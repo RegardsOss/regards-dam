@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LICENSE_PLACEHOLDER -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>fr.cnes.regards.modules</groupId>
+	<artifactId>models</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.4.0.RELEASE</version>
+	</parent>
+
+	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
+
+	<modules>
+		<module>models-dao</module>
+		<module>models-domain</module>
+		<module>models-rest</module>
+		<module>models-service</module>
+		<module>models-signature</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Core dependencies -->
+			<dependency>
+				<groupId>fr.cnes.regards.microservices</groupId>
+				<artifactId>microservice-core</artifactId>
+				<version>0.0.1</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules</groupId>
+				<artifactId>module-jobs</artifactId>
+				<version>0.0.1</version>
+			</dependency>
+			<!-- Module layers -->
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-dao</artifactId>
+				<version>1.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-domain</artifactId>
+				<version>1.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-rest</artifactId>
+				<version>1.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-service</artifactId>
+				<version>1.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-signature</artifactId>
+				<version>1.0-SNAPSHOT</version>
+			</dependency>
+			<!-- COTS -->
+			<!-- Netflix Feign REST Client -->
+			<dependency>
+				<groupId>com.netflix.feign</groupId>
+				<artifactId>feign-core</artifactId>
+				<version>8.18.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>fr.cnes.regards.modules</groupId>
+			<artifactId>module-core</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
