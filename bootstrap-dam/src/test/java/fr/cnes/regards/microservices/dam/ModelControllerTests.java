@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -33,15 +33,16 @@ public class ModelControllerTests {
 
     private static final Logger LOG = LoggerFactory.getLogger(ModelControllerTests.class);
 
-    static String jwt_;
+    private String jwt_;
 
     @Autowired
     private MockMvc mvc_;
 
-    @BeforeClass
-    public static void staticSetup() {
-        JWTService jwtService_ = new JWTService();
-        jwtService_.setSecret("123456789");
+    @Autowired
+    private JWTService jwtService_;
+
+    @Before
+    public void setup() {
         jwt_ = jwtService_.generateToken("PROJECT", "email", "MSI", "USER");
     }
 
