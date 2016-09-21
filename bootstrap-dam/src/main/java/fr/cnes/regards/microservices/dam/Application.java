@@ -11,9 +11,10 @@ import fr.cnes.regards.microservices.core.annotation.MicroserviceInfo;
 import springfox.documentation.builders.ApiInfoBuilder;
 
 /**
- * 
+ *
  * Start microservice dam
- * @author TODO
+ *
+ * @author msordi
  *
  */
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.microservices.core" })
@@ -27,7 +28,7 @@ public class Application {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(Application.class, args); // NOSONAR
     }
 
 }
