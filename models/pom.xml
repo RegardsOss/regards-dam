@@ -31,12 +31,12 @@
 			<dependency>
 				<groupId>fr.cnes.regards.microservices</groupId>
 				<artifactId>microservice-core</artifactId>
-				<version>0.0.1</version>
+				<version>1.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules</groupId>
 				<artifactId>module-jobs</artifactId>
-				<version>0.0.1</version>
+				<version>1.0-SNAPSHOT</version>
 			</dependency>
 			<!-- Module layers -->
 			<dependency>
@@ -78,7 +78,7 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules</groupId>
 			<artifactId>module-core</artifactId>
-			<version>0.0.1</version>
+			<version>1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
