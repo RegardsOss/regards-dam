@@ -27,8 +27,14 @@ public class Application {
                 .license("Apache License Version 2.0").version("1.0-SNAPSHOT");
     }
 
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args); // NOSONAR
+    /**
+     * Main
+     *
+     * @param pArgs
+     *            Bootsrap args
+     */
+    public static void main(String[] pArgs) {
+        SpringApplication.run(Application.class, pArgs); // NOSONAR
     }
 
 }

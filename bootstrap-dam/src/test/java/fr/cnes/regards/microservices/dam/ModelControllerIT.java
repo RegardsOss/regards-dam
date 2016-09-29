@@ -21,6 +21,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import fr.cnes.regards.microservices.core.security.jwt.JWTService;
+import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
+import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
 
 /**
  * @author msordi
@@ -29,9 +31,9 @@ import fr.cnes.regards.microservices.core.security.jwt.JWTService;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @AutoConfigureMockMvc
-public class ModelControllerTests {
+public class ModelControllerIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ModelControllerTests.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ModelControllerIT.class);
 
     private String jwt_;
 
@@ -46,6 +48,7 @@ public class ModelControllerTests {
         jwt_ = jwtService_.generateToken("PROJECT", "email", "MSI", "USER");
     }
 
+    @Requirement("MA_REF_EXIGENCE")
     @Test
     public void testGetAttributes() {
 
@@ -58,6 +61,21 @@ public class ModelControllerTests {
             LOG.error(message, e);
             Assert.fail(message);
         }
+    }
+
+    @Requirement("TOTO1")
+    @Requirement("TOTO2")
+    @Purpose("Dis ok TOTO!")
+    @Test
+    public void testToto() {
+        LOG.debug("OK TOTO");
+    }
+
+    @Requirement("FOO1")
+    @Requirement("FOO2")
+    @Test
+    public void testFoo() {
+        LOG.debug("OK FOO");
     }
 
 }
