@@ -19,7 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.RequestMethod;
 
+import fr.cnes.regards.microservices.core.security.endpoint.MethodAuthorizationService;
 import fr.cnes.regards.microservices.core.security.jwt.JWTService;
 import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
 import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
@@ -43,9 +45,15 @@ public class ModelControllerIT {
     @Autowired
     private JWTService jwtService_;
 
+    @Autowired
+    private MethodAuthorizationService authService_;
+
     @Before
     public void setup() {
-        jwt_ = jwtService_.generateToken("PROJECT", "email", "MSI", "USER");
+        String role = "USER";
+        jwt_ = jwtService_.generateToken("PROJECT", "email", "MSI", role);
+        authService_.setAuthorities("/models/attributes", RequestMethod.GET, role);
+        authService_.setAuthorities("/models/attributes/{pAttributeId}", RequestMethod.GET, role, "ADMIN");
     }
 
     @Requirement("MA_REF_EXIGENCE")

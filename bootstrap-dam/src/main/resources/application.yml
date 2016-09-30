@@ -1,0 +1,72 @@
+#
+# LICENSE_PLACEHOLDER
+#
+
+#set( $semicolon = ':' )
+#set( $dollar = '$' )
+server:
+  adress: localhost
+  port: 3333
+
+security:
+  client: acme
+  secret: acmesecret
+
+spring:
+  application:
+    name : dam
+  hateoas:
+    use-hal-as-default-json-media-type : false
+  jpa:
+    hibernate:
+      ddl-auto: update 
+  profiles:
+    active: dev
+    
+swagger:
+  api:
+    name: dam-api
+
+cloud:
+  config:
+    discovery:
+      enabled: false
+    server:
+      enabled: false
+      name: myconfigserver
+      
+eureka:
+  client:
+    enabled: false
+    
+microservice:
+  dao:
+    enabled : false
+    embedded : false
+    instance :
+      enabled : false
+      datasource : 
+        url: jdbc:postgresql://localhost:5432/project1
+        username: user
+        password: mdp
+    dialect : org.hibernate.dialect.PostgreSQLDialect
+    driverClassName : org.postgresql.Driver
+  projects:
+    - 
+      name: project1
+      datasource:
+        url: jdbc:postgresql://localhost:5432/project1
+        username: user
+        password: mdp
+
+# JWT
+jwt:
+  secret: 123456789
+
+# Mock authorities
+# if you want to have an endpoint accessible with more than one ROLE use the following format : /path@VERB|ROLE1|ROLE2 
+#regards:
+#  security:
+#    authorities:
+#      - /api/greeting@GET|USER
+#      - /api/me@GET|ADMIN
