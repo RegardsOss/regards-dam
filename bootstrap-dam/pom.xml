@@ -8,13 +8,13 @@
 	<artifactId>bootstrap-dam</artifactId>
 	<packaging>jar</packaging>
 
-	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.4.0.RELEASE</version>
+		<groupId>fr.cnes.regards.microservices</groupId>
+		<artifactId>dam</artifactId>
+		<version>1.0-SNAPSHOT</version>
 	</parent>
+
+	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 
 	<dependencies>
 		<!-- Core dependencies -->

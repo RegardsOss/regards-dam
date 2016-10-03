@@ -11,6 +11,12 @@
 
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.4.0.RELEASE</version>
+	</parent>
+	
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     	<sonar.language>java</sonar.language>
@@ -21,5 +27,14 @@
 		<module>bootstrap-dam</module>
 		<module>models</module>
 	</modules>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<uniqueVersion>true</uniqueVersion>
+			<id>archiva-snapshots</id>
+			<name>Archiva Managed Snapshot Repository</name>
+			<url>http://172.26.46.158:8010/repository/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
