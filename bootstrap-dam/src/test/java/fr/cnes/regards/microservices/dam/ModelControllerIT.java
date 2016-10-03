@@ -22,9 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import fr.cnes.regards.microservices.core.security.endpoint.MethodAuthorizationService;
-import fr.cnes.regards.microservices.core.security.jwt.JWTService;
 import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
 import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
+import fr.cnes.regards.security.utils.jwt.JWTService;
 
 /**
  * @author msordi
