@@ -6,12 +6,14 @@
 
 	<groupId>fr.cnes.regards.modules</groupId>
 	<artifactId>models</artifactId>
+	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<parent>
-		<groupId>fr.cnes.regards.microservices</groupId>
-		<artifactId>dam</artifactId>
-		<version>1.0-SNAPSHOT</version>
+		<groupId>fr.cnes.regards</groupId>
+		<artifactId>regards-parent</artifactId>
+		<version>0.0.0-SNAPSHOT</version>
+		<relativePath></relativePath>
 	</parent>
 
 	<modules>
@@ -27,40 +29,32 @@
 			<dependency>
 				<groupId>fr.cnes.regards.modules</groupId>
 				<artifactId>module-jobs</artifactId>
-				<version>1.0-SNAPSHOT</version>
+				<version>${project.version}</version>
 			</dependency>
-			<!-- Module layers -->
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-dao</artifactId>
-				<version>1.0-SNAPSHOT</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-domain</artifactId>
-				<version>1.0-SNAPSHOT</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-rest</artifactId>
-				<version>1.0-SNAPSHOT</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-service</artifactId>
-				<version>1.0-SNAPSHOT</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-signature</artifactId>
-				<version>1.0-SNAPSHOT</version>
-			</dependency>
-			<!-- COTS -->
-			<!-- Netflix Feign REST Client -->
-			<dependency>
-				<groupId>com.netflix.feign</groupId>
-				<artifactId>feign-core</artifactId>
-				<version>8.18.0</version>
+				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -69,7 +63,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules</groupId>
 			<artifactId>module-core</artifactId>
-			<version>1.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

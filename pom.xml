@@ -10,7 +10,7 @@
 	<packaging>pom</packaging>
 
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-	
+
 	<properties>
 		<java.version>1.8</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,16 +19,17 @@
 	</properties>
 
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.4.0.RELEASE</version>
+		<groupId>fr.cnes.regards</groupId>
+		<artifactId>regards-boot-parent</artifactId>
+		<version>0.0.0-SNAPSHOT</version>
+		<relativePath></relativePath>
 	</parent>
 
 	<modules>
 		<module>bootstrap-dam</module>
 		<module>models</module>
 	</modules>
-	
+
 	<distributionManagement>
 		<snapshotRepository>
 			<uniqueVersion>true</uniqueVersion>
@@ -37,60 +38,4 @@
 			<url>http://172.26.46.158:8010/repository/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
-
-	<dependencyManagement>
-		<dependencies>
-			<!-- Core dependencies -->
-			<dependency>
-				<groupId>fr.cnes.regards.microservices</groupId>
-				<artifactId>microservice-core</artifactId>
-				<version>1.1-SNAPSHOT</version>
-			</dependency>
-			<!-- Tests -->
-			<dependency>
-				<groupId>fr.cnes.regards.microservices</groupId>
-				<artifactId>microservice-core-test</artifactId>
-				<version>1.0-SNAPSHOT</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-failsafe-plugin</artifactId>
-					<configuration>
-						<properties>
-							<property>
-								<name>listener</name>
-								<value>fr.cnes.regards.microservices.core.test.report.RequirementMatrixReportListener</value>
-							</property>
-						</properties>
-					</configuration>
-					<executions>
-						<execution>
-							<goals>
-								<goal>integration-test</goal>
-								<goal>verify</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<configuration>
-						<properties>
-							<property>
-								<name>listener</name>
-								<value>fr.cnes.regards.microservices.core.test.report.RequirementMatrixReportListener</value>
-							</property>
-						</properties>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
 </project>
