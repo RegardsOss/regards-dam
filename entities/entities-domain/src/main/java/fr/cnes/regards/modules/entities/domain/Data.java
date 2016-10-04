@@ -30,6 +30,7 @@ public class Data implements Identifiable<Long> {
     @NotNull
     private final MimeType mimeType_;
 
+    @Valid
     private final DataType dataType_;
 
     @Valid
