@@ -4,18 +4,12 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * @author lmieulet
  *
  */
-public class DataEntity extends Entities {
-
-    @NotNull
-    private final Long id_;
+public class DataEntity extends Entity {
 
     /**
      *
@@ -25,9 +19,8 @@ public class DataEntity extends Entities {
     /**
      * @param pFiles
      */
-    public DataEntity(List<Data> pFiles) {
-        super();
-        id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
+    public DataEntity(String pSid_id, List<Data> pFiles) {
+        super(pSid_id);
         files_ = pFiles;
     }
 

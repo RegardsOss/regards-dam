@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.validation.constraints.NotNull;
@@ -11,14 +12,14 @@ import javax.validation.constraints.NotNull;
 import org.springframework.hateoas.Identifiable;
 
 import fr.cnes.regards.modules.core.validation.PastOrNow;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author lmieulet
  *
  */
-public class Entities implements Identifiable<Long> {
+public abstract class Entity implements Identifiable<Long> {
 
-    @NotNull
     private Long id_;
 
     @PastOrNow
@@ -33,19 +34,17 @@ public class Entities implements Identifiable<Long> {
     @NotNull
     private String sid_id_;
 
-    public Entities() {
+    private List<String> tags_;
+
+    private List<IAttribute> attributes_;
+
+    private Model model_;
+
+    public Entity(String pSid_id) {
         super();
         id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
         creationDate_ = LocalDateTime.now();
         lastUpdate_ = LocalDateTime.now();
-    }
-
-    /**
-     * @param sid_id
-     *            The id of the submitted Package
-     */
-    public Entities(String pSid_id) {
-        this();
         sid_id_ = pSid_id;
     }
 
@@ -108,6 +107,36 @@ public class Entities implements Identifiable<Long> {
      */
     public void setSidId(String pSid_id) {
         sid_id_ = pSid_id;
+    }
+
+    /**
+     * @return the tags
+     */
+    public List<String> getTags() {
+        return tags_;
+    }
+
+    /**
+     * @param pTags
+     *            the tags to set
+     */
+    public void setTags(List<String> pTags) {
+        tags_ = pTags;
+    }
+
+    /**
+     * @return the attributes
+     */
+    public List<IAttribute> getAttributes() {
+        return attributes_;
+    }
+
+    /**
+     * @param pAttributes
+     *            the attributes to set
+     */
+    public void setAttributes(List<IAttribute> pAttributes) {
+        attributes_ = pAttributes;
     }
 
 }

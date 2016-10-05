@@ -27,5 +27,9 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-domain</artifactId>
+		</dependency>
 	</dependencies>
 </project>
