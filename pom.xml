@@ -28,10 +28,10 @@
 	<modules>
 		<module>bootstrap-dam</module>
 		<module>models</module>
-    <module>entities</module>
-    <module>collections</module>
-  </modules>
-	
+		<module>entities</module>
+		<module>collections</module>
+	</modules>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<uniqueVersion>true</uniqueVersion>
