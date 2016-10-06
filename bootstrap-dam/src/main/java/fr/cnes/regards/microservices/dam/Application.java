@@ -22,6 +22,11 @@ import springfox.documentation.builders.ApiInfoBuilder;
 @MicroserviceInfo(name = "dam", version = "1.0-SNAPSHOT")
 public class Application {
 
+    /**
+     * Initialize swagger builder
+     *
+     * @return Swagger API builder
+     */
     @Bean
     public ApiInfoBuilder apiInfoBuilder() {
         return new ApiInfoBuilder().title("dam API").description("API for dam REGARDS Microservice")
@@ -29,12 +34,12 @@ public class Application {
     }
 
     /**
-     * Main
+     * Microservice starter method
      *
      * @param pArgs
-     *            Bootsrap args
+     *            microservice start arguments
      */
-    public static void main(String[] pArgs) {
+    public static void main(final String[] pArgs) {
         SpringApplication.run(Application.class, pArgs); // NOSONAR
     }
 

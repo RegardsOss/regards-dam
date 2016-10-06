@@ -18,6 +18,8 @@
 	<modules>
 		<module>bootstrap-dam</module>
 		<module>models</module>
+		<module>entities</module>
+		<module>collections</module>
 	</modules>
 
 </project>

@@ -31,7 +31,7 @@ import fr.cnes.regards.security.utils.jwt.JWTService;
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class ModelControllerIT {
 
@@ -56,34 +56,25 @@ public class ModelControllerIT {
         authService_.setAuthorities("/models/attributes/{pAttributeId}", RequestMethod.GET, role, "ADMIN");
     }
 
-    @Requirement("MA_REF_EXIGENCE")
+    /**
+     * @see test javadoc
+     * @requirement REGARDS_DSL_DAM_MOD_010
+     * @purpose Get model attributes to manage data models
+     */
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Purpose("Get model attributes to manage data models")
     @Test
     public void testGetAttributes() {
 
         try {
             this.mvc_.perform(get("/models/attributes").header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt_))
                     .andExpect(status().isOk());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             String message = "Cannot reach model attributes";
             LOG.error(message, e);
             Assert.fail(message);
         }
-    }
-
-    @Requirement("TOTO1")
-    @Requirement("TOTO2")
-    @Purpose("Dis ok TOTO!")
-    @Test
-    public void testToto() {
-        LOG.debug("OK TOTO");
-    }
-
-    @Requirement("FOO1")
-    @Requirement("FOO2")
-    @Test
-    public void testFoo() {
-        LOG.debug("OK FOO");
     }
 
 }
