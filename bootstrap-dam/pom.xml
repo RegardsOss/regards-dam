@@ -9,10 +9,15 @@
 	<packaging>jar</packaging>
 
 	<parent>
-		<groupId>fr.cnes.regards.microservices</groupId>
-		<artifactId>dam</artifactId>
-		<version>1.0-SNAPSHOT</version>
+		<groupId>fr.cnes.regards</groupId>
+		<artifactId>regards-boot-parent</artifactId>
+		<version>0.0.0-SNAPSHOT</version>
+		<relativePath></relativePath>
 	</parent>
+	
+	<properties>
+		<fr.cnes.regards.docker.image.name>rs-dam</fr.cnes.regards.docker.image.name>
+	</properties>
 
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 

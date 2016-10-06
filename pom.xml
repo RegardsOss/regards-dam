@@ -8,21 +8,11 @@
 	<artifactId>dam</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-
-	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-
-	<properties>
-		<java.version>1.8</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<sonar.language>java</sonar.language>
-		<sonar.jacoco.reportMissing.force.zero>true</sonar.jacoco.reportMissing.force.zero>
-	</properties>
-
+	
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
-		<artifactId>regards-boot-parent</artifactId>
+		<artifactId>regards-aggregator-parent</artifactId>
 		<version>0.0.0-SNAPSHOT</version>
-		<relativePath></relativePath>
 	</parent>
 
 	<modules>
@@ -30,12 +20,4 @@
 		<module>models</module>
 	</modules>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<uniqueVersion>true</uniqueVersion>
-			<id>archiva-snapshots</id>
-			<name>Archiva Managed Snapshot Repository</name>
-			<url>http://172.26.46.158:8010/repository/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>
