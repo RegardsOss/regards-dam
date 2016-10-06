@@ -4,6 +4,9 @@
 package fr.cnes.regards.modules.models.domain;
 
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.springframework.hateoas.Identifiable;
 
 /**
  *
@@ -12,7 +15,9 @@ import java.util.List;
  * @author msordi
  *
  */
-public class Model {
+public class Model implements Identifiable<Long> {
+
+    private final Long id_;
 
     /**
      * Model name
@@ -28,6 +33,11 @@ public class Model {
      * Model attributes
      */
     private List<ModelAttribute> attributes_;
+
+    public Model() {
+        super();
+        id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
+    }
 
     /**
      * @return the name
@@ -72,5 +82,15 @@ public class Model {
      */
     public void setAttributes(List<ModelAttribute> pAttributes) {
         attributes_ = pAttributes;
+    }
+
+    /**
+     *
+     * @return model id
+     */
+    @Override
+    public Long getId() {
+        // TODO Auto-generated method stub
+        return id_;
     }
 }

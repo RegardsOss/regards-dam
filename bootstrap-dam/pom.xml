@@ -42,6 +42,10 @@
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-client</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.collections</groupId>
+			<artifactId>collections-rest</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

@@ -17,8 +17,7 @@ import springfox.documentation.builders.ApiInfoBuilder;
  * @author msordi
  *
  */
-@SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.microservices.core",
-        "fr.cnes.regards.security.utils" })
+@SpringBootApplication(scanBasePackages = { "fr.cnes.regards" })
 @MicroserviceInfo(name = "dam", version = "1.0-SNAPSHOT")
 public class Application {
 
