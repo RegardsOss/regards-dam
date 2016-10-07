@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.cnes.regards.modules.models.domain.AttributeModel;
-import fr.cnes.regards.modules.models.domain.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.security.utils.endpoint.annotation.ResourceAccess;
 
 /**
@@ -47,11 +47,17 @@ public class AttributeController {
         return ResponseEntity.ok(null);
     }
 
+    /**
+     *
+     * @param pAttributeModel
+     * @return
+     */
     @ResourceAccess(description = "Add an attribute")
     @PostMapping
     public ResponseEntity<AttributeModel> addAttribute(@RequestBody AttributeModel pAttributeModel) {
         // TODO
         return null;
+
     }
 
     @ResourceAccess(description = "Get an attribute")

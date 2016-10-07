@@ -1,0 +1,48 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
+package fr.cnes.regards.modules.models.domain.attributes.restriction;
+
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+
+/**
+ * Manage pattern restriction for attribute of type :
+ * <ul>
+ * <li>{@link AttributeType#STRING}</li>
+ * <li>{@link AttributeType#STRING_ARRAY}</li>
+ * </ul>
+ *
+ * @author msordi
+ *
+ */
+public class PatternRestriction extends AbstractRestriction {
+
+    /**
+     * Validation pattern
+     */
+    private String pattern;
+
+    /**
+     * Constructor
+     */
+    public PatternRestriction() {
+        super();
+        setType(RestrictionType.PATTERN);
+    }
+
+    /**
+     * @return the pattern
+     */
+    public String getPattern() {
+        return pattern;
+    }
+
+    /**
+     * @param pPattern
+     *            the pattern to set
+     */
+    public void setPattern(String pPattern) {
+        pattern = pPattern;
+    }
+
+}

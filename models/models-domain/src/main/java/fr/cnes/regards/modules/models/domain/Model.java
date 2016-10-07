@@ -3,7 +3,9 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
-import java.util.List;
+import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  *
@@ -17,60 +19,60 @@ public class Model {
     /**
      * Model name
      */
-    private String name_;
+    private String name;
+
+    /**
+     * Optional attribute description
+     */
+    private Optional<String> description;
 
     /**
      * Model type
      */
-    private ModelType type_;
+    private ModelType type;
 
     /**
      * Model attributes
      */
-    private List<ModelAttribute> attributes_;
+    private SortedSet<ModelAttribute> attributes;
 
-    /**
-     * @return the name
-     */
+    public Model() {
+        attributes = new TreeSet<>();
+    }
+
     public String getName() {
-        return name_;
+        return name;
     }
 
-    /**
-     * @param pName
-     *            the name to set
-     */
     public void setName(String pName) {
-        name_ = pName;
+        name = pName;
     }
 
-    /**
-     * @return the type
-     */
     public ModelType getType() {
-        return type_;
+        return type;
     }
 
-    /**
-     * @param pType
-     *            the type to set
-     */
     public void setType(ModelType pType) {
-        type_ = pType;
+        type = pType;
     }
 
-    /**
-     * @return the attributes
-     */
-    public List<ModelAttribute> getAttributes() {
-        return attributes_;
+    public Optional<String> getDescription() {
+        return description;
     }
 
-    /**
-     * @param pAttributes
-     *            the attributes to set
-     */
-    public void setAttributes(List<ModelAttribute> pAttributes) {
-        attributes_ = pAttributes;
+    public void setDescription(Optional<String> pDescription) {
+        description = pDescription;
+    }
+
+    public SortedSet<ModelAttribute> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(SortedSet<ModelAttribute> pAttributes) {
+        attributes = pAttributes;
+    }
+
+    public void addAttribute(ModelAttribute pAttribute) {
+
     }
 }
