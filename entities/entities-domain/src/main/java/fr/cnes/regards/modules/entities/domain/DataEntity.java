@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.List;
 
+import fr.cnes.regards.modules.models.domain.Model;
+
 /**
  * @author lmieulet
  *
@@ -19,8 +21,8 @@ public class DataEntity extends Entity {
     /**
      * @param pFiles
      */
-    public DataEntity(String pSid_id, List<Data> pFiles) {
-        super(pSid_id);
+    public DataEntity(String pSid_id, Model pModel, List<Data> pFiles) {
+        super(pSid_id, pModel);
         files_ = pFiles;
     }
 

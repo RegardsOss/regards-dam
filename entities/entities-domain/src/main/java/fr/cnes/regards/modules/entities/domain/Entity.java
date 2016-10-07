@@ -40,12 +40,13 @@ public abstract class Entity implements Identifiable<Long> {
 
     private Model model_;
 
-    public Entity(String pSid_id) {
+    public Entity(String pSid_id, Model pModel) {
         super();
         id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
         creationDate_ = LocalDateTime.now();
         lastUpdate_ = LocalDateTime.now();
         sid_id_ = pSid_id;
+        model_ = pModel;
     }
 
     /**
@@ -137,6 +138,36 @@ public abstract class Entity implements Identifiable<Long> {
      */
     public void setAttributes(List<IAttribute> pAttributes) {
         attributes_ = pAttributes;
+    }
+
+    /**
+     * @return the sid_id
+     */
+    public String getSid_id() {
+        return sid_id_;
+    }
+
+    /**
+     * @param pSid_id
+     *            the sid_id to set
+     */
+    public void setSid_id(String pSid_id) {
+        sid_id_ = pSid_id;
+    }
+
+    /**
+     * @return the model
+     */
+    public Model getModel() {
+        return model_;
+    }
+
+    /**
+     * @param pModel
+     *            the model to set
+     */
+    public void setModel(Model pModel) {
+        model_ = pModel;
     }
 
 }
