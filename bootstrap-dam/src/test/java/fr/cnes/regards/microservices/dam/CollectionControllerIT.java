@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import fr.cnes.regards.microservices.core.security.endpoint.MethodAuthorizationService;
 import fr.cnes.regards.microservices.core.test.AbstractRegardsIntegrationTest;
@@ -41,35 +40,34 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
     @Autowired
     private MethodAuthorizationService authService;
 
-    private Model pModel1;
+    private Model model1;
 
     private Collection collection1;
 
     @Autowired
     private ICollectionRepository collectionRepository;
 
+    private List<ResultMatcher> expectations;
+
     @Before
     public void setup() {
         String role = "USER";
         jwt = jwtService.generateToken("PROJECT", "email", "MSI", role);
-        authService.setAuthorities("/collections", RequestMethod.GET, role);
-        authService.setAuthorities("/collections/model/{model_id}", RequestMethod.GET, role, "ADMIN");
-        authService.setAuthorities("/collections", RequestMethod.POST, role, "ADMIN");
-        authService.setAuthorities("/collections/{collection_id}", RequestMethod.GET, role, "ADMIN");
+        expectations = new ArrayList<>();
 
         // Reset entities list
         collectionRepository.deleteAll();
 
         // Bootstrap default values
-        pModel1 = new Model();
-        collection1 = collectionRepository.save(new Collection(pModel1, "pDescription", "pName"));
+        model1 = new Model();
+
+        collection1 = collectionRepository.save(new Collection(model1, "pDescription", "pName"));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all collections")
     @Test
     public void testGetCollections() {
-        List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
         expectations.add(MockMvcResultMatchers.jsonPath("$.*", Matchers.hasSize(1)));
@@ -79,12 +77,11 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_xxx")
-    @Purpose("Shall retrieve all collections")
+    @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
+        Collection collection2 = new Collection(model1, "pDescription2", "pName2");
 
-        Collection collection2 = collectionRepository.save(new Collection(pModel1, "pDescription2", "pName2"));
-        List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
 
@@ -101,13 +98,49 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
     @Purpose("Shall retrieve a collection using its id")
     @Test
     public void testGetCollectionById() {
-        List<ResultMatcher> expectations = new ArrayList<>();
-
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
         expectations.add(MockMvcResultMatchers.jsonPath("$.description", Matchers.is(collection1.getDescription())));
         expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(collection1.getName())));
         performGet("/collections/{collection_id}", jwt, expectations,
                    "Failed to fetch a specific collection using its id", collection1.getId());
+    }
+
+    @Requirement("REGARDS_DSL_DAM_COL_410")
+    @Purpose("Shall retrieve a collection using its model id")
+    @Test
+    public void testGetCollectionByModelId() {
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.*", Matchers.hasSize(1)));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.is(collection1.getName())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[0].description", Matchers.is(collection1.getDescription())));
+        performGet("/collections/model/{model_id}", jwt, expectations,
+                   "Failed to fetch a specific collection using its model id", model1.getId());
+    }
+
+    @Requirement("REGARDS_DSL_DAM_COL_xxx")
+    @Purpose("Shall update a collection")
+    @Test
+    public void testUpdateCollection() {
+        Collection collectionClone = new Collection();
+        collectionClone.setId(collection1.getId());
+        String newName = "new name";
+        collectionClone.setName(newName);
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(newName)));
+        performPut("/collections/{collection_id}", jwt, collectionClone, expectations,
+                   "Failed to update a specific collection using its id", collection1.getId());
+    }
+
+    @Requirement("REGARDS_DSL_DAM_COL_110")
+    @Purpose("Shall delete a collection")
+    @Test
+    public void testDeleteCollection() {
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        performDelete("/collections/{collection_id}", jwt, expectations,
+                      "Failed to delete a specific collection using its id", collection1.getId());
     }
 }
