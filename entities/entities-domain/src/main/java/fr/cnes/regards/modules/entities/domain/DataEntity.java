@@ -22,7 +22,7 @@ public class DataEntity extends Entity {
      * @param pFiles
      */
     public DataEntity(String pSid_id, Model pModel, List<Data> pFiles) {
-        super(pSid_id, pModel);
+        super(pModel);
         files_ = pFiles;
     }
 

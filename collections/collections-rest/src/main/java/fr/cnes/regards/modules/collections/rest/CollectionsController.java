@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,12 +33,16 @@ import fr.cnes.regards.modules.core.exception.InvalidValueException;
  *
  */
 @RestController
-@ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS", documentation = "http://test")
+@ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
+        documentation = "http://test")
 public class CollectionsController implements CollectionsSignature {
 
     @Autowired
     private ICollectionsRequestService collectionsRequestService_;
 
+    /**
+     * @summary Entry point to retrieve all collections
+     */
     @Override
     public HttpEntity<List<Resource<Collection>>> retrieveCollectionList() {
         List<Collection> collections = collectionsRequestService_.retrieveCollectionList();
@@ -46,6 +51,9 @@ public class CollectionsController implements CollectionsSignature {
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
+    /**
+     * @summary Entry point to retrieve all collections that uses a specific model
+     */
     @Override
     public HttpEntity<List<Resource<Collection>>> retrieveCollectionListByModelId(
             @PathVariable("model_id") Long pModelId) {
@@ -53,6 +61,47 @@ public class CollectionsController implements CollectionsSignature {
         List<Resource<Collection>> resources = collections.stream().map(u -> new Resource<>(u))
                 .collect(Collectors.toList());
         return new ResponseEntity<>(resources, HttpStatus.OK);
+    }
+
+    /**
+     * @summary Entry point to retrieve a collection using its id
+     */
+    @Override
+    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") String pCollectionId) {
+        Collection collection = collectionsRequestService_.retrieveCollectionById(pCollectionId);
+        Resource<Collection> resource = new Resource<>(collection);
+        return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    /**
+     * @throws OperationNotSupportedException
+     * @summary Entry point to update a collection using its id
+     */
+    @Override
+    public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") String pCollectionId,
+            @RequestBody Collection pCollection) throws OperationNotSupportedException {
+        Collection collection = collectionsRequestService_.updateCollection(pCollection, pCollectionId);
+        Resource<Collection> resource = new Resource<>(collection);
+        return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    /**
+     * @summary Entry point to delete a collection using its id
+     */
+    @Override
+    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") String pCollectionId) {
+        collectionsRequestService_.deleteCollection(pCollectionId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * @summary Entry point to create a collection
+     */
+    @Override
+    public HttpEntity<Resource<Collection>> createCollection(@RequestBody Collection pCollection) {
+        Collection collection = collectionsRequestService_.createCollection(pCollection);
+        Resource<Collection> resource = new Resource<>(collection);
+        return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }
 
     @ExceptionHandler(NoSuchElementException.class)

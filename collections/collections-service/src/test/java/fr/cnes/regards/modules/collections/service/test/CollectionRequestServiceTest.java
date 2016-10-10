@@ -3,12 +3,14 @@
  */
 package fr.cnes.regards.modules.collections.service.test;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
+import javax.naming.OperationNotSupportedException;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
 import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
@@ -26,45 +28,95 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 public class CollectionRequestServiceTest {
 
-    private ICollectionsRequestService collectionsRequestService_;
+    private ICollectionsRequestService collectionsRequestService;
 
     private Model pModel1;
 
-    private Model pModel2_;
+    private Model pModel2;
 
-    private Collection collection1_;
+    private Collection collection1;
 
-    private Collection collection2_;
+    private Collection collection2;
+
+    private ICollectionRepository collectionRepositoryMocked;
+
+    private ICollectionsRequestService collectionsRequestServiceMocked;
 
     @Before
     public void init() throws AlreadyExistingException {
         // use a stub repository, to be able to only test the service
         ICollectionRepository collectionRepository = new CollectionRepositoryStub();
-        collectionsRequestService_ = new CollectionsRequestService(collectionRepository);
+        collectionsRequestService = new CollectionsRequestService(collectionRepository);
         // populate the repository
         pModel1 = new Model();
-        pModel2_ = new Model();
-        collection1_ = new Collection("pSid_id", pModel1, "pDescription", "pName");
-        collection2_ = new Collection("pSid_id2", pModel2_, "pDescription2", "pName2");
-        collectionRepository.save(collection1_);
-        collectionRepository.save(collection2_);
+        pModel2 = new Model();
+        collection1 = new Collection(pModel1, "pDescription", "pName");
+        collection2 = new Collection(pModel2, "pDescription2", "pName2");
+        collectionRepository.save(collection1);
+        collectionRepository.save(collection2);
+
+        // create a mock repository
+        collectionRepositoryMocked = Mockito.mock(ICollectionRepository.class);
+        collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked);
+
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all collections.")
     public void retrieveCollectionList() {
-        List<Collection> collections = collectionsRequestService_.retrieveCollectionList();
-        assertEquals(collections.size(), 2);
+        List<Collection> collections = collectionsRequestService.retrieveCollectionList();
+        Assert.assertEquals(collections.size(), 2);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve collections by model id.")
     public void retrieveCollectionListByModelId() {
-        List<Collection> collections = collectionsRequestService_.retrieveCollectionListByModelId(pModel1.getId());
-        assertEquals(collections.size(), 1);
-        assertEquals(collections.get(0).getId(), collection1_.getId());
-        assertEquals(collections.get(0).getModel().getId(), pModel1.getId());
+        List<Collection> collections = collectionsRequestService.retrieveCollectionListByModelId(pModel1.getId());
+        Assert.assertEquals(collections.size(), 1);
+        Assert.assertEquals(collections.get(0).getId(), collection1.getId());
+        Assert.assertEquals(collections.get(0).getModel().getId(), pModel1.getId());
     }
+
+    @Test
+    public void retrieveCollectionById() {
+        Collection collection = collectionsRequestService.retrieveCollectionById(collection2.getId());
+
+        Assert.assertEquals(collection.getId(), collection2.getId());
+        Assert.assertEquals(collection.getModel().getId(), pModel2.getId());
+    }
+
+    @Test
+    public void updateCollection() {
+        Mockito.when(collectionRepositoryMocked.findOne(collection1.getId())).thenReturn(collection1);
+        Mockito.when(collectionRepositoryMocked.save(collection1)).thenReturn(collection1);
+        try {
+            collectionsRequestServiceMocked.updateCollection(collection1, collection1.getId());
+        } catch (OperationNotSupportedException e) {
+            e.printStackTrace();
+            Assert.fail();
+        }
+    }
+
+    @Test(expected = OperationNotSupportedException.class)
+    public void updateCollectionWithWrongURL() throws OperationNotSupportedException {
+        Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
+        collectionsRequestServiceMocked.updateCollection(collection1, collection2.getId());
+    }
+
+    @Test
+    public void deleteCollection() {
+        collectionsRequestServiceMocked.deleteCollection(collection2.getId());
+        Mockito.verify(collectionRepositoryMocked).delete(collection2.getId());
+    }
+
+    @Test
+    public void createCollection() {
+        Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
+        Collection collection = collectionsRequestServiceMocked.createCollection(collection2);
+        Mockito.verify(collectionRepositoryMocked).save(collection2);
+        Assert.assertEquals(collection, collection2);
+    }
+
 }
