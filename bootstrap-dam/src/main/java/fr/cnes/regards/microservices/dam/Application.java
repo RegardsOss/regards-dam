@@ -5,10 +5,8 @@ package fr.cnes.regards.microservices.dam;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
 import fr.cnes.regards.microservices.core.annotation.MicroserviceInfo;
-import springfox.documentation.builders.ApiInfoBuilder;
 
 /**
  *
@@ -20,17 +18,6 @@ import springfox.documentation.builders.ApiInfoBuilder;
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards" })
 @MicroserviceInfo(name = "dam", version = "1.0-SNAPSHOT")
 public class Application {
-
-    /**
-     * Initialize swagger builder
-     *
-     * @return Swagger API builder
-     */
-    @Bean
-    public ApiInfoBuilder apiInfoBuilder() {
-        return new ApiInfoBuilder().title("dam API").description("API for dam REGARDS Microservice")
-                .license("Apache License Version 2.0").version("1.0-SNAPSHOT");
-    }
 
     /**
      * Microservice starter method

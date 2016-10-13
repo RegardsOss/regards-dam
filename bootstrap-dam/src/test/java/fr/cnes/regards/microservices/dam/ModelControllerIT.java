@@ -21,10 +21,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import fr.cnes.regards.microservices.core.security.endpoint.MethodAuthorizationService;
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.framework.starter.security.endpoint.MethodAuthorizationService;
 import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
 import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
-import fr.cnes.regards.security.utils.jwt.JWTService;
 
 /**
  * @author msordi

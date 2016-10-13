@@ -5,20 +5,17 @@ package fr.cnes.regards.modules.models.rest;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.cnes.regards.framework.security.utils.endpoint.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.security.utils.endpoint.annotation.ResourceAccess;
+import fr.cnes.regards.modules.models.service.IAttributeService;
+import fr.cnes.regards.modules.models.signature.IAttributeSignature;
 
 /**
  *
@@ -28,57 +25,55 @@ import fr.cnes.regards.security.utils.endpoint.annotation.ResourceAccess;
  *
  */
 @RestController
-@RequestMapping("/models/attributes")
-public class AttributeController {
+public class AttributeController implements IAttributeSignature {
 
     /**
-     *
-     * Get the project model list
-     *
-     * @param pType
-     *            model type
-     * @return model list filtered by type if not null
+     * Attribute service
      */
+    @Autowired
+    private IAttributeService attributeService;
+
+    @Override
     @ResourceAccess(description = "List all attributes")
-    @GetMapping
-    public ResponseEntity<List<AttributeModel>> getAttributes(
-            @RequestParam(value = "type", required = false) AttributeType pType) {
-        // TODO : get all AttributeModel
-        return ResponseEntity.ok(null);
+    public ResponseEntity<List<AttributeModel>> getAttributes(AttributeType pType) {
+        final List<AttributeModel> attributes = attributeService.getAttributes(pType);
+        return ResponseEntity.ok(attributes);
     }
 
-    /**
-     *
-     * @param pAttributeModel
-     * @return
-     */
+    @Override
     @ResourceAccess(description = "Add an attribute")
-    @PostMapping
     public ResponseEntity<AttributeModel> addAttribute(@RequestBody AttributeModel pAttributeModel) {
         // TODO
         return null;
-
     }
 
+    @Override
     @ResourceAccess(description = "Get an attribute")
-    @GetMapping("/{pAttributeId}")
     public ResponseEntity<AttributeModel> getAttribute(@PathVariable Integer pAttributeId) {
         // TODO
         return null;
     }
 
+    @Override
     @ResourceAccess(description = "Update an attribute")
-    @PutMapping("/{pAttributeId}")
     public ResponseEntity<AttributeModel> updateAttribute(@PathVariable Integer pAttributeId) {
         // TODO
         return null;
     }
 
+    @Override
     @ResourceAccess(description = "Delete an attribute")
-    @DeleteMapping("/{pAttributeId}")
     public ResponseEntity<?> deleteAttribute(@PathVariable Integer pAttributeId) {
         // TODO
         return null;
+    }
+
+    public IAttributeService getAttributeService() {
+        return attributeService;
+    }
+
+    public void setAttributeService(IAttributeService pAttributeService) {
+        attributeService = pAttributeService;
     }
 
     // TODO : gérer l'import/export d'attributs

@@ -16,12 +16,12 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-domain</artifactId>
+			<groupId>fr.cnes.regards.utils</groupId>
+			<artifactId>security-utils</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.netflix.feign</groupId>
-			<artifactId>feign-core</artifactId>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-domain</artifactId>
 		</dependency>
 	</dependencies>
 </project>
