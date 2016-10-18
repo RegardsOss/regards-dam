@@ -21,10 +21,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import fr.cnes.regards.microservices.core.security.endpoint.MethodAuthorizationService;
-import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
-import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
-import fr.cnes.regards.security.utils.jwt.JWTService;
+import fr.cnes.regards.framework.security.autoconfigure.endpoint.DefaultMethodAuthorizationService;
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 
 /**
  * @author msordi
@@ -46,11 +46,11 @@ public class ModelControllerIT {
     private JWTService jwtService_;
 
     @Autowired
-    private MethodAuthorizationService authService_;
+    private DefaultMethodAuthorizationService authService_;
 
     @Before
     public void setup() {
-        String role = "USER";
+        final String role = "USER";
         jwt_ = jwtService_.generateToken("PROJECT", "email", "MSI", role);
         authService_.setAuthorities("/models/attributes", RequestMethod.GET, role);
         authService_.setAuthorities("/models/attributes/{pAttributeId}", RequestMethod.GET, role, "ADMIN");
@@ -70,8 +70,8 @@ public class ModelControllerIT {
         try {
             this.mvc_.perform(get("/models/attributes").header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt_))
                     .andExpect(status().isOk());
-        } catch (Exception e) {
-            String message = "Cannot reach model attributes";
+        } catch (final Exception e) {
+            final String message = "Cannot reach model attributes";
             LOG.error(message, e);
             Assert.fail(message);
         }

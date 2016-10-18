@@ -15,14 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.microservices.core.security.endpoint.MethodAuthorizationService;
-import fr.cnes.regards.microservices.core.test.AbstractRegardsIntegrationTest;
-import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
-import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.security.autoconfigure.endpoint.DefaultMethodAuthorizationService;
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsIntegrationTest;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.security.utils.jwt.JWTService;
 
 /**
  * @author lmieulet
@@ -38,7 +38,7 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
     private JWTService jwtService;
 
     @Autowired
-    private MethodAuthorizationService authService;
+    private DefaultMethodAuthorizationService authService;
 
     private Model model1;
 
@@ -51,7 +51,7 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
 
     @Before
     public void setup() {
-        String role = "USER";
+        final String role = "USER";
         jwt = jwtService.generateToken("PROJECT", "email", "MSI", role);
         expectations = new ArrayList<>();
 
@@ -80,7 +80,7 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
     @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
-        Collection collection2 = new Collection(model1, "pDescription2", "pName2");
+        final Collection collection2 = new Collection(model1, "pDescription2", "pName2");
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
@@ -124,9 +124,9 @@ public class CollectionControllerIT extends AbstractRegardsIntegrationTest {
     @Purpose("Shall update a collection")
     @Test
     public void testUpdateCollection() {
-        Collection collectionClone = new Collection();
+        final Collection collectionClone = new Collection();
         collectionClone.setId(collection1.getId());
-        String newName = "new name";
+        final String newName = "new name";
         collectionClone.setName(newName);
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));

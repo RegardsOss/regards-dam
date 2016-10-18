@@ -12,8 +12,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
-import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.dao.stubs.CollectionRepositoryStub;
 import fr.cnes.regards.modules.collections.domain.Collection;
@@ -45,7 +45,7 @@ public class CollectionRequestServiceTest {
     @Before
     public void init() throws AlreadyExistingException {
         // use a stub repository, to be able to only test the service
-        ICollectionRepository collectionRepository = new CollectionRepositoryStub();
+        final ICollectionRepository collectionRepository = new CollectionRepositoryStub();
         collectionsRequestService = new CollectionsRequestService(collectionRepository);
         // populate the repository
         pModel1 = new Model();
@@ -65,7 +65,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all collections.")
     public void retrieveCollectionList() {
-        List<Collection> collections = collectionsRequestService.retrieveCollectionList();
+        final List<Collection> collections = collectionsRequestService.retrieveCollectionList();
         Assert.assertEquals(collections.size(), 2);
     }
 
@@ -73,7 +73,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve collections by model id.")
     public void retrieveCollectionListByModelId() {
-        List<Collection> collections = collectionsRequestService.retrieveCollectionListByModelId(pModel1.getId());
+        final List<Collection> collections = collectionsRequestService.retrieveCollectionListByModelId(pModel1.getId());
         Assert.assertEquals(collections.size(), 1);
         Assert.assertEquals(collections.get(0).getId(), collection1.getId());
         Assert.assertEquals(collections.get(0).getModel().getId(), pModel1.getId());
@@ -81,7 +81,7 @@ public class CollectionRequestServiceTest {
 
     @Test
     public void retrieveCollectionById() {
-        Collection collection = collectionsRequestService.retrieveCollectionById(collection2.getId());
+        final Collection collection = collectionsRequestService.retrieveCollectionById(collection2.getId());
 
         Assert.assertEquals(collection.getId(), collection2.getId());
         Assert.assertEquals(collection.getModel().getId(), pModel2.getId());
@@ -93,7 +93,7 @@ public class CollectionRequestServiceTest {
         Mockito.when(collectionRepositoryMocked.save(collection1)).thenReturn(collection1);
         try {
             collectionsRequestServiceMocked.updateCollection(collection1, collection1.getId());
-        } catch (OperationNotSupportedException e) {
+        } catch (final OperationNotSupportedException e) {
             e.printStackTrace();
             Assert.fail();
         }
@@ -114,7 +114,7 @@ public class CollectionRequestServiceTest {
     @Test
     public void createCollection() {
         Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
-        Collection collection = collectionsRequestServiceMocked.createCollection(collection2);
+        final Collection collection = collectionsRequestServiceMocked.createCollection(collection2);
         Mockito.verify(collectionRepositoryMocked).save(collection2);
         Assert.assertEquals(collection, collection2);
     }

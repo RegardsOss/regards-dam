@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.cnes.regards.framework.security.utils.endpoint.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.AttributeModel;
 import fr.cnes.regards.modules.models.domain.AttributeType;
-import fr.cnes.regards.security.utils.endpoint.annotation.ResourceAccess;
 
 /**
  *
@@ -42,35 +42,35 @@ public class AttributeController {
     @ResourceAccess(description = "List all attributes")
     @GetMapping
     public ResponseEntity<List<AttributeModel>> getAttributes(
-            @RequestParam(value = "type", required = false) AttributeType pType) {
+            @RequestParam(value = "type", required = false) final AttributeType pType) {
         // TODO : get all AttributeModel
         return ResponseEntity.ok(null);
     }
 
     @ResourceAccess(description = "Add an attribute")
     @PostMapping
-    public ResponseEntity<AttributeModel> addAttribute(@RequestBody AttributeModel pAttributeModel) {
+    public ResponseEntity<AttributeModel> addAttribute(@RequestBody final AttributeModel pAttributeModel) {
         // TODO
         return null;
     }
 
     @ResourceAccess(description = "Get an attribute")
     @GetMapping("/{pAttributeId}")
-    public ResponseEntity<AttributeModel> getAttribute(@PathVariable Integer pAttributeId) {
+    public ResponseEntity<AttributeModel> getAttribute(@PathVariable final Integer pAttributeId) {
         // TODO
         return null;
     }
 
     @ResourceAccess(description = "Update an attribute")
     @PutMapping("/{pAttributeId}")
-    public ResponseEntity<AttributeModel> updateAttribute(@PathVariable Integer pAttributeId) {
+    public ResponseEntity<AttributeModel> updateAttribute(@PathVariable final Integer pAttributeId) {
         // TODO
         return null;
     }
 
     @ResourceAccess(description = "Delete an attribute")
     @DeleteMapping("/{pAttributeId}")
-    public ResponseEntity<?> deleteAttribute(@PathVariable Integer pAttributeId) {
+    public ResponseEntity<?> deleteAttribute(@PathVariable final Integer pAttributeId) {
         // TODO
         return null;
     }
