@@ -23,10 +23,6 @@
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-dao</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules</groupId>
-			<artifactId>module-jobs</artifactId>
-		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
