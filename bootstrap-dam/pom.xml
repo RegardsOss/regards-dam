@@ -23,24 +23,24 @@
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 
 	<dependencies>
-		<!-- Core dependencies -->
+		<!-- Framework Starters dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.microservices</groupId>
-			<artifactId>microservice-core</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-instance-regards-starter</artifactId>
 		</dependency>
 		<!-- Module dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-rest</artifactId>
 		</dependency>
-<!-- 		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-client</artifactId>
-		</dependency>
+		<!-- <dependency> <groupId>fr.cnes.regards.modules.collections</groupId> 
+			<artifactId>collections-rest</artifactId> </dependency> -->
+		<!-- Test dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-rest</artifactId>
-		</dependency> -->
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-integration-test</artifactId>

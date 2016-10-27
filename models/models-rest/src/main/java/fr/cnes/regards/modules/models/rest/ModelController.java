@@ -44,14 +44,14 @@ public class ModelController {
      */
     @ResourceAccess(description = "List all models")
     @GetMapping
-    public ResponseEntity<?> getModels(@RequestParam(value = "type", required = false) ModelType pType) {
+    public ResponseEntity<?> getModels(@RequestParam(value = "type", required = false) final ModelType pType) {
         // TODO
         return ResponseEntity.ok(null);
     }
 
     @ResourceAccess(description = "Add a model")
     @PostMapping
-    public ResponseEntity<?> addModel(@RequestBody Model pModel) {
+    public ResponseEntity<?> addModel(@RequestBody final Model pModel) {
         // TODO
         return null;
     }
@@ -60,7 +60,7 @@ public class ModelController {
 
     @ResourceAccess(description = "Get a model")
     @GetMapping("/{pModelId}")
-    public ResponseEntity<?> getModel(@PathVariable Integer pModelId) {
+    public ResponseEntity<?> getModel(@PathVariable final Integer pModelId) {
         // TODO
         return null;
     }
@@ -69,22 +69,22 @@ public class ModelController {
 
     @ResourceAccess(description = "Delete a model")
     @DeleteMapping("/{pModelId}")
-    public ResponseEntity<?> deleteModel(@PathVariable Integer pModelId) {
+    public ResponseEntity<?> deleteModel(@PathVariable final Integer pModelId) {
         // TODO
         return null;
     }
 
     @ResourceAccess(description = "Get all model attributes")
     @GetMapping("/{pModelId}/attributes")
-    public ResponseEntity<?> getModelAttributes(@PathVariable Integer pModelId) {
+    public ResponseEntity<?> getModelAttributes(@PathVariable final Integer pModelId) {
         // TODO : get all ModelAttributes
         return null;
     }
 
     @ResourceAccess(description = "Assign an attribute to a model")
     @PostMapping("/{pModelId}/attributes")
-    public ResponseEntity<?> assignAttributeToModel(@PathVariable Integer pModelId,
-            @RequestBody ModelAttribute pModelAttribute) {
+    public ResponseEntity<?> assignAttributeToModel(@PathVariable final Integer pModelId,
+            @RequestBody final ModelAttribute pModelAttribute) {
         // TODO : associate attribute to a model through ModelAttribute (with calculation properties)
         // Only available for NO NAMESPACE ATTRIBUTES
         return null;
@@ -92,21 +92,24 @@ public class ModelController {
 
     @ResourceAccess(description = "Get a single model attribute")
     @GetMapping("/{pModelId}/attributes/{pAttributeId}")
-    public ResponseEntity<?> getModelAttribute(@PathVariable Integer pModelId, @PathVariable Integer pAttributeId) {
+    public ResponseEntity<?> getModelAttribute(@PathVariable final Integer pModelId,
+            @PathVariable final Integer pAttributeId) {
         // TODO : get a single ModelAttribute
         return null;
     }
 
     @ResourceAccess(description = "Update a model attribute")
     @PutMapping("/{pModelId}/attributes/{pAttributeId}")
-    public ResponseEntity<?> updateModelAttribute(@PathVariable Integer pModelId, @PathVariable Integer pAttributeId) {
+    public ResponseEntity<?> updateModelAttribute(@PathVariable final Integer pModelId,
+            @PathVariable final Integer pAttributeId) {
         // TODO : update ModelAttribute (change calculation properties)
         return null;
     }
 
     @ResourceAccess(description = "Dissociate an attribute from a model")
     @DeleteMapping("/{pModelId}/attributes/{pAttributeId}")
-    public ResponseEntity<?> deleteModelAttribute(@PathVariable Integer pModelId, @PathVariable Integer pAttributeId) {
+    public ResponseEntity<?> deleteModelAttribute(@PathVariable final Integer pModelId,
+            @PathVariable final Integer pAttributeId) {
         // TODO : dissociate attribute from the model / just delete the link
         // Only available for NO NAMESPACE ATTRIBUTES
         return null;
@@ -116,8 +119,8 @@ public class ModelController {
 
     @ResourceAccess(description = "Assign all attributes of a namespace to a model")
     @PostMapping("/{pModelId}/attributes/namespaces/{pNamespace}")
-    public ResponseEntity<Void> assignNSAttributesToModel(@PathVariable Integer pModelId,
-            @PathVariable Integer pNamespace, @RequestBody List<ModelAttribute> pModelAttributes) {
+    public ResponseEntity<Void> assignNSAttributesToModel(@PathVariable final Integer pModelId,
+            @PathVariable final Integer pNamespace, @RequestBody final List<ModelAttribute> pModelAttributes) {
         // TODO : associate attributes to a model through ModelAttribute (with calculation properties)
         // Only available for NAMESPACE ATTRIBUTES : all attributes of a the namespace must be specified
         return null;
@@ -125,8 +128,8 @@ public class ModelController {
 
     @ResourceAccess(description = "Dissociate all attributes of a namespace")
     @DeleteMapping("/{pModelId}/attributes/namespaces/{pNamespace}")
-    public ResponseEntity<?> deleteNSModelAttributes(@PathVariable Integer pModelId, @PathVariable Integer pNamespace,
-            @PathVariable Integer pAttributeId) {
+    public ResponseEntity<?> deleteNSModelAttributes(@PathVariable final Integer pModelId,
+            @PathVariable final Integer pNamespace, @PathVariable final Integer pAttributeId) {
         // TODO : dissociate attribute from the model / just delete the link
         // Only available for NAMESPACE ATTRIBUTES
         // Dissociate all attributes of the given namespace
