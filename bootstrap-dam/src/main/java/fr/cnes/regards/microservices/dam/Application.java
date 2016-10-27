@@ -10,23 +10,22 @@ import fr.cnes.regards.microservices.core.annotation.MicroserviceInfo;
 
 /**
  *
- * Start microservice dam
+ * Spring boot application : scans all core and contrib modules
  *
  * @author msordi
  *
  */
-@SpringBootApplication(scanBasePackages = { "fr.cnes.regards" })
-@MicroserviceInfo(name = "dam", version = "1.0-SNAPSHOT")
+@SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
+@MicroserviceInfo(name = "Data management", version = "1.0-SNAPSHOT")
 public class Application {
 
     /**
-     * Microservice starter method
+     * Microservice bootstrap method
      *
      * @param pArgs
-     *            microservice start arguments
+     *            microservice bootstrap arguments
      */
     public static void main(final String[] pArgs) {
         SpringApplication.run(Application.class, pArgs); // NOSONAR
     }
-
 }

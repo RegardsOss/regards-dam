@@ -23,9 +23,4 @@ public abstract class AbstractRestriction implements IRestriction {
         type = pType;
     }
 
-    @Override
-    public Boolean hasRestriction() {
-        return !RestrictionType.NO_RESTRICTION.equals(type);
-    }
-
 }

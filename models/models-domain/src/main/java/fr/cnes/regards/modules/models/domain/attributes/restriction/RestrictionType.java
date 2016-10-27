@@ -4,6 +4,9 @@
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
 /**
+ *
+ * Available restriction type
+ * 
  * @author msordi
  *
  */

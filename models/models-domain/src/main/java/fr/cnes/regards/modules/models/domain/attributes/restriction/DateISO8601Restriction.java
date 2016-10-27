@@ -26,4 +26,10 @@ public class DateISO8601Restriction extends AbstractRestriction {
         super();
         setType(RestrictionType.DATE_ISO8601);
     }
+
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return AttributeType.DATE_ARRAY.equals(pAttributeType) || AttributeType.DATE_INTERVAL.equals(pAttributeType)
+                || AttributeType.DATE_ISO8601.equals(pAttributeType);
+    }
 }

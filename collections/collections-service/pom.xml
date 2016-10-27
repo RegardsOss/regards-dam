@@ -36,29 +36,22 @@
 			<groupId>com.netflix.feign</groupId>
 			<artifactId>feign-core</artifactId>
 		</dependency>
+		<!-- Test -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+<!-- 		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>security-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency> -->
+		
 		<!-- Test dependencies -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-test-autoconfigure</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.microservices</groupId>
-			<artifactId>microservice-core-test</artifactId>
-		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-commons</artifactId>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 </project>

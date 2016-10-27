@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.collections.fallback;
 
 import java.util.List;
 
+import javax.naming.OperationNotSupportedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
@@ -33,6 +35,31 @@ public class CollectionsFallback implements CollectionsClient {
 
     @Override
     public HttpEntity<List<Resource<Collection>>> retrieveCollectionListByModelId(Long pModelId) {
+        LOG.error(fallBackErrorMessage_);
+        return null;
+    }
+
+    @Override
+    public HttpEntity<Resource<Collection>> createCollection(Collection pCollection) {
+        LOG.error(fallBackErrorMessage_);
+        return null;
+    }
+
+    @Override
+    public HttpEntity<Resource<Collection>> retrieveCollection(String pCollectionId) {
+        LOG.error(fallBackErrorMessage_);
+        return null;
+    }
+
+    @Override
+    public HttpEntity<Resource<Collection>> updateCollection(String pCollectionId, Collection pCollection)
+            throws OperationNotSupportedException {
+        LOG.error(fallBackErrorMessage_);
+        return null;
+    }
+
+    @Override
+    public HttpEntity<Void> deleteCollection(String pCollectionId) {
         LOG.error(fallBackErrorMessage_);
         return null;
     }

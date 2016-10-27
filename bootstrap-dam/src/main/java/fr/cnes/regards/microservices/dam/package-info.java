@@ -2,6 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 /**
- * Microservice bootrap package
+ * @author msordi
+ *
  */
 package fr.cnes.regards.microservices.dam;

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.cnes.regards.framework.security.utils.endpoint.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.core.annotation.ModuleInfo;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
@@ -46,7 +46,7 @@ public class ModelController {
     @GetMapping
     public ResponseEntity<?> getModels(@RequestParam(value = "type", required = false) ModelType pType) {
         // TODO
-        return null;
+        return ResponseEntity.ok(null);
     }
 
     @ResourceAccess(description = "Add a model")

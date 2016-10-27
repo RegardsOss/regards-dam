@@ -5,6 +5,9 @@ package fr.cnes.regards.modules.models.signature;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
+import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,54 +30,19 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @RequestMapping("/models/attributes")
 public interface IAttributeSignature {
 
-    /**
-     * Get all attributes or attributes for a particular type
-     *
-     * @param pType
-     *            {@link AttributeType}
-     * @return list of {@link AttributeModel}
-     */
     @GetMapping
-    public ResponseEntity<List<AttributeModel>> getAttributes(
+    ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
             @RequestParam(value = "type", required = false) AttributeType pType);
 
-    /**
-     * Create a new attribute
-     *
-     * @param pAttributeModel
-     *            element to create
-     * @return the {@link AttributeModel}
-     */
     @PostMapping
-    public ResponseEntity<AttributeModel> addAttribute(@RequestBody AttributeModel pAttributeModel);
+    ResponseEntity<Resource<AttributeModel>> addAttribute(@Valid @RequestBody AttributeModel pAttributeModel);
 
-    /**
-     * Get an attribute
-     *
-     * @param pAttributeId
-     *            the attribute identifier
-     * @return the {@link AttributeModel}
-     */
     @GetMapping("/{pAttributeId}")
-    public ResponseEntity<AttributeModel> getAttribute(@PathVariable Integer pAttributeId);
+    ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId);
 
-    /**
-     * Update an attribute
-     *
-     * @param pAttributeId
-     *            the attribute identifier
-     * @return the {@link AttributeModel}
-     */
     @PutMapping("/{pAttributeId}")
-    public ResponseEntity<AttributeModel> updateAttribute(@PathVariable Integer pAttributeId);
+    ResponseEntity<Resource<AttributeModel>> updateAttribute(@Valid @RequestBody AttributeModel pAttributeModel);
 
-    /**
-     * Delete an attribute
-     *
-     * @param pAttributeId
-     *            the attribute identifier
-     * @return TODO
-     */
     @DeleteMapping("/{pAttributeId}")
-    public ResponseEntity<?> deleteAttribute(@PathVariable Integer pAttributeId);
+    ResponseEntity<Void> deleteAttribute(@PathVariable Long pAttributeId);
 }

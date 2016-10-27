@@ -19,14 +19,9 @@
 	<dependencies>
 		<!-- Regards client core -->
 		<dependency>
-			<groupId>fr.cnes.regards.utils</groupId>
-			<artifactId>security-utils</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.client</groupId>
 			<artifactId>client-core</artifactId>
 		</dependency>
-		<!-- Microservice internal dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-domain</artifactId>

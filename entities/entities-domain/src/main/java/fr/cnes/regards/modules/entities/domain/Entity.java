@@ -11,6 +11,11 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.hateoas.Identifiable;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import fr.cnes.regards.modules.core.deserializer.LocalDateTimeDeserializer;
+import fr.cnes.regards.modules.core.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.modules.core.validation.PastOrNow;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -18,9 +23,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author lmieulet
  *
  */
-public abstract class Entity implements Identifiable<Long> {
-
-    private Long id_;
+public abstract class Entity implements Identifiable<String> {
 
     @PastOrNow
     private LocalDateTime lastUpdate_;
@@ -32,7 +35,7 @@ public abstract class Entity implements Identifiable<Long> {
      * Submission Information Package (SIP): which is the information sent from the producer to the archive
      */
     @NotNull
-    private String sid_id_;
+    private String sid_id;
 
     private List<String> tags_;
 
@@ -40,34 +43,21 @@ public abstract class Entity implements Identifiable<Long> {
 
     private Model model_;
 
-    public Entity(String pSid_id, Model pModel) {
-        super();
-        id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
+    public Entity() {
         creationDate_ = LocalDateTime.now();
         lastUpdate_ = LocalDateTime.now();
-        sid_id_ = pSid_id;
+        sid_id = String.format("%d-azrtyuiop", ThreadLocalRandom.current().nextInt(1, 1000000));
+    }
+
+    public Entity(Model pModel) {
+        this();
         model_ = pModel;
-    }
-
-    /**
-     * @return Return the entity id
-     */
-    @Override
-    public Long getId() {
-        return id_;
-    }
-
-    /**
-     * @param pId
-     *            the id to set
-     */
-    public void setId(Long pId) {
-        id_ = pId;
     }
 
     /**
      * @return the lastUpdate
      */
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getLastUpdate() {
         return lastUpdate_;
     }
@@ -76,6 +66,7 @@ public abstract class Entity implements Identifiable<Long> {
      * @param pLastUpdate
      *            the lastUpdate to set
      */
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setLastUpdate(LocalDateTime pLastUpdate) {
         lastUpdate_ = pLastUpdate;
     }
@@ -83,6 +74,7 @@ public abstract class Entity implements Identifiable<Long> {
     /**
      * @return the creationDate
      */
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getCreationDate() {
         return creationDate_;
     }
@@ -91,6 +83,7 @@ public abstract class Entity implements Identifiable<Long> {
      * @param pCreationDate
      *            the creationDate to set
      */
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setCreationDate(LocalDateTime pCreationDate) {
         creationDate_ = pCreationDate;
     }
@@ -99,7 +92,7 @@ public abstract class Entity implements Identifiable<Long> {
      * @return the id of the submitted Package
      */
     public String getSidId() {
-        return sid_id_;
+        return sid_id;
     }
 
     /**
@@ -107,7 +100,23 @@ public abstract class Entity implements Identifiable<Long> {
      *            the sid_id to set
      */
     public void setSidId(String pSid_id) {
-        sid_id_ = pSid_id;
+        sid_id = pSid_id;
+    }
+
+    /**
+     * @return Return the entity id
+     */
+    @Override
+    public String getId() {
+        return sid_id;
+    }
+
+    /**
+     * @param pId
+     *            the id to set
+     */
+    public void setId(String pId) {
+        sid_id = pId;
     }
 
     /**
@@ -138,21 +147,6 @@ public abstract class Entity implements Identifiable<Long> {
      */
     public void setAttributes(List<IAttribute> pAttributes) {
         attributes_ = pAttributes;
-    }
-
-    /**
-     * @return the sid_id
-     */
-    public String getSid_id() {
-        return sid_id_;
-    }
-
-    /**
-     * @param pSid_id
-     *            the sid_id to set
-     */
-    public void setSid_id(String pSid_id) {
-        sid_id_ = pSid_id;
     }
 
     /**

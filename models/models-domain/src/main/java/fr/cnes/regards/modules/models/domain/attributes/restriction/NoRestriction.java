@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+
 /**
  * No restriction
  *
@@ -16,4 +18,8 @@ public class NoRestriction extends AbstractRestriction {
         setType(RestrictionType.NO_RESTRICTION);
     }
 
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return Boolean.FALSE;
+    }
 }

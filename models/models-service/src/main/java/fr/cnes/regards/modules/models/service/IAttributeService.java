@@ -5,8 +5,6 @@ package fr.cnes.regards.modules.models.service;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.PathVariable;
-
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
@@ -22,9 +20,9 @@ public interface IAttributeService {
 
     AttributeModel addAttribute(AttributeModel pAttributeModel);
 
-    AttributeModel getAttribute(@PathVariable Integer pAttributeId);
+    AttributeModel getAttribute(Long pAttributeId);
 
-    AttributeModel updateAttribute(@PathVariable Integer pAttributeId);
+    AttributeModel updateAttribute(AttributeModel pAttributeModel);
 
-    void deleteAttribute(@PathVariable Integer pAttributeId);
+    void deleteAttribute(Long pAttributeId);
 }

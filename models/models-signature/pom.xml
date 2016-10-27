@@ -16,10 +16,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.utils</groupId>
-			<artifactId>security-utils</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-domain</artifactId>
 		</dependency>

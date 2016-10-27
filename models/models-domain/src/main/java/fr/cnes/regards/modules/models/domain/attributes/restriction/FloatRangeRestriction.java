@@ -76,4 +76,9 @@ public class FloatRangeRestriction extends AbstractRestriction {
         maxExclusive = pMaxExclusive;
     }
 
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return AttributeType.FLOAT.equals(pAttributeType) || AttributeType.FLOAT_ARRAY.equals(pAttributeType)
+                || AttributeType.FLOAT_INTERVAL.equals(pAttributeType);
+    }
 }

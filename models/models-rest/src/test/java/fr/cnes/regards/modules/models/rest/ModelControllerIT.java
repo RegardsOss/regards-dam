@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.microservices.dam;
+package fr.cnes.regards.modules.models.rest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,10 +21,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import fr.cnes.regards.framework.security.endpoint.MethodAuthorizationService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
-import fr.cnes.regards.framework.starter.security.endpoint.MethodAuthorizationService;
-import fr.cnes.regards.microservices.core.test.report.annotation.Purpose;
-import fr.cnes.regards.microservices.core.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 
 /**
  * @author msordi
@@ -51,9 +51,10 @@ public class ModelControllerIT {
     @Before
     public void setup() {
         String role = "USER";
-        jwt_ = jwtService_.generateToken("PROJECT", "email", "MSI", role);
-        authService_.setAuthorities("/models/attributes", RequestMethod.GET, role);
-        authService_.setAuthorities("/models/attributes/{pAttributeId}", RequestMethod.GET, role, "ADMIN");
+        String tenant = "PROJECT";
+        jwt_ = jwtService_.generateToken(tenant, "email", "MSI", role);
+        authService_.setAuthorities(tenant, "/models/attributes", RequestMethod.GET, role);
+        authService_.setAuthorities(tenant, "/models/attributes/{pAttributeId}", RequestMethod.GET, role, "ADMIN");
     }
 
     /**

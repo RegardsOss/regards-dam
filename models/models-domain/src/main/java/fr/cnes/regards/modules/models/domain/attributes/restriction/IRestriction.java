@@ -3,22 +3,17 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+
 /**
+ * Restriction interface
+ *
  * @author msordi
  *
  */
 public interface IRestriction {
 
-    /**
-     *
-     * @return restriction type
-     */
     RestrictionType getType();
 
-    /**
-     *
-     * @return {@link Boolean#TRUE} if restriction is set
-     */
-    Boolean hasRestriction();
-
+    Boolean supports(AttributeType pAttributeType);
 }

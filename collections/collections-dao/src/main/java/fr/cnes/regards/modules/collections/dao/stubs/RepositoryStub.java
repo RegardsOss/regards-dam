@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @Profile("test")
 @Primary
-public class RepositoryStub<T extends Identifiable<Long>> implements CrudRepository<T, Long> {
+public class RepositoryStub<T extends Identifiable<String>> implements CrudRepository<T, String> {
 
     protected Set<T> entities_ = new HashSet<>();
 
@@ -31,12 +31,12 @@ public class RepositoryStub<T extends Identifiable<Long>> implements CrudReposit
     }
 
     @Override
-    public T findOne(Long pId) {
+    public T findOne(String pId) {
         return entities_.stream().filter(r -> r.getId().equals(pId)).findFirst().get();
     }
 
     @Override
-    public boolean exists(Long pId) {
+    public boolean exists(String pId) {
         return entities_.stream().filter(r -> r.getId().equals(pId)).findAny().isPresent();
     }
 
@@ -46,7 +46,7 @@ public class RepositoryStub<T extends Identifiable<Long>> implements CrudReposit
     }
 
     @Override
-    public void delete(Long pId) {
+    public void delete(String pId) {
         entities_.removeIf(r -> r.getId().equals(pId));
     }
 
@@ -84,7 +84,7 @@ public class RepositoryStub<T extends Identifiable<Long>> implements CrudReposit
     }
 
     @Override
-    public Iterable<T> findAll(Iterable<Long> pIds) {
+    public Iterable<T> findAll(Iterable<String> pIds) {
         return StreamSupport.stream(pIds.spliterator(), false).map(id -> findOne(id)).collect(Collectors.toList());
     }
 

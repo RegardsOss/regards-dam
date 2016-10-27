@@ -20,13 +20,21 @@ public class Collection extends Entity {
     private String name_;
 
     /**
+     * @param pSid_id
+     * @param pModel
+     */
+    public Collection() {
+        super();
+    }
+
+    /**
      *
      * @param pSid_id
      * @param pDescription
      * @param pName
      */
-    public Collection(String pSid_id, Model pModel, String pDescription, String pName) {
-        super(pSid_id, pModel);
+    public Collection(Model pModel, String pDescription, String pName) {
+        super(pModel);
         description_ = pDescription;
         name_ = pName;
     }

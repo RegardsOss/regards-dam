@@ -6,7 +6,6 @@
 
 	<groupId>fr.cnes.regards.modules.collections</groupId>
 	<artifactId>collections-rest</artifactId>
-	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
@@ -16,8 +15,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.microservices</groupId>
-			<artifactId>microservice-core</artifactId>
+			<groupId>fr.cnes.regards.modules</groupId>
+			<artifactId>module-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>
@@ -26,6 +25,12 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-signature</artifactId>
+		</dependency>
+		<!-- Test -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -45,4 +45,9 @@ public class PatternRestriction extends AbstractRestriction {
         pattern = pPattern;
     }
 
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return AttributeType.STRING.equals(pAttributeType) || AttributeType.STRING_ARRAY.equals(pAttributeType);
+    }
+
 }

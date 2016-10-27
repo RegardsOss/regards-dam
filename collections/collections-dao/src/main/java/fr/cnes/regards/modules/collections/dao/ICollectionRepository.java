@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.collections.domain.Collection;
  * @author lmieulet
  *
  */
-public interface ICollectionRepository extends CrudRepository<Collection, Long> {
+public interface ICollectionRepository extends CrudRepository<Collection, String> {
 
     /**
      * @param pModelId

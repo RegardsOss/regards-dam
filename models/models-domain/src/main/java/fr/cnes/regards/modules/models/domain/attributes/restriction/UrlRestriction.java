@@ -22,4 +22,9 @@ public class UrlRestriction extends AbstractRestriction {
         setType(RestrictionType.URL);
     }
 
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return AttributeType.URL.equals(pAttributeType);
+    }
+
 }

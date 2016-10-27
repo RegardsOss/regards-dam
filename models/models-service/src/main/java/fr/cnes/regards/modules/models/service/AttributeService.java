@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.models.service;
 
 import java.util.List;
 
+import org.apache.commons.collections4.IterableUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -20,10 +22,15 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @Service
 public class AttributeService implements IAttributeService {
 
+    /**
+     * {@link AttributeModel} repository
+     */
+    @Autowired
+    private IAttributeModelRepository repository;
+
     @Override
     public List<AttributeModel> getAttributes(AttributeType pType) {
-        // TODO Auto-generated method stub
-        return null;
+        return IterableUtils.toList(repository.findAll());
     }
 
     @Override
@@ -33,19 +40,19 @@ public class AttributeService implements IAttributeService {
     }
 
     @Override
-    public AttributeModel getAttribute(Integer pAttributeId) {
+    public AttributeModel getAttribute(Long pAttributeId) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public AttributeModel updateAttribute(Integer pAttributeId) {
+    public AttributeModel updateAttribute(AttributeModel pAttributeModel) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void deleteAttribute(Integer pAttributeId) {
+    public void deleteAttribute(Long pAttributeId) {
         // TODO Auto-generated method stub
 
     }

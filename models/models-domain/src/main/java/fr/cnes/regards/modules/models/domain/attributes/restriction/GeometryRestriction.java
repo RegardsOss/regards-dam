@@ -21,4 +21,9 @@ public class GeometryRestriction extends AbstractRestriction {
         super();
         setType(RestrictionType.GEOMETRY);
     }
+
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return AttributeType.GEOMETRY.equals(pAttributeType);
+    }
 }

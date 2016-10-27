@@ -6,7 +6,6 @@
 
 	<groupId>fr.cnes.regards.modules.models</groupId>
 	<artifactId>models-domain</artifactId>
-	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
@@ -16,8 +15,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-validator</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-multitenant-regards-starter</artifactId>
 		</dependency>
 	</dependencies>
 </project>

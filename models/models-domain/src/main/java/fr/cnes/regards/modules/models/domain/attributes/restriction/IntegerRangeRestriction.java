@@ -75,4 +75,10 @@ public class IntegerRangeRestriction extends AbstractRestriction {
     public void setMaxExclusive(Integer pMaxExclusive) {
         maxExclusive = pMaxExclusive;
     }
+
+    @Override
+    public Boolean supports(AttributeType pAttributeType) {
+        return AttributeType.INTEGER.equals(pAttributeType) || AttributeType.INTEGER_ARRAY.equals(pAttributeType)
+                || AttributeType.INTEGER_INTERVAL.equals(pAttributeType);
+    }
 }
