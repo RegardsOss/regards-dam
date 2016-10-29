@@ -6,6 +6,10 @@ package fr.cnes.regards.modules.models.domain.attributes.restriction;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -18,11 +22,14 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author msordi
  *
  */
+@Entity(name = "EnumerationRestriction")
+@DiscriminatorValue("Enumeration")
 public class EnumerationRestriction extends AbstractRestriction {
 
     /**
      * Acceptable values, relevant for {@link AttributeType#ENUMERATION} attributes
      */
+    @ElementCollection
     private Set<String> acceptableValues;
 
     public EnumerationRestriction() {

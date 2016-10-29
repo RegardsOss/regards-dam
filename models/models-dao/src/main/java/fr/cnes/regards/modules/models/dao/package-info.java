@@ -4,4 +4,4 @@
 /**
  * Model repository package
  */
-package fr.cnes.regards.modules.models.service;
+package fr.cnes.regards.modules.models.dao;

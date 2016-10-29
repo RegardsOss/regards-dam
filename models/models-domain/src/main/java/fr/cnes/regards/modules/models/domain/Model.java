@@ -7,6 +7,18 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import fr.cnes.regards.framework.jpa.IIdentifiable;
+
 /**
  *
  * Define a model
@@ -14,7 +26,17 @@ import java.util.TreeSet;
  * @author msordi
  *
  */
-public class Model {
+@Entity
+@Table(name = "T_MODEL")
+@SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "SEQ_MODEL")
+public class Model implements IIdentifiable<Long> {
+
+    /**
+     * Internal identifier
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "modelSequence")
+    private Long id;
 
     /**
      * Model name
@@ -24,7 +46,7 @@ public class Model {
     /**
      * Optional attribute description
      */
-    private Optional<String> description;
+    private String description;
 
     /**
      * Model type
@@ -34,10 +56,21 @@ public class Model {
     /**
      * Model attributes
      */
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("pos ASC")
     private SortedSet<ModelAttribute> attributes;
 
     public Model() {
         attributes = new TreeSet<>();
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long pId) {
+        id = pId;
     }
 
     public String getName() {
@@ -57,10 +90,10 @@ public class Model {
     }
 
     public Optional<String> getDescription() {
-        return description;
+        return Optional.ofNullable(description);
     }
 
-    public void setDescription(Optional<String> pDescription) {
+    public void setDescription(String pDescription) {
         description = pDescription;
     }
 

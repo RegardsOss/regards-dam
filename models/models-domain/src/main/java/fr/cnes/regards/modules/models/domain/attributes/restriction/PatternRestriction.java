@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -15,6 +18,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author msordi
  *
  */
+@Entity(name = "PatternRestriction")
+@DiscriminatorValue("Pattern")
 public class PatternRestriction extends AbstractRestriction {
 
     /**

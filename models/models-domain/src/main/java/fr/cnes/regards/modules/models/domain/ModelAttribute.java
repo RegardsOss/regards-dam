@@ -3,6 +3,17 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
@@ -16,11 +27,23 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  * @author msordi
  *
  */
-public class ModelAttribute implements Comparable<ModelAttribute> {
+@Entity
+@Table(name = "T_MODEL_ATT")
+@SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "SEQ_MODEL_ATT")
+public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long> {
+
+    /**
+     * Internal identifier
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "modelAttSequence")
+    private Long id;
 
     /**
      * Common attribute model
      */
+    @OneToOne(optional = false)
+    @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "ATTRIBUTE_ID_FK"))
     private AttributeModel attribute;
 
     /**
@@ -32,7 +55,16 @@ public class ModelAttribute implements Comparable<ModelAttribute> {
     /**
      * Position (allows to sort attribute in model)
      */
-    private Short position = 0;
+    private Short pos = 0;
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long pId) {
+        id = pId;
+    }
 
     public AttributeModel getAttribute() {
         return attribute;
@@ -50,17 +82,31 @@ public class ModelAttribute implements Comparable<ModelAttribute> {
         isCalculated = pIsCalculated;
     }
 
-    public Short getPosition() {
-        return position;
+    public Short getPos() {
+        return pos;
     }
 
-    public void setPosition(Short pPosition) {
-        position = pPosition;
+    public void setPos(Short pPosition) {
+        pos = pPosition;
     }
 
     @Override
     public int compareTo(ModelAttribute pOther) {
-        return this.position - pOther.getPosition();
+        return this.pos - pOther.getPos();
     }
 
+    @Override
+    public boolean equals(Object pObj) {
+        Boolean result = Boolean.FALSE;
+        if (pObj instanceof ModelAttribute) {
+            final ModelAttribute modelAtt = (ModelAttribute) pObj;
+            result = modelAtt.getAttribute().equals(this.getAttribute());
+        }
+        return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getAttribute().hashCode();
+    }
 }

@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -17,6 +20,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author msordi
  *
  */
+@Entity(name = "DateISO8601Restriction")
+@DiscriminatorValue("DateISO8601")
 public class DateISO8601Restriction extends AbstractRestriction {
 
     /**

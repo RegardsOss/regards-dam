@@ -5,13 +5,31 @@ package fr.cnes.regards.modules.models.domain.attributes;
 
 import java.util.Optional;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+
+import fr.cnes.regards.framework.jpa.IIdentifiable;
 
 /**
  * @author msordi
  *
  */
-public class Fragment {
+@Entity
+@Table(name = "T_FRAGMENT")
+@SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "SEQ_FRAGMENT")
+public class Fragment implements IIdentifiable<Long> {
+
+    /**
+     * Internal identifier
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fragmentSequence")
+    private Long id;
 
     /**
      * Attribute name
@@ -22,7 +40,7 @@ public class Fragment {
     /**
      * Optional attribute description
      */
-    private Optional<String> description;
+    private String description;
 
     /**
      * @return the name
@@ -43,14 +61,23 @@ public class Fragment {
      * @return the description
      */
     public Optional<String> getDescription() {
-        return description;
+        return Optional.ofNullable(description);
     }
 
     /**
      * @param pDescription
      *            the description to set
      */
-    public void setDescription(Optional<String> pDescription) {
+    public void setDescription(String pDescription) {
         description = pDescription;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long pId) {
+        id = pId;
     }
 }
