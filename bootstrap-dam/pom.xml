@@ -23,10 +23,9 @@
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 
 	<dependencies>
-		<!-- Framework Starters dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>jpa-instance-regards-starter</artifactId>
+			<groupId>fr.cnes.regards.microservices</groupId>
+			<artifactId>microservice-core</artifactId>
 		</dependency>
 		<!-- Module dependencies -->
 		<dependency>
