@@ -42,4 +42,10 @@ public interface IAttributeSignature {
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pAttributeId}")
     ResponseEntity<Void> deleteAttribute(@PathVariable Long pAttributeId);
+
+    @RequestMapping(method = RequestMethod.GET, value = "/restrictions")
+    ResponseEntity<List<String>> getRestrictions(@RequestParam(value = "type") AttributeType pType);
+
+    @RequestMapping(method = RequestMethod.GET, value = "/types")
+    ResponseEntity<List<String>> getAttributeTypes();
 }

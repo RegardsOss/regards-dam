@@ -41,6 +41,11 @@ public final class AttributeModelBuilder {
         return attributeModel;
     }
 
+    public AttributeModelBuilder withId(Long pId) {
+        attributeModel.setId(pId);
+        return this;
+    }
+
     public AttributeModelBuilder description(String pDescription) {
         attributeModel.setDescription(pDescription);
         return this;

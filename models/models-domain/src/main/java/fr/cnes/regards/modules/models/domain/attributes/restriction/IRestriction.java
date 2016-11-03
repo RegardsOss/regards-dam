@@ -16,4 +16,13 @@ public interface IRestriction {
     RestrictionType getType();
 
     Boolean supports(AttributeType pAttributeType);
+
+    /**
+     * Restriction that can be set by users
+     *
+     * @return {@link Boolean#TRUE} if restriction is public
+     */
+    default Boolean isPublic() {
+        return Boolean.FALSE;
+    }
 }

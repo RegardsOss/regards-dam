@@ -91,4 +91,9 @@ public class FloatRangeRestriction extends AbstractRestriction {
         return AttributeType.FLOAT.equals(pAttributeType) || AttributeType.FLOAT_ARRAY.equals(pAttributeType)
                 || AttributeType.FLOAT_INTERVAL.equals(pAttributeType);
     }
+
+    @Override
+    public Boolean isPublic() {
+        return Boolean.TRUE;
+    }
 }

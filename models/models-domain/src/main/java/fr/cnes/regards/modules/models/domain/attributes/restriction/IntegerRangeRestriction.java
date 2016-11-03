@@ -91,4 +91,9 @@ public class IntegerRangeRestriction extends AbstractRestriction {
         return AttributeType.INTEGER.equals(pAttributeType) || AttributeType.INTEGER_ARRAY.equals(pAttributeType)
                 || AttributeType.INTEGER_INTERVAL.equals(pAttributeType);
     }
+
+    @Override
+    public Boolean isPublic() {
+        return Boolean.TRUE;
+    }
 }

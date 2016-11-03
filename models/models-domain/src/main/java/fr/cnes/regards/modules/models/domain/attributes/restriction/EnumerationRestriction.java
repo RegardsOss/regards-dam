@@ -56,4 +56,9 @@ public class EnumerationRestriction extends AbstractRestriction {
     public Boolean supports(AttributeType pAttributeType) {
         return AttributeType.ENUMERATION.equals(pAttributeType);
     }
+
+    @Override
+    public Boolean isPublic() {
+        return Boolean.TRUE;
+    }
 }

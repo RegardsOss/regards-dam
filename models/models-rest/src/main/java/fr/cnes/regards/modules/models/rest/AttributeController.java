@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.hateoas.Resource;
@@ -20,7 +21,8 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.core.rest.AbstractController;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.IAttributeService;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.service.RestrictionService;
 import fr.cnes.regards.modules.models.signature.IAttributeSignature;
 
 /**
@@ -37,16 +39,23 @@ public class AttributeController extends AbstractController
     /**
      * Attribute service
      */
-    private final IAttributeService attributeService;
+    private final IAttributeModelService attributeService;
+
+    /**
+     * Restriction service
+     */
+    private final RestrictionService restrictionService;
 
     /**
      * Resource service
      */
     private final IResourceService resourceService;
 
-    public AttributeController(IAttributeService pAttributeService, IResourceService pResourceService) {
+    public AttributeController(IAttributeModelService pAttributeService, IResourceService pResourceService,
+            RestrictionService pRestrictionService) {
         this.attributeService = pAttributeService;
         this.resourceService = pResourceService;
+        this.restrictionService = pRestrictionService;
     }
 
     @Override
@@ -86,16 +95,32 @@ public class AttributeController extends AbstractController
     }
 
     @Override
+    @ResourceAccess(description = "List available restriction by attribute model type")
+    public ResponseEntity<List<String>> getRestrictions(@RequestParam(value = "type") AttributeType pType) {
+        return ResponseEntity.ok(restrictionService.getRestrictions(pType));
+    }
+
+    @Override
+    @ResourceAccess(description = "List all attribute model types")
+    public ResponseEntity<List<String>> getAttributeTypes() {
+        final List<String> types = new ArrayList<>();
+        for (AttributeType type : AttributeType.values()) {
+            types.add(type.name());
+        }
+        return ResponseEntity.ok(types);
+    }
+
+    @Override
     public Resource<AttributeModel> toResource(AttributeModel pAttributeModel) {
         final Resource<AttributeModel> resource = resourceService.toResource(pAttributeModel);
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pAttributeModel.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()));
+                                MethodParamFactory.build(AttributeModel.class));
         resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pAttributeModel.getId()));
         resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()));
+                                MethodParamFactory.build(AttributeType.class));
         return resource;
     }
 

@@ -19,9 +19,10 @@ import fr.cnes.regards.framework.hateoas.DefaultResourceService;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.endpoint.MethodAuthorizationService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelFactory;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.IAttributeService;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.service.RestrictionService;
 
 /**
  *
@@ -40,7 +41,7 @@ public class AttributeControllerTest {
     /**
      * Attribute service
      */
-    private IAttributeService attributeServiceMocked;
+    private IAttributeModelService attributeServiceMocked;
 
     /**
      * Resource service
@@ -55,24 +56,26 @@ public class AttributeControllerTest {
     @Before
     public void init() {
         // Service
-        attributeServiceMocked = Mockito.mock(IAttributeService.class);
+        attributeServiceMocked = Mockito.mock(IAttributeModelService.class);
         // Hateoas authorization
         final MethodAuthorizationService authService = Mockito.mock(MethodAuthorizationService.class);
         resourceServiceMocked = new DefaultResourceService(authService);
+        final RestrictionService restrictionService = Mockito.mock(RestrictionService.class);
         // Init controller
-        attributeController = new AttributeController(attributeServiceMocked, resourceServiceMocked);
+        attributeController = new AttributeController(attributeServiceMocked, resourceServiceMocked,
+                restrictionService);
     }
 
     @Test
     public void getAttributeTest() {
         final List<AttributeModel> attributes = new ArrayList<>();
-        attributes.add(AttributeModelFactory.build(1L, "NAME", AttributeType.STRING));
-        attributes.add(AttributeModelFactory.build(2L, "START_DATE", AttributeType.DATE_ISO8601));
-        attributes.add(AttributeModelFactory.build(3L, "STOP_DATE", AttributeType.DATE_ISO8601));
+        attributes.add(AttributeModelBuilder.build("NAME", AttributeType.STRING).withId(1L).get());
+        attributes.add(AttributeModelBuilder.build("START_DATE", AttributeType.DATE_ISO8601).withId(2L).get());
+        // CHECKSTYLE:OFF
+        attributes.add(AttributeModelBuilder.build("STOP_DATE", AttributeType.DATE_ISO8601).withId(3L).get());
+        // CHECKSTYLE:ON
         Mockito.when(attributeServiceMocked.getAttributes(null)).thenReturn(attributes);
-
         final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null);
-
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }
 

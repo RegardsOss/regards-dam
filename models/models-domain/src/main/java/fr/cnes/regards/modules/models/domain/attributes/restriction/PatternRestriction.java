@@ -55,4 +55,9 @@ public class PatternRestriction extends AbstractRestriction {
         return AttributeType.STRING.equals(pAttributeType) || AttributeType.STRING_ARRAY.equals(pAttributeType);
     }
 
+    @Override
+    public Boolean isPublic() {
+        return Boolean.TRUE;
+    }
+
 }

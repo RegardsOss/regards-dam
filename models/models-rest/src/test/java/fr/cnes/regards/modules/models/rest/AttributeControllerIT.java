@@ -6,16 +6,22 @@ package fr.cnes.regards.modules.models.rest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.jayway.jsonpath.JsonPath;
 
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * Test module API
@@ -31,29 +37,53 @@ public class AttributeControllerIT extends AbstractRegardsIT {
     private static final Logger LOG = LoggerFactory.getLogger(AttributeControllerIT.class);
 
     /**
+     * Class level mapping
+     */
+    private static final String TYPE_MAPPING = "/models/attributes";
+
+    /**
      * Test get attributes
      *
-     * @throws Exception
-     *             if endpoint cannot be reached
      */
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     @Purpose("Get model attributes to manage data models")
     @Test
-    public void testGetAttributes() throws Exception {
+    public void testGetAttributes() {
 
-        // Manage security context
-        final String role = "USER";
-        final String endpoint = "/models/attributes";
-        final String tenant = "PROJECT";
-
-        final String jwt = jwtService.generateToken(tenant, "email", "MSI", role);
-        authService.setAuthorities(tenant, endpoint, RequestMethod.GET, role);
-
+        // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>(1);
         expectations.add(MockMvcResultMatchers.status().isOk());
 
-        performGet(endpoint, jwt, expectations, "Cannot get all attributes");
+        // Perform test
+        performDefaultGet(TYPE_MAPPING, expectations, "Cannot get all attributes");
+    }
+
+    /**
+     * Test persisting and loading a simple attribute
+     */
+    @Test
+    public void addSimpleAttribute() {
+
+        final String attName = "NAME";
+        final String idPath = "$.id";
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>(1);
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(idPath, Matchers.notNullValue()));
+        // expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.hasValue(attName)));
+
+        // Content
+        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING).get();
+
+        final ResultActions resultActions = performDefaultPost(TYPE_MAPPING, attModel, expectations,
+                                                               "Cannot add attribute");
+        final String json = payload(resultActions);
+        final Integer id = JsonPath.read(json, idPath);
+
+        // Retrieve attribute
+        performDefaultGet(TYPE_MAPPING + "/{pAttributeId}", expectations, "Cannot retrieve attribute", id);
     }
 
     @Override

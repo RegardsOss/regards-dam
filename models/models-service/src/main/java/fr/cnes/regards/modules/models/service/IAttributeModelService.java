@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author msordi
  *
  */
-public interface IAttributeService {
+public interface IAttributeModelService {
 
     List<AttributeModel> getAttributes(AttributeType pType);
 

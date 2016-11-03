@@ -7,6 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  *
@@ -17,4 +18,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  */
 @Repository
 public interface IAttributeModelRepository extends CrudRepository<AttributeModel, Long> {
+
+    Iterable<AttributeModel> findByType(AttributeType pType);
 }

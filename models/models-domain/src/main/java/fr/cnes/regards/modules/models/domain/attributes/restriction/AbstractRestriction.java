@@ -54,5 +54,4 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
     public void setType(RestrictionType pType) {
         type = pType;
     }
-
 }
