@@ -21,7 +21,6 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 
 /**
@@ -69,23 +68,23 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Whether this attribute is a search criterion
      */
     @NotNull
-    private Boolean isCriterion;
+    private boolean queryable;
 
     /**
-     * Whether this attribute is a facet<br/>
-     * Only criterion attribute can be a facet!
+     * Whether this attribute can be used for facet<br/>
+     * Only queryable attribute can be a facet!
      */
-    private Boolean isFacet;
+    private boolean facetable;
 
     /**
      * Whether this attribute can be alterate by users
      */
-    private Boolean isAlterable;
+    private boolean alterable;
 
     /**
      * Whether this attribute is optional
      */
-    private Boolean isOptional;
+    private boolean optional;
 
     /**
      * Applicable restriction
@@ -119,38 +118,6 @@ public class AttributeModel implements IIdentifiable<Long> {
         type = pType;
     }
 
-    public Boolean getIsCriterion() {
-        return isCriterion;
-    }
-
-    public void setIsCriterion(Boolean pIsCriterion) {
-        isCriterion = pIsCriterion;
-    }
-
-    public Boolean getIsFacet() {
-        return isFacet;
-    }
-
-    public void setIsFacet(Boolean pIsFacet) {
-        isFacet = pIsFacet;
-    }
-
-    public Boolean getIsAlterable() {
-        return isAlterable;
-    }
-
-    public void setIsAlterable(Boolean pIsAlterable) {
-        isAlterable = pIsAlterable;
-    }
-
-    public Boolean getIsOptional() {
-        return isOptional;
-    }
-
-    public void setIsOptional(Boolean pIsOptional) {
-        isOptional = pIsOptional;
-    }
-
     public Optional<Fragment> getFragment() {
         return Optional.ofNullable(fragment);
     }
@@ -167,7 +134,7 @@ public class AttributeModel implements IIdentifiable<Long> {
         description = pDescription;
     }
 
-    public Optional<IRestriction> getRestriction() {
+    public Optional<AbstractRestriction> getRestriction() {
         return Optional.ofNullable(restriction);
     }
 
@@ -192,5 +159,37 @@ public class AttributeModel implements IIdentifiable<Long> {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    public boolean isAlterable() {
+        return alterable;
+    }
+
+    public void setAlterable(boolean pAlterable) {
+        alterable = pAlterable;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean pOptional) {
+        optional = pOptional;
+    }
+
+    public boolean isQueryable() {
+        return queryable;
+    }
+
+    public void setQueryable(boolean pQueryable) {
+        queryable = pQueryable;
+    }
+
+    public boolean isFacetable() {
+        return facetable;
+    }
+
+    public void setFacetable(boolean pFacetable) {
+        facetable = pFacetable;
     }
 }

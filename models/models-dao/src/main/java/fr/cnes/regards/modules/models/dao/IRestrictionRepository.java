@@ -6,15 +6,14 @@ package fr.cnes.regards.modules.models.dao;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 
 /**
- *
- * {@link AttributeModel} repository
+ * {@link AbstractRestriction} repository
  *
  * @author Marc Sordi
  *
  */
 @Repository
-public interface IAttributeModelRepository extends CrudRepository<AttributeModel, Long> {
+public interface IRestrictionRepository extends CrudRepository<AbstractRestriction, Long> {
 }

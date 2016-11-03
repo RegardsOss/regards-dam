@@ -6,15 +6,15 @@ package fr.cnes.regards.modules.models.dao;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
  *
- * {@link AttributeModel} repository
+ * {@link Fragment} repository
  *
  * @author Marc Sordi
  *
  */
 @Repository
-public interface IAttributeModelRepository extends CrudRepository<AttributeModel, Long> {
+public interface IFragmentRepository extends CrudRepository<Fragment, Long> {
 }

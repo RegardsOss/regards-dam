@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -17,7 +18,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * <li>{@link AttributeType#FLOAT_INTERVAL}</li>
  * </ul>
  *
- * @author msordi
+ * @author Marc Sordi
  *
  */
 @Entity(name = "FloatRangeRestriction")
@@ -27,58 +28,62 @@ public class FloatRangeRestriction extends AbstractRestriction {
     /**
      * Minimum possible value (included)
      */
-    private Float minfInclusive;
+    @Column(name = "MINF_INCLUSIVE")
+    private Float minInclusive;
 
     /**
      * Maximun possible value (included)
      */
-    private Float maxfInclusive;
+    @Column(name = "MAXF_INCLUSIVE")
+    private Float maxInclusive;
 
     /**
      * Minimum possible value (excluded)
      */
-    private Float minfExclusive;
+    @Column(name = "MINF_EXCLUSIVE")
+    private Float minExclusive;
 
     /**
      * Maximum possible value (excluded)
      */
-    private Float maxfExclusive;
+    @Column(name = "MAXF_EXCLUSIVE")
+    private Float maxExclusive;
 
     public FloatRangeRestriction() {
         super();
         setType(RestrictionType.FLOAT_RANGE);
     }
 
-    public Float getMinfInclusive() {
-        return minfInclusive;
+    public Float getMinInclusive() {
+        return minInclusive;
     }
 
-    public void setMinfInclusive(Float pMinfInclusive) {
-        minfInclusive = pMinfInclusive;
+    public void setMinInclusive(Float pMinInclusive) {
+        minInclusive = pMinInclusive;
     }
 
-    public Float getMaxfInclusive() {
-        return maxfInclusive;
+    public Float getMaxInclusive() {
+        return maxInclusive;
     }
 
-    public void setMaxfInclusive(Float pMaxfInclusive) {
-        maxfInclusive = pMaxfInclusive;
+    public void setMaxInclusive(Float pMaxInclusive) {
+        maxInclusive = pMaxInclusive;
     }
 
-    public Float getMinfExclusive() {
-        return minfExclusive;
+    public Float getMinExclusive() {
+        return minExclusive;
     }
 
-    public void setMinfExclusive(Float pMinfExclusive) {
-        minfExclusive = pMinfExclusive;
+    public void setMinExclusive(Float pMinExclusive) {
+        minExclusive = pMinExclusive;
     }
 
-    public Float getMaxfExclusive() {
-        return maxfExclusive;
+    public Float getMaxExclusive() {
+        return maxExclusive;
     }
 
-    public void setMaxfExclusive(Float pMaxfExclusive) {
-        maxfExclusive = pMaxfExclusive;
+    public void setMaxExclusive(Float pMaxExclusive) {
+        maxExclusive = pMaxExclusive;
     }
 
     @Override

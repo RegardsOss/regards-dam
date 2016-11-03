@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
@@ -27,21 +28,25 @@ public class IntegerRangeRestriction extends AbstractRestriction {
     /**
      * Minimum possible value (included)
      */
+    @Column(name = "MIN_INCLUSIVE")
     private Integer minInclusive;
 
     /**
      * Maximun possible value (included)
      */
+    @Column(name = "MAX_INCLUSIVE")
     private Integer maxInclusive;
 
     /**
      * Minimum possible value (excluded)
      */
+    @Column(name = "MIN_EXCLUSIVE")
     private Integer minExclusive;
 
     /**
      * Maximum possible value (excluded)
      */
+    @Column(name = "MAX_EXCLUSIVE")
     private Integer maxExclusive;
 
     public IntegerRangeRestriction() {

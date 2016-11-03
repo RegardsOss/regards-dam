@@ -25,6 +25,6 @@ public class NoRestriction extends AbstractRestriction {
 
     @Override
     public Boolean supports(AttributeType pAttributeType) {
-        return Boolean.FALSE;
+        return Boolean.TRUE;
     }
 }
