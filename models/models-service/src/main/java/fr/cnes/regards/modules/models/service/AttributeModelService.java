@@ -5,13 +5,16 @@ package fr.cnes.regards.modules.models.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.dao.IFragmentRepository;
+import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
 
 /**
  *
@@ -26,38 +29,67 @@ public class AttributeModelService implements IAttributeModelService {
     /**
      * {@link AttributeModel} repository
      */
-    @Autowired
-    private IAttributeModelRepository attModleRepository;
+    private final IAttributeModelRepository attModelRepository;
+
+    /**
+     * {@link IRestriction} repository
+     */
+    private final IRestrictionRepository restrictionRepository;
+
+    /**
+     * {@link Fragment} repository
+     */
+    private final IFragmentRepository fragmentRepository;
+
+    public AttributeModelService(IAttributeModelRepository pAttModelRepository,
+            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository) {
+        this.attModelRepository = pAttModelRepository;
+        this.restrictionRepository = pRestrictionRepository;
+        this.fragmentRepository = pFragmentRepository;
+    }
 
     @Override
     public List<AttributeModel> getAttributes(AttributeType pType) {
         final Iterable<AttributeModel> attModels;
         if (pType != null) {
-            attModels = attModleRepository.findByType(pType);
+            attModels = attModelRepository.findByType(pType);
         } else {
-            attModels = attModleRepository.findAll();
+            attModels = attModelRepository.findAll();
         }
         return IterableUtils.toList(attModels);
     }
 
     @Override
     public AttributeModel addAttribute(AttributeModel pAttributeModel) {
-        return attModleRepository.save(pAttributeModel);
+        return saveTransientEntities(pAttributeModel);
     }
 
     @Override
     public AttributeModel getAttribute(Long pAttributeId) {
-        return attModleRepository.findOne(pAttributeId);
+        return attModelRepository.findOne(pAttributeId);
     }
 
     @Override
     public AttributeModel updateAttribute(AttributeModel pAttributeModel) {
-        return attModleRepository.save(pAttributeModel);
+        return saveTransientEntities(pAttributeModel);
     }
 
     @Override
     public void deleteAttribute(Long pAttributeId) {
-        attModleRepository.delete(pAttributeId);
+        attModelRepository.delete(pAttributeId);
+    }
+
+    private AttributeModel saveTransientEntities(AttributeModel pAttributeModel) {
+        // Manage restriction
+        if (pAttributeModel.getRestriction() != null) {
+            restrictionRepository.save(pAttributeModel.getRestriction());
+        }
+        // Manage fragment
+        if (pAttributeModel.getFragment() != null) {
+            fragmentRepository.save(pAttributeModel.getFragment());
+        }
+        // Finally, save attribute model
+        return attModelRepository.save(pAttributeModel);
     }
 
 }

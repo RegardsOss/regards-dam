@@ -3,8 +3,8 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
-import java.util.Optional;
-
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -43,6 +43,7 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Attribute name
      */
     @NotNull
+    @Column(unique = true)
     private String name;
 
     /**
@@ -89,7 +90,7 @@ public class AttributeModel implements IIdentifiable<Long> {
     /**
      * Applicable restriction
      */
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "RESTRICTION_ID_FK"))
     private AbstractRestriction restriction;
 
@@ -118,24 +119,24 @@ public class AttributeModel implements IIdentifiable<Long> {
         type = pType;
     }
 
-    public Optional<Fragment> getFragment() {
-        return Optional.ofNullable(fragment);
+    public Fragment getFragment() {
+        return fragment;
     }
 
     public void setFragment(Fragment pFragment) {
         fragment = pFragment;
     }
 
-    public Optional<String> getDescription() {
-        return Optional.ofNullable(description);
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription(String pDescription) {
         description = pDescription;
     }
 
-    public Optional<AbstractRestriction> getRestriction() {
-        return Optional.ofNullable(restriction);
+    public AbstractRestriction getRestriction() {
+        return restriction;
     }
 
     public void setRestriction(AbstractRestriction pRestriction) {

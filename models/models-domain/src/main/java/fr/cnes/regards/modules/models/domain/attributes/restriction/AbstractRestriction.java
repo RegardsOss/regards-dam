@@ -13,7 +13,10 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.SequenceGenerator;
 
+import com.google.gson.annotations.JsonAdapter;
+
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.models.domain.adapters.gson.RestrictionJsonAdapterFactory;
 
 /**
  * @author msordi
@@ -22,6 +25,7 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 @Entity(name = "T_RESTRICTION")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SequenceGenerator(name = "restrictionSequence", initialValue = 1, sequenceName = "SEQ_RESTRICTION")
+@JsonAdapter(RestrictionJsonAdapterFactory.class)
 public abstract class AbstractRestriction implements IRestriction, IIdentifiable<Long> {
 
     /**

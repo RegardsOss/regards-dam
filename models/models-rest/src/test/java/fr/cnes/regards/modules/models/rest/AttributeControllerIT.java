@@ -52,7 +52,7 @@ public class AttributeControllerIT extends AbstractRegardsIT {
     public void testGetAttributes() {
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>(1);
+        final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Perform test
@@ -69,10 +69,10 @@ public class AttributeControllerIT extends AbstractRegardsIT {
         final String idPath = "$.id";
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>(1);
+        final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(idPath, Matchers.notNullValue()));
-        // expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.hasValue(attName)));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(attName)));
 
         // Content
         final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING).get();
@@ -84,6 +84,19 @@ public class AttributeControllerIT extends AbstractRegardsIT {
 
         // Retrieve attribute
         performDefaultGet(TYPE_MAPPING + "/{pAttributeId}", expectations, "Cannot retrieve attribute", id);
+    }
+
+    @Test
+    public void addAndRemoveRestrictedAttribute() {
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        // Content
+        final AttributeModel attModel = AttributeModelBuilder.build("ALPHABET", AttributeType.ENUMERATION)
+                .withEnumerationRestriction("ALPHA", "BETA", "GAMMA");
+
+        performDefaultPost(TYPE_MAPPING, attModel, expectations, "Cannot add attribute with enum restriction");
     }
 
     @Override

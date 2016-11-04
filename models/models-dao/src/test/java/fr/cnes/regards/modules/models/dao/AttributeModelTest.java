@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.models.dao;
 
-import java.util.Optional;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +25,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.DateISO8601R
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.GeometryRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.NoRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
@@ -103,7 +100,7 @@ public class AttributeModelTest {
         final AttributeModel att = findSingle();
         Assert.assertEquals(attName, att.getName());
         Assert.assertEquals(AttributeType.STRING, att.getType());
-        Assert.assertEquals(description, att.getDescription().get());
+        Assert.assertEquals(description, att.getDescription());
         Assert.assertEquals(Boolean.FALSE, att.isAlterable());
         Assert.assertEquals(Boolean.FALSE, att.isQueryable());
         Assert.assertEquals(Boolean.FALSE, att.isFacetable());
@@ -237,8 +234,8 @@ public class AttributeModelTest {
         Assert.assertEquals(2, Iterables.size(atts));
         for (AttributeModel att : atts) {
             Assert.assertNotNull(att.getFragment());
-            Assert.assertEquals(name, att.getFragment().get().getName());
-            Assert.assertEquals(description, att.getFragment().get().getDescription().get());
+            Assert.assertEquals(name, att.getFragment().getName());
+            Assert.assertEquals(description, att.getFragment().getDescription().get());
         }
 
     }
@@ -252,30 +249,24 @@ public class AttributeModelTest {
     private void saveAttribute(AttributeModel pAttributeModel) {
         Assert.assertNotNull(pAttributeModel);
         // Save restriction if any
-        if (pAttributeModel.getRestriction().isPresent()) {
-            final AbstractRestriction restriction = pAttributeModel.getRestriction().get();
-            if (restriction != null) {
-                restrictionRepository.save(restriction);
-            }
+        if (pAttributeModel.getRestriction() != null) {
+            final AbstractRestriction restriction = pAttributeModel.getRestriction();
+            restrictionRepository.save(restriction);
         }
         // Save fragment if any
-        if (pAttributeModel.getFragment().isPresent()) {
-            final Fragment fragment = pAttributeModel.getFragment().get();
-            if (fragment != null) {
-                fragmentRepository.save(fragment);
-            }
+        if (pAttributeModel.getFragment() != null) {
+            final Fragment fragment = pAttributeModel.getFragment();
+            fragmentRepository.save(fragment);
         }
         // Save attribute model
         attModelRepository.save(pAttributeModel);
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends AbstractRestriction> T checkRestrictionType(Optional<AbstractRestriction> pRestriction,
-            Class<T> pClass) {
-        if (pRestriction.isPresent() && (pRestriction.get() != null)) {
-            final IRestriction restriction = pRestriction.get();
-            Assert.assertTrue(pClass.isInstance(restriction));
-            return (T) restriction;
+    private <T extends AbstractRestriction> T checkRestrictionType(AbstractRestriction pRestriction, Class<T> pClass) {
+        if (pRestriction != null) {
+            Assert.assertTrue(pClass.isInstance(pRestriction));
+            return (T) pRestriction;
         } else {
             throw new AssertionError("Missing restriction!");
         }
