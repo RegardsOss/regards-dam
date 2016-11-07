@@ -232,7 +232,7 @@ public class AttributeModelTest {
 
         final Iterable<AttributeModel> atts = attModelRepository.findAll();
         Assert.assertEquals(2, Iterables.size(atts));
-        for (AttributeModel att : atts) {
+        for (final AttributeModel att : atts) {
             Assert.assertNotNull(att.getFragment());
             Assert.assertEquals(name, att.getFragment().getName());
             Assert.assertEquals(description, att.getFragment().getDescription());
@@ -246,7 +246,7 @@ public class AttributeModelTest {
      * @param pAttributeModel
      *            entity to save
      */
-    private void saveAttribute(AttributeModel pAttributeModel) {
+    private void saveAttribute(final AttributeModel pAttributeModel) {
         Assert.assertNotNull(pAttributeModel);
         // Save restriction if any
         if (pAttributeModel.getRestriction() != null) {

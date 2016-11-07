@@ -18,7 +18,7 @@
 		<!-- Starter -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>jpa-multitenant-regards-starter</artifactId>
+			<artifactId>jpa-multitenant-regards</artifactId>
 		</dependency>
 		<!-- Module -->
 		<dependency>
