@@ -20,4 +20,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 public interface IAttributeModelRepository extends CrudRepository<AttributeModel, Long> {
 
     Iterable<AttributeModel> findByType(AttributeType pType);
+
+    AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
 }

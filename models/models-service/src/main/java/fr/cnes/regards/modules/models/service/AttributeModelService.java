@@ -3,8 +3,11 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.text.MessageFormat;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
@@ -14,7 +17,9 @@ import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
+import fr.cnes.regards.modules.models.domain.exception.AlreadyExistsException;
 
 /**
  *
@@ -25,6 +30,11 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction
  */
 @Service
 public class AttributeModelService implements IAttributeModelService {
+
+    /**
+     * Logger
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(AttributeModelService.class);
 
     /**
      * {@link AttributeModel} repository
@@ -60,8 +70,10 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public AttributeModel addAttribute(AttributeModel pAttributeModel) {
-        return saveTransientEntities(pAttributeModel);
+    public AttributeModel addAttribute(AttributeModel pAttributeModel) throws AlreadyExistsException {
+        manageRestriction(pAttributeModel);
+        manageFragment(pAttributeModel);
+        return manageAttributeModel(pAttributeModel);
     }
 
     @Override
@@ -71,7 +83,8 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public AttributeModel updateAttribute(AttributeModel pAttributeModel) {
-        return saveTransientEntities(pAttributeModel);
+        // TODO
+        return null;
     }
 
     @Override
@@ -79,17 +92,70 @@ public class AttributeModelService implements IAttributeModelService {
         attModelRepository.delete(pAttributeId);
     }
 
-    private AttributeModel saveTransientEntities(AttributeModel pAttributeModel) {
-        // Manage restriction
-        if (pAttributeModel.getRestriction() != null) {
-            restrictionRepository.save(pAttributeModel.getRestriction());
+    /**
+     * Manage attribute model restriction
+     *
+     * @param pAttributeModel
+     *            attribute model
+     */
+    private void manageRestriction(AttributeModel pAttributeModel) {
+        AbstractRestriction restriction = pAttributeModel.getRestriction();
+        if (restriction != null) {
+            if (restriction.supports(pAttributeModel.getType())) {
+                restriction = restrictionRepository.save(restriction);
+            } else {
+                // Unset restriction
+                pAttributeModel.setRestriction(null);
+                LOG.warn("Restriction type \"{}\" does not support attribute of type \"{}\".", restriction.getType(),
+                         pAttributeModel.getType());
+            }
         }
-        // Manage fragment
-        if (pAttributeModel.getFragment() != null) {
-            fragmentRepository.save(pAttributeModel.getFragment());
-        }
-        // Finally, save attribute model
-        return attModelRepository.save(pAttributeModel);
     }
 
+    /**
+     * Manage attribute model fragment (fallback to default fragment)
+     *
+     * @param pAttributeModel
+     *            attribute model
+     */
+    private void manageFragment(AttributeModel pAttributeModel) {
+        Fragment fragment = pAttributeModel.getFragment();
+        if (fragment != null) {
+            fragmentRepository.save(fragment);
+        } else {
+            // Manage default fragment
+            fragment = initOrRetrieveDefaultFragment();
+            pAttributeModel.setFragment(fragment);
+        }
+    }
+
+    private Fragment initOrRetrieveDefaultFragment() {
+        Fragment defaultFragment = fragmentRepository.findByName(Fragment.getDefaultName());
+        if (defaultFragment == null) {
+            defaultFragment = fragmentRepository.save(Fragment.buildDefault());
+        }
+        return defaultFragment;
+    }
+
+    private AttributeModel manageAttributeModel(AttributeModel pAttributeModel) throws AlreadyExistsException {
+        if (!pAttributeModel.isIdentifiable()) {
+            // Check potential conflic
+            final AttributeModel attributeModel = attModelRepository
+                    .findByNameAndFragmentName(pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+            if (attributeModel != null) {
+                String message;
+                if (pAttributeModel.getFragment().isDefaultFragment()) {
+                    message = MessageFormat.format("Attribute model with name \"{0}\" already exists.",
+                                                   pAttributeModel.getName());
+                } else {
+                    message = MessageFormat.format(
+                                                   "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
+                                                   pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                }
+                LOG.error(message);
+                throw new AlreadyExistsException(message);
+            }
+        }
+        return attModelRepository.save(pAttributeModel);
+    }
 }

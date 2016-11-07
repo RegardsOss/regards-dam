@@ -96,7 +96,10 @@ public class AttributeControllerIT extends AbstractRegardsIT {
         final AttributeModel attModel = AttributeModelBuilder.build("ALPHABET", AttributeType.ENUMERATION)
                 .withEnumerationRestriction("ALPHA", "BETA", "GAMMA");
 
-        performDefaultPost(TYPE_MAPPING, attModel, expectations, "Cannot add attribute with enum restriction");
+        final ResultActions resultActions = performDefaultPost(TYPE_MAPPING, attModel, expectations,
+                                                               "Cannot add attribute with enum restriction");
+        LOG.debug(payload(resultActions));
+
     }
 
     @Override

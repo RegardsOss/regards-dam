@@ -18,5 +18,9 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>jpa-multitenant-regards-starter</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>gson-utils</artifactId>
+		</dependency>
 	</dependencies>
 </project>

@@ -14,7 +14,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 
 import com.google.common.collect.Iterables;
 
-import fr.cnes.regards.framework.jpa.multitenant.autoconfigure.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
@@ -235,7 +235,7 @@ public class AttributeModelTest {
         for (AttributeModel att : atts) {
             Assert.assertNotNull(att.getFragment());
             Assert.assertEquals(name, att.getFragment().getName());
-            Assert.assertEquals(description, att.getFragment().getDescription().get());
+            Assert.assertEquals(description, att.getFragment().getDescription());
         }
 
     }
@@ -257,6 +257,12 @@ public class AttributeModelTest {
         if (pAttributeModel.getFragment() != null) {
             final Fragment fragment = pAttributeModel.getFragment();
             fragmentRepository.save(fragment);
+        } else {
+            Fragment defaultF = fragmentRepository.findByName(Fragment.getDefaultName());
+            if (defaultF == null) {
+                defaultF = fragmentRepository.save(Fragment.buildDefault());
+            }
+            pAttributeModel.setFragment(defaultF);
         }
         // Save attribute model
         attModelRepository.save(pAttributeModel);

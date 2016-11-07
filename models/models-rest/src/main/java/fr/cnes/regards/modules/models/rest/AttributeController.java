@@ -21,6 +21,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.core.rest.AbstractController;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.exception.ModelException;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.RestrictionService;
 import fr.cnes.regards.modules.models.signature.IAttributeSignature;
@@ -68,7 +69,8 @@ public class AttributeController extends AbstractController
 
     @Override
     @ResourceAccess(description = "Add an attribute")
-    public ResponseEntity<Resource<AttributeModel>> addAttribute(@RequestBody AttributeModel pAttributeModel) {
+    public ResponseEntity<Resource<AttributeModel>> addAttribute(@RequestBody AttributeModel pAttributeModel)
+            throws ModelException {
         final AttributeModel attribute = attributeService.addAttribute(pAttributeModel);
         return ResponseEntity.ok(toResource(attribute));
     }
@@ -82,7 +84,8 @@ public class AttributeController extends AbstractController
 
     @Override
     @ResourceAccess(description = "Update an attribute")
-    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@RequestBody AttributeModel pAttributeModel) {
+    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@RequestBody AttributeModel pAttributeModel)
+            throws ModelException {
         final AttributeModel attribute = attributeService.updateAttribute(pAttributeModel);
         return ResponseEntity.ok(toResource(attribute));
     }

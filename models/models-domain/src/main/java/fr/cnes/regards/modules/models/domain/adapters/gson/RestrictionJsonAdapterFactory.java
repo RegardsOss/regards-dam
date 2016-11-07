@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.adapters.gson;
 
+import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DateISO8601Restriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;

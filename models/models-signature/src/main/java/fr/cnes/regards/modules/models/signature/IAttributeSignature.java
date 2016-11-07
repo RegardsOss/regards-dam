@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.exception.ModelException;
 
 /**
  * Attribute management API
@@ -32,13 +33,15 @@ public interface IAttributeSignature {
             @RequestParam(value = "type", required = false) AttributeType pType);
 
     @RequestMapping(method = RequestMethod.POST)
-    ResponseEntity<Resource<AttributeModel>> addAttribute(@Valid @RequestBody AttributeModel pAttributeModel);
+    ResponseEntity<Resource<AttributeModel>> addAttribute(@Valid @RequestBody AttributeModel pAttributeModel)
+            throws ModelException;
 
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
     ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId);
 
     @RequestMapping(method = RequestMethod.PUT)
-    ResponseEntity<Resource<AttributeModel>> updateAttribute(@Valid @RequestBody AttributeModel pAttributeModel);
+    ResponseEntity<Resource<AttributeModel>> updateAttribute(@Valid @RequestBody AttributeModel pAttributeModel)
+            throws ModelException;
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pAttributeId}")
     ResponseEntity<Void> deleteAttribute(@PathVariable Long pAttributeId);

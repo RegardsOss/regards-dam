@@ -7,6 +7,7 @@ import java.util.List;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.exception.AlreadyExistsException;
 
 /**
  * Attribute management service
@@ -18,7 +19,7 @@ public interface IAttributeModelService {
 
     List<AttributeModel> getAttributes(AttributeType pType);
 
-    AttributeModel addAttribute(AttributeModel pAttributeModel);
+    AttributeModel addAttribute(AttributeModel pAttributeModel) throws AlreadyExistsException;
 
     AttributeModel getAttribute(Long pAttributeId);
 

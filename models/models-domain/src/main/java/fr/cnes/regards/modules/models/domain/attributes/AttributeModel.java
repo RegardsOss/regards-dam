@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.models.domain.attributes;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -17,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -28,7 +28,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionT
  *
  */
 @Entity
-@Table(name = "T_ATT_MODEL")
+@Table(name = "T_ATT_MODEL", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "fragment_id" }))
 @SequenceGenerator(name = "attModelSequence", initialValue = 1, sequenceName = "SEQ_ATT_MODEL")
 public class AttributeModel implements IIdentifiable<Long> {
 
@@ -43,7 +43,6 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Attribute name
      */
     @NotNull
-    @Column(unique = true)
     private String name;
 
     /**
@@ -62,7 +61,7 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Optional fragment
      */
     @ManyToOne
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"))
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false)
     private Fragment fragment;
 
     /**

@@ -17,4 +17,6 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  */
 @Repository
 public interface IFragmentRepository extends CrudRepository<Fragment, Long> {
+
+    Fragment findByName(String pName);
 }
