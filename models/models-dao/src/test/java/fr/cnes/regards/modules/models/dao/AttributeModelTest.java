@@ -16,7 +16,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 
 import com.google.common.collect.Iterables;
 
-import fr.cnes.regards.framework.jpa.multitenant.autoconfigure.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
@@ -235,7 +235,7 @@ public class AttributeModelTest {
 
         final Iterable<AttributeModel> atts = attModelRepository.findAll();
         Assert.assertEquals(2, Iterables.size(atts));
-        for (AttributeModel att : atts) {
+        for (final AttributeModel att : atts) {
             Assert.assertNotNull(att.getFragment());
             Assert.assertEquals(name, att.getFragment().get().getName());
             Assert.assertEquals(description, att.getFragment().get().getDescription().get());
@@ -249,7 +249,7 @@ public class AttributeModelTest {
      * @param pAttributeModel
      *            entity to save
      */
-    private void saveAttribute(AttributeModel pAttributeModel) {
+    private void saveAttribute(final AttributeModel pAttributeModel) {
         Assert.assertNotNull(pAttributeModel);
         // Save restriction if any
         if (pAttributeModel.getRestriction().isPresent()) {
@@ -270,8 +270,8 @@ public class AttributeModelTest {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends AbstractRestriction> T checkRestrictionType(Optional<AbstractRestriction> pRestriction,
-            Class<T> pClass) {
+    private <T extends AbstractRestriction> T checkRestrictionType(final Optional<AbstractRestriction> pRestriction,
+            final Class<T> pClass) {
         if (pRestriction.isPresent() && (pRestriction.get() != null)) {
             final IRestriction restriction = pRestriction.get();
             Assert.assertTrue(pClass.isInstance(restriction));
