@@ -13,6 +13,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import fr.cnes.regards.framework.module.rest.exception.AlreadyExistingException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
@@ -20,7 +21,6 @@ import fr.cnes.regards.modules.collections.dao.stubs.CollectionRepositoryStub;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.collections.service.CollectionsRequestService;
 import fr.cnes.regards.modules.collections.service.ICollectionsRequestService;
-import fr.cnes.regards.modules.core.exception.AlreadyExistingException;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**

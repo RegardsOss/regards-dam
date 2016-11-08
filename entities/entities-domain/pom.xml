@@ -16,16 +16,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.hateoas</groupId>
-			<artifactId>spring-hateoas</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-validator</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>regards-core-jpa-common</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>

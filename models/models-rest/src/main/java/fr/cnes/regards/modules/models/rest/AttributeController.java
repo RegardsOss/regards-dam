@@ -17,11 +17,10 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.core.rest.AbstractController;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.domain.exception.ModelException;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.RestrictionService;
 import fr.cnes.regards.modules.models.signature.IAttributeSignature;
@@ -34,8 +33,7 @@ import fr.cnes.regards.modules.models.signature.IAttributeSignature;
  *
  */
 @RestController
-public class AttributeController extends AbstractController
-        implements IAttributeSignature, IResourceController<AttributeModel> {
+public class AttributeController implements IAttributeSignature, IResourceController<AttributeModel> {
 
     /**
      * Attribute service
@@ -70,7 +68,7 @@ public class AttributeController extends AbstractController
     @Override
     @ResourceAccess(description = "Add an attribute")
     public ResponseEntity<Resource<AttributeModel>> addAttribute(@RequestBody AttributeModel pAttributeModel)
-            throws ModelException {
+            throws ModuleException {
         final AttributeModel attribute = attributeService.addAttribute(pAttributeModel);
         return ResponseEntity.ok(toResource(attribute));
     }
@@ -85,7 +83,7 @@ public class AttributeController extends AbstractController
     @Override
     @ResourceAccess(description = "Update an attribute")
     public ResponseEntity<Resource<AttributeModel>> updateAttribute(@RequestBody AttributeModel pAttributeModel)
-            throws ModelException {
+            throws ModuleException {
         final AttributeModel attribute = attributeService.updateAttribute(pAttributeModel);
         return ResponseEntity.ok(toResource(attribute));
     }

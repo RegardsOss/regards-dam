@@ -16,7 +16,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>jpa-multitenant-regards-starter</artifactId>
+			<artifactId>regards-core-jpa-data</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>

@@ -5,9 +5,9 @@ package fr.cnes.regards.modules.models.service;
 
 import java.util.List;
 
+import fr.cnes.regards.framework.module.rest.exception.AlreadyExistsException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.domain.exception.AlreadyExistsException;
 
 /**
  * Attribute management service

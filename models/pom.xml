@@ -13,7 +13,7 @@
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
 		<version>0.0.6-SNAPSHOT</version>
-		<relativePath/>
+		<relativePath />
 	</parent>
 
 	<modules>
@@ -56,8 +56,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.modules</groupId>
-			<artifactId>module-core</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards-starter</artifactId>
 		</dependency>
 	</dependencies>
 </project>

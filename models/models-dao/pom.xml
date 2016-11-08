@@ -15,10 +15,10 @@
 	</parent>
 
 	<dependencies>
-		<!-- Starter -->
+		<!-- REGARDS starter -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>jpa-multitenant-regards</artifactId>
+			<artifactId>jpa-multitenant-regards-starter</artifactId>
 		</dependency>
 		<!-- Module -->
 		<dependency>

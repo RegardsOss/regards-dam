@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
+import fr.cnes.regards.framework.module.rest.exception.AlreadyExistsException;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
@@ -19,7 +20,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
-import fr.cnes.regards.modules.models.domain.exception.AlreadyExistsException;
 
 /**
  *
@@ -137,13 +137,22 @@ public class AttributeModelService implements IAttributeModelService {
         return defaultFragment;
     }
 
+    /**
+     * Manage a single attribute model
+     *
+     * @param pAttributeModel
+     *            the attribute model
+     * @return the persisted attribute model
+     * @throws AlreadyExistsException
+     *             if conflict detected
+     */
     private AttributeModel manageAttributeModel(AttributeModel pAttributeModel) throws AlreadyExistsException {
         if (!pAttributeModel.isIdentifiable()) {
-            // Check potential conflic
+            // Check potential conflict
             final AttributeModel attributeModel = attModelRepository
                     .findByNameAndFragmentName(pAttributeModel.getName(), pAttributeModel.getFragment().getName());
             if (attributeModel != null) {
-                String message;
+                final String message;
                 if (pAttributeModel.getFragment().isDefaultFragment()) {
                     message = MessageFormat.format("Attribute model with name \"{0}\" already exists.",
                                                    pAttributeModel.getName());
