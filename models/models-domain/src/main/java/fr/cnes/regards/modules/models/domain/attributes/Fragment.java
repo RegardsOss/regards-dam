@@ -67,7 +67,7 @@ public class Fragment implements IIdentifiable<Long> {
      * List of related attribute models
      */
     @OneToMany(mappedBy = "fragment", fetch = FetchType.EAGER)
-    private List<AttributeModel> attributeModels;
+    private transient List<AttributeModel> attributeModels;
 
     /**
      * Attribute name

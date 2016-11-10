@@ -120,6 +120,7 @@ public class AttributeModelController implements IAttributeModelSignature, IReso
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pAttributeModel.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
+                                MethodParamFactory.build(Long.class, pAttributeModel.getId()),
                                 MethodParamFactory.build(AttributeModel.class));
         resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pAttributeModel.getId()));
