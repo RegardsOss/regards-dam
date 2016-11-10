@@ -53,10 +53,6 @@ public final class RestrictionFactory {
         return irr;
     }
 
-    public static NoRestriction buildNoRestriction() {
-        return new NoRestriction();
-    }
-
     public static PatternRestriction buildPatternRestriction(String pPattern) {
         final PatternRestriction pr = new PatternRestriction();
         pr.setPattern(pPattern);

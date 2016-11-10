@@ -24,5 +24,9 @@
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-dao</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards</artifactId>
+		</dependency>
 	</dependencies>
 </project>

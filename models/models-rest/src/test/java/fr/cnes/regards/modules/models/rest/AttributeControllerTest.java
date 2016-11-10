@@ -49,9 +49,9 @@ public class AttributeControllerTest {
     private IResourceService resourceServiceMocked;
 
     /**
-     * {@link AttributeController}
+     * {@link AttributeModelController}
      */
-    private AttributeController attributeController;
+    private AttributeModelController attributeController;
 
     @Before
     public void init() {
@@ -62,7 +62,7 @@ public class AttributeControllerTest {
         resourceServiceMocked = new DefaultResourceService(authService);
         final RestrictionService restrictionService = Mockito.mock(RestrictionService.class);
         // Init controller
-        attributeController = new AttributeController(attributeServiceMocked, resourceServiceMocked,
+        attributeController = new AttributeModelController(attributeServiceMocked, resourceServiceMocked,
                 restrictionService);
     }
 

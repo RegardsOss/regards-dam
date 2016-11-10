@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.jayway.jsonpath.JsonPath;
 
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
+import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -86,24 +87,52 @@ public class AttributeControllerIT extends AbstractRegardsIT {
         performDefaultGet(TYPE_MAPPING + "/{pAttributeId}", expectations, "Cannot retrieve attribute", id);
     }
 
+    /**
+     * Check if inserting same attribute throws a conflict exception
+     */
     @Test
-    public void addAndRemoveRestrictedAttribute() {
+    public void manageConflictedAttributes() {
+        final String attName = "ALPHABET";
+        final String[] acceptableValues = new String[] { "ALPHA", "BETA", "GAMMA" };
+
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Content
-        final AttributeModel attModel = AttributeModelBuilder.build("ALPHABET", AttributeType.ENUMERATION)
-                .withEnumerationRestriction("ALPHA", "BETA", "GAMMA");
+        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.ENUMERATION)
+                .withEnumerationRestriction(acceptableValues);
 
-        final ResultActions resultActions = performDefaultPost(TYPE_MAPPING, attModel, expectations,
-                                                               "Cannot add attribute with enum restriction");
-        LOG.debug(payload(resultActions));
+        performDefaultPost(TYPE_MAPPING, attModel, expectations, "Cannot add attribute with enum restriction");
 
+        // Define conflict expectations
+        final List<ResultMatcher> conflictExpectations = new ArrayList<>();
+        conflictExpectations.add(MockMvcResultMatchers.status().isConflict());
+
+        // Same clone model ... replay
+        final AttributeModel conflictAttModel = AttributeModelBuilder.build(attName, AttributeType.ENUMERATION)
+                .withEnumerationRestriction(acceptableValues);
+
+        performDefaultPost(TYPE_MAPPING, conflictAttModel, conflictExpectations, "Conflict not detected");
     }
 
     @Override
     protected Logger getLogger() {
         return LOG;
+    }
+
+    @Test
+    public void getAllRestrictions() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isServiceUnavailable());
+        performDefaultGet(TYPE_MAPPING + "/restrictions", expectations, "Restriction must be retrieve by type");
+    }
+
+    @Test
+    public void getRestrictionForString() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        performDefaultGet(TYPE_MAPPING + "/restrictions", expectations, "Restriction must be retrieve by type",
+                          RequestParamBuilder.build().param("type", AttributeType.STRING.toString()));
     }
 }

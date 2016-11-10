@@ -5,7 +5,7 @@ package fr.cnes.regards.modules.models.service;
 
 import java.util.List;
 
-import fr.cnes.regards.framework.module.rest.exception.AlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
@@ -19,11 +19,11 @@ public interface IAttributeModelService {
 
     List<AttributeModel> getAttributes(AttributeType pType);
 
-    AttributeModel addAttribute(AttributeModel pAttributeModel) throws AlreadyExistsException;
+    AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException;
 
-    AttributeModel getAttribute(Long pAttributeId);
+    AttributeModel getAttribute(Long pAttributeId) throws ModuleException;
 
-    AttributeModel updateAttribute(AttributeModel pAttributeModel);
+    AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException;
 
     void deleteAttribute(Long pAttributeId);
 }

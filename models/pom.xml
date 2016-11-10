@@ -53,11 +53,5 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>module-regards-starter</artifactId>
-		</dependency>
-	</dependencies>
+	
 </project>

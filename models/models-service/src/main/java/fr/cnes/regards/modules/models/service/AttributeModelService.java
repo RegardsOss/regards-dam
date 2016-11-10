@@ -11,7 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
-import fr.cnes.regards.framework.module.rest.exception.AlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotIdentifiableException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleInconsistentEntityIdentifierException;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
@@ -70,26 +74,44 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public AttributeModel addAttribute(AttributeModel pAttributeModel) throws AlreadyExistsException {
+    public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
         manageRestriction(pAttributeModel);
         manageFragment(pAttributeModel);
         return manageAttributeModel(pAttributeModel);
     }
 
     @Override
-    public AttributeModel getAttribute(Long pAttributeId) {
+    public AttributeModel getAttribute(Long pAttributeId) throws ModuleException {
+        if (!attModelRepository.exists(pAttributeId)) {
+            throw new ModuleEntityNotFoundException(pAttributeId, AttributeModel.class);
+        }
         return attModelRepository.findOne(pAttributeId);
     }
 
     @Override
-    public AttributeModel updateAttribute(AttributeModel pAttributeModel) {
-        // TODO
-        return null;
+    public AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException {
+        if (!pAttributeModel.isIdentifiable()) {
+            throw new ModuleEntityNotIdentifiableException(
+                    String.format("Unknown identifier for attribute model \"%s\"", pAttributeModel.getName()));
+        }
+        if (!pAttributeId.equals(pAttributeModel.getId())) {
+            throw new ModuleInconsistentEntityIdentifierException(pAttributeId, pAttributeModel.getId(),
+                    pAttributeModel.getClass());
+        }
+        if (!attModelRepository.exists(pAttributeId)) {
+            final AttributeModel attModel = attModelRepository.findOne(pAttributeModel.getId());
+            if (attModel == null) {
+                throw new ModuleEntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
+            }
+        }
+        return attModelRepository.save(pAttributeModel);
     }
 
     @Override
     public void deleteAttribute(Long pAttributeId) {
-        attModelRepository.delete(pAttributeId);
+        if (attModelRepository.exists(pAttributeId)) {
+            attModelRepository.delete(pAttributeId);
+        }
     }
 
     /**
@@ -99,10 +121,12 @@ public class AttributeModelService implements IAttributeModelService {
      *            attribute model
      */
     private void manageRestriction(AttributeModel pAttributeModel) {
-        AbstractRestriction restriction = pAttributeModel.getRestriction();
+        final AbstractRestriction restriction = pAttributeModel.getRestriction();
         if (restriction != null) {
             if (restriction.supports(pAttributeModel.getType())) {
-                restriction = restrictionRepository.save(restriction);
+                if (!restriction.isIdentifiable()) {
+                    restrictionRepository.save(restriction);
+                }
             } else {
                 // Unset restriction
                 pAttributeModel.setRestriction(null);
@@ -121,7 +145,9 @@ public class AttributeModelService implements IAttributeModelService {
     private void manageFragment(AttributeModel pAttributeModel) {
         Fragment fragment = pAttributeModel.getFragment();
         if (fragment != null) {
-            fragmentRepository.save(fragment);
+            if (!fragment.isIdentifiable()) {
+                fragmentRepository.save(fragment);
+            }
         } else {
             // Manage default fragment
             fragment = initOrRetrieveDefaultFragment();
@@ -143,10 +169,10 @@ public class AttributeModelService implements IAttributeModelService {
      * @param pAttributeModel
      *            the attribute model
      * @return the persisted attribute model
-     * @throws AlreadyExistsException
+     * @throws ModuleException
      *             if conflict detected
      */
-    private AttributeModel manageAttributeModel(AttributeModel pAttributeModel) throws AlreadyExistsException {
+    private AttributeModel manageAttributeModel(AttributeModel pAttributeModel) throws ModuleException {
         if (!pAttributeModel.isIdentifiable()) {
             // Check potential conflict
             final AttributeModel attributeModel = attModelRepository
@@ -157,12 +183,14 @@ public class AttributeModelService implements IAttributeModelService {
                     message = MessageFormat.format("Attribute model with name \"{0}\" already exists.",
                                                    pAttributeModel.getName());
                 } else {
+                    // CHECKSTYLE:OFF
                     message = MessageFormat.format(
                                                    "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
                                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                    // CHECKSTYLE:ON
                 }
                 LOG.error(message);
-                throw new AlreadyExistsException(message);
+                throw new ModuleAlreadyExistsException(message);
             }
         }
         return attModelRepository.save(pAttributeModel);

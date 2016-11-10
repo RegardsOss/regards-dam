@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  *
  */
 @RequestMapping("/models/attributes")
-public interface IAttributeSignature {
+public interface IAttributeModelSignature {
 
     @RequestMapping(method = RequestMethod.GET)
     ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
@@ -37,11 +37,11 @@ public interface IAttributeSignature {
             throws ModuleException;
 
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
-    ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId);
+    ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId) throws ModuleException;
 
-    @RequestMapping(method = RequestMethod.PUT)
-    ResponseEntity<Resource<AttributeModel>> updateAttribute(@Valid @RequestBody AttributeModel pAttributeModel)
-            throws ModuleException;
+    @RequestMapping(method = RequestMethod.PUT, value = "/{pAttributeId}")
+    ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable Long pAttributeId,
+            @Valid @RequestBody AttributeModel pAttributeModel) throws ModuleException;
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pAttributeId}")
     ResponseEntity<Void> deleteAttribute(@PathVariable Long pAttributeId);

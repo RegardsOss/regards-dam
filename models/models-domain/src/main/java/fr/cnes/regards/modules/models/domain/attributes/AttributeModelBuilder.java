@@ -114,7 +114,8 @@ public final class AttributeModelBuilder {
     }
 
     public AttributeModel withoutRestriction() {
-        return withRestriction(RestrictionFactory.buildNoRestriction());
+        attributeModel.setRestriction(null);
+        return attributeModel;
     }
 
     public AttributeModel withPatternRestriction(String pPattern) {

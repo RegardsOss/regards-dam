@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
-import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -18,6 +18,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
@@ -33,6 +35,21 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionT
 public class AttributeModel implements IIdentifiable<Long> {
 
     /**
+     * Name regular expression
+     */
+    private static final String ATT_NAME_REGEXP = "[0-9a-zA-Z_]*";
+
+    /**
+     * Name min size
+     */
+    private static final int ATT_NAME_MIN_SIZE = 3;
+
+    /**
+     * Name max size
+     */
+    private static final int ATT_NAME_MAX_SIZE = 32;
+
+    /**
      * Internal identifier
      */
     @Id
@@ -43,6 +60,11 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Attribute name
      */
     @NotNull
+    @Pattern(regexp = ATT_NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+            + ATT_NAME_REGEXP + "\".")
+    @Size(min = ATT_NAME_MIN_SIZE, max = ATT_NAME_MAX_SIZE, message = "Attribute name must be between "
+            + ATT_NAME_MIN_SIZE + " and " + ATT_NAME_MAX_SIZE + " length.")
+    @Column(nullable = false, updatable = false)
     private String name;
 
     /**
@@ -54,6 +76,7 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Attribute type
      */
     @NotNull
+    @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private AttributeType type;
 
@@ -61,7 +84,7 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Optional fragment
      */
     @ManyToOne
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false)
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false, updatable = false)
     private Fragment fragment;
 
     /**
@@ -89,7 +112,7 @@ public class AttributeModel implements IIdentifiable<Long> {
     /**
      * Applicable restriction
      */
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "RESTRICTION_ID_FK"))
     private AbstractRestriction restriction;
 

@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.models.rest;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,17 +25,17 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.RestrictionService;
-import fr.cnes.regards.modules.models.signature.IAttributeSignature;
+import fr.cnes.regards.modules.models.signature.IAttributeModelSignature;
 
 /**
  *
- * REST interface for managing model attributes
+ * REST controller for managing model attributes
  *
  * @author msordi
  *
  */
 @RestController
-public class AttributeController implements IAttributeSignature, IResourceController<AttributeModel> {
+public class AttributeModelController implements IAttributeModelSignature, IResourceController<AttributeModel> {
 
     /**
      * Attribute service
@@ -50,7 +52,7 @@ public class AttributeController implements IAttributeSignature, IResourceContro
      */
     private final IResourceService resourceService;
 
-    public AttributeController(IAttributeModelService pAttributeService, IResourceService pResourceService,
+    public AttributeModelController(IAttributeModelService pAttributeService, IResourceService pResourceService,
             RestrictionService pRestrictionService) {
         this.attributeService = pAttributeService;
         this.resourceService = pResourceService;
@@ -67,7 +69,7 @@ public class AttributeController implements IAttributeSignature, IResourceContro
 
     @Override
     @ResourceAccess(description = "Add an attribute")
-    public ResponseEntity<Resource<AttributeModel>> addAttribute(@RequestBody AttributeModel pAttributeModel)
+    public ResponseEntity<Resource<AttributeModel>> addAttribute(@Valid @RequestBody AttributeModel pAttributeModel)
             throws ModuleException {
         final AttributeModel attribute = attributeService.addAttribute(pAttributeModel);
         return ResponseEntity.ok(toResource(attribute));
@@ -75,16 +77,17 @@ public class AttributeController implements IAttributeSignature, IResourceContro
 
     @Override
     @ResourceAccess(description = "Get an attribute")
-    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId) {
+    public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId)
+            throws ModuleException {
         final AttributeModel attribute = attributeService.getAttribute(pAttributeId);
         return ResponseEntity.ok(toResource(attribute));
     }
 
     @Override
     @ResourceAccess(description = "Update an attribute")
-    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@RequestBody AttributeModel pAttributeModel)
-            throws ModuleException {
-        final AttributeModel attribute = attributeService.updateAttribute(pAttributeModel);
+    public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable Long pAttributeId,
+            @Valid @RequestBody AttributeModel pAttributeModel) throws ModuleException {
+        final AttributeModel attribute = attributeService.updateAttribute(pAttributeId, pAttributeModel);
         return ResponseEntity.ok(toResource(attribute));
     }
 

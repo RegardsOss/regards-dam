@@ -3,14 +3,20 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 
@@ -24,6 +30,21 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 @Table(name = "T_FRAGMENT")
 @SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "SEQ_FRAGMENT")
 public class Fragment implements IIdentifiable<Long> {
+
+    /**
+     * Name regular expression
+     */
+    private static final String FRAGMENT_NAME_REGEXP = "[0-9a-zA-Z_]*";
+
+    /**
+     * Name min size
+     */
+    private static final int FRAGMENT_NAME_MIN_SIZE = 3;
+
+    /**
+     * Name max size
+     */
+    private static final int FRAGMENT_NAME_MAX_SIZE = 20;
 
     /**
      * Default fragment name
@@ -43,10 +64,20 @@ public class Fragment implements IIdentifiable<Long> {
     private Long id;
 
     /**
+     * List of related attribute models
+     */
+    @OneToMany(mappedBy = "fragment", fetch = FetchType.EAGER)
+    private List<AttributeModel> attributeModels;
+
+    /**
      * Attribute name
      */
     @NotNull
-    @Column(unique = true)
+    @Pattern(regexp = FRAGMENT_NAME_REGEXP, message = "Fragment name must conform to regular expression \""
+            + FRAGMENT_NAME_REGEXP + "\".")
+    @Size(min = FRAGMENT_NAME_MIN_SIZE, max = FRAGMENT_NAME_MAX_SIZE, message = "Fragment name must be between "
+            + FRAGMENT_NAME_MIN_SIZE + " and " + FRAGMENT_NAME_MAX_SIZE + " length.")
+    @Column(unique = true, nullable = false, updatable = false)
     private String name;
 
     /**
@@ -90,7 +121,22 @@ public class Fragment implements IIdentifiable<Long> {
         return fragment;
     }
 
+    public static Fragment buildFragment(String pName, String pDescription) {
+        final Fragment fragment = new Fragment();
+        fragment.setName(pName);
+        fragment.setDescription(pDescription);
+        return fragment;
+    }
+
     public static String getDefaultName() {
         return DEFAULT_FRAGMENT_NAME;
+    }
+
+    public List<AttributeModel> getAttributeModels() {
+        return attributeModels;
+    }
+
+    public void setAttributeModels(List<AttributeModel> pAttributeModels) {
+        attributeModels = pAttributeModels;
     }
 }

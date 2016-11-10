@@ -49,11 +49,9 @@ public class RestrictionService {
      */
     public List<String> getRestrictions(AttributeType pType) {
         final List<String> restrictionList = new ArrayList<>();
-        if (pType != null) {
-            for (IRestriction restriction : restrictions) {
-                if (restriction.supports(pType) && restriction.isPublic()) {
-                    restrictionList.add(restriction.getType().name());
-                }
+        for (IRestriction restriction : restrictions) {
+            if (restriction.supports(pType) && restriction.isPublic()) {
+                restrictionList.add(restriction.getType().name());
             }
         }
         return restrictionList;
