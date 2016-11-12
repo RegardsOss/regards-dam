@@ -5,9 +5,12 @@ package fr.cnes.regards.modules.models.signature;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +28,7 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  *
  */
 @RequestMapping("/models/fragments")
-public interface IFragmentController {
+public interface IFragmentSignature {
 
     @RequestMapping(method = RequestMethod.GET)
     ResponseEntity<List<Resource<Fragment>>> getFragments();
@@ -42,4 +45,20 @@ public interface IFragmentController {
 
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pFragmentId}")
     ResponseEntity<Void> deleteFragment(@PathVariable Long pFragmentId) throws ModuleException;
+
+    /**
+     * Download the model fragment
+     *
+     * @param pRequest
+     *            HTTP request
+     * @param pResponse
+     *            HTTP response
+     * @param pFragmentId
+     *            fragment to download
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public void downloadFragment(HttpServletRequest pRequest, HttpServletResponse pResponse,
+            @PathVariable Long pFragmentId);
+
+    // TODO : fragment upload / see Spring MVC doc p.22.10
 }

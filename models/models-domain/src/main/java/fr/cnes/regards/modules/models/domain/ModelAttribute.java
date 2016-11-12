@@ -12,6 +12,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -43,7 +44,8 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      * Common attribute model
      */
     @OneToOne(optional = false)
-    @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "ATTRIBUTE_ID_FK"))
+    @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "ATTRIBUTE_ID_FK"), updatable = false)
+    @NotNull
     private AttributeModel attribute;
 
     /**

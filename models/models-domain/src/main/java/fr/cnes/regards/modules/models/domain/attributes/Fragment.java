@@ -11,6 +11,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -27,24 +28,24 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  *
  */
 @Entity
-@Table(name = "T_FRAGMENT")
+@Table(name = "T_FRAGMENT", indexes = { @Index(name = "IDX_NAME", columnList = "name") })
 @SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "SEQ_FRAGMENT")
 public class Fragment implements IIdentifiable<Long> {
 
     /**
      * Name regular expression
      */
-    private static final String FRAGMENT_NAME_REGEXP = "[0-9a-zA-Z_]*";
+    public static final String FRAGMENT_NAME_REGEXP = "[0-9a-zA-Z_]*";
 
     /**
      * Name min size
      */
-    private static final int FRAGMENT_NAME_MIN_SIZE = 3;
+    public static final int FRAGMENT_NAME_MIN_SIZE = 3;
 
     /**
      * Name max size
      */
-    private static final int FRAGMENT_NAME_MAX_SIZE = 20;
+    public static final int FRAGMENT_NAME_MAX_SIZE = 20;
 
     /**
      * Default fragment name

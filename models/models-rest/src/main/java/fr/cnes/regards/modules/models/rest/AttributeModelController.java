@@ -128,9 +128,4 @@ public class AttributeModelController implements IAttributeModelSignature, IReso
                                 MethodParamFactory.build(AttributeType.class));
         return resource;
     }
-
-    // TODO : gérer l'import/export d'attributs
-    // à partir d'une sélection d'attributs simples ou de namespaces :
-    // - les attributs NO NAMESPACE sont exportés à l'unité
-    // - tous les attributs d'un même NAMESPACE sont exportés
 }

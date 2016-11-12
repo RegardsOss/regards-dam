@@ -5,6 +5,9 @@ package fr.cnes.regards.modules.models.rest;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +19,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IFragmentService;
-import fr.cnes.regards.modules.models.signature.IFragmentController;
+import fr.cnes.regards.modules.models.signature.IFragmentSignature;
 
 /**
  * REST controller for managing model fragments
@@ -25,7 +28,7 @@ import fr.cnes.regards.modules.models.signature.IFragmentController;
  *
  */
 @RestController
-public class FragmentController implements IFragmentController, IResourceController<Fragment> {
+public class FragmentController implements IFragmentSignature, IResourceController<Fragment> {
 
     /**
      * Fragment service
@@ -75,6 +78,12 @@ public class FragmentController implements IFragmentController, IResourceControl
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         return resource;
+    }
+
+    @Override
+    public void downloadFragment(HttpServletRequest pRequest, HttpServletResponse pResponse, Long pFragmentId) {
+        // TODO Auto-generated method stub
+
     }
 
 }

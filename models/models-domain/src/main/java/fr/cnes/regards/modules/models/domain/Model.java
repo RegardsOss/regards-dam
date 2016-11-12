@@ -8,7 +8,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,6 +19,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 
@@ -32,6 +38,21 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 public class Model implements IIdentifiable<Long> {
 
     /**
+     * Name regular expression
+     */
+    private static final String MODEL_NAME_REGEXP = "[0-9a-zA-Z_]*";
+
+    /**
+     * Name min size
+     */
+    private static final int MODEL_NAME_MIN_SIZE = 3;
+
+    /**
+     * Name max size
+     */
+    private static final int MODEL_NAME_MAX_SIZE = 32;
+
+    /**
      * Internal identifier
      */
     @Id
@@ -41,6 +62,12 @@ public class Model implements IIdentifiable<Long> {
     /**
      * Model name
      */
+    @NotNull
+    @Pattern(regexp = MODEL_NAME_REGEXP, message = "Model name must conform to regular expression \""
+            + MODEL_NAME_REGEXP + "\".")
+    @Size(min = MODEL_NAME_MIN_SIZE, max = MODEL_NAME_MAX_SIZE, message = "Attribute name must be between "
+            + MODEL_NAME_MIN_SIZE + " and " + MODEL_NAME_MAX_SIZE + " length.")
+    @Column(nullable = false, updatable = false)
     private String name;
 
     /**
@@ -51,6 +78,9 @@ public class Model implements IIdentifiable<Long> {
     /**
      * Model type
      */
+    @NotNull
+    @Column(nullable = false, updatable = false)
+    @Enumerated(EnumType.STRING)
     private ModelType type;
 
     /**
@@ -58,11 +88,7 @@ public class Model implements IIdentifiable<Long> {
      */
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("pos ASC")
-    private SortedSet<ModelAttribute> attributes;
-
-    public Model() {
-        attributes = new TreeSet<>();
-    }
+    private transient SortedSet<ModelAttribute> attributes = new TreeSet<>();
 
     @Override
     public Long getId() {
@@ -106,6 +132,6 @@ public class Model implements IIdentifiable<Long> {
     }
 
     public void addAttribute(ModelAttribute pAttribute) {
-
+        attributes.add(pAttribute);
     }
 }
