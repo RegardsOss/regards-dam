@@ -15,6 +15,8 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionFactory;
 
 /**
+ * Restriction service
+ * 
  * @author Marc Sordi
  *
  */

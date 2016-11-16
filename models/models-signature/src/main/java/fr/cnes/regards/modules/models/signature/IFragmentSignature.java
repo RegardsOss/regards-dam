@@ -16,13 +16,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
  *
- * Fragment management API
+ * {@link Fragment} management API
  *
  * @author Marc Sordi
  *
@@ -30,35 +32,93 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 @RequestMapping("/models/fragments")
 public interface IFragmentSignature {
 
+    /**
+     * Retrieve all fragments except default one
+     *
+     * @return list of fragments
+     */
     @RequestMapping(method = RequestMethod.GET)
     ResponseEntity<List<Resource<Fragment>>> getFragments();
 
+    /**
+     * Create a new fragment
+     *
+     * @param pFragment
+     *            the fragment to create
+     * @return the created {@link Fragment}
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @RequestMapping(method = RequestMethod.POST)
     ResponseEntity<Resource<Fragment>> addFragment(@Valid @RequestBody Fragment pFragment) throws ModuleException;
 
+    /**
+     * Retrieve a fragment
+     *
+     * @param pFragmentId
+     *            fragment identifier
+     * @return the retrieved {@link Fragment}
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}")
     ResponseEntity<Resource<Fragment>> getFragment(@PathVariable Long pFragmentId) throws ModuleException;
 
+    /**
+     * Update fragment. At the moment, only its description is updatable.
+     *
+     * @param pFragmentId
+     *            fragment identifier
+     * @param pFragment
+     *            the fragment
+     * @return the updated {@link Fragment}
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @RequestMapping(method = RequestMethod.PUT, value = "/{pFragmentId}")
     ResponseEntity<Resource<Fragment>> updateFragment(@PathVariable Long pFragmentId,
             @Valid @RequestBody Fragment pFragment) throws ModuleException;
 
+    /**
+     * Delete a fragment
+     *
+     * @param pFragmentId
+     *            fragment identifier
+     * @return nothing
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pFragmentId}")
     ResponseEntity<Void> deleteFragment(@PathVariable Long pFragmentId) throws ModuleException;
 
     /**
-     * Download the model fragment
+     * Export a model fragment
      *
      * @param pRequest
      *            HTTP request
      * @param pResponse
      *            HTTP response
      * @param pFragmentId
-     *            fragment to download
+     *            fragment to export
+     * @throws ModuleException
+     *             if error occurs!
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public void downloadFragment(HttpServletRequest pRequest, HttpServletResponse pResponse,
-            @PathVariable Long pFragmentId);
+    // CHECKSTYLE:OFF
+    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    // CHECKSTYLE:ON
+    public void exportFragment(HttpServletRequest pRequest, HttpServletResponse pResponse,
+            @PathVariable Long pFragmentId) throws ModuleException;
 
-    // TODO : fragment upload / see Spring MVC doc p.22.10
+    /**
+     * Import a model fragment
+     *
+     * @param pFile
+     *            file representing the fragment
+     * @return TODO
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    // TODO adapt signature / see Spring MVC doc p.22.10
+    @RequestMapping(method = RequestMethod.POST, value = "/import")
+    public ResponseEntity<String> importFragment(@RequestParam("file") MultipartFile pFile) throws ModuleException;
 }

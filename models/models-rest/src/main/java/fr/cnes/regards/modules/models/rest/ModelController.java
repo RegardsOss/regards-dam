@@ -5,132 +5,126 @@ package fr.cnes.regards.modules.models.rest;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.hateoas.Resource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import fr.cnes.regards.framework.hateoas.IResourceController;
+import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
+import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.models.signature.IModelSignature;
 
 /**
  *
- * REST interface for managing data model
+ * REST interface for managing data {@link Model}
  *
  * @author msordi
  *
  */
 @RestController
+// CHECKSTYLE:OFF
 @ModuleInfo(name = "models", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI", documentation = "http://test")
-public class ModelController {
+// CHECKSTYLE:ON
+public class ModelController implements IModelSignature, IResourceController<Model> {
 
     /**
-     *
-     * Get the project model list
-     *
-     * @param pType
-     *            model type
-     * @return model list filtered by type if not null
+     * Model attribute service
      */
+    private final IModelService modelService;
+
+    /**
+     * Resource service
+     */
+    private final IResourceService resourceService;
+
+    public ModelController(IModelService pModelService, IResourceService pResourceService) {
+        this.modelService = pModelService;
+        this.resourceService = pResourceService;
+    }
+
+    @Override
     @ResourceAccess(description = "List all models")
-    @GetMapping
-    public ResponseEntity<?> getModels(@RequestParam(value = "type", required = false) final ModelType pType) {
-        // TODO
-        return ResponseEntity.ok(null);
+    public ResponseEntity<List<Resource<Model>>> getModels(ModelType pType) {
+        return ResponseEntity.ok(toResources(modelService.getModels(pType)));
     }
 
-    @ResourceAccess(description = "Add a model")
-    @PostMapping
-    public ResponseEntity<?> addModel(@RequestBody final Model pModel) {
-        // TODO
-        return null;
+    @Override
+    @ResourceAccess(description = "Create a model")
+    public ResponseEntity<Resource<Model>> createModel(Model pModel) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.createModel(pModel)));
     }
 
-    // TODO gérer l'import de modèle
-
+    @Override
     @ResourceAccess(description = "Get a model")
-    @GetMapping("/{pModelId}")
-    public ResponseEntity<?> getModel(@PathVariable final Integer pModelId) {
-        // TODO
-        return null;
+    public ResponseEntity<Resource<Model>> getModel(Long pModelId) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.getModel(pModelId)));
     }
 
-    // TODO gérer l'export de modèle
+    @Override
+    @ResourceAccess(description = "Update a model")
+    public ResponseEntity<Resource<Model>> updateModel(Long pModelId, Model pModel) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.updateModel(pModelId, pModel)));
+    }
 
+    @Override
     @ResourceAccess(description = "Delete a model")
-    @DeleteMapping("/{pModelId}")
-    public ResponseEntity<?> deleteModel(@PathVariable final Integer pModelId) {
-        // TODO
+    public ResponseEntity<Void> deleteModel(Long pModelId) throws ModuleException {
+        modelService.deleteModel(pModelId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @ResourceAccess(description = "Duplicate a model")
+    public ResponseEntity<Resource<Model>> duplicateModel(Long pModelId, Model pModel) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.duplicateModel(pModelId, pModel)));
+    }
+
+    @Override
+    @ResourceAccess(description = "Export a model")
+    public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, Long pModelId)
+            throws ModuleException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    @ResourceAccess(description = "Import a model")
+    public ResponseEntity<String> importModel(MultipartFile pFile) throws ModuleException {
+        // TODO Auto-generated method stub
         return null;
     }
 
-    @ResourceAccess(description = "Get all model attributes")
-    @GetMapping("/{pModelId}/attributes")
-    public ResponseEntity<?> getModelAttributes(@PathVariable final Integer pModelId) {
-        // TODO : get all ModelAttributes
-        return null;
+    @Override
+    public Resource<Model> toResource(Model pElement, Object... pExtras) {
+        final Resource<Model> resource = resourceService.toResource(pElement);
+        resourceService.addLink(resource, this.getClass(), "getModel", LinkRels.SELF,
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
+                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(Model.class));
+        resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
+                                MethodParamFactory.build(ModelType.class));
+        // Import / Export
+        resourceService.addLink(resource, this.getClass(), "exportModel", "export",
+                                MethodParamFactory.build(HttpServletRequest.class),
+                                MethodParamFactory.build(HttpServletResponse.class),
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "importModel", "import",
+                                MethodParamFactory.build(MultipartFile.class));
+        return resource;
     }
 
-    @ResourceAccess(description = "Assign an attribute to a model")
-    @PostMapping("/{pModelId}/attributes")
-    public ResponseEntity<?> assignAttributeToModel(@PathVariable final Integer pModelId,
-            @RequestBody final ModelAttribute pModelAttribute) {
-        // TODO : associate attribute to a model through ModelAttribute (with calculation properties)
-        // Only available for NO NAMESPACE ATTRIBUTES
-        return null;
-    }
-
-    @ResourceAccess(description = "Get a single model attribute")
-    @GetMapping("/{pModelId}/attributes/{pAttributeId}")
-    public ResponseEntity<?> getModelAttribute(@PathVariable final Integer pModelId,
-            @PathVariable final Integer pAttributeId) {
-        // TODO : get a single ModelAttribute
-        return null;
-    }
-
-    @ResourceAccess(description = "Update a model attribute")
-    @PutMapping("/{pModelId}/attributes/{pAttributeId}")
-    public ResponseEntity<?> updateModelAttribute(@PathVariable final Integer pModelId,
-            @PathVariable final Integer pAttributeId) {
-        // TODO : update ModelAttribute (change calculation properties)
-        return null;
-    }
-
-    @ResourceAccess(description = "Dissociate an attribute from a model")
-    @DeleteMapping("/{pModelId}/attributes/{pAttributeId}")
-    public ResponseEntity<?> deleteModelAttribute(@PathVariable final Integer pModelId,
-            @PathVariable final Integer pAttributeId) {
-        // TODO : dissociate attribute from the model / just delete the link
-        // Only available for NO NAMESPACE ATTRIBUTES
-        return null;
-    }
-
-    // Attributes grouped by namespace
-
-    @ResourceAccess(description = "Assign all attributes of a namespace to a model")
-    @PostMapping("/{pModelId}/attributes/namespaces/{pNamespace}")
-    public ResponseEntity<Void> assignNSAttributesToModel(@PathVariable final Integer pModelId,
-            @PathVariable final Integer pNamespace, @RequestBody final List<ModelAttribute> pModelAttributes) {
-        // TODO : associate attributes to a model through ModelAttribute (with calculation properties)
-        // Only available for NAMESPACE ATTRIBUTES : all attributes of a the namespace must be specified
-        return null;
-    }
-
-    @ResourceAccess(description = "Dissociate all attributes of a namespace")
-    @DeleteMapping("/{pModelId}/attributes/namespaces/{pNamespace}")
-    public ResponseEntity<?> deleteNSModelAttributes(@PathVariable final Integer pModelId,
-            @PathVariable final Integer pNamespace, @PathVariable final Integer pAttributeId) {
-        // TODO : dissociate attribute from the model / just delete the link
-        // Only available for NAMESPACE ATTRIBUTES
-        // Dissociate all attributes of the given namespace
-        return null;
-    }
 }

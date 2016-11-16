@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.models.signature.IAttributeModelSignature;
 
 /**
  *
- * REST controller for managing model attributes
+ * REST controller for managing {@link AttributeModel}
  *
  * @author msordi
  *
@@ -115,7 +115,7 @@ public class AttributeModelController implements IAttributeModelSignature, IReso
     }
 
     @Override
-    public Resource<AttributeModel> toResource(AttributeModel pAttributeModel) {
+    public Resource<AttributeModel> toResource(AttributeModel pAttributeModel, Object... pExtras) {
         final Resource<AttributeModel> resource = resourceService.toResource(pAttributeModel);
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pAttributeModel.getId()));
