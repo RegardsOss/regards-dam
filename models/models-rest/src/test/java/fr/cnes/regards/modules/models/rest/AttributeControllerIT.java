@@ -43,6 +43,12 @@ public class AttributeControllerIT extends AbstractRegardsIT {
     private static final String TYPE_MAPPING = "/models/attributes";
 
     /**
+     * Restriction method mapping
+     *
+     */
+    private static final String RESTRICTION_MAPPING = "/restrictions";
+
+    /**
      * Test get attributes
      *
      */
@@ -125,14 +131,14 @@ public class AttributeControllerIT extends AbstractRegardsIT {
     public void getAllRestrictions() {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isServiceUnavailable());
-        performDefaultGet(TYPE_MAPPING + "/restrictions", expectations, "Restriction must be retrieve by type");
+        performDefaultGet(TYPE_MAPPING + RESTRICTION_MAPPING, expectations, "Restriction must be retrieve by type");
     }
 
     @Test
     public void getRestrictionForString() {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        performDefaultGet(TYPE_MAPPING + "/restrictions", expectations, "Restriction must be retrieve by type",
+        performDefaultGet(TYPE_MAPPING + RESTRICTION_MAPPING, expectations, "STRING restriction should exists!",
                           RequestParamBuilder.build().param("type", AttributeType.STRING.toString()));
     }
 }

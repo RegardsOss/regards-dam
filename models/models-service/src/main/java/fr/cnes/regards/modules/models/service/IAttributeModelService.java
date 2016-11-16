@@ -26,4 +26,13 @@ public interface IAttributeModelService {
     AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException;
 
     void deleteAttribute(Long pAttributeId);
+
+    /**
+     * Check if attribute is linked to a particular fragment (not default one)
+     *
+     * @param pAttributeId
+     *            attribute to check
+     * @return true if attribute linked to a particular fragment
+     */
+    boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
 }

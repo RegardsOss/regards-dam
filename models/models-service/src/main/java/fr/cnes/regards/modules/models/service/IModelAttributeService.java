@@ -30,5 +30,16 @@ public interface IModelAttributeService {
 
     List<ModelAttribute> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
 
+    /**
+     * Propagate a fragment update
+     *
+     * @param pFragmentId
+     *            fragment updated
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    void updateNSBind(Long pFragmentId) throws ModuleException;
+
     void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
+
 }

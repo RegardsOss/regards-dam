@@ -55,11 +55,15 @@ public class AttributeModelService implements IAttributeModelService {
      */
     private final IFragmentRepository fragmentRepository;
 
+    private final IModelAttributeService modelAttributeService;
+
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
-            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository) {
+            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
+            IModelAttributeService pModelAttributeService) {
         this.attModelRepository = pAttModelRepository;
         this.restrictionRepository = pRestrictionRepository;
         this.fragmentRepository = pFragmentRepository;
+        this.modelAttributeService = pModelAttributeService;
     }
 
     @Override
@@ -76,8 +80,12 @@ public class AttributeModelService implements IAttributeModelService {
     @Override
     public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
         manageRestriction(pAttributeModel);
-        manageFragment(pAttributeModel);
-        return manageAttributeModel(pAttributeModel);
+        final Fragment fragment = manageFragment(pAttributeModel);
+        manageAttributeModel(pAttributeModel);
+        if (fragment.isDefaultFragment()) {
+            modelAttributeService.updateNSBind(fragment.getId());
+        }
+        return pAttributeModel;
     }
 
     @Override
@@ -99,10 +107,7 @@ public class AttributeModelService implements IAttributeModelService {
                     pAttributeModel.getClass());
         }
         if (!attModelRepository.exists(pAttributeId)) {
-            final AttributeModel attModel = attModelRepository.findOne(pAttributeModel.getId());
-            if (attModel == null) {
-                throw new ModuleEntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
-            }
+            throw new ModuleEntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
         }
         return attModelRepository.save(pAttributeModel);
     }
@@ -141,8 +146,9 @@ public class AttributeModelService implements IAttributeModelService {
      *
      * @param pAttributeModel
      *            attribute model
+     * @return fragment
      */
-    private void manageFragment(AttributeModel pAttributeModel) {
+    private Fragment manageFragment(AttributeModel pAttributeModel) {
         Fragment fragment = pAttributeModel.getFragment();
         if (fragment != null) {
             if (!fragment.isIdentifiable()) {
@@ -153,6 +159,7 @@ public class AttributeModelService implements IAttributeModelService {
             fragment = initOrRetrieveDefaultFragment();
             pAttributeModel.setFragment(fragment);
         }
+        return fragment;
     }
 
     private Fragment initOrRetrieveDefaultFragment() {
@@ -194,5 +201,14 @@ public class AttributeModelService implements IAttributeModelService {
             }
         }
         return attModelRepository.save(pAttributeModel);
+    }
+
+    @Override
+    public boolean isFragmentAttribute(Long pAttributeId) throws ModuleException {
+        final AttributeModel attModel = attModelRepository.findOne(pAttributeId);
+        if (attModel == null) {
+            throw new ModuleEntityNotFoundException(pAttributeId, AttributeModel.class);
+        }
+        return !attModel.getFragment().isDefaultFragment();
     }
 }

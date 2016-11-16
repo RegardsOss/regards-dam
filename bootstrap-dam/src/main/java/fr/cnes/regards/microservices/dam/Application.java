@@ -15,9 +15,10 @@ import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
  * @author msordi
  *
  */
+// CHECKSTYLE:OFF
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
 @MicroserviceInfo(name = "Data management", version = "1.0-SNAPSHOT")
-public class Application {
+public class Application { // NOSONAR
 
     /**
      * Microservice bootstrap method
@@ -29,3 +30,4 @@ public class Application {
         SpringApplication.run(Application.class, pArgs); // NOSONAR
     }
 }
+// CHECKSTYLE:ON

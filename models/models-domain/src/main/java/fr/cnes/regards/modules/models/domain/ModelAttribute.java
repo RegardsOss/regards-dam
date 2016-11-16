@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -53,6 +54,13 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      */
     // TODO link to a calculation plugin
     private Boolean isCalculated = Boolean.FALSE;
+
+    /**
+     * Related model
+     */
+    @ManyToOne
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "MODEL_ID_FK"), nullable = false, updatable = false)
+    private Model model;
 
     /**
      * Position (allows to sort attribute in model)
@@ -110,5 +118,13 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
     @Override
     public int hashCode() {
         return this.getAttribute().hashCode();
+    }
+
+    public Model getModel() {
+        return model;
+    }
+
+    public void setModel(Model pModel) {
+        model = pModel;
     }
 }

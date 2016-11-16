@@ -15,6 +15,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
@@ -33,7 +34,7 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  *
  */
 @Entity
-@Table(name = "T_MODEL")
+@Table(name = "T_MODEL", indexes = { @Index(columnList = "name") })
 @SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "SEQ_MODEL")
 public class Model implements IIdentifiable<Long> {
 
@@ -67,7 +68,7 @@ public class Model implements IIdentifiable<Long> {
             + MODEL_NAME_REGEXP + "\".")
     @Size(min = MODEL_NAME_MIN_SIZE, max = MODEL_NAME_MAX_SIZE, message = "Attribute name must be between "
             + MODEL_NAME_MIN_SIZE + " and " + MODEL_NAME_MAX_SIZE + " length.")
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, unique = true)
     private String name;
 
     /**
@@ -86,7 +87,7 @@ public class Model implements IIdentifiable<Long> {
     /**
      * Model attributes
      */
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("pos ASC")
     private transient SortedSet<ModelAttribute> attributes = new TreeSet<>();
 

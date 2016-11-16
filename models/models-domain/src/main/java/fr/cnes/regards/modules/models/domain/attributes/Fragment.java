@@ -140,4 +140,18 @@ public class Fragment implements IIdentifiable<Long> {
     public void setAttributeModels(List<AttributeModel> pAttributeModels) {
         attributeModels = pAttributeModels;
     }
+
+    @Override
+    public boolean equals(Object pObj) {
+        if (pObj instanceof Fragment) {
+            final Fragment f = (Fragment) pObj;
+            return f.getName().equals(name);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
 }

@@ -84,7 +84,9 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Optional fragment
      */
     @ManyToOne
+    // CHECKSTYLE:OFF
     @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false, updatable = false)
+    // CHECKSTYLE:ON
     private Fragment fragment;
 
     /**
@@ -171,17 +173,16 @@ public class AttributeModel implements IIdentifiable<Long> {
 
     @Override
     public boolean equals(Object pObj) {
-        Boolean result = Boolean.FALSE;
         if (pObj instanceof AttributeModel) {
             final AttributeModel attmod = (AttributeModel) pObj;
-            result = attmod.getName().equals(name);
+            return attmod.getName().equals(name) && fragment.equals(attmod.getFragment());
         }
-        return result;
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return name.hashCode() + fragment.hashCode();
     }
 
     public boolean isAlterable() {

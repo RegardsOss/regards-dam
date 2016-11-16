@@ -36,6 +36,7 @@ public class AttributeControllerTest {
     /**
      * Class logger
      */
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(AttributeControllerTest.class);
 
     /**
