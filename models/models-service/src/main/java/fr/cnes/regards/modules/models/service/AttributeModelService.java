@@ -208,4 +208,9 @@ public class AttributeModelService implements IAttributeModelService {
         }
         return !attModel.getFragment().isDefaultFragment();
     }
+
+    @Override
+    public List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException {
+        return IterableUtils.toList(attModelRepository.findByFragmentId(pFragmentId));
+    }
 }

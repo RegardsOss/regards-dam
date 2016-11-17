@@ -3,7 +3,9 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -53,12 +55,13 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      * Whether this attribute in computed or not
      */
     // TODO link to a calculation plugin
+    @Column(name = "calculated")
     private Boolean isCalculated = Boolean.FALSE;
 
     /**
      * Related model
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "MODEL_ID_FK"), nullable = false, updatable = false)
     private Model model;
 

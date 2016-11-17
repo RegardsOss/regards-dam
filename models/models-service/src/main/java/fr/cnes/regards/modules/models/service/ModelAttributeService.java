@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.models.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,12 +128,13 @@ public class ModelAttributeService implements IModelAttributeService {
     public List<ModelAttribute> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
         final List<ModelAttribute> modAtts = new ArrayList<>();
         final Model model = modelService.getModel(pModelId);
+        final Iterable<ModelAttribute> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
 
         // Check if fragment not already bound
-        if (!isBoundFragment(model, pFragmentId)) {
+        if (!isBoundFragment(existingModelAtts, pFragmentId)) {
 
             // Retrieve fragment attributes
-            final List<AttributeModel> attModels = fragmentService.getFragment(pFragmentId).getAttributeModels();
+            final List<AttributeModel> attModels = attributeModelService.findByFragmentId(pFragmentId);
 
             if (attModels != null) {
                 for (AttributeModel attModel : attModels) {
@@ -155,16 +155,15 @@ public class ModelAttributeService implements IModelAttributeService {
     /**
      * Check if fragment is bounded to the model
      *
-     * @param pModel
-     *            model
+     * @param pModelAtts
+     *            model attributes
      * @param pFragmentId
      *            fragment identifier
      * @return true if fragment is bound
      */
-    private boolean isBoundFragment(final Model pModel, Long pFragmentId) {
-        final SortedSet<ModelAttribute> attributes = pModel.getAttributes();
-        if (attributes != null) {
-            for (ModelAttribute modelAtt : attributes) {
+    private boolean isBoundFragment(final Iterable<ModelAttribute> pModelAtts, Long pFragmentId) {
+        if (pModelAtts != null) {
+            for (ModelAttribute modelAtt : pModelAtts) {
                 if (pFragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
                     return true;
                 }
@@ -176,9 +175,9 @@ public class ModelAttributeService implements IModelAttributeService {
     @Override
     @MultitenantTransactional
     public void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
-        final Model model = modelService.getModel(pModelId);
-        if (model.getAttributes() != null) {
-            for (ModelAttribute modelAtt : model.getAttributes()) {
+        Iterable<ModelAttribute> modelAtts = modelAttributeRepository.findByModelId(pModelId);
+        if (modelAtts != null) {
+            for (ModelAttribute modelAtt : modelAtts) {
                 if (pFragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
                     modelAttributeRepository.delete(modelAtt);
                 }

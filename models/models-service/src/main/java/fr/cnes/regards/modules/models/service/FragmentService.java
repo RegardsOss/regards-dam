@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.ModuleAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotEmptyException;
@@ -14,7 +16,9 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotFoundExcep
 import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleInconsistentEntityIdentifierException;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
@@ -31,8 +35,15 @@ public class FragmentService implements IFragmentService {
      */
     private final IFragmentRepository fragmentRepository;
 
-    public FragmentService(IFragmentRepository pFragmentRepository) {
+    /**
+     * {@link AttributeModel} repository
+     */
+    private final IAttributeModelRepository attributeModelRepository;
+
+    public FragmentService(IFragmentRepository pFragmentRepository,
+            IAttributeModelRepository pAttributeModelRepository) {
         this.fragmentRepository = pFragmentRepository;
+        this.attributeModelRepository = pAttributeModelRepository;
     }
 
     @Override
@@ -75,11 +86,13 @@ public class FragmentService implements IFragmentService {
 
     @Override
     public void deleteFragment(Long pFragmentId) throws ModuleException {
-        final Fragment fragment = fragmentRepository.findOne(pFragmentId);
-        if ((fragment != null) && (fragment.getAttributeModels() == null)) {
-            fragmentRepository.delete(pFragmentId);
-        } else {
+        // Check if fragment is empty
+        final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
+        if ((attModels != null) || (Iterables.size(attModels) != 0)) {
             throw new ModuleEntityNotEmptyException(pFragmentId, Fragment.class);
+        }
+        if (fragmentRepository.exists(pFragmentId)) {
+            fragmentRepository.delete(pFragmentId);
         }
     }
 

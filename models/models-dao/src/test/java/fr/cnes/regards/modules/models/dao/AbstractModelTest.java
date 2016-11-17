@@ -6,10 +6,14 @@ package fr.cnes.regards.modules.models.dao;
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 
 /**
  * Common attribute model test methods
@@ -23,33 +27,68 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
      * Attribute model repository
      */
     @Autowired
-    private IAttributeModelRepository attModelRepository;
+    protected IAttributeModelRepository attModelRepository;
 
     /**
      * Restriction repository
      */
     @Autowired
-    private IRestrictionRepository restrictionRepository;
+    protected IRestrictionRepository restrictionRepository;
 
     /**
      * Fragment repository
      */
     @Autowired
-    private IFragmentRepository fragmentRepository;
+    protected IFragmentRepository fragmentRepository;
 
     /**
      * Model repository
      */
     @Autowired
-    private IModelRepository modelRepository;
+    protected IModelRepository modelRepository;
 
+    /**
+     * Model attribute repository
+     */
+    @Autowired
+    protected IModelAttributeRepository modelAttributeRepository;
+
+    /**
+     *
+     * Save an attribute model
+     *
+     * @param pAttributeModel
+     *            entity to save
+     * @return the saved attribute model
+     */
     protected AttributeModel saveAttribute(final AttributeModel pAttributeModel) {
-        return TestModelUtils.saveAttribute(pAttributeModel, restrictionRepository, fragmentRepository,
-                                            attModelRepository);
+        Assert.assertNotNull(pAttributeModel);
+        // Save restriction if any
+        if (pAttributeModel.getRestriction() != null) {
+            final AbstractRestriction restriction = pAttributeModel.getRestriction();
+            restrictionRepository.save(restriction);
+        }
+        // Save fragment if any
+        if (pAttributeModel.getFragment() != null) {
+            final Fragment fragment = pAttributeModel.getFragment();
+            fragmentRepository.save(fragment);
+        } else {
+            Fragment defaultF = fragmentRepository.findByName(Fragment.getDefaultName());
+            if (defaultF == null) {
+                defaultF = fragmentRepository.save(Fragment.buildDefault());
+            }
+            pAttributeModel.setFragment(defaultF);
+        }
+        // Save attribute model
+        return attModelRepository.save(pAttributeModel);
     }
 
     protected AttributeModel findSingle() {
-        return TestModelUtils.findSingle(attModelRepository);
+        final Iterable<AttributeModel> atts = attModelRepository.findAll();
+        if (Iterables.size(atts) != 1) {
+            Assert.fail("Only single result is expected!");
+        }
+        return Iterables.get(atts, 0);
     }
 
     /**
@@ -79,17 +118,4 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
         Assert.assertEquals(pModelType, retrieved.getType());
         return retrieved;
     }
-
-    public IAttributeModelRepository getAttModelRepository() {
-        return attModelRepository;
-    }
-
-    public IRestrictionRepository getRestrictionRepository() {
-        return restrictionRepository;
-    }
-
-    public IFragmentRepository getFragmentRepository() {
-        return fragmentRepository;
-    }
-
 }

@@ -6,7 +6,6 @@ package fr.cnes.regards.modules.models.dao;
 import org.junit.Assert;
 import org.junit.Test;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -25,7 +24,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.UrlRestricti
  * @author Marc Sordi
  *
  */
-@MultitenantTransactional
 public class RestrictionTest extends AbstractModelTest {
 
     @Test

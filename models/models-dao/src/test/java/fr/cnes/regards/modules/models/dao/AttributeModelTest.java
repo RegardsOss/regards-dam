@@ -66,7 +66,7 @@ public class AttributeModelTest extends AbstractModelTest {
                 .withEnumerationRestriction("EARTH", "ASTRO", "MARS");
         saveAttribute(attModel2);
 
-        final Iterable<AttributeModel> atts = getAttModelRepository().findAll();
+        final Iterable<AttributeModel> atts = attModelRepository.findAll();
         Assert.assertEquals(2, Iterables.size(atts));
         for (final AttributeModel att : atts) {
             Assert.assertNotNull(att.getFragment());
@@ -80,6 +80,6 @@ public class AttributeModelTest extends AbstractModelTest {
         final AttributeModel attModel = AttributeModelBuilder.build("TO_DELETE", AttributeType.STRING)
                 .withoutRestriction();
         final AttributeModel saved = saveAttribute(attModel);
-        getAttModelRepository().delete(saved);
+        attModelRepository.delete(saved);
     }
 }
