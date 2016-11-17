@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Iterables;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -21,8 +20,7 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  * @author msordi
  *
  */
-@MultitenantTransactional
-public class AttributeModelTest extends AbstractAttributeModelTest {
+public class AttributeModelTest extends AbstractModelTest {
 
     /**
      * Save and retrieve a single and simple attribute

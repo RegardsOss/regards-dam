@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.UrlRestricti
  *
  */
 @MultitenantTransactional
-public class RestrictionTest extends AbstractAttributeModelTest {
+public class RestrictionTest extends AbstractModelTest {
 
     @Test
     public void dateRestriction() {

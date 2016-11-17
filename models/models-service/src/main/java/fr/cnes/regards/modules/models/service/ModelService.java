@@ -32,14 +32,8 @@ public class ModelService implements IModelService {
      */
     private final IModelRepository modelRepository;
 
-    /**
-     * Model attribute service
-     */
-    private final IModelAttributeService modelAttributeService;
-
-    public ModelService(IModelRepository pModelRepository, IModelAttributeService pModelAttributeService) {
+    public ModelService(IModelRepository pModelRepository) {
         this.modelRepository = pModelRepository;
-        this.modelAttributeService = pModelAttributeService;
     }
 
     @Override
@@ -95,7 +89,7 @@ public class ModelService implements IModelService {
         if (!modelRepository.exists(pModelId)) {
             throw new ModuleEntityNotFoundException(pModel.getId(), Model.class);
         }
-        Model duplicatedModel = createModel(pModel);
+        final Model duplicatedModel = createModel(pModel);
         // TODO assign all reference model attributes to duplicated one
         return duplicatedModel;
     }

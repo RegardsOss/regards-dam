@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
-import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -116,8 +115,8 @@ public class Model implements IIdentifiable<Long> {
         type = pType;
     }
 
-    public Optional<String> getDescription() {
-        return Optional.ofNullable(description);
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription(String pDescription) {

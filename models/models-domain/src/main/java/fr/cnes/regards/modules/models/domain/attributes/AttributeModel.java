@@ -92,7 +92,7 @@ public class AttributeModel implements IIdentifiable<Long> {
     /**
      * Whether this attribute is a search criterion
      */
-    @NotNull
+    @Column(nullable = false)
     private boolean queryable;
 
     /**
@@ -175,14 +175,21 @@ public class AttributeModel implements IIdentifiable<Long> {
     public boolean equals(Object pObj) {
         if (pObj instanceof AttributeModel) {
             final AttributeModel attmod = (AttributeModel) pObj;
-            return attmod.getName().equals(name) && fragment.equals(attmod.getFragment());
+            boolean hasSameFragment = true;
+            if (fragment != null) {
+                hasSameFragment = fragment.equals(attmod.getFragment());
+            }
+            return attmod.getName().equals(name) && hasSameFragment;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode() + fragment.hashCode();
+        if (fragment != null) {
+            return name.hashCode() + fragment.hashCode();
+        }
+        return name.hashCode();
     }
 
     public boolean isAlterable() {
