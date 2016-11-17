@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author lmieulet
  *
  */
-public class DataEntity extends Entity {
+public class DataEntity extends AbstractEntity {
 
     /**
      *

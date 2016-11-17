@@ -7,10 +7,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.naming.OperationNotSupportedException;
-
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 
@@ -29,6 +28,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     /**
      *
      * @param pCollectionRepository
+     *            repository used by service to provide data
      */
     public CollectionsRequestService(ICollectionRepository pCollectionRepository) {
         super();
@@ -36,37 +36,40 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     }
 
     @Override
-    public List<Collection> retrieveCollectionList() {
-        Iterable<Collection> collections = collectionRepository.findAll();
+    public List<Collection> retrieveCollectionList(Long pModelId) {
+        final Iterable<Collection> collections = collectionRepository.findAll();
+        if (pModelId == null) {
+            return StreamSupport.stream(collections.spliterator(), true).collect(Collectors.toList());
+        } else {
+            return retrieveCollectionListByModelId(pModelId);
+        }
+    }
+
+    private List<Collection> retrieveCollectionListByModelId(Long pModelId) {
+        final Iterable<Collection> collections = collectionRepository.findAllByModelId(pModelId);
         return StreamSupport.stream(collections.spliterator(), true).collect(Collectors.toList());
     }
 
     @Override
-    public List<Collection> retrieveCollectionListByModelId(Long pModelId) {
-        Iterable<Collection> collections = collectionRepository.findAllByModelId(pModelId);
-        return StreamSupport.stream(collections.spliterator(), true).collect(Collectors.toList());
-    }
-
-    @Override
-    public Collection retrieveCollectionById(String pCollectionId) {
+    public Collection retrieveCollectionById(Long pCollectionId) {
         return collectionRepository.findOne(pCollectionId);
     }
 
     @Override
-    public Collection updateCollection(Collection pCollection, String pCollectionId)
-            throws OperationNotSupportedException {
+    public Collection updateCollection(Collection pCollection, Long pCollectionId)
+            throws EntityInconsistentIdentifierException {
         // Check if exist
-        Collection collectionBeforeUpdate = collectionRepository.findOne(pCollectionId);
+        final Collection collectionBeforeUpdate = collectionRepository.findOne(pCollectionId);
         if (!collectionBeforeUpdate.getId().equals(pCollection.getId())) {
-            throw new OperationNotSupportedException(
-                    "collectionId inside the route is different from the enity inside the request body");
+            // "collectionId inside the route is different from the enity inside the request body"
+            throw new EntityInconsistentIdentifierException(pCollectionId, pCollection.getId(), Collection.class);
         }
-        Collection collectionAfterUpdate = collectionRepository.save(pCollection);
+        final Collection collectionAfterUpdate = collectionRepository.save(pCollection);
         return collectionAfterUpdate;
     }
 
     @Override
-    public void deleteCollection(String pCollectionId) {
+    public void deleteCollection(Long pCollectionId) {
         collectionRepository.delete(pCollectionId);
     }
 
