@@ -11,4 +11,4 @@ package fr.cnes.regards.modules.entities.domain;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import fr.cnes.regards.modules.entities.domain.json.JsonBinaryType;
+import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
