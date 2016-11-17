@@ -55,15 +55,11 @@ public class AttributeModelService implements IAttributeModelService {
      */
     private final IFragmentRepository fragmentRepository;
 
-    private final IModelAttributeService modelAttributeService;
-
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
-            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
-            IModelAttributeService pModelAttributeService) {
+            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository) {
         this.attModelRepository = pAttModelRepository;
         this.restrictionRepository = pRestrictionRepository;
         this.fragmentRepository = pFragmentRepository;
-        this.modelAttributeService = pModelAttributeService;
     }
 
     @Override
@@ -83,7 +79,8 @@ public class AttributeModelService implements IAttributeModelService {
         final Fragment fragment = manageFragment(pAttributeModel);
         manageAttributeModel(pAttributeModel);
         if (fragment.isDefaultFragment()) {
-            modelAttributeService.updateNSBind(fragment.getId());
+            // TODO modelAttributeService.updateNSBind(fragment.getId());
+            // Attention au référence cyclique entre service
         }
         return pAttributeModel;
     }

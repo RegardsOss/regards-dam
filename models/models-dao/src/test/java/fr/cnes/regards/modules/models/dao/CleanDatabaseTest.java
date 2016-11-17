@@ -25,7 +25,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRest
  *
  */
 @MultitenantTransactional
-public class CleanDatabaseTest extends AbstractAttributeModelTest {
+public class CleanDatabaseTest extends AbstractModelTest {
 
     /**
      * Logger

@@ -65,7 +65,26 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
     /**
      * Position (allows to sort attribute in model)
      */
-    private Short pos = 0;
+    private Integer pos = 0;
+
+    public ModelAttribute() {
+        super();
+    }
+
+    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {
+        attribute = pAttributeModel;
+        this.model = pModel;
+        this.pos = pPosition;
+        this.isCalculated = pIsCalculated;
+    }
+
+    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {
+        this(pAttributeModel, pModel, pPosition, Boolean.FALSE);
+    }
+
+    public ModelAttribute(AttributeModel pAttributeModel, Model pModel) {
+        this(pAttributeModel, pModel, 0, Boolean.FALSE);
+    }
 
     @Override
     public Long getId() {
@@ -92,11 +111,11 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
         isCalculated = pIsCalculated;
     }
 
-    public Short getPos() {
+    public Integer getPos() {
         return pos;
     }
 
-    public void setPos(Short pPosition) {
+    public void setPos(Integer pPosition) {
         pos = pPosition;
     }
 
