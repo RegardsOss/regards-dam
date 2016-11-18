@@ -71,24 +71,21 @@ public class AttributeModelController implements IAttributeModelSignature, IReso
     @ResourceAccess(description = "Add an attribute")
     public ResponseEntity<Resource<AttributeModel>> addAttribute(@Valid @RequestBody AttributeModel pAttributeModel)
             throws ModuleException {
-        final AttributeModel attribute = attributeService.addAttribute(pAttributeModel);
-        return ResponseEntity.ok(toResource(attribute));
+        return ResponseEntity.ok(toResource(attributeService.addAttribute(pAttributeModel)));
     }
 
     @Override
     @ResourceAccess(description = "Get an attribute")
     public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable Long pAttributeId)
             throws ModuleException {
-        final AttributeModel attribute = attributeService.getAttribute(pAttributeId);
-        return ResponseEntity.ok(toResource(attribute));
+        return ResponseEntity.ok(toResource(attributeService.getAttribute(pAttributeId)));
     }
 
     @Override
     @ResourceAccess(description = "Update an attribute")
     public ResponseEntity<Resource<AttributeModel>> updateAttribute(@PathVariable Long pAttributeId,
             @Valid @RequestBody AttributeModel pAttributeModel) throws ModuleException {
-        final AttributeModel attribute = attributeService.updateAttribute(pAttributeId, pAttributeModel);
-        return ResponseEntity.ok(toResource(attribute));
+        return ResponseEntity.ok(toResource(attributeService.updateAttribute(pAttributeId, pAttributeModel)));
     }
 
     @Override

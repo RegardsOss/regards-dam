@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
-import fr.cnes.regards.framework.module.rest.exception.ModuleAlreadyExistsException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleEntityNotIdentifiableException;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleInconsistentEntityIdentifierException;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
@@ -76,19 +76,20 @@ public class AttributeModelService implements IAttributeModelService {
     @Override
     public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
         manageRestriction(pAttributeModel);
-        final Fragment fragment = manageFragment(pAttributeModel);
+        // final Fragment fragment =
+        manageFragment(pAttributeModel);
         manageAttributeModel(pAttributeModel);
-        if (fragment.isDefaultFragment()) {
-            // TODO modelAttributeService.updateNSBind(fragment.getId());
-            // Attention au référence cyclique entre service
-        }
+        // if (!fragment.isDefaultFragment()) {
+        // // TODO modelAttributeService.updateNSBind(fragment.getId());
+        // // Attention au référence cyclique entre service
+        // }
         return pAttributeModel;
     }
 
     @Override
     public AttributeModel getAttribute(Long pAttributeId) throws ModuleException {
         if (!attModelRepository.exists(pAttributeId)) {
-            throw new ModuleEntityNotFoundException(pAttributeId, AttributeModel.class);
+            throw new EntityNotFoundException(pAttributeId, AttributeModel.class);
         }
         return attModelRepository.findOne(pAttributeId);
     }
@@ -96,15 +97,15 @@ public class AttributeModelService implements IAttributeModelService {
     @Override
     public AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException {
         if (!pAttributeModel.isIdentifiable()) {
-            throw new ModuleEntityNotIdentifiableException(
+            throw new EntityNotIdentifiableException(
                     String.format("Unknown identifier for attribute model \"%s\"", pAttributeModel.getName()));
         }
         if (!pAttributeId.equals(pAttributeModel.getId())) {
-            throw new ModuleInconsistentEntityIdentifierException(pAttributeId, pAttributeModel.getId(),
+            throw new EntityInconsistentIdentifierException(pAttributeId, pAttributeModel.getId(),
                     pAttributeModel.getClass());
         }
         if (!attModelRepository.exists(pAttributeId)) {
-            throw new ModuleEntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
+            throw new EntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
         }
         return attModelRepository.save(pAttributeModel);
     }
@@ -194,7 +195,7 @@ public class AttributeModelService implements IAttributeModelService {
                     // CHECKSTYLE:ON
                 }
                 LOG.error(message);
-                throw new ModuleAlreadyExistsException(message);
+                throw new EntityAlreadyExistsException(message);
             }
         }
         return attModelRepository.save(pAttributeModel);
@@ -204,7 +205,7 @@ public class AttributeModelService implements IAttributeModelService {
     public boolean isFragmentAttribute(Long pAttributeId) throws ModuleException {
         final AttributeModel attModel = attModelRepository.findOne(pAttributeId);
         if (attModel == null) {
-            throw new ModuleEntityNotFoundException(pAttributeId, AttributeModel.class);
+            throw new EntityNotFoundException(pAttributeId, AttributeModel.class);
         }
         return !attModel.getFragment().isDefaultFragment();
     }

@@ -3,9 +3,12 @@
  */
 package fr.cnes.regards.modules.models.dao;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Iterables;
 
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
@@ -23,8 +26,12 @@ public class ModelTest extends AbstractModelTest {
     /**
      * Logger
      */
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ModelTest.class);
 
+    /**
+     * Create a model, attach an attribute model and try to retrieve
+     */
     @Test
     public void createModel() {
         final Model model = createModel("MISSION", "Scientist mission collection", ModelType.COLLECTION);
@@ -39,7 +46,6 @@ public class ModelTest extends AbstractModelTest {
 
         // Retrieve all model attributes
         final Iterable<ModelAttribute> directAtts = modelAttributeRepository.findByModelId(model.getId());
-        LOG.debug(model.getName());
-
+        Assert.assertEquals(1, Iterables.size(directAtts));
     }
 }

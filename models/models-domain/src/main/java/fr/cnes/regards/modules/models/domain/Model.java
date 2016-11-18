@@ -77,13 +77,6 @@ public class Model implements IIdentifiable<Long> {
     @Enumerated(EnumType.STRING)
     private ModelType type;
 
-    // /**
-    // * Model attributes
-    // */
-    // @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    // @OrderBy("pos ASC")
-    // private SortedSet<ModelAttribute> attributes = new TreeSet<>();
-
     @Override
     public Long getId() {
         return id;

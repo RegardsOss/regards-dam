@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.models.service;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 
 /**
@@ -41,5 +42,7 @@ public interface IModelAttributeService {
     void updateNSBind(Long pFragmentId) throws ModuleException;
 
     void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
+
+    Model duplicateModelAttributes(Long pSourceModelId, Model pTargetModel) throws ModuleException;
 
 }
