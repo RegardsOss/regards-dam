@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
@@ -33,6 +35,8 @@ public class ModelTest extends AbstractModelTest {
      * Create a model, attach an attribute model and try to retrieve
      */
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Purpose("Create a model of type COLLECTION - DOCUMENT, DATA or DATASET are also available -")
     public void createModel() {
         final Model model = createModel("MISSION", "Scientist mission collection", ModelType.COLLECTION);
 
@@ -48,4 +52,6 @@ public class ModelTest extends AbstractModelTest {
         final Iterable<ModelAttribute> directAtts = modelAttributeRepository.findByModelId(model.getId());
         Assert.assertEquals(1, Iterables.size(directAtts));
     }
+
+    // TODO try to delete a non empty model
 }

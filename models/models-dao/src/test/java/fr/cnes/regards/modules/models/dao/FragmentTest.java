@@ -10,6 +10,8 @@ import org.junit.Test;
 
 import com.google.common.collect.Iterables;
 
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -27,6 +29,8 @@ public class FragmentTest extends AbstractModelTest {
     /**
      * Try to delete a non empty fragment
      */
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Try to delete a non empty fragment")
     @Test(expected = PersistenceException.class)
     public void deleteFragment() {
 

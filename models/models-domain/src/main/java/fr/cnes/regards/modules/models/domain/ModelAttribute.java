@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -31,7 +32,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  *
  */
 @Entity
-@Table(name = "T_MODEL_ATT")
+@Table(name = "T_MODEL_ATT", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
 @SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "SEQ_MODEL_ATT")
 public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long> {
 

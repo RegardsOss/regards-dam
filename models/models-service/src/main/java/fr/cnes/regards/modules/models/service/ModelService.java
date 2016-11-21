@@ -138,6 +138,18 @@ public class ModelService implements IModelService, IModelAttributeService {
         if (attributeModelService.isFragmentAttribute(pModelAttribute.getAttribute().getId())) {
             throw new FragmentAttributeException(pModelAttribute.getAttribute().getId());
         }
+        // Do not rebind an attribute
+        final Iterable<ModelAttribute> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
+        if (existingModelAtts != null) {
+            for (ModelAttribute modAtt : existingModelAtts) {
+                if (modAtt.equals(pModelAttribute)) {
+                    throw new EntityAlreadyExistsException(
+                            String.format("Attribute %s already exists in model %s!", modAtt.getAttribute().getName(),
+                                          model.getName()));
+                }
+            }
+        }
+
         pModelAttribute.setModel(model);
         return modelAttributeRepository.save(pModelAttribute);
     }

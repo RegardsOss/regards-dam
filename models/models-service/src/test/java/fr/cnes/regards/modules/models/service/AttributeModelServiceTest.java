@@ -16,6 +16,8 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
@@ -68,6 +70,8 @@ public class AttributeModelServiceTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_060")
+    @Purpose("Retrieve list of project attributes")
     public void getAttributesTest() {
         final List<AttributeModel> expectedAttModels = new ArrayList<>();
         expectedAttModels.add(AttributeModelBuilder.build("FIRST", AttributeType.STRING).get());
@@ -80,6 +84,9 @@ public class AttributeModelServiceTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Requirement("REGARDS_DSL_DAM_MOD_060")
+    @Purpose("Retrieve list of project attributes by type")
     public void getAttributesByTypeTest() {
         final List<AttributeModel> expectedAttModels = new ArrayList<>();
         expectedAttModels.add(AttributeModelBuilder.build("FIRST_STRING", AttributeType.STRING).get());
@@ -97,6 +104,8 @@ public class AttributeModelServiceTest {
      *             if error occurs!
      */
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Purpose("Create an attribute and automatically bind it to default fragment (i.e. namespace)")
     public void addAttributeTest() throws ModuleException {
         final String attName = "MISSION";
         final AttributeType attType = AttributeType.STRING;
@@ -117,6 +126,9 @@ public class AttributeModelServiceTest {
      *             if error occurs!
      */
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Manage a GEO fragment (i.e. consistent object)")
     public void addAttributeInFragmentTest() throws ModuleException {
         final String attName = "COORDINATE";
         final AttributeType attType = AttributeType.GEOMETRY;
