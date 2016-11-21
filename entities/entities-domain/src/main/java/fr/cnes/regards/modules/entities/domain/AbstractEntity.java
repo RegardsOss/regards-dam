@@ -5,16 +5,29 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
 
 import org.apache.poi.ss.formula.functions.T;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
 import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -27,28 +40,38 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  *
  */
+@TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+// @Entity
+// @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "SEQ_ENTITY")
+@MappedSuperclass
 public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     /**
      * last time the entity was updated
      */
     @PastOrNow
+    @Column
     protected LocalDateTime lastUpdate;
 
     /**
      * time at which the entity was created
      */
     @PastOrNow
+    @Column
     protected LocalDateTime creationDate;
 
     /**
      * entity id for SGBD purpose mainly and REST request
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
     protected Long id;
 
     /**
      * Information Package ID for REST request
      */
+    @Column
     protected String ipId;
 
     /**
@@ -56,31 +79,46 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * REST request
      */
     @NotNull
-    protected final String sipId;
+    @Column
+    protected String sipId;
 
     /**
-     * list of tags affected to this entity
+     * FIXME: element collection means a table of tags for collection, another one for datasets etc, or creating an
+     * entity Tag that would mean same table for all those entities knowing that most of tags will be on several type of
+     *
+     * entities list of tags affected to this entity
      */
+    @Column
+    @ElementCollection
     protected List<String> tags;
 
     /**
      * list of attribute associated to this entity
      */
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
     protected List<IAttribute<T>> attributes;
 
     /**
      * model that this entity is respecting
      */
+    @ManyToOne
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
+            updatable = false, referencedColumnName = "id")
     protected Model model;
 
     public AbstractEntity() {
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
-        sipId = String.format("%d-azrtyuiop", ThreadLocalRandom.current().nextInt(1, 1000000));
     }
 
-    public AbstractEntity(Model pModel) {
+    public AbstractEntity(Long pId) {
         this();
+        id = pId;
+    }
+
+    public AbstractEntity(Model pModel, Long pId) {
+        this(pId);
         model = pModel;
     }
 
@@ -143,13 +181,13 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         tags = pTags;
     }
 
-    public List<IAttribute<T>> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(List<IAttribute<T>> pAttributes) {
-        attributes = pAttributes;
-    }
+    // public List<IAttribute<T>> getAttributes() {
+    // return attributes;
+    // }
+    //
+    // public void setAttributes(List<IAttribute<T>> pAttributes) {
+    // attributes = pAttributes;
+    // }
 
     public Model getModel() {
         return model;
@@ -161,6 +199,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     public String getSipId() {
         return sipId;
+    }
+
+    public void setSipId(String pSipId) {
+        sipId = pSipId;
     }
 
 }

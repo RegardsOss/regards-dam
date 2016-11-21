@@ -15,9 +15,10 @@
 	</parent>
 
 	<dependencies>
+		<!-- REGARDS starter -->
 		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-jpa</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-multitenant-regards-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>

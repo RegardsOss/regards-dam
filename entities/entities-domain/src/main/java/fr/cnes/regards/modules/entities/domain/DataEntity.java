@@ -21,8 +21,8 @@ public class DataEntity extends AbstractEntity {
     /**
      * @param pFiles
      */
-    public DataEntity(String pSid_id, Model pModel, List<Data> pFiles) {
-        super(pModel);
+    public DataEntity(Long pId, String pSid_id, Model pModel, List<Data> pFiles) {
+        super(pModel, pId);
         files_ = pFiles;
     }
 

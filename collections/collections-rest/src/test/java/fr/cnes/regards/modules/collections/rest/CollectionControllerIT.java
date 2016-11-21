@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -26,17 +24,14 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author lmieulet
- *
+ * @author Sylvain Vissiere-Guerinet
  */
-@Ignore
 public class CollectionControllerIT extends AbstractRegardsIT {
 
+    /**
+     * Logger
+     */
     private static final Logger LOG = LoggerFactory.getLogger(CollectionControllerIT.class);
-
-    private String jwt;
-
-    @Autowired
-    private JWTService jwtService;
 
     private Model model1;
 
@@ -49,8 +44,6 @@ public class CollectionControllerIT extends AbstractRegardsIT {
 
     @Before
     public void setup() {
-        final String role = "USER";
-        jwt = jwtService.generateToken("PROJECT", "email", "MSI", role);
         expectations = new ArrayList<>();
 
         // Reset entities list
@@ -58,8 +51,9 @@ public class CollectionControllerIT extends AbstractRegardsIT {
 
         // Bootstrap default values
         model1 = new Model();
+        model1.setId(1L);
 
-        collection1 = collectionRepository.save(new Collection(model1, "pDescription", "pName"));
+        collection1 = collectionRepository.save(new Collection(1L, model1, "pDescription", "pName"));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_510")
@@ -71,14 +65,14 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.*", Matchers.hasSize(1)));
         expectations.add(MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.is(collection1.getName())));
 
-        performGet("/collections", jwt, expectations, "Failed to fetch collection list");
+        performDefaultGet("/collections", expectations, "Failed to fetch collection list");
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_xxx")
     @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
-        final Collection collection2 = new Collection(model1, "pDescription2", "pName2");
+        final Collection collection2 = new Collection(2L, model1, "pDescription2", "pName2");
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
@@ -88,7 +82,7 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(collection2.getName())));
         expectations.add(MockMvcResultMatchers.jsonPath("$.sidId", Matchers.anything()));
         expectations.add(MockMvcResultMatchers.jsonPath("$.links.*", Matchers.hasSize(0)));
-        performPost("/collections", jwt, collection2, expectations, "Failed to create a new collection");
+        performDefaultPost("/collections", collection2, expectations, "Failed to create a new collection");
 
     }
 
@@ -100,8 +94,8 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
         expectations.add(MockMvcResultMatchers.jsonPath("$.description", Matchers.is(collection1.getDescription())));
         expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(collection1.getName())));
-        performGet("/collections/{collection_id}", jwt, expectations,
-                   "Failed to fetch a specific collection using its id", collection1.getId());
+        performDefaultGet("/collections/{collection_id}", expectations,
+                          "Failed to fetch a specific collection using its id", collection1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_410")
@@ -114,8 +108,8 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.is(collection1.getName())));
         expectations
                 .add(MockMvcResultMatchers.jsonPath("$.[0].description", Matchers.is(collection1.getDescription())));
-        performGet("/collections/model/{model_id}", jwt, expectations,
-                   "Failed to fetch a specific collection using its model id", model1.getId());
+        performDefaultGet("/collections/model/{model_id}", expectations,
+                          "Failed to fetch a specific collection using its model id", model1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_xxx")
@@ -129,8 +123,8 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
         expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(newName)));
-        performPut("/collections/{collection_id}", jwt, collectionClone, expectations,
-                   "Failed to update a specific collection using its id", collection1.getId());
+        performDefaultPut("/collections/{collection_id}", collectionClone, expectations,
+                          "Failed to update a specific collection using its id", collection1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_110")
@@ -138,8 +132,8 @@ public class CollectionControllerIT extends AbstractRegardsIT {
     @Test
     public void testDeleteCollection() {
         expectations.add(MockMvcResultMatchers.status().isOk());
-        performDelete("/collections/{collection_id}", jwt, expectations,
-                      "Failed to delete a specific collection using its id", collection1.getId());
+        performDefaultDelete("/collections/{collection_id}", expectations,
+                             "Failed to delete a specific collection using its id", collection1.getId());
     }
 
     @Override

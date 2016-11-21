@@ -3,9 +3,8 @@
  */
 package fr.cnes.regards.modules.collections.service.test;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javax.naming.OperationNotSupportedException;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,11 +22,9 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author lmieulet
- *
+ * @author Sylvain Vissiere-Guerinet
  */
 public class CollectionRequestServiceTest {
-
-    private ICollectionsRequestService collectionsRequestService;
 
     private Model pModel1;
 
@@ -47,6 +44,13 @@ public class CollectionRequestServiceTest {
      */
     @Before
     public void init() {
+        // populate the repository
+        pModel1 = new Model();
+        pModel1.setId(1L);
+        pModel2 = new Model();
+        pModel2.setId(2L);
+        collection1 = new Collection(1L, pModel1, "pDescription", "pName");
+        collection2 = new Collection(2L, pModel2, "pDescription2", "pName2");
         // create a mock repository
         collectionRepositoryMocked = Mockito.mock(ICollectionRepository.class);
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked);
@@ -57,23 +61,31 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all collections.")
     public void retrieveCollectionList() {
-        final List<Collection> collections = collectionsRequestService.retrieveCollectionList(null);
-        Assert.assertEquals(collections.size(), 2);
+        final List<Collection> answer = new ArrayList<>(2);
+        answer.add(collection1);
+        answer.add(collection2);
+        Mockito.when(collectionRepositoryMocked.findAll()).thenReturn(answer);
+        final List<Collection> collections = collectionsRequestServiceMocked.retrieveCollectionList(null);
+        Assert.assertEquals(2, collections.size());
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve collections by model id.")
     public void retrieveCollectionListByModelId() {
-        final List<Collection> collections = collectionsRequestService.retrieveCollectionList(pModel1.getId());
-        Assert.assertEquals(collections.size(), 1);
-        Assert.assertEquals(collections.get(0).getId(), collection1.getId());
-        Assert.assertEquals(collections.get(0).getModel().getId(), pModel1.getId());
+        final List<Collection> answer = new ArrayList<>(1);
+        answer.add(collection1);
+        Mockito.when(collectionRepositoryMocked.findAllByModelId(pModel1.getId())).thenReturn(answer);
+        final List<Collection> collections = collectionsRequestServiceMocked.retrieveCollectionList(pModel1.getId());
+        Assert.assertEquals(1, collections.size());
+        Assert.assertEquals(collection1.getId(), collections.get(0).getId());
+        Assert.assertEquals(pModel1.getId(), collections.get(0).getModel().getId());
     }
 
     @Test
     public void retrieveCollectionById() {
-        final Collection collection = collectionsRequestService.retrieveCollectionById(collection2.getId());
+        Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
+        final Collection collection = collectionsRequestServiceMocked.retrieveCollectionById(collection2.getId());
 
         Assert.assertEquals(collection.getId(), collection2.getId());
         Assert.assertEquals(collection.getModel().getId(), pModel2.getId());
@@ -91,7 +103,7 @@ public class CollectionRequestServiceTest {
         }
     }
 
-    @Test(expected = OperationNotSupportedException.class)
+    @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateCollectionWithWrongURL() throws EntityInconsistentIdentifierException {
         Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         collectionsRequestServiceMocked.updateCollection(collection1, collection2.getId());
