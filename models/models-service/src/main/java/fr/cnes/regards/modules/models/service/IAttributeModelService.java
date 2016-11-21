@@ -33,6 +33,10 @@ public interface IAttributeModelService {
      * @param pAttributeId
      *            attribute to check
      * @return true if attribute linked to a particular fragment
+     * @throws ModuleException
+     *             if fragment does not exist
      */
     boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
+
+    List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException;
 }

@@ -3,10 +3,6 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -15,8 +11,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -33,7 +27,7 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  *
  */
 @Entity
-@Table(name = "T_MODEL", indexes = { @Index(columnList = "name") })
+@Table(name = "T_MODEL", indexes = { @Index(name = "IDX_MODEL_NAME", columnList = "name") })
 @SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "SEQ_MODEL")
 public class Model implements IIdentifiable<Long> {
 
@@ -83,13 +77,6 @@ public class Model implements IIdentifiable<Long> {
     @Enumerated(EnumType.STRING)
     private ModelType type;
 
-    /**
-     * Model attributes
-     */
-    @OneToMany(mappedBy = "model", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("pos ASC")
-    private transient SortedSet<ModelAttribute> attributes = new TreeSet<>();
-
     @Override
     public Long getId() {
         return id;
@@ -123,15 +110,15 @@ public class Model implements IIdentifiable<Long> {
         description = pDescription;
     }
 
-    public SortedSet<ModelAttribute> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(SortedSet<ModelAttribute> pAttributes) {
-        attributes = pAttributes;
-    }
-
-    public void addAttribute(ModelAttribute pAttribute) {
-        attributes.add(pAttribute);
-    }
+    // public SortedSet<ModelAttribute> getAttributes() {
+    // return attributes;
+    // }
+    //
+    // public void setAttributes(SortedSet<ModelAttribute> pAttributes) {
+    // attributes = pAttributes;
+    // }
+    //
+    // public void addAttribute(ModelAttribute pAttribute) {
+    // attributes.add(pAttribute);
+    // }
 }

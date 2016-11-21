@@ -38,9 +38,9 @@ public class CleanDatabaseTest extends AbstractModelTest {
         final AttributeModel attModel = AttributeModelBuilder.build("withRestrictionAttribute", AttributeType.STRING)
                 .withPatternRestriction("MOCKPATTERN");
         final AttributeModel saved = saveAttribute(attModel);
-        getAttModelRepository().delete(saved);
+        attModelRepository.delete(saved);
 
-        final Iterable<AbstractRestriction> it = getRestrictionRepository().findAll();
+        final Iterable<AbstractRestriction> it = restrictionRepository.findAll();
         Assert.assertEquals(0, Iterables.size(it));
     }
 
@@ -58,11 +58,11 @@ public class CleanDatabaseTest extends AbstractModelTest {
                 .withoutRestriction();
         saveAttribute(attModel2);
 
-        getAttModelRepository().delete(saved);
+        attModelRepository.delete(saved);
 
         // Only one attribute model is deleted
         // The default fragment is not removed
-        final Fragment defaultFragment = getFragmentRepository().findByName(Fragment.getDefaultName());
+        final Fragment defaultFragment = fragmentRepository.findByName(Fragment.getDefaultName());
         Assert.assertNotNull(defaultFragment);
     }
 }

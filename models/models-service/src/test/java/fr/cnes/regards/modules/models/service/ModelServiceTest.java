@@ -1,0 +1,347 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
+package fr.cnes.regards.modules.models.service;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.util.Assert;
+
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
+import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
+
+/**
+ * @author Marc Sordi
+ *
+ */
+public class ModelServiceTest {
+
+    /**
+     * Sample model name
+     */
+    private static final String MODEL_NAME = "model";
+
+    /**
+     * Sample attribute model name
+     */
+    private static final String ATT_MOD_NAME = "attmod";
+
+    /**
+     * Model repository
+     */
+    private IModelRepository mockModelR;
+
+    /**
+     * Model attribute repository
+     */
+    private IModelAttributeRepository mockModelAttR;
+
+    /**
+     * Attribute model service
+     */
+    private IAttributeModelService mockAttModelS;
+
+    /**
+     * Model and model attribute services
+     */
+    private ModelService modelService;
+
+    @Before
+    public void beforeTest() {
+        mockModelR = Mockito.mock(IModelRepository.class);
+        mockModelAttR = Mockito.mock(IModelAttributeRepository.class);
+        mockAttModelS = Mockito.mock(IAttributeModelService.class);
+        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS);
+    }
+
+    @Test(expected = EntityUnexpectedIdentifierException.class)
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Purpose("Test unexpected model creation")
+    public void createUnexpectedModelTest() throws ModuleException {
+        final Model model = new Model();
+        model.setId(1L);
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+        modelService.createModel(model);
+    }
+
+    @Test(expected = EntityAlreadyExistsException.class)
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Purpose("Test model creation with conflict")
+    public void createAlreadyExistsModelTest() throws ModuleException {
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+
+        Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(model);
+
+        modelService.createModel(model);
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Purpose("Test model creation")
+    public void createModelTest() throws ModuleException {
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+
+        Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(null);
+        Mockito.when(mockModelR.save(model)).thenReturn(model);
+
+        Assert.notNull(modelService.createModel(model));
+    }
+
+    @Test(expected = EntityNotFoundException.class)
+    public void getUnknownModelTest() throws ModuleException {
+        final Long modelId = 1L;
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
+
+        modelService.getModel(modelId);
+    }
+
+    @Test
+    public void getModelTest() throws ModuleException {
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+
+        Assert.notNull(modelService.getModel(modelId));
+    }
+
+    @Test(expected = EntityNotIdentifiableException.class)
+    public void updateUnexpectedModelTest() throws ModuleException {
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+        modelService.updateModel(modelId, model);
+    }
+
+    @Test(expected = EntityInconsistentIdentifierException.class)
+    public void updateInconsistentModelTest() throws ModuleException {
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+        model.setId(2L);
+
+        modelService.updateModel(modelId, model);
+    }
+
+    @Test(expected = EntityNotFoundException.class)
+    public void updateUnknownModelTest() throws ModuleException {
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+        model.setId(modelId);
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
+
+        modelService.updateModel(modelId, model);
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Purpose("Test model update")
+    public void updateModelTest() throws ModuleException {
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+        model.setId(modelId);
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.save(model)).thenReturn(model);
+
+        Assert.notNull(modelService.updateModel(modelId, model));
+    }
+
+    @Test
+    public void deleteModelTest() throws ModuleException {
+        final Long modelId = 1L;
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
+        final IModelService spy = Mockito.spy(modelService);
+        Mockito.doNothing().when(spy).deleteModel(modelId);
+
+        modelService.deleteModel(modelId);
+    }
+
+    /**
+     * Do not bind an attribute that is part of fragment
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test(expected = FragmentAttributeException.class)
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Test error occurs binding attribute that is part of a fragment")
+    public void bindAttributeToModelTest() throws ModuleException {
+
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setId(modelId);
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+
+        final Fragment frag = Fragment.buildFragment("FRAG", null);
+        final Long attId = 10L;
+        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING).fragment(frag)
+                .withId(attId).get();
+
+        final ModelAttribute modAtt = new ModelAttribute(attModel, model);
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
+
+        modelService.bindAttributeToModel(modelId, modAtt);
+    }
+
+    // TODO do not rebind an attribute
+
+    /**
+     * Do not unbind an attribute that is part of fragment
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test(expected = FragmentAttributeException.class)
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Test error occurs unbinding attribute that is part of a fragment")
+    public void unbindAttributeFromModelTest() throws ModuleException {
+
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setId(modelId);
+        model.setName(MODEL_NAME);
+        model.setType(ModelType.COLLECTION);
+
+        final Fragment frag = Fragment.buildFragment("FR2AG", null);
+        final Long attId = 10L;
+        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING).fragment(frag)
+                .withId(attId).withPatternRestriction(".*");
+
+        final Long modAttId = 10L;
+        final ModelAttribute modAtt = new ModelAttribute(attModel, model);
+        modAtt.setId(modAttId);
+
+        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
+        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockModelAttR.findOne(modAttId)).thenReturn(modAtt);
+        Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
+
+        modelService.unbindAttributeFromModel(modelId, modAttId);
+    }
+
+    //
+    // @Override
+    // @MultitenantTransactional
+    // public List<ModelAttribute> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
+    // final List<ModelAttribute> modAtts = new ArrayList<>();
+    // final Model model = getModel(pModelId);
+    // final Iterable<ModelAttribute> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
+    //
+    // // Check if fragment not already bound
+    // if (!isBoundFragment(existingModelAtts, pFragmentId)) {
+    //
+    // // Retrieve fragment attributes
+    // final List<AttributeModel> attModels = attributeModelService.findByFragmentId(pFragmentId);
+    //
+    // if (attModels != null) {
+    // for (AttributeModel attModel : attModels) {
+    // // Create model attributes to link base attributes
+    // final ModelAttribute modelAtt = new ModelAttribute();
+    // modelAtt.setAttribute(attModel);
+    // modelAtt.setModel(model);
+    // modelAttributeRepository.save(modelAtt);
+    // modAtts.add(modelAtt);
+    // }
+    // }
+    // } else {
+    // LOG.warn("Fragment {} already bound to model {}", pFragmentId, pModelId);
+    // }
+    // return modAtts;
+    // }
+    //
+    // /**
+    // * Check if fragment is bounded to the model
+    // *
+    // * @param pModelAtts
+    // * model attributes
+    // * @param pFragmentId
+    // * fragment identifier
+    // * @return true if fragment is bound
+    // */
+    // private boolean isBoundFragment(final Iterable<ModelAttribute> pModelAtts, Long pFragmentId) {
+    // if (pModelAtts != null) {
+    // for (ModelAttribute modelAtt : pModelAtts) {
+    // if (pFragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
+    // return true;
+    // }
+    // }
+    // }
+    // return false;
+    // }
+    //
+    // @Override
+    // @MultitenantTransactional
+    // public void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
+    // final Iterable<ModelAttribute> modelAtts = modelAttributeRepository.findByModelId(pModelId);
+    // if (modelAtts != null) {
+    // for (ModelAttribute modelAtt : modelAtts) {
+    // if (pFragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
+    // modelAttributeRepository.delete(modelAtt);
+    // }
+    // }
+    // }
+    // }
+    //
+    // @Override
+    // public void updateNSBind(Long pFragmentId) throws ModuleException {
+    // // FIXME update all model bound to this fragment if fragment attribute list is updated
+    // }
+    //
+    // @Override
+    // public Model duplicateModelAttributes(Long pSourceModelId, Model pTargetModel) throws ModuleException {
+    // // Retrieve all reference model attributes
+    // final List<ModelAttribute> modelAtts = getModelAttributes(pSourceModelId);
+    // if (modelAtts != null) {
+    // for (ModelAttribute modelAtt : modelAtts) {
+    // // Create model attributes to link base attributes
+    // final ModelAttribute duplicatedModelAtt = new ModelAttribute();
+    // duplicatedModelAtt.setCalculated(modelAtt.isCalculated());
+    // duplicatedModelAtt.setAttribute(modelAtt.getAttribute());
+    // duplicatedModelAtt.setModel(pTargetModel);
+    // modelAttributeRepository.save(duplicatedModelAtt);
+    // }
+    // }
+    // return pTargetModel;
+    // }
+}

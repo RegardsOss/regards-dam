@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -13,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -30,7 +32,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  *
  */
 @Entity
-@Table(name = "T_MODEL_ATT")
+@Table(name = "T_MODEL_ATT", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
 @SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "SEQ_MODEL_ATT")
 public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long> {
 
@@ -53,7 +55,8 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      * Whether this attribute in computed or not
      */
     // TODO link to a calculation plugin
-    private Boolean isCalculated = Boolean.FALSE;
+    @Column(name = "calculated")
+    private boolean calculated = Boolean.FALSE;
 
     /**
      * Related model
@@ -75,7 +78,7 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
         attribute = pAttributeModel;
         this.model = pModel;
         this.pos = pPosition;
-        this.isCalculated = pIsCalculated;
+        this.calculated = pIsCalculated;
     }
 
     public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {
@@ -103,12 +106,12 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
         attribute = pAttribute;
     }
 
-    public Boolean getIsCalculated() {
-        return isCalculated;
+    public boolean isCalculated() {
+        return calculated;
     }
 
-    public void setIsCalculated(Boolean pIsCalculated) {
-        isCalculated = pIsCalculated;
+    public void setCalculated(boolean pIsCalculated) {
+        calculated = pIsCalculated;
     }
 
     public Integer getPos() {

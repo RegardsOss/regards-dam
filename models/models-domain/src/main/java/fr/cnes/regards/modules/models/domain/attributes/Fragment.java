@@ -3,16 +3,12 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -63,12 +59,6 @@ public class Fragment implements IIdentifiable<Long> {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "fragmentSequence")
     private Long id;
-
-    /**
-     * List of related attribute models
-     */
-    @OneToMany(mappedBy = "fragment", fetch = FetchType.EAGER)
-    private transient List<AttributeModel> attributeModels;
 
     /**
      * Attribute name
@@ -131,14 +121,6 @@ public class Fragment implements IIdentifiable<Long> {
 
     public static String getDefaultName() {
         return DEFAULT_FRAGMENT_NAME;
-    }
-
-    public List<AttributeModel> getAttributeModels() {
-        return attributeModels;
-    }
-
-    public void setAttributeModels(List<AttributeModel> pAttributeModels) {
-        attributeModels = pAttributeModels;
     }
 
     @Override

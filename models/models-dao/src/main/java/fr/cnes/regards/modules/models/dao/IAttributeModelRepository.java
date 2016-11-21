@@ -22,4 +22,6 @@ public interface IAttributeModelRepository extends CrudRepository<AttributeModel
     Iterable<AttributeModel> findByType(AttributeType pType);
 
     AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
+
+    Iterable<AttributeModel> findByFragmentId(Long pFragmentId);
 }

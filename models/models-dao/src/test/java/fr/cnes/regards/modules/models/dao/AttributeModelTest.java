@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import com.google.common.collect.Iterables;
 
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -26,6 +28,11 @@ public class AttributeModelTest extends AbstractModelTest {
      * Save and retrieve a single and simple attribute
      */
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_020")
+    @Requirement("REGARDS_DSL_DAM_MOD_100")
+    @Requirement("REGARDS_DSL_DAM_MOD_110")
+    @Requirement("REGARDS_DSL_DAM_MOD_120")
+    @Purpose("Create a single attribute of type STRING not queryable and not facetable")
     public void singleAttribute() {
 
         // Add string attribute
@@ -51,6 +58,8 @@ public class AttributeModelTest extends AbstractModelTest {
      * Test fragment
      */
     @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Test fragment management")
     public void fragmentTest() {
         final Fragment f = new Fragment();
         final String name = "GEO_FRAGMENT";
@@ -66,7 +75,7 @@ public class AttributeModelTest extends AbstractModelTest {
                 .withEnumerationRestriction("EARTH", "ASTRO", "MARS");
         saveAttribute(attModel2);
 
-        final Iterable<AttributeModel> atts = getAttModelRepository().findAll();
+        final Iterable<AttributeModel> atts = attModelRepository.findAll();
         Assert.assertEquals(2, Iterables.size(atts));
         for (final AttributeModel att : atts) {
             Assert.assertNotNull(att.getFragment());
@@ -80,6 +89,6 @@ public class AttributeModelTest extends AbstractModelTest {
         final AttributeModel attModel = AttributeModelBuilder.build("TO_DELETE", AttributeType.STRING)
                 .withoutRestriction();
         final AttributeModel saved = saveAttribute(attModel);
-        getAttModelRepository().delete(saved);
+        attModelRepository.delete(saved);
     }
 }
