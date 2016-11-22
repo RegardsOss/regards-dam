@@ -6,28 +6,25 @@ package fr.cnes.regards.modules.entities.domain;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
-
-import org.apache.poi.ss.formula.functions.T;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
 import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -40,11 +37,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-// @Entity
-// @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "SEQ_ENTITY")
-@MappedSuperclass
+// @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+// @MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     /**
@@ -65,6 +61,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * entity id for SGBD purpose mainly and REST request
      */
     @Id
+    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "SEQ_ENTITY")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
     protected Long id;
 
@@ -85,26 +82,28 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * FIXME: element collection means a table of tags for collection, another one for datasets etc, or creating an
      * entity Tag that would mean same table for all those entities knowing that most of tags will be on several type of
+     * them
      *
      * entities list of tags affected to this entity
      */
     @Column
     @ElementCollection
+    @CollectionTable(joinColumns = @JoinColumn(name = "ID", foreignKey = @ForeignKey(name = "FK_TAGS_ID")))
     protected List<String> tags;
 
     /**
      * list of attribute associated to this entity
      */
-    @Type(type = "jsonb")
-    @Column(columnDefinition = "jsonb")
-    protected List<IAttribute<T>> attributes;
+    // @Type(type = "jsonb")
+    // @Column(columnDefinition = "jsonb")
+    // protected List<IAttribute<T>> attributes;
 
     /**
      * model that this entity is respecting
      */
-    @ManyToOne
+    @ManyToOne(targetEntity = Model.class)
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
-            updatable = false, referencedColumnName = "id")
+            updatable = false)
     protected Model model;
 
     public AbstractEntity() {

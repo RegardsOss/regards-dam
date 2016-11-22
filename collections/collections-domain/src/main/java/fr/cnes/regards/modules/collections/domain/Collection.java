@@ -6,10 +6,13 @@ package fr.cnes.regards.modules.collections.domain;
 import java.util.List;
 
 import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -24,9 +27,19 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Entity
 @Table(name = "T_COLLECTION")
-@AssociationOverride(name = "model", foreignKey = @ForeignKey(name = "FK_COLLECTION_MODEL"))
-// @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "SEQ_COLLECTION")
+@AssociationOverrides({ @AssociationOverride(
+        name = "model", joinColumns = @JoinColumn(name = "model_id",
+                foreignKey = @ForeignKey(name = "FK_COLLECTION_MODEL_ID"), nullable = false, updatable = false),
+        foreignKey = @ForeignKey(name = "FK_COLLECTION_MODEL_ID")) })
 public class Collection extends AbstractEntity {
+
+    /**
+     * model that this entity is respecting
+     */
+    @ManyToOne
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
+            updatable = false)
+    protected Model model;
 
     /**
      * description

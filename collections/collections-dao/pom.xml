@@ -20,6 +20,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>jpa-multitenant-regards-starter</artifactId>
 		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.springframework.boot</groupId> -->
+		<!-- <artifactId>spring-boot-starter-data-jpa</artifactId> -->
+		<!-- </dependency> -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-domain</artifactId>
