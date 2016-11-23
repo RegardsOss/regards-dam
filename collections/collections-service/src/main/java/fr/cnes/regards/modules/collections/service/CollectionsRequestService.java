@@ -45,9 +45,11 @@ public class CollectionsRequestService implements ICollectionsRequestService {
         }
     }
 
+    // TODO: reintegrate
     private List<Collection> retrieveCollectionListByModelId(Long pModelId) {
-        final Iterable<Collection> collections = collectionRepository.findAllByModelId(pModelId);
-        return StreamSupport.stream(collections.spliterator(), true).collect(Collectors.toList());
+        // final Iterable<Collection> collections = collectionRepository.findAllByModelId(pModelId);
+        // return StreamSupport.stream(collections.spliterator(), true).collect(Collectors.toList());
+        return null;
     }
 
     @Override

@@ -19,12 +19,19 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+
+import org.apache.poi.ss.formula.functions.T;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
 import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -37,9 +44,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-// @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+@TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 // @MappedSuperclass
 @Entity
+@Table(name = "T_ENTITY")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class AbstractEntity implements IIdentifiable<Long> {
 
@@ -47,7 +55,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * last time the entity was updated
      */
     @PastOrNow
-    @Column
+    @Column(name = "last_update")
     protected LocalDateTime lastUpdate;
 
     /**
@@ -68,6 +76,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * Information Package ID for REST request
      */
+    @NotNull
     @Column
     protected String ipId;
 
@@ -75,7 +84,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
      * REST request
      */
-    @NotNull
     @Column
     protected String sipId;
 
@@ -86,22 +94,22 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      *
      * entities list of tags affected to this entity
      */
-    @Column
+
     @ElementCollection
-    @CollectionTable(joinColumns = @JoinColumn(name = "ID", foreignKey = @ForeignKey(name = "FK_TAGS_ID")))
+    @CollectionTable(name = "TA_ENTITY_TAGS", foreignKey = @ForeignKey(name = "FK_ENTITY_TAGS_ID"))
     protected List<String> tags;
 
     /**
      * list of attribute associated to this entity
      */
-    // @Type(type = "jsonb")
-    // @Column(columnDefinition = "jsonb")
-    // protected List<IAttribute<T>> attributes;
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    protected List<IAttribute<T>> attributes;
 
     /**
      * model that this entity is respecting
      */
-    @ManyToOne(targetEntity = Model.class)
+    @ManyToOne
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
             updatable = false)
     protected Model model;
@@ -111,13 +119,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         lastUpdate = LocalDateTime.now();
     }
 
-    public AbstractEntity(Long pId) {
-        this();
+    public AbstractEntity(Model pModel, Long pId, String pIpId) {
         id = pId;
-    }
-
-    public AbstractEntity(Model pModel, Long pId) {
-        this(pId);
+        ipId = pIpId;
         model = pModel;
     }
 
@@ -180,13 +184,13 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         tags = pTags;
     }
 
-    // public List<IAttribute<T>> getAttributes() {
-    // return attributes;
-    // }
-    //
-    // public void setAttributes(List<IAttribute<T>> pAttributes) {
-    // attributes = pAttributes;
-    // }
+    public List<IAttribute<T>> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(List<IAttribute<T>> pAttributes) {
+        attributes = pAttributes;
+    }
 
     public Model getModel() {
         return model;

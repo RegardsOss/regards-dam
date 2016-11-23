@@ -3,6 +3,10 @@
  */
 package fr.cnes.regards.modules.collections.dao;
 
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.IEntityPagingAndSortingRepository;
 
@@ -11,6 +15,7 @@ import fr.cnes.regards.modules.entities.domain.IEntityPagingAndSortingRepository
  * @author Sylvain Vissiere-Guerinet
  *
  */
+@Repository
 public interface ICollectionRepository extends IEntityPagingAndSortingRepository<Collection> {
 
     /**
@@ -18,6 +23,6 @@ public interface ICollectionRepository extends IEntityPagingAndSortingRepository
      *            id of the model the collections should respect
      * @return list of Collection respecting a model
      */
-    Iterable<Collection> findAllByModelId(Long pModelId);
+    List<Collection> findByModelId(Long pModelId);
 
 }

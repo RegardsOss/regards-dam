@@ -27,6 +27,14 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>regards-core-jpa-data</artifactId>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>fr.cnes.regards.framework</groupId> -->
+<!-- 			<artifactId>jpa-multitenant-regards</artifactId> -->
+<!-- 		</dependency> -->
 		<!-- Microservice internal dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.entities</groupId>

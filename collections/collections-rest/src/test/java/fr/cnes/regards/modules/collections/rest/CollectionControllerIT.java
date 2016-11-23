@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -26,6 +28,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
+@TestPropertySource("classpath:test.properties")
+@ComponentScan(basePackages = { "fr.cnes.regards.modules.collections" })
 public class CollectionControllerIT extends AbstractRegardsIT {
 
     /**
@@ -53,7 +57,7 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         model1 = new Model();
         model1.setId(1L);
 
-        collection1 = collectionRepository.save(new Collection(1L, model1, "pDescription", "pName"));
+        collection1 = collectionRepository.save(new Collection(1L, "IpID", model1, "pDescription", "pName"));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_510")
@@ -72,7 +76,7 @@ public class CollectionControllerIT extends AbstractRegardsIT {
     @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
-        final Collection collection2 = new Collection(2L, model1, "pDescription2", "pName2");
+        final Collection collection2 = new Collection(2L, "IpID2", model1, "pDescription2", "pName2");
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
