@@ -63,12 +63,20 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(AttributeType pType) {
+    public List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName) {
         final Iterable<AttributeModel> attModels;
-        if (pType != null) {
-            attModels = attModelRepository.findByType(pType);
+        if (pFragmentName != null) {
+            if (pType != null) {
+                attModels = attModelRepository.findByTypeAndFragmentName(pType, pFragmentName);
+            } else {
+                attModels = attModelRepository.findByFragmentName(pFragmentName);
+            }
         } else {
-            attModels = attModelRepository.findAll();
+            if (pType != null) {
+                attModels = attModelRepository.findByType(pType);
+            } else {
+                attModels = attModelRepository.findAll();
+            }
         }
         return IterableUtils.toList(attModels);
     }
@@ -149,23 +157,22 @@ public class AttributeModelService implements IAttributeModelService {
     private Fragment manageFragment(AttributeModel pAttributeModel) {
         Fragment fragment = pAttributeModel.getFragment();
         if (fragment != null) {
-            if (!fragment.isIdentifiable()) {
-                fragmentRepository.save(fragment);
-            }
+            fragment = initOrRetrieveFragment(fragment);
         } else {
-            // Manage default fragment
-            fragment = initOrRetrieveDefaultFragment();
-            pAttributeModel.setFragment(fragment);
+            // Fallback to default fragment
+            fragment = initOrRetrieveFragment(Fragment.buildDefault());
         }
+        pAttributeModel.setFragment(fragment);
         return fragment;
     }
 
-    private Fragment initOrRetrieveDefaultFragment() {
-        Fragment defaultFragment = fragmentRepository.findByName(Fragment.getDefaultName());
-        if (defaultFragment == null) {
-            defaultFragment = fragmentRepository.save(Fragment.buildDefault());
+    private Fragment initOrRetrieveFragment(Fragment pFragment) {
+        Fragment fragment = fragmentRepository.findByName(pFragment.getName());
+        if (fragment == null) {
+            pFragment.setId(null);
+            fragment = fragmentRepository.save(pFragment);
         }
-        return defaultFragment;
+        return fragment;
     }
 
     /**

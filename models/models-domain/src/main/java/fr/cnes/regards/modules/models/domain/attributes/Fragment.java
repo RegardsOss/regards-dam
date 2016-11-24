@@ -76,6 +76,16 @@ public class Fragment implements IIdentifiable<Long> {
      */
     private String description;
 
+    // Useful for (de)serialization
+    public Fragment() {
+        super();
+    }
+
+    public Fragment(String pName, String pDescription) {
+        name = pName;
+        description = pDescription;
+    }
+
     public String getName() {
         return name;
     }
@@ -106,17 +116,11 @@ public class Fragment implements IIdentifiable<Long> {
     }
 
     public static Fragment buildDefault() {
-        final Fragment fragment = new Fragment();
-        fragment.setName(getDefaultName());
-        fragment.setDescription(DEFAULT_FRAGMENT_DESCRIPTION);
-        return fragment;
+        return new Fragment(getDefaultName(), DEFAULT_FRAGMENT_DESCRIPTION);
     }
 
     public static Fragment buildFragment(String pName, String pDescription) {
-        final Fragment fragment = new Fragment();
-        fragment.setName(pName);
-        fragment.setDescription(pDescription);
-        return fragment;
+        return new Fragment(pName, pDescription);
     }
 
     public static String getDefaultName() {
@@ -125,8 +129,11 @@ public class Fragment implements IIdentifiable<Long> {
 
     @Override
     public boolean equals(Object pObj) {
-        if (pObj instanceof Fragment) {
+        if (Fragment.class.isInstance(pObj)) {
             final Fragment f = (Fragment) pObj;
+            if ((f == null) || (f.getName() == null)) {
+                return false;
+            }
             return f.getName().equals(name);
         }
         return false;
@@ -134,6 +141,9 @@ public class Fragment implements IIdentifiable<Long> {
 
     @Override
     public int hashCode() {
+        if (name == null) {
+            return 0;
+        }
         return name.hashCode();
     }
 }

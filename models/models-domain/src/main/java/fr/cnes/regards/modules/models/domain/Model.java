@@ -77,6 +77,14 @@ public class Model implements IIdentifiable<Long> {
     @Enumerated(EnumType.STRING)
     private ModelType type;
 
+    public static Model build(String pName, String pDescription, ModelType pModelType) {
+        final Model model = new Model();
+        model.setName(pName);
+        model.setDescription(pDescription);
+        model.setType(pModelType);
+        return model;
+    }
+
     @Override
     public Long getId() {
         return id;
@@ -109,16 +117,4 @@ public class Model implements IIdentifiable<Long> {
     public void setDescription(String pDescription) {
         description = pDescription;
     }
-
-    // public SortedSet<ModelAttribute> getAttributes() {
-    // return attributes;
-    // }
-    //
-    // public void setAttributes(SortedSet<ModelAttribute> pAttributes) {
-    // attributes = pAttributes;
-    // }
-    //
-    // public void addAttribute(ModelAttribute pAttribute) {
-    // attributes.add(pAttribute);
-    // }
 }
