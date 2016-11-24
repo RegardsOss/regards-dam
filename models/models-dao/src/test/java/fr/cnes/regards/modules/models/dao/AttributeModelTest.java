@@ -61,11 +61,9 @@ public class AttributeModelTest extends AbstractModelTest {
     @Requirement("REGARDS_DSL_DAM_MOD_050")
     @Purpose("Test fragment management")
     public void fragmentTest() {
-        final Fragment f = new Fragment();
         final String name = "GEO_FRAGMENT";
         final String description = "All consistent geo attributes";
-        f.setName(name);
-        f.setDescription(description);
+        final Fragment f = new Fragment(name, description);
 
         final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(f)
                 .withGeometryRestriction();

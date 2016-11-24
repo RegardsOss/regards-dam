@@ -79,7 +79,7 @@ public class AttributeModelServiceTest {
 
         Mockito.when(mockAttModelR.findAll()).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(null);
+        final List<AttributeModel> attModels = attributeModelService.getAttributes(null, null);
         Assert.assertEquals(2, attModels.size());
     }
 
@@ -93,7 +93,7 @@ public class AttributeModelServiceTest {
 
         Mockito.when(mockAttModelR.findByType(AttributeType.STRING)).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING);
+        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null);
         Assert.assertEquals(1, attModels.size());
     }
 

@@ -17,7 +17,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public interface IAttributeModelService {
 
-    List<AttributeModel> getAttributes(AttributeType pType);
+    List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName);
 
     AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException;
 

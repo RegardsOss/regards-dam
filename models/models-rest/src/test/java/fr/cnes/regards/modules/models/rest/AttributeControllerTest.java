@@ -75,8 +75,8 @@ public class AttributeControllerTest {
         // CHECKSTYLE:OFF
         attributes.add(AttributeModelBuilder.build("STOP_DATE", AttributeType.DATE_ISO8601).withId(3L).get());
         // CHECKSTYLE:ON
-        Mockito.when(attributeServiceMocked.getAttributes(null)).thenReturn(attributes);
-        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null);
+        Mockito.when(attributeServiceMocked.getAttributes(null, null)).thenReturn(attributes);
+        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null);
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }
 

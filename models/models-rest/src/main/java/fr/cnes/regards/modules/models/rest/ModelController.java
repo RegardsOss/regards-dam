@@ -7,9 +7,16 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,9 +28,9 @@ import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.modules.models.signature.IModelSignature;
 
 /**
  *
@@ -36,7 +43,13 @@ import fr.cnes.regards.modules.models.signature.IModelSignature;
 // CHECKSTYLE:OFF
 @ModuleInfo(name = "models", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI", documentation = "http://test")
 // CHECKSTYLE:ON
-public class ModelController implements IModelSignature, IResourceController<Model> {
+@RequestMapping(ModelController.TYPE_MAPPING)
+public class ModelController implements IResourceController<Model> {
+
+    /**
+     * Type mapping
+     */
+    public static final String TYPE_MAPPING = "/models";
 
     /**
      * Model attribute service
@@ -53,54 +66,136 @@ public class ModelController implements IModelSignature, IResourceController<Mod
         this.resourceService = pResourceService;
     }
 
-    @Override
+    /**
+     * Retrieve all {@link Model}. The request can be filtered by {@link ModelType}.
+     *
+     * @param pType
+     *            filter
+     * @return a list of {@link Model}
+     */
     @ResourceAccess(description = "List all models")
-    public ResponseEntity<List<Resource<Model>>> getModels(ModelType pType) {
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<List<Resource<Model>>> getModels(
+            @RequestParam(value = "type", required = false) ModelType pType) {
         return ResponseEntity.ok(toResources(modelService.getModels(pType)));
     }
 
-    @Override
+    /**
+     * Create a {@link Model}
+     *
+     * @param pModel
+     *            the {@link Model} to create
+     * @return the created {@link Model}
+     * @throws ModuleException
+     *             if problem occurs during model creation
+     */
     @ResourceAccess(description = "Create a model")
-    public ResponseEntity<Resource<Model>> createModel(Model pModel) throws ModuleException {
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<Resource<Model>> createModel(@Valid @RequestBody Model pModel) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.createModel(pModel)));
     }
 
-    @Override
+    /**
+     * Get a {@link Model} without its attributes
+     *
+     * @param pModelId
+     *            {@link Model} identifier
+     * @return a {@link Model}
+     * @throws ModuleException
+     *             if model cannot be retrieved
+     */
     @ResourceAccess(description = "Get a model")
-    public ResponseEntity<Resource<Model>> getModel(Long pModelId) throws ModuleException {
+    @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}")
+    public ResponseEntity<Resource<Model>> getModel(@PathVariable Long pModelId) throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.getModel(pModelId)));
     }
 
-    @Override
+    /**
+     * Allow to update {@link Model} description
+     *
+     * @param pModelId
+     *            {@link Model} identifier
+     * @param pModel
+     *            {@link Model} to update
+     * @return updated {@link Model}
+     * @throws ModuleException
+     *             if model cannot be updated
+     */
     @ResourceAccess(description = "Update a model")
-    public ResponseEntity<Resource<Model>> updateModel(Long pModelId, Model pModel) throws ModuleException {
+    @RequestMapping(method = RequestMethod.PUT, value = "/{pModelId}")
+    public ResponseEntity<Resource<Model>> updateModel(@PathVariable Long pModelId, @Valid @RequestBody Model pModel)
+            throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.updateModel(pModelId, pModel)));
     }
 
-    @Override
+    /**
+     * Delete a {@link Model} and detach all {@link ModelAttribute}
+     *
+     * @param pModelId
+     *            {@link Model} identifier
+     * @return nothing
+     * @throws ModuleException
+     *             if model cannot be deleted
+     */
     @ResourceAccess(description = "Delete a model")
-    public ResponseEntity<Void> deleteModel(Long pModelId) throws ModuleException {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{pModelId}")
+    public ResponseEntity<Void> deleteModel(@PathVariable Long pModelId) throws ModuleException {
         modelService.deleteModel(pModelId);
         return ResponseEntity.noContent().build();
     }
 
-    @Override
+    /**
+     * Duplicate a model
+     *
+     * @param pModelId
+     *            {@link Model} to duplicate
+     * @param pModel
+     *            new model to create with its own name and description (other informations are skipped)
+     * @return a new model based on actual one
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @ResourceAccess(description = "Duplicate a model")
-    public ResponseEntity<Resource<Model>> duplicateModel(Long pModelId, Model pModel) throws ModuleException {
+    @RequestMapping(method = RequestMethod.POST, value = "/{pModelId}/duplicate")
+    public ResponseEntity<Resource<Model>> duplicateModel(@PathVariable Long pModelId, @Valid @RequestBody Model pModel)
+            throws ModuleException {
         return ResponseEntity.ok(toResource(modelService.duplicateModel(pModelId, pModel)));
     }
 
-    @Override
+    /**
+     * Export a model
+     *
+     * @param pRequest
+     *            HTTP request
+     * @param pResponse
+     *            HTTP response
+     * @param pModelId
+     *            model to export
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @ResourceAccess(description = "Export a model")
-    public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, Long pModelId)
+    // CHECKSTYLE:OFF
+    @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    // CHECKSTYLE:ON
+    public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, @PathVariable Long pModelId)
             throws ModuleException {
         // TODO Auto-generated method stub
-
     }
 
-    @Override
+    /**
+     * Import a model
+     *
+     * @param pFile
+     *            model to import
+     * @return TODO
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    // TODO adapt signature / see Spring MVC doc p.22.10
     @ResourceAccess(description = "Import a model")
-    public ResponseEntity<String> importModel(MultipartFile pFile) throws ModuleException {
+    @RequestMapping(method = RequestMethod.POST, value = "/import")
+    public ResponseEntity<String> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
         // TODO Auto-generated method stub
         return null;
     }
