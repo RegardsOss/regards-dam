@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -22,14 +21,16 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
-@TestPropertySource("classpath:test.properties")
-@ComponentScan(basePackages = { "fr.cnes.regards.modules.collections" })
+@TestPropertySource(locations = { "classpath:test.properties" })
+// @EnableJpaRepositories(basePackages = { "fr.cnes.regards.modules" })
+// @EntityScan(basePackages = { "fr.cnes.regards.modules" })
 public class CollectionControllerIT extends AbstractRegardsIT {
 
     /**
@@ -44,6 +45,9 @@ public class CollectionControllerIT extends AbstractRegardsIT {
     @Autowired
     private ICollectionRepository collectionRepository;
 
+    @Autowired
+    private IModelRepository modelRepository;
+
     private List<ResultMatcher> expectations;
 
     @Before
@@ -56,6 +60,8 @@ public class CollectionControllerIT extends AbstractRegardsIT {
         // Bootstrap default values
         model1 = new Model();
         model1.setId(1L);
+
+        modelRepository.save(model1);
 
         collection1 = collectionRepository.save(new Collection(1L, "IpID", model1, "pDescription", "pName"));
     }

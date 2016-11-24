@@ -14,9 +14,18 @@
 	</parent>
 
 	<dependencies>
+	<!-- Starters -->
 		<dependency>
-			<groupId>fr.cnes.regards.modules</groupId>
-			<artifactId>module-core</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>security-regards-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>
@@ -30,6 +39,11 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-integration-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-dao</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
