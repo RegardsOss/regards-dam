@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.collections.domain;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -12,7 +13,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -23,6 +27,8 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Entity
 @Table(name = "T_COLLECTION")
 public class Collection extends AbstractEntity {
+
+    private static final String COLLECTION_TYPE = "Collection";
 
     /**
      * description
@@ -50,12 +56,26 @@ public class Collection extends AbstractEntity {
     @OneToMany
     private List<Collection> parents;
 
-    public Collection() {
-        super();
+    public Collection(Model pModel) {
+        super(pModel, COLLECTION_TYPE);
     }
 
-    public Collection(Long pId, String pIpId, Model pModel, String pDescription, String pName) {
-        super(pModel, pId, pIpId);
+    public Collection(Model pModel, String pDescription, String pName) {
+        super(pModel);
+        description = pDescription;
+        name = pName;
+    }
+
+    public Collection(String pSipId, Model pModel, String pDescription, String pName) {
+        this(pModel, pDescription, pName);
+        sipId = pSipId;
+        final JWTService jwtService = new JWTService();
+        ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, jwtService.getActualTenant(),
+                UUID.nameUUIDFromBytes(sipId.getBytes()), 1);
+    }
+
+    public Collection(Long pId, Model pModel, String pDescription, String pName) {
+        super(pModel, pId);
         description = pDescription;
         name = pName;
     }

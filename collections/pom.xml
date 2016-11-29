@@ -22,7 +22,6 @@
 		<module>collections-domain</module>
 		<module>collections-rest</module>
 		<module>collections-service</module>
-		<module>collections-signature</module>
 	</modules>
 
 	<dependencyManagement>
@@ -51,11 +50,6 @@
 			<dependency>
 				<groupId>fr.cnes.regards.modules.collections</groupId>
 				<artifactId>collections-client</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.collections</groupId>
-				<artifactId>collections-signature</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

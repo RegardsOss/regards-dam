@@ -4,11 +4,14 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
-import javax.persistence.CollectionTable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -17,12 +20,12 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
-import org.apache.poi.ss.formula.functions.T;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
@@ -35,6 +38,10 @@ import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
 import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -45,7 +52,6 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-// @MappedSuperclass
 @Entity
 @Table(name = "T_ENTITY")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -76,13 +82,16 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * Information Package ID for REST request
      */
+    @Column(unique = true)
+    @Convert(converter = UrnConverter.class)
     @NotNull
-    @Column
-    protected String ipId;
+    protected UniformResourceName ipId;
 
     /**
      * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
      * REST request
+     *
+     * If no SIP ID is there it means it's not an AIP?
      */
     @Column
     protected String sipId;
@@ -94,35 +103,53 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      *
      * entities list of tags affected to this entity
      */
-
-    @ElementCollection
-    @CollectionTable(name = "TA_ENTITY_TAGS", foreignKey = @ForeignKey(name = "FK_ENTITY_TAGS_ID"))
-    protected List<String> tags;
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "entity_id", foreignKey = @ForeignKey(name = "FK_ENTITY_TAGS_ID"))
+    protected Set<Tag> tags;
 
     /**
      * list of attribute associated to this entity
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
-    protected List<IAttribute<T>> attributes;
+    protected List<IAttribute<Object>> attributes;
 
     /**
      * model that this entity is respecting
      */
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
             updatable = false)
     protected Model model;
 
-    public AbstractEntity() {
+    protected AbstractEntity() {
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
+        tags = new HashSet<>();
     }
 
-    public AbstractEntity(Model pModel, Long pId, String pIpId) {
-        id = pId;
-        ipId = pIpId;
+    protected AbstractEntity(Model pModel) {
+        this();
         model = pModel;
+    }
+
+    public AbstractEntity(Model pModel, Long pId) {
+        this(pModel);
+        id = pId;
+    }
+
+    public AbstractEntity(Model pModel, String pEntityType) {
+        this(pModel);
+        final JWTService jwtService = new JWTService();
+        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, jwtService.getActualTenant(), UUID.randomUUID(),
+                1);
+    }
+
+    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) {
+        this(pModel);
+        ipId = pIpId;
+        id = pId;
     }
 
     /**
@@ -168,27 +195,27 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         id = pId;
     }
 
-    public String getIpId() {
+    public UniformResourceName getIpId() {
         return ipId;
     }
 
-    public void setIpId(String pIpId) {
+    public void setIpId(UniformResourceName pIpId) {
         ipId = pIpId;
     }
 
-    public List<String> getTags() {
+    public Set<Tag> getTags() {
         return tags;
     }
 
-    public void setTags(List<String> pTags) {
+    public void setTags(Set<Tag> pTags) {
         tags = pTags;
     }
 
-    public List<IAttribute<T>> getAttributes() {
+    public List<IAttribute<Object>> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<IAttribute<T>> pAttributes) {
+    public void setAttributes(List<IAttribute<Object>> pAttributes) {
         attributes = pAttributes;
     }
 

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -23,8 +22,12 @@ public interface ICollectionsSignature {
 
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    HttpEntity<List<Resource<Collection>>> retrieveCollectionList(
-            @RequestParam(required = false, value = "modelId") Long pModelId);
+    HttpEntity<List<Resource<Collection>>> retrieveCollectionList();
+
+    @RequestMapping(value = "/model/{model_id}", method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    HttpEntity<List<Resource<Collection>>> retrieveCollectionListByModelId(@PathVariable("model_id") Long pModelId);
 
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)

@@ -18,6 +18,7 @@ import fr.cnes.regards.modules.models.domain.ModelType;
  * @author Sylvain Vissiere-Guerinet
  *
  */
+// @ContextConfiguration(classes = { CollectionTestConfiguration.class })
 @TestPropertySource("classpath:application-test.properties")
 public class CollectionTest extends AbstractDaoTransactionalTest {
 
@@ -33,7 +34,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         model1.setName("Model1");
         model1.setType(ModelType.COLLECTION);
         model1 = modelRepository.save(model1);
-        Collection collection1 = collectionRepository.save(new Collection(1L, "IpID", model1, "pDescription", "pName"));
+        Collection collection1 = collectionRepository.save(new Collection("IpID", model1, "pDescription", "pName"));
         Collection collection2 = collectionRepository.findOne(collection1.getId());
     }
 

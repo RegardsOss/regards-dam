@@ -5,13 +5,13 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.springframework.hateoas.Identifiable;
+import fr.cnes.regards.framework.jpa.IIdentifiable;
 
 /**
  * @author lmieulet
  *
  */
-public class DataObject implements Identifiable<Long> {
+public class DataObject implements IIdentifiable<Long> {
 
     private final Long id_;
 

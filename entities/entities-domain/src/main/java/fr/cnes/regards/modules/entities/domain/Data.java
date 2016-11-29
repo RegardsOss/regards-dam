@@ -9,14 +9,15 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import org.springframework.hateoas.Identifiable;
 import org.springframework.util.MimeType;
+
+import fr.cnes.regards.framework.jpa.IIdentifiable;
 
 /**
  * @author lmieulet
  *
  */
-public class Data implements Identifiable<Long> {
+public class Data implements IIdentifiable<Long> {
 
     @NotNull
     private final Long id_;

@@ -6,32 +6,43 @@ package fr.cnes.regards.modules.collections.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.test.integration.AbstractRegardsIT;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelType;
 
 /**
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
 @TestPropertySource(locations = { "classpath:test.properties" })
-// @EnableJpaRepositories(basePackages = { "fr.cnes.regards.modules" })
-// @EntityScan(basePackages = { "fr.cnes.regards.modules" })
-public class CollectionControllerIT extends AbstractRegardsIT {
+@MultitenantTransactional
+public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
+
+    /**
+     *
+     */
+    private static final String COLLECTIONS_COLLECTION_ID = "/collections/{collection_id}";
+
+    /**
+     *
+     */
+    private static final String COLLECTIONS = "/collections";
 
     /**
      * Logger
@@ -51,98 +62,72 @@ public class CollectionControllerIT extends AbstractRegardsIT {
     private List<ResultMatcher> expectations;
 
     @Before
-    public void setup() {
+    public void initRepos() {
         expectations = new ArrayList<>();
-
-        // Reset entities list
-        collectionRepository.deleteAll();
-
         // Bootstrap default values
-        model1 = new Model();
-        model1.setId(1L);
-
-        modelRepository.save(model1);
-
-        collection1 = collectionRepository.save(new Collection(1L, "IpID", model1, "pDescription", "pName"));
+        model1 = Model.build("modelName1", "model desc", ModelType.COLLECTION);
+        model1 = modelRepository.save(model1);
+        collection1 = collectionRepository.save(new Collection("SipId1", model1, "pDescription", "pName"));
     }
+
+    // TODO: test retrieve Collection by (S)IP_ID, by modelId and sipId
 
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all collections")
     @Test
-    public void testGetCollections() {
+    public void testGetAllCollections() {
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.*", Matchers.hasSize(1)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.is(collection1.getName())));
-
-        performDefaultGet("/collections", expectations, "Failed to fetch collection list");
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(COLLECTIONS, expectations, "Failed to fetch collection list");
     }
 
-    @Requirement("REGARDS_DSL_DAM_COL_xxx")
+    @Requirement("REGARDS_DSL_DAM_COL_010")
+    @Requirement("REGARDS_DSL_DAM_COL_020")
     @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
-        final Collection collection2 = new Collection(2L, "IpID2", model1, "pDescription2", "pName2");
+        final Collection collection2 = new Collection("IpID2", model1, "pDescription2", "pName2");
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        // Some assertion based on https://github.com/jayway/JsonPath#path-examples syntax
-        expectations.add(MockMvcResultMatchers.jsonPath("$.description", Matchers.is(collection2.getDescription())));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(collection2.getName())));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.sidId", Matchers.anything()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.links.*", Matchers.hasSize(0)));
-        performDefaultPost("/collections", collection2, expectations, "Failed to create a new collection");
+        performDefaultPost(COLLECTIONS, collection2, expectations, "Failed to create a new collection");
 
     }
 
+    // TODO add get by ip id
     @Requirement("REGARDS_DSL_DAM_COL_310")
     @Purpose("Shall retrieve a collection using its id")
     @Test
     public void testGetCollectionById() {
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.description", Matchers.is(collection1.getDescription())));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(collection1.getName())));
-        performDefaultGet("/collections/{collection_id}", expectations,
-                          "Failed to fetch a specific collection using its id", collection1.getId());
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(COLLECTIONS_COLLECTION_ID, expectations, "Failed to fetch a specific collection using its id",
+                          collection1.getId());
     }
 
-    @Requirement("REGARDS_DSL_DAM_COL_410")
-    @Purpose("Shall retrieve a collection using its model id")
-    @Test
-    public void testGetCollectionByModelId() {
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.*", Matchers.hasSize(1)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].name", Matchers.is(collection1.getName())));
-        expectations
-                .add(MockMvcResultMatchers.jsonPath("$.[0].description", Matchers.is(collection1.getDescription())));
-        performDefaultGet("/collections/model/{model_id}", expectations,
-                          "Failed to fetch a specific collection using its model id", model1.getId());
-    }
-
-    @Requirement("REGARDS_DSL_DAM_COL_xxx")
-    @Purpose("Shall update a collection")
+    @Requirement("REGARDS_DSL_DAM_COL_210")
+    @Purpose("Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
+            + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
     public void testUpdateCollection() {
-        final Collection collectionClone = new Collection();
-        collectionClone.setId(collection1.getId());
+        final Collection collectionClone = new Collection(collection1.getId(), collection1.getModel(),
+                collection1.getDescription(), collection1.getName());
         final String newName = "new name";
         collectionClone.setName(newName);
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.is(newName)));
-        performDefaultPut("/collections/{collection_id}", collectionClone, expectations,
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultPut(COLLECTIONS_COLLECTION_ID, collectionClone, expectations,
                           "Failed to update a specific collection using its id", collection1.getId());
     }
 
+    // TODO: add delete by ip id
     @Requirement("REGARDS_DSL_DAM_COL_110")
     @Purpose("Shall delete a collection")
     @Test
     public void testDeleteCollection() {
         expectations.add(MockMvcResultMatchers.status().isOk());
-        performDefaultDelete("/collections/{collection_id}", expectations,
+        performDefaultDelete(COLLECTIONS_COLLECTION_ID, expectations,
                              "Failed to delete a specific collection using its id", collection1.getId());
     }
 

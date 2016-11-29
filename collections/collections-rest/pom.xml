@@ -31,10 +31,6 @@
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-service</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-signature</artifactId>
-		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

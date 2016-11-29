@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.collections.rest;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.naming.OperationNotSupportedException;
 
@@ -12,9 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -25,7 +28,7 @@ import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.collections.service.ICollectionsRequestService;
-import fr.cnes.regards.modules.collections.signature.ICollectionsSignature;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 
 /**
  * @author lmieulet
@@ -34,7 +37,8 @@ import fr.cnes.regards.modules.collections.signature.ICollectionsSignature;
 @RestController
 @ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
         documentation = "http://test")
-public class CollectionsController implements IResourceController<Collection>, ICollectionsSignature {
+@RequestMapping(value = "/collections")
+public class CollectionsController implements IResourceController<Collection> {
 
     /**
      * Service
@@ -46,14 +50,16 @@ public class CollectionsController implements IResourceController<Collection>, I
     private IResourceService resourceService;
 
     /**
-     * @summary Entry point to retrieve all collections
+     * Entry point to retrieve {@link Collection}s
+     *
+     * @return all {@link Collection}s
      */
-    @Override
-    public HttpEntity<List<Resource<Collection>>> retrieveCollectionList(Long pModelId) {
+    @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public HttpEntity<List<Resource<Collection>>> retrieveCollectionList() {
 
-        final List<Collection> collections = collectionsRequestService.retrieveCollectionList(pModelId);
-        final List<Resource<Collection>> resources = collections.stream().map(u -> new Resource<>(u))
-                .collect(Collectors.toList());
+        final List<Collection> collections = collectionsRequestService.retrieveCollectionList();
+        final List<Resource<Collection>> resources = toResources(collections);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 
     }
@@ -61,32 +67,35 @@ public class CollectionsController implements IResourceController<Collection>, I
     /**
      * @summary Entry point to retrieve a collection using its id
      */
-    @Override
+    @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
     public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long pCollectionId) {
         final Collection collection = collectionsRequestService.retrieveCollectionById(pCollectionId);
-        final Resource<Collection> resource = new Resource<>(collection);
+        final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
-
-    // TODO: retrieve Collection by (S)IP_ID
 
     /**
      * @throws OperationNotSupportedException
      * @summary Entry point to update a collection using its id
      */
-    @Override
-    public HttpEntity<Resource<Collection>> updateCollection(Long pCollectionId, Collection pCollection)
-            throws EntityInconsistentIdentifierException {
+    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
+            @RequestBody Collection pCollection) throws EntityInconsistentIdentifierException {
         final Collection collection = collectionsRequestService.updateCollection(pCollection, pCollectionId);
-        final Resource<Collection> resource = new Resource<>(collection);
+        final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     /**
      * @summary Entry point to delete a collection using its id
      */
-    @Override
-    public HttpEntity<Void> deleteCollection(Long pCollectionId) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId) {
         collectionsRequestService.deleteCollection(pCollectionId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -94,11 +103,41 @@ public class CollectionsController implements IResourceController<Collection>, I
     /**
      * @summary Entry point to create a collection
      */
-    @Override
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
     public HttpEntity<Resource<Collection>> createCollection(@RequestBody Collection pCollection) {
         final Collection collection = collectionsRequestService.createCollection(pCollection);
-        final Resource<Collection> resource = new Resource<>(collection);
+        final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
+    }
+
+    /**
+     * @throws OperationNotSupportedException
+     * @summary Entry point to update a collection using its id
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate",
+            consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
+            @RequestBody List<AbstractEntity> pToBeDissociated) throws EntityInconsistentIdentifierException {
+        final Collection collection = collectionsRequestService.dissociateCollection(pCollectionId, pToBeDissociated);
+        final Resource<Collection> resource = toResource(collection);
+        return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    /**
+     * @throws OperationNotSupportedException
+     * @summary Entry point to update a collection using its id
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate",
+            consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
+            @RequestBody List<AbstractEntity> pToBeAssociatedWith) throws EntityInconsistentIdentifierException {
+        final Collection collection = collectionsRequestService.associateCollection(pCollectionId, pToBeAssociatedWith);
+        final Resource<Collection> resource = toResource(collection);
+        return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     @Override
@@ -109,6 +148,9 @@ public class CollectionsController implements IResourceController<Collection>, I
         resourceService.addLink(resource, this.getClass(), "retrieveCollectionList", LinkRels.LIST);
         resourceService.addLink(resource, this.getClass(), "deleteCollection", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "createCollection", LinkRels.UPDATE,
+                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(Collection.class));
         return resource;
     }
 
