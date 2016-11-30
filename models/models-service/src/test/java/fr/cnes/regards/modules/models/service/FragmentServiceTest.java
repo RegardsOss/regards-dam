@@ -3,6 +3,11 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,9 +15,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -39,6 +48,11 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 public class FragmentServiceTest {
 
     /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(FragmentServiceTest.class);
+
+    /**
      * Test fragment name
      */
     private static final String TEST_FRAG_NAME = "FRAG";
@@ -61,13 +75,22 @@ public class FragmentServiceTest {
     private IAttributeModelRepository mockAttModelR;
 
     /**
+     * Attribute model service
+     */
+    @Mock
+    private IAttributeModelService mockAttModelS;
+
+    @Captor
+    private ArgumentCaptor<Iterable<AttributeModel>> attModelCaptor;
+
+    /**
      * Mocked fragment service
      */
     private IFragmentService fragmentService;
 
     @Before
     public void beforeTest() {
-        fragmentService = new FragmentService(mockFragmentR, mockAttModelR);
+        fragmentService = new FragmentService(mockFragmentR, mockAttModelR, mockAttModelS);
     }
 
     @Test
@@ -147,5 +170,56 @@ public class FragmentServiceTest {
         Mockito.when(mockAttModelR.findByFragmentId(fragmentId)).thenReturn(attModels);
 
         fragmentService.deleteFragment(fragmentId);
+    }
+
+    /**
+     * Test fragment export
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test
+    public void exportFragmentTest() throws ModuleException {
+        final Long fragmentId = 1L;
+        final Fragment expected = Fragment.buildFragment(TEST_FRAG_NAME, TEST_FRAG_DESC);
+        expected.setId(fragmentId);
+
+        final List<AttributeModel> attModels = new ArrayList<>();
+        attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN).withoutRestriction());
+        attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING)
+                .withEnumerationRestriction("public", "scientist", "user"));
+        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.FLOAT_ARRAY).description("physical data")
+                .withoutRestriction());
+
+        Mockito.when(mockFragmentR.exists(fragmentId)).thenReturn(true);
+        Mockito.when(mockFragmentR.findOne(fragmentId)).thenReturn(expected);
+        Mockito.when(mockAttModelR.findByFragmentId(fragmentId)).thenReturn(attModels);
+
+        try {
+            final OutputStream output = Files.newOutputStream(Paths.get("target", expected.getName() + ".xml"));
+            fragmentService.exportFragment(fragmentId, output);
+        } catch (IOException e) {
+            LOGGER.debug("Cannot export fragment");
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void importFragmentTest() throws ModuleException {
+        try {
+            final InputStream input = Files
+                    .newInputStream(Paths.get("src", "test", "resources", "sample-fragment.xml"));
+
+            fragmentService.importFragment(input);
+
+            // Capture read data
+            Mockito.verify(mockAttModelS).addAllAttributes(attModelCaptor.capture());
+            final Iterable<AttributeModel> attModels = attModelCaptor.getValue();
+            LOGGER.debug("argument captured");
+
+        } catch (IOException e) {
+            LOGGER.debug("Cannot import fragment");
+            Assert.fail();
+        }
     }
 }

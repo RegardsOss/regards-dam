@@ -8,6 +8,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.schema.FloatRange;
+import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
  *
@@ -95,5 +97,27 @@ public class FloatRangeRestriction extends AbstractRestriction {
     @Override
     public Boolean isPublic() {
         return Boolean.TRUE;
+    }
+
+    @Override
+    public Restriction toXml() {
+
+        final Restriction restriction = new Restriction();
+        final FloatRange frr = new FloatRange();
+        frr.setMaxExclusive(maxExclusive);
+        frr.setMaxInclusive(maxInclusive);
+        frr.setMinExclusive(minExclusive);
+        frr.setMinInclusive(minInclusive);
+        restriction.setFloatRange(frr);
+        return restriction;
+    }
+
+    @Override
+    public void fromXml(Restriction pXmlElement) {
+        final FloatRange fr = pXmlElement.getFloatRange();
+        setMaxExclusive(fr.getMaxExclusive());
+        setMaxInclusive(fr.getMaxInclusive());
+        setMinExclusive(fr.getMinExclusive());
+        setMinInclusive(fr.getMinInclusive());
     }
 }

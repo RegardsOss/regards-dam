@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -24,5 +26,9 @@ public interface IFragmentService {
 
     Fragment updateFragment(Long pFragmentId, Fragment pFragment) throws ModuleException;
 
-    public void deleteFragment(Long pFragmentId) throws ModuleException;
+    void deleteFragment(Long pFragmentId) throws ModuleException;
+
+    void exportFragment(Long pFragmentId, OutputStream pOutputStream) throws ModuleException;
+
+    void importFragment(InputStream pInputStream) throws ModuleException;
 }

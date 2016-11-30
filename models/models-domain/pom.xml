@@ -29,4 +29,28 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<version>2.2</version>
+				<executions>
+					<execution>
+						<id>xjc</id>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<packageName>fr.cnes.regards.modules.models.schema</packageName>
+					<sources>
+						<source>src/main/resources</source>
+					</sources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

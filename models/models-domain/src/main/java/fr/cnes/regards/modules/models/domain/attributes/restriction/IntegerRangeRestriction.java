@@ -3,11 +3,15 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import java.math.BigInteger;
+
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.schema.IntegerRange;
+import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
  *
@@ -95,5 +99,27 @@ public class IntegerRangeRestriction extends AbstractRestriction {
     @Override
     public Boolean isPublic() {
         return Boolean.TRUE;
+    }
+
+    @Override
+    public Restriction toXml() {
+
+        final Restriction restriction = new Restriction();
+        final IntegerRange irr = new IntegerRange();
+        irr.setMaxExclusive(BigInteger.valueOf(maxExclusive));
+        irr.setMaxInclusive(BigInteger.valueOf(maxInclusive));
+        irr.setMinExclusive(BigInteger.valueOf(minExclusive));
+        irr.setMinInclusive(BigInteger.valueOf(minInclusive));
+        restriction.setIntegerRange(irr);
+        return restriction;
+    }
+
+    @Override
+    public void fromXml(Restriction pXmlElement) {
+        final IntegerRange ir = pXmlElement.getIntegerRange();
+        setMaxExclusive(ir.getMaxExclusive().intValueExact());
+        setMaxInclusive(ir.getMaxInclusive().intValueExact());
+        setMinExclusive(ir.getMinExclusive().intValueExact());
+        setMinInclusive(ir.getMinInclusive().intValueExact());
     }
 }

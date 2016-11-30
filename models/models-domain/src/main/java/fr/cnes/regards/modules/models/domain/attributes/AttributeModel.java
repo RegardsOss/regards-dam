@@ -22,8 +22,16 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
+import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
+import fr.cnes.regards.modules.models.schema.Attribute;
+import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
  * @author msordi
@@ -32,22 +40,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionT
 @Entity
 @Table(name = "T_ATT_MODEL", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "fragment_id" }))
 @SequenceGenerator(name = "attModelSequence", initialValue = 1, sequenceName = "SEQ_ATT_MODEL")
-public class AttributeModel implements IIdentifiable<Long> {
-
-    /**
-     * Name regular expression
-     */
-    private static final String ATT_NAME_REGEXP = "[0-9a-zA-Z_]*";
-
-    /**
-     * Name min size
-     */
-    private static final int ATT_NAME_MIN_SIZE = 3;
-
-    /**
-     * Name max size
-     */
-    private static final int ATT_NAME_MAX_SIZE = 32;
+public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute> {
 
     /**
      * Internal identifier
@@ -60,10 +53,10 @@ public class AttributeModel implements IIdentifiable<Long> {
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = ATT_NAME_REGEXP, message = "Attribute name must conform to regular expression \""
-            + ATT_NAME_REGEXP + "\".")
-    @Size(min = ATT_NAME_MIN_SIZE, max = ATT_NAME_MAX_SIZE, message = "Attribute name must be between "
-            + ATT_NAME_MIN_SIZE + " and " + ATT_NAME_MAX_SIZE + " length.")
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+            + Model.NAME_REGEXP + "\".")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false)
     private String name;
 
@@ -222,5 +215,50 @@ public class AttributeModel implements IIdentifiable<Long> {
 
     public void setFacetable(boolean pFacetable) {
         facetable = pFacetable;
+    }
+
+    @Override
+    public Attribute toXml() {
+        final Attribute xmlAtt = new Attribute();
+        xmlAtt.setName(name);
+        xmlAtt.setDescription(description);
+        xmlAtt.setAlterable(alterable);
+        xmlAtt.setFacetable(facetable);
+        xmlAtt.setOptional(optional);
+        xmlAtt.setQueryable(queryable);
+        if (restriction != null) {
+            xmlAtt.setRestriction(restriction.toXml());
+        }
+        xmlAtt.setType(type.toString());
+        return xmlAtt;
+    }
+
+    @Override
+    public void fromXml(Attribute pXmlElement) {
+        setName(pXmlElement.getName());
+        setDescription(pXmlElement.getDescription());
+        setAlterable(pXmlElement.isAlterable());
+        setFacetable(pXmlElement.isFacetable());
+        setOptional(pXmlElement.isOptional());
+        setQueryable(pXmlElement.isQueryable());
+        if (pXmlElement.getRestriction() != null) {
+            final Restriction xmlRestriction = pXmlElement.getRestriction();
+            if (xmlRestriction.getEnumeration() != null) {
+                restriction = new EnumerationRestriction();
+            } else
+                if (xmlRestriction.getFloatRange() != null) {
+                    restriction = new FloatRangeRestriction();
+                } else
+                    if (xmlRestriction.getIntegerRange() != null) {
+                        restriction = new IntegerRangeRestriction();
+                    } else
+                        if (xmlRestriction.getPattern() != null) {
+                            restriction = new PatternRestriction();
+                        }
+
+            // Cause null pointer exception if implementation not consistent with XSD
+            restriction.fromXml(pXmlElement.getRestriction());
+        }
+        setType(AttributeType.valueOf(pXmlElement.getType()));
     }
 }

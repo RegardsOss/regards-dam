@@ -7,6 +7,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
  * Manage pattern restriction for attribute of type :
@@ -58,6 +59,19 @@ public class PatternRestriction extends AbstractRestriction {
     @Override
     public Boolean isPublic() {
         return Boolean.TRUE;
+    }
+
+    @Override
+    public Restriction toXml() {
+
+        final Restriction restriction = new Restriction();
+        restriction.setPattern(pattern);
+        return restriction;
+    }
+
+    @Override
+    public void fromXml(Restriction pXmlElement) {
+        setPattern(pXmlElement.getPattern());
     }
 
 }

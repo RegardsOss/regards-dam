@@ -16,6 +16,8 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 
 /**
  * Fragment : gathers a set of attributes ans acts as a name space.
@@ -26,22 +28,7 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 @Entity
 @Table(name = "T_FRAGMENT", indexes = { @Index(name = "IDX_NAME", columnList = "name") })
 @SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "SEQ_FRAGMENT")
-public class Fragment implements IIdentifiable<Long> {
-
-    /**
-     * Name regular expression
-     */
-    public static final String FRAGMENT_NAME_REGEXP = "[0-9a-zA-Z_]*";
-
-    /**
-     * Name min size
-     */
-    public static final int FRAGMENT_NAME_MIN_SIZE = 3;
-
-    /**
-     * Name max size
-     */
-    public static final int FRAGMENT_NAME_MAX_SIZE = 20;
+public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.modules.models.schema.Fragment> {
 
     /**
      * Default fragment name
@@ -64,10 +51,10 @@ public class Fragment implements IIdentifiable<Long> {
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = FRAGMENT_NAME_REGEXP, message = "Fragment name must conform to regular expression \""
-            + FRAGMENT_NAME_REGEXP + "\".")
-    @Size(min = FRAGMENT_NAME_MIN_SIZE, max = FRAGMENT_NAME_MAX_SIZE, message = "Fragment name must be between "
-            + FRAGMENT_NAME_MIN_SIZE + " and " + FRAGMENT_NAME_MAX_SIZE + " length.")
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Fragment name must conform to regular expression \""
+            + Model.NAME_REGEXP + "\".")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Fragment name must be between "
+            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(unique = true, nullable = false, updatable = false)
     private String name;
 
@@ -75,16 +62,6 @@ public class Fragment implements IIdentifiable<Long> {
      * Optional attribute description
      */
     private String description;
-
-    // Useful for (de)serialization
-    public Fragment() {
-        super();
-    }
-
-    public Fragment(String pName, String pDescription) {
-        name = pName;
-        description = pDescription;
-    }
 
     public String getName() {
         return name;
@@ -116,11 +93,14 @@ public class Fragment implements IIdentifiable<Long> {
     }
 
     public static Fragment buildDefault() {
-        return new Fragment(getDefaultName(), DEFAULT_FRAGMENT_DESCRIPTION);
+        return Fragment.buildFragment(getDefaultName(), DEFAULT_FRAGMENT_DESCRIPTION);
     }
 
     public static Fragment buildFragment(String pName, String pDescription) {
-        return new Fragment(pName, pDescription);
+        final Fragment fragment = new Fragment();
+        fragment.setName(pName);
+        fragment.setDescription(pDescription);
+        return fragment;
     }
 
     public static String getDefaultName() {
@@ -145,5 +125,23 @@ public class Fragment implements IIdentifiable<Long> {
             return 0;
         }
         return name.hashCode();
+    }
+
+    @Override
+    public fr.cnes.regards.modules.models.schema.Fragment toXml() {
+
+        // CHECKSTYLE:OFF
+        final fr.cnes.regards.modules.models.schema.Fragment xmlFragment = new fr.cnes.regards.modules.models.schema.Fragment();
+        // CHECKSTYLE:ON
+        xmlFragment.setName(name);
+        xmlFragment.setDescription(description);
+
+        return xmlFragment;
+    }
+
+    @Override
+    public void fromXml(fr.cnes.regards.modules.models.schema.Fragment pXmlElement) {
+        setName(pXmlElement.getName());
+        setDescription(pXmlElement.getDescription());
     }
 }

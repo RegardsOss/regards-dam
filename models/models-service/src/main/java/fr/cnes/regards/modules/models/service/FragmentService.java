@@ -3,8 +3,12 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Iterables;
@@ -20,6 +24,8 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.service.dto.XmlExportHelper;
+import fr.cnes.regards.modules.models.service.dto.XmlImportHelper;
 
 /**
  * Fragment service
@@ -31,6 +37,12 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 public class FragmentService implements IFragmentService {
 
     /**
+     * Class logger
+     */
+    @SuppressWarnings("unused")
+    private static final Logger LOGGER = LoggerFactory.getLogger(FragmentService.class);
+
+    /**
      * {@link Fragment} repository
      */
     private final IFragmentRepository fragmentRepository;
@@ -40,10 +52,16 @@ public class FragmentService implements IFragmentService {
      */
     private final IAttributeModelRepository attributeModelRepository;
 
-    public FragmentService(IFragmentRepository pFragmentRepository,
-            IAttributeModelRepository pAttributeModelRepository) {
+    /**
+     * {@link AttributeModelService}
+     */
+    private final IAttributeModelService attributeModelService;
+
+    public FragmentService(IFragmentRepository pFragmentRepository, IAttributeModelRepository pAttributeModelRepository,
+            IAttributeModelService pAttributeModelService) {
         this.fragmentRepository = pFragmentRepository;
         this.attributeModelRepository = pAttributeModelRepository;
+        this.attributeModelService = pAttributeModelService;
     }
 
     @Override
@@ -63,10 +81,11 @@ public class FragmentService implements IFragmentService {
 
     @Override
     public Fragment getFragment(Long pFragmentId) throws ModuleException {
-        if (!fragmentRepository.exists(pFragmentId)) {
+        final Fragment fragment = fragmentRepository.findOne(pFragmentId);
+        if (fragment == null) {
             throw new EntityNotFoundException(pFragmentId, Fragment.class);
         }
-        return fragmentRepository.findOne(pFragmentId);
+        return fragment;
     }
 
     @Override
@@ -88,11 +107,29 @@ public class FragmentService implements IFragmentService {
     public void deleteFragment(Long pFragmentId) throws ModuleException {
         // Check if fragment is empty
         final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
-        if ((attModels != null) || (Iterables.size(attModels) != 0)) {
+        if ((attModels != null) || !Iterables.isEmpty(attModels)) {
             throw new EntityNotEmptyException(pFragmentId, Fragment.class);
         }
         if (fragmentRepository.exists(pFragmentId)) {
             fragmentRepository.delete(pFragmentId);
         }
+    }
+
+    @Override
+    public void exportFragment(Long pFragmentId, OutputStream pOutputStream) throws ModuleException {
+        // Get fragment
+        final Fragment fragment = getFragment(pFragmentId);
+        // Get all related attributes
+        final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
+        // Export fragment to output stream
+        XmlExportHelper.exportFragment(pOutputStream, fragment, attModels);
+    }
+
+    @Override
+    public void importFragment(InputStream pInputStream) throws ModuleException {
+        // Import fragment from input stream
+        final Iterable<AttributeModel> attModels = XmlImportHelper.importFragment(pInputStream);
+        // Insert attributes
+        attributeModelService.addAllAttributes(attModels);
     }
 }

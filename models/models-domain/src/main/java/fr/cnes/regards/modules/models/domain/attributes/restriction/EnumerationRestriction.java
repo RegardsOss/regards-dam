@@ -11,12 +11,15 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.schema.Enumeration;
+import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
  *
- * Manage enumeration restriction for attribute of type :
+ * Manage pattern restriction for attribute of type :
  * <ul>
- * <li>{@link AttributeType#ENUMERATION}</li>
+ * <li>{@link AttributeType#STRING}</li>
+ * <li>{@link AttributeType#STRING_ARRAY}</li>
  * </ul>
  *
  * @author msordi
@@ -54,11 +57,32 @@ public class EnumerationRestriction extends AbstractRestriction {
 
     @Override
     public Boolean supports(AttributeType pAttributeType) {
-        return AttributeType.ENUMERATION.equals(pAttributeType);
+        return AttributeType.STRING.equals(pAttributeType) || AttributeType.STRING_ARRAY.equals(pAttributeType);
     }
 
     @Override
     public Boolean isPublic() {
         return Boolean.TRUE;
+    }
+
+    @Override
+    public Restriction toXml() {
+
+        final Restriction restriction = new Restriction();
+        final Enumeration enumeration = new Enumeration();
+        if (acceptableValues != null) {
+            for (String val : acceptableValues) {
+                enumeration.getValue().add(val);
+            }
+        }
+        restriction.setEnumeration(enumeration);
+        return restriction;
+    }
+
+    @Override
+    public void fromXml(Restriction pXmlElement) {
+        for (String val : pXmlElement.getEnumeration().getValue()) {
+            addAcceptableValues(val);
+        }
     }
 }

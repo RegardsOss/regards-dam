@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -81,17 +82,26 @@ public class AttributeModelService implements IAttributeModelService {
         return IterableUtils.toList(attModels);
     }
 
+    @MultitenantTransactional
     @Override
     public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
-        manageRestriction(pAttributeModel);
-        // final Fragment fragment =
-        manageFragment(pAttributeModel);
-        manageAttributeModel(pAttributeModel);
+        manageAttribute(pAttributeModel);
         // if (!fragment.isDefaultFragment()) {
         // // TODO modelAttributeService.updateNSBind(fragment.getId());
         // // Attention au référence cyclique entre service
         // }
         return pAttributeModel;
+    }
+
+    @MultitenantTransactional
+    @Override
+    public Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException {
+        if (pAttributeModels != null) {
+            for (AttributeModel attModel : pAttributeModels) {
+                manageAttribute(attModel);
+            }
+        }
+        return pAttributeModels;
     }
 
     @Override
@@ -123,6 +133,13 @@ public class AttributeModelService implements IAttributeModelService {
         if (attModelRepository.exists(pAttributeId)) {
             attModelRepository.delete(pAttributeId);
         }
+    }
+
+    private AttributeModel manageAttribute(AttributeModel pAttributeModel) throws ModuleException {
+        manageRestriction(pAttributeModel);
+        manageFragment(pAttributeModel);
+        manageAttributeModel(pAttributeModel);
+        return pAttributeModel;
     }
 
     /**

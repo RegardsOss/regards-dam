@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.dto.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
 
@@ -39,7 +41,7 @@ public class ModelService implements IModelService, IModelAttributeService {
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(ModelService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModelService.class);
 
     /**
      * Model repository
@@ -85,10 +87,11 @@ public class ModelService implements IModelService, IModelAttributeService {
 
     @Override
     public Model getModel(Long pModelId) throws ModuleException {
-        if (!modelRepository.exists(pModelId)) {
+        final Model model = modelRepository.findOne(pModelId);
+        if (model == null) {
             throw new EntityNotFoundException(pModelId, Model.class);
         }
-        return modelRepository.findOne(pModelId);
+        return model;
     }
 
     @Override
@@ -217,7 +220,7 @@ public class ModelService implements IModelService, IModelAttributeService {
                 }
             }
         } else {
-            LOG.warn("Fragment {} already bound to model {}", pFragmentId, pModelId);
+            LOGGER.warn("Fragment {} already bound to model {}", pFragmentId, pModelId);
         }
         return modAtts;
     }
@@ -268,12 +271,22 @@ public class ModelService implements IModelService, IModelAttributeService {
             for (ModelAttribute modelAtt : modelAtts) {
                 // Create model attributes to link base attributes
                 final ModelAttribute duplicatedModelAtt = new ModelAttribute();
-                duplicatedModelAtt.setCalculated(modelAtt.isCalculated());
+                duplicatedModelAtt.setMode(modelAtt.getMode());
                 duplicatedModelAtt.setAttribute(modelAtt.getAttribute());
                 duplicatedModelAtt.setModel(pTargetModel);
                 modelAttributeRepository.save(duplicatedModelAtt);
             }
         }
         return pTargetModel;
+    }
+
+    @Override
+    public void exportModel(Long pModelId, OutputStream pOutputStream) throws ModuleException {
+        // Get model
+        final Model model = getModel(pModelId);
+        // Get all related attributes
+        final Iterable<ModelAttribute> modelAtts = getModelAttributes(pModelId);
+        // Export fragment to output stream
+        XmlExportHelper.exportModel(pOutputStream, model, modelAtts);
     }
 }

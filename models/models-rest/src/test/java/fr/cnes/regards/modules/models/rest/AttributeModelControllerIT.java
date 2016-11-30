@@ -105,12 +105,6 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
-    public void createEnumAttribute() {
-        createAttribute("ENUM_ATT", "enum description", AttributeType.ENUMERATION);
-    }
-
-    @Test
-    @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatAttribute() {
         createAttribute("FLOAT_ATT", "float description", AttributeType.FLOAT);
     }
@@ -258,7 +252,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Content
-        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.ENUMERATION)
+        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING)
                 .withEnumerationRestriction(acceptableValues);
 
         performDefaultPost(AttributeModelController.TYPE_MAPPING, attModel, expectations,
@@ -269,7 +263,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         conflictExpectations.add(MockMvcResultMatchers.status().isConflict());
 
         // Same clone model ... replay
-        final AttributeModel conflictAttModel = AttributeModelBuilder.build(attName, AttributeType.ENUMERATION)
+        final AttributeModel conflictAttModel = AttributeModelBuilder.build(attName, AttributeType.STRING)
                 .withEnumerationRestriction(acceptableValues);
 
         performDefaultPost(AttributeModelController.TYPE_MAPPING, conflictAttModel, conflictExpectations,

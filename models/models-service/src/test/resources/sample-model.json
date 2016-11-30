@@ -1,0 +1,78 @@
+{
+  "name": "sample",
+  "description": "Model description",
+  "type": "COLLECTION",
+  "attributes": [
+    {
+      "name": "att_string",
+      "type": "STRING",
+      "queryable": false,
+      "facetable": false,
+      "alterable": false,
+      "optional": false,
+      "mode": "GIVEN"
+    },
+    {
+      "name": "att_boolean",
+      "type": "BOOLEAN",
+      "queryable": false,
+      "facetable": false,
+      "alterable": false,
+      "optional": false,
+      "mode": "GIVEN"
+    }
+  ],
+  "fragments": [
+    {
+      "name": "GEO",
+      "description": "Geographic information",
+      "attributes": [
+        {
+          "name": "CRS",
+          "type": "ENUMERATION",
+          "queryable": false,
+          "facetable": false,
+          "alterable": false,
+          "optional": false,
+          "mode": "GIVEN",
+          "restriction": {
+            "acceptableValues": [
+              "Earth",
+              "Mars",
+              "Venus"
+            ],
+            "type": "ENUMERATION"
+          }
+        },
+        {
+          "name": "GEOMETRY",
+          "type": "GEOMETRY",
+          "queryable": false,
+          "facetable": false,
+          "alterable": false,
+          "optional": false,
+          "mode": "GIVEN"
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "description": "Contact information",
+      "attributes": [
+        {
+          "name": "Phone",
+          "type": "STRING",
+          "queryable": false,
+          "facetable": false,
+          "alterable": false,
+          "optional": false,
+          "mode": "GIVEN",
+          "restriction": {
+            "pattern": "[0-9 ]{10}",
+            "type": "PATTERN"
+          }
+        }
+      ]
+    }
+  ]
+}

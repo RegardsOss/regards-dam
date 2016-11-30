@@ -39,12 +39,12 @@ public class RestrictionTest extends AbstractModelTest {
 
     @Test
     public void enumRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("ENUM", AttributeType.ENUMERATION)
+        final AttributeModel attModel = AttributeModelBuilder.build("ENUM", AttributeType.STRING)
                 .withEnumerationRestriction("FIRST", "SECOND");
         saveAttribute(attModel);
 
         final AttributeModel att = findSingle();
-        Assert.assertEquals(AttributeType.ENUMERATION, att.getType());
+        Assert.assertEquals(AttributeType.STRING, att.getType());
         final EnumerationRestriction er = checkRestrictionType(att.getRestriction(), EnumerationRestriction.class);
         Assert.assertEquals(2, er.getAcceptableValues().size());
     }

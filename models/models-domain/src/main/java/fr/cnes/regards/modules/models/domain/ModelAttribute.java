@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -19,6 +18,8 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
+import fr.cnes.regards.modules.models.schema.Attribute;
 
 /**
  *
@@ -34,7 +35,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 @Entity
 @Table(name = "T_MODEL_ATT", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
 @SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "SEQ_MODEL_ATT")
-public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long> {
+public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long>, IXmlisable<Attribute> {
 
     /**
      * Internal identifier
@@ -55,8 +56,8 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      * Whether this attribute in computed or not
      */
     // TODO link to a calculation plugin
-    @Column(name = "calculated")
-    private boolean calculated = Boolean.FALSE;
+    @NotNull
+    private ComputationMode mode = ComputationMode.GIVEN;
 
     /**
      * Related model
@@ -78,7 +79,7 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
         attribute = pAttributeModel;
         this.model = pModel;
         this.pos = pPosition;
-        this.calculated = pIsCalculated;
+        this.mode = ComputationMode.GIVEN;
     }
 
     public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {
@@ -104,14 +105,6 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
 
     public void setAttribute(AttributeModel pAttribute) {
         attribute = pAttribute;
-    }
-
-    public boolean isCalculated() {
-        return calculated;
-    }
-
-    public void setCalculated(boolean pIsCalculated) {
-        calculated = pIsCalculated;
     }
 
     public Integer getPos() {
@@ -148,5 +141,25 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
 
     public void setModel(Model pModel) {
         model = pModel;
+    }
+
+    public ComputationMode getMode() {
+        return mode;
+    }
+
+    public void setMode(ComputationMode pMode) {
+        mode = pMode;
+    }
+
+    @Override
+    public Attribute toXml() {
+        final Attribute xmlAtt = attribute.toXml();
+        xmlAtt.setComputationMode(mode.toString());
+        return xmlAtt;
+    }
+
+    @Override
+    public void fromXml(Attribute pXmlElement) {
+        // TODO Auto-generated method stub
     }
 }

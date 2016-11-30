@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -29,4 +30,6 @@ public interface IModelService {
     void deleteModel(Long pModelId) throws ModuleException;
 
     Model duplicateModel(Long pModelId, Model pModel) throws ModuleException;
+
+    void exportModel(Long pModelId, OutputStream pOutputStream) throws ModuleException;
 }

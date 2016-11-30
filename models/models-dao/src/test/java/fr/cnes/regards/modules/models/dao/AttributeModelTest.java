@@ -63,13 +63,13 @@ public class AttributeModelTest extends AbstractModelTest {
     public void fragmentTest() {
         final String name = "GEO_FRAGMENT";
         final String description = "All consistent geo attributes";
-        final Fragment f = new Fragment(name, description);
+        final Fragment f = Fragment.buildFragment(name, description);
 
         final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(f)
                 .withGeometryRestriction();
         saveAttribute(attModel1);
 
-        final AttributeModel attModel2 = AttributeModelBuilder.build("CRS", AttributeType.ENUMERATION).fragment(f)
+        final AttributeModel attModel2 = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(f)
                 .withEnumerationRestriction("EARTH", "ASTRO", "MARS");
         saveAttribute(attModel2);
 

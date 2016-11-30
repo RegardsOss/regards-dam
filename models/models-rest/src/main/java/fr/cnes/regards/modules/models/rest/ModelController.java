@@ -3,13 +3,17 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +34,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.service.FragmentService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -50,6 +55,21 @@ public class ModelController implements IResourceController<Model> {
      * Type mapping
      */
     public static final String TYPE_MAPPING = "/models";
+
+    /**
+     * Prefix for imported/exported filename
+     */
+    private static final String MODEL_FILE_PREFIX = "model-";
+
+    /**
+     * Suffix for imported/exported filename
+     */
+    private static final String JSON_EXTENSION = ".json";
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(FragmentService.class);
 
     /**
      * Model attribute service
@@ -175,12 +195,25 @@ public class ModelController implements IResourceController<Model> {
      *             if error occurs!
      */
     @ResourceAccess(description = "Export a model")
-    // CHECKSTYLE:OFF
-    @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    // CHECKSTYLE:ON
+    @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}/export")
     public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, @PathVariable Long pModelId)
             throws ModuleException {
-        // TODO Auto-generated method stub
+        final Model model = modelService.getModel(pModelId);
+        final String exportedFilename = MODEL_FILE_PREFIX + model.getName() + JSON_EXTENSION;
+
+        // Produce octet stream to force navigator opening "save as" dialog
+        pResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        pResponse.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
+
+        try {
+            modelService.exportModel(pModelId, pResponse.getOutputStream());
+            pResponse.getOutputStream().flush();
+        } catch (IOException e) {
+            final String message = String.format("Error with servlet output stream while exporting model %s.",
+                                                 model.getName());
+            LOGGER.error(message, e);
+            throw new ModuleException(e);
+        }
     }
 
     /**

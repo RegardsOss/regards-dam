@@ -18,6 +18,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 
 /**
  *
@@ -29,22 +30,22 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 @Entity
 @Table(name = "T_MODEL", indexes = { @Index(name = "IDX_MODEL_NAME", columnList = "name") })
 @SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "SEQ_MODEL")
-public class Model implements IIdentifiable<Long> {
+public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.modules.models.schema.Model> {
 
     /**
      * Name regular expression
      */
-    private static final String MODEL_NAME_REGEXP = "[0-9a-zA-Z_]*";
+    public static final String NAME_REGEXP = "[0-9a-zA-Z_]*";
 
     /**
      * Name min size
      */
-    private static final int MODEL_NAME_MIN_SIZE = 3;
+    public static final int NAME_MIN_SIZE = 3;
 
     /**
      * Name max size
      */
-    private static final int MODEL_NAME_MAX_SIZE = 32;
+    public static final int NAME_MAX_SIZE = 32;
 
     /**
      * Internal identifier
@@ -57,10 +58,9 @@ public class Model implements IIdentifiable<Long> {
      * Model name
      */
     @NotNull
-    @Pattern(regexp = MODEL_NAME_REGEXP, message = "Model name must conform to regular expression \""
-            + MODEL_NAME_REGEXP + "\".")
-    @Size(min = MODEL_NAME_MIN_SIZE, max = MODEL_NAME_MAX_SIZE, message = "Attribute name must be between "
-            + MODEL_NAME_MIN_SIZE + " and " + MODEL_NAME_MAX_SIZE + " length.")
+    @Pattern(regexp = NAME_REGEXP, message = "Model name must conform to regular expression \"" + NAME_REGEXP + "\".")
+    @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE, message = "Attribute name must be between " + NAME_MIN_SIZE
+            + " and " + NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false, unique = true)
     private String name;
 
@@ -116,5 +116,19 @@ public class Model implements IIdentifiable<Long> {
 
     public void setDescription(String pDescription) {
         description = pDescription;
+    }
+
+    @Override
+    public fr.cnes.regards.modules.models.schema.Model toXml() {
+        final fr.cnes.regards.modules.models.schema.Model xmlModel = new fr.cnes.regards.modules.models.schema.Model();
+        xmlModel.setName(name);
+        xmlModel.setDescription(description);
+        xmlModel.setType(type.toString());
+        return xmlModel;
+    }
+
+    @Override
+    public void fromXml(fr.cnes.regards.modules.models.schema.Model pXmlElement) {
+        // TODO Auto-generated method stub
     }
 }

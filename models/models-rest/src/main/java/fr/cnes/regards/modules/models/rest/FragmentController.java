@@ -3,13 +3,17 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +31,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.service.FragmentService;
 import fr.cnes.regards.modules.models.service.IFragmentService;
 
 /**
@@ -43,6 +48,21 @@ public class FragmentController implements IResourceController<Fragment> {
      * Type mapping
      */
     public static final String TYPE_MAPPING = "/models/fragments";
+
+    /**
+     * Prefix for imported/exported filename
+     */
+    private static final String FRAGMENT_FILE_PREFIX = "fragment-";
+
+    /**
+     * Suffix for imported/exported filename
+     */
+    private static final String JSON_EXTENSION = ".json";
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(FragmentService.class);
 
     /**
      * Fragment service
@@ -148,13 +168,26 @@ public class FragmentController implements IResourceController<Fragment> {
      *             if error occurs!
      */
     @ResourceAccess(description = "Export a fragment")
-    // CHECKSTYLE:OFF
-    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    // CHECKSTYLE:ON
+    @RequestMapping(method = RequestMethod.GET, value = "/{pFragmentId}/export")
     public void exportFragment(HttpServletRequest pRequest, HttpServletResponse pResponse,
             @PathVariable Long pFragmentId) throws ModuleException {
-        // TODO Auto-generated method stub
 
+        final Fragment fragment = fragmentService.getFragment(pFragmentId);
+        final String exportedFilename = FRAGMENT_FILE_PREFIX + fragment.getName() + JSON_EXTENSION;
+
+        // Produce octet stream to force navigator opening "save as" dialog
+        pResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        pResponse.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
+
+        try {
+            fragmentService.exportFragment(pFragmentId, pResponse.getOutputStream());
+            pResponse.getOutputStream().flush();
+        } catch (IOException e) {
+            final String message = String.format("Error with servlet output stream while exporting fragment %s.",
+                                                 fragment.getName());
+            LOGGER.error(message, e);
+            throw new ModuleException(e);
+        }
     }
 
     /**

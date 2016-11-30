@@ -21,6 +21,8 @@ public interface IAttributeModelService {
 
     AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException;
 
+    Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException;
+
     AttributeModel getAttribute(Long pAttributeId) throws ModuleException;
 
     AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException;

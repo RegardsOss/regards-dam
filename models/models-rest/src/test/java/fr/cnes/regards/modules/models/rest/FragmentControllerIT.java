@@ -50,7 +50,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createEmptyFragmentTest() {
 
-        final Fragment fragment = new Fragment(null, null);
+        final Fragment fragment = new Fragment();
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();

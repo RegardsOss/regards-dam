@@ -57,11 +57,6 @@ public class RestrictionServiceTest {
     }
 
     @Test
-    public void getEnumRestriction() {
-        testRestriction(AttributeType.ENUMERATION, 1, RestrictionType.ENUMERATION);
-    }
-
-    @Test
     public void getFloatRestriction() {
         testRestriction(AttributeType.FLOAT, 1, RestrictionType.FLOAT_RANGE);
         testRestriction(AttributeType.FLOAT_ARRAY, 1, RestrictionType.FLOAT_RANGE);
@@ -82,8 +77,8 @@ public class RestrictionServiceTest {
 
     @Test
     public void getStringRestriction() {
-        testRestriction(AttributeType.STRING, 1, RestrictionType.PATTERN);
-        testRestriction(AttributeType.STRING_ARRAY, 1, RestrictionType.PATTERN);
+        testRestriction(AttributeType.STRING, 2, RestrictionType.PATTERN, RestrictionType.ENUMERATION);
+        testRestriction(AttributeType.STRING_ARRAY, 2, RestrictionType.PATTERN, RestrictionType.ENUMERATION);
     }
 
     @Test

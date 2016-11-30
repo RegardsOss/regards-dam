@@ -3,9 +3,18 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -32,6 +41,11 @@ import fr.cnes.regards.modules.models.service.exception.FragmentAttributeExcepti
  *
  */
 public class ModelServiceTest {
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModelServiceTest.class);
 
     /**
      * Sample model name
@@ -258,5 +272,69 @@ public class ModelServiceTest {
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
 
         modelService.unbindAttributeFromModel(modelId, modAttId);
+    }
+
+    /**
+     * Test model export
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test
+    public void exportModelTest() throws ModuleException {
+
+        final Long modelId = 1L;
+        final Model model = new Model();
+        model.setId(modelId);
+        model.setName("sample");
+        model.setDescription("Model description");
+        model.setType(ModelType.COLLECTION);
+
+        final List<ModelAttribute> modAtts = new ArrayList<>();
+
+        // Attribute #1 in default fragment
+        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING)
+                .fragment(Fragment.buildDefault()).withoutRestriction();
+        ModelAttribute modAtt = new ModelAttribute(attMod, model);
+        modAtts.add(modAtt);
+
+        // Attribute #2 in default fragment
+        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN).fragment(Fragment.buildDefault())
+                .withoutRestriction();
+        modAtt = new ModelAttribute(attMod, model);
+        modAtts.add(modAtt);
+
+        // Geo fragment
+        final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
+
+        // Attribute #3 in geo fragment
+        attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
+                .withEnumerationRestriction("Earth", "Mars", "Venus");
+        modAtt = new ModelAttribute(attMod, model);
+        modAtts.add(modAtt);
+
+        // Attribute #4 in geo fragment
+        attMod = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(geo).withoutRestriction();
+        modAtt = new ModelAttribute(attMod, model);
+        modAtts.add(modAtt);
+
+        // Geo fragment
+        final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
+
+        // Attribute #5 in contact fragment
+        attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING).fragment(contact)
+                .withPatternRestriction("[0-9 ]{10}");
+        modAtt = new ModelAttribute(attMod, model);
+        modAtts.add(modAtt);
+
+        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockModelAttR.findByModelId(modelId)).thenReturn(modAtts);
+
+        try {
+            final OutputStream output = Files.newOutputStream(Paths.get("target", model.getName() + ".xml"));
+            modelService.exportModel(modelId, output);
+        } catch (IOException e) {
+            LOGGER.debug("Cannot export fragment");
+        }
     }
 }
