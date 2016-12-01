@@ -6,7 +6,7 @@ package fr.cnes.regards.modules.collections.dao;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.collections.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.IEntityPagingAndSortingRepository;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 
 /**
  * @author lmieulet
@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.entities.domain.IEntityPagingAndSortingRepository
  *
  */
 @Repository
-public interface ICollectionRepository extends IEntityPagingAndSortingRepository<Collection> {
+public interface ICollectionRepository extends IAbstractEntityRepository<Collection> {
 
     /**
      * @param pCollectionIpId

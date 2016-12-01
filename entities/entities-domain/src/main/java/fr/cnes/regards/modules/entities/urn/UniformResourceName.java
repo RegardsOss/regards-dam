@@ -7,12 +7,14 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import javax.persistence.Convert;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.util.Assert;
 
+import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.urn.validator.RegardsOaisUrn;
 
 /**
@@ -30,6 +32,7 @@ import fr.cnes.regards.modules.entities.urn.validator.RegardsOaisUrn;
  *
  */
 @RegardsOaisUrn
+@Convert(converter = UrnConverter.class)
 public class UniformResourceName {
 
     /**
@@ -240,4 +243,13 @@ public class UniformResourceName {
         return pattern.matcher(pUrn).matches();
     }
 
+    @Override
+    public boolean equals(Object pOther) {
+        return (pOther instanceof UniformResourceName) && pOther.toString().equals(toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
 }

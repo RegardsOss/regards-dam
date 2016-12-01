@@ -15,7 +15,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public interface IAbstractEntityRepository extends IEntityPagingAndSortingRepository<AbstractEntity> {
+public interface IAbstractEntityRepository<T extends AbstractEntity> extends IEntityPagingAndSortingRepository<T> {
 
     /**
      * @param pIpIds

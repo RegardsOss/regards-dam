@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.collections.dao;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -36,6 +37,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         model1 = modelRepository.save(model1);
         Collection collection1 = collectionRepository.save(new Collection("IpID", model1, "pDescription", "pName"));
         Collection collection2 = collectionRepository.findOne(collection1.getId());
+        Assert.assertEquals(collection1, collection2);
     }
 
 }

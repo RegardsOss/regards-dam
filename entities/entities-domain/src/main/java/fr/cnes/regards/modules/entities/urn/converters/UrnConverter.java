@@ -12,11 +12,14 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Converter
+@Converter(autoApply = true)
 public class UrnConverter implements AttributeConverter<UniformResourceName, String> {
 
     @Override
     public String convertToDatabaseColumn(UniformResourceName pAttribute) {
+        if (pAttribute == null) {
+            return null;
+        }
         return pAttribute.toString();
     }
 

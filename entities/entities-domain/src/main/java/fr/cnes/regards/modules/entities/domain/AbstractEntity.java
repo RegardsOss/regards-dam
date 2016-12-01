@@ -33,6 +33,7 @@ import org.hibernate.annotations.TypeDefs;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
@@ -55,6 +56,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Entity
 @Table(name = "T_ENTITY")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Gsonable
 public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     /**
@@ -123,7 +125,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
             updatable = false)
     protected Model model;
 
-    protected AbstractEntity() {
+    /**
+     *
+     */
+    public AbstractEntity() {
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();

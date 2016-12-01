@@ -10,7 +10,6 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
@@ -26,7 +25,6 @@ import fr.cnes.regards.modules.models.domain.ModelType;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@ContextConfiguration(classes = { AbstractEntityTestConfiguration.class })
 @TestPropertySource("classpath:application-test.properties")
 public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
@@ -37,7 +35,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
     private static final Tag TAG_LAST = new Tag("LAST");
 
     @Autowired
-    private IAbstractEntityRepository entityRepository;
+    private IAbstractEntityRepository<AbstractEntity> entityRepository;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -114,6 +112,29 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         Assert.assertTrue(result.contains(entity2));
         Assert.assertTrue(result.contains(entity3));
         Assert.assertFalse(result.contains(entity4));
+    }
+
+    @Test
+    public void testFindByIpIdInEmptySet() {
+        final Model model = Model.build("name", "desc", ModelType.COLLECTION);
+        modelRepository.save(model);
+
+        TestEntity entity1 = new TestEntity(model, "Entity");
+        entity1 = entityRepository.save(entity1);
+
+        TestEntity entity2 = new TestEntity(model, "Entity");
+        entity2 = entityRepository.save(entity2);
+
+        TestEntity entity3 = new TestEntity(model, "Entity");
+        entity3 = entityRepository.save(entity3);
+
+        TestEntity entity4 = new TestEntity(model, "Entity");
+        entity4 = entityRepository.save(entity4);
+
+        final Set<UniformResourceName> ipIds = new HashSet<>();
+
+        final List<AbstractEntity> result = entityRepository.findByIpIdIn(ipIds);
+        Assert.assertEquals(0, result.size());
     }
 
 }

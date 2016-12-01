@@ -61,7 +61,7 @@ public class Collection extends AbstractEntity {
     }
 
     public Collection(Model pModel, String pDescription, String pName) {
-        super(pModel);
+        this(pModel);
         description = pDescription;
         name = pName;
     }
@@ -75,9 +75,8 @@ public class Collection extends AbstractEntity {
     }
 
     public Collection(Long pId, Model pModel, String pDescription, String pName) {
-        super(pModel, pId);
-        description = pDescription;
-        name = pName;
+        this(pModel, pDescription, pName);
+        id = pId;
     }
 
     /**

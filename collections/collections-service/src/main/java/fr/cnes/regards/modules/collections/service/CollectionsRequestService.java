@@ -47,7 +47,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     /**
      * DAO for all entities, used to dissociate
      */
-    private final IAbstractEntityRepository entitiesRepository;
+    private final IAbstractEntityRepository<AbstractEntity> entitiesRepository;
 
     /**
      *
@@ -57,7 +57,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      *            service used to contact, or not, archival storage
      */
     public CollectionsRequestService(ICollectionRepository pCollectionRepository,
-            IAbstractEntityRepository pAbstractEntityRepository, IStorageService pPersistService) {
+            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pPersistService) {
         super();
         collectionRepository = pCollectionRepository;
         storageService = pPersistService;
@@ -143,7 +143,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
     @Override
     public void deleteCollection(Long pCollectionId) {
-        final Collection toDelete = collectionRepository.getOne(pCollectionId);
+        final Collection toDelete = collectionRepository.findOne(pCollectionId);
         dissociate(toDelete);
         // FIXME: repo.delete and then persist.delete? ou c'est que storage qui gère le delete?
         collectionRepository.delete(pCollectionId);
@@ -156,13 +156,14 @@ public class CollectionsRequestService implements ICollectionsRequestService {
         dissociate(pToDelete, linkedToToDelete);
     }
 
-    public void dissociate(Collection pToDissociate, List<AbstractEntity> pToBeDissociated) {
+    private void dissociate(Collection pToDissociate, List<AbstractEntity> pToBeDissociated) {
         // TODO: implement cf REGARDS_DSL_DAM_COL_120
-        Set<Tag> toDissociateAssociations = pToDissociate.getTags();
+        final Set<Tag> toDissociateAssociations = pToDissociate.getTags();
         for (AbstractEntity toBeDissociated : pToBeDissociated) {
             toDissociateAssociations.remove(new Tag(toBeDissociated.getIpId().toString()));
             dissociate(pToDissociate, toBeDissociated);
         }
+        pToDissociate.setTags(toDissociateAssociations);
         collectionRepository.save(pToDissociate);
     }
 
@@ -255,7 +256,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     @Override
     public Collection associateCollection(Long pCollectionId, List<AbstractEntity> pToBeAssociatedWith) {
         final Collection associatedCollection = collectionRepository.findOne(pCollectionId);
-        dissociate(associatedCollection, pToBeAssociatedWith);
+        associate(associatedCollection, pToBeAssociatedWith);
         return associatedCollection;
     }
 

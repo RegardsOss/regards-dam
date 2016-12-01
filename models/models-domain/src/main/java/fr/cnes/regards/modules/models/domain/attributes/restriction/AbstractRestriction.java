@@ -39,7 +39,7 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
      * Attribute restriction type
      */
     @Enumerated(EnumType.STRING)
-    private RestrictionType type;
+    public RestrictionType type;
 
     @Override
     public Long getId() {

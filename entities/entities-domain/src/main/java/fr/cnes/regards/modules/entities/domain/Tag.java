@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "T_TAG")
-public class Tag {
+public class Tag implements Comparable<Tag> {
 
     @Id
     @SequenceGenerator(name = "TagSequence", initialValue = 1, sequenceName = "SEQ_TAG")
@@ -55,6 +55,11 @@ public class Tag {
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    @Override
+    public int compareTo(Tag pO) {
+        return value.compareTo(pO.value);
     }
 
 }

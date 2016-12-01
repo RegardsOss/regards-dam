@@ -97,7 +97,7 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResponseBody
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId) {
         collectionsRequestService.deleteCollection(pCollectionId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -148,7 +148,7 @@ public class CollectionsController implements IResourceController<Collection> {
         resourceService.addLink(resource, this.getClass(), "retrieveCollectionList", LinkRels.LIST);
         resourceService.addLink(resource, this.getClass(), "deleteCollection", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "createCollection", LinkRels.UPDATE,
+        resourceService.addLink(resource, this.getClass(), "updateCollection", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Collection.class));
         return resource;
