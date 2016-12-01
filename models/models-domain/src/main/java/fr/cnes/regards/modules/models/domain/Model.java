@@ -129,6 +129,8 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
 
     @Override
     public void fromXml(fr.cnes.regards.modules.models.schema.Model pXmlElement) {
-        // TODO Auto-generated method stub
+        setName(pXmlElement.getName());
+        setDescription(pXmlElement.getDescription());
+        setType(ModelType.valueOf(pXmlElement.getType()));
     }
 }

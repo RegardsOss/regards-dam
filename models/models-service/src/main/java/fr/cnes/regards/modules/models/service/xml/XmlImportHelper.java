@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.models.service.dto;
+package fr.cnes.regards.modules.models.service.xml;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -44,17 +44,18 @@ public final class XmlImportHelper {
 
     /**
      * Import fragment {@link AttributeModel} from input stream
-     * 
+     *
      * @param pInputStream
      *            input stream
      * @return list of {@link AttributeModel} linked to same {@link Fragment}
      * @throws ImportException
+     *             if error occurs!
      */
     public static Iterable<AttributeModel> importFragment(InputStream pInputStream) throws ImportException {
         final Fragment xmlFragment = read(pInputStream, Fragment.class);
 
         if (xmlFragment.getAttribute().isEmpty()) {
-            final String message = String.format("The fragment %s is skipped because no attribute is bound!",
+            final String message = String.format("Import for fragment %s is skipped because no attribute is bound!",
                                                  xmlFragment.getName());
             LOGGER.error(message);
             throw new ImportException(message);
@@ -78,11 +79,56 @@ public final class XmlImportHelper {
         return attModels;
     }
 
+    /**
+     * Import model {@link ModelAttribute} from input stream
+     *
+     * @param pInputStream
+     *            input stream
+     * @return list of {@link ModelAttribute}
+     * @throws ImportException
+     *             if error occurs!
+     */
     public static Iterable<ModelAttribute> importModel(InputStream pInputStream) throws ImportException {
-        final Model model = read(pInputStream, Model.class);
-        // TODO
-        LOGGER.debug("ok");
-        return null;
+        final Model xmlModel = read(pInputStream, Model.class);
+
+        if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {
+            final String message = String.format("Import for module %s is skipped because no attribute is bound!",
+                                                 xmlModel.getName());
+            LOGGER.error(message);
+            throw new ImportException(message);
+        }
+
+        final List<ModelAttribute> modelAtts = new ArrayList<>();
+
+        // Manage model
+        final fr.cnes.regards.modules.models.domain.Model model = new fr.cnes.regards.modules.models.domain.Model();
+        model.fromXml(xmlModel);
+
+        // Manage attribute (default fragment)
+        for (Attribute xmlAtt : xmlModel.getAttribute()) {
+            final ModelAttribute modelAtt = new ModelAttribute();
+            modelAtt.fromXml(xmlAtt);
+            modelAtt.setModel(model);
+            modelAtts.add(modelAtt);
+        }
+
+        for (Fragment xmlFragment : xmlModel.getFragment()) {
+            // Manage fragment
+            // CHECKSTYLE:OFF
+            fr.cnes.regards.modules.models.domain.attributes.Fragment fragment = new fr.cnes.regards.modules.models.domain.attributes.Fragment();
+            // CHECKSTYLE:ON
+            fragment.fromXml(xmlFragment);
+
+            for (Attribute xmlAtt : xmlFragment.getAttribute()) {
+                final ModelAttribute modelAtt = new ModelAttribute();
+                modelAtt.fromXml(xmlAtt);
+                modelAtt.setModel(model);
+                modelAtt.getAttribute().setFragment(fragment);
+                modelAtts.add(modelAtt);
+            }
+        }
+
+        return modelAtts;
     }
 
     /**

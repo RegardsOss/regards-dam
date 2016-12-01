@@ -24,8 +24,8 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
-import fr.cnes.regards.modules.models.service.dto.XmlExportHelper;
-import fr.cnes.regards.modules.models.service.dto.XmlImportHelper;
+import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
+import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
 
 /**
  * Fragment service
@@ -126,10 +126,11 @@ public class FragmentService implements IFragmentService {
     }
 
     @Override
-    public void importFragment(InputStream pInputStream) throws ModuleException {
+    public Iterable<AttributeModel> importFragment(InputStream pInputStream) throws ModuleException {
         // Import fragment from input stream
         final Iterable<AttributeModel> attModels = XmlImportHelper.importFragment(pInputStream);
         // Insert attributes
         attributeModelService.addAllAttributes(attModels);
+        return attModels;
     }
 }

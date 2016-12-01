@@ -160,6 +160,11 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
 
     @Override
     public void fromXml(Attribute pXmlElement) {
-        // TODO Auto-generated method stub
+        // Manage base attribute
+        final AttributeModel attModel = new AttributeModel();
+        attModel.fromXml(pXmlElement);
+        setAttribute(attModel);
+        // Manage computation mode
+        setMode(ComputationMode.valueOf(pXmlElement.getComputationMode()));
     }
 }

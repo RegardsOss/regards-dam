@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.models.service.dto;
+package fr.cnes.regards.modules.models.service.xml;
 
 import java.io.InputStream;
 import java.io.OutputStream;

@@ -85,7 +85,7 @@ public class AttributeModelService implements IAttributeModelService {
     @MultitenantTransactional
     @Override
     public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
-        manageAttribute(pAttributeModel);
+        createAttribute(pAttributeModel);
         // if (!fragment.isDefaultFragment()) {
         // // TODO modelAttributeService.updateNSBind(fragment.getId());
         // // Attention au référence cyclique entre service
@@ -98,7 +98,7 @@ public class AttributeModelService implements IAttributeModelService {
     public Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException {
         if (pAttributeModels != null) {
             for (AttributeModel attModel : pAttributeModels) {
-                manageAttribute(attModel);
+                createAttribute(attModel);
             }
         }
         return pAttributeModels;
@@ -135,7 +135,7 @@ public class AttributeModelService implements IAttributeModelService {
         }
     }
 
-    private AttributeModel manageAttribute(AttributeModel pAttributeModel) throws ModuleException {
+    public AttributeModel createAttribute(AttributeModel pAttributeModel) throws ModuleException {
         manageRestriction(pAttributeModel);
         manageFragment(pAttributeModel);
         manageAttributeModel(pAttributeModel);

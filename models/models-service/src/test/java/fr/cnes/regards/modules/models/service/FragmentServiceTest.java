@@ -23,6 +23,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
@@ -37,6 +39,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 
 /**
  * Test fragment service
@@ -80,6 +83,9 @@ public class FragmentServiceTest {
     @Mock
     private IAttributeModelService mockAttModelS;
 
+    /**
+     * List argument captor
+     */
     @Captor
     private ArgumentCaptor<Iterable<AttributeModel>> attModelCaptor;
 
@@ -185,11 +191,13 @@ public class FragmentServiceTest {
         expected.setId(fragmentId);
 
         final List<AttributeModel> attModels = new ArrayList<>();
+        // CHECKSTYLE:OFF
         attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN).withoutRestriction());
         attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING)
                 .withEnumerationRestriction("public", "scientist", "user"));
         attModels.add(AttributeModelBuilder.build("DATA", AttributeType.FLOAT_ARRAY).description("physical data")
                 .withoutRestriction());
+        // CHECKSTYLE:ON
 
         Mockito.when(mockFragmentR.exists(fragmentId)).thenReturn(true);
         Mockito.when(mockFragmentR.findOne(fragmentId)).thenReturn(expected);
@@ -204,6 +212,12 @@ public class FragmentServiceTest {
         }
     }
 
+    /**
+     * Import fragment (See sample-fragment.xml)
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
     @Test
     public void importFragmentTest() throws ModuleException {
         try {
@@ -215,8 +229,50 @@ public class FragmentServiceTest {
             // Capture read data
             Mockito.verify(mockAttModelS).addAllAttributes(attModelCaptor.capture());
             final Iterable<AttributeModel> attModels = attModelCaptor.getValue();
-            LOGGER.debug("argument captured");
 
+            final int expectedSize = 3;
+            Assert.assertEquals(expectedSize, Iterables.size(attModels));
+
+            for (AttributeModel attModel : attModels) {
+                // Check fragment
+                Assert.assertEquals("fragmentName", attModel.getFragment().getName());
+                final String name = attModel.getName();
+
+                if ("NAME".equals(name)) {
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
+                    Assert.assertFalse(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isFacetable());
+                    Assert.assertTrue(attModel.isOptional());
+                    Assert.assertFalse(attModel.isQueryable());
+                    Assert.assertNull(attModel.getRestriction());
+                } else
+                    if ("PROFILE".equals(name)) {
+                        Assert.assertNull(attModel.getDescription());
+                        Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                        Assert.assertFalse(attModel.isAlterable());
+                        Assert.assertFalse(attModel.isFacetable());
+                        Assert.assertFalse(attModel.isOptional());
+                        Assert.assertTrue(attModel.isQueryable());
+                        Assert.assertNotNull(attModel.getRestriction());
+                        Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
+                        final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
+                        Assert.assertTrue(er.getAcceptableValues().contains("public"));
+                        Assert.assertTrue(er.getAcceptableValues().contains("scientist"));
+                        Assert.assertTrue(er.getAcceptableValues().contains("user"));
+                    } else
+                        if ("DATA".equals(name)) {
+                            Assert.assertEquals("physical data", attModel.getDescription());
+                            Assert.assertEquals(AttributeType.FLOAT_ARRAY, attModel.getType());
+                            Assert.assertTrue(attModel.isAlterable());
+                            Assert.assertTrue(attModel.isFacetable());
+                            Assert.assertFalse(attModel.isOptional());
+                            Assert.assertTrue(attModel.isQueryable());
+                            Assert.assertNull(attModel.getRestriction());
+                        } else {
+                            Assert.fail("Unexpected attribute");
+                        }
+            }
         } catch (IOException e) {
             LOGGER.debug("Cannot import fragment");
             Assert.fail();

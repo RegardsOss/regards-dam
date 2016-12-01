@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +26,10 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.service.dto.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
+import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
+import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
 
 /**
  * Manage model lifecycle
@@ -288,5 +290,22 @@ public class ModelService implements IModelService, IModelAttributeService {
         final Iterable<ModelAttribute> modelAtts = getModelAttributes(pModelId);
         // Export fragment to output stream
         XmlExportHelper.exportModel(pOutputStream, model, modelAtts);
+    }
+
+    @MultitenantTransactional
+    @Override
+    public Iterable<ModelAttribute> importModel(InputStream pInputStream) throws ModuleException {
+        // Import model from input stream
+        final Iterable<ModelAttribute> modelAtts = XmlImportHelper.importModel(pInputStream);
+        // Insert attributes
+        for (ModelAttribute modelAtt : modelAtts) {
+            // Create model
+            createModel(modelAtt.getModel());
+            // Create attribute
+            attributeModelService.createAttribute(modelAtt.getAttribute());
+            // Bind attribute to model
+            modelAttributeRepository.save(modelAtt);
+        }
+        return modelAtts;
     }
 }

@@ -3,11 +3,13 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
 
 /**
@@ -32,4 +34,6 @@ public interface IModelService {
     Model duplicateModel(Long pModelId, Model pModel) throws ModuleException;
 
     void exportModel(Long pModelId, OutputStream pOutputStream) throws ModuleException;
+
+    Iterable<ModelAttribute> importModel(InputStream pInputStream) throws ModuleException;
 }

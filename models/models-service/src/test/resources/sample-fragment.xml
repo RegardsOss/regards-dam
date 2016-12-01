@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fragment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="../../main/xsd/model_V1.0.xsd">
+	xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
 	<name>fragmentName</name>
 	<description>Sample fragment</description>
-	<attribute alterable="false" optional="false" queryable="false"
+	<attribute alterable="false" optional="true" queryable="false"
 		facetable="false">
 		<name>NAME</name>
 		<type>BOOLEAN</type>
 	</attribute>
-	<attribute alterable="false" optional="false" queryable="false"
+	<attribute alterable="false" optional="false" queryable="true"
 		facetable="false">
 		<name>PROFILE</name>
 		<type>STRING</type>
@@ -20,8 +20,8 @@
 			</enumeration>
 		</restriction>
 	</attribute>
-	<attribute alterable="false" optional="false" queryable="false"
-		facetable="false">
+	<attribute alterable="true" optional="false" queryable="true"
+		facetable="true">
 		<name>DATA</name>
 		<description>physical data</description>
 		<type>FLOAT_ARRAY</type>

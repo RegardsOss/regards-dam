@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="../../main/xsd/model_V1.0.xsd">
+	xsi:noNamespaceSchemaLocation="../../main/resources/model_V1.0.xsd">
 	<name>sample</name>
 	<description>Sample mission</description>
 	<type>COLLECTION</type>

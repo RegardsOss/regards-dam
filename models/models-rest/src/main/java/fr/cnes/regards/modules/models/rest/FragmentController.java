@@ -195,16 +195,21 @@ public class FragmentController implements IResourceController<Fragment> {
      *
      * @param pFile
      *            file representing the fragment
-     * @return TODO
+     * @return nothing
      * @throws ModuleException
      *             if error occurs!
      */
-    // TODO adapt signature / see Spring MVC doc p.22.10
     @ResourceAccess(description = "Import a fragment")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<String> importFragment(@RequestParam("file") MultipartFile pFile) throws ModuleException {
-        // TODO Auto-generated method stub
-        return null;
+    public ResponseEntity<Void> importFragment(@RequestParam("file") MultipartFile pFile) throws ModuleException {
+        try {
+            fragmentService.importFragment(pFile.getInputStream());
+        } catch (IOException e) {
+            final String message = "Error with file stream while importing fragment.";
+            LOGGER.error(message, e);
+            throw new ModuleException(e);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @Override

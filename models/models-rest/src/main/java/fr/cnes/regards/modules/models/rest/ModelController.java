@@ -221,16 +221,21 @@ public class ModelController implements IResourceController<Model> {
      *
      * @param pFile
      *            model to import
-     * @return TODO
+     * @return nothing
      * @throws ModuleException
      *             if error occurs!
      */
-    // TODO adapt signature / see Spring MVC doc p.22.10
     @ResourceAccess(description = "Import a model")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<String> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
-        // TODO Auto-generated method stub
-        return null;
+    public ResponseEntity<Void> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
+        try {
+            modelService.importModel(pFile.getInputStream());
+        } catch (IOException e) {
+            final String message = "Error with file stream while importing model.";
+            LOGGER.error(message, e);
+            throw new ModuleException(e);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @Override

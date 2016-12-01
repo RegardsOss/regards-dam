@@ -4,18 +4,21 @@
 package fr.cnes.regards.modules.models.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
+
+import com.google.common.collect.Iterables;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -27,6 +30,7 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
@@ -34,6 +38,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
 
 /**
@@ -120,7 +126,7 @@ public class ModelServiceTest {
         Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(null);
         Mockito.when(mockModelR.save(model)).thenReturn(model);
 
-        Assert.notNull(modelService.createModel(model));
+        Assert.assertNotNull(modelService.createModel(model));
     }
 
     @Test(expected = EntityNotFoundException.class)
@@ -142,7 +148,7 @@ public class ModelServiceTest {
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
 
-        Assert.notNull(modelService.getModel(modelId));
+        Assert.assertNotNull(modelService.getModel(modelId));
     }
 
     @Test(expected = EntityNotIdentifiableException.class)
@@ -191,7 +197,7 @@ public class ModelServiceTest {
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
         Mockito.when(mockModelR.save(model)).thenReturn(model);
 
-        Assert.notNull(modelService.updateModel(modelId, model));
+        Assert.assertNotNull(modelService.updateModel(modelId, model));
     }
 
     @Test
@@ -335,6 +341,124 @@ public class ModelServiceTest {
             modelService.exportModel(modelId, output);
         } catch (IOException e) {
             LOGGER.debug("Cannot export fragment");
+        }
+    }
+
+    /**
+     * Test model import
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test
+    public void importModelTest() throws ModuleException {
+
+        try {
+            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", "sample-model.xml"));
+
+            final Iterable<ModelAttribute> modelAtts = modelService.importModel(input);
+
+            final int expectedSize = 5;
+            Assert.assertEquals(expectedSize, Iterables.size(modelAtts));
+
+            for (ModelAttribute modAtt : modelAtts) {
+
+                // Check model info
+                Assert.assertEquals("sample", modAtt.getModel().getName());
+                Assert.assertEquals("Sample mission", modAtt.getModel().getDescription());
+                Assert.assertEquals(ModelType.COLLECTION, modAtt.getModel().getType());
+
+                // Check attributes
+                final AttributeModel attModel = modAtt.getAttribute();
+                Assert.assertNotNull(attModel);
+
+                if ("att_string".equals(attModel.getName())) {
+                    Assert.assertNull(attModel.getFragment());
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                    Assert.assertFalse(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isFacetable());
+                    Assert.assertTrue(attModel.isOptional());
+                    Assert.assertFalse(attModel.isQueryable());
+                    Assert.assertNull(attModel.getRestriction());
+                    Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
+                }
+
+                if ("att_boolean".equals(attModel.getName())) {
+                    Assert.assertNull(attModel.getFragment());
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
+                    Assert.assertTrue(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isFacetable());
+                    Assert.assertFalse(attModel.isOptional());
+                    Assert.assertFalse(attModel.isQueryable());
+                    Assert.assertNull(attModel.getRestriction());
+                    Assert.assertEquals(ComputationMode.CUSTOM, modAtt.getMode());
+                }
+
+                if ("CRS".equals(attModel.getName())) {
+                    Assert.assertNotNull(attModel.getFragment());
+                    Assert.assertEquals("GEO", attModel.getFragment().getName());
+                    Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
+
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                    Assert.assertFalse(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isFacetable());
+                    Assert.assertFalse(attModel.isOptional());
+                    Assert.assertFalse(attModel.isQueryable());
+
+                    Assert.assertNotNull(attModel.getRestriction());
+                    Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
+                    final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
+                    Assert.assertTrue(er.getAcceptableValues().contains("Earth"));
+                    Assert.assertTrue(er.getAcceptableValues().contains("Mars"));
+                    Assert.assertTrue(er.getAcceptableValues().contains("Venus"));
+
+                    Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
+                }
+
+                if ("GEOMETRY".equals(attModel.getName())) {
+                    Assert.assertNotNull(attModel.getFragment());
+                    Assert.assertEquals("GEO", attModel.getFragment().getName());
+                    Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
+
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.GEOMETRY, attModel.getType());
+                    Assert.assertFalse(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isFacetable());
+                    Assert.assertFalse(attModel.isOptional());
+                    Assert.assertFalse(attModel.isQueryable());
+
+                    Assert.assertNull(attModel.getRestriction());
+
+                    Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
+                }
+
+                if ("Phone".equals(attModel.getName())) {
+                    Assert.assertNotNull(attModel.getFragment());
+                    Assert.assertEquals("Contact", attModel.getFragment().getName());
+                    Assert.assertEquals("Contact information", attModel.getFragment().getDescription());
+
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                    Assert.assertTrue(attModel.isAlterable());
+                    Assert.assertTrue(attModel.isFacetable());
+                    Assert.assertTrue(attModel.isOptional());
+                    Assert.assertTrue(attModel.isQueryable());
+
+                    Assert.assertNotNull(attModel.getRestriction());
+                    Assert.assertTrue(attModel.getRestriction() instanceof PatternRestriction);
+                    final PatternRestriction pr = (PatternRestriction) attModel.getRestriction();
+                    Assert.assertEquals("[0-9 ]{10}", pr.getPattern());
+
+                    Assert.assertEquals(ComputationMode.FROM_DESCENDANTS, modAtt.getMode());
+                }
+            }
+
+        } catch (IOException e) {
+            LOGGER.debug("Cannot import fragment");
+            Assert.fail();
         }
     }
 }
