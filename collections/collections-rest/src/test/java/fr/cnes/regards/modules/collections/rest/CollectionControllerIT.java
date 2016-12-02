@@ -8,9 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
@@ -68,7 +68,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private Collection collection3;
 
-    private Collection collection4;
+    private AbstractEntity collection4;
 
     @Autowired
     private ICollectionRepository collectionRepository;
@@ -97,7 +97,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
         collection1 = collectionRepository.save(collection1);
         collection3 = collectionRepository.save(collection3);
-        collection4 = collectionRepository.save(collection4);
+        // collection4 = collectionRepository.save(collection4);
     }
 
     // TODO: test retrieve Collection by (S)IP_ID, by modelId and sipId
@@ -183,8 +183,6 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    @Ignore
-    // TODO: MAKE IT WORK!
     public void testDissociateCollections() {
         final List<Collection> toDissociate = new ArrayList<>();
         toDissociate.add(collection3);
@@ -194,19 +192,22 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    // @Ignore
-    // TODO: MAKE IT WORK!
     public void testAssociateCollections() {
         final List<AbstractEntity> toAssociate = new ArrayList<>();
         toAssociate.add(collection4);
+
+        final Gson gson = gsonBuilder.create();
+        String gsonString = gson.toJson(collection4, AbstractEntity.class);
+        Object gsonObject = gson.fromJson(gsonString, AbstractEntity.class);
+
+        String col4String = gson(collection4);
+        String col4list = gson(toAssociate);
+
         expectations.add(MockMvcResultMatchers.status().isOk());
-        try {
-            performDefaultPut(COLLECTIONS_COLLECTION_ID_ASSOCIATE, toAssociate, expectations,
-                              "Failed to associate collections from one collection using its id", collection1.getId());
-        } catch (Throwable t) {
-            LOG.error("ISSUE", t);
-            Assert.fail();
-        }
+
+        performDefaultPut(COLLECTIONS_COLLECTION_ID_ASSOCIATE, toAssociate, expectations,
+                          "Failed to associate collections from one collection using its id", collection1.getId());
+
     }
 
     @Override

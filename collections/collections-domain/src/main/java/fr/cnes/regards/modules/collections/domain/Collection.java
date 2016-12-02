@@ -56,6 +56,10 @@ public class Collection extends AbstractEntity {
     @OneToMany
     private List<Collection> parents;
 
+    public Collection() {
+        super();
+    }
+
     public Collection(Model pModel) {
         super(pModel, COLLECTION_TYPE);
     }
