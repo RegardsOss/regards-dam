@@ -78,11 +78,9 @@ public class CollectionsRequestService implements ICollectionsRequestService {
             // "collectionId inside the route is different from the entity inside the request body"
             throw new EntityInconsistentIdentifierException(pCollectionId, pCollection.getId(), Collection.class);
         }
-        // FIXME: handle the URN and possible modifications (version change/Revisions)
         Set<UniformResourceName> oldLinks = extractUrns(collectionBeforeUpdate.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pCollection.getTags());
         if (!oldLinks.equals(newLinks)) {
-            // TODO: associate/dissociate cf REGARDS_DSL_DAM_COL_220
             final Set<UniformResourceName> toDissociate = getDiff(oldLinks, newLinks);
             dissociate(collectionBeforeUpdate, toDissociate);
             final Set<UniformResourceName> toAssociate = getDiff(newLinks, oldLinks);
@@ -157,7 +155,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     }
 
     private void dissociate(Collection pToDissociate, List<AbstractEntity> pToBeDissociated) {
-        // TODO: implement cf REGARDS_DSL_DAM_COL_120
+
         final Set<Tag> toDissociateAssociations = pToDissociate.getTags();
         for (AbstractEntity toBeDissociated : pToBeDissociated) {
             toDissociateAssociations.remove(new Tag(toBeDissociated.getIpId().toString()));
@@ -174,7 +172,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pTarget
      */
     private void dissociate(Collection pActual, AbstractEntity pTarget) {
-        // TODO: REGARDS_DSL_DAM_COL_230
+
         pTarget.getTags().remove(new Tag(pActual.getIpId().toString()));
         entitiesRepository.save(pTarget);
     }
@@ -186,7 +184,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pCollectionList
      */
     public void associate(Collection pSource, List<AbstractEntity> pCollectionList) {
-        // TODO: implement cf REGARDS_DSL_DAM_COL_040
+
         for (AbstractEntity target : pCollectionList) {
             // associate target to source
             pSource.getTags().add(new Tag(target.getIpId().toString()));
@@ -202,7 +200,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pTarget
      */
     private void associate(Collection pSource, AbstractEntity pTarget) {
-        // TODO: implement cf REGARDS_DSL_DAM_COL_050
+
         pTarget.getTags().add(new Tag(pSource.getIpId().toString()));
         entitiesRepository.save(pTarget);
     }
