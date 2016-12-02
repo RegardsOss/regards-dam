@@ -13,23 +13,18 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  */
 public class DataObject implements IIdentifiable<Long> {
 
-    private final Long id_;
+    private final Long id;
 
-    private FileType fileType_;
+    private FileType fileType;
 
-    private UniformResourceIdentifier uri_;
-
-    @Override
-    public Long getId() {
-        return id_;
-    }
+    private UniformResourceIdentifier uri;
 
     /**
      *
      */
     public DataObject() {
         super();
-        id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
+        id = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
     }
 
     /**
@@ -38,15 +33,20 @@ public class DataObject implements IIdentifiable<Long> {
      */
     public DataObject(FileType pFileType, UniformResourceIdentifier pUri) {
         this();
-        fileType_ = pFileType;
-        uri_ = pUri;
+        fileType = pFileType;
+        uri = pUri;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
     }
 
     /**
      * @return the fileType
      */
     public FileType getFileType() {
-        return fileType_;
+        return fileType;
     }
 
     /**
@@ -54,14 +54,14 @@ public class DataObject implements IIdentifiable<Long> {
      *            the fileType to set
      */
     public void setFileType(FileType pFileType) {
-        fileType_ = pFileType;
+        fileType = pFileType;
     }
 
     /**
      * @return the uri
      */
     public UniformResourceIdentifier getUri() {
-        return uri_;
+        return uri;
     }
 
     /**
@@ -69,7 +69,7 @@ public class DataObject implements IIdentifiable<Long> {
      *            the uri to set
      */
     public void setUri(UniformResourceIdentifier pUri) {
-        uri_ = pUri;
+        uri = pUri;
     }
 
 }

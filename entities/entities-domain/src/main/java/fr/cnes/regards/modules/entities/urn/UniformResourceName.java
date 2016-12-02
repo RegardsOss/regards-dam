@@ -62,7 +62,6 @@ public class UniformResourceName {
     @NotNull
     private String tenant;
 
-    // FIXME: UUID or String and then UUID.fromString(ID)
     @NotNull
     private UUID entityId;
 

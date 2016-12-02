@@ -16,21 +16,22 @@ public class DataEntity extends AbstractEntity {
     /**
      *
      */
-    private List<Data> files_;
+    private List<Data> files;
 
     /**
      * @param pFiles
      */
-    public DataEntity(Long pId, String pSid_id, Model pModel, List<Data> pFiles) {
-        // super(pModel, pId);
-        files_ = pFiles;
+    public DataEntity(Long pId, String pSidId, Model pModel, List<Data> pFiles) {
+        super(pModel, pId);
+        sipId = pSidId;
+        files = pFiles;
     }
 
     /**
      * @return the files
      */
     public List<Data> getFiles() {
-        return files_;
+        return files;
     }
 
     /**
@@ -38,6 +39,6 @@ public class DataEntity extends AbstractEntity {
      *            the files to set
      */
     public void setFiles(List<Data> pFiles) {
-        files_ = pFiles;
+        files = pFiles;
     }
 }

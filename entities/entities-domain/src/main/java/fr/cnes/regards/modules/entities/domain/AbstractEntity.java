@@ -99,9 +99,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     protected String sipId;
 
     /**
-     * FIXME: element collection means a table of tags for collection, another one for datasets etc, or creating an
-     * entity Tag that would mean same table for all those entities knowing that most of tags will be on several type of
-     * them
      *
      * entities list of tags affected to this entity
      */

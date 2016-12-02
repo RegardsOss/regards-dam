@@ -20,22 +20,22 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 public class Data implements IIdentifiable<Long> {
 
     @NotNull
-    private final Long id_;
+    private final Long id;
 
     @NotNull
-    private final String checksum_;
+    private final String checksum;
 
     @Min(0)
-    private final int fileSize_;
+    private final int fileSize;
 
     @NotNull
-    private final MimeType mimeType_;
+    private final MimeType mimeType;
 
     @Valid
-    private final DataType dataType_;
+    private final DataType dataType;
 
     @Valid
-    private final UniformResourceIdentifier fileRef_;
+    private final UniformResourceIdentifier fileRef;
 
     /**
      * @param pChecksum
@@ -46,45 +46,45 @@ public class Data implements IIdentifiable<Long> {
     public Data(String pChecksum, int pFileSize, MimeType pMimeType, DataType pDataType,
             UniformResourceIdentifier pFileRef) {
         super();
-        id_ = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
-        checksum_ = pChecksum;
-        fileSize_ = pFileSize;
-        mimeType_ = pMimeType;
-        dataType_ = pDataType;
-        fileRef_ = pFileRef;
+        id = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
+        checksum = pChecksum;
+        fileSize = pFileSize;
+        mimeType = pMimeType;
+        dataType = pDataType;
+        fileRef = pFileRef;
     }
 
     /**
      * @return the checksum
      */
     public String getChecksum() {
-        return checksum_;
+        return checksum;
     }
 
     /**
      * @return the fileSize
      */
     public int getFileSize() {
-        return fileSize_;
+        return fileSize;
     }
 
     /**
      * @return the mimeType
      */
     public MimeType getMimeType() {
-        return mimeType_;
+        return mimeType;
     }
 
     /**
      * @return the dataType
      */
     public DataType getDataType() {
-        return dataType_;
+        return dataType;
     }
 
     @Override
     public Long getId() {
-        return id_;
+        return id;
     }
 
 }
