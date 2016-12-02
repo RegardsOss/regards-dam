@@ -21,6 +21,7 @@
 		<module>models</module>
 		<module>entities</module>
 		<module>collections</module>
+		<module>storage</module>
 	</modules>
 
 </project>

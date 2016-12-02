@@ -20,6 +20,7 @@
 
 	<modules>
 		<module>entities-domain</module>
+		<module>entities-dao</module>
 	</modules>
 
 	<dependencyManagement>
@@ -30,19 +31,17 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>fr.cnes.regards.modules.entities</groupId>
+				<artifactId>entities-dao</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-domain</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.modules</groupId>
-			<artifactId>module-core</artifactId>
-		</dependency>
-	</dependencies>
 
 	<build>
 		<plugins>

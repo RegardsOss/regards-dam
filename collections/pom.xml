@@ -22,7 +22,6 @@
 		<module>collections-domain</module>
 		<module>collections-rest</module>
 		<module>collections-service</module>
-		<module>collections-signature</module>
 	</modules>
 
 	<dependencyManagement>
@@ -54,29 +53,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>fr.cnes.regards.modules.collections</groupId>
-				<artifactId>collections-signature</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>fr.cnes.regards.modules.entities</groupId>
 				<artifactId>entities-domain</artifactId>
 				<version>1.0-SNAPSHOT</version>
 			</dependency>
-			<!-- COTS -->
-			<!-- Netflix Feign REST Client -->
-			<dependency>
-				<groupId>com.netflix.feign</groupId>
-				<artifactId>feign-core</artifactId>
-				<version>8.18.0</version>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
-	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.modules</groupId>
-			<artifactId>module-core</artifactId>
-		</dependency>
-	</dependencies>
+	
 </project>

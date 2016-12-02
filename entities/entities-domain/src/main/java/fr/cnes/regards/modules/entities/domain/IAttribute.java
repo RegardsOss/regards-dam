@@ -4,6 +4,10 @@
 package fr.cnes.regards.modules.entities.domain;
 
 /**
+ *
+ * @param <T>
+ *            type of Attribute
+ *
  * @author lmieulet
  *
  */

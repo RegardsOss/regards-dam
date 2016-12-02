@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- LICENSE_PLACEHOLDER -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.cnes.regards.microservices.dam</groupId>
@@ -22,6 +21,15 @@
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 
 	<dependencies>
+		<!-- Spring dependencies -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-eureka</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.microservices</groupId>
 			<artifactId>microservice-core</artifactId>
@@ -31,8 +39,10 @@
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-rest</artifactId>
 		</dependency>
-		<!-- <dependency> <groupId>fr.cnes.regards.modules.collections</groupId> 
-			<artifactId>collections-rest</artifactId> </dependency> -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.collections</groupId>
+			<artifactId>collections-rest</artifactId>
+		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

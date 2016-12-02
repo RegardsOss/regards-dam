@@ -15,55 +15,55 @@ import javax.validation.constraints.NotNull;
 public class UniformResourceIdentifier {
 
     @NotNull
-    private final URI uri_;
+    private final URI uri;
 
     public UniformResourceIdentifier(String pUrl) throws URISyntaxException {
-        uri_ = new URI(pUrl);
+        uri = new URI(pUrl);
     }
 
     public UniformResourceIdentifier(URI pUri) {
-        uri_ = pUri;
+        uri = pUri;
     }
 
     /**
      * @return the URI
      */
     public URI getUri() {
-        return uri_;
+        return uri;
     }
 
     /**
      * @return URI scheme
      */
     public String getScheme() {
-        return uri_.getScheme();
+        return uri.getScheme();
     }
 
     /**
      * @return URI host
      */
     public String getHost() {
-        return uri_.getHost();
+        return uri.getHost();
     }
 
     /**
      * @return URI path
      */
     public String getPath() {
-        return uri_.getPath();
+        return uri.getPath();
     }
 
     /**
      * @return URI port
      */
     public int getPort() {
-        return uri_.getPort();
+        return uri.getPort();
     }
 
     /**
      * @return URI fragment
      */
     public String getFragment() {
-        return uri_.getFragment();
+        return uri.getFragment();
     }
 }

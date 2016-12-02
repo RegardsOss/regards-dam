@@ -3,8 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
  * TODO: move to right place Entity interface.
@@ -15,7 +15,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Sylvain Vissiere-Guerinet
  * @since 1.0
  */
-public interface IEntityPagingAndSortingRepository<T extends Entity>
-        extends PagingAndSortingRepository<T, Integer>, JpaSpecificationExecutor<T> {
+public interface IEntityPagingAndSortingRepository<T extends AbstractEntity>
+        extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
 
 }

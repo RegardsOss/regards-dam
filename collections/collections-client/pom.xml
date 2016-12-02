@@ -26,8 +26,8 @@
 			<artifactId>collections-domain</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-signature</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>microservice-regards</artifactId>
 		</dependency>
 	</dependencies>
 </project>

@@ -3,20 +3,30 @@
  */
 package fr.cnes.regards.modules.collections.dao;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.collections.domain.Collection;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 
 /**
  * @author lmieulet
+ * @author Sylvain Vissiere-Guerinet
  *
  */
-public interface ICollectionRepository extends CrudRepository<Collection, String> {
+@Repository
+public interface ICollectionRepository extends IAbstractEntityRepository<Collection> {
 
     /**
-     * @param pModelId
-     * @return
+     * @param pCollectionIpId
+     *            ip id of the {@link Collection} to delete
      */
-    Iterable<Collection> findAllByModelId(Long pModelId);
+    void deleteByIpId(String pCollectionIpId);
+
+    /**
+     * @param pCollectionIpId
+     *            Ip id of the requested {@link Collection}
+     * @return requested {@link Collection}
+     */
+    Collection findOneByIpId(String pCollectionIpId);
 
 }
