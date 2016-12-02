@@ -298,9 +298,13 @@ public class ModelService implements IModelService, IModelAttributeService {
         // Import model from input stream
         final Iterable<ModelAttribute> modelAtts = XmlImportHelper.importModel(pInputStream);
         // Insert attributes
+        boolean initModel = true;
         for (ModelAttribute modelAtt : modelAtts) {
-            // Create model
-            createModel(modelAtt.getModel());
+            // Create model once
+            if (initModel) {
+                createModel(modelAtt.getModel());
+                initModel = false;
+            }
             // Create attribute
             attributeModelService.createAttribute(modelAtt.getAttribute());
             // Bind attribute to model

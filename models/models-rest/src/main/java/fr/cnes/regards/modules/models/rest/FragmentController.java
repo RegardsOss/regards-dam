@@ -57,7 +57,7 @@ public class FragmentController implements IResourceController<Fragment> {
     /**
      * Suffix for imported/exported filename
      */
-    private static final String JSON_EXTENSION = ".json";
+    private static final String FRAGMENT_EXTENSION = ".xml";
 
     /**
      * Class logger
@@ -173,7 +173,7 @@ public class FragmentController implements IResourceController<Fragment> {
             @PathVariable Long pFragmentId) throws ModuleException {
 
         final Fragment fragment = fragmentService.getFragment(pFragmentId);
-        final String exportedFilename = FRAGMENT_FILE_PREFIX + fragment.getName() + JSON_EXTENSION;
+        final String exportedFilename = FRAGMENT_FILE_PREFIX + fragment.getName() + FRAGMENT_EXTENSION;
 
         // Produce octet stream to force navigator opening "save as" dialog
         pResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);

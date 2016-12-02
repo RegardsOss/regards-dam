@@ -64,7 +64,7 @@ public class ModelController implements IResourceController<Model> {
     /**
      * Suffix for imported/exported filename
      */
-    private static final String JSON_EXTENSION = ".json";
+    private static final String MODEL_EXTENSION = ".xml";
 
     /**
      * Class logger
@@ -199,7 +199,7 @@ public class ModelController implements IResourceController<Model> {
     public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, @PathVariable Long pModelId)
             throws ModuleException {
         final Model model = modelService.getModel(pModelId);
-        final String exportedFilename = MODEL_FILE_PREFIX + model.getName() + JSON_EXTENSION;
+        final String exportedFilename = MODEL_FILE_PREFIX + model.getName() + MODEL_EXTENSION;
 
         // Produce octet stream to force navigator opening "save as" dialog
         pResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);

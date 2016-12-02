@@ -3,23 +3,34 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  *
@@ -41,6 +52,12 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Autowired
     private IFragmentRepository fragmentRepository;
+
+    /**
+     * Attribute model service
+     */
+    @Autowired
+    private IAttributeModelService attributeModelService;
 
     @Override
     protected Logger getLogger() {
@@ -75,19 +92,112 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void getAllFragment() {
+    public void getAllFragment() throws ModuleException {
         populateDatabase();
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(3)));
+        final int expectedSize = 3;
+        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
-        performDefaultGet(FragmentController.TYPE_MAPPING, expectations, "Should return result");
+        performDefaultGet(FragmentController.TYPE_MAPPING, expectations, "Should return all fragments");
     }
 
-    private void populateDatabase() {
+    /**
+     * Export fragment
+     *
+     * @throws ModuleException
+     *             module exception
+     */
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Export fragment - Allows to share model fragment")
+    public void exportFragment() throws ModuleException {
+        populateDatabase();
+
+        final Fragment defaultFragment = fragmentRepository.findByName(Fragment.getDefaultName());
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        final ResultActions resultActions = performDefaultGet(FragmentController.TYPE_MAPPING + "/{pFragmentId}/export",
+                                                              expectations, "Should return result",
+                                                              defaultFragment.getId());
+
+        assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
+        Assert.assertNotNull(payload(resultActions));
+    }
+
+    /**
+     * Import fragment
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Import fragment - Allows to share model fragment")
+    public void importFragment() throws ModuleException {
+
+        final Path filePath = Paths.get("src", "test", "resources", "fragment_it.xml");
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
+
+        performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import", filePath, expectations,
+                                 "Should be able to import a fragment");
+
+        // Get fragment from repository
+        final String fragmentName = "IMPORT_FRAGMENT";
+        final Fragment importedFragment = fragmentRepository.findByName(fragmentName);
+
+        // Get fragment attributes
+        final List<AttributeModel> attModels = attributeModelService.findByFragmentId(importedFragment.getId());
+        Assert.assertEquals(2, attModels.size());
+
+        for (AttributeModel attModel : attModels) {
+
+            // Check fragment
+            Assert.assertEquals(fragmentName, attModel.getFragment().getName());
+            Assert.assertEquals("Imported fragment from integration test", attModel.getFragment().getDescription());
+
+            if ("IT_BOOLEAN".equals(attModel.getName())) {
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
+                Assert.assertFalse(attModel.isAlterable());
+                Assert.assertFalse(attModel.isFacetable());
+                Assert.assertTrue(attModel.isOptional());
+                Assert.assertFalse(attModel.isQueryable());
+                Assert.assertNull(attModel.getRestriction());
+            }
+
+            if ("IT_STRING".equals(attModel.getName())) {
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                Assert.assertFalse(attModel.isAlterable());
+                Assert.assertTrue(attModel.isFacetable());
+                Assert.assertFalse(attModel.isOptional());
+                Assert.assertTrue(attModel.isQueryable());
+
+                Assert.assertNotNull(attModel.getRestriction());
+                Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
+                final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
+                final int expectedValSize = 3;
+                Assert.assertEquals(expectedValSize, er.getAcceptableValues().size());
+                Assert.assertTrue(er.getAcceptableValues().contains("junit"));
+                Assert.assertTrue(er.getAcceptableValues().contains("testng"));
+                Assert.assertTrue(er.getAcceptableValues().contains("selenium"));
+            }
+        }
+    }
+
+    private void populateDatabase() throws ModuleException {
         fragmentRepository.save(Fragment.buildDefault());
         fragmentRepository.save(Fragment.buildFragment("Geo", "Geographic information"));
         fragmentRepository.save(Fragment.buildFragment("Contact", "Contact card"));
+
+        final AttributeModel attModel = AttributeModelBuilder.build("FIRST", AttributeType.BOOLEAN)
+                .withoutRestriction();
+        attributeModelService.addAttribute(attModel);
     }
 }

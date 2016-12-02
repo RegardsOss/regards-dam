@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,15 +13,28 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  *
@@ -35,6 +50,30 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
      * Logger
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelControllerIT.class);
+
+    /**
+     * Model service
+     */
+    @Autowired
+    private IModelService modelService;
+
+    /**
+     * Model repository
+     */
+    @Autowired
+    private IModelRepository modelRepository;
+
+    /**
+     * Attribute model service
+     */
+    @Autowired
+    private IAttributeModelService attributeModelService;
+
+    /**
+     * Model attribute service
+     */
+    @Autowired
+    private IModelAttributeService modelAttributeService;
 
     @Override
     protected Logger getLogger() {
@@ -122,4 +161,140 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultPost(ModelController.TYPE_MAPPING, model, expectations, "Consistent model should be created.");
     }
 
+    /**
+     * Export model
+     *
+     * @throws ModuleException
+     *             module exception
+     */
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Export model - Allows to share model or export reference model")
+    public void exportModel() throws ModuleException {
+
+        final Model model = new Model();
+        model.setName("EXPORT_MODEL");
+        model.setDescription("Exported model");
+        model.setType(ModelType.COLLECTION);
+        modelService.createModel(model);
+
+        // Attribute #1 in default fragment
+        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING).withoutRestriction();
+        attributeModelService.addAttribute(attMod);
+
+        ModelAttribute modAtt = new ModelAttribute();
+        modAtt.setAttribute(attMod);
+        modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
+
+        // Attribute #2 in default fragment
+        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN).isAlterable().withoutRestriction();
+        attributeModelService.addAttribute(attMod);
+
+        modAtt = new ModelAttribute();
+        modAtt.setAttribute(attMod);
+        modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
+
+        // Geo fragment
+        final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
+
+        // Attribute #3 in geo fragment
+        attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
+                .withEnumerationRestriction("Earth", "Mars", "Venus");
+        attributeModelService.addAttribute(attMod);
+
+        // Attribute #4 in geo fragment
+        attMod = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(geo).withoutRestriction();
+        attributeModelService.addAttribute(attMod);
+
+        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment().getId());
+
+        // Contact fragment
+        final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
+
+        // Attribute #5 in contact fragment
+        attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING).fragment(contact)
+                .withPatternRestriction("[0-9 ]{10}");
+        attributeModelService.addAttribute(attMod);
+
+        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment().getId());
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING + "/{pModelId}/export",
+                                                              expectations, "Should return result", model.getId());
+
+        assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
+        Assert.assertNotNull(payload(resultActions));
+    }
+
+    /**
+     * Import model
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_050")
+    @Purpose("Import fragment - Allows to share model or add predefined model ")
+    public void importFragment() throws ModuleException {
+
+        final Path filePath = Paths.get("src", "test", "resources", "model_it.xml");
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
+
+        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
+                                 "Should be able to import a fragment");
+
+        // Get model from repository
+        final Model model = modelRepository.findByName("sample");
+        Assert.assertNotNull(model);
+
+        // Get model attributes
+        final List<ModelAttribute> modAtts = modelAttributeService.getModelAttributes(model.getId());
+        Assert.assertNotNull(modAtts);
+        final int expectedSize = 4;
+        Assert.assertEquals(expectedSize, modAtts.size());
+        // final Fragment importedFragment = fragmentRepository.findByName(fragmentName);
+        //
+        // // Get fragment attributes
+        // final List<AttributeModel> attModels = attributeModelService.findByFragmentId(importedFragment.getId());
+        // Assert.assertEquals(2, attModels.size());
+        //
+        // for (AttributeModel attModel : attModels) {
+        //
+        // // Check fragment
+        // Assert.assertEquals(fragmentName, attModel.getFragment().getName());
+        // Assert.assertEquals("Imported fragment from integration test", attModel.getFragment().getDescription());
+        //
+        // if ("IT_BOOLEAN".equals(attModel.getName())) {
+        // Assert.assertNull(attModel.getDescription());
+        // Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
+        // Assert.assertFalse(attModel.isAlterable());
+        // Assert.assertFalse(attModel.isFacetable());
+        // Assert.assertTrue(attModel.isOptional());
+        // Assert.assertFalse(attModel.isQueryable());
+        // Assert.assertNull(attModel.getRestriction());
+        // }
+        //
+        // if ("IT_STRING".equals(attModel.getName())) {
+        // Assert.assertNull(attModel.getDescription());
+        // Assert.assertEquals(AttributeType.STRING, attModel.getType());
+        // Assert.assertFalse(attModel.isAlterable());
+        // Assert.assertTrue(attModel.isFacetable());
+        // Assert.assertFalse(attModel.isOptional());
+        // Assert.assertTrue(attModel.isQueryable());
+        //
+        // Assert.assertNotNull(attModel.getRestriction());
+        // Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
+        // final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
+        // final int expectedValSize = 3;
+        // Assert.assertEquals(expectedValSize, er.getAcceptableValues().size());
+        // Assert.assertTrue(er.getAcceptableValues().contains("junit"));
+        // Assert.assertTrue(er.getAcceptableValues().contains("testng"));
+        // Assert.assertTrue(er.getAcceptableValues().contains("selenium"));
+        // }
+        // }
+    }
 }
