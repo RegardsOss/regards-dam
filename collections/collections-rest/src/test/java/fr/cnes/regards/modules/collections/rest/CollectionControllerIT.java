@@ -18,8 +18,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import com.google.gson.Gson;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -195,13 +193,6 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testAssociateCollections() {
         final List<AbstractEntity> toAssociate = new ArrayList<>();
         toAssociate.add(collection4);
-
-        final Gson gson = gsonBuilder.create();
-        String gsonString = gson.toJson(collection4, AbstractEntity.class);
-        Object gsonObject = gson.fromJson(gsonString, AbstractEntity.class);
-
-        String col4String = gson(collection4);
-        String col4list = gson(toAssociate);
 
         expectations.add(MockMvcResultMatchers.status().isOk());
 
