@@ -4,40 +4,33 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.modules.collections</groupId>
-	<artifactId>collections-service</artifactId>
+	<groupId>fr.cnes.regards.modules.dataset</groupId>
+	<artifactId>dataset-domain</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
-		<artifactId>collections</artifactId>
+		<artifactId>dataset</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-dao</artifactId>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-dao</artifactId>
+			<artifactId>entities-domain</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>microservice-regards</artifactId>
+			<artifactId>regards-core-jpa-data</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.storage</groupId>
-			<artifactId>storage-service</artifactId>
-			<!-- FIXME: version should not be specified -->
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
-		<!-- Test dependencies -->
-		<dependency>
-			<groupId>fr.cnes.regards.framework.test</groupId>
-			<artifactId>regards-test</artifactId>
-			<scope>test</scope>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
 		</dependency>
 	</dependencies>
 </project>

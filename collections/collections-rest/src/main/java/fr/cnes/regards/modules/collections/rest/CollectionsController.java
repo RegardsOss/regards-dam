@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.collections.rest;
 import java.util.List;
 
 import javax.naming.OperationNotSupportedException;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -26,6 +27,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.collections.service.ICollectionsRequestService;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -56,6 +58,7 @@ public class CollectionsController implements IResourceController<Collection> {
      */
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @ResourceAccess(description = "endpoint to retrieve the list fo all collections")
     public HttpEntity<List<Resource<Collection>>> retrieveCollectionList() {
 
         final List<Collection> collections = collectionsRequestService.retrieveCollectionList();
@@ -69,6 +72,7 @@ public class CollectionsController implements IResourceController<Collection> {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @ResourceAccess(description = "retrieve the collection of id collection_id")
     public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long pCollectionId) {
         final Collection collection = collectionsRequestService.retrieveCollectionById(pCollectionId);
         final Resource<Collection> resource = toResource(collection);
@@ -82,8 +86,10 @@ public class CollectionsController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}", consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @ResourceAccess(
+            description = "update the collection of id collection_id to match  the collection passed in parameter")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @RequestBody Collection pCollection) throws EntityInconsistentIdentifierException {
+            @Valid @RequestBody Collection pCollection) throws EntityInconsistentIdentifierException {
         final Collection collection = collectionsRequestService.updateCollection(pCollection, pCollectionId);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
@@ -95,6 +101,7 @@ public class CollectionsController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @ResourceAccess(description = "delete the collection of collection_id")
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId) {
         collectionsRequestService.deleteCollection(pCollectionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -106,7 +113,8 @@ public class CollectionsController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public HttpEntity<Resource<Collection>> createCollection(@RequestBody Collection pCollection) {
+    @ResourceAccess(description = "create a new collection according to what is passed as parameter")
+    public HttpEntity<Resource<Collection>> createCollection(@Valid @RequestBody Collection pCollection) {
         final Collection collection = collectionsRequestService.createCollection(pCollection);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
@@ -119,8 +127,10 @@ public class CollectionsController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate",
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @ResourceAccess(
+            description = "dissociate the collection of id collection_id from the list of entities in parameter")
     public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @RequestBody List<AbstractEntity> pToBeDissociated) throws EntityInconsistentIdentifierException {
+            @Valid @RequestBody List<AbstractEntity> pToBeDissociated) throws EntityInconsistentIdentifierException {
         final Collection collection = collectionsRequestService.dissociateCollection(pCollectionId, pToBeDissociated);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
@@ -133,8 +143,9 @@ public class CollectionsController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate",
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @ResourceAccess(description = "associate the collection of id collection_id to the list of entities in parameter")
     public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
-            @RequestBody List<AbstractEntity> pToBeAssociatedWith) throws EntityInconsistentIdentifierException {
+            @Valid @RequestBody List<AbstractEntity> pToBeAssociatedWith) throws EntityInconsistentIdentifierException {
         final Collection collection = collectionsRequestService.associateCollection(pCollectionId, pToBeAssociatedWith);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
