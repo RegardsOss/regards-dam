@@ -26,6 +26,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DateISO8601Restriction;
+import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
  *
@@ -152,7 +153,7 @@ public class AttributeModelServiceTest {
      * @throws ModuleException
      *             if error occurs!
      */
-    @Test
+    @Test(expected = UnsupportedRestrictionException.class)
     public void addAttributeWithUnsupportedRestriction() throws ModuleException {
         final String attName = "RESTRICTED";
         final AttributeType attType = AttributeType.STRING;
@@ -165,8 +166,6 @@ public class AttributeModelServiceTest {
         Mockito.when(mockAttModelR.save(expectedAttModel)).thenReturn(expectedAttModel);
 
         attributeModelService.addAttribute(expectedAttModel);
-        // Restriction is not set silently
-        Assert.assertNull(expectedAttModel.getRestriction());
     }
 
     /**

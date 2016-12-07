@@ -25,6 +25,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
+import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
  *
@@ -39,7 +40,7 @@ public class AttributeModelService implements IAttributeModelService {
     /**
      * Logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(AttributeModelService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttributeModelService.class);
 
     /**
      * {@link AttributeModel} repository
@@ -135,6 +136,7 @@ public class AttributeModelService implements IAttributeModelService {
         }
     }
 
+    @Override
     public AttributeModel createAttribute(AttributeModel pAttributeModel) throws ModuleException {
         manageRestriction(pAttributeModel);
         manageFragment(pAttributeModel);
@@ -147,20 +149,14 @@ public class AttributeModelService implements IAttributeModelService {
      *
      * @param pAttributeModel
      *            attribute model
+     * @throws UnsupportedRestrictionException
+     *             if restriction not supported
      */
-    private void manageRestriction(AttributeModel pAttributeModel) {
+    private void manageRestriction(AttributeModel pAttributeModel) throws UnsupportedRestrictionException {
         final AbstractRestriction restriction = pAttributeModel.getRestriction();
         if (restriction != null) {
-            if (restriction.supports(pAttributeModel.getType())) {
-                if (!restriction.isIdentifiable()) {
-                    restrictionRepository.save(restriction);
-                }
-            } else {
-                // Unset restriction
-                pAttributeModel.setRestriction(null);
-                LOG.warn("Restriction type \"{}\" does not support attribute of type \"{}\".", restriction.getType(),
-                         pAttributeModel.getType());
-            }
+            checkRestrictionSupport(pAttributeModel);
+            restrictionRepository.save(restriction);
         }
     }
 
@@ -218,7 +214,7 @@ public class AttributeModelService implements IAttributeModelService {
                                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
                     // CHECKSTYLE:ON
                 }
-                LOG.error(message);
+                LOGGER.error(message);
                 throw new EntityAlreadyExistsException(message);
             }
         }
@@ -237,5 +233,16 @@ public class AttributeModelService implements IAttributeModelService {
     @Override
     public List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException {
         return IterableUtils.toList(attModelRepository.findByFragmentId(pFragmentId));
+    }
+
+    @Override
+    public void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException {
+        final IRestriction restriction = pAttributeModel.getRestriction();
+        if ((restriction != null) && !restriction.supports(pAttributeModel.getType())) {
+            final String message = String.format("Attribute of type %s does not support %s restriction",
+                                                 pAttributeModel.getType(), restriction.getType());
+            LOGGER.error(message);
+            throw new UnsupportedRestrictionException(message);
+        }
     }
 }

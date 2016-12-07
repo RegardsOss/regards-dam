@@ -21,6 +21,7 @@
 	<modules>
 		<module>entities-domain</module>
 		<module>entities-dao</module>
+		<module>entities-service</module>
 	</modules>
 
 	<dependencyManagement>

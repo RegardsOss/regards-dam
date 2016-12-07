@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -32,6 +33,7 @@ import fr.cnes.regards.modules.models.service.IModelAttributeService;
  * @author Marc Sordi
  *
  */
+@RestController
 @RequestMapping(ModelAttributeController.TYPE_MAPPING)
 public class ModelAttributeController implements IResourceController<ModelAttribute> {
 

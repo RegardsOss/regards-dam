@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
  * Attribute management service
@@ -74,4 +75,6 @@ public interface IAttributeModelService {
     boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
 
     List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException;
+
+    void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;
 }
