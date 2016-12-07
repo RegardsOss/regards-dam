@@ -120,7 +120,11 @@ public class Collection extends AbstractEntity {
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        if (id == null) {
+            return ipId.hashCode(); // TODO: check if nice or not
+        } else {
+            return id.hashCode();
+        }
     }
 
     public List<AbstractEntity> getContent() {
