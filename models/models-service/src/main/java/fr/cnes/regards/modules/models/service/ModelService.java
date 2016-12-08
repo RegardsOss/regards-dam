@@ -71,6 +71,9 @@ public class ModelService implements IModelService, IModelAttributeService {
 
     @Override
     public List<Model> getModels(ModelType pType) {
+        if (pType == null) {
+            return IterableUtils.toList(modelRepository.findAll());
+        }
         return IterableUtils.toList(modelRepository.findByType(pType));
     }
 
