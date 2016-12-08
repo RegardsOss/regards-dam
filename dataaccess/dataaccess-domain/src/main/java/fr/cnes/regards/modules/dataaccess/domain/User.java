@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * mirror of a ProjectUser for data access purpose, only contains email
  *
@@ -11,7 +13,15 @@ package fr.cnes.regards.modules.dataaccess.domain;
  */
 public class User {
 
+    @NotNull
     private String email;
+
+    /**
+     * @param pDbData
+     */
+    public User(String pEmail) {
+        email = pEmail;
+    }
 
     public String getEmail() {
         return email;
