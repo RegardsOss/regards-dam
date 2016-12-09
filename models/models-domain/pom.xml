@@ -20,7 +20,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>gson-utils</artifactId>
+			<artifactId>gson-regards</artifactId>
 		</dependency>
 		<!-- Test -->
 		<dependency>
