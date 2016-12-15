@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.dataaccess.domain;
+package fr.cnes.regards.modules.dataaccess.domain.accessgroup;
 
 import javax.validation.constraints.NotNull;
 
@@ -29,6 +29,16 @@ public class User {
 
     public void setEmail(String pEmail) {
         email = pEmail;
+    }
+
+    @Override
+    public boolean equals(Object pOther) {
+        return (pOther instanceof User) && ((User) pOther).email.equals(email);
+    }
+
+    @Override
+    public int hashCode() {
+        return email.hashCode();
     }
 
 }

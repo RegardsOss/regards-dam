@@ -6,7 +6,7 @@ package fr.cnes.regards.modules.dataaccess.domain.jpa.converters;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import fr.cnes.regards.modules.dataaccess.domain.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 
 /**
  * @author Sylvain Vissiere-Guerinet

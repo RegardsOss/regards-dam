@@ -16,6 +16,10 @@
 	</parent>
 
 	<dependencies>
+	<dependency>
+		<groupId>fr.cnes.regards.framework</groupId>
+		<artifactId>module-regards</artifactId>
+	</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dataset</groupId>
 			<artifactId>dataset-dao</artifactId>

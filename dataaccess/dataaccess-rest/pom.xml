@@ -37,5 +37,16 @@
 			<artifactId>regards-integration-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-dao</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.marvinformatics.feign</groupId>
+			<artifactId>feign-mock</artifactId>
+			<version>0.4</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

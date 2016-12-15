@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.dataaccess.domain;
+package fr.cnes.regards.modules.dataaccess.domain.accessright;
 
 /**
  * Quality Level of an AIP, it is determined by a human

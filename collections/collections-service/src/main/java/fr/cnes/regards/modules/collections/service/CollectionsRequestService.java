@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -71,9 +72,12 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
     @Override
     public Collection updateCollection(Collection pCollection, Long pCollectionId)
-            throws EntityInconsistentIdentifierException {
+            throws EntityInconsistentIdentifierException, EntityNotFoundException {
         // Check if exist
         final Collection collectionBeforeUpdate = collectionRepository.findOne(pCollectionId);
+        if (collectionBeforeUpdate == null) {
+            throw new EntityNotFoundException(pCollectionId, Collection.class);
+        }
         if (!collectionBeforeUpdate.getId().equals(pCollection.getId())) {
             // "collectionId inside the route is different from the entity inside the request body"
             throw new EntityInconsistentIdentifierException(pCollectionId, pCollection.getId(), Collection.class);

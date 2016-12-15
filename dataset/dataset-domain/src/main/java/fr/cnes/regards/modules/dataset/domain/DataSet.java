@@ -3,7 +3,11 @@
  */
 package fr.cnes.regards.modules.dataset.domain;
 
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+import fr.cnes.regards.modules.collections.domain.Collection;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  *
@@ -12,18 +16,16 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public class DataSet {
+@Entity
+@Table(name = "T_DATA_SET")
+public class DataSet extends Collection {
 
-    private UniformResourceName urn;
+    private static final String DATASET_TYPE = "DataSet";
 
     private int score;
 
-    public UniformResourceName getUrn() {
-        return urn;
-    }
-
-    public void setUrn(UniformResourceName pUrn) {
-        urn = pUrn;
+    public DataSet(Model pModel, String pDescription, String pName) {
+        super(pModel, DATASET_TYPE, pDescription, pName);
     }
 
     public int getScore() {

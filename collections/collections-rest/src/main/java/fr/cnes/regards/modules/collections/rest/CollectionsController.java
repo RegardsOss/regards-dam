@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.collections.service.ICollectionsRequestService;
@@ -80,6 +81,7 @@ public class CollectionsController implements IResourceController<Collection> {
     }
 
     /**
+     * @throws EntityNotFoundException
      * @throws OperationNotSupportedException
      * @summary Entry point to update a collection using its id
      */
@@ -89,7 +91,8 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResourceAccess(
             description = "update the collection of id collection_id to match  the collection passed in parameter")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @Valid @RequestBody Collection pCollection) throws EntityInconsistentIdentifierException {
+            @Valid @RequestBody Collection pCollection)
+            throws EntityInconsistentIdentifierException, EntityNotFoundException {
         final Collection collection = collectionsRequestService.updateCollection(pCollection, pCollectionId);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);

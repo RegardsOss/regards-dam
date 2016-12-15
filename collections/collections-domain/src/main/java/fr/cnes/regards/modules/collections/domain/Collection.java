@@ -34,27 +34,27 @@ public class Collection extends AbstractEntity {
      * description
      */
     @Column
-    private String description;
+    protected String description;
 
     /**
      * name
      */
     @NotNull
     @Column
-    private String name;
+    protected String name;
 
     /**
      * list of other entities that this collection contains
      */
     @OneToMany(mappedBy = "id",
             cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-    private List<AbstractEntity> content;
+    protected List<AbstractEntity> content;
 
     /**
      * list of collection containing this one
      */
     @OneToMany
-    private List<Collection> parents;
+    protected List<Collection> parents;
 
     public Collection() {
         super();
@@ -62,6 +62,28 @@ public class Collection extends AbstractEntity {
 
     public Collection(Model pModel) {
         super(pModel, COLLECTION_TYPE);
+    }
+
+    /**
+     * contructor for children
+     *
+     * @param pModel
+     * @param pEntity
+     */
+    public Collection(Model pModel, String pEntity) {
+        super(pModel, pEntity);
+    }
+
+    /**
+     * contructor for children
+     *
+     * @param pModel
+     * @param pEntity
+     */
+    public Collection(Model pModel, String pEntity, String pDescription, String pName) {
+        this(pModel, pEntity);
+        description = pDescription;
+        name = pName;
     }
 
     public Collection(Model pModel, String pDescription, String pName) {

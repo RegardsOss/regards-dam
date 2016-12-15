@@ -21,8 +21,8 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-domain</artifactId>
+			<groupId>fr.cnes.regards.modules.collections</groupId>
+			<artifactId>collections-domain</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>

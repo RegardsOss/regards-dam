@@ -17,8 +17,20 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.accessrights</groupId>
+			<artifactId>accessrights-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.dataset</groupId>
+			<artifactId>dataset-service</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
 			<artifactId>dataaccess-dao</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards</artifactId>
 		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
