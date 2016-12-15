@@ -11,6 +11,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationMode;
+import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationTarget;
+import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
@@ -21,6 +25,9 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightCreated;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightDeleted;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightUpdated;
 import fr.cnes.regards.modules.dataset.domain.DataSet;
 import fr.cnes.regards.modules.dataset.service.DataSetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -42,14 +49,17 @@ public class AccessRightService {
 
     private final DataSetService dataSetService;
 
+    private final IPublisher eventPublisher;
+
     public AccessRightService(IAccessRightRepository<AbstractAccessRight> pAccessRightRepository,
             IGroupAccessRightRepository pGroupRepository, IUserAccessRightRepository pUserRepository,
-            AccessGroupService pAccessGroupService, DataSetService pDataSetService) {
+            AccessGroupService pAccessGroupService, DataSetService pDataSetService, IPublisher pEventPublisher) {
         repository = pAccessRightRepository;
         groupRepository = pGroupRepository;
         userRepository = pUserRepository;
         accessGroupService = pAccessGroupService;
         dataSetService = pDataSetService;
+        eventPublisher = pEventPublisher;
     }
 
     /**
@@ -137,8 +147,10 @@ public class AccessRightService {
      * @param pAccessRight
      * @return
      * @throws EntityNotFoundException
+     * @throws RabbitMQVhostException
      */
-    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws EntityNotFoundException {
+    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight)
+            throws EntityNotFoundException, RabbitMQVhostException {
         dataSetService.retrieveDataSet(pAccessRight.getDataset().getId());
         if (pAccessRight instanceof GroupAccessRight) {
             Long accessGroupId = ((GroupAccessRight) pAccessRight).getAccessGroup().getId();
@@ -153,7 +165,10 @@ public class AccessRightService {
                 }
             }
         }
-        return repository.save(pAccessRight);
+        AbstractAccessRight created = repository.save(pAccessRight);
+        eventPublisher.publish(new AccessRightCreated(created.getId()), AmqpCommunicationMode.ONE_TO_MANY,
+                               AmqpCommunicationTarget.INTERNAL);
+        return created;
     }
 
     /**
@@ -175,9 +190,10 @@ public class AccessRightService {
      * @return
      * @throws EntityNotFoundException
      * @throws EntityInconsistentIdentifierException
+     * @throws RabbitMQVhostException
      */
     public AbstractAccessRight updateAccessRight(Long pId, AbstractAccessRight pToBe)
-            throws EntityNotFoundException, EntityInconsistentIdentifierException {
+            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
         AbstractAccessRight toBeUpdated = repository.findOne(pId);
         if (toBeUpdated == null) {
             throw new EntityNotFoundException(pId, AbstractAccessRight.class);
@@ -185,14 +201,20 @@ public class AccessRightService {
         if (!pToBe.getId().equals(pId)) {
             throw new EntityInconsistentIdentifierException(pId, pToBe.getId(), AbstractAccessRight.class);
         }
-        return repository.save(toBeUpdated);
+        AbstractAccessRight updated = repository.save(toBeUpdated);
+        eventPublisher.publish(new AccessRightUpdated(pId), AmqpCommunicationMode.ONE_TO_MANY,
+                               AmqpCommunicationTarget.INTERNAL);
+        return updated;
     }
 
     /**
      * @param pId
+     * @throws RabbitMQVhostException
      */
-    public void deleteAccessRight(Long pId) {
+    public void deleteAccessRight(Long pId) throws RabbitMQVhostException {
         repository.delete(pId);
+        eventPublisher.publish(new AccessRightDeleted(pId), AmqpCommunicationMode.ONE_TO_MANY,
+                               AmqpCommunicationTarget.INTERNAL);
     }
 
 }

@@ -15,6 +15,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
@@ -53,6 +55,8 @@ public class AccessRightServiceTest {
 
     private DataSetService dsService;
 
+    private IPublisher eventPublisher;
+
     private AccessGroup AG1;
 
     private AccessGroup AG2;
@@ -89,7 +93,8 @@ public class AccessRightServiceTest {
         uarRepo = Mockito.mock(IUserAccessRightRepository.class);
         agService = Mockito.mock(AccessGroupService.class);
         dsService = Mockito.mock(DataSetService.class);
-        service = new AccessRightService(arRepo, garRepo, uarRepo, agService, dsService);
+        eventPublisher = Mockito.mock(IPublisher.class);
+        service = new AccessRightService(arRepo, garRepo, uarRepo, agService, dsService, eventPublisher);
 
         final Model model = Model.build("MODEL", DESC, ModelType.DATASET);
         AG1 = new AccessGroup("AG1");
@@ -294,14 +299,15 @@ public class AccessRightServiceTest {
     }
 
     @Test(expected = EntityNotFoundException.class)
-    public void testUpdateAccessRightNotFound() throws EntityNotFoundException, EntityInconsistentIdentifierException {
+    public void testUpdateAccessRightNotFound()
+            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
         Mockito.when(arRepo.findOne(3L)).thenReturn(null);
         service.updateAccessRight(3L, GAR22);
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void testUpdateAccessRightInconsistentId()
-            throws EntityNotFoundException, EntityInconsistentIdentifierException {
+            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
         Mockito.when(arRepo.findOne(3L)).thenReturn(UAR11);
         service.updateAccessRight(3L, GAR22);
     }

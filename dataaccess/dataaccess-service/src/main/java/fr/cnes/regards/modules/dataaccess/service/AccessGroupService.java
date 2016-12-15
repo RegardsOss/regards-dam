@@ -6,8 +6,6 @@ package fr.cnes.regards.modules.dataaccess.service;
 import java.util.List;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,11 +38,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 @ContextConfiguration(classes = { FeignConfiguration.class })
 public class AccessGroupService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AccessGroupService.class);
-
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
-
-    private static final String PROJECT_USER_FEIGN_ERROR = "Error while trying to contact ProjectUser handler";
 
     private final IAccessGroupRepository accessGroupDao;
 
@@ -169,7 +163,7 @@ public class AccessGroupService {
      * @return
      */
     public Page<AccessGroup> retrieveAccessGroupsOfUser(String pUserEmail, Pageable pPageable) {
-        return accessGroupDao.findAllByUsers(new User(pUserEmail), pPageable);
+        return accessGroupDao.findAllByUsersOrIsPrivate(new User(pUserEmail), Boolean.FALSE, pPageable);
     }
 
     /**

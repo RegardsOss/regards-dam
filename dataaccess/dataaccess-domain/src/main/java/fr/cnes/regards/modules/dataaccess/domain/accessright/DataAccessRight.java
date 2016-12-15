@@ -8,14 +8,19 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
+import javax.validation.constraints.NotNull;
+
+import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAccessRightValidation;
+import fr.cnes.regards.modules.plugins.domain.PluginConfiguration;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
 @Entity
-// TODO: validation, id of check data access should be present if data access level is custom
+@DataAccessRightValidation
 public class DataAccessRight {
 
     @Id
@@ -23,8 +28,36 @@ public class DataAccessRight {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataAccessRightSequence")
     private Long id;
 
+    @NotNull
     @Enumerated
     private DataAccessLevel dataAccessLevel;
-    // TODO: add CheckDataAccess plugin reference
+
+    @OneToOne
+    private PluginConfiguration pluginConfiguration;
+
+    public DataAccessRight(DataAccessLevel pDataAccessLevel) {
+        dataAccessLevel = pDataAccessLevel;
+    }
+
+    public DataAccessRight(DataAccessLevel pDataAccessLevel, PluginConfiguration pPluginConf) {
+        this(pDataAccessLevel);
+        pluginConfiguration = pPluginConf;
+    }
+
+    public DataAccessLevel getDataAccessLevel() {
+        return dataAccessLevel;
+    }
+
+    public void setDataAccessLevel(DataAccessLevel pDataAccessLevel) {
+        dataAccessLevel = pDataAccessLevel;
+    }
+
+    public PluginConfiguration getPluginConfiguration() {
+        return pluginConfiguration;
+    }
+
+    public void setPluginConfiguration(PluginConfiguration pPluginConfiguration) {
+        pluginConfiguration = pPluginConfiguration;
+    }
 
 }

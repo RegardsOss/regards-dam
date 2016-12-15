@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -48,7 +47,6 @@ import fr.cnes.regards.modules.models.domain.ModelType;
  *
  */
 @MultitenantTransactional
-@ContextConfiguration(classes = { MockedFeignConfiguration.class })
 @TestPropertySource("classpath:test.properties")
 public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 

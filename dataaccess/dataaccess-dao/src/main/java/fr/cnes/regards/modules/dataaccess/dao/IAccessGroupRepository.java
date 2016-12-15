@@ -40,4 +40,12 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      */
     Set<AccessGroup> findAllByUsers(User pUser);
 
+    /**
+     * @param pUser
+     * @param pFalse
+     * @param pPageable
+     * @return
+     */
+    Page<AccessGroup> findAllByUsersOrIsPrivate(User pUser, Boolean pFalse, Pageable pPageable);
+
 }

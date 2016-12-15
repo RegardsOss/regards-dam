@@ -5,8 +5,11 @@ package fr.cnes.regards.modules.dataaccess.domain.accessgroup;
 
 import javax.validation.constraints.NotNull;
 
+import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
+
 /**
- * mirror of a ProjectUser for data access purpose, only contains email
+ * Mirror of a ProjectUser for data access purpose, only contains email. Access rights are attribited to a user thanks
+ * to {@link UserAccessRight}
  *
  * @author Sylvain Vissiere-Guerinet
  *

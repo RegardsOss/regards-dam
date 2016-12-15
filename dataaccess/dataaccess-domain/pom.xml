@@ -27,10 +27,10 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>fr.cnes.regards.modules.dataset</groupId> -->
-<!-- 			<artifactId>dataset-domain</artifactId> -->
-<!-- 		</dependency> -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.plugins</groupId>
+			<artifactId>module-plugins-domain</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>regards-core-jpa-data</artifactId>

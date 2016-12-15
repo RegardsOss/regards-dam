@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessright;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
@@ -12,13 +15,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.SubsettedAccessRight;
 import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -27,7 +33,7 @@ import fr.cnes.regards.modules.dataset.domain.DataSet;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "KIND")
-// TODO: subsetting
+@SubsettedAccessRight
 public abstract class AbstractAccessRight implements IIdentifiable<Long> {
 
     @Id
@@ -46,6 +52,13 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
     @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL)
     protected DataAccessRight dataAccessRight;
 
+    /**
+     * allow to define a subset of the dataSet, if it is empty then all the dataSet is concerned
+     */
+    @ManyToMany
+    @NotNull
+    protected Set<AttributeModel> subsettingCriteria;
+
     @ManyToOne
     @NotNull
     private DataSet dataSet;
@@ -55,6 +68,23 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
         qualityFilter = pQualityFilter;
         accessLevel = pAccessLevel;
         dataSet = pDataset;
+        subsettingCriteria = new HashSet<>();
+    }
+
+    public Set<AttributeModel> getSubsettingCriteria() {
+        return subsettingCriteria;
+    }
+
+    public void setSubsettingCriteria(Set<AttributeModel> pSubsettingCriteria) {
+        subsettingCriteria = pSubsettingCriteria;
+    }
+
+    public DataSet getDataSet() {
+        return dataSet;
+    }
+
+    public void setDataSet(DataSet pDataSet) {
+        dataSet = pDataSet;
     }
 
     public QualityFilter getQualityFilter() {
