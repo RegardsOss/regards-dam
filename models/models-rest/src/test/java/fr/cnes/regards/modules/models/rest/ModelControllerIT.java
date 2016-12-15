@@ -78,6 +78,11 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelAttributeService modelAttributeService;
 
+    /**
+     * JSON path
+     */
+    private static final String JSON_ID = "$.content.id";
+
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -159,7 +164,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.id", Matchers.notNullValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
         performDefaultPost(ModelController.TYPE_MAPPING, model, expectations, "Consistent model should be created.");
     }
