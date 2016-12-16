@@ -11,6 +11,8 @@ node_modules/
 .classpath
 .settings/
 .pmd
+.factorypath
+bin/
 
 ######################
 # Intellij

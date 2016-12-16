@@ -53,7 +53,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * JSON path
      */
-    private static final String JSON_ID = "$.id";
+    private static final String JSON_ID = "$.content.id";
 
     /**
      * JPA entity manager : use it to flush context to prevent false positive
@@ -207,9 +207,11 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.name", Matchers.equalTo(pName)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.description", Matchers.equalTo(pDescription)));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.type", Matchers.equalTo(pType.toString())));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.name", Matchers.equalTo(pName)));
+        if (pDescription != null) {
+            expectations.add(MockMvcResultMatchers.jsonPath("$.content.description", Matchers.equalTo(pDescription)));
+        }
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.type", Matchers.equalTo(pType.toString())));
         return performDefaultPost(AttributeModelController.TYPE_MAPPING, attModel, expectations,
                                   "Consistent attribute should be created.");
     }

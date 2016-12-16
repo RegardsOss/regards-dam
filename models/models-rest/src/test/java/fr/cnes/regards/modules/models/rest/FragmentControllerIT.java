@@ -54,6 +54,11 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     private IFragmentRepository fragmentRepository;
 
     /**
+     * JSON path
+     */
+    private static final String JSON_ID = "$.content.id";
+
+    /**
      * Attribute model service
      */
     @Autowired
@@ -86,7 +91,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.id", Matchers.notNullValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
         performDefaultPost(FragmentController.TYPE_MAPPING, fragment, expectations, "Fragment cannot be created.");
     }

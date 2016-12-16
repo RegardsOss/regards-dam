@@ -24,6 +24,12 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends IEn
     List<AbstractEntity> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
+     * @param pIpId
+     * @return
+     */
+    AbstractEntity findOneByIpId(UniformResourceName pIpId);
+
+    /**
      * @param pTagToSearch
      * @return
      */
