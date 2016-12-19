@@ -22,6 +22,7 @@
 		<module>entities</module>
 		<module>collections</module>
 		<module>storage</module>
+		<module>crawler</module>
 	</modules>
 
 </project>
