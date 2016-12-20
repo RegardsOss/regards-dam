@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.attributes;
+package fr.cnes.regards.modules.entities.domain.attribute;
 
 /**
  *
@@ -13,13 +13,6 @@ package fr.cnes.regards.modules.entities.domain.attributes;
  *
  */
 public interface IAttribute<T> {
-
-    /**
-     * Get fragment name. Equivalent to name space.
-     *
-     * @return fragment name
-     */
-    String getFragmentName();
 
     /**
      * Get attribute name

@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.attributes;
+package fr.cnes.regards.modules.entities.domain.attribute;
 
 /**
  * @param <T>
@@ -12,22 +12,22 @@ package fr.cnes.regards.modules.entities.domain.attributes;
 public abstract class AbstractAttribute<T> implements IAttribute<T> {
 
     /**
-     * Fragment name (may be null)
-     */
-    private String fragmentName;
-
-    /**
      * Attribute name
      */
     private String name;
 
+    /**
+     * Attribute value
+     */
+    private T value;
+
     @Override
-    public String getFragmentName() {
-        return fragmentName;
+    public T getValue() {
+        return value;
     }
 
-    public void setFragmentName(String pFragmentName) {
-        fragmentName = pFragmentName;
+    public void setValue(T pValue) {
+        value = pValue;
     }
 
     @Override
