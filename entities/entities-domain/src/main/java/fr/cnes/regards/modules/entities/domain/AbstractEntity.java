@@ -30,14 +30,9 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
-import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
-import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -157,7 +152,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * @return the lastUpdate
      */
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
@@ -166,7 +160,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * @param pLastUpdate
      *            the lastUpdate to set
      */
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setLastUpdate(LocalDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
@@ -174,7 +167,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * @return the creationDate
      */
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
@@ -183,7 +175,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * @param pCreationDate
      *            the creationDate to set
      */
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setCreationDate(LocalDateTime pCreationDate) {
         creationDate = pCreationDate;
     }
