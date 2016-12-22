@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.cnes.regards.modules.datasources</groupId>
-	<artifactId>datasources-domain</artifactId>
+	<artifactId>datasources-plugin</artifactId>
 
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
