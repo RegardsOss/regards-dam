@@ -40,6 +40,7 @@ import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserialize
 import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
@@ -111,15 +112,14 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
-    protected List<IAttribute<Object>> attributes;
+    protected List<AbstractAttribute<?>> attributes;
 
     /**
      * model that this entity is respecting
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
-            updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
     protected Model model;
 
     /**
@@ -213,11 +213,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         tags = pTags;
     }
 
-    public List<IAttribute<Object>> getAttributes() {
+    public List<AbstractAttribute<?>> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<IAttribute<Object>> pAttributes) {
+    public void setAttributes(List<AbstractAttribute<?>> pAttributes) {
         attributes = pAttributes;
     }
 

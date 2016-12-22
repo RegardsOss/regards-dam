@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain;
+package fr.cnes.regards.modules.entities.domain.attribute;
 
 /**
  *
@@ -9,18 +9,19 @@ package fr.cnes.regards.modules.entities.domain;
  *            type of Attribute
  *
  * @author lmieulet
+ * @author Marc Sordi
  *
  */
 public interface IAttribute<T> {
 
     /**
+     * Get attribute name
      *
-     * @return the attribute name
+     * @return attribute name
      */
-    public String getFullName();
+    String getName();
 
     /**
-     *
      * @return the attribute value
      */
     public T getValue();
