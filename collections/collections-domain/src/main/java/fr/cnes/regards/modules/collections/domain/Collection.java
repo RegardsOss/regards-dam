@@ -60,20 +60,6 @@ public class Collection extends AbstractEntity {
         super();
     }
 
-    public Collection(Model pModel) {
-        super(pModel, COLLECTION_TYPE);
-    }
-
-    /**
-     * contructor for children
-     *
-     * @param pModel
-     * @param pEntity
-     */
-    public Collection(Model pModel, String pEntity) {
-        super(pModel, pEntity);
-    }
-
     /**
      * contructor for children
      *
@@ -81,13 +67,13 @@ public class Collection extends AbstractEntity {
      * @param pEntity
      */
     public Collection(Model pModel, String pEntity, String pDescription, String pName) {
-        this(pModel, pEntity);
+        super(pModel, pEntity);
         description = pDescription;
         name = pName;
     }
 
     public Collection(Model pModel, String pDescription, String pName) {
-        this(pModel);
+        super(pModel, COLLECTION_TYPE);
         description = pDescription;
         name = pName;
     }
@@ -142,11 +128,7 @@ public class Collection extends AbstractEntity {
 
     @Override
     public int hashCode() {
-        if (id == null) {
-            return ipId.hashCode(); // TODO: check if nice or not
-        } else {
-            return id.hashCode();
-        }
+        return ipId.hashCode();
     }
 
     public List<AbstractEntity> getContent() {

@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
@@ -59,7 +58,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
-    public HttpEntity<PagedResources<Resource<AbstractAccessRight>>> retrieveAccessRightsList(
+    public ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName pDataSetIpId,
             @RequestParam(name = "useremail", required = false) String pUserEmail, final Pageable pPageable,
@@ -72,7 +71,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
-    public HttpEntity<Resource<AbstractAccessRight>> createAccessRight(
+    public ResponseEntity<Resource<AbstractAccessRight>> createAccessRight(
             @Valid @RequestBody AbstractAccessRight pAccessRight)
             throws EntityNotFoundException, RabbitMQVhostException {
         AbstractAccessRight created = accessRightService.createAccessRight(pAccessRight);
@@ -82,7 +81,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "send the access right of id requested")
-    public HttpEntity<Resource<AbstractAccessRight>> retrieveAccessRight(
+    public ResponseEntity<Resource<AbstractAccessRight>> retrieveAccessRight(
             @Valid @PathVariable("accessright_id") Long pId) throws EntityNotFoundException {
         AbstractAccessRight requested = accessRightService.retrieveAccessRight(pId);
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
@@ -91,8 +90,8 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
-    public HttpEntity<Resource<AbstractAccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
-            @Valid AbstractAccessRight pToBe)
+    public ResponseEntity<Resource<AbstractAccessRight>> updateAccessRight(
+            @Valid @PathVariable("accessright_id") Long pId, @Valid AbstractAccessRight pToBe)
             throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
         AbstractAccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
@@ -101,7 +100,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "delete the access right of id requested")
-    public HttpEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
+    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
             throws RabbitMQVhostException {
         accessRightService.deleteAccessRight(pId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
