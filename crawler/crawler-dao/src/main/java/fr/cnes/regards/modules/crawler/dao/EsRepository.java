@@ -40,8 +40,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 
+/**
+ * Elasticsearch repository implementation
+ */
 @Repository
 public class EsRepository implements IEsRepository {
+
+    /**
+     * Elasticsearch port
+     */
+    private static final int ES_PORT = 9300;
+
+    /**
+     * Scrolling keeping alive Time in ms when searching into Elasticsearch
+     */
+    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 500;
+
+    /**
+     * Default number of hits retrieved by scrolling
+     */
+    private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
 
     /**
      * Client to ElasticSearch base
@@ -54,17 +72,28 @@ public class EsRepository implements IEsRepository {
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
     public EsRepository(/* ICollectionsRequestService pCollectionsRequestService */) {
-        this.client = new PreBuiltTransportClient(Settings.EMPTY);
+        client = new PreBuiltTransportClient(Settings.EMPTY);
         try {
-            this.client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
+            client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));
         } catch (final UnknownHostException e) {
             Throwables.propagate(e);
         }
     }
 
     @Override
+    public void close() {
+        client.close();
+    }
+
+    @Override
     public boolean createIndex(String pIndex) {
         return client.admin().indices().prepareCreate(pIndex).get().isAcknowledged();
+    }
+
+    @Override
+    public boolean delete(String pIndex, String pType, String pId) {
+        final DeleteResponse response = client.prepareDelete(pIndex, pType, pId).get();
+        return (response.getResult() == Result.DELETED);
     }
 
     @Override
@@ -75,9 +104,23 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public String[] findIndices() {
-        return Iterables.toArray(Iterables
-                .transform(client.admin().indices().prepareGetSettings().get().getIndexToSettings(), (c) -> c.key),
-                                 String.class);
+        return Iterables
+                .toArray(Iterables.transform(client.admin().indices().prepareGetSettings().get().getIndexToSettings(),
+                                             (pSetting) -> pSetting.key),
+                         String.class);
+    }
+
+    @Override
+    public <T> T get(String pIndex, String pType, String pId, Class<T> pClass) {
+        try {
+            final GetResponse response = client.prepareGet(pIndex, pType, pId).get();
+            if (!response.isExists()) {
+                return null;
+            }
+            return jsonMapper.readValue(response.getSourceAsBytes(), pClass);
+        } catch (final IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
@@ -86,10 +129,41 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public boolean save(String index, String type, String id, Object document) {
+    public boolean merge(String pIndex, String pType, String pId, Map<String, Object> pMergedPropertiesMap) {
         try {
-            final IndexResponse response = client.prepareIndex(index, type, id)
-                    .setSource(jsonMapper.writeValueAsBytes(document)).get();
+            final Map<String, Map<String, Object>> mapMap = new HashMap<>();
+            final XContentBuilder builder = XContentFactory.jsonBuilder().startObject();
+            for (final Map.Entry<String, Object> entry : pMergedPropertiesMap.entrySet()) {
+                // Simple key = value
+                if (!entry.getKey().contains(".")) {
+                    builder.field(entry.getKey(), entry.getValue());
+                } else { // Complex key => key.subKey = value
+                    final String name = entry.getKey().substring(0, entry.getKey().indexOf('.'));
+                    if (!mapMap.containsKey(name)) {
+                        mapMap.put(name, new HashMap<>());
+                    }
+                    final Map<String, Object> subMap = mapMap.get(name);
+                    subMap.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
+                }
+            }
+            // Pending sub objects ?
+            if (!mapMap.isEmpty()) {
+                for (final Map.Entry<String, Map<String, Object>> entry : mapMap.entrySet()) {
+                    builder.field(entry.getKey(), entry.getValue());
+                }
+            }
+            final UpdateResponse response = client.prepareUpdate(pIndex, pType, pId).setDoc(builder.endObject()).get();
+            return (response.getResult() == Result.UPDATED);
+        } catch (final IOException jpe) {
+            throw Throwables.propagate(jpe);
+        }
+    }
+
+    @Override
+    public boolean save(String pIndex, String pType, String pId, Object pDocument) {
+        try {
+            final IndexResponse response = client.prepareIndex(pIndex, pType, pId)
+                    .setSource(jsonMapper.writeValueAsBytes(pDocument)).get();
             return (response.getResult() == Result.CREATED);
         } catch (final JsonProcessingException jpe) {
             throw Throwables.propagate(jpe);
@@ -97,11 +171,11 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public Map<String, Throwable> saveBulk(String index, String type, Map<String, ?> documentMap) {
+    public Map<String, Throwable> saveBulk(String pIndex, String pType, Map<String, ?> pDocumentMap) {
         try {
             final BulkRequestBuilder bulkRequest = client.prepareBulk();
-            for (final Map.Entry<String, ?> entry : documentMap.entrySet()) {
-                bulkRequest.add(client.prepareIndex(index, type, entry.getKey())
+            for (final Map.Entry<String, ?> entry : pDocumentMap.entrySet()) {
+                bulkRequest.add(client.prepareIndex(pIndex, pType, entry.getKey())
                         .setSource(jsonMapper.writeValueAsBytes(entry.getValue())));
             }
             final BulkResponse response = bulkRequest.get();
@@ -121,97 +195,42 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> T get(String index, String type, String id, Class<T> clazz) {
-        try {
-            final GetResponse response = client.prepareGet(index, type, id).get();
-            if (!response.isExists()) {
-                return null;
-            }
-            return jsonMapper.readValue(response.getSourceAsBytes(), clazz);
-        } catch (final IOException e) {
-            throw Throwables.propagate(e);
-        }
-    }
-
-    @Override
-    public boolean delete(String index, String type, String id) {
-        final DeleteResponse response = client.prepareDelete(index, type, id).get();
-        return (response.getResult() == Result.DELETED);
-    }
-
-    @Override
-    public boolean merge(String index, String type, String id, Map<String, Object> mergedPropertiesMap) {
-        try {
-            final Map<String, Map<String, Object>> mapMap = new HashMap<>();
-            final XContentBuilder builder = XContentFactory.jsonBuilder().startObject();
-            for (final Map.Entry<String, Object> entry : mergedPropertiesMap.entrySet()) {
-                // Simple key = value
-                if (!entry.getKey().contains(".")) {
-                    builder.field(entry.getKey(), entry.getValue());
-                } else { // Complex key => key.subKey = value
-                    final String name = entry.getKey().substring(0, entry.getKey().indexOf('.'));
-                    if (!mapMap.containsKey(name)) {
-                        mapMap.put(name, new HashMap<>());
-                    }
-                    final Map<String, Object> subMap = mapMap.get(name);
-                    subMap.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
-                }
-            }
-            // Pending sub objects ?
-            if (!mapMap.isEmpty()) {
-                for (final Map.Entry<String, Map<String, Object>> entry : mapMap.entrySet()) {
-                    builder.field(entry.getKey(), entry.getValue());
-                }
-            }
-            final UpdateResponse response = client.prepareUpdate(index, type, id).setDoc(builder.endObject()).get();
-            return (response.getResult() == Result.UPDATED);
-        } catch (final IOException jpe) {
-            throw Throwables.propagate(jpe);
-        }
-    }
-
-    @Override
-    public <T> Page<T> searchAllLimited(String index, Class<T> clazz, int pageSize) {
-        return this.searchAllLimited(index, clazz, new PageRequest(0, pageSize));
-    }
-
-    @Override
-    public <T> Page<T> searchAllLimited(String index, Class<T> clazz, Pageable pageRequest) {
-        try {
-            final List<T> results = new ArrayList<>();
-            final SearchResponse response = client.prepareSearch(index).setFrom(pageRequest.getOffset())
-                    .setSize(pageRequest.getPageSize()).get();
-            final SearchHits hits = response.getHits();
-            for (final SearchHit hit : hits) {
-                results.add(jsonMapper.readValue(hit.getSourceAsString(), clazz));
-            }
-            return new PageImpl<>(results, pageRequest, response.getHits().getTotalHits());
-        } catch (final IOException e) {
-            throw Throwables.propagate(e);
-        }
-
-    }
-
-    @Override
-    public void searchAll(String index, Consumer<SearchHit> action) {
+    public void searchAll(String pIndex, Consumer<SearchHit> pAction) {
         final QueryBuilder qb = QueryBuilders.matchAllQuery();
 
-        SearchResponse scrollResp = client.prepareSearch(index).setScroll(new TimeValue(500)).setQuery(qb).setSize(100)
-                .get();
+        SearchResponse scrollResp = client.prepareSearch(pIndex).setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
+                .setQuery(qb).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
         // Scroll until no hits are returned
         do {
             for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                action.accept(hit);
+                pAction.accept(hit);
             }
 
-            scrollResp = client.prepareSearchScroll(scrollResp.getScrollId()).setScroll(new TimeValue(500)).execute()
-                    .actionGet();
+            scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
+                    .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
         } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
                                                               // loop.
     }
 
     @Override
-    public void close() {
-        this.client.close();
+    public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, int pPageSize) {
+        return this.searchAllLimited(pIndex, pClass, new PageRequest(0, pPageSize));
+    }
+
+    @Override
+    public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
+        try {
+            final List<T> results = new ArrayList<>();
+            final SearchResponse response = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
+                    .setSize(pPageRequest.getPageSize()).get();
+            final SearchHits hits = response.getHits();
+            for (final SearchHit hit : hits) {
+                results.add(jsonMapper.readValue(hit.getSourceAsString(), pClass));
+            }
+            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+        } catch (final IOException e) {
+            throw Throwables.propagate(e);
+        }
+
     }
 }

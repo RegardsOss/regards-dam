@@ -25,16 +25,26 @@ import com.google.common.collect.Lists;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
 
+/**
+ * EsRepository test
+ */
 public class EsRepositoryTest {
 
-    static private IEsRepository repository;
+    /**
+     * Class to test
+     */
+    private static IEsRepository repository;
 
+    /**
+     * Befor class setting up method
+     * @throws Exception
+     */
     @BeforeClass
-    static public void setUp() throws Exception {
+    public static void setUp() throws Exception {
         repository = new EsRepository();
-        final Consumer<String> cleanFct = (index) -> {
+        final Consumer<String> cleanFct = (pIndex) -> {
             try {
-                repository.deleteIndex(index);
+                repository.deleteIndex(pIndex);
             } catch (final IndexNotFoundException infe) {
             }
         };
@@ -62,7 +72,7 @@ public class EsRepositoryTest {
     @Test
     public void testFindIndices() {
         Assert.assertTrue(repository.createIndex("toto"));
-        Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((i) -> i.equals("toto")));
+        Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((pIndex) -> pIndex.equals("toto")));
     }
 
     @Test
@@ -72,6 +82,9 @@ public class EsRepositoryTest {
         Assert.assertFalse(repository.indexExists("sqdkljhskjhdfkjhsdfkjhskdjfksjdhfkjhksdjhfksjdfgsjhfgsjdhgfjshdf"));
     }
 
+    /**
+     * Test save, get delete
+     */
     @Test
     public void testSaveGetDelete() {
         repository.createIndex("items");
@@ -103,6 +116,9 @@ public class EsRepositoryTest {
         Assert.assertFalse(repository.delete("items", "test", "1"));
     }
 
+    /**
+     * Test merge
+     */
     @Test
     public void testMerge() {
         repository.createIndex("mergeditems");
@@ -158,12 +174,16 @@ public class EsRepositoryTest {
         loadItemsBulk(100_000);
     }
 
-    public void loadItemsBulk(int count) {
+    /**
+     * Load generated data into Elsaticsearch
+     * @param pCount number of documents to insert
+     */
+    private void loadItemsBulk(int pCount) {
         final LoremIpsum loremIpsum = new LoremIpsum();
         final String[] words = loremIpsum.getWords(100).split(" ");
 
         final Map<String, Item> itemMap = new HashMap<>();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < pCount; i++) {
             final Item item = new Item(i, Stream.generate(() -> words[(int) (Math.random() * words.length)])
                     .limit((int) (Math.random() * 10)).collect(Collectors.toSet()).toArray(new String[0]));
             item.setName(words[(int) (Math.random() * words.length)]);
@@ -174,9 +194,12 @@ public class EsRepositoryTest {
         }
         final long start = System.currentTimeMillis();
         repository.saveBulk("loading", "items", itemMap);
-        System.out.println("Loading (" + count + " items): " + (System.currentTimeMillis() - start) + " ms");
+        System.out.println("Loading (" + pCount + " items): " + (System.currentTimeMillis() - start) + " ms");
     }
 
+    /**
+     * Test of search all
+     */
     @Test
     public void testSearchAll() {
         Page<Item> itemsPage = repository.searchAllLimited("loading", Item.class, 100);
@@ -201,6 +224,9 @@ public class EsRepositoryTest {
         System.out.println((System.currentTimeMillis() - start) + " ms");
     }
 
+    /**
+     * Item class
+     */
     private static final class Item implements Serializable {
 
         private int id;
