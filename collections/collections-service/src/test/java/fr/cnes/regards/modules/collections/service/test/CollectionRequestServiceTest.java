@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -129,7 +130,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Purpose("Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
-    public void updateCollection() {
+    public void updateCollection() throws EntityNotFoundException {
         final Collection updatedCollection1 = collection1;
         updatedCollection1.setDescription("Updated Description");
 
@@ -148,7 +149,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_220")
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
-    public void testFullUpdate() throws EntityInconsistentIdentifierException {
+    public void testFullUpdate() throws EntityInconsistentIdentifierException, EntityNotFoundException {
         final Tag col4Tag = new Tag(collection4.getIpId().toString());
         final Set<Tag> newTags = new HashSet();
         newTags.add(col4Tag);
@@ -159,7 +160,7 @@ public class CollectionRequestServiceTest {
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateCollectionWithWrongURL() throws EntityInconsistentIdentifierException {
+    public void updateCollectionWithWrongURL() throws EntityInconsistentIdentifierException, EntityNotFoundException {
         Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         collectionsRequestServiceMocked.updateCollection(collection1, collection2.getId());
     }
@@ -179,7 +180,6 @@ public class CollectionRequestServiceTest {
     public void createCollection() {
         Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
         final Collection collection = collectionsRequestServiceMocked.createCollection(collection2);
-        // Mockito.verify(collectionRepositoryMocked).save(collection2);
         Assert.assertEquals(collection, collection2);
     }
 
