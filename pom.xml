@@ -20,8 +20,9 @@
 		<module>entities</module>
 		<module>collections</module>
 		<module>storage</module>
-    <module>dataaccess</module>
-    <module>dataset</module>
-  </modules>
+		<module>datasources</module>
+		<module>dataaccess</module>
+		<module>dataset</module>
+	</modules>
 
 </project>
