@@ -3,13 +3,11 @@
  */
 package fr.cnes.regards.modules.entities.service.validator.restriction;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.service.validator.AbstractAttributeValidator;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 
 /**
@@ -18,19 +16,15 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationR
  * @author Marc Sordi
  *
  */
-public class EnumerationValidator implements Validator {
-
-    /**
-     * Class logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(EnumerationValidator.class);
+public class EnumerationValidator extends AbstractAttributeValidator {
 
     /**
      * Configured restriction
      */
     private final EnumerationRestriction restriction;
 
-    public EnumerationValidator(EnumerationRestriction pRestriction) {
+    public EnumerationValidator(EnumerationRestriction pRestriction, String pAttributeKey) {
+        super(pAttributeKey);
         this.restriction = pRestriction;
     }
 
@@ -41,9 +35,24 @@ public class EnumerationValidator implements Validator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        // TODO
-        restriction.getAcceptableValues();
-        LOGGER.debug("Validate string or string array");
+        pErrors.rejectValue(attributeKey, "error.inconsistent.attribute.type");
     }
 
+    public void validate(StringAttribute pTarget, Errors pErrors) {
+        if (!restriction.getAcceptableValues().contains(pTarget.getValue())) {
+            reject(pErrors);
+        }
+    }
+
+    public void validate(StringArrayAttribute pTarget, Errors pErrors) {
+        for (String val : pTarget.getValue()) {
+            if (!restriction.getAcceptableValues().contains(val)) {
+                reject(pErrors);
+            }
+        }
+    }
+
+    private void reject(Errors pErrors) {
+        pErrors.rejectValue(attributeKey, "error.enum.value.does.not.exist", "Value not acceptable.");
+    }
 }

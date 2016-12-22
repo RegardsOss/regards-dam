@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.validator;
+package fr.cnes.regards.modules.entities.domain.attribute.validator;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -14,7 +14,7 @@ import javax.validation.Payload;
 
 /**
  *
- * Custom model validation annotation
+ * Check geometry
  *
  * @author Marc Sordi
  *
@@ -25,9 +25,19 @@ import javax.validation.Payload;
 @Documented
 public @interface CheckGeometry {
 
+    /**
+     * @return error message key
+     */
     String message() default "{fr.cnes.regards.modules.entities.validator.CheckGeometry.message}";
 
+    /**
+     *
+     * @return validation groups
+     */
     Class<?>[] groups() default {};
 
+    /**
+     * @return custom payload object
+     */
     Class<? extends Payload>[] payload() default {};
 }

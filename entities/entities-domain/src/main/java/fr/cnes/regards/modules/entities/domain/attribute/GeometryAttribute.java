@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute;
 
-import fr.cnes.regards.modules.entities.domain.validator.CheckGeometry;
+import fr.cnes.regards.modules.entities.domain.attribute.validator.CheckGeometry;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**

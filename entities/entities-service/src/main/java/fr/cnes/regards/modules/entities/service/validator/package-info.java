@@ -2,7 +2,8 @@
  * LICENSE_PLACEHOLDER
  */
 /**
- * Attribute validator package
+ *
+ * Attribute level validator package
  *
  * @author Marc Sordi
  *

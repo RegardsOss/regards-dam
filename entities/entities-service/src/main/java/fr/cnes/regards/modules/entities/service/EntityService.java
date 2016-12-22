@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.service.validator.ValidatorFactory;
-import fr.cnes.regards.modules.models.domain.ComputationMode;
+import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
+import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
+import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
+import fr.cnes.regards.modules.entities.service.validator.RequiredAttributeValidator;
+import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -72,50 +77,137 @@ public class EntityService implements IEntityService {
         // Prepare attributes for validation check
         Map<String, AbstractAttribute<?>> attMap = new HashMap<>();
 
+        // Build attribute map
         buildAttributeMap(attMap, Fragment.getDefaultName(), pAbstractEntity.getAttributes());
-        // build map
 
-        // Loop over model attributes ... to check each attribute
+        // Loop over model attributes ... to validate each attribute
         for (ModelAttribute modelAtt : modAtts) {
-            AttributeModel attModel = modelAtt.getAttribute();
-            String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
-            LOGGER.debug(String.format("Computed key : \"%s\"", key));
+            checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
+        }
+    }
 
-            // Retrieve attribute
-            AbstractAttribute<?> att = attMap.get(key);
+    /**
+     * Validate an attribute with its corresponding model attribute
+     *
+     * @param pAttMap
+     *            attribue map
+     * @param pModelAttribute
+     *            model attribute
+     * @param pErrors
+     *            validation errors
+     * @param pManageAlterable
+     *            manage update or not
+     */
+    protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttribute pModelAttribute,
+            Errors pErrors, boolean pManageAlterable) {
 
-            // Only "GIVEN" attribute must be set
-            if (!ComputationMode.GIVEN.equals(modelAtt.getMode()) && (att != null)) {
-                pErrors.rejectValue(key, "error.computed.attribute.given", "Computed attribute value must not be set.");
-            }
+        AttributeModel attModel = pModelAttribute.getAttribute();
+        String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
+        LOGGER.debug(String.format("Computed key : \"%s\"", key));
 
-            // Required attribute must be set
-            if (!pManageAlterable && !attModel.isOptional() && (att == null)) {
-                pErrors.rejectValue(key, "error.attribute.required", "Attribute required.");
-            }
+        // Retrieve attribute
+        AbstractAttribute<?> att = pAttMap.get(key);
 
-            // Update mode only :
-            // FIXME retrieve not alterable attribute from database before update
-            if (pManageAlterable && !attModel.isAlterable() && (att != null)) {
-                pErrors.rejectValue(key, "error.attribute.not.alterable", "Attribute not alterable must not be set.");
-            }
-
-            if (att != null) {
-                // Check attribute type
-                if (!att.represents(attModel.getType())) {
-                    pErrors.rejectValue(key, "error.inconsistent.attribute.type",
-                                        "Attribute not consistent with model attribute type.");
-                }
-
-                // Check restriction
-                if (attModel.hasRestriction()) {
-                    ValidatorFactory.getValidator(attModel.getRestriction());
-                }
-
-                // Static validation
-                // TODO RestrictionValidatorFactory.getValidator(pRestriction)
+        // Do validation
+        for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
+            if (validator.supports(att.getClass())) {
+                validator.validate(att, pErrors);
+            } else {
+                pErrors.rejectValue(key, "error.unsupported.validator.message", "Unsupported validator.");
             }
         }
+
+        // OK
+        // Validator validator = new ComputationModeValidator(pModelAttribute.getMode(), key);
+        // if (validator.supports(att.getClass())) {
+        // validator.validate(att, pErrors);
+        // } else {
+        // // TODO
+        // }
+
+        // OK
+        // // Required attribute must be set
+        // if (!pManageAlterable && !attModel.isOptional()) {
+        // validator = new RequiredAttributeValidator(key);
+        // if (validator.supports(att.getClass())) {
+        // validator.validate(att, pErrors);
+        // } else {
+        // // TODO
+        // }
+        // }
+
+        // OK
+        // // Update mode only :
+        // // FIXME retrieve not alterable attribute from database before update
+        // if (pManageAlterable && !attModel.isAlterable() && (att != null)) {
+        // validator = new NotAlterableAttributeValidator(key);
+        // if (validator.supports(att.getClass())) {
+        // validator.validate(att, pErrors);
+        // } else {
+        // // TODO
+        // }
+        // }
+
+        // if (att != null) {
+
+        // OK
+        // validator = new AttributeTypeValidator(attModel.getType(), key);
+        // if (validator.supports(att.getClass())) {
+        // validator.validate(att, pErrors);
+        // } else {
+        // // TODO
+        // }
+
+        // OK
+        // // Check restriction
+        // if (attModel.hasRestriction()) {
+        // validator = RestrictionValidatorFactory.getValidator(attModel.getRestriction());
+        // if (validator.supports(att.getClass())) {
+        // validator.validate(att, pErrors);
+        // } else {
+        // pErrors.rejectValue(key, "error.unsupported.restriction.message",
+        // "Unsupported model restriction definition for current type");
+        // }
+        // }
+        // }
+    }
+
+    /**
+     * Compute available validators
+     *
+     * @param pModelAttribute
+     *            {@link ModelAttribute}
+     * @param pAttributeKey
+     *            attribute key
+     * @param pManageAlterable
+     *            manage update or not
+     * @return {@link Validator} list
+     */
+    protected List<Validator> getValidators(ModelAttribute pModelAttribute, String pAttributeKey,
+            boolean pManageAlterable) {
+
+        AttributeModel attModel = pModelAttribute.getAttribute();
+
+        List<Validator> validators = new ArrayList<>();
+        // Check computation mode
+        validators.add(new ComputationModeValidator(pModelAttribute.getMode(), pAttributeKey));
+        // Check required attribute
+        if (!pManageAlterable && !attModel.isOptional()) {
+            validators.add(new RequiredAttributeValidator(pAttributeKey));
+        }
+        // Check alterable attribute
+        // Update mode only :
+        // FIXME retrieve not alterable attribute from database before update
+        if (pManageAlterable && !attModel.isAlterable()) {
+            validators.add(new NotAlterableAttributeValidator(pAttributeKey));
+        }
+        // Check attribute type
+        validators.add(new AttributeTypeValidator(attModel.getType(), pAttributeKey));
+        // Check restriction
+        if (attModel.hasRestriction()) {
+            validators.add(RestrictionValidatorFactory.getValidator(attModel.getRestriction(), pAttributeKey));
+        }
+        return validators;
     }
 
     /**
@@ -128,7 +220,7 @@ public class EntityService implements IEntityService {
      * @param pAttributes
      *            {@link AbstractAttribute} list to analyze
      */
-    private void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
+    protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
             final List<AbstractAttribute<?>> pAttributes) {
         for (AbstractAttribute<?> att : pAttributes) {
 

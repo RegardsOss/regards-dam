@@ -6,11 +6,11 @@ package fr.cnes.regards.modules.entities.service.validator.restriction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import fr.cnes.regards.modules.entities.domain.attribute.FloatArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.FloatAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.FloatIntervalAttribute;
+import fr.cnes.regards.modules.entities.service.validator.AbstractAttributeValidator;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
 
 /**
@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRe
  * @author Marc Sordi
  *
  */
-public class FloatRangeValidator implements Validator {
+public class FloatRangeValidator extends AbstractAttributeValidator {
 
     /**
      * Class logger
@@ -33,7 +33,8 @@ public class FloatRangeValidator implements Validator {
      */
     private final FloatRangeRestriction restriction;
 
-    public FloatRangeValidator(FloatRangeRestriction pRestriction) {
+    public FloatRangeValidator(FloatRangeRestriction pRestriction, String pAttributeKey) {
+        super(pAttributeKey);
         this.restriction = pRestriction;
     }
 

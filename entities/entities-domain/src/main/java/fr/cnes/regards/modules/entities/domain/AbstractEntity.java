@@ -116,7 +116,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      */
     @NotNull
     @ManyToOne
+    // CHECKSTYLE:OFF
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
+    // CHECKSTYLE:ON
     protected Model model;
 
     /**
@@ -140,8 +142,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     public AbstractEntity(Model pModel, String pEntityType) {
         this(pModel);
-        final JWTService jwtService = new JWTService();
-        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, jwtService.getActualTenant(), UUID.randomUUID(),
+        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
                 1);
     }
 
@@ -228,6 +229,16 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     public void setSipId(String pSipId) {
         sipId = pSipId;
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        return (pObj instanceof AbstractEntity) && ((AbstractEntity) pObj).getIpId().equals(getIpId());
+    }
+
+    @Override
+    public int hashCode() {
+        return ipId.hashCode();
     }
 
 }

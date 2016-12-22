@@ -46,8 +46,8 @@ public class Collection extends AbstractEntity {
     /**
      * list of other entities that this collection contains
      */
-    @OneToMany(mappedBy = "id",
-            cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+    @OneToMany(mappedBy = "id", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.REFRESH })
     protected List<AbstractEntity> content;
 
     /**
@@ -81,8 +81,7 @@ public class Collection extends AbstractEntity {
     public Collection(String pSipId, Model pModel, String pDescription, String pName) {
         this(pModel, pDescription, pName);
         sipId = pSipId;
-        final JWTService jwtService = new JWTService();
-        ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, jwtService.getActualTenant(),
+        ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, JWTService.getActualTenant(),
                 UUID.nameUUIDFromBytes(sipId.getBytes()), 1);
     }
 
@@ -119,16 +118,6 @@ public class Collection extends AbstractEntity {
      */
     public void setName(String pName) {
         name = pName;
-    }
-
-    @Override
-    public boolean equals(Object pObj) {
-        return (pObj instanceof Collection) && ((Collection) pObj).getId().equals(getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return ipId.hashCode();
     }
 
     public List<AbstractEntity> getContent() {
