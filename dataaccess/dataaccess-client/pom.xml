@@ -25,5 +25,21 @@
 			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
 			<artifactId>dataaccess-domain</artifactId>
 		</dependency>
+		
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-integration-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-multitenant-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
+			<artifactId>dataaccess-rest</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

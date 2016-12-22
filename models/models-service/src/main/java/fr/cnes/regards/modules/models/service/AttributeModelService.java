@@ -126,6 +126,7 @@ public class AttributeModelService implements IAttributeModelService {
         if (!attModelRepository.exists(pAttributeId)) {
             throw new EntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
         }
+        manageRestriction(pAttributeModel);
         return attModelRepository.save(pAttributeModel);
     }
 
