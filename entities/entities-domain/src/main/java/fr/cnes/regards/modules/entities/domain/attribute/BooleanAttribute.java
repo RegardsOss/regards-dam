@@ -13,4 +13,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class BooleanAttribute extends AbstractAttribute<Boolean> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.BOOLEAN.equals(pAttributeType);
+    }
 }

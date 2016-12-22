@@ -3,6 +3,10 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute;
 
+import javax.validation.constraints.NotNull;
+
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+
 /**
  * @param <T>
  *            attribute type
@@ -14,11 +18,13 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
     /**
      * Attribute name
      */
+    @NotNull
     private String name;
 
     /**
      * Attribute value
      */
+    @NotNull
     private T value;
 
     @Override
@@ -39,4 +45,15 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
         name = pName;
     }
 
+    @Override
+    public String toString() {
+        return name + " : " + value.toString();
+    }
+
+    public abstract boolean represents(AttributeType pAttributeType);
+
+    @Override
+    public int hashCode() {
+        return name.hashCode() + value.hashCode();
+    }
 }

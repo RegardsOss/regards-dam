@@ -16,4 +16,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class DateIntervalAttribute extends AbstractAttribute<Interval<LocalDateTime>> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.DATE_INTERVAL.equals(pAttributeType);
+    }
 }

@@ -13,4 +13,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class StringArrayAttribute extends AbstractAttribute<String[]> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.STRING_ARRAY.equals(pAttributeType);
+    }
 }

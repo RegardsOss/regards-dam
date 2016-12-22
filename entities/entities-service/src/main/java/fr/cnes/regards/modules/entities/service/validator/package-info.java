@@ -2,8 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 /**
- *
- * Domain validator package
+ * Attribute validator package
  *
  * @author Marc Sordi
  *

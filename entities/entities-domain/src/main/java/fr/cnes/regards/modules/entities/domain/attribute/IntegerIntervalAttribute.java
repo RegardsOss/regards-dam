@@ -14,4 +14,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class IntegerIntervalAttribute extends AbstractAttribute<Interval<Integer>> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.INTEGER_INTERVAL.equals(pAttributeType);
+    }
 }

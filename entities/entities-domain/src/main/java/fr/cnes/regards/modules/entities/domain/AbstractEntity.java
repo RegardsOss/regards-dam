@@ -24,6 +24,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
@@ -107,6 +108,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
+    @Valid
     protected List<AbstractAttribute<?>> attributes;
 
     /**

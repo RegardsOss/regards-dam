@@ -13,4 +13,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class FloatArrayAttribute extends AbstractAttribute<Float[]> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.FLOAT_ARRAY.equals(pAttributeType);
+    }
 }

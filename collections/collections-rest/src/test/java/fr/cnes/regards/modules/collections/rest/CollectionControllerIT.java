@@ -26,6 +26,11 @@ import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Tag;
+import fr.cnes.regards.modules.entities.domain.adapters.gson.AttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelType;
@@ -74,6 +79,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelRepository modelRepository;
 
+    @Autowired
+    private AttributeAdapterFactory attributeAdapterFactory;
+
     private List<ResultMatcher> expectations;
 
     @Before
@@ -120,6 +128,30 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPost(COLLECTIONS, collection2, expectations, "Failed to create a new collection");
+
+    }
+
+    @Requirement("REGARDS_DSL_DAM_COL_010")
+    @Requirement("REGARDS_DSL_DAM_COL_020")
+    @Purpose("Shall create a new collection")
+    @Test
+    public void testPostCollectionWithAttributes() {
+        final Collection collectionWithAtt = new Collection("IpID2", model1, "pDescription2", "pName2");
+        List<AbstractAttribute<?>> atts = new ArrayList<>();
+
+        // Add attributes
+        String attributeName = "name";
+        String attributeGeo = "geo";
+        attributeAdapterFactory.registerSubtype(StringAttribute.class, attributeName);
+        attributeAdapterFactory.registerSubtype(GeometryAttribute.class, attributeGeo);
+        atts.add(AttributeBuilder.buildString(attributeName, "test name"));
+        atts.add(AttributeBuilder.buildGeometry(attributeGeo, "POLYGON(...)"));
+        collectionWithAtt.setAttributes(atts);
+
+        expectations.add(MockMvcResultMatchers.status().isCreated());
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+
+        performDefaultPost(COLLECTIONS, collectionWithAtt, expectations, "Failed to create a new collection");
 
     }
 

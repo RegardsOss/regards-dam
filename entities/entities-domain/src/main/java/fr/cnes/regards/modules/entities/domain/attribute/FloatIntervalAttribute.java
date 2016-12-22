@@ -14,4 +14,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class FloatIntervalAttribute extends AbstractAttribute<Interval<Float>> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.FLOAT_INTERVAL.equals(pAttributeType);
+    }
 }

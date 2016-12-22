@@ -3,35 +3,35 @@
  */
 package fr.cnes.regards.modules.entities.service.validator.restriction;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
+
 /**
+ *
+ * Validate {@link GeometryAttribute}
+ *
  * @author Marc Sordi
  *
  */
 public class GeometryValidator implements Validator {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.validation.Validator#supports(java.lang.Class)
+    /**
+     * Class logger
      */
+    @SuppressWarnings("unused")
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryValidator.class);
+
     @Override
     public boolean supports(Class<?> pClazz) {
-        // TODO Auto-generated method stub
-        return false;
+        return pClazz == GeometryAttribute.class;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
-     */
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        // TODO Auto-generated method stub
-
+        // TODO check supported shape type : polygon, linestring, point, etc.
     }
-
 }
