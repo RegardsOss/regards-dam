@@ -24,7 +24,7 @@ public class CheckGeometryValidator implements ConstraintValidator<CheckGeometry
 
     @Override
     public boolean isValid(GeometryAttribute pValue, ConstraintValidatorContext pContext) {
-        // FIXME control supported geometry
+        // TODO control supported geometry
         return true;
     }
 }

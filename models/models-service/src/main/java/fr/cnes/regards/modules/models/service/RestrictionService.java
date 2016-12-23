@@ -16,7 +16,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionF
 
 /**
  * Restriction service
- * 
+ *
  * @author Marc Sordi
  *
  */
@@ -32,13 +32,10 @@ public class RestrictionService {
     @PostConstruct
     public void init() {
         restrictions = new ArrayList<>();
-        restrictions.add(RestrictionFactory.buildDateISO8601Restriction());
         restrictions.add(RestrictionFactory.buildEnumerationRestriction());
-        restrictions.add(RestrictionFactory.buildFloatRangeRestriction(null, null, null, null));
-        restrictions.add(RestrictionFactory.buildGeometryRestriction());
-        restrictions.add(RestrictionFactory.buildIntegerRangeRestriction(null, null, null, null));
+        restrictions.add(RestrictionFactory.buildFloatRangeRestriction(null, null, false, false));
+        restrictions.add(RestrictionFactory.buildIntegerRangeRestriction(null, null, false, false));
         restrictions.add(RestrictionFactory.buildPatternRestriction(null));
-        restrictions.add(RestrictionFactory.buildUrlRestriction());
     }
 
     /**
@@ -52,7 +49,7 @@ public class RestrictionService {
     public List<String> getRestrictions(AttributeType pType) {
         final List<String> restrictionList = new ArrayList<>();
         for (IRestriction restriction : restrictions) {
-            if (restriction.supports(pType) && restriction.isPublic()) {
+            if (restriction.supports(pType)) {
                 restrictionList.add(restriction.getType().name());
             }
         }

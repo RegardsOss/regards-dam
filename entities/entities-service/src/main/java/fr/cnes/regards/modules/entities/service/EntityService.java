@@ -116,60 +116,6 @@ public class EntityService implements IEntityService {
                 pErrors.rejectValue(key, "error.unsupported.validator.message", "Unsupported validator.");
             }
         }
-
-        // OK
-        // Validator validator = new ComputationModeValidator(pModelAttribute.getMode(), key);
-        // if (validator.supports(att.getClass())) {
-        // validator.validate(att, pErrors);
-        // } else {
-        // // TODO
-        // }
-
-        // OK
-        // // Required attribute must be set
-        // if (!pManageAlterable && !attModel.isOptional()) {
-        // validator = new RequiredAttributeValidator(key);
-        // if (validator.supports(att.getClass())) {
-        // validator.validate(att, pErrors);
-        // } else {
-        // // TODO
-        // }
-        // }
-
-        // OK
-        // // Update mode only :
-        // // FIXME retrieve not alterable attribute from database before update
-        // if (pManageAlterable && !attModel.isAlterable() && (att != null)) {
-        // validator = new NotAlterableAttributeValidator(key);
-        // if (validator.supports(att.getClass())) {
-        // validator.validate(att, pErrors);
-        // } else {
-        // // TODO
-        // }
-        // }
-
-        // if (att != null) {
-
-        // OK
-        // validator = new AttributeTypeValidator(attModel.getType(), key);
-        // if (validator.supports(att.getClass())) {
-        // validator.validate(att, pErrors);
-        // } else {
-        // // TODO
-        // }
-
-        // OK
-        // // Check restriction
-        // if (attModel.hasRestriction()) {
-        // validator = RestrictionValidatorFactory.getValidator(attModel.getRestriction());
-        // if (validator.supports(att.getClass())) {
-        // validator.validate(att, pErrors);
-        // } else {
-        // pErrors.rejectValue(key, "error.unsupported.restriction.message",
-        // "Unsupported model restriction definition for current type");
-        // }
-        // }
-        // }
     }
 
     /**
@@ -222,18 +168,20 @@ public class EntityService implements IEntityService {
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
             final List<AbstractAttribute<?>> pAttributes) {
-        for (AbstractAttribute<?> att : pAttributes) {
+        if (pAttributes != null) {
+            for (AbstractAttribute<?> att : pAttributes) {
 
-            // Compute key
-            String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
+                // Compute key
+                String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
 
-            // Compute value
-            if (ObjectAttribute.class.equals(att.getClass())) {
-                ObjectAttribute o = (ObjectAttribute) att;
-                buildAttributeMap(pAttMap, key, o.getValue());
-            } else {
-                LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
-                pAttMap.put(key, att);
+                // Compute value
+                if (ObjectAttribute.class.equals(att.getClass())) {
+                    ObjectAttribute o = (ObjectAttribute) att;
+                    buildAttributeMap(pAttMap, key, o.getValue());
+                } else {
+                    LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
+                    pAttMap.put(key, att);
+                }
             }
         }
     }

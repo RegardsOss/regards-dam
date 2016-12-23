@@ -67,25 +67,25 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static FloatArrayAttribute buildFloatArray(String pName, Float... pValues) {
+    public static FloatArrayAttribute buildFloatArray(String pName, Double... pValues) {
         FloatArrayAttribute att = new FloatArrayAttribute();
         att.setName(pName);
         att.setValue(pValues);
         return att;
     }
 
-    public static FloatAttribute buildFloat(String pName, Float pValue) {
+    public static FloatAttribute buildFloat(String pName, Double pValue) {
         FloatAttribute att = new FloatAttribute();
         att.setName(pName);
         att.setValue(pValue);
         return att;
     }
 
-    public static FloatIntervalAttribute buildFloatInterval(String pName, Float pLowerBoundFloat,
-            Float pUpperBoundFloat) {
+    public static FloatIntervalAttribute buildFloatInterval(String pName, Double pLowerBoundFloat,
+            Double pUpperBoundFloat) {
         FloatIntervalAttribute att = new FloatIntervalAttribute();
         att.setName(pName);
-        Interval<Float> interval = new Interval<>();
+        Interval<Double> interval = new Interval<>();
         interval.setLowerBound(pLowerBoundFloat);
         interval.setUpperBound(pUpperBoundFloat);
         att.setValue(interval);

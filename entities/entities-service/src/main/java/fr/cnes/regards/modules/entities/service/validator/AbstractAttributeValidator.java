@@ -15,6 +15,11 @@ import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 public abstract class AbstractAttributeValidator implements Validator {
 
     /**
+     * Error code for inconsistent attribute type
+     */
+    protected static final String INCONSISTENT_ATTRIBUTE = "error.inconsistent.attribute.type";
+
+    /**
      * Attribute key
      */
     protected final String attributeKey;

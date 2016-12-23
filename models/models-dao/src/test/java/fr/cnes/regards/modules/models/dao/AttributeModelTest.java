@@ -66,7 +66,7 @@ public class AttributeModelTest extends AbstractModelTest {
         final Fragment f = Fragment.buildFragment(name, description);
 
         final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(f)
-                .withGeometryRestriction();
+                .withoutRestriction();
         saveAttribute(attModel1);
 
         final AttributeModel attModel2 = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(f)

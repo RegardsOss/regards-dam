@@ -33,6 +33,7 @@ public class AttributeTypeValidator extends AbstractAttributeValidator {
             if (!att.represents(attributeType)) {
                 pErrors.rejectValue(attributeKey, "error.inconsistent.attribute.type.message",
                                     "Attribute not consistent with model attribute type.");
+
             }
         }
     }

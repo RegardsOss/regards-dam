@@ -35,7 +35,7 @@ public class EnumerationValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        pErrors.rejectValue(attributeKey, "error.inconsistent.attribute.type");
+        pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
     }
 
     public void validate(StringAttribute pTarget, Errors pErrors) {

@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Marc Sordi
  *
  */
-public class FloatArrayAttribute extends AbstractAttribute<Float[]> {
+public class FloatArrayAttribute extends AbstractAttribute<Double[]> {
 
     @Override
     public boolean represents(AttributeType pAttributeType) {

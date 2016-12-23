@@ -17,6 +17,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -109,6 +110,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      */
     @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "RESTRICTION_ID_FK"))
+    @Valid
     private AbstractRestriction restriction;
 
     @Override

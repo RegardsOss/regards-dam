@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.service.validator.restriction;
 
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
@@ -43,20 +45,26 @@ public class PatternValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        pErrors.rejectValue(attributeKey, "error.inconsistent.attribute.type");
+        pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
     }
 
     public void validate(StringAttribute pTarget, Errors pErrors) {
-        // TODO TEST match
+        if (!Pattern.matches(restriction.getPattern(), pTarget.getValue())) {
+            reject(pErrors);
+        }
     }
 
     public void validate(StringArrayAttribute pTarget, Errors pErrors) {
-        // TODO TEST match
+        for (String val : pTarget.getValue()) {
+            if (!Pattern.matches(restriction.getPattern(), val)) {
+                reject(pErrors);
+            }
+        }
     }
 
     private void reject(Errors pErrors) {
-        // TODO
-        pErrors.rejectValue(attributeKey, "error.enum.value.does.not.exist", "Value not acceptable.");
+        pErrors.rejectValue(attributeKey, "error.value.not.conform.to.pattern",
+                            String.format("Value not conform to pattern %s.", restriction.getPattern()));
     }
 
 }
