@@ -124,29 +124,29 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      *
      */
-    public AbstractEntity() {
+    public AbstractEntity() { // NOSONAR
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();
     }
 
-    protected AbstractEntity(Model pModel) {
+    protected AbstractEntity(Model pModel) { // NOSONAR
         this();
         model = pModel;
     }
 
-    public AbstractEntity(Model pModel, Long pId) {
+    public AbstractEntity(Model pModel, Long pId) { // NOSONAR
         this(pModel);
         id = pId;
     }
 
-    public AbstractEntity(Model pModel, String pEntityType) {
+    public AbstractEntity(Model pModel, String pEntityType) { // NOSONAR
         this(pModel);
         ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
                 1);
     }
 
-    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) {
+    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) { // NOSONAR
         this(pModel);
         ipId = pIpId;
         id = pId;

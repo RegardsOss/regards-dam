@@ -71,22 +71,22 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      */
     private Integer pos = 0;
 
-    public ModelAttribute() {
+    public ModelAttribute() { // NOSONAR
         super();
     }
 
-    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {
+    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
         this.model = pModel;
         this.pos = pPosition;
         this.mode = ComputationMode.GIVEN;
     }
 
-    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {
+    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {// NOSONAR
         this(pAttributeModel, pModel, pPosition, Boolean.FALSE);
     }
 
-    public ModelAttribute(AttributeModel pAttributeModel, Model pModel) {
+    public ModelAttribute(AttributeModel pAttributeModel, Model pModel) {// NOSONAR
         this(pAttributeModel, pModel, 0, Boolean.FALSE);
     }
 

@@ -56,7 +56,7 @@ public class Collection extends AbstractEntity {
     @OneToMany
     protected List<Collection> parents;
 
-    public Collection() {
+    public Collection() { // NOSONAR
         super();
     }
 
@@ -78,14 +78,14 @@ public class Collection extends AbstractEntity {
         name = pName;
     }
 
-    public Collection(String pSipId, Model pModel, String pDescription, String pName) {
+    public Collection(String pSipId, Model pModel, String pDescription, String pName) { // NOSONAR
         this(pModel, pDescription, pName);
         sipId = pSipId;
         ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, JWTService.getActualTenant(),
                 UUID.nameUUIDFromBytes(sipId.getBytes()), 1);
     }
 
-    public Collection(Long pId, Model pModel, String pDescription, String pName) {
+    public Collection(Long pId, Model pModel, String pDescription, String pName) { // NOSONAR
         this(pModel, pDescription, pName);
         id = pId;
     }

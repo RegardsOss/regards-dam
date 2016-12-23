@@ -86,29 +86,26 @@ public class UniformResourceName {
         version = pVersion;
     }
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId, // NOSONAR
             int pVersion, Long pOrder, String pRevision) {
         this(pOaisIdentifier, pEntityType, pTenant, pEntityId, pVersion);
         order = pOrder;
         revision = pRevision;
     }
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
-            int pVersion, long pOrder) {
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId, // NOSONAR
+            int pVersion, long pOrder) {// NOSONAR
         this(pOaisIdentifier, pEntityType, pTenant, pEntityId, pVersion);
         order = pOrder;
     }
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId, // NOSONAR
             int pVersion, String pRevision) {
         this(pOaisIdentifier, pEntityType, pTenant, pEntityId, pVersion);
         revision = pRevision;
     }
 
-    /**
-     *
-     */
-    public UniformResourceName() {
+    public UniformResourceName() {// NOSONAR
         // for testing purpose
     }
 
