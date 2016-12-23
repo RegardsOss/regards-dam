@@ -335,4 +335,38 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultGet(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", expectations,
                           "Cannot retrieve attribute", id);
     }
+
+    /**
+     * Check if removing a restriction works
+     */
+    @Test
+    @Ignore
+    public void removeRestriction() {
+        final AttributeModel attMod = AttributeModelBuilder.build("attModRestr", AttributeType.STRING)
+                .description("desc").withPatternRestriction("pattern");
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        final ResultActions resultActions = performDefaultPost(AttributeModelController.TYPE_MAPPING, attMod,
+                                                               expectations, "Attribute should be created.");
+
+        final String json = payload(resultActions);
+        final Integer id = JsonPath.read(json, JSON_ID);
+
+        attMod.setId(Long.valueOf(id));
+        attMod.setRestriction(null);
+
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.is(id)));
+        // expectations.add(MockMvcResultMatchers.jsonPath("$", Matchers.hasProperty("restrictions")));
+
+        performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attMod, expectations,
+                          "Restriction should be deleted.", id);
+
+    }
+
+    // post attribute avec restriction
+    // put attribute virer restriction
+    // Verifier si elle existe
+    // AttributeBuilder with pattern restriction
 }
