@@ -18,7 +18,9 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -80,6 +82,11 @@ public class EsRepository implements IEsRepository {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));
         } catch (final UnknownHostException e) {
             Throwables.propagate(e);
+        }
+        // Testinf availability of ES
+        List<DiscoveryNode> nodes = client.connectedNodes();
+        if (nodes.isEmpty()) {
+            throw new NoNodeAvailableException("Elasticsearch is down");
         }
     }
 

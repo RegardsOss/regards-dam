@@ -13,9 +13,11 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
@@ -44,7 +46,16 @@ public class EsRepositoryTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
-        repository = new EsRepository();
+        // By now, repository try to connect localhost:9300 for ElasticSearch
+        boolean repositoryOK = true;
+        try {
+            repository = new EsRepository();
+        } catch (NoNodeAvailableException e) {
+            repositoryOK = false;
+        }
+        // Do not launch tests is Elasticsearch is not available
+        Assume.assumeTrue(repositoryOK);
+
         final Consumer<String> cleanFct = (pIndex) -> {
             try {
                 repository.deleteIndex(pIndex);
@@ -63,7 +74,9 @@ public class EsRepositoryTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        repository.close();
+        if (repository != null) {
+            repository.close();
+        }
     }
 
     @Test
