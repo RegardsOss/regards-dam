@@ -10,13 +10,10 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.DateISO8601Restriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.GeometryRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.UrlRestriction;
 
 /**
  * Restriction test
@@ -25,17 +22,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.UrlRestricti
  *
  */
 public class RestrictionTest extends AbstractModelTest {
-
-    @Test
-    public void dateRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("DATE_ARRAY", AttributeType.DATE_ARRAY)
-                .withDateISO8601Restriction();
-        saveAttribute(attModel);
-
-        final AttributeModel att = findSingle();
-        Assert.assertEquals(AttributeType.DATE_ARRAY, att.getType());
-        checkRestrictionType(att.getRestriction(), DateISO8601Restriction.class);
-    }
 
     @Test
     public void enumRestriction() {
@@ -49,33 +35,22 @@ public class RestrictionTest extends AbstractModelTest {
         Assert.assertEquals(2, er.getAcceptableValues().size());
     }
 
-    @Test
-    public void geoRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("GEO", AttributeType.GEOMETRY)
-                .withGeometryRestriction();
-        saveAttribute(attModel);
-
-        final AttributeModel att = findSingle();
-        Assert.assertEquals(AttributeType.GEOMETRY, att.getType());
-        checkRestrictionType(att.getRestriction(), GeometryRestriction.class);
-    }
-
     /**
      * Test float restriction
      */
     @Test
     public void floatRestriction() {
         final AttributeModel attModel = AttributeModelBuilder.build("FLOAT", AttributeType.FLOAT_INTERVAL)
-                .withFloatRangeRestriction(Float.MIN_VALUE, Float.MAX_VALUE, null, null);
+                .withFloatRangeRestriction(Double.MIN_VALUE, Double.MAX_VALUE, false, false);
         saveAttribute(attModel);
 
         final AttributeModel att = findSingle();
         Assert.assertEquals(AttributeType.FLOAT_INTERVAL, att.getType());
         final FloatRangeRestriction frr = checkRestrictionType(att.getRestriction(), FloatRangeRestriction.class);
-        Assert.assertTrue(Float.MIN_VALUE == frr.getMinInclusive());
-        Assert.assertTrue(Float.MAX_VALUE == frr.getMaxInclusive());
-        Assert.assertNull(frr.getMinExclusive());
-        Assert.assertNull(frr.getMaxExclusive());
+        Assert.assertTrue(Double.MIN_VALUE == frr.getMin());
+        Assert.assertTrue(Double.MAX_VALUE == frr.getMax());
+        Assert.assertFalse(frr.isMinExcluded());
+        Assert.assertFalse(frr.isMaxExcluded());
     }
 
     /**
@@ -84,16 +59,16 @@ public class RestrictionTest extends AbstractModelTest {
     @Test
     public void integerRestriction() {
         final AttributeModel attModel = AttributeModelBuilder.build("INTEGER", AttributeType.INTEGER_ARRAY)
-                .withIntegerRangeRestriction(Integer.MIN_VALUE, Integer.MAX_VALUE, null, null);
+                .withIntegerRangeRestriction(Integer.MIN_VALUE, Integer.MAX_VALUE, false, true);
         saveAttribute(attModel);
 
         final AttributeModel att = findSingle();
         Assert.assertEquals(AttributeType.INTEGER_ARRAY, att.getType());
         final IntegerRangeRestriction irr = checkRestrictionType(att.getRestriction(), IntegerRangeRestriction.class);
-        Assert.assertTrue(Integer.MIN_VALUE == irr.getMinInclusive());
-        Assert.assertTrue(Integer.MAX_VALUE == irr.getMaxInclusive());
-        Assert.assertNull(irr.getMinExclusive());
-        Assert.assertNull(irr.getMaxExclusive());
+        Assert.assertTrue(Integer.MIN_VALUE == irr.getMin());
+        Assert.assertTrue(Integer.MAX_VALUE == irr.getMax());
+        Assert.assertFalse(irr.isMinExcluded());
+        Assert.assertTrue(irr.isMaxExcluded());
     }
 
     @Test
@@ -107,16 +82,6 @@ public class RestrictionTest extends AbstractModelTest {
         Assert.assertEquals(AttributeType.STRING_ARRAY, att.getType());
         final PatternRestriction pr = checkRestrictionType(att.getRestriction(), PatternRestriction.class);
         Assert.assertEquals(pattern, pr.getPattern());
-    }
-
-    @Test
-    public void urlRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("URL", AttributeType.URL).withUrlRestriction();
-        saveAttribute(attModel);
-
-        final AttributeModel att = findSingle();
-        Assert.assertEquals(AttributeType.URL, att.getType());
-        checkRestrictionType(att.getRestriction(), UrlRestriction.class);
     }
 
     @SuppressWarnings("unchecked")

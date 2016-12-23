@@ -39,7 +39,7 @@ public class DataAccessRight {
         dataAccessLevel = pDataAccessLevel;
     }
 
-    public DataAccessRight(DataAccessLevel pDataAccessLevel, PluginConfiguration pPluginConf) {
+    public DataAccessRight(DataAccessLevel pDataAccessLevel, PluginConfiguration pPluginConf) { // NOSONAR
         this(pDataAccessLevel);
         pluginConfiguration = pPluginConf;
     }

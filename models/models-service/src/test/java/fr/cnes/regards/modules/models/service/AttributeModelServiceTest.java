@@ -25,7 +25,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.DateISO8601Restriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionFactory;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
@@ -159,8 +159,9 @@ public class AttributeModelServiceTest {
         final AttributeType attType = AttributeType.STRING;
         final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType).withoutRestriction();
         // Bypass builder to set a bad restriction
-        expectedAttModel.setRestriction(new DateISO8601Restriction());
-
+        // CHECKSTYLE:OFF
+        expectedAttModel.setRestriction(RestrictionFactory.buildIntegerRangeRestriction(0, 10, false, false));
+        // CHECKSTYLE:ON
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName())).thenReturn(null);
         Mockito.when(mockAttModelR.save(expectedAttModel)).thenReturn(expectedAttModel);

@@ -6,9 +6,13 @@ package fr.cnes.regards.modules.models.domain.attributes.restriction;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.validator.CheckFloatRange;
 import fr.cnes.regards.modules.models.schema.FloatRange;
+import fr.cnes.regards.modules.models.schema.FloatRange.Max;
+import fr.cnes.regards.modules.models.schema.FloatRange.Min;
 import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
@@ -23,6 +27,7 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  * @author Marc Sordi
  *
  */
+@CheckFloatRange
 @Entity(name = "FloatRangeRestriction")
 @DiscriminatorValue("FloatRange")
 public class FloatRangeRestriction extends AbstractRestriction {
@@ -30,62 +35,32 @@ public class FloatRangeRestriction extends AbstractRestriction {
     /**
      * Minimum possible value (included)
      */
-    @Column(name = "MINF_INCLUSIVE")
-    private Float minInclusive;
+    @Column(name = "MINF")
+    @NotNull
+    private Double min;
 
     /**
      * Maximun possible value (included)
      */
-    @Column(name = "MAXF_INCLUSIVE")
-    private Float maxInclusive;
+    @Column(name = "MAXF")
+    @NotNull
+    private Double max;
 
     /**
      * Minimum possible value (excluded)
      */
-    @Column(name = "MINF_EXCLUSIVE")
-    private Float minExclusive;
+    @Column(name = "MINF_EXCLUDED")
+    private boolean minExcluded = false;
 
     /**
      * Maximum possible value (excluded)
      */
-    @Column(name = "MAXF_EXCLUSIVE")
-    private Float maxExclusive;
+    @Column(name = "MAXF_EXCLUDED")
+    private boolean maxExcluded = false;
 
-    public FloatRangeRestriction() {
+    public FloatRangeRestriction() {// NOSONAR
         super();
         setType(RestrictionType.FLOAT_RANGE);
-    }
-
-    public Float getMinInclusive() {
-        return minInclusive;
-    }
-
-    public void setMinInclusive(Float pMinInclusive) {
-        minInclusive = pMinInclusive;
-    }
-
-    public Float getMaxInclusive() {
-        return maxInclusive;
-    }
-
-    public void setMaxInclusive(Float pMaxInclusive) {
-        maxInclusive = pMaxInclusive;
-    }
-
-    public Float getMinExclusive() {
-        return minExclusive;
-    }
-
-    public void setMinExclusive(Float pMinExclusive) {
-        minExclusive = pMinExclusive;
-    }
-
-    public Float getMaxExclusive() {
-        return maxExclusive;
-    }
-
-    public void setMaxExclusive(Float pMaxExclusive) {
-        maxExclusive = pMaxExclusive;
     }
 
     @Override
@@ -94,9 +69,36 @@ public class FloatRangeRestriction extends AbstractRestriction {
                 || AttributeType.FLOAT_INTERVAL.equals(pAttributeType);
     }
 
-    @Override
-    public Boolean isPublic() {
-        return Boolean.TRUE;
+    public Double getMin() {
+        return min;
+    }
+
+    public void setMin(Double pMin) {
+        min = pMin;
+    }
+
+    public Double getMax() {
+        return max;
+    }
+
+    public void setMax(Double pMax) {
+        max = pMax;
+    }
+
+    public boolean isMinExcluded() {
+        return minExcluded;
+    }
+
+    public void setMinExcluded(boolean pMinExcluded) {
+        minExcluded = pMinExcluded;
+    }
+
+    public boolean isMaxExcluded() {
+        return maxExcluded;
+    }
+
+    public void setMaxExcluded(boolean pMaxExcluded) {
+        maxExcluded = pMaxExcluded;
     }
 
     @Override
@@ -104,10 +106,17 @@ public class FloatRangeRestriction extends AbstractRestriction {
 
         final Restriction restriction = new Restriction();
         final FloatRange frr = new FloatRange();
-        frr.setMaxExclusive(maxExclusive);
-        frr.setMaxInclusive(maxInclusive);
-        frr.setMinExclusive(minExclusive);
-        frr.setMinInclusive(minInclusive);
+
+        Max xmlMax = new Max();
+        xmlMax.setValue(max);
+        xmlMax.setExcluded(maxExcluded);
+        frr.setMax(xmlMax);
+
+        Min xmlMin = new Min();
+        xmlMin.setValue(min);
+        xmlMin.setExcluded(minExcluded);
+        frr.setMin(xmlMin);
+
         restriction.setFloatRange(frr);
         return restriction;
     }
@@ -115,9 +124,12 @@ public class FloatRangeRestriction extends AbstractRestriction {
     @Override
     public void fromXml(Restriction pXmlElement) {
         final FloatRange fr = pXmlElement.getFloatRange();
-        setMaxExclusive(fr.getMaxExclusive());
-        setMaxInclusive(fr.getMaxInclusive());
-        setMinExclusive(fr.getMinExclusive());
-        setMinInclusive(fr.getMinInclusive());
+        Max xmlMax = fr.getMax();
+        setMax(xmlMax.getValue());
+        setMaxExcluded(xmlMax.isExcluded());
+        Min xmlMin = fr.getMin();
+        setMin(xmlMin.getValue());
+        setMinExcluded(xmlMin.isExcluded());
     }
+
 }

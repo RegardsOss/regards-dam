@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringMvcContract;
 import org.springframework.hateoas.PagedResources;
@@ -28,7 +27,6 @@ import fr.cnes.regards.client.core.TokenClientProvider;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
-import fr.cnes.regards.modules.dataaccess.client.IUserClient;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 
 /**
@@ -47,9 +45,6 @@ public class IUserClientIT extends AbstractRegardsWebIT {
     @Value("${server.address}")
     private String serverAddress;
 
-    @LocalServerPort
-    private int serverPort;
-
     @Value("${hystrix.command.default.execution.isolation.strategy}")
     private String strategy;
 
@@ -62,7 +57,7 @@ public class IUserClientIT extends AbstractRegardsWebIT {
         jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString());
         userClient = HystrixFeign.builder().contract(new SpringMvcContract()).encoder(new GsonEncoder())
                 .decoder(new ResponseEntityDecoder(new GsonDecoder()))
-                .target(new TokenClientProvider<>(IUserClient.class, "http://" + serverAddress + ":" + serverPort));
+                .target(new TokenClientProvider<>(IUserClient.class, "http://" + serverAddress + ":" + getPort()));
     }
 
     /**

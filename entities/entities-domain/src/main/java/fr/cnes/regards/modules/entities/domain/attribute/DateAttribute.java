@@ -15,4 +15,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class DateAttribute extends AbstractAttribute<LocalDateTime> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.DATE_ISO8601.equals(pAttributeType);
+    }
 }

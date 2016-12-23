@@ -122,10 +122,26 @@
 	<xs:element name="integer_range">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="minInclusive" type="xs:integer" minOccurs="0"/>
-				<xs:element name="maxInclusive" type="xs:integer" minOccurs="0"/>
-				<xs:element name="minExclusive" type="xs:integer" minOccurs="0"/>
-				<xs:element name="maxExclusive" type="xs:integer" minOccurs="0"/>
+				<xs:element name="min">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:integer">
+								<xs:attribute name="excluded" type="xs:boolean"
+									default="false" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="max">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:integer">
+								<xs:attribute name="excluded" type="xs:boolean"
+									default="false" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -134,10 +150,26 @@
 	<xs:element name="float_range">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="minInclusive" type="xs:float" minOccurs="0"/>
-				<xs:element name="maxInclusive" type="xs:float" minOccurs="0"/>
-				<xs:element name="minExclusive" type="xs:float" minOccurs="0"/>
-				<xs:element name="maxExclusive" type="xs:float" minOccurs="0"/>
+				<xs:element name="min">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:double">
+								<xs:attribute name="excluded" type="xs:boolean"
+									default="false" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="max">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:double">
+								<xs:attribute name="excluded" type="xs:boolean"
+									default="false" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>

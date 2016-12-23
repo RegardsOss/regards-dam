@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import org.springframework.validation.Errors;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 
@@ -14,5 +16,5 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  */
 public interface IEntityService {
 
-    boolean validate(AbstractEntity pAbstractEntity) throws ModuleException;
+    void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 }

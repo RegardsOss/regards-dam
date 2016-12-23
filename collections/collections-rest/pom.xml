@@ -14,7 +14,7 @@
 	</parent>
 
 	<dependencies>
-	<!-- Starters -->
+		<!-- Starters -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>module-regards-starter</artifactId>
@@ -30,6 +30,10 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.collections</groupId>
 			<artifactId>collections-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service</artifactId>
 		</dependency>
 		<!-- Test -->
 		<dependency>

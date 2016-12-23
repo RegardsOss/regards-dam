@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
 import org.springframework.cloud.netflix.feign.support.SpringMvcContract;
 import org.springframework.hateoas.PagedResources;
@@ -26,7 +25,6 @@ import feign.hystrix.HystrixFeign;
 import fr.cnes.regards.client.core.TokenClientProvider;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
-import fr.cnes.regards.modules.dataaccess.client.IAccessRightClient;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 
 /**
@@ -45,9 +43,6 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
     @Value("${server.address}")
     private String serverAddress;
 
-    @LocalServerPort
-    private int serverPort;
-
     /**
      *
      * Check that the access right Feign Client handle the pagination parameters.
@@ -63,7 +58,7 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
             final IAccessRightClient accessRightClient = HystrixFeign.builder().contract(new SpringMvcContract())
                     .encoder(new GsonEncoder()).decoder(new ResponseEntityDecoder(new GsonDecoder()))
                     .target(new TokenClientProvider<>(IAccessRightClient.class,
-                            "http://" + serverAddress + ":" + serverPort));
+                            "http://" + serverAddress + ":" + getPort()));
             final ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> accessRights = accessRightClient
                     .retrieveAccessRightsList(null, null, null, 0, 10);
             Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));

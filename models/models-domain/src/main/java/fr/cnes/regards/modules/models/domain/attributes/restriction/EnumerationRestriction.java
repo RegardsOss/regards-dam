@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.schema.Enumeration;
@@ -33,6 +34,7 @@ public class EnumerationRestriction extends AbstractRestriction {
      * Acceptable values, relevant for {@link AttributeType#ENUMERATION} attributes
      */
     @ElementCollection
+    @NotNull
     private Set<String> acceptableValues;
 
     public EnumerationRestriction() {
@@ -58,11 +60,6 @@ public class EnumerationRestriction extends AbstractRestriction {
     @Override
     public Boolean supports(AttributeType pAttributeType) {
         return AttributeType.STRING.equals(pAttributeType) || AttributeType.STRING_ARRAY.equals(pAttributeType);
-    }
-
-    @Override
-    public Boolean isPublic() {
-        return Boolean.TRUE;
     }
 
     @Override

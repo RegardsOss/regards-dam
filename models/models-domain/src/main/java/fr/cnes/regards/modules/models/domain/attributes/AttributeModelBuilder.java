@@ -89,28 +89,18 @@ public final class AttributeModelBuilder {
         return attributeModel;
     }
 
-    public AttributeModel withDateISO8601Restriction() {
-        return withRestriction(RestrictionFactory.buildDateISO8601Restriction());
-    }
-
     public AttributeModel withEnumerationRestriction(String... pAcceptableValues) {
         return withRestriction(RestrictionFactory.buildEnumerationRestriction(pAcceptableValues));
     }
 
-    public AttributeModel withFloatRangeRestriction(Float pMinInclusive, Float pMaxInclusive, Float pMinExclusive,
-            Float pMaxExclusive) {
-        return withRestriction(RestrictionFactory.buildFloatRangeRestriction(pMinInclusive, pMaxInclusive,
-                                                                             pMinExclusive, pMaxExclusive));
+    public AttributeModel withFloatRangeRestriction(Double pMin, Double pMax, boolean pMinExcluded,
+            boolean pMaxExcluded) {
+        return withRestriction(RestrictionFactory.buildFloatRangeRestriction(pMin, pMax, pMinExcluded, pMaxExcluded));
     }
 
-    public AttributeModel withGeometryRestriction() {
-        return withRestriction(RestrictionFactory.buildGeometryRestriction());
-    }
-
-    public AttributeModel withIntegerRangeRestriction(Integer pMinInclusive, Integer pMaxInclusive,
-            Integer pMinExclusive, Integer pMaxExclusive) {
-        return withRestriction(RestrictionFactory.buildIntegerRangeRestriction(pMinInclusive, pMaxInclusive,
-                                                                               pMinExclusive, pMaxExclusive));
+    public AttributeModel withIntegerRangeRestriction(Integer pMin, Integer pMax, boolean pMinExcluded,
+            boolean pMaxExcluded) {
+        return withRestriction(RestrictionFactory.buildIntegerRangeRestriction(pMin, pMax, pMinExcluded, pMaxExcluded));
     }
 
     public AttributeModel withoutRestriction() {
@@ -120,9 +110,5 @@ public final class AttributeModelBuilder {
 
     public AttributeModel withPatternRestriction(String pPattern) {
         return withRestriction(RestrictionFactory.buildPatternRestriction(pPattern));
-    }
-
-    public AttributeModel withUrlRestriction() {
-        return withRestriction(RestrictionFactory.buildUrlRestriction());
     }
 }

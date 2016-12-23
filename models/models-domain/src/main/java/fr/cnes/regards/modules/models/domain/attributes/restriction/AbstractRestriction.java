@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.SequenceGenerator;
+import javax.validation.constraints.NotNull;
 
 import com.google.gson.annotations.JsonAdapter;
 
@@ -34,13 +35,13 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
      */
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "restrictionSequence")
-    private Long id;
+    protected Long id;
 
     /**
      * Attribute restriction type
      */
     @Enumerated(EnumType.STRING)
-    public RestrictionType type;
+    protected RestrictionType type;
 
     @Override
     public Long getId() {
@@ -52,6 +53,7 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
     }
 
     @Override
+    @NotNull
     public RestrictionType getType() {
         return type;
     }

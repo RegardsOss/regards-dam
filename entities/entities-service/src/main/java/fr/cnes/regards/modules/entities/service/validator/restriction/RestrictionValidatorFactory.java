@@ -3,18 +3,15 @@
  */
 package fr.cnes.regards.modules.entities.service.validator.restriction;
 
-import java.util.EnumMap;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.validation.Validator;
 
-import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 
 /**
  * Restriction validator factory
@@ -22,7 +19,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionT
  * @author Marc Sordi
  *
  */
-@Service
 public final class RestrictionValidatorFactory {
 
     /**
@@ -30,62 +26,29 @@ public final class RestrictionValidatorFactory {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(RestrictionValidatorFactory.class);
 
-    /**
-     * Validators
-     */
-    private Map<RestrictionType, Validator> validators;
-
-    @PostConstruct
-    private void initFactory() throws UnknownRestrictionValidatorException {
-        initValidators();
+    private RestrictionValidatorFactory() {
     }
 
-    public Validator getValidator(IRestriction pRestriction) throws UnknownRestrictionValidatorException {
-        return validators.get(pRestriction.getType());
+    public static Validator getValidator(AbstractRestriction pRestriction, String pAttributeKey) {
+        String errorMessage = String.format("No validator found for restriction type %s and attribute %s.",
+                                            pRestriction.getType(), pAttributeKey);
+        LOGGER.debug(errorMessage);
+        throw new UnsupportedOperationException(errorMessage);
     }
 
-    private void initValidators() throws UnknownRestrictionValidatorException {
-        if (validators == null) {
-            validators = new EnumMap<>(RestrictionType.class);
-            for (RestrictionType rType : RestrictionType.values()) {
-                validators.put(rType, getValidatorInstance(rType));
-            }
-        }
+    public static Validator getValidator(EnumerationRestriction pRestriction, String pAttributeKey) {
+        return new EnumerationValidator(pRestriction, pAttributeKey);
     }
 
-    private Validator getValidatorInstance(RestrictionType pRestrictionType)
-            throws UnknownRestrictionValidatorException {
-        Validator validator;
-        switch (pRestrictionType) {
-            case NO_RESTRICTION:
-                validator = new NoRestrictionValidator();
-                break;
-            case DATE_ISO8601:
-                validator = new DateIso8601Validator();
-                break;
-            case ENUMERATION:
-                validator = new EnumerationValidator();
-                break;
-            case FLOAT_RANGE:
-                validator = new FloatRangeValidator();
-                break;
-            case GEOMETRY:
-                validator = new GeometryValidator();
-                break;
-            case INTEGER_RANGE:
-                validator = new IntegerRangeValidator();
-                break;
-            case PATTERN:
-                validator = new PatternValidator();
-                break;
-            case URL:
-                validator = new UrlValidator();
-                break;
-            default:
-                String errorMessage = String.format("No validator found for restriction %s.", pRestrictionType);
-                LOGGER.debug(errorMessage);
-                throw new UnknownRestrictionValidatorException(errorMessage);
-        }
-        return validator;
+    public static Validator getValidator(FloatRangeRestriction pRestriction, String pAttributeKey) {
+        return new FloatRangeValidator(pRestriction, pAttributeKey);
+    }
+
+    public static Validator getValidator(IntegerRangeRestriction pRestriction, String pAttributeKey) {
+        return new IntegerRangeValidator(pRestriction, pAttributeKey);
+    }
+
+    public static Validator getValidator(PatternRestriction pRestriction, String pAttributeKey) {
+        return new PatternValidator(pRestriction, pAttributeKey);
     }
 }

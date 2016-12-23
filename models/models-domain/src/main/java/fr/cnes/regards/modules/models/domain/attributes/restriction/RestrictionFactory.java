@@ -15,10 +15,6 @@ public final class RestrictionFactory {
     private RestrictionFactory() {
     }
 
-    public static DateISO8601Restriction buildDateISO8601Restriction() {
-        return new DateISO8601Restriction();
-    }
-
     public static EnumerationRestriction buildEnumerationRestriction(String... pAcceptableValues) {
         final EnumerationRestriction er = new EnumerationRestriction();
         if (pAcceptableValues != null) {
@@ -29,27 +25,23 @@ public final class RestrictionFactory {
         return er;
     }
 
-    public static FloatRangeRestriction buildFloatRangeRestriction(Float pMinInclusive, Float pMaxInclusive,
-            Float pMinExclusive, Float pMaxExclusive) {
+    public static FloatRangeRestriction buildFloatRangeRestriction(Double pMin, Double pMax, boolean pMinExcluded,
+            boolean pMaxExcluded) {
         final FloatRangeRestriction frr = new FloatRangeRestriction();
-        frr.setMinInclusive(pMinInclusive);
-        frr.setMaxInclusive(pMaxInclusive);
-        frr.setMinExclusive(pMinExclusive);
-        frr.setMaxExclusive(pMaxExclusive);
+        frr.setMin(pMin);
+        frr.setMax(pMax);
+        frr.setMinExcluded(pMinExcluded);
+        frr.setMaxExcluded(pMaxExcluded);
         return frr;
     }
 
-    public static GeometryRestriction buildGeometryRestriction() {
-        return new GeometryRestriction();
-    }
-
-    public static IntegerRangeRestriction buildIntegerRangeRestriction(Integer pMinInclusive, Integer pMaxInclusive,
-            Integer pMinExclusive, Integer pMaxExclusive) {
+    public static IntegerRangeRestriction buildIntegerRangeRestriction(Integer pMin, Integer pMax, boolean pMinExcluded,
+            boolean pMaxExcluded) {
         final IntegerRangeRestriction irr = new IntegerRangeRestriction();
-        irr.setMinInclusive(pMinInclusive);
-        irr.setMaxInclusive(pMaxInclusive);
-        irr.setMinExclusive(pMinExclusive);
-        irr.setMaxExclusive(pMaxExclusive);
+        irr.setMin(pMin);
+        irr.setMax(pMax);
+        irr.setMinExcluded(pMinExcluded);
+        irr.setMaxExcluded(pMaxExcluded);
         return irr;
     }
 
@@ -57,9 +49,5 @@ public final class RestrictionFactory {
         final PatternRestriction pr = new PatternRestriction();
         pr.setPattern(pPattern);
         return pr;
-    }
-
-    public static UrlRestriction buildUrlRestriction() {
-        return new UrlRestriction();
     }
 }

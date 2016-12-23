@@ -3,7 +3,7 @@
  */
 /**
  *
- * Domain validator package
+ * Attribute level validator package
  *
  * @author Marc Sordi
  *
