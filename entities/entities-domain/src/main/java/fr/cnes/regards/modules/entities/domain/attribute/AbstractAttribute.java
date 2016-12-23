@@ -51,9 +51,4 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
     }
 
     public abstract boolean represents(AttributeType pAttributeType);
-
-    @Override
-    public int hashCode() {
-        return name.hashCode() + value.hashCode();
-    }
 }
