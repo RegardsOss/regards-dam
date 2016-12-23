@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.crawler.dao;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -19,11 +20,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
+import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
 
 /**
  * EsRepository test
@@ -55,7 +58,7 @@ public class EsRepositoryTest {
         cleanFct.accept("items");
         cleanFct.accept("mergeditems");
         cleanFct.accept("bulktest");
-        // cleanFct.accept("loading");
+        cleanFct.accept("loading");
     }
 
     @AfterClass
@@ -89,12 +92,12 @@ public class EsRepositoryTest {
     public void testSaveGetDelete() {
         repository.createIndex("items");
         // Creations for first two
-        final Item item1 = new Item(1, "group1", "group2", "group3");
-        Assert.assertTrue(repository.save("items", "test", "1", item1));
-        Assert.assertTrue(repository.save("items", "test", "2", new Item(2, "group1", "group3")));
+        final Item item1 = new Item("1", "test", "group1", "group2", "group3");
+        Assert.assertTrue(repository.save("items", item1));
+        Assert.assertTrue(repository.save("items", new Item("2", "test", "group1", "group3")));
         // Update
-        final Item item2 = new Item(2, "group4", "group5");
-        Assert.assertFalse(repository.save("items", "test", "2", item2));
+        final Item item2 = new Item("2", "test", "group4", "group5");
+        Assert.assertFalse(repository.save("items", item2));
 
         // Get
         final Item item1FromIndex = repository.get("items", "test", "1", Item.class);
@@ -105,15 +108,22 @@ public class EsRepositoryTest {
         Assert.assertNull(repository.get("items", "test", "3", Item.class));
 
         // Save and get an empty item
-        repository.save("items", "test", "3", new Item());
-        Assert.assertNotNull(repository.get("items", "test", "3", Item.class));
+        try {
+            repository.save("items", new Item());
+            Assert.fail("docId and type not provided, this should have thrown an IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+        }
+
+        // Testing get method with an Item as parameter (instead of id and type)
+        Item toFindItem = new Item("1", "test");
+        toFindItem = repository.get("items", toFindItem);
 
         // Delete
         Assert.assertTrue(repository.delete("items", "test", "1"));
         Assert.assertTrue(repository.delete("items", "test", "2"));
-        Assert.assertTrue(repository.delete("items", "test", "3"));
         Assert.assertFalse(repository.delete("items", "test", "4"));
         Assert.assertFalse(repository.delete("items", "test", "1"));
+
     }
 
     /**
@@ -123,11 +133,11 @@ public class EsRepositoryTest {
     public void testMerge() {
         repository.createIndex("mergeditems");
         // Creations for firt two
-        final Item item1 = new Item(1, "group1", "group2", "group3");
+        final Item item1 = new Item("1", "test", "group1", "group2", "group3");
         // final Item subItem = new Item(10);
         // subItem.setName("Bert");
         // item1.setSubItem(subItem);
-        Assert.assertTrue(repository.save("mergeditems", "test", "1", item1));
+        Assert.assertTrue(repository.save("mergeditems", item1));
 
         // Add name and change groups
         final Map<String, Object> propsMap = new HashMap<>();
@@ -140,36 +150,46 @@ public class EsRepositoryTest {
         Assert.assertNotNull(item1FromIndex.getGroups());
         Assert.assertEquals(1, item1FromIndex.getGroups().size());
         Assert.assertEquals("group1", item1FromIndex.getGroups().get(0));
-        Assert.assertEquals(1, item1FromIndex.getId());
+        Assert.assertEquals("1", item1FromIndex.getDocId());
 
         // Adding subItem
         propsMap.clear();
         propsMap.put("subItem.name", "Bart");
-        propsMap.put("subItem.id", 20);
         propsMap.put("subItem.groups", new String[] { "G1, G2" });
 
         Assert.assertTrue(repository.merge("mergeditems", "test", "1", propsMap));
         item1FromIndex = repository.get("mergeditems", "test", "1", Item.class);
         Assert.assertNotNull(item1FromIndex.getSubItem());
         Assert.assertEquals("Bart", item1FromIndex.getSubItem().getName());
-        Assert.assertEquals(20, item1FromIndex.getSubItem().getId());
+        Assert.assertNull(item1FromIndex.getSubItem().getDocId());
         Assert.assertEquals(Arrays.asList(new String[] { "G1, G2" }), item1FromIndex.getSubItem().getGroups());
     }
 
     @Test
     public void testBulkSave() {
-        final Item item1 = new Item(1, "group1", "group2", "group3");
-        final Item item2 = new Item(1, "group1", "group2", "group3");
-        final Map<String, Object> map = new HashMap<>();
-        map.put("1", item1);
-        map.put("2", item2);
-        map.put("25", this.getClass());
-        final Map<String, Throwable> errorMap = repository.saveBulk("bulktest", "items", map);
-        Assert.assertNotNull(errorMap);
-        Assert.assertEquals(1, errorMap.size());
+        // Twice same first item (=> create then update) plus an empty item
+        final Item item1 = new Item("1", "test", "group1", "group2", "group3");
+        final Item item2 = new Item("1", "test", "group1", "group2", "group3");
+        final List<Item> list = new ArrayList<>();
+        list.add(item1);
+        list.add(item2);
+        list.add(new Item());
+        try {
+            repository.saveBulk("bulktest", list);
+            Assert.fail("saveBulk should have thrown an IllegalArgumentException (last item does not provide id nor "
+                    + "type ");
+        } catch (IllegalArgumentException e) {
+        }
+
+        // remove failed item
+        list.remove(2);
+        final Map<String, Throwable> errorMap = repository.saveBulk("bulktest", list);
+        Assert.assertNull(errorMap);
+
+        // If someone could find a case when a document save failed...Don't hesitate to talk it to me
     }
 
-    @Test
+    // @Test
     public void testLoad() {
         loadItemsBulk(100_000);
     }
@@ -179,21 +199,23 @@ public class EsRepositoryTest {
      * @param pCount number of documents to insert
      */
     private void loadItemsBulk(int pCount) {
+        repository.createIndex("loading");
+
         final LoremIpsum loremIpsum = new LoremIpsum();
         final String[] words = loremIpsum.getWords(100).split(" ");
 
-        final Map<String, Item> itemMap = new HashMap<>();
+        final List<Item> items = new ArrayList<>();
         for (int i = 0; i < pCount; i++) {
-            final Item item = new Item(i, Stream.generate(() -> words[(int) (Math.random() * words.length)])
-                    .limit((int) (Math.random() * 10)).collect(Collectors.toSet()).toArray(new String[0]));
+            final Item item = new Item(Integer.toString(i), "test",
+                    Stream.generate(() -> words[(int) (Math.random() * words.length)]).limit((int) (Math.random() * 10))
+                            .collect(Collectors.toSet()).toArray(new String[0]));
             item.setName(words[(int) (Math.random() * words.length)]);
-            item.setId(i);
             item.setHeight((int) (Math.random() * 1000));
             item.setPrice(Math.random() * 10000.);
-            itemMap.put(Integer.toString(i), item);
+            items.add(item);
         }
         final long start = System.currentTimeMillis();
-        repository.saveBulk("loading", "items", itemMap);
+        repository.saveBulk("loading", items);
         System.out.println("Loading (" + pCount + " items): " + (System.currentTimeMillis() - start) + " ms");
     }
 
@@ -202,6 +224,9 @@ public class EsRepositoryTest {
      */
     @Test
     public void testSearchAll() {
+        int count = 100_000;
+        loadItemsBulk(count);
+
         Page<Item> itemsPage = repository.searchAllLimited("loading", Item.class, 100);
         while (!itemsPage.isLast() && (itemsPage.getNumber() < 99)) {
             itemsPage = repository.searchAllLimited("loading", Item.class, itemsPage.nextPageable());
@@ -210,7 +235,7 @@ public class EsRepositoryTest {
         long start = System.currentTimeMillis();
         repository.searchAll("loading", h -> i.getAndIncrement());
         System.out.println((System.currentTimeMillis() - start) + " ms");
-        Assert.assertEquals(100_000, i.get());
+        Assert.assertEquals(count, i.get());
 
         final ObjectMapper jsonMapper = new ObjectMapper();
         start = System.currentTimeMillis();
@@ -227,9 +252,7 @@ public class EsRepositoryTest {
     /**
      * Item class
      */
-    private static final class Item implements Serializable {
-
-        private int id;
+    private static class Item extends AbstractIndexable implements Serializable {
 
         private String name;
 
@@ -244,25 +267,16 @@ public class EsRepositoryTest {
         public Item() {
         }
 
-        public Item(int id, String... groups) {
-            this.id = id;
+        public Item(String id, String type, String... groups) {
+            super(id, type);
             this.groups = Lists.newArrayList(groups);
         }
 
-        public Item(int id, String name, int height, double price, String... groups) {
-            this(id, groups);
+        public Item(String id, String type, String name, int height, double price, String... groups) {
+            this(id, type, groups);
             this.name = name;
             this.height = height;
             this.price = price;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        @SuppressWarnings("unused")
-        public void setId(int pId) {
-            id = pId;
         }
 
         public List<String> getGroups() {
@@ -306,30 +320,15 @@ public class EsRepositoryTest {
             this.price = price;
         }
 
+        @JsonProperty("id")
         @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = (prime * result) + id;
-            return result;
+        public String getDocId() {
+            return super.getDocId();
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final Item other = (Item) obj;
-            if (id != other.id) {
-                return false;
-            }
-            return true;
+        public void setDocId(String pDocId) {
+            super.setDocId(pDocId);
         }
 
     }

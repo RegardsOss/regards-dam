@@ -19,6 +19,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
@@ -39,6 +40,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+
+import fr.cnes.regards.modules.crawler.domain.IIndexable;
 
 /**
  * Elasticsearch repository implementation
@@ -159,10 +162,17 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    private void checkDocument(IIndexable pDoc) throws IllegalArgumentException {
+        if (Strings.isNullOrEmpty(pDoc.getDocId()) || Strings.isNullOrEmpty(pDoc.getType())) {
+            throw new IllegalArgumentException("docId and type are mandatory on an IIndexable object");
+        }
+    }
+
     @Override
-    public boolean save(String pIndex, String pType, String pId, Object pDocument) {
+    public boolean save(String pIndex, IIndexable pDocument) {
+        checkDocument(pDocument);
         try {
-            final IndexResponse response = client.prepareIndex(pIndex, pType, pId)
+            final IndexResponse response = client.prepareIndex(pIndex, pDocument.getType(), pDocument.getDocId())
                     .setSource(jsonMapper.writeValueAsBytes(pDocument)).get();
             return (response.getResult() == Result.CREATED);
         } catch (final JsonProcessingException jpe) {
@@ -171,12 +181,16 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public Map<String, Throwable> saveBulk(String pIndex, String pType, Map<String, ?> pDocumentMap) {
+    public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
+            @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException {
+        for (T doc : pDocuments) {
+            checkDocument(doc);
+        }
         try {
             final BulkRequestBuilder bulkRequest = client.prepareBulk();
-            for (final Map.Entry<String, ?> entry : pDocumentMap.entrySet()) {
-                bulkRequest.add(client.prepareIndex(pIndex, pType, entry.getKey())
-                        .setSource(jsonMapper.writeValueAsBytes(entry.getValue())));
+            for (T doc : pDocuments) {
+                bulkRequest.add(client.prepareIndex(pIndex, doc.getType(), doc.getDocId())
+                        .setSource(jsonMapper.writeValueAsBytes(doc)));
             }
             final BulkResponse response = bulkRequest.get();
             Map<String, Throwable> errorMap = null;

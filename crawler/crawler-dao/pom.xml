@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>fr.cnes.regards.modules.crawler</groupId>
 	<artifactId>crawler-dao</artifactId>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
@@ -33,6 +33,24 @@
 			<!-- <version>2.7</version> -->
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
 
 		<!-- Test dependencies -->
 		<dependency>
@@ -40,24 +58,19 @@
 			<artifactId>regards-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-<!-- 		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-test-framework</artifactId>
-			<version>6.3.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.test</groupId>
-			<artifactId>framework</artifactId>
-			<version>5.1.1</version>
-			<scope>test</scope>
-		</dependency>
- -->
+		<!-- <dependency> <groupId>org.apache.lucene</groupId> <artifactId>lucene-test-framework</artifactId> 
+			<version>6.3.0</version> <scope>test</scope> </dependency> <dependency> <groupId>org.elasticsearch.test</groupId> 
+			<artifactId>framework</artifactId> <version>5.1.1</version> <scope>test</scope> 
+			</dependency> -->
 		<dependency>
 			<groupId>de.sven-jacobs</groupId>
 			<artifactId>loremipsum</artifactId>
 			<version>1.0</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.crawler</groupId>
+			<artifactId>crawler-domain</artifactId>
 		</dependency>
 	</dependencies>
 </project>
