@@ -9,6 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -58,22 +59,129 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     }
 
     @Override
-    protected JsonElement beforeExtractingDiscriminator(JsonElement pJsonElement) {
-        return Flattener.restore(pJsonElement, DISCRIMINATOR_FIELD_NAME, VALUE_FIELD_NAME);
+    protected JsonElement getOnReadDiscriminator(JsonElement pJsonElement) {
+        JsonElement discriminator = null;
+        if (pJsonElement.isJsonObject()) {
+            JsonObject o = pJsonElement.getAsJsonObject();
+            if (o.size() != 1) {
+                String errorMessage = String.format("Only single key/value pair is expected in \"%s\"", pJsonElement);
+                LOGGER.error(errorMessage);
+                throw new IllegalArgumentException(errorMessage);
+            }
+            for (Map.Entry<String, JsonElement> entry : o.entrySet()) {
+                return new JsonPrimitive(entry.getKey());
+            }
+        }
+        return discriminator;
     }
 
     @Override
     protected JsonElement beforeRead(JsonElement pJsonElement, String pDiscriminator, Class<?> pSubType) {
+        JsonElement restored = restore(pJsonElement, pSubType);
         if (pSubType == ObjectAttribute.class) {
-            addNamespaceToChildren(pJsonElement, pDiscriminator);
+            addNamespaceToChildren(restored, pDiscriminator);
         }
-        removeParentNamespace(pJsonElement);
-        return pJsonElement;
+        removeParentNamespace(restored);
+        return restored;
     }
 
     @Override
     protected JsonElement beforeWrite(JsonElement pJsonElement, Class<?> pSubType) {
-        return Flattener.flatten(pJsonElement, DISCRIMINATOR_FIELD_NAME, VALUE_FIELD_NAME);
+        return flatten(pJsonElement, pSubType);
+    }
+
+    /**
+     * Flatten a {@link JsonElement} carrying key and value in separated fields into a single field whose key is the
+     * value of the key field and value the value of the value field
+     *
+     * @param pJsonElement
+     *            {@link JsonElement} to flatten
+     * @param pSubType
+     *            sub type
+     * @return flattened {@link JsonElement}
+     */
+    protected JsonElement flatten(JsonElement pJsonElement, Class<?> pSubType) {
+        LOGGER.debug(String.format("Flattening %s", pJsonElement));
+
+        if (!pJsonElement.isJsonObject()) {
+            String format = "JSON element must be an object containing 2 members whose names are \"%s\" and \"%s\"";
+            String errorMessage = String.format(format, DISCRIMINATOR_FIELD_NAME, VALUE_FIELD_NAME);
+            LOGGER.error(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        JsonObject current = pJsonElement.getAsJsonObject();
+
+        // Init flattened element
+        JsonObject flattened = new JsonObject();
+        // Get key : must be a string
+        JsonElement key = current.get(DISCRIMINATOR_FIELD_NAME);
+        // Get value
+        JsonElement val = current.get(VALUE_FIELD_NAME);
+
+        if (pSubType == ObjectAttribute.class) {
+            // Flattening array elements
+            JsonObject flattenedObject = new JsonObject();
+            Iterator<JsonElement> nestedIter = val.getAsJsonArray().iterator();
+            while (nestedIter.hasNext()) {
+                JsonObject nested = nestedIter.next().getAsJsonObject();
+                for (Map.Entry<String, JsonElement> e : nested.entrySet()) {
+                    flattenedObject.add(e.getKey(), e.getValue());
+                }
+            }
+            flattened.add(key.getAsString(), flattenedObject);
+        } else {
+            flattened.add(key.getAsString(), val);
+        }
+
+        LOGGER.debug(String.format("Flattened object : \"%s\" -> \"%s\"", pJsonElement, flattened));
+
+        return flattened;
+    }
+
+    /**
+     * Restore {@link JsonElement} object structure (inverse flattening)
+     *
+     * @param pJsonElement
+     *            {@link JsonElement} to restore
+     * @param pSubType
+     *            sub type
+     * @return restored {@link JsonElement}
+     */
+    protected JsonElement restore(JsonElement pJsonElement, Class<?> pSubType) {
+        LOGGER.debug(String.format("Restoring %s", pJsonElement));
+
+        if (!pJsonElement.isJsonObject()) {
+            String errorMessage = "JSON element must be an object.";
+            LOGGER.error(errorMessage);
+            throw new IllegalArgumentException(errorMessage);
+        }
+
+        JsonObject current = pJsonElement.getAsJsonObject();
+
+        // Init restored element
+        JsonObject restored = new JsonObject();
+        // Restore members
+        for (Map.Entry<String, JsonElement> e : current.entrySet()) {
+            restored.addProperty(DISCRIMINATOR_FIELD_NAME, e.getKey());
+            JsonElement val = e.getValue();
+            if (pSubType == ObjectAttribute.class) {
+                // Restoring array but not element structure
+                JsonArray restoredArray = new JsonArray();
+                for (Map.Entry<String, JsonElement> nestedEntry : val.getAsJsonObject().entrySet()) {
+                    JsonObject nestedObject = new JsonObject();
+                    nestedObject.add(nestedEntry.getKey(), nestedEntry.getValue());
+                    restoredArray.add(nestedObject);
+                }
+                restored.add(VALUE_FIELD_NAME, restoredArray);
+            } else {
+                restored.add(VALUE_FIELD_NAME, val);
+            }
+        }
+
+        LOGGER.debug(String.format("Restored object : \"%s\" -> \"%s\"", pJsonElement, restored));
+
+        return restored;
     }
 
     /**
