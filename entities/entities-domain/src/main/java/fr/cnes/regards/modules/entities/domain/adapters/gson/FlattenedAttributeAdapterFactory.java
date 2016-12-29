@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.domain.adapters.gson;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,25 +14,20 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
-import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 
 /**
- *
- * Factory for (de)serialize {@link AbstractAttribute}
- *
  * @author Marc Sordi
  *
  */
 @SuppressWarnings("rawtypes")
-@GsonTypeAdapterFactoryBean
-public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
+public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
 
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(AttributeAdapterFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlattenedAttributeAdapterFactory.class);
 
     /**
      * Discriminator field
@@ -41,7 +37,7 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     /**
      * Discriminator field
      */
-    private static final String VALUE_FIELD = "value";
+    private static final String VALUE_FIELD_NAME = "value";
 
     /**
      * Namespace separator
@@ -53,12 +49,17 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
      */
     private static final String REGEXP_ESCAPE = "\\";
 
-    public AttributeAdapterFactory() {
+    public FlattenedAttributeAdapterFactory() {
         super(AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
     }
 
     public void registerSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
         registerSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+    }
+
+    @Override
+    protected JsonElement beforeExtractingDiscriminator(JsonElement pJsonElement) {
+        return Flattener.restore(pJsonElement, DISCRIMINATOR_FIELD_NAME, VALUE_FIELD_NAME);
     }
 
     @Override
@@ -68,6 +69,11 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
         }
         removeParentNamespace(pJsonElement);
         return pJsonElement;
+    }
+
+    @Override
+    protected JsonElement beforeWrite(JsonElement pJsonElement, Class<?> pSubType) {
+        return Flattener.flatten(pJsonElement, DISCRIMINATOR_FIELD_NAME, VALUE_FIELD_NAME);
     }
 
     /**
@@ -81,10 +87,10 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     protected void addNamespaceToChildren(JsonElement pJsonElement, String pDiscriminator) {
 
         if (pJsonElement.isJsonObject()) {
-            final JsonElement children = pJsonElement.getAsJsonObject().get(VALUE_FIELD);
+            final JsonElement children = pJsonElement.getAsJsonObject().get(VALUE_FIELD_NAME);
 
             if (children == null) {
-                throw missingFieldException(pJsonElement, VALUE_FIELD);
+                throw missingFieldException(pJsonElement, VALUE_FIELD_NAME);
             }
 
             if (children.isJsonArray()) {
@@ -101,7 +107,7 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     }
 
     /**
-     * Add namespace to {@link JsonElement} child
+     * Add namespace to {@link JsonElement} child keys
      *
      * @param pJsonElement
      *            {@link JsonElement}
@@ -116,15 +122,12 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
             String logOriginal = pJsonElement.toString();
             JsonObject o = pJsonElement.getAsJsonObject();
 
-            JsonElement originalElement = o.get(DISCRIMINATOR_FIELD_NAME);
-            if (originalElement == null) {
-                throw missingFieldException(pJsonElement, DISCRIMINATOR_FIELD_NAME);
+            for (Map.Entry<String, JsonElement> entry : o.entrySet()) {
+                // Add new key mapping
+                o.add(pDiscriminator.concat(NS_SEPARATOR).concat(entry.getKey()), entry.getValue());
+                // Remove old key mapping
+                o.remove(entry.getKey());
             }
-
-            // Compute and inject name with its namespace
-            String originalName = originalElement.getAsString();
-            String nsName = pDiscriminator.concat(NS_SEPARATOR).concat(originalName);
-            o.add(DISCRIMINATOR_FIELD_NAME, new JsonPrimitive(nsName));
 
             LOGGER.debug(String.format("Namespace added : \"%s\" -> \"%s\"", logOriginal, pJsonElement.toString()));
         } else {
@@ -177,7 +180,7 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     }
 
     private IllegalArgumentException missingFieldException(JsonElement pJsonElement, String pFieldName) {
-        String errorMessage = String.format("JSON element %s must contains a %s field", pJsonElement.toString(),
+        String errorMessage = String.format("JSON element %s must contains a \"%s\" field", pJsonElement.toString(),
                                             pFieldName);
         LOGGER.error(errorMessage);
         return new IllegalArgumentException(errorMessage);
