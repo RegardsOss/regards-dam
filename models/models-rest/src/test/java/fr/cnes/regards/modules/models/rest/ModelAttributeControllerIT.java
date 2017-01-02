@@ -188,6 +188,22 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id").value(att.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type").value(att.getType().toString()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0]content.model.type").value(mod.getType().toString()));
+
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id").value(att2.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type").value(att2.getType().toString()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
+
         performDefaultGet(ModelAttributeController.TYPE_MAPPING, expectations, "All attributes should be listed",
                           mod.getId());
 
@@ -280,6 +296,22 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
+
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.id").value(att.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.name").value(att.getName()));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[0].content.attribute.type").value(att.getType().toString()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0]content.model.id").value(mod.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0]content.model.name").value(mod.getName()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[0]content.model.type").value(mod.getType().toString()));
+
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.id").value(att2.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.name").value(att2.getName()));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[1].content.attribute.type").value(att2.getType().toString()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.id").value(mod.getId().intValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
 
         performDefaultPost(ModelAttributeController.TYPE_MAPPING + fragmentApi, null, expectations,
                            "Should bind fragment", mod.getId(), frag.getId());
