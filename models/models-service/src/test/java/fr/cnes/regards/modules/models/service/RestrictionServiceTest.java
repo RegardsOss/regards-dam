@@ -58,9 +58,9 @@ public class RestrictionServiceTest {
 
     @Test
     public void getFloatRestriction() {
-        testRestriction(AttributeType.DOUBLE, 1, RestrictionType.FLOAT_RANGE);
-        testRestriction(AttributeType.DOUBLE_ARRAY, 1, RestrictionType.FLOAT_RANGE);
-        testRestriction(AttributeType.DOUBLE_INTERVAL, 1, RestrictionType.FLOAT_RANGE);
+        testRestriction(AttributeType.DOUBLE, 1, RestrictionType.DOUBLE_RANGE);
+        testRestriction(AttributeType.DOUBLE_ARRAY, 1, RestrictionType.DOUBLE_RANGE);
+        testRestriction(AttributeType.DOUBLE_INTERVAL, 1, RestrictionType.DOUBLE_RANGE);
     }
 
     @Test

@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -27,8 +28,8 @@ import javax.validation.constraints.Size;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
@@ -36,6 +37,7 @@ import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
 import fr.cnes.regards.modules.models.schema.Property;
 import fr.cnes.regards.modules.models.schema.Restriction;
+import fr.cnes.regards.modules.models.schema.Type;
 
 /**
  * @author msordi
@@ -70,12 +72,32 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private String description;
 
     /**
+     * Default value
+     */
+    private String defaultValue;
+
+    /**
      * Attribute type
      */
     @NotNull
     @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private AttributeType type;
+
+    /**
+     * Unit useful for number based attributes
+     */
+    private String unit;
+
+    /**
+     * Precision useful for double based attributes
+     */
+    private Integer precision;
+
+    /**
+     * Array size useful for array based attributes
+     */
+    private Integer arraysize;
 
     /**
      * Optional fragment
@@ -125,6 +147,11 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Custom attribute properties
      */
     private List<Property> properties;
+
+    /**
+     * Reference
+     */
+    private String ref;
 
     @Override
     public Long getId() {
@@ -232,55 +259,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         facetable = pFacetable;
     }
 
-    @Override
-    public Attribute toXml() {
-        final Attribute xmlAtt = new Attribute();
-        xmlAtt.setName(name);
-        xmlAtt.setDescription(description);
-        xmlAtt.setAlterable(alterable);
-        xmlAtt.setFacetable(facetable);
-        xmlAtt.setOptional(optional);
-        xmlAtt.setQueryable(queryable);
-        if (restriction != null) {
-            xmlAtt.setRestriction(restriction.toXml());
-        }
-        xmlAtt.setType(type.toString());
-        xmlAtt.setGroup(group);
-        xmlAtt.getProperty().addAll(properties);
-        return xmlAtt;
-    }
-
-    @Override
-    public void fromXml(Attribute pXmlElement) {
-        setName(pXmlElement.getName());
-        setDescription(pXmlElement.getDescription());
-        setAlterable(pXmlElement.isAlterable());
-        setFacetable(pXmlElement.isFacetable());
-        setOptional(pXmlElement.isOptional());
-        setQueryable(pXmlElement.isQueryable());
-        if (pXmlElement.getRestriction() != null) {
-            final Restriction xmlRestriction = pXmlElement.getRestriction();
-            if (xmlRestriction.getEnumeration() != null) {
-                restriction = new EnumerationRestriction();
-            } else
-                if (xmlRestriction.getFloatRange() != null) {
-                    restriction = new DoubleRangeRestriction();
-                } else
-                    if (xmlRestriction.getIntegerRange() != null) {
-                        restriction = new IntegerRangeRestriction();
-                    } else
-                        if (xmlRestriction.getPattern() != null) {
-                            restriction = new PatternRestriction();
-                        }
-
-            // Cause null pointer exception if implementation not consistent with XSD
-            restriction.fromXml(pXmlElement.getRestriction());
-        }
-        setType(AttributeType.valueOf(pXmlElement.getType()));
-        setGroup(pXmlElement.getGroup());
-        setProperties(pXmlElement.getProperty());
-    }
-
     public String getGroup() {
         return group;
     }
@@ -295,5 +273,105 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setProperties(List<Property> pProperties) {
         properties = pProperties;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String pUnit) {
+        unit = pUnit;
+    }
+
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    public void setPrecision(Integer pPrecision) {
+        precision = pPrecision;
+    }
+
+    public Integer getArraysize() {
+        return arraysize;
+    }
+
+    public void setArraysize(Integer pArraysize) {
+        arraysize = pArraysize;
+    }
+
+    @Override
+    public Attribute toXml() {
+        final Attribute xmlAtt = new Attribute();
+        xmlAtt.setName(name);
+        xmlAtt.setDescription(description);
+        xmlAtt.setDefaultValue(defaultValue);
+        xmlAtt.setAlterable(alterable);
+        xmlAtt.setFacetable(facetable);
+        xmlAtt.setOptional(optional);
+        xmlAtt.setQueryable(queryable);
+        if (restriction != null) {
+            xmlAtt.setRestriction(restriction.toXml());
+        }
+        Type xmlType = new Type();
+        xmlType.setArraysize(BigInteger.valueOf(arraysize));
+        xmlType.setPrecision(BigInteger.valueOf(precision));
+        xmlType.setUnit(unit);
+        xmlType.setValue(fr.cnes.regards.modules.models.schema.RestrictionType.valueOf(type.toString()));
+        xmlAtt.setType(xmlType);
+        xmlAtt.setGroup(group);
+        xmlAtt.getProperty().addAll(properties);
+        return xmlAtt;
+    }
+
+    @Override
+    public void fromXml(Attribute pXmlElement) {
+        setName(pXmlElement.getName());
+        setDescription(pXmlElement.getDescription());
+        setDefaultValue(pXmlElement.getDefaultValue());
+        setAlterable(pXmlElement.isAlterable());
+        setFacetable(pXmlElement.isFacetable());
+        setOptional(pXmlElement.isOptional());
+        setQueryable(pXmlElement.isQueryable());
+        if (pXmlElement.getRestriction() != null) {
+            final Restriction xmlRestriction = pXmlElement.getRestriction();
+            if (xmlRestriction.getEnumeration() != null) {
+                restriction = new EnumerationRestriction();
+            } else
+                if (xmlRestriction.getDoubleRange() != null) {
+                    restriction = new DoubleRangeRestriction();
+                } else
+                    if (xmlRestriction.getIntegerRange() != null) {
+                        restriction = new IntegerRangeRestriction();
+                    } else
+                        if (xmlRestriction.getPattern() != null) {
+                            restriction = new PatternRestriction();
+                        }
+
+            // Cause null pointer exception if implementation not consistent with XSD
+            restriction.fromXml(pXmlElement.getRestriction());
+        }
+        Type xmlType = pXmlElement.getType();
+        setArraysize(xmlType.getArraysize().intValueExact());
+        setPrecision(xmlType.getPrecision().intValueExact());
+        setUnit(xmlType.getUnit());
+        setType(AttributeType.valueOf(xmlType.getValue().toString()));
+        setGroup(pXmlElement.getGroup());
+        setProperties(pXmlElement.getProperty());
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String pDefaultValue) {
+        defaultValue = pDefaultValue;
+    }
+
+    public String getRef() {
+        return ref;
+    }
+
+    public void setRef(String pRef) {
+        ref = pRef;
     }
 }
