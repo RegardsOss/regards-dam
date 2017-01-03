@@ -108,19 +108,19 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatAttribute() {
-        createAttribute("FLOAT_ATT", "float description", AttributeType.FLOAT);
+        createAttribute("FLOAT_ATT", "float description", AttributeType.DOUBLE);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatArrayAttribute() {
-        createAttribute("FLOAT_ARRAY_ATT", "float array description", AttributeType.FLOAT_ARRAY);
+        createAttribute("FLOAT_ARRAY_ATT", "float array description", AttributeType.DOUBLE_ARRAY);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatIntervalAttribute() {
-        createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.FLOAT_INTERVAL);
+        createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.DOUBLE_INTERVAL);
     }
 
     @Test

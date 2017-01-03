@@ -7,42 +7,42 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
 
-import fr.cnes.regards.modules.entities.domain.attribute.FloatArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.FloatAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.FloatIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.value.Interval;
 import fr.cnes.regards.modules.entities.service.validator.AbstractAttributeValidator;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 
 /**
- * Validate {@link FloatAttribute}, {@link FloatArrayAttribute} or {@link FloatIntervalAttribute} value with a
- * {@link FloatRangeRestriction}
+ * Validate {@link DoubleAttribute}, {@link DoubleArrayAttribute} or {@link DoubleIntervalAttribute} value with a
+ * {@link DoubleRangeRestriction}
  *
  * @author Marc Sordi
  *
  */
-public class FloatRangeValidator extends AbstractAttributeValidator {
+public class DoubleRangeValidator extends AbstractAttributeValidator {
 
     /**
      * Class logger
      */
     @SuppressWarnings("unused")
-    private static final Logger LOGGER = LoggerFactory.getLogger(FloatRangeValidator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DoubleRangeValidator.class);
 
     /**
      * Configured restriction
      */
-    private final FloatRangeRestriction restriction;
+    private final DoubleRangeRestriction restriction;
 
-    public FloatRangeValidator(FloatRangeRestriction pRestriction, String pAttributeKey) {
+    public DoubleRangeValidator(DoubleRangeRestriction pRestriction, String pAttributeKey) {
         super(pAttributeKey);
         this.restriction = pRestriction;
     }
 
     @Override
     public boolean supports(Class<?> pClazz) {
-        return (pClazz == FloatAttribute.class) || (pClazz == FloatArrayAttribute.class)
-                || (pClazz == FloatIntervalAttribute.class);
+        return (pClazz == DoubleAttribute.class) || (pClazz == DoubleArrayAttribute.class)
+                || (pClazz == DoubleIntervalAttribute.class);
     }
 
     @Override
@@ -50,17 +50,17 @@ public class FloatRangeValidator extends AbstractAttributeValidator {
         pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
     }
 
-    public void validate(FloatAttribute pTarget, Errors pErrors) {
+    public void validate(DoubleAttribute pTarget, Errors pErrors) {
         checkRange(pTarget.getValue(), pErrors);
     }
 
-    public void validate(FloatArrayAttribute pTarget, Errors pErrors) {
+    public void validate(DoubleArrayAttribute pTarget, Errors pErrors) {
         for (Double value : pTarget.getValue()) {
             checkRange(value, pErrors);
         }
     }
 
-    public void validate(FloatIntervalAttribute pTarget, Errors pErrors) {
+    public void validate(DoubleIntervalAttribute pTarget, Errors pErrors) {
         Interval<Double> interval = pTarget.getValue();
         checkRange(interval.getLowerBound(), pErrors);
         checkRange(interval.getUpperBound(), pErrors);
@@ -68,7 +68,7 @@ public class FloatRangeValidator extends AbstractAttributeValidator {
 
     /**
      * Check value is in restriction range
-     * 
+     *
      * @param pValue
      *            value
      * @param pErrors
@@ -97,7 +97,7 @@ public class FloatRangeValidator extends AbstractAttributeValidator {
     }
 
     private void reject(Errors pErrors) {
-        pErrors.rejectValue(attributeKey, "error.float.value.not.in.required.range",
+        pErrors.rejectValue(attributeKey, "error.double.value.not.in.required.range",
                             "Value not constistent with restriction range.");
     }
 }

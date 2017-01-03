@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 
@@ -40,13 +40,13 @@ public class RestrictionTest extends AbstractModelTest {
      */
     @Test
     public void floatRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("FLOAT", AttributeType.FLOAT_INTERVAL)
+        final AttributeModel attModel = AttributeModelBuilder.build("FLOAT", AttributeType.DOUBLE_INTERVAL)
                 .withFloatRangeRestriction(Double.MIN_VALUE, Double.MAX_VALUE, false, false);
         saveAttribute(attModel);
 
         final AttributeModel att = findSingle();
-        Assert.assertEquals(AttributeType.FLOAT_INTERVAL, att.getType());
-        final FloatRangeRestriction frr = checkRestrictionType(att.getRestriction(), FloatRangeRestriction.class);
+        Assert.assertEquals(AttributeType.DOUBLE_INTERVAL, att.getType());
+        final DoubleRangeRestriction frr = checkRestrictionType(att.getRestriction(), DoubleRangeRestriction.class);
         Assert.assertTrue(Double.MIN_VALUE == frr.getMin());
         Assert.assertTrue(Double.MAX_VALUE == frr.getMax());
         Assert.assertFalse(frr.isMinExcluded());
