@@ -27,4 +27,10 @@
 		<description>physical data</description>
 		<type>DOUBLE_ARRAY</type>
 	</attribute>
+	<attribute group="test">
+		<name>planets</name>
+		<type arraysize="3">STRING_ARRAY</type>
+		<defaultValue>earth</defaultValue>
+		<property key="utype" value="astro.planet"/>
+	</attribute>
 </fragment>

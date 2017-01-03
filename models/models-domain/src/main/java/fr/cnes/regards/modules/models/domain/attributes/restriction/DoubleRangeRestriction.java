@@ -10,9 +10,9 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.validator.CheckFloatRange;
-import fr.cnes.regards.modules.models.schema.FloatRange;
-import fr.cnes.regards.modules.models.schema.FloatRange.Max;
-import fr.cnes.regards.modules.models.schema.FloatRange.Min;
+import fr.cnes.regards.modules.models.schema.DoubleRange;
+import fr.cnes.regards.modules.models.schema.DoubleRange.Max;
+import fr.cnes.regards.modules.models.schema.DoubleRange.Min;
 import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
@@ -60,7 +60,7 @@ public class DoubleRangeRestriction extends AbstractRestriction {
 
     public DoubleRangeRestriction() {// NOSONAR
         super();
-        setType(RestrictionType.FLOAT_RANGE);
+        setType(RestrictionType.DOUBLE_RANGE);
     }
 
     @Override
@@ -105,29 +105,29 @@ public class DoubleRangeRestriction extends AbstractRestriction {
     public Restriction toXml() {
 
         final Restriction restriction = new Restriction();
-        final FloatRange frr = new FloatRange();
+        final DoubleRange drr = new DoubleRange();
 
         Max xmlMax = new Max();
         xmlMax.setValue(max);
         xmlMax.setExcluded(maxExcluded);
-        frr.setMax(xmlMax);
+        drr.setMax(xmlMax);
 
         Min xmlMin = new Min();
         xmlMin.setValue(min);
         xmlMin.setExcluded(minExcluded);
-        frr.setMin(xmlMin);
+        drr.setMin(xmlMin);
 
-        restriction.setFloatRange(frr);
+        restriction.setDoubleRange(drr);
         return restriction;
     }
 
     @Override
     public void fromXml(Restriction pXmlElement) {
-        final FloatRange fr = pXmlElement.getFloatRange();
-        Max xmlMax = fr.getMax();
+        final DoubleRange dr = pXmlElement.getDoubleRange();
+        Max xmlMax = dr.getMax();
         setMax(xmlMax.getValue());
         setMaxExcluded(xmlMax.isExcluded());
-        Min xmlMin = fr.getMin();
+        Min xmlMin = dr.getMin();
         setMin(xmlMin.getValue());
         setMinExcluded(xmlMin.isExcluded());
     }

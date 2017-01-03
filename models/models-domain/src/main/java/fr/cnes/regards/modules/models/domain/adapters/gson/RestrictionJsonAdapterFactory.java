@@ -24,7 +24,7 @@ public class RestrictionJsonAdapterFactory extends PolymorphicTypeAdapterFactory
         super(AbstractRestriction.class, "type");
         registerSubtype(EnumerationRestriction.class, RestrictionType.ENUMERATION);
         registerSubtype(PatternRestriction.class, RestrictionType.PATTERN);
-        registerSubtype(DoubleRangeRestriction.class, RestrictionType.FLOAT_RANGE);
+        registerSubtype(DoubleRangeRestriction.class, RestrictionType.DOUBLE_RANGE);
         registerSubtype(IntegerRangeRestriction.class, RestrictionType.INTEGER_RANGE);
     }
 }
