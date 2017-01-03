@@ -15,12 +15,17 @@ public abstract class AbstractIndexable implements IIndexable {
      */
     private String type;
 
-    public AbstractIndexable() {
+    @SuppressWarnings("unused")
+    private AbstractIndexable() {
+    }
+
+    public AbstractIndexable(String pType) {
+        this.type = pType;
     }
 
     public AbstractIndexable(String pDocId, String pType) {
+        this(pType);
         this.docId = pDocId;
-        this.type = pType;
     }
 
     @Override

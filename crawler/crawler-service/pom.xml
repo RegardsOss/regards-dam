@@ -31,6 +31,7 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.entities</groupId>
 			<artifactId>entities-domain</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- TODO : slf4j -->

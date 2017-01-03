@@ -11,4 +11,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  */
 public class Car extends AbstractEntity {
 
+    public Car() {
+        super(null, "car");
+    }
 }

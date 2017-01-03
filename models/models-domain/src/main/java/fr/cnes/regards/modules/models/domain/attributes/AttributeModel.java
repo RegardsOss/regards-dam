@@ -59,8 +59,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
-            + Model.NAME_REGEXP + "\".")
+    @Pattern(regexp = Model.NAME_REGEXP,
+            message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false)
@@ -104,7 +104,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      */
     @ManyToOne
     // CHECKSTYLE:OFF
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false, updatable = false)
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false,
+            updatable = false)
     // CHECKSTYLE:ON
     private Fragment fragment;
 

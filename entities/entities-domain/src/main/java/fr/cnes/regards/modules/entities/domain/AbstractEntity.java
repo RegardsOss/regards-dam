@@ -36,6 +36,7 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -54,7 +55,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Table(name = "T_ENTITY")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Gsonable
-public abstract class AbstractEntity implements IIdentifiable<Long> {
+public abstract class AbstractEntity extends AbstractIndexable implements IIdentifiable<Long> {
 
     /**
      * last time the entity was updated
@@ -117,39 +118,69 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     @NotNull
     @ManyToOne
     // CHECKSTYLE:OFF
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
+            updatable = false)
     // CHECKSTYLE:ON
     protected Model model;
 
     /**
      *
      */
-    public AbstractEntity() { // NOSONAR
-        creationDate = LocalDateTime.now();
-        lastUpdate = LocalDateTime.now();
-        tags = new HashSet<>();
+    // private AbstractEntity() { // NOSONAR
+    // creationDate = LocalDateTime.now();
+    // lastUpdate = LocalDateTime.now();
+    // tags = new HashSet<>();
+    // }
+    //
+    // protected AbstractEntity(Model pModel) { // NOSONAR
+    // this();
+    // model = pModel;
+    // }
+    //
+    // public AbstractEntity(Model pModel, Long pId) { // NOSONAR
+    // this(pModel);
+    // id = pId;
+    // }
+    //
+    // public AbstractEntity(Model pModel, String pEntityType) { // NOSONAR
+    // this(pModel);
+    // ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
+    // 1);
+    // }
+    //
+    // public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) { // NOSONAR
+    // this(pModel);
+    // ipId = pIpId;
+    // id = pId;
+    // }
+
+    @SuppressWarnings("unused")
+    private AbstractEntity() { // NOSONAR
+        this(null, "TYPE MOISI");
     }
 
+    // TODO A voir
     protected AbstractEntity(Model pModel) { // NOSONAR
-        this();
+        this(pModel, "TYPE MOISI");
         model = pModel;
     }
 
+    // TODO : à virer une fois les data refaites (urn
     public AbstractEntity(Model pModel, Long pId) { // NOSONAR
-        this(pModel);
-        id = pId;
+        this(pModel, "TYPE MOISI");
+        this.id = pId;
     }
 
     public AbstractEntity(Model pModel, String pEntityType) { // NOSONAR
-        this(pModel);
+        super(pEntityType);
         ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
                 1);
-    }
+        super.setDocId(ipId.toString());
 
-    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) { // NOSONAR
-        this(pModel);
-        ipId = pIpId;
-        id = pId;
+        model = pModel;
+        creationDate = LocalDateTime.now();
+        lastUpdate = LocalDateTime.now();
+        tags = new HashSet<>();
     }
 
     /**

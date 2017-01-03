@@ -13,6 +13,10 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  */
 public class Doc extends AbstractEntity {
 
+    public Doc() {
+        super(null, "Doc");
+    }
+
     @NotNull
     private String docName;
 

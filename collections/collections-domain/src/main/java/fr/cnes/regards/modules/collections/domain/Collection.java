@@ -46,8 +46,8 @@ public class Collection extends AbstractEntity { // NOSONAR
     /**
      * list of other entities that this collection contains
      */
-    @OneToMany(mappedBy = "id", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST,
-            CascadeType.REFRESH })
+    @OneToMany(mappedBy = "id",
+            cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
     protected List<AbstractEntity> content;
 
     /**
@@ -57,16 +57,16 @@ public class Collection extends AbstractEntity { // NOSONAR
     protected List<Collection> parents;
 
     public Collection() { // NOSONAR
-        super();
+        super(null, COLLECTION_TYPE);
     }
 
     /**
-     * contructor for children
+     * Constructor for children (ex. DataSet)
      *
      * @param pModel
      * @param pEntity
      */
-    public Collection(Model pModel, String pEntity, String pDescription, String pName) {
+    protected Collection(Model pModel, String pEntity, String pDescription, String pName) {
         super(pModel, pEntity);
         description = pDescription;
         name = pName;
