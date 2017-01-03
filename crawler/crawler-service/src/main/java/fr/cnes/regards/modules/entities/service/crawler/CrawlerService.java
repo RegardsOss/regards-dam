@@ -2,12 +2,15 @@ package fr.cnes.regards.modules.entities.service.crawler;
 
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.modules.collections.service.ICollectionsRequestService;
+import fr.cnes.regards.framework.multitenant.autoconfigure.tenant.ITenantResolver;
 
 @Service
 public class CrawlerService implements ICrawlerService {
 
-    public CrawlerService(ICollectionsRequestService pCollectionsRequestService) {
+    private ITenantResolver tenantResolver;
+
+    public CrawlerService() {
 
     }
+
 }

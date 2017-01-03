@@ -16,6 +16,10 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>multitenant-regards-starter</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
 			<artifactId>crawler-dao</artifactId>
 		</dependency>
@@ -28,8 +32,6 @@
 			<groupId>fr.cnes.regards.modules.entities</groupId>
 			<artifactId>entities-domain</artifactId>
 		</dependency>
-
-
 
 		<!-- TODO : slf4j -->
 		<dependency>

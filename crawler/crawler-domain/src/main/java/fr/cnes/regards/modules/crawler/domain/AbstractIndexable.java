@@ -50,17 +50,17 @@ public abstract class AbstractIndexable implements IIndexable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object pObj) {
+        if (this == pObj) {
             return true;
         }
-        if (obj == null) {
+        if (pObj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != pObj.getClass()) {
             return false;
         }
-        AbstractIndexable other = (AbstractIndexable) obj;
+        AbstractIndexable other = (AbstractIndexable) pObj;
         if (docId == null) {
             if (other.docId != null) {
                 return false;
