@@ -62,11 +62,12 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     }
 
     @Override
-    protected void beforeDelegateRead(JsonElement pJsonElement, String pDiscriminator, Class<?> pSubType) {
+    protected JsonElement beforeRead(JsonElement pJsonElement, String pDiscriminator, Class<?> pSubType) {
         if (pSubType == ObjectAttribute.class) {
             addNamespaceToChildren(pJsonElement, pDiscriminator);
         }
         removeParentNamespace(pJsonElement);
+        return pJsonElement;
     }
 
     /**
