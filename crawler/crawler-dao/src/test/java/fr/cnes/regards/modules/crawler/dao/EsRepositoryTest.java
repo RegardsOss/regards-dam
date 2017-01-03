@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.dao;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -23,9 +22,9 @@ import org.junit.Test;
 import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
@@ -40,6 +39,8 @@ public class EsRepositoryTest {
      */
     private static IEsRepository repository;
 
+    private static Gson gson;
+
     /**
      * Befor class setting up method
      * @throws Exception
@@ -49,7 +50,8 @@ public class EsRepositoryTest {
         // By now, repository try to connect localhost:9300 for ElasticSearch
         boolean repositoryOK = true;
         try {
-            repository = new EsRepository();
+            gson = new GsonBuilder().create();
+            repository = new EsRepository(gson);
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -250,15 +252,8 @@ public class EsRepositoryTest {
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
 
-        final ObjectMapper jsonMapper = new ObjectMapper();
         start = System.currentTimeMillis();
-        repository.searchAll("loading", h -> {
-            try {
-                Item item = jsonMapper.readValue(h.getSourceAsString(), Item.class);
-            } catch (final IOException e) {
-                Throwables.propagate(e);
-            }
-        });
+        repository.searchAll("loading", h -> gson.fromJson(h.getSourceAsString(), Item.class));
         System.out.println((System.currentTimeMillis() - start) + " ms");
     }
 
