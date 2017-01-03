@@ -11,9 +11,9 @@ import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.FloatArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.FloatAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.FloatIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -67,27 +67,27 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static FloatArrayAttribute buildFloatArray(String pName, Double... pValues) {
-        FloatArrayAttribute att = new FloatArrayAttribute();
+    public static DoubleArrayAttribute buildDoubleArray(String pName, Double... pValues) {
+        DoubleArrayAttribute att = new DoubleArrayAttribute();
         att.setName(pName);
         att.setValue(pValues);
         return att;
     }
 
-    public static FloatAttribute buildFloat(String pName, Double pValue) {
-        FloatAttribute att = new FloatAttribute();
+    public static DoubleAttribute buildDouble(String pName, Double pValue) {
+        DoubleAttribute att = new DoubleAttribute();
         att.setName(pName);
         att.setValue(pValue);
         return att;
     }
 
-    public static FloatIntervalAttribute buildFloatInterval(String pName, Double pLowerBoundFloat,
-            Double pUpperBoundFloat) {
-        FloatIntervalAttribute att = new FloatIntervalAttribute();
+    public static DoubleIntervalAttribute buildDoubleInterval(String pName, Double pLowerBoundDouble,
+            Double pUpperBoundDouble) {
+        DoubleIntervalAttribute att = new DoubleIntervalAttribute();
         att.setName(pName);
         Interval<Double> interval = new Interval<>();
-        interval.setLowerBound(pLowerBoundFloat);
-        interval.setUpperBound(pUpperBoundFloat);
+        interval.setLowerBound(pLowerBoundDouble);
+        interval.setUpperBound(pUpperBoundDouble);
         att.setValue(interval);
         return att;
     }

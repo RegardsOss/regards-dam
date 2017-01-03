@@ -47,5 +47,6 @@ public class FragmentTest extends AbstractModelTest {
         // Try to remove anyway
         fragmentRepository.delete(fragment);
         entityManager.flush();
+        entityManager.clear();
     }
 }

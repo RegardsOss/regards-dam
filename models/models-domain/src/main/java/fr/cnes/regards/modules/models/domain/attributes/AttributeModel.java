@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -26,12 +28,13 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
+import fr.cnes.regards.modules.models.schema.Property;
 import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
@@ -112,6 +115,16 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "RESTRICTION_ID_FK"))
     @Valid
     private AbstractRestriction restriction;
+
+    /**
+     * Optional group for displaying purpose
+     */
+    private String group;
+
+    /**
+     * Custom attribute properties
+     */
+    private List<Property> properties;
 
     @Override
     public Long getId() {
@@ -232,6 +245,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             xmlAtt.setRestriction(restriction.toXml());
         }
         xmlAtt.setType(type.toString());
+        xmlAtt.setGroup(group);
+        xmlAtt.getProperty().addAll(properties);
         return xmlAtt;
     }
 
@@ -249,7 +264,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
                 restriction = new EnumerationRestriction();
             } else
                 if (xmlRestriction.getFloatRange() != null) {
-                    restriction = new FloatRangeRestriction();
+                    restriction = new DoubleRangeRestriction();
                 } else
                     if (xmlRestriction.getIntegerRange() != null) {
                         restriction = new IntegerRangeRestriction();
@@ -262,5 +277,23 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             restriction.fromXml(pXmlElement.getRestriction());
         }
         setType(AttributeType.valueOf(pXmlElement.getType()));
+        setGroup(pXmlElement.getGroup());
+        setProperties(pXmlElement.getProperty());
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String pGroup) {
+        group = pGroup;
+    }
+
+    public List<Property> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(List<Property> pProperties) {
+        properties = pProperties;
     }
 }

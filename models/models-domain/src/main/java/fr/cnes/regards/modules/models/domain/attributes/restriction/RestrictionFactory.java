@@ -25,9 +25,9 @@ public final class RestrictionFactory {
         return er;
     }
 
-    public static FloatRangeRestriction buildFloatRangeRestriction(Double pMin, Double pMax, boolean pMinExcluded,
+    public static DoubleRangeRestriction buildFloatRangeRestriction(Double pMin, Double pMax, boolean pMinExcluded,
             boolean pMaxExcluded) {
-        final FloatRangeRestriction frr = new FloatRangeRestriction();
+        final DoubleRangeRestriction frr = new DoubleRangeRestriction();
         frr.setMin(pMin);
         frr.setMax(pMax);
         frr.setMinExcluded(pMinExcluded);

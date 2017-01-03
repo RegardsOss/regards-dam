@@ -200,7 +200,7 @@ public class AttributeModelServiceTest {
     public void getAttributeTest() throws ModuleException {
         final Long attributeId = 1L;
 
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build("EXISTING", AttributeType.FLOAT)
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build("EXISTING", AttributeType.DOUBLE)
                 .withoutRestriction();
         Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.TRUE);
         Mockito.when(mockAttModelR.findOne(attributeId)).thenReturn(expectedAttModel);
@@ -211,14 +211,14 @@ public class AttributeModelServiceTest {
 
     @Test(expected = EntityNotIdentifiableException.class)
     public void updateNotIdentifiableAttributeTest() throws ModuleException {
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.FLOAT)
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE)
                 .withoutRestriction();
         attributeModelService.updateAttribute(1L, expectedAttModel);
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateInconsistentAttributeTest() throws ModuleException {
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.FLOAT)
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE)
                 .withoutRestriction();
         expectedAttModel.setId(1L);
         attributeModelService.updateAttribute(2L, expectedAttModel);
@@ -228,7 +228,7 @@ public class AttributeModelServiceTest {
     @Test
     public void updateAttributeTest() throws ModuleException {
         final Long attributeId = 1L;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.FLOAT)
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE)
                 .withoutRestriction();
         expectedAttModel.setId(attributeId);
 
@@ -245,7 +245,7 @@ public class AttributeModelServiceTest {
     @Test
     public void deleteAttributeTest() {
         final Long attributeId = 1L;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.FLOAT)
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE)
                 .withoutRestriction();
         expectedAttModel.setId(attributeId);
 

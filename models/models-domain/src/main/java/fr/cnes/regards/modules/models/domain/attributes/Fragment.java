@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 
 /**
- * Fragment : gathers a set of attributes ans acts as a name space.
+ * Fragment : gathers a set of attributes and acts as a name space.
  *
  * @author msordi
  *
@@ -48,7 +48,7 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     private Long id;
 
     /**
-     * Attribute name
+     * Fragment name
      */
     @NotNull
     @Pattern(regexp = Model.NAME_REGEXP, message = "Fragment name must conform to regular expression \""
@@ -59,9 +59,14 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     private String name;
 
     /**
-     * Optional attribute description
+     * Optional fragment description
      */
     private String description;
+
+    /**
+     * Optional fragment version
+     */
+    private String version;
 
     public String getName() {
         return name;
@@ -135,6 +140,7 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
         // CHECKSTYLE:ON
         xmlFragment.setName(name);
         xmlFragment.setDescription(description);
+        xmlFragment.setVersion(version);
 
         return xmlFragment;
     }
@@ -143,5 +149,14 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     public void fromXml(fr.cnes.regards.modules.models.schema.Fragment pXmlElement) {
         setName(pXmlElement.getName());
         setDescription(pXmlElement.getDescription());
+        setVersion(pXmlElement.getVersion());
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String pVersion) {
+        version = pVersion;
     }
 }

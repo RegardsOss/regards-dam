@@ -19,18 +19,18 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  *
  * Manage date format restriction for attribute of type :
  * <ul>
- * <li>{@link AttributeType#FLOAT}</li>
- * <li>{@link AttributeType#FLOAT_ARRAY}</li>
- * <li>{@link AttributeType#FLOAT_INTERVAL}</li>
+ * <li>{@link AttributeType#DOUBLE}</li>
+ * <li>{@link AttributeType#DOUBLE_ARRAY}</li>
+ * <li>{@link AttributeType#DOUBLE_INTERVAL}</li>
  * </ul>
  *
  * @author Marc Sordi
  *
  */
 @CheckFloatRange
-@Entity(name = "FloatRangeRestriction")
-@DiscriminatorValue("FloatRange")
-public class FloatRangeRestriction extends AbstractRestriction {
+@Entity(name = "DoubleRangeRestriction")
+@DiscriminatorValue("DoubleRange")
+public class DoubleRangeRestriction extends AbstractRestriction {
 
     /**
      * Minimum possible value (included)
@@ -58,15 +58,15 @@ public class FloatRangeRestriction extends AbstractRestriction {
     @Column(name = "MAXF_EXCLUDED")
     private boolean maxExcluded = false;
 
-    public FloatRangeRestriction() {// NOSONAR
+    public DoubleRangeRestriction() {// NOSONAR
         super();
         setType(RestrictionType.FLOAT_RANGE);
     }
 
     @Override
     public Boolean supports(AttributeType pAttributeType) {
-        return AttributeType.FLOAT.equals(pAttributeType) || AttributeType.FLOAT_ARRAY.equals(pAttributeType)
-                || AttributeType.FLOAT_INTERVAL.equals(pAttributeType);
+        return AttributeType.DOUBLE.equals(pAttributeType) || AttributeType.DOUBLE_ARRAY.equals(pAttributeType)
+                || AttributeType.DOUBLE_INTERVAL.equals(pAttributeType);
     }
 
     public Double getMin() {

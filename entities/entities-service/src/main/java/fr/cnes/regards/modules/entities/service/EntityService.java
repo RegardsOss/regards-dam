@@ -14,8 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -84,6 +87,16 @@ public class EntityService implements IEntityService {
         for (ModelAttribute modelAtt : modAtts) {
             checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
         }
+
+        // If errors, throw exception
+        if (pErrors.hasErrors()) {
+            for (ObjectError error : pErrors.getAllErrors()) {
+                List<String> errorMessages = new ArrayList<>();
+                errorMessages.add(error.toString());
+                LOGGER.error(error.toString());
+                throw new EntityInvalidException(errorMessages);
+            }
+        }
     }
 
     /**
@@ -110,11 +123,7 @@ public class EntityService implements IEntityService {
 
         // Do validation
         for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
-            if (validator.supports(att.getClass())) {
-                validator.validate(att, pErrors);
-            } else {
-                pErrors.rejectValue(key, "error.unsupported.validator.message", "Unsupported validator.");
-            }
+            ValidationUtils.invokeValidator(validator, att, pErrors);
         }
     }
 

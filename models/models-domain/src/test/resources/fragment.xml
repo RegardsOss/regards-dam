@@ -19,11 +19,12 @@
 				<value>user</value>
 			</enumeration>
 		</restriction>
+		<property key="utype" value="Obs.dataProductType"/>
 	</attribute>
 	<attribute alterable="false" optional="false" queryable="false"
 		facetable="false">
 		<name>DATA</name>
 		<description>physical data</description>
-		<type>FLOAT_ARRAY</type>
+		<type>DOUBLE_ARRAY</type>
 	</attribute>
 </fragment>
