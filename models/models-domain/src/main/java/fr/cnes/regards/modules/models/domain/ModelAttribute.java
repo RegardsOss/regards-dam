@@ -165,6 +165,8 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
         attModel.fromXml(pXmlElement);
         setAttribute(attModel);
         // Manage computation mode
-        setMode(ComputationMode.valueOf(pXmlElement.getComputationMode()));
+        if (pXmlElement.getComputationMode() != null) {
+            setMode(ComputationMode.valueOf(pXmlElement.getComputationMode()));
+        }
     }
 }

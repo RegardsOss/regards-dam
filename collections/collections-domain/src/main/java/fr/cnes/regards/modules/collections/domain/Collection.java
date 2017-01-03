@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Entity
 @Table(name = "T_COLLECTION")
-public class Collection extends AbstractEntity {
+public class Collection extends AbstractEntity { // NOSONAR
 
     private static final String COLLECTION_TYPE = "Collection";
 

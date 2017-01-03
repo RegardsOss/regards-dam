@@ -207,7 +207,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         tags = pTags;
     }
 
-    public List<AbstractAttribute<?>> getAttributes() {
+    public List<AbstractAttribute<?>> getAttributes() { // NOSONAR
         return attributes;
     }
 

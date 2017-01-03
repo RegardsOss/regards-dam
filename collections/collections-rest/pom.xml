@@ -43,7 +43,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-dao</artifactId>
+			<artifactId>models-rest</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
