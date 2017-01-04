@@ -8,9 +8,13 @@ import java.math.BigInteger;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.validator.CheckIntegerRange;
 import fr.cnes.regards.modules.models.schema.IntegerRange;
+import fr.cnes.regards.modules.models.schema.IntegerRange.Max;
+import fr.cnes.regards.modules.models.schema.IntegerRange.Min;
 import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
@@ -25,6 +29,7 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  * @author msordi
  *
  */
+@CheckIntegerRange
 @Entity(name = "IntegerRangeRestriction")
 @DiscriminatorValue("IntegerRange")
 public class IntegerRangeRestriction extends AbstractRestriction {
@@ -32,62 +37,32 @@ public class IntegerRangeRestriction extends AbstractRestriction {
     /**
      * Minimum possible value (included)
      */
-    @Column(name = "MIN_INCLUSIVE")
-    private Integer minInclusive;
+    @Column(name = "MINI")
+    @NotNull
+    private Integer min;
 
     /**
      * Maximun possible value (included)
      */
-    @Column(name = "MAX_INCLUSIVE")
-    private Integer maxInclusive;
+    @Column(name = "MAXI")
+    @NotNull
+    private Integer max;
 
     /**
      * Minimum possible value (excluded)
      */
-    @Column(name = "MIN_EXCLUSIVE")
-    private Integer minExclusive;
+    @Column(name = "MINI_EXCLUDED")
+    private boolean minExcluded = false;
 
     /**
      * Maximum possible value (excluded)
      */
-    @Column(name = "MAX_EXCLUSIVE")
-    private Integer maxExclusive;
+    @Column(name = "MAXI_EXCLUDED")
+    private boolean maxExcluded = false;
 
-    public IntegerRangeRestriction() {
+    public IntegerRangeRestriction() {// NOSONAR
         super();
         setType(RestrictionType.INTEGER_RANGE);
-    }
-
-    public Integer getMinInclusive() {
-        return minInclusive;
-    }
-
-    public void setMinInclusive(Integer pMinInclusive) {
-        minInclusive = pMinInclusive;
-    }
-
-    public Integer getMaxInclusive() {
-        return maxInclusive;
-    }
-
-    public void setMaxInclusive(Integer pMaxInclusive) {
-        maxInclusive = pMaxInclusive;
-    }
-
-    public Integer getMinExclusive() {
-        return minExclusive;
-    }
-
-    public void setMinExclusive(Integer pMinExclusive) {
-        minExclusive = pMinExclusive;
-    }
-
-    public Integer getMaxExclusive() {
-        return maxExclusive;
-    }
-
-    public void setMaxExclusive(Integer pMaxExclusive) {
-        maxExclusive = pMaxExclusive;
     }
 
     @Override
@@ -96,9 +71,36 @@ public class IntegerRangeRestriction extends AbstractRestriction {
                 || AttributeType.INTEGER_INTERVAL.equals(pAttributeType);
     }
 
-    @Override
-    public Boolean isPublic() {
-        return Boolean.TRUE;
+    public Integer getMin() {
+        return min;
+    }
+
+    public void setMin(Integer pMin) {
+        min = pMin;
+    }
+
+    public Integer getMax() {
+        return max;
+    }
+
+    public void setMax(Integer pMax) {
+        max = pMax;
+    }
+
+    public boolean isMinExcluded() {
+        return minExcluded;
+    }
+
+    public void setMinExcluded(boolean pMinExcluded) {
+        minExcluded = pMinExcluded;
+    }
+
+    public boolean isMaxExcluded() {
+        return maxExcluded;
+    }
+
+    public void setMaxExcluded(boolean pMaxExcluded) {
+        maxExcluded = pMaxExcluded;
     }
 
     @Override
@@ -106,10 +108,17 @@ public class IntegerRangeRestriction extends AbstractRestriction {
 
         final Restriction restriction = new Restriction();
         final IntegerRange irr = new IntegerRange();
-        irr.setMaxExclusive(BigInteger.valueOf(maxExclusive));
-        irr.setMaxInclusive(BigInteger.valueOf(maxInclusive));
-        irr.setMinExclusive(BigInteger.valueOf(minExclusive));
-        irr.setMinInclusive(BigInteger.valueOf(minInclusive));
+
+        Max xmlMax = new Max();
+        xmlMax.setValue(BigInteger.valueOf(max));
+        xmlMax.setExcluded(maxExcluded);
+        irr.setMax(xmlMax);
+
+        Min xmlMin = new Min();
+        xmlMin.setValue(BigInteger.valueOf(min));
+        xmlMin.setExcluded(minExcluded);
+        irr.setMin(xmlMin);
+
         restriction.setIntegerRange(irr);
         return restriction;
     }
@@ -117,9 +126,12 @@ public class IntegerRangeRestriction extends AbstractRestriction {
     @Override
     public void fromXml(Restriction pXmlElement) {
         final IntegerRange ir = pXmlElement.getIntegerRange();
-        setMaxExclusive(ir.getMaxExclusive().intValueExact());
-        setMaxInclusive(ir.getMaxInclusive().intValueExact());
-        setMinExclusive(ir.getMinExclusive().intValueExact());
-        setMinInclusive(ir.getMinInclusive().intValueExact());
+        Max xmlMax = ir.getMax();
+        setMax(xmlMax.getValue().intValueExact());
+        setMaxExcluded(xmlMax.isExcluded());
+        Min xmlMin = ir.getMin();
+        setMin(xmlMin.getValue().intValue());
+        setMinExcluded(xmlMin.isExcluded());
     }
+
 }

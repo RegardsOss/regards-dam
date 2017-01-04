@@ -55,6 +55,11 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelControllerIT.class);
 
     /**
+     * JSON path
+     */
+    private static final String JSON_ID = "$.content.id";
+
+    /**
      * Model service
      */
     @Autowired
@@ -77,11 +82,6 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Autowired
     private IModelAttributeService modelAttributeService;
-
-    /**
-     * JSON path
-     */
-    private static final String JSON_ID = "$.content.id";
 
     @Override
     protected Logger getLogger() {
@@ -244,8 +244,8 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_050")
-    @Purpose("Import fragment - Allows to share model or add predefined model ")
-    public void importFragment() throws ModuleException {
+    @Purpose("Import model - Allows to share model or add predefined model ")
+    public void importModel() throws ModuleException {
 
         final Path filePath = Paths.get("src", "test", "resources", "model_it.xml");
 

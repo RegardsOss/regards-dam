@@ -17,16 +17,6 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 public interface ICollectionsRequestService {
 
     /**
-     *
-     * @param pModelId
-     *            model id to get a restricted list of collection respecting the expected model, null if you want all
-     * @param pSipId
-     *
-     * @return list of collection respecting, or not, a model
-     */
-    // public List<Collection> retrieveCollectionList(Long pModelId, String pSipId);
-
-    /**
      * @return all {@link Collection}s
      */
     public List<Collection> retrieveCollectionList();

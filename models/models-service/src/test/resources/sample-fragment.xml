@@ -24,6 +24,6 @@
 		facetable="true">
 		<name>DATA</name>
 		<description>physical data</description>
-		<type>FLOAT_ARRAY</type>
+		<type>DOUBLE_ARRAY</type>
 	</attribute>
 </fragment>

@@ -26,6 +26,7 @@ import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Tag;
+import fr.cnes.regards.modules.entities.domain.adapters.gson.AttributeAdapterFactory;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelType;
@@ -73,6 +74,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IModelRepository modelRepository;
+
+    @Autowired
+    private AttributeAdapterFactory attributeAdapterFactory;
 
     private List<ResultMatcher> expectations;
 

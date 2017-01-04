@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Entity
 @Table(name = "T_COLLECTION")
-public class Collection extends AbstractEntity {
+public class Collection extends AbstractEntity { // NOSONAR
 
     private static final String COLLECTION_TYPE = "Collection";
 
@@ -46,8 +46,8 @@ public class Collection extends AbstractEntity {
     /**
      * list of other entities that this collection contains
      */
-    @OneToMany(mappedBy = "id",
-            cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+    @OneToMany(mappedBy = "id", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.REFRESH })
     protected List<AbstractEntity> content;
 
     /**
@@ -56,22 +56,8 @@ public class Collection extends AbstractEntity {
     @OneToMany
     protected List<Collection> parents;
 
-    public Collection() {
+    public Collection() { // NOSONAR
         super();
-    }
-
-    public Collection(Model pModel) {
-        super(pModel, COLLECTION_TYPE);
-    }
-
-    /**
-     * contructor for children
-     *
-     * @param pModel
-     * @param pEntity
-     */
-    public Collection(Model pModel, String pEntity) {
-        super(pModel, pEntity);
     }
 
     /**
@@ -81,26 +67,25 @@ public class Collection extends AbstractEntity {
      * @param pEntity
      */
     public Collection(Model pModel, String pEntity, String pDescription, String pName) {
-        this(pModel, pEntity);
+        super(pModel, pEntity);
         description = pDescription;
         name = pName;
     }
 
     public Collection(Model pModel, String pDescription, String pName) {
-        this(pModel);
+        super(pModel, COLLECTION_TYPE);
         description = pDescription;
         name = pName;
     }
 
-    public Collection(String pSipId, Model pModel, String pDescription, String pName) {
+    public Collection(String pSipId, Model pModel, String pDescription, String pName) { // NOSONAR
         this(pModel, pDescription, pName);
         sipId = pSipId;
-        final JWTService jwtService = new JWTService();
-        ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, jwtService.getActualTenant(),
+        ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, JWTService.getActualTenant(),
                 UUID.nameUUIDFromBytes(sipId.getBytes()), 1);
     }
 
-    public Collection(Long pId, Model pModel, String pDescription, String pName) {
+    public Collection(Long pId, Model pModel, String pDescription, String pName) { // NOSONAR
         this(pModel, pDescription, pName);
         id = pId;
     }
@@ -133,20 +118,6 @@ public class Collection extends AbstractEntity {
      */
     public void setName(String pName) {
         name = pName;
-    }
-
-    @Override
-    public boolean equals(Object pObj) {
-        return (pObj instanceof Collection) && ((Collection) pObj).getId().equals(getId());
-    }
-
-    @Override
-    public int hashCode() {
-        if (id == null) {
-            return ipId.hashCode(); // TODO: check if nice or not
-        } else {
-            return id.hashCode();
-        }
     }
 
     public List<AbstractEntity> getContent() {

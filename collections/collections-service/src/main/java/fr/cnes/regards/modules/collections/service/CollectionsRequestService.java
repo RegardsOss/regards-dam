@@ -33,7 +33,8 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     /**
      * Logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(CollectionsRequestService.class);
+    @SuppressWarnings("unused")
+    private static final Logger LOGGER = LoggerFactory.getLogger(CollectionsRequestService.class);
 
     /**
      * bean toward the module responsible to contact, or not, the archival storage
@@ -211,7 +212,6 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
     @Override
     public Collection createCollection(Collection pCollection) {
-        // TODO: verify with model
         Collection newCollection = collectionRepository.save(pCollection);
         if (!newCollection.getTags().isEmpty()) {
             associate(newCollection);

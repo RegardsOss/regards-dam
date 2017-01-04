@@ -55,7 +55,7 @@ public class AccessGroup implements IIdentifiable<Long> {
 
     private boolean isPrivate = Boolean.TRUE;
 
-    public AccessGroup() {
+    public AccessGroup() { // NOSONAR
         // for hibernate
     }
 

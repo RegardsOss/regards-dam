@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +58,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the whole list of accessGroups")
-    public HttpEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(final Pageable pPageable,
+    public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(final Pageable pPageable,
             final PagedResourcesAssembler<AccessGroup> pAssembler) {
         Page<AccessGroup> accessGroups = accessGroupService.retrieveAccessGroups(pPageable);
         return new ResponseEntity<>(toPagedResources(accessGroups, pAssembler), HttpStatus.OK);
@@ -68,7 +67,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create an access group according to the parameter")
-    public HttpEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup pToBeCreated)
+    public ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup pToBeCreated)
             throws EntityAlreadyExistsException {
         AccessGroup created = accessGroupService.createAccessGroup(pToBeCreated);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
@@ -77,7 +76,8 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
     @ResourceAccess(description = "send the access group of name requested")
-    public HttpEntity<Resource<AccessGroup>> retrieveAccessGroup(@Valid @PathVariable("name") String pAccessGroupName) {
+    public ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(
+            @Valid @PathVariable("name") String pAccessGroupName) {
         final AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
@@ -85,7 +85,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
     @ResourceAccess(description = "delete the access group of name requested")
-    public HttpEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") String pAccessGroupName) {
+    public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") String pAccessGroupName) {
         accessGroupService.deleteAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -93,7 +93,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResponseBody
     @ResourceAccess(description = "associated the user of email specified to the access group of name requested")
-    public HttpEntity<Resource<AccessGroup>> associateUserToAccessGroup(
+    public ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(
             @Valid @PathVariable("name") String pAccessGroupName, @Valid @PathVariable("email") String pUserEmail)
             throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.associateUserToAccessGroup(pUserEmail, pAccessGroupName);
@@ -103,7 +103,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResponseBody
     @ResourceAccess(description = "dissociated the user of email specified from the access group of name requested")
-    public HttpEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(
+    public ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(
             @Valid @PathVariable("name") String pAccessGroupName, @Valid @PathVariable("email") String pUserEmail)
             throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.dissociateUserFromAccessGroup(pUserEmail, pAccessGroupName);

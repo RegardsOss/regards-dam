@@ -24,22 +24,19 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
-import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
-import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
@@ -111,44 +108,45 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
-    protected List<IAttribute<Object>> attributes;
+    @Valid
+    protected List<AbstractAttribute<?>> attributes;
 
     /**
      * model that this entity is respecting
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
-            updatable = false)
+    // CHECKSTYLE:OFF
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
+    // CHECKSTYLE:ON
     protected Model model;
 
     /**
      *
      */
-    public AbstractEntity() {
+    public AbstractEntity() { // NOSONAR
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();
     }
 
-    protected AbstractEntity(Model pModel) {
+    protected AbstractEntity(Model pModel) { // NOSONAR
         this();
         model = pModel;
     }
 
-    public AbstractEntity(Model pModel, Long pId) {
+    public AbstractEntity(Model pModel, Long pId) { // NOSONAR
         this(pModel);
         id = pId;
     }
 
-    public AbstractEntity(Model pModel, String pEntityType) {
+    public AbstractEntity(Model pModel, String pEntityType) { // NOSONAR
         this(pModel);
-        final JWTService jwtService = new JWTService();
-        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, jwtService.getActualTenant(), UUID.randomUUID(),
+        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
                 1);
     }
 
-    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) {
+    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) { // NOSONAR
         this(pModel);
         ipId = pIpId;
         id = pId;
@@ -157,7 +155,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * @return the lastUpdate
      */
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
@@ -166,7 +163,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * @param pLastUpdate
      *            the lastUpdate to set
      */
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setLastUpdate(LocalDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
@@ -174,7 +170,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * @return the creationDate
      */
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
@@ -183,7 +178,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * @param pCreationDate
      *            the creationDate to set
      */
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setCreationDate(LocalDateTime pCreationDate) {
         creationDate = pCreationDate;
     }
@@ -213,11 +207,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         tags = pTags;
     }
 
-    public List<IAttribute<Object>> getAttributes() {
+    public List<AbstractAttribute<?>> getAttributes() { // NOSONAR
         return attributes;
     }
 
-    public void setAttributes(List<IAttribute<Object>> pAttributes) {
+    public void setAttributes(List<AbstractAttribute<?>> pAttributes) {
         attributes = pAttributes;
     }
 
@@ -235,6 +229,16 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     public void setSipId(String pSipId) {
         sipId = pSipId;
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        return (pObj instanceof AbstractEntity) && ((AbstractEntity) pObj).getIpId().equals(getIpId());
+    }
+
+    @Override
+    public int hashCode() {
+        return ipId.hashCode();
     }
 
 }

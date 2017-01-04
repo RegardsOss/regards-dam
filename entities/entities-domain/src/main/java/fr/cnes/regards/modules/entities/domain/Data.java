@@ -14,6 +14,8 @@ import org.springframework.util.MimeType;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 
 /**
+ * This class manages physical data reference
+ *
  * @author lmieulet
  *
  */
@@ -37,12 +39,6 @@ public class Data implements IIdentifiable<Long> {
     @Valid
     private final UniformResourceIdentifier fileRef;
 
-    /**
-     * @param pChecksum
-     * @param pFileSize
-     * @param pMimeType
-     * @param pDataType
-     */
     public Data(String pChecksum, int pFileSize, MimeType pMimeType, DataType pDataType,
             UniformResourceIdentifier pFileRef) {
         super();

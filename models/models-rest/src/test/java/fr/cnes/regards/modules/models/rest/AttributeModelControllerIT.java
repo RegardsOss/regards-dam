@@ -29,6 +29,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 
 /**
  * Test module API
@@ -106,19 +108,19 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatAttribute() {
-        createAttribute("FLOAT_ATT", "float description", AttributeType.FLOAT);
+        createAttribute("FLOAT_ATT", "float description", AttributeType.DOUBLE);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatArrayAttribute() {
-        createAttribute("FLOAT_ARRAY_ATT", "float array description", AttributeType.FLOAT_ARRAY);
+        createAttribute("FLOAT_ARRAY_ATT", "float array description", AttributeType.DOUBLE_ARRAY);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatIntervalAttribute() {
-        createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.FLOAT_INTERVAL);
+        createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.DOUBLE_INTERVAL);
     }
 
     @Test
@@ -190,6 +192,31 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * POST a new attribute
      *
+     * @param pAttributeModel
+     *            the attribute
+     *
+     * @return {@link ResultActions}
+     */
+    private ResultActions createAttribute(AttributeModel pAttributeModel) {
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.name", Matchers.equalTo(pAttributeModel.getName())));
+        if (pAttributeModel.getDescription() != null) {
+            expectations.add(MockMvcResultMatchers.jsonPath("$.content.description",
+                                                            Matchers.equalTo(pAttributeModel.getDescription())));
+        }
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.type",
+                                                        Matchers.equalTo(pAttributeModel.getType().toString())));
+        return performDefaultPost(AttributeModelController.TYPE_MAPPING, pAttributeModel, expectations,
+                                  "Consistent attribute should be created.");
+    }
+
+    /**
+     * POST a new attribute
+     *
      * @param pName
      *            name
      * @param pDescription
@@ -198,22 +225,21 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
      *            type
      * @param pFragment
      *            fragment
+     * @param pRestriction
+     *            restriction
      * @return {@link ResultActions}
      */
-    private ResultActions createAttribute(String pName, String pDescription, AttributeType pType, Fragment pFragment) {
+    private ResultActions createAttribute(String pName, String pDescription, AttributeType pType, Fragment pFragment,
+            AbstractRestriction pRestriction) {
+
         final AttributeModel attModel = AttributeModelBuilder.build(pName, pType).description(pDescription)
                 .fragment(pFragment).get();
-        // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.name", Matchers.equalTo(pName)));
-        if (pDescription != null) {
-            expectations.add(MockMvcResultMatchers.jsonPath("$.content.description", Matchers.equalTo(pDescription)));
-        }
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.type", Matchers.equalTo(pType.toString())));
-        return performDefaultPost(AttributeModelController.TYPE_MAPPING, attModel, expectations,
-                                  "Consistent attribute should be created.");
+        attModel.setRestriction(pRestriction);
+        return createAttribute(attModel);
+    }
+
+    private ResultActions createAttribute(String pName, String pDescription, AttributeType pType, Fragment pFragment) {
+        return createAttribute(pName, pDescription, pType, pFragment, null);
     }
 
     private ResultActions createAttribute(String pName, String pDescription, AttributeType pType) {
@@ -365,8 +391,29 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     }
 
-    // post attribute avec restriction
-    // put attribute virer restriction
-    // Verifier si elle existe
-    // AttributeBuilder with pattern restriction
+    /**
+     * Test restriction creation and update
+     */
+    @Test
+    public void createAndUpdateAttributeWithRestriction() {
+        AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.INTEGER)
+                .withIntegerRangeRestriction(1, 3, false, false);
+        ResultActions resultActions = createAttribute(attModel);
+
+        String json = payload(resultActions);
+        Integer id = JsonPath.read(json, JSON_ID);
+
+        // Set a new restriction
+        attModel.setId(Long.valueOf(id));
+        IntegerRangeRestriction irr = new IntegerRangeRestriction();
+        irr.setMin(10);
+        irr.setMax(100);
+        attModel.setRestriction(irr);
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attModel,
+                                          expectations, "Update should be successful.", id);
+    }
 }
