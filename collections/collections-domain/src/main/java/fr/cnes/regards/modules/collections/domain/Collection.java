@@ -17,6 +17,7 @@ import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -27,8 +28,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Entity
 @Table(name = "T_COLLECTION")
 public class Collection extends AbstractEntity { // NOSONAR
-
-    private static final String COLLECTION_TYPE = "Collection";
 
     /**
      * description
@@ -57,7 +56,7 @@ public class Collection extends AbstractEntity { // NOSONAR
     protected List<Collection> parents;
 
     public Collection() { // NOSONAR
-        super(null, COLLECTION_TYPE);
+        super(null, EntityType.COLLECTION);
     }
 
     /**
@@ -66,14 +65,14 @@ public class Collection extends AbstractEntity { // NOSONAR
      * @param pModel
      * @param pEntity
      */
-    protected Collection(Model pModel, String pEntity, String pDescription, String pName) {
+    protected Collection(Model pModel, EntityType pEntity, String pDescription, String pName) {
         super(pModel, pEntity);
         description = pDescription;
         name = pName;
     }
 
     public Collection(Model pModel, String pDescription, String pName) {
-        super(pModel, COLLECTION_TYPE);
+        super(pModel, EntityType.COLLECTION);
         description = pDescription;
         name = pName;
     }
@@ -81,7 +80,7 @@ public class Collection extends AbstractEntity { // NOSONAR
     public Collection(String pSipId, Model pModel, String pDescription, String pName) { // NOSONAR
         this(pModel, pDescription, pName);
         sipId = pSipId;
-        ipId = new UniformResourceName(OAISIdentifier.AIP, COLLECTION_TYPE, JWTService.getActualTenant(),
+        ipId = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, JWTService.getActualTenant(),
                 UUID.nameUUIDFromBytes(sipId.getBytes()), 1);
     }
 

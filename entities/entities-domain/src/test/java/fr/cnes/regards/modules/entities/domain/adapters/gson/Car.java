@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.domain.adapters.gson;
 
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * @author Marc Sordi
@@ -12,6 +13,6 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 public class Car extends AbstractEntity {
 
     public Car() {
-        super(null, "car");
+        super(null, EntityType.DATA);
     }
 }

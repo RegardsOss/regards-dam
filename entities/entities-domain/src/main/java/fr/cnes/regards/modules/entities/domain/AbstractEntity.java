@@ -24,6 +24,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -41,6 +42,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -123,6 +125,9 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     // CHECKSTYLE:ON
     protected Model model;
 
+    @Transient
+    private EntityType entityType;
+
     /**
      *
      */
@@ -154,25 +159,8 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     // id = pId;
     // }
 
-    @SuppressWarnings("unused")
-    private AbstractEntity() { // NOSONAR
-        this(null, "TYPE MOISI");
-    }
-
-    // TODO A voir
-    protected AbstractEntity(Model pModel) { // NOSONAR
-        this(pModel, "TYPE MOISI");
-        model = pModel;
-    }
-
-    // TODO : à virer une fois les data refaites (urn
-    public AbstractEntity(Model pModel, Long pId) { // NOSONAR
-        this(pModel, "TYPE MOISI");
-        this.id = pId;
-    }
-
-    public AbstractEntity(Model pModel, String pEntityType) { // NOSONAR
-        super(pEntityType);
+    public AbstractEntity(Model pModel, EntityType pEntityType) { // NOSONAR
+        super(pEntityType.toString());
         ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
                 1);
         super.setDocId(ipId.toString());
@@ -260,6 +248,10 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
 
     public void setSipId(String pSipId) {
         sipId = pSipId;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
     }
 
     @Override
