@@ -138,6 +138,8 @@ public class CollectionsController implements IResourceController<Collection> {
      *
      * @param pCollection
      *            {@link Collection} to create
+     * @param pResult
+     *            validation errors
      * @return {@link Collection} as a {@link Resource}
      * @throws ModuleException
      *             if validation fails
@@ -150,10 +152,6 @@ public class CollectionsController implements IResourceController<Collection> {
 
         // Validate dynamic model
         entityService.validate(pCollection, pResult, false);
-
-        if (pResult.hasErrors()) {
-            // FIXME
-        }
 
         final Collection collection = collectionsRequestService.createCollection(pCollection);
         final Resource<Collection> resource = toResource(collection);

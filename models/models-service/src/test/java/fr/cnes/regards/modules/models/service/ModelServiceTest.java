@@ -344,121 +344,147 @@ public class ModelServiceTest {
         }
     }
 
-    /**
-     * Test model import
-     *
-     * @throws ModuleException
-     *             if error occurs!
-     */
     @Test
     public void importModelTest() throws ModuleException {
+        Iterable<ModelAttribute> modelAtts = importModel("sample-model.xml");
+        checkImportedModel(modelAtts);
+    }
 
+    /**
+     * Same test as before but XML has no default value
+     *
+     * @throws ModuleException
+     *             if problem occurs!
+     */
+    @Test
+    public void importMinimalModelTest() throws ModuleException {
+        Iterable<ModelAttribute> modelAtts = importModel("sample-model-minimal.xml");
+        checkImportedModel(modelAtts);
+    }
+
+    /**
+     * Import model definition file from resources directory
+     *
+     * @param pFilename
+     *            filename
+     * @return list of created model attributes
+     * @throws ModuleException
+     *             if error occurs
+     */
+    private Iterable<ModelAttribute> importModel(String pFilename) throws ModuleException {
         try {
-            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", "sample-model.xml"));
+            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
+            return modelService.importModel(input);
+        } catch (IOException e) {
+            String errorMessage = "Cannot import minimal model";
+            LOGGER.debug(errorMessage);
+            throw new AssertionError(errorMessage);
+        }
+    }
 
-            final Iterable<ModelAttribute> modelAtts = modelService.importModel(input);
+    /**
+     * Check imported model
+     *
+     * @param pModelAtts
+     *            list of {@link ModelAttribute}
+     */
+    private void checkImportedModel(Iterable<ModelAttribute> pModelAtts) {
+        final int expectedSize = 5;
+        Assert.assertEquals(expectedSize, Iterables.size(pModelAtts));
 
-            final int expectedSize = 5;
-            Assert.assertEquals(expectedSize, Iterables.size(modelAtts));
+        for (ModelAttribute modAtt : pModelAtts) {
 
-            for (ModelAttribute modAtt : modelAtts) {
+            // Check model info
+            Assert.assertEquals("sample", modAtt.getModel().getName());
+            Assert.assertEquals("Sample mission", modAtt.getModel().getDescription());
+            Assert.assertEquals(ModelType.COLLECTION, modAtt.getModel().getType());
 
-                // Check model info
-                Assert.assertEquals("sample", modAtt.getModel().getName());
-                Assert.assertEquals("Sample mission", modAtt.getModel().getDescription());
-                Assert.assertEquals(ModelType.COLLECTION, modAtt.getModel().getType());
+            // Check attributes
+            final AttributeModel attModel = modAtt.getAttribute();
+            Assert.assertNotNull(attModel);
 
-                // Check attributes
-                final AttributeModel attModel = modAtt.getAttribute();
-                Assert.assertNotNull(attModel);
-
-                if ("att_string".equals(attModel.getName())) {
-                    Assert.assertNull(attModel.getFragment());
-                    Assert.assertNull(attModel.getDescription());
-                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                    Assert.assertFalse(attModel.isAlterable());
-                    Assert.assertFalse(attModel.isFacetable());
-                    Assert.assertTrue(attModel.isOptional());
-                    Assert.assertFalse(attModel.isQueryable());
-                    Assert.assertNull(attModel.getRestriction());
-                    Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-                }
-
-                if ("att_boolean".equals(attModel.getName())) {
-                    Assert.assertNull(attModel.getFragment());
-                    Assert.assertNull(attModel.getDescription());
-                    Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
-                    Assert.assertTrue(attModel.isAlterable());
-                    Assert.assertFalse(attModel.isFacetable());
-                    Assert.assertFalse(attModel.isOptional());
-                    Assert.assertFalse(attModel.isQueryable());
-                    Assert.assertNull(attModel.getRestriction());
-                    Assert.assertEquals(ComputationMode.CUSTOM, modAtt.getMode());
-                }
-
-                if ("CRS".equals(attModel.getName())) {
-                    Assert.assertNotNull(attModel.getFragment());
-                    Assert.assertEquals("GEO", attModel.getFragment().getName());
-                    Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
-
-                    Assert.assertNull(attModel.getDescription());
-                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                    Assert.assertFalse(attModel.isAlterable());
-                    Assert.assertFalse(attModel.isFacetable());
-                    Assert.assertFalse(attModel.isOptional());
-                    Assert.assertFalse(attModel.isQueryable());
-
-                    Assert.assertNotNull(attModel.getRestriction());
-                    Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
-                    final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
-                    Assert.assertTrue(er.getAcceptableValues().contains("Earth"));
-                    Assert.assertTrue(er.getAcceptableValues().contains("Mars"));
-                    Assert.assertTrue(er.getAcceptableValues().contains("Venus"));
-
-                    Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-                }
-
-                if ("GEOMETRY".equals(attModel.getName())) {
-                    Assert.assertNotNull(attModel.getFragment());
-                    Assert.assertEquals("GEO", attModel.getFragment().getName());
-                    Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
-
-                    Assert.assertNull(attModel.getDescription());
-                    Assert.assertEquals(AttributeType.GEOMETRY, attModel.getType());
-                    Assert.assertFalse(attModel.isAlterable());
-                    Assert.assertFalse(attModel.isFacetable());
-                    Assert.assertFalse(attModel.isOptional());
-                    Assert.assertFalse(attModel.isQueryable());
-
-                    Assert.assertNull(attModel.getRestriction());
-
-                    Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-                }
-
-                if ("Phone".equals(attModel.getName())) {
-                    Assert.assertNotNull(attModel.getFragment());
-                    Assert.assertEquals("Contact", attModel.getFragment().getName());
-                    Assert.assertEquals("Contact information", attModel.getFragment().getDescription());
-
-                    Assert.assertNull(attModel.getDescription());
-                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                    Assert.assertTrue(attModel.isAlterable());
-                    Assert.assertTrue(attModel.isFacetable());
-                    Assert.assertTrue(attModel.isOptional());
-                    Assert.assertTrue(attModel.isQueryable());
-
-                    Assert.assertNotNull(attModel.getRestriction());
-                    Assert.assertTrue(attModel.getRestriction() instanceof PatternRestriction);
-                    final PatternRestriction pr = (PatternRestriction) attModel.getRestriction();
-                    Assert.assertEquals("[0-9 ]{10}", pr.getPattern());
-
-                    Assert.assertEquals(ComputationMode.FROM_DESCENDANTS, modAtt.getMode());
-                }
+            if ("att_string".equals(attModel.getName())) {
+                Assert.assertNull(attModel.getFragment());
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                Assert.assertFalse(attModel.isAlterable());
+                Assert.assertFalse(attModel.isFacetable());
+                Assert.assertTrue(attModel.isOptional());
+                Assert.assertFalse(attModel.isQueryable());
+                Assert.assertNull(attModel.getRestriction());
+                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
             }
 
-        } catch (IOException e) {
-            LOGGER.debug("Cannot import fragment");
-            Assert.fail();
+            if ("att_boolean".equals(attModel.getName())) {
+                Assert.assertNull(attModel.getFragment());
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
+                Assert.assertTrue(attModel.isAlterable());
+                Assert.assertFalse(attModel.isFacetable());
+                Assert.assertFalse(attModel.isOptional());
+                Assert.assertFalse(attModel.isQueryable());
+                Assert.assertNull(attModel.getRestriction());
+                Assert.assertEquals(ComputationMode.CUSTOM, modAtt.getMode());
+            }
+
+            if ("CRS".equals(attModel.getName())) {
+                Assert.assertNotNull(attModel.getFragment());
+                Assert.assertEquals("GEO", attModel.getFragment().getName());
+                Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
+
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                Assert.assertFalse(attModel.isAlterable());
+                Assert.assertFalse(attModel.isFacetable());
+                Assert.assertFalse(attModel.isOptional());
+                Assert.assertFalse(attModel.isQueryable());
+
+                Assert.assertNotNull(attModel.getRestriction());
+                Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
+                final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
+                Assert.assertTrue(er.getAcceptableValues().contains("Earth"));
+                Assert.assertTrue(er.getAcceptableValues().contains("Mars"));
+                Assert.assertTrue(er.getAcceptableValues().contains("Venus"));
+
+                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
+            }
+
+            if ("GEOMETRY".equals(attModel.getName())) {
+                Assert.assertNotNull(attModel.getFragment());
+                Assert.assertEquals("GEO", attModel.getFragment().getName());
+                Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
+
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.GEOMETRY, attModel.getType());
+                Assert.assertFalse(attModel.isAlterable());
+                Assert.assertFalse(attModel.isFacetable());
+                Assert.assertFalse(attModel.isOptional());
+                Assert.assertFalse(attModel.isQueryable());
+
+                Assert.assertNull(attModel.getRestriction());
+
+                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
+            }
+
+            if ("Phone".equals(attModel.getName())) {
+                Assert.assertNotNull(attModel.getFragment());
+                Assert.assertEquals("Contact", attModel.getFragment().getName());
+                Assert.assertEquals("Contact information", attModel.getFragment().getDescription());
+
+                Assert.assertNull(attModel.getDescription());
+                Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                Assert.assertTrue(attModel.isAlterable());
+                Assert.assertTrue(attModel.isFacetable());
+                Assert.assertTrue(attModel.isOptional());
+                Assert.assertTrue(attModel.isQueryable());
+
+                Assert.assertNotNull(attModel.getRestriction());
+                Assert.assertTrue(attModel.getRestriction() instanceof PatternRestriction);
+                final PatternRestriction pr = (PatternRestriction) attModel.getRestriction();
+                Assert.assertEquals("[0-9 ]{10}", pr.getPattern());
+
+                Assert.assertEquals(ComputationMode.FROM_DESCENDANTS, modAtt.getMode());
+            }
         }
     }
 }

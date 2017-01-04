@@ -9,7 +9,7 @@ import org.springframework.validation.Validator;
 
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 
@@ -40,8 +40,8 @@ public final class RestrictionValidatorFactory {
         return new EnumerationValidator(pRestriction, pAttributeKey);
     }
 
-    public static Validator getValidator(FloatRangeRestriction pRestriction, String pAttributeKey) {
-        return new FloatRangeValidator(pRestriction, pAttributeKey);
+    public static Validator getValidator(DoubleRangeRestriction pRestriction, String pAttributeKey) {
+        return new DoubleRangeValidator(pRestriction, pAttributeKey);
     }
 
     public static Validator getValidator(IntegerRangeRestriction pRestriction, String pAttributeKey) {

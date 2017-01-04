@@ -195,7 +195,7 @@ public class FragmentServiceTest {
         attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN).withoutRestriction());
         attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING)
                 .withEnumerationRestriction("public", "scientist", "user"));
-        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.FLOAT_ARRAY).description("physical data")
+        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.DOUBLE_ARRAY).description("physical data")
                 .withoutRestriction());
         // CHECKSTYLE:ON
 
@@ -263,7 +263,7 @@ public class FragmentServiceTest {
                     } else
                         if ("DATA".equals(name)) {
                             Assert.assertEquals("physical data", attModel.getDescription());
-                            Assert.assertEquals(AttributeType.FLOAT_ARRAY, attModel.getType());
+                            Assert.assertEquals(AttributeType.DOUBLE_ARRAY, attModel.getType());
                             Assert.assertTrue(attModel.isAlterable());
                             Assert.assertTrue(attModel.isFacetable());
                             Assert.assertFalse(attModel.isOptional());

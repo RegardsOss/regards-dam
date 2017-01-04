@@ -41,7 +41,7 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     /**
      * Discriminator field
      */
-    private static final String VALUE_FIELD = "value";
+    private static final String VALUE_FIELD_NAME = "value";
 
     /**
      * Namespace separator
@@ -81,10 +81,10 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     protected void addNamespaceToChildren(JsonElement pJsonElement, String pDiscriminator) {
 
         if (pJsonElement.isJsonObject()) {
-            final JsonElement children = pJsonElement.getAsJsonObject().get(VALUE_FIELD);
+            final JsonElement children = pJsonElement.getAsJsonObject().get(VALUE_FIELD_NAME);
 
             if (children == null) {
-                throw missingFieldException(pJsonElement, VALUE_FIELD);
+                throw missingFieldException(pJsonElement, VALUE_FIELD_NAME);
             }
 
             if (children.isJsonArray()) {
@@ -177,7 +177,7 @@ public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<Abstr
     }
 
     private IllegalArgumentException missingFieldException(JsonElement pJsonElement, String pFieldName) {
-        String errorMessage = String.format("JSON element %s must contains a %s field", pJsonElement.toString(),
+        String errorMessage = String.format("JSON element %s must contains a \"%s\" field", pJsonElement.toString(),
                                             pFieldName);
         LOGGER.error(errorMessage);
         return new IllegalArgumentException(errorMessage);
