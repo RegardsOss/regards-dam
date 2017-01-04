@@ -18,6 +18,7 @@ import fr.cnes.regards.modules.collections.dao.ICollectionRepository;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.storage.service.IStorageService;
@@ -103,9 +104,23 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
      *            pCollection
      */
-    private void associate(Collection pCollection, Set<UniformResourceName> pToAssociate) {
+    public void associate(Collection pCollection, Set<UniformResourceName> pToAssociate) {
         final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pToAssociate);
         associate(pCollection, entityToAssociate);
+    }
+
+    /**
+     * @param pCollection
+     *            a {@link Collection}
+     * @param pToAssociate
+     *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
+     *            pCollection
+     */
+    @Override
+    public Collection associateCollection(Long pCollectionId, Set<UniformResourceName> pToAssociate) {
+        final Collection collection = collectionRepository.findOne(pCollectionId);
+        associate(collection, pToAssociate);
+        return collection;
     }
 
     /**
@@ -192,8 +207,14 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
         for (AbstractEntity target : pCollectionList) {
             // associate target to source
-            pSource.getTags().add(new Tag(target.getIpId().toString()));
-            associate(pSource, target);
+            if (!(target instanceof Document)) {
+                // Collections cannot be tagged into Document
+                pSource.getTags().add(new Tag(target.getIpId().toString()));
+            }
+            // bidirectional association if it's a collection or dataset
+            if (target instanceof Collection) {
+                associate(pSource, target);
+            }
         }
         collectionRepository.save(pSource);
     }
@@ -205,7 +226,6 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pTarget
      */
     private void associate(Collection pSource, AbstractEntity pTarget) {
-
         pTarget.getTags().add(new Tag(pSource.getIpId().toString()));
         entitiesRepository.save(pTarget);
     }
@@ -245,17 +265,17 @@ public class CollectionsRequestService implements ICollectionsRequestService {
         final Collection toDelete = collectionRepository.findOneByIpId(pCollectionIpId);
         collectionRepository.deleteByIpId(pCollectionIpId);
         storageService.delete(toDelete);
-
     }
 
     @Override
-    public Collection dissociateCollection(Long pCollectionId, List<AbstractEntity> pToBeDissociated) {
+    public Collection dissociateCollection(Long pCollectionId, List<UniformResourceName> pToBeDissociated) {
         final Collection dissociatedCollection = collectionRepository.findOne(pCollectionId);
-        dissociate(dissociatedCollection, pToBeDissociated);
+        Set<UniformResourceName> toBeDissociatedSet = pToBeDissociated.stream().distinct().collect(Collectors.toSet());
+        final List<AbstractEntity> toBeDissociated = entitiesRepository.findByIpIdIn(toBeDissociatedSet);
+        dissociate(dissociatedCollection, toBeDissociated);
         return dissociatedCollection;
     }
 
-    @Override
     public Collection associateCollection(Long pCollectionId, List<AbstractEntity> pToBeAssociatedWith) {
         final Collection associatedCollection = collectionRepository.findOne(pCollectionId);
         associate(associatedCollection, pToBeAssociatedWith);

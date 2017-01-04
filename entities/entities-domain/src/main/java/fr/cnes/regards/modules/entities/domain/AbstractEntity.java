@@ -117,7 +117,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     @NotNull
     @ManyToOne
     // CHECKSTYLE:OFF
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
+            updatable = false)
     // CHECKSTYLE:ON
     protected Model model;
 

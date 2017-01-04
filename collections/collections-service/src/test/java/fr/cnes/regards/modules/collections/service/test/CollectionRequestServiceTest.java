@@ -187,8 +187,8 @@ public class CollectionRequestServiceTest {
     @Purpose("Si la collection courante est dissociée d’une collection alors cette dernière doit aussi être dissociée de la collection courante (suppression de la navigation bidirectionnelle).")
     @Test
     public void testDissociate() {
-        final List<AbstractEntity> col2List = new ArrayList<>();
-        col2List.add(collection2);
+        final List<UniformResourceName> col2List = new ArrayList<>();
+        col2List.add(collection2.getIpId());
         collectionsRequestServiceMocked.dissociateCollection(collection1.getId(), col2List);
         Assert.assertFalse(collection1.getTags().contains(new Tag(collection2.getIpId().toString())));
         Assert.assertFalse(collection2.getTags().contains(new Tag(collection1.getIpId().toString())));
@@ -205,18 +205,25 @@ public class CollectionRequestServiceTest {
     @Purpose("Le système doit permettre d’associer une collection à d’autres collections.")
     @Test
     public void testAssociateToList() {
-        final List<AbstractEntity> col3List = new ArrayList<>();
-        col3List.add(collection3);
+        final Set<UniformResourceName> col3List = new HashSet<>();
+        col3List.add(collection3.getIpId());
         collectionsRequestServiceMocked.associateCollection(collection1.getId(), col3List);
         Assert.assertTrue(collection1.getTags().contains(new Tag(collection3.getIpId().toString())));
+    }
+
+    @Requirement("REGARDS_DSL_DAM_CAT_450")
+    @Purpose("Le système doit permettre d’ajouter un tag de type « collection » sur un ou plusieurs AIP de type « data » à partir d’une liste d’IP_ID.")
+    @Test
+    public void testAssociateToListData() {
+
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_050")
     @Purpose("Si une collection cible est associée à une collection source alors la collection source doit aussi être associée à la collection cible (navigation bidirectionnelle).")
     @Test
     public void testAssociateSourceToTarget() {
-        final List<AbstractEntity> col3List = new ArrayList<>();
-        col3List.add(collection3);
+        final Set<UniformResourceName> col3List = new HashSet<>();
+        col3List.add(collection3.getIpId());
         collectionsRequestServiceMocked.associateCollection(collection1.getId(), col3List);
         Assert.assertTrue(collection3.getTags().contains(new Tag(collection1.getIpId().toString())));
     }

@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.collections.rest;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -30,8 +31,8 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.collections.service.ICollectionsRequestService;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.service.IEntityService;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * @author lmieulet
@@ -39,7 +40,8 @@ import fr.cnes.regards.modules.entities.service.IEntityService;
  */
 @RestController
 // CHECKSTYLE:OFF
-@ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS", documentation = "http://test")
+@ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
+        documentation = "http://test")
 // CHECKSTYLE:ON
 @RequestMapping(value = "/collections")
 public class CollectionsController implements IResourceController<Collection> {
@@ -159,7 +161,7 @@ public class CollectionsController implements IResourceController<Collection> {
     }
 
     /**
-     * Entry point to update a collection using its id
+     * Entry point to handle dissociation of {@link Collection} specified by its id to other entities
      *
      * @param pCollectionId
      *            {@link Collection} id
@@ -173,14 +175,14 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResponseBody
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
     public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @Valid @RequestBody List<AbstractEntity> pToBeDissociated) throws ModuleException {
+            @Valid @RequestBody List<UniformResourceName> pToBeDissociated) throws ModuleException {
         final Collection collection = collectionsRequestService.dissociateCollection(pCollectionId, pToBeDissociated);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     /**
-     * Entry point to update a collection using its id
+     * Entry point to handle association of {@link Collection} specified by its id to other entities
      *
      * @param pCollectionId
      *            {@link Collection} id
@@ -194,7 +196,7 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResponseBody
     @ResourceAccess(description = "associate the collection of id collection_id to the list of entities in parameter")
     public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
-            @Valid @RequestBody List<AbstractEntity> pToBeAssociatedWith) throws ModuleException {
+            @Valid @RequestBody Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
         final Collection collection = collectionsRequestService.associateCollection(pCollectionId, pToBeAssociatedWith);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);

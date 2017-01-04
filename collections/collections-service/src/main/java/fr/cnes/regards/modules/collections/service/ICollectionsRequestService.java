@@ -4,11 +4,13 @@
 package fr.cnes.regards.modules.collections.service;
 
 import java.util.List;
+import java.util.Set;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * @author lmieulet
@@ -76,13 +78,13 @@ public interface ICollectionsRequestService {
      *
      * @return {@link Collection} dissociated
      */
-    public Collection dissociateCollection(Long pCollectionId, List<AbstractEntity> pToBeDissociated);
+    public Collection dissociateCollection(Long pCollectionId, List<UniformResourceName> pToBeDissociated);
 
     /**
      * @param pCollectionId
      * @param pToBeAssociatedWith
      * @return
      */
-    Collection associateCollection(Long pCollectionId, List<AbstractEntity> pToBeAssociatedWith);
+    Collection associateCollection(Long pCollectionId, Set<UniformResourceName> pToBeAssociatedWith);
 
 }
