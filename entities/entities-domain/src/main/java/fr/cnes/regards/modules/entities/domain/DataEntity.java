@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.entities.domain;
 import java.util.List;
 
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author lmieulet
@@ -25,12 +26,11 @@ public abstract class DataEntity extends AbstractEntity {
     /**
      * @param pFiles
      */
-    /*    public DataEntity(Long pId, String pSipId, Model pModel, List<Data> pFiles) {
-        super(pModel, EntityType.DATA);
+    public DataEntity(EntityType pEntityType, String pSipId, Model pModel, List<Data> pFiles) {
+        super(pModel, pEntityType);
         sipId = pSipId;
         files = pFiles;
-        id = pId;
-    }*/
+    }
 
     /**
      * @return the files
@@ -40,7 +40,8 @@ public abstract class DataEntity extends AbstractEntity {
     }
 
     /**
-     * @param pFiles the files to set
+     * @param pFiles
+     *            the files to set
      */
     public void setFiles(List<Data> pFiles) {
         files = pFiles;

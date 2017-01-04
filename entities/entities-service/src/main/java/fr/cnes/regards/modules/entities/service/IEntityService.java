@@ -9,6 +9,7 @@ import org.springframework.validation.Errors;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -31,5 +32,5 @@ public interface IEntityService {
      *            linked to pSource
      * @return Updated pSource
      */
-    AbstractEntity associate(Collection pSource, Set<UniformResourceName> pTargetsUrn);
+    AbstractEntity associate(AbstractEntity pSource, Set<UniformResourceName> pTargetsUrn);
 }

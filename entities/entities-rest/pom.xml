@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LICENSE_PLACEHOLDER -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>fr.cnes.regards.modules.entities</groupId>
+	<artifactId>entities-rest</artifactId>
+	<packaging>jar</packaging>
+
+	<parent>
+		<groupId>fr.cnes.regards.modules</groupId>
+		<artifactId>entities</artifactId>
+		<version>1.1-SNAPSHOT</version>
+	</parent>
+
+		<dependencies>
+		<!-- Starters -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>security-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service</artifactId>
+		</dependency>
+		<!-- Test -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-integration-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-rest</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

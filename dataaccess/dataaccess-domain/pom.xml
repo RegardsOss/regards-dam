@@ -20,8 +20,8 @@
 			<artifactId>spring-context</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.dataset</groupId>
-			<artifactId>dataset-domain</artifactId>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-domain</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
