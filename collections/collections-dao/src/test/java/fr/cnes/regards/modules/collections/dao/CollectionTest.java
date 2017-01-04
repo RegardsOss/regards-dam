@@ -12,7 +12,7 @@ import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTe
 import fr.cnes.regards.modules.collections.domain.Collection;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  *
@@ -33,7 +33,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
     public void test() {
         Model model1 = new Model();
         model1.setName("Model1");
-        model1.setType(ModelType.COLLECTION);
+        model1.setType(EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
         Collection collection1 = collectionRepository.save(new Collection("IpID", model1, "pDescription", "pName"));
         Collection collection2 = collectionRepository.findOne(collection1.getId());

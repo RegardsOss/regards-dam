@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.domain.adapters.gson.AttributeAdapterFactory;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * @author lmieulet
@@ -84,7 +84,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void initRepos() {
         expectations = new ArrayList<>();
         // Bootstrap default values
-        model1 = Model.build("modelName1", "model desc", ModelType.COLLECTION);
+        model1 = Model.build("modelName1", "model desc", EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
 
         collection1 = new Collection("SipId1", model1, "pDescription", "pName");

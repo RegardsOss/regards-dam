@@ -90,6 +90,7 @@ public interface IEsRepository {
      * Utility method to avoid using Class<T> and passing directly id and type
      * @param pIndex index
      * @param pDocument IIndexable object specifying docId and type
+     * @param <T> document type
      * @return found document of same type as pDocument or null
      */
     @SuppressWarnings("unchecked")

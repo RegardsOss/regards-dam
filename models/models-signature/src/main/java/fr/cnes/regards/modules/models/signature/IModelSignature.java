@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  *
@@ -35,14 +35,14 @@ import fr.cnes.regards.modules.models.domain.ModelType;
 public interface IModelSignature {
 
     /**
-     * Retrieve all {@link Model}. The request can be filtered by {@link ModelType}.
+     * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
      *
      * @param pType
      *            filter
      * @return a list of {@link Model}
      */
     @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<List<Resource<Model>>> getModels(@RequestParam(value = "type", required = false) ModelType pType);
+    ResponseEntity<List<Resource<Model>>> getModels(@RequestParam(value = "type", required = false) EntityType pType);
 
     /**
      * Create a {@link Model}

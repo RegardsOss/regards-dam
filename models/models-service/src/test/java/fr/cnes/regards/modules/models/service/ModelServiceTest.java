@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -98,7 +98,7 @@ public class ModelServiceTest {
         final Model model = new Model();
         model.setId(1L);
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
         modelService.createModel(model);
     }
 
@@ -108,7 +108,7 @@ public class ModelServiceTest {
     public void createAlreadyExistsModelTest() throws ModuleException {
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
 
         Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(model);
 
@@ -121,7 +121,7 @@ public class ModelServiceTest {
     public void createModelTest() throws ModuleException {
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
 
         Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(null);
         Mockito.when(mockModelR.save(model)).thenReturn(model);
@@ -143,7 +143,7 @@ public class ModelServiceTest {
         final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
@@ -156,7 +156,7 @@ public class ModelServiceTest {
         final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
         modelService.updateModel(modelId, model);
     }
 
@@ -165,7 +165,7 @@ public class ModelServiceTest {
         final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
         model.setId(2L);
 
         modelService.updateModel(modelId, model);
@@ -176,7 +176,7 @@ public class ModelServiceTest {
         final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
         model.setId(modelId);
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
@@ -191,7 +191,7 @@ public class ModelServiceTest {
         final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
         model.setId(modelId);
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
@@ -227,7 +227,7 @@ public class ModelServiceTest {
         final Model model = new Model();
         model.setId(modelId);
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
 
         final Fragment frag = Fragment.buildFragment("FRAG", null);
         final Long attId = 10L;
@@ -261,7 +261,7 @@ public class ModelServiceTest {
         final Model model = new Model();
         model.setId(modelId);
         model.setName(MODEL_NAME);
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
 
         final Fragment frag = Fragment.buildFragment("FR2AG", null);
         final Long attId = 10L;
@@ -294,7 +294,7 @@ public class ModelServiceTest {
         model.setId(modelId);
         model.setName("sample");
         model.setDescription("Model description");
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
 
         final List<ModelAttribute> modAtts = new ArrayList<>();
 
@@ -397,7 +397,7 @@ public class ModelServiceTest {
             // Check model info
             Assert.assertEquals("sample", modAtt.getModel().getName());
             Assert.assertEquals("Sample mission", modAtt.getModel().getDescription());
-            Assert.assertEquals(ModelType.COLLECTION, modAtt.getModel().getType());
+            Assert.assertEquals(EntityType.COLLECTION, modAtt.getModel().getType());
 
             // Check attributes
             final AttributeModel attModel = modAtt.getAttribute();

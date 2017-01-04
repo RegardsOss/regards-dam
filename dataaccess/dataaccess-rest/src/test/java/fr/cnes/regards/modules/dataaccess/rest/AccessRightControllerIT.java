@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.dataset.dao.IDataSetRepository;
 import fr.cnes.regards.modules.dataset.domain.DataSet;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -116,7 +116,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
 
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
-        Model model = Model.build("model1", "desc", ModelType.DATASET);
+        Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
         ds1 = new DataSet(model, dsDesc, ds1Name);
         ds1 = dsRepo.save(ds1);

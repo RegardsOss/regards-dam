@@ -5,12 +5,12 @@ package fr.cnes.regards.modules.models.domain;
 
 /**
  *
- * List of available module types
+ * List of available entity types
  *
  * @author msordi
  *
  */
-public enum ModelType {
+public enum EntityType {
 
     /**
      * Possible model type

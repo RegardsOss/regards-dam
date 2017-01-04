@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 import fr.cnes.regards.modules.collections.domain.Collection;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -20,12 +21,10 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Table(name = "T_DATA_SET")
 public class DataSet extends Collection {
 
-    private static final String DATASET_TYPE = "DataSet";
-
     private int score;
 
     public DataSet(Model pModel, String pDescription, String pName) {
-        super(pModel, DATASET_TYPE, pDescription, pName);
+        super(pModel, EntityType.DATASET, pDescription, pName);
     }
 
     public int getScore() {

@@ -15,12 +15,17 @@ public abstract class AbstractIndexable implements IIndexable {
      */
     private String type;
 
-    public AbstractIndexable() {
+    @SuppressWarnings("unused")
+    private AbstractIndexable() {
+    }
+
+    public AbstractIndexable(String pType) {
+        this.type = pType;
     }
 
     public AbstractIndexable(String pDocId, String pType) {
+        this(pType);
         this.docId = pDocId;
-        this.type = pType;
     }
 
     @Override
@@ -50,17 +55,17 @@ public abstract class AbstractIndexable implements IIndexable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object pObj) {
+        if (this == pObj) {
             return true;
         }
-        if (obj == null) {
+        if (pObj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != pObj.getClass()) {
             return false;
         }
-        AbstractIndexable other = (AbstractIndexable) obj;
+        AbstractIndexable other = (AbstractIndexable) pObj;
         if (docId == null) {
             if (other.docId != null) {
                 return false;
