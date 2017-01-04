@@ -27,7 +27,7 @@
 			</restriction>
 		</attribute>
 		<attribute>
-			<name>coordinante</name>
+			<name>coordinate</name>
 			<type>GEOMETRY</type>
 		</attribute>
 	</fragment>
