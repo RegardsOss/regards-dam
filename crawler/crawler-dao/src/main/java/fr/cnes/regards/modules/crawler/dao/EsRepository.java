@@ -38,10 +38,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 
@@ -52,9 +52,14 @@ import fr.cnes.regards.modules.crawler.domain.IIndexable;
 public class EsRepository implements IEsRepository {
 
     /**
-     * Elasticsearch port
+     * Elasticsearch cluster name
      */
     private static final int ES_PORT = 9300;
+
+    /**
+     * Elasticsearch port
+     */
+    private static final String ES_CLUSTER_NAME = "regards";
 
     /**
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
@@ -74,10 +79,15 @@ public class EsRepository implements IEsRepository {
     /**
      * Json mapper
      */
-    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private Gson gson;
 
-    public EsRepository(/* ICollectionsRequestService pCollectionsRequestService */) {
-        client = new PreBuiltTransportClient(Settings.EMPTY);
+    /**
+     * Constructor
+     * @param pGson JSon mapper bean
+     */
+    public EsRepository(Gson pGson) {
+        this.gson = pGson;
+        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", ES_CLUSTER_NAME).build());
         try {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));
         } catch (final UnknownHostException e) {
@@ -127,8 +137,9 @@ public class EsRepository implements IEsRepository {
             if (!response.isExists()) {
                 return null;
             }
-            return jsonMapper.readValue(response.getSourceAsBytes(), pClass);
-        } catch (final IOException e) {
+            return gson.fromJson(response.getSourceAsString(), pClass);
+            // return jsonMapper.readValue(response.getSourceAsBytes(), pClass);
+        } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
     }
@@ -178,13 +189,9 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean save(String pIndex, IIndexable pDocument) {
         checkDocument(pDocument);
-        try {
-            final IndexResponse response = client.prepareIndex(pIndex, pDocument.getType(), pDocument.getDocId())
-                    .setSource(jsonMapper.writeValueAsBytes(pDocument)).get();
-            return (response.getResult() == Result.CREATED);
-        } catch (final JsonProcessingException jpe) {
-            throw Throwables.propagate(jpe);
-        }
+        final IndexResponse response = client.prepareIndex(pIndex, pDocument.getType(), pDocument.getDocId())
+                .setSource(gson.toJson(pDocument)).get();
+        return (response.getResult() == Result.CREATED);
     }
 
     @Override
@@ -193,26 +200,21 @@ public class EsRepository implements IEsRepository {
         for (T doc : pDocuments) {
             checkDocument(doc);
         }
-        try {
-            final BulkRequestBuilder bulkRequest = client.prepareBulk();
-            for (T doc : pDocuments) {
-                bulkRequest.add(client.prepareIndex(pIndex, doc.getType(), doc.getDocId())
-                        .setSource(jsonMapper.writeValueAsBytes(doc)));
-            }
-            final BulkResponse response = bulkRequest.get();
-            Map<String, Throwable> errorMap = null;
-            for (final BulkItemResponse itemResponse : response.getItems()) {
-                if (itemResponse.isFailed()) {
-                    if (errorMap == null) {
-                        errorMap = new HashMap<>();
-                    }
-                    errorMap.put(itemResponse.getId(), itemResponse.getFailure().getCause());
-                }
-            }
-            return errorMap;
-        } catch (final JsonProcessingException jpe) {
-            throw Throwables.propagate(jpe);
+        final BulkRequestBuilder bulkRequest = client.prepareBulk();
+        for (T doc : pDocuments) {
+            bulkRequest.add(client.prepareIndex(pIndex, doc.getType(), doc.getDocId()).setSource(gson.toJson(doc)));
         }
+        final BulkResponse response = bulkRequest.get();
+        Map<String, Throwable> errorMap = null;
+        for (final BulkItemResponse itemResponse : response.getItems()) {
+            if (itemResponse.isFailed()) {
+                if (errorMap == null) {
+                    errorMap = new HashMap<>();
+                }
+                errorMap.put(itemResponse.getId(), itemResponse.getFailure().getCause());
+            }
+        }
+        return errorMap;
     }
 
     @Override
@@ -246,10 +248,10 @@ public class EsRepository implements IEsRepository {
                     .setSize(pPageRequest.getPageSize()).get();
             final SearchHits hits = response.getHits();
             for (final SearchHit hit : hits) {
-                results.add(jsonMapper.readValue(hit.getSourceAsString(), pClass));
+                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
-        } catch (final IOException e) {
+        } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
 

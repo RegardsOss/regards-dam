@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
+import fr.cnes.regards.modules.models.domain.EntityType;
+
 /**
  * @author Sylvain Vissiere-Guerinet
  *
@@ -18,7 +20,7 @@ public class UniformResourceNameTest {
 
     @Test
     public void testFromStringSIP() {
-        final UniformResourceName sipUrn = new UniformResourceName(OAISIdentifier.SIP, "Collection", "CDPP",
+        final UniformResourceName sipUrn = new UniformResourceName(OAISIdentifier.SIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1);
         final Pattern pattern = Pattern.compile(UniformResourceName.URN_PATTERN);
         final Matcher matcher = pattern.matcher(sipUrn.toString());
@@ -27,7 +29,7 @@ public class UniformResourceNameTest {
 
     @Test
     public void testFromStringFullAIP() {
-        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, "Collection", "CDPP",
+        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1, 2L, "3");
         final Pattern pattern = Pattern.compile(UniformResourceName.URN_PATTERN);
         Assert.assertTrue(pattern.matcher(aipUrn.toString()).matches());
@@ -35,7 +37,7 @@ public class UniformResourceNameTest {
 
     @Test
     public void testFromStringAIPWithoutRevision() {
-        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, "Collection", "CDPP",
+        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1, 2L);
         final Pattern pattern = Pattern.compile(UniformResourceName.URN_PATTERN);
         Assert.assertTrue(pattern.matcher(aipUrn.toString()).matches());
@@ -43,7 +45,7 @@ public class UniformResourceNameTest {
 
     @Test
     public void testFromStringAIPWithoutOrder() {
-        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, "Collection", "CDPP",
+        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1, "revision");
         final Pattern pattern = Pattern.compile(UniformResourceName.URN_PATTERN);
         Assert.assertTrue(pattern.matcher(aipUrn.toString()).matches());
@@ -51,7 +53,7 @@ public class UniformResourceNameTest {
 
     @Test
     public void testFromStringAIPWithoutOrderOrRevision() {
-        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, "Collection", "CDPP",
+        final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1);
         final Pattern pattern = Pattern.compile(UniformResourceName.URN_PATTERN);
         Assert.assertTrue(pattern.matcher(aipUrn.toString()).matches());

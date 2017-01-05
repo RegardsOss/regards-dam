@@ -28,7 +28,7 @@ import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -107,7 +107,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Create collection model")
     public void createCollectionModelTest() {
-        createModel("MISSION", "Mission description", ModelType.COLLECTION);
+        createModel("MISSION", "Mission description", EntityType.COLLECTION);
     }
 
     /**
@@ -117,7 +117,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Create data model")
     public void createDataModelTest() {
-        createModel("DATA_MODEL", "Data model description", ModelType.DATA);
+        createModel("DATA_MODEL", "Data model description", EntityType.DATA);
     }
 
     /**
@@ -128,7 +128,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_MOD_040")
     @Purpose("Create dataset model (dataset is a model type)")
     public void createDatasetModelTest() {
-        createModel("DATASET", "Dataset description", ModelType.DATASET);
+        createModel("DATASET", "Dataset description", EntityType.DATASET);
     }
 
     /**
@@ -138,7 +138,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Create document model")
     public void createDocumentModelTest() {
-        createModel("DOCUMENT", "Document description", ModelType.DOCUMENT);
+        createModel("DOCUMENT", "Document description", EntityType.DOCUMENT);
     }
 
     /**
@@ -151,7 +151,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
      * @param pType
      *            type
      */
-    private void createModel(String pName, String pDescription, ModelType pType) {
+    private void createModel(String pName, String pDescription, EntityType pType) {
         Assert.assertNotNull(pName);
         Assert.assertNotNull(pDescription);
         Assert.assertNotNull(pType);
@@ -183,7 +183,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final Model model = new Model();
         model.setName("EXPORT_MODEL");
         model.setDescription("Exported model");
-        model.setType(ModelType.COLLECTION);
+        model.setType(EntityType.COLLECTION);
         modelService.createModel(model);
 
         // Attribute #1 in default fragment

@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.net.URI;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.validation.Valid;
@@ -37,10 +38,9 @@ public class Data implements IIdentifiable<Long> {
     private final DataType dataType;
 
     @Valid
-    private final UniformResourceIdentifier fileRef;
+    private final URI fileRef;
 
-    public Data(String pChecksum, int pFileSize, MimeType pMimeType, DataType pDataType,
-            UniformResourceIdentifier pFileRef) {
+    public Data(String pChecksum, int pFileSize, MimeType pMimeType, DataType pDataType, URI pFileRef) {
         super();
         id = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
         checksum = pChecksum;

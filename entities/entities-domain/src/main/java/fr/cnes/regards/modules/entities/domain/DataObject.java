@@ -3,72 +3,51 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.net.URI;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * @author lmieulet
  *
  */
-public class DataObject implements IIdentifiable<Long> {
-
-    private final Long id;
+public class DataObject extends DataEntity implements IIdentifiable<Long> {
 
     private FileType fileType;
 
-    private UniformResourceIdentifier uri;
+    private URI uri;
 
     /**
      *
      */
     public DataObject() {
-        super();
-        id = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
+        super(EntityType.DATA);
     }
 
     /**
      * @param pFileType
      * @param pUri
      */
-    public DataObject(FileType pFileType, UniformResourceIdentifier pUri) {
+    public DataObject(FileType pFileType, URI pUri) {
         this();
         fileType = pFileType;
         uri = pUri;
     }
 
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @return the fileType
-     */
     public FileType getFileType() {
         return fileType;
     }
 
-    /**
-     * @param pFileType
-     *            the fileType to set
-     */
     public void setFileType(FileType pFileType) {
         fileType = pFileType;
     }
 
-    /**
-     * @return the uri
-     */
-    public UniformResourceIdentifier getUri() {
+    public URI getUri() {
         return uri;
     }
 
-    /**
-     * @param pUri
-     *            the uri to set
-     */
-    public void setUri(UniformResourceIdentifier pUri) {
+    public void setUri(URI pUri) {
         uri = pUri;
     }
 

@@ -24,7 +24,7 @@ import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
@@ -70,7 +70,7 @@ public class ModelService implements IModelService, IModelAttributeService {
     // CHECKSTYLE:ON
 
     @Override
-    public List<Model> getModels(ModelType pType) {
+    public List<Model> getModels(EntityType pType) {
         if (pType == null) {
             return IterableUtils.toList(modelRepository.findAll());
         }

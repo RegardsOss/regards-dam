@@ -6,8 +6,8 @@ package fr.cnes.regards.modules.dataaccess.domain.accessright;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Data;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.plugins.annotations.PluginInterface;
 
 /**

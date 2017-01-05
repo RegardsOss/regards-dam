@@ -20,11 +20,11 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
-import fr.cnes.regards.modules.dataset.dao.IDataSetRepository;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelType;
 
 /**
  *
@@ -88,7 +88,7 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
     @Before
     public void init() {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
-        Model model = Model.build("model1", "desc", ModelType.DATASET);
+        Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
         ds1 = new DataSet(model, dsDesc, ds1Name);
         ds1 = dsRepo.save(ds1);
