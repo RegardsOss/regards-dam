@@ -24,9 +24,8 @@
 			<artifactId>crawler-dao</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-service</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.entities</groupId>
