@@ -8,16 +8,20 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.modules.collections.domain.Collection;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.rest.ModelController;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  *
@@ -26,7 +30,6 @@ import fr.cnes.regards.modules.models.rest.ModelController;
  * @author Marc Sordi
  *
  */
-@Ignore // TODO activate
 @MultitenantTransactional
 public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
@@ -34,6 +37,12 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
      * Logger
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(CollectionValidationIT.class);
+
+    /**
+     * {@link Model} service
+     */
+    @Autowired
+    private IModelService modelService;
 
     /**
      * Import a model
@@ -50,6 +59,28 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
+    }
+
+    /**
+     * Instance with a simple single root attribute
+     *
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    @Test
+    public void testSimpleModel() throws ModuleException {
+        importModel("simple-model.xml");
+
+        Model mission = modelService.getModelByName("MISSION");
+
+        Collection mission1 = new Collection();
+        mission1.setModel(mission);
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        performDefaultPost("/collections", mission1, expectations, "...");
     }
 
     @Test

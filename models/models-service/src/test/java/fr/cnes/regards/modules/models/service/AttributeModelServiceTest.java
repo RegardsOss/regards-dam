@@ -19,10 +19,12 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeProperty;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionFactory;
@@ -62,12 +64,19 @@ public class AttributeModelServiceTest {
      */
     private IFragmentRepository mockFragmentR;
 
+    /**
+     * {@link AttributeProperty} repository
+     */
+    private IAttributePropertyRepository mockAttPropertyR;
+
     @Before
     public void beforeTest() {
         mockAttModelR = Mockito.mock(IAttributeModelRepository.class);
         mockRestrictionR = Mockito.mock(IRestrictionRepository.class);
         mockFragmentR = Mockito.mock(IFragmentRepository.class);
-        attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR);
+        mockAttPropertyR = Mockito.mock(IAttributePropertyRepository.class);
+        attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
+                mockAttPropertyR);
     }
 
     @Test

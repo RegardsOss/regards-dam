@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.adapters.gson;
+package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -30,6 +30,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @param <T>
  *            concrete entity class
  */
+// TODO instanciate and register for all entities
 public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapterFactory {
 
     /**
@@ -93,11 +94,19 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
         };
     }
 
-    protected void beforeWrite(T pSource, JsonElement pJsonElement) {
+    /**
+     * Hook for manipulating serialization
+     *
+     * @param pSource
+     *            {@link AbstractEntity} to write
+     * @param pJsonElement
+     *            JSON representation of {@link AbstractEntity}
+     */
+    protected void beforeWrite(T pSource, JsonElement pJsonElement) { // NOSONAR
         LOGGER.debug("Before write");
 
         if (!pJsonElement.isJsonObject()) {
-            // TODO throw error
+            throw objectRequiredException(pJsonElement);
         }
 
         JsonObject entity = pJsonElement.getAsJsonObject();
@@ -106,16 +115,25 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
             if (attEl.isJsonArray()) {
                 entity.add(ATTRIBUTE_FIELD_NAME, mergeArray(attEl.getAsJsonArray()));
             } else {
-                // TODO throw error
+                String errorMessage = String.format("Unexpected JSON element %s. Array required.",
+                                                    pJsonElement.toString());
+                LOGGER.error(errorMessage);
+                throw new IllegalArgumentException(errorMessage);
             }
         }
     }
 
+    /**
+     * Hook to manipulate deserialization
+     *
+     * @param pJsonElement
+     *            JSON representation of {@link AbstractEntity}
+     */
     protected void beforeRead(JsonElement pJsonElement) {
         LOGGER.debug("Before read");
 
         if (!pJsonElement.isJsonObject()) {
-            // TODO throw error
+            throw objectRequiredException(pJsonElement);
         }
 
         JsonObject entity = pJsonElement.getAsJsonObject();
@@ -123,11 +141,20 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
         if (attEl != null) {
             if (attEl.isJsonObject()) {
                 entity.add(ATTRIBUTE_FIELD_NAME, restoreArray(attEl.getAsJsonObject()));
+            } else {
+                throw objectRequiredException(attEl);
             }
         }
 
     }
 
+    /**
+     * Merge {@link JsonArray} flattening elements in a single {@link JsonObject}
+     *
+     * @param pJsonArray
+     *            {@link JsonArray} to flatten
+     * @return {@link JsonObject}
+     */
     private JsonObject mergeArray(JsonArray pJsonArray) {
         JsonObject mergedObject = new JsonObject();
         Iterator<JsonElement> nestedIter = pJsonArray.iterator();
@@ -139,12 +166,19 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
                     mergedObject.add(e.getKey(), e.getValue());
                 }
             } else {
-                // TODO exception
+                throw objectRequiredException(nested);
             }
         }
         return mergedObject;
     }
 
+    /**
+     * Restore {@link JsonArray} from flattened {@link JsonObject} elements (reverse merge)
+     *
+     * @param pJsonObject
+     *            {@link JsonObject} to transform
+     * @return {@link JsonArray}
+     */
     private JsonArray restoreArray(JsonObject pJsonObject) {
         JsonArray restoredArray = new JsonArray();
         for (Map.Entry<String, JsonElement> nestedEntry : pJsonObject.entrySet()) {
@@ -153,5 +187,11 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
             restoredArray.add(nestedObject);
         }
         return restoredArray;
+    }
+
+    private IllegalArgumentException objectRequiredException(JsonElement pJsonElement) {
+        String errorMessage = String.format("Unexpected JSON element %s. Object required.", pJsonElement.toString());
+        LOGGER.error(errorMessage);
+        return new IllegalArgumentException(errorMessage);
     }
 }

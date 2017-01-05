@@ -27,6 +27,8 @@ public interface IModelService {
 
     Model getModel(Long pModelId) throws ModuleException;
 
+    Model getModelByName(String pModelName) throws ModuleException;
+
     Model updateModel(Long pModelId, Model pModel) throws ModuleException;
 
     void deleteModel(Long pModelId) throws ModuleException;

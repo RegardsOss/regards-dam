@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.adapters.gson;
+package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import java.util.Iterator;
 
@@ -13,7 +13,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
-import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 
@@ -25,7 +24,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
  *
  */
 @SuppressWarnings("rawtypes")
-@GsonTypeAdapterFactoryBean
 public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
 
     /**

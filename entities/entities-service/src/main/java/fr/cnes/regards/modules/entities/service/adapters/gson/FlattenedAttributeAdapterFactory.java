@@ -1,28 +1,49 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.adapters.gson;
+package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.TypeAdapter;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.UrlAttribute;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  * @author Marc Sordi
  *
  */
 @SuppressWarnings("rawtypes")
+@GsonTypeAdapterFactoryBean
 public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
 
     /**
@@ -50,12 +71,105 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      */
     private static final String REGEXP_ESCAPE = "\\";
 
-    public FlattenedAttributeAdapterFactory() {
+    /**
+     * {@link AttributeModel} service
+     */
+    private final IAttributeModelService attributeModelService;
+
+    public FlattenedAttributeAdapterFactory(IAttributeModelService pAttributeModelService) {
         super(AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
+        this.attributeModelService = pAttributeModelService;
     }
 
     public void registerSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
-        registerSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+        if (pNamespace == null) {
+            registerSubtype(pType, pDiscriminatorFieldValue);
+        } else {
+            registerSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+        }
+    }
+
+    /*
+     * Intercept mapping method to dynamically registers attributes
+     */
+    @Override
+    protected void doMapping(Gson pGson, Map<String, TypeAdapter<?>> pDiscriminatorToDelegate,
+            Map<Class<?>, TypeAdapter<?>> pSubtypeToDelegate) {
+        registerAttributes();
+        super.doMapping(pGson, pDiscriminatorToDelegate, pSubtypeToDelegate);
+    }
+
+    /**
+     * Dynamically register configured {@link AttributeModel}"
+     */
+    protected void registerAttributes() {
+        List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+        if (atts != null) {
+            for (AttributeModel att : atts) {
+
+                // Define namespace if required
+                String namespace = null;
+                // Register namespace as an object wrapper
+                if (!att.getFragment().isDefaultFragment()) {
+                    namespace = att.getFragment().getName();
+                    registerSubtype(ObjectAttribute.class, namespace);
+                }
+
+                // Retrieve matching attribute class
+                Class<?> matchingClass;
+                switch (att.getType()) {
+                    case BOOLEAN:
+                        matchingClass = BooleanAttribute.class;
+                        break;
+                    case DATE_ARRAY:
+                        matchingClass = DateArrayAttribute.class;
+                        break;
+                    case DATE_INTERVAL:
+                        matchingClass = DateIntervalAttribute.class;
+                        break;
+                    case DATE_ISO8601:
+                        matchingClass = DateAttribute.class;
+                        break;
+                    case DOUBLE:
+                        matchingClass = DoubleAttribute.class;
+                        break;
+                    case DOUBLE_ARRAY:
+                        matchingClass = DoubleArrayAttribute.class;
+                        break;
+                    case DOUBLE_INTERVAL:
+                        matchingClass = DoubleIntervalAttribute.class;
+                        break;
+                    case GEOMETRY:
+                        matchingClass = GeometryAttribute.class;
+                        break;
+                    case INTEGER:
+                        matchingClass = IntegerAttribute.class;
+                        break;
+                    case INTEGER_ARRAY:
+                        matchingClass = IntegerArrayAttribute.class;
+                        break;
+                    case INTEGER_INTERVAL:
+                        matchingClass = IntegerIntervalAttribute.class;
+                        break;
+                    case STRING:
+                        matchingClass = StringAttribute.class;
+                        break;
+                    case STRING_ARRAY:
+                        matchingClass = StringArrayAttribute.class;
+                        break;
+                    case URL:
+                        matchingClass = UrlAttribute.class;
+                        break;
+                    default:
+                        String errorMessage = String.format("Unexpected attribute type \"%s\".", att.getType());
+                        LOGGER.error(errorMessage);
+                        throw new IllegalArgumentException(errorMessage);
+                }
+
+                // Register attribute
+                registerSubtype(matchingClass, att.getName(), namespace);
+            }
+        }
     }
 
     @Override

@@ -5,7 +5,7 @@
 	<xs:element name="model">
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element ref="name" />
+				<xs:element name="name" type="nameType" />
 				<xs:element ref="description" minOccurs="0" />
 				<xs:element ref="version" minOccurs="0" />
 				<!-- Define model types -->
@@ -28,23 +28,24 @@
 	<!-- Fragment root element -->
 	<xs:element name="fragment">
 		<xs:complexType>
-			<xs:sequence>
-				<xs:element ref="name" />
+			<!-- In MODEL definition only, sequence must not be set if ref exists. -->
+			<xs:sequence minOccurs="0">
+				<xs:element name="name" type="nameType" />
 				<xs:element ref="description" minOccurs="0" />
 				<xs:element ref="version" minOccurs="0" />
 				<xs:element ref="attribute" minOccurs="0" maxOccurs="unbounded" />
 			</xs:sequence>
+			<!-- In MODEL definition only, useful to reference an existing fragment.-->
+			<xs:attribute name="ref" type="nameType" />
 		</xs:complexType>
 	</xs:element>
 
-	<!-- Define name -->
-	<xs:element name="name">
-		<xs:simpleType>
-			<xs:restriction base="xs:token">
-				<xs:pattern value="[0-9a-zA-Z_]{3,32}" />
-			</xs:restriction>
-		</xs:simpleType>
-	</xs:element>
+	<!-- Define name type -->
+	<xs:simpleType name="nameType">
+		<xs:restriction base="xs:token">
+			<xs:pattern value="[0-9a-zA-Z_]{3,32}" />
+		</xs:restriction>
+	</xs:simpleType>
 
 	<!-- Define description -->
 	<xs:element name="description">
@@ -61,8 +62,9 @@
 	<!-- Define attribute -->
 	<xs:element name="attribute">
 		<xs:complexType>
-			<xs:sequence>
-				<xs:element ref="name" />
+			<!-- In MODEL definition only, sequence must not be set if ref exists. -->
+			<xs:sequence minOccurs="0">
+				<xs:element name="name" type="nameType" />
 				<xs:element ref="description" minOccurs="0" />
 				<xs:element ref="type" />
 				<xs:element name="defaultValue" type="xs:string"
@@ -81,6 +83,8 @@
 			<xs:attribute name="facetable" type="xs:boolean"
 				default="false" />
 			<xs:attribute name="group" type="xs:string" />
+			<!-- In MODEL definition only, useful to reference an existing root attribute (not in a fragment).-->
+			<xs:attribute name="ref" type="nameType" />
 		</xs:complexType>
 	</xs:element>
 

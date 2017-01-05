@@ -30,6 +30,7 @@
 		<attribute>
 			<name>GEOMETRY</name>
 			<type>GEOMETRY</type>
+			<property key="utype" value="ivoa.geometry"/>
 		</attribute>
 	</fragment>
 	<fragment>
