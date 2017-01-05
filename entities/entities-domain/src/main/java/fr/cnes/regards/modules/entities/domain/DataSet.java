@@ -3,8 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.Table;
 
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -17,13 +17,16 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @Entity
-@Table(name = "T_DATA_SET")
-public class DataSet extends Collection {
+@DiscriminatorValue("DATASET")
+public class DataSet extends AbstractLinkEntity {
 
+    /**
+     * Quality mark
+     */
     private int score;
 
-    public DataSet(Model pModel, String pDescription, String pName) {
-        super(pModel, EntityType.DATASET, pDescription, pName);
+    public DataSet(Model pModel) {
+        super(pModel, EntityType.DATASET);
     }
 
     public int getScore() {

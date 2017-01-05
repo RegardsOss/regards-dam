@@ -73,10 +73,14 @@ public class CollectionRequestServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection1 = new Collection(1L, pModel1, "pDescription", "pName");
-        collection2 = new Collection(2L, pModel2, "pDescription2", "pName2");
-        collection3 = new Collection(3L, pModel2, "pDescription3", "pName3");
-        collection4 = new Collection(4L, pModel2, "pDescription4", "pName4");
+        collection1 = new Collection(pModel1);
+        collection1.setId(1L);
+        collection2 = new Collection(pModel2);
+        collection2.setId(2L);
+        collection3 = new Collection(pModel2);
+        collection3.setId(3L);
+        collection4 = new Collection(pModel2);
+        collection4.setId(4L);
         collection2URN = collection2.getIpId();
         Set<Tag> collection1Tags = collection1.getTags();
         collection1Tags.add(new Tag(collection2URN.toString()));
@@ -132,7 +136,6 @@ public class CollectionRequestServiceTest {
     @Test
     public void updateCollection() throws EntityNotFoundException {
         final Collection updatedCollection1 = collection1;
-        updatedCollection1.setDescription("Updated Description");
 
         Mockito.when(collectionRepositoryMocked.findOne(collection1.getId())).thenReturn(collection1);
         Mockito.when(collectionRepositoryMocked.save(updatedCollection1)).thenReturn(updatedCollection1);

@@ -12,24 +12,22 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author lmieulet
  *
  */
-public abstract class DataEntity extends AbstractEntity {
+public abstract class AbstractDataEntity extends AbstractEntity {
 
     /**
      *
      */
     private List<Data> files;
 
-    public DataEntity(EntityType pEntityType) {
-        super(null, pEntityType);
+    protected AbstractDataEntity(EntityType pEntityType) {
+        this(null, pEntityType);
     }
 
     /**
      * @param pFiles
      */
-    public DataEntity(EntityType pEntityType, String pSipId, Model pModel, List<Data> pFiles) {
+    protected AbstractDataEntity(Model pModel, EntityType pEntityType) {
         super(pModel, pEntityType);
-        sipId = pSipId;
-        files = pFiles;
     }
 
     /**
@@ -40,8 +38,7 @@ public abstract class DataEntity extends AbstractEntity {
     }
 
     /**
-     * @param pFiles
-     *            the files to set
+     * @param pFiles the files to set
      */
     public void setFiles(List<Data> pFiles) {
         files = pFiles;
