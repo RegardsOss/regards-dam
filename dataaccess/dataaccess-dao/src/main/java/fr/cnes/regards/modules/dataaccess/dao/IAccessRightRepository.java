@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 
 /**
  * @author Sylvain Vissiere-Guerinet

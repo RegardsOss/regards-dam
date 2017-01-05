@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,13 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
-import org.springframework.validation.ObjectError;
-import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
@@ -28,6 +30,7 @@ import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidat
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.RequiredAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -87,16 +90,6 @@ public class EntityService implements IEntityService {
         for (ModelAttribute modelAtt : modAtts) {
             checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
         }
-
-        // If errors, throw exception
-        if (pErrors.hasErrors()) {
-            for (ObjectError error : pErrors.getAllErrors()) {
-                List<String> errorMessages = new ArrayList<>();
-                errorMessages.add(error.toString());
-                LOGGER.error(error.toString());
-                throw new EntityInvalidException(errorMessages);
-            }
-        }
     }
 
     /**
@@ -123,7 +116,11 @@ public class EntityService implements IEntityService {
 
         // Do validation
         for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
-            ValidationUtils.invokeValidator(validator, att, pErrors);
+            if (validator.supports(att.getClass())) {
+                validator.validate(att, pErrors);
+            } else {
+                pErrors.rejectValue(key, "error.unsupported.validator.message", "Unsupported validator.");
+            }
         }
     }
 
@@ -193,5 +190,53 @@ public class EntityService implements IEntityService {
                 }
             }
         }
+    }
+
+    @Override
+    public AbstractEntity associate(AbstractEntity pSource, Set<UniformResourceName> pTargetsUrn) {
+        if (pSource instanceof DataSet) {
+            // by specification, a dataset should never be the source of a tag
+            return pSource;
+        } else {
+            if (pSource instanceof Collection) {
+                return associateCollection((Collection) pSource, pTargetsUrn);
+            } else {
+                if (pSource instanceof Document) {
+                    return associateDocument((Document) pSource, pTargetsUrn);
+                } else {
+                    return associateDataObject((DataObject) pSource, pTargetsUrn);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param pSource
+     * @param pTargetsUrn
+     * @return
+     */
+    private AbstractEntity associateDataObject(DataObject pSource, Set<UniformResourceName> pTargetsUrn) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param pSource
+     * @param pTargetsUrn
+     * @return
+     */
+    private AbstractEntity associateCollection(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param pSource
+     * @param pTargetsUrn
+     * @return
+     */
+    private AbstractEntity associateDocument(Document pSource, Set<UniformResourceName> pTargetsUrn) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

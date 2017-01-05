@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -37,11 +36,11 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
-import fr.cnes.regards.modules.dataset.dao.IDataSetRepository;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * @author Sylvain Vissiere-Guerinet

@@ -20,11 +20,11 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
-import fr.cnes.regards.modules.dataset.dao.IDataSetRepository;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  *

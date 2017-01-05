@@ -4,18 +4,21 @@
 package fr.cnes.regards.modules.models.domain.attributes;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -142,16 +145,26 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Optional group for displaying purpose
      */
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+            + Model.NAME_REGEXP + "\".")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    @Column(name = "group_name", length = Model.NAME_MAX_SIZE)
     private String group;
 
     /**
      * Custom attribute properties
      */
-    private List<Property> properties;
+    @Valid
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "att_ppty_id", foreignKey = @ForeignKey(name = "FK_ATT_PPTY_ATT"))
+    @Column(name = "att_properties")
+    private List<AttributeProperty> properties;
 
     /**
      * Reference
      */
+    @Column(name = "refname")
     private String ref;
 
     @Override
@@ -268,14 +281,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         group = pGroup;
     }
 
-    public List<Property> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(List<Property> pProperties) {
-        properties = pProperties;
-    }
-
     public String getUnit() {
         return unit;
     }
@@ -314,13 +319,25 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             xmlAtt.setRestriction(restriction.toXml());
         }
         Type xmlType = new Type();
-        xmlType.setArraysize(BigInteger.valueOf(arraysize));
-        xmlType.setPrecision(BigInteger.valueOf(precision));
+        if (arraysize != null) {
+            xmlType.setArraysize(BigInteger.valueOf(arraysize));
+        }
+        if (precision != null) {
+            xmlType.setPrecision(BigInteger.valueOf(precision));
+        }
         xmlType.setUnit(unit);
         xmlType.setValue(fr.cnes.regards.modules.models.schema.RestrictionType.valueOf(type.toString()));
         xmlAtt.setType(xmlType);
         xmlAtt.setGroup(group);
-        xmlAtt.getProperty().addAll(properties);
+
+        if (properties != null) {
+            for (AttributeProperty ppty : properties) {
+                Property xmlProperty = new Property();
+                xmlProperty.setKey(ppty.getKey());
+                xmlProperty.setValue(ppty.getValue());
+                xmlAtt.getProperty().add(xmlProperty);
+            }
+        }
         return xmlAtt;
     }
 
@@ -352,12 +369,26 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             restriction.fromXml(pXmlElement.getRestriction());
         }
         Type xmlType = pXmlElement.getType();
-        setArraysize(xmlType.getArraysize().intValueExact());
-        setPrecision(xmlType.getPrecision().intValueExact());
+        if (xmlType.getArraysize() != null) {
+            setArraysize(xmlType.getArraysize().intValueExact());
+        }
+        if (xmlType.getPrecision() != null) {
+            setPrecision(xmlType.getPrecision().intValueExact());
+        }
         setUnit(xmlType.getUnit());
         setType(AttributeType.valueOf(xmlType.getValue().toString()));
         setGroup(pXmlElement.getGroup());
-        setProperties(pXmlElement.getProperty());
+
+        if (!pXmlElement.getProperty().isEmpty()) {
+            List<AttributeProperty> ppts = new ArrayList<>();
+            for (Property xmlProperty : pXmlElement.getProperty()) {
+                AttributeProperty attPpty = new AttributeProperty();
+                attPpty.setKey(xmlProperty.getKey());
+                attPpty.setValue(xmlProperty.getValue());
+                ppts.add(attPpty);
+            }
+            setProperties(ppts);
+        }
     }
 
     public String getDefaultValue() {
@@ -374,5 +405,13 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setRef(String pRef) {
         ref = pRef;
+    }
+
+    public List<AttributeProperty> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(List<AttributeProperty> pProperties) {
+        properties = pProperties;
     }
 }

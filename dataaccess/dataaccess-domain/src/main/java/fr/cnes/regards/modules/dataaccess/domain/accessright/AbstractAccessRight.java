@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.SubsettedAccessRight;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
