@@ -18,11 +18,10 @@
 		<module>bootstrap-dam</module>
 		<module>models</module>
 		<module>entities</module>
-		<module>collections</module>
 		<module>storage</module>
 		<module>datasources</module>
-		<module>dataaccess</module>
-		<module>dataset</module>
+    	<module>dataaccess</module>
+		<module>crawler</module>
 	</modules>
 
 </project>

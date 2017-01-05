@@ -33,7 +33,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.service.FragmentService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -87,7 +87,7 @@ public class ModelController implements IResourceController<Model> {
     }
 
     /**
-     * Retrieve all {@link Model}. The request can be filtered by {@link ModelType}.
+     * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
      *
      * @param pType
      *            filter
@@ -96,7 +96,7 @@ public class ModelController implements IResourceController<Model> {
     @ResourceAccess(description = "List all models")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<Model>>> getModels(
-            @RequestParam(value = "type", required = false) ModelType pType) {
+            @RequestParam(value = "type", required = false) EntityType pType) {
         return ResponseEntity.ok(toResources(modelService.getModels(pType)));
     }
 
@@ -249,7 +249,7 @@ public class ModelController implements IResourceController<Model> {
         resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
-                                MethodParamFactory.build(ModelType.class));
+                                MethodParamFactory.build(EntityType.class));
         // Import / Export
         resourceService.addLink(resource, this.getClass(), "exportModel", "export",
                                 MethodParamFactory.build(HttpServletRequest.class),

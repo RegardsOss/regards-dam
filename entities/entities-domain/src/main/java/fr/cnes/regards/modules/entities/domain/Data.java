@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.net.URI;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.validation.Valid;
@@ -14,6 +15,8 @@ import org.springframework.util.MimeType;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 
 /**
+ * This class manages physical data reference
+ *
  * @author lmieulet
  *
  */
@@ -35,16 +38,9 @@ public class Data implements IIdentifiable<Long> {
     private final DataType dataType;
 
     @Valid
-    private final UniformResourceIdentifier fileRef;
+    private final URI fileRef;
 
-    /**
-     * @param pChecksum
-     * @param pFileSize
-     * @param pMimeType
-     * @param pDataType
-     */
-    public Data(String pChecksum, int pFileSize, MimeType pMimeType, DataType pDataType,
-            UniformResourceIdentifier pFileRef) {
+    public Data(String pChecksum, int pFileSize, MimeType pMimeType, DataType pDataType, URI pFileRef) {
         super();
         id = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
         checksum = pChecksum;

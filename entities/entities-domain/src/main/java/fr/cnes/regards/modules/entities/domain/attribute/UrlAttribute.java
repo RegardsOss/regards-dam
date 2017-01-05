@@ -15,4 +15,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class UrlAttribute extends AbstractAttribute<URL> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.URL.equals(pAttributeType);
+    }
 }

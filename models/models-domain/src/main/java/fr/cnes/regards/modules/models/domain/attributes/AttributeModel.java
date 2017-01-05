@@ -3,20 +3,27 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -24,14 +31,16 @@ import javax.validation.constraints.Size;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.FloatRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
+import fr.cnes.regards.modules.models.schema.Property;
 import fr.cnes.regards.modules.models.schema.Restriction;
+import fr.cnes.regards.modules.models.schema.Type;
 
 /**
  * @author msordi
@@ -53,8 +62,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
-            + Model.NAME_REGEXP + "\".")
+    @Pattern(regexp = Model.NAME_REGEXP,
+            message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false)
@@ -66,6 +75,11 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private String description;
 
     /**
+     * Default value
+     */
+    private String defaultValue;
+
+    /**
      * Attribute type
      */
     @NotNull
@@ -74,11 +88,27 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private AttributeType type;
 
     /**
+     * Unit useful for number based attributes
+     */
+    private String unit;
+
+    /**
+     * Precision useful for double based attributes
+     */
+    private Integer precision;
+
+    /**
+     * Array size useful for array based attributes
+     */
+    private Integer arraysize;
+
+    /**
      * Optional fragment
      */
     @ManyToOne
     // CHECKSTYLE:OFF
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false, updatable = false)
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false,
+            updatable = false)
     // CHECKSTYLE:ON
     private Fragment fragment;
 
@@ -109,7 +139,33 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      */
     @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "RESTRICTION_ID_FK"))
+    @Valid
     private AbstractRestriction restriction;
+
+    /**
+     * Optional group for displaying purpose
+     */
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+            + Model.NAME_REGEXP + "\".")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    @Column(name = "group_name", length = Model.NAME_MAX_SIZE)
+    private String group;
+
+    /**
+     * Custom attribute properties
+     */
+    @Valid
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "att_ppty_id", foreignKey = @ForeignKey(name = "FK_ATT_PPTY_ATT"))
+    @Column(name = "att_properties")
+    private List<AttributeProperty> properties;
+
+    /**
+     * Reference
+     */
+    @Column(name = "refname")
+    private String ref;
 
     @Override
     public Long getId() {
@@ -217,11 +273,44 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         facetable = pFacetable;
     }
 
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String pGroup) {
+        group = pGroup;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String pUnit) {
+        unit = pUnit;
+    }
+
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    public void setPrecision(Integer pPrecision) {
+        precision = pPrecision;
+    }
+
+    public Integer getArraysize() {
+        return arraysize;
+    }
+
+    public void setArraysize(Integer pArraysize) {
+        arraysize = pArraysize;
+    }
+
     @Override
     public Attribute toXml() {
         final Attribute xmlAtt = new Attribute();
         xmlAtt.setName(name);
         xmlAtt.setDescription(description);
+        xmlAtt.setDefaultValue(defaultValue);
         xmlAtt.setAlterable(alterable);
         xmlAtt.setFacetable(facetable);
         xmlAtt.setOptional(optional);
@@ -229,7 +318,26 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         if (restriction != null) {
             xmlAtt.setRestriction(restriction.toXml());
         }
-        xmlAtt.setType(type.toString());
+        Type xmlType = new Type();
+        if (arraysize != null) {
+            xmlType.setArraysize(BigInteger.valueOf(arraysize));
+        }
+        if (precision != null) {
+            xmlType.setPrecision(BigInteger.valueOf(precision));
+        }
+        xmlType.setUnit(unit);
+        xmlType.setValue(fr.cnes.regards.modules.models.schema.RestrictionType.valueOf(type.toString()));
+        xmlAtt.setType(xmlType);
+        xmlAtt.setGroup(group);
+
+        if (properties != null) {
+            for (AttributeProperty ppty : properties) {
+                Property xmlProperty = new Property();
+                xmlProperty.setKey(ppty.getKey());
+                xmlProperty.setValue(ppty.getValue());
+                xmlAtt.getProperty().add(xmlProperty);
+            }
+        }
         return xmlAtt;
     }
 
@@ -237,6 +345,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     public void fromXml(Attribute pXmlElement) {
         setName(pXmlElement.getName());
         setDescription(pXmlElement.getDescription());
+        setDefaultValue(pXmlElement.getDefaultValue());
         setAlterable(pXmlElement.isAlterable());
         setFacetable(pXmlElement.isFacetable());
         setOptional(pXmlElement.isOptional());
@@ -246,8 +355,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             if (xmlRestriction.getEnumeration() != null) {
                 restriction = new EnumerationRestriction();
             } else
-                if (xmlRestriction.getFloatRange() != null) {
-                    restriction = new FloatRangeRestriction();
+                if (xmlRestriction.getDoubleRange() != null) {
+                    restriction = new DoubleRangeRestriction();
                 } else
                     if (xmlRestriction.getIntegerRange() != null) {
                         restriction = new IntegerRangeRestriction();
@@ -259,6 +368,50 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             // Cause null pointer exception if implementation not consistent with XSD
             restriction.fromXml(pXmlElement.getRestriction());
         }
-        setType(AttributeType.valueOf(pXmlElement.getType()));
+        Type xmlType = pXmlElement.getType();
+        if (xmlType.getArraysize() != null) {
+            setArraysize(xmlType.getArraysize().intValueExact());
+        }
+        if (xmlType.getPrecision() != null) {
+            setPrecision(xmlType.getPrecision().intValueExact());
+        }
+        setUnit(xmlType.getUnit());
+        setType(AttributeType.valueOf(xmlType.getValue().toString()));
+        setGroup(pXmlElement.getGroup());
+
+        if (!pXmlElement.getProperty().isEmpty()) {
+            List<AttributeProperty> ppts = new ArrayList<>();
+            for (Property xmlProperty : pXmlElement.getProperty()) {
+                AttributeProperty attPpty = new AttributeProperty();
+                attPpty.setKey(xmlProperty.getKey());
+                attPpty.setValue(xmlProperty.getValue());
+                ppts.add(attPpty);
+            }
+            setProperties(ppts);
+        }
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String pDefaultValue) {
+        defaultValue = pDefaultValue;
+    }
+
+    public String getRef() {
+        return ref;
+    }
+
+    public void setRef(String pRef) {
+        ref = pRef;
+    }
+
+    public List<AttributeProperty> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(List<AttributeProperty> pProperties) {
+        properties = pProperties;
     }
 }

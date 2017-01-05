@@ -13,4 +13,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public class IntegerArrayAttribute extends AbstractAttribute<Integer[]> {
 
+    @Override
+    public boolean represents(AttributeType pAttributeType) {
+        return AttributeType.INTEGER_ARRAY.equals(pAttributeType);
+    }
 }

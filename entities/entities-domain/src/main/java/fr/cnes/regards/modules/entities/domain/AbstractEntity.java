@@ -24,26 +24,25 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
-import fr.cnes.regards.framework.jpa.utils.deserializer.LocalDateTimeDeserializer;
-import fr.cnes.regards.framework.jpa.utils.serializer.LocalDateTimeSerializer;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -58,7 +57,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Table(name = "T_ENTITY")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Gsonable
-public abstract class AbstractEntity implements IIdentifiable<Long> {
+public abstract class AbstractEntity extends AbstractIndexable implements IIdentifiable<Long> {
 
     /**
      * last time the entity was updated
@@ -112,6 +111,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
+    @Valid
     protected List<AbstractAttribute<?>> attributes;
 
     /**
@@ -119,45 +119,34 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
+    // CHECKSTYLE:OFF
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
+            updatable = false)
+    // CHECKSTYLE:ON
     protected Model model;
 
-    /**
-     *
-     */
-    public AbstractEntity() {
+    @Transient
+    private EntityType entityType;
+
+    private AbstractEntity(EntityType pEntityType) { // NOSONAR
+        this(null, pEntityType);
+    }
+
+    public AbstractEntity(Model pModel, EntityType pEntityType) { // NOSONAR
+        super(pEntityType.toString());
+        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
+                1);
+        super.setDocId(ipId.toString());
+
+        model = pModel;
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();
     }
 
-    protected AbstractEntity(Model pModel) {
-        this();
-        model = pModel;
-    }
-
-    public AbstractEntity(Model pModel, Long pId) {
-        this(pModel);
-        id = pId;
-    }
-
-    public AbstractEntity(Model pModel, String pEntityType) {
-        this(pModel);
-        final JWTService jwtService = new JWTService();
-        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, jwtService.getActualTenant(), UUID.randomUUID(),
-                1);
-    }
-
-    public AbstractEntity(Model pModel, UniformResourceName pIpId, Long pId) {
-        this(pModel);
-        ipId = pIpId;
-        id = pId;
-    }
-
     /**
      * @return the lastUpdate
      */
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
@@ -166,7 +155,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * @param pLastUpdate
      *            the lastUpdate to set
      */
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setLastUpdate(LocalDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
@@ -174,7 +162,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
     /**
      * @return the creationDate
      */
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
@@ -183,7 +170,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
      * @param pCreationDate
      *            the creationDate to set
      */
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     public void setCreationDate(LocalDateTime pCreationDate) {
         creationDate = pCreationDate;
     }
@@ -213,7 +199,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
         tags = pTags;
     }
 
-    public List<AbstractAttribute<?>> getAttributes() {
+    public List<AbstractAttribute<?>> getAttributes() { // NOSONAR
         return attributes;
     }
 
@@ -235,6 +221,20 @@ public abstract class AbstractEntity implements IIdentifiable<Long> {
 
     public void setSipId(String pSipId) {
         sipId = pSipId;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        return (pObj instanceof AbstractEntity) && ((AbstractEntity) pObj).getIpId().equals(getIpId());
+    }
+
+    @Override
+    public int hashCode() {
+        return ipId.hashCode();
     }
 
 }

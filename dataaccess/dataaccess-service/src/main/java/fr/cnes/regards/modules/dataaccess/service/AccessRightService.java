@@ -28,8 +28,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightCreated;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightDeleted;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightUpdated;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
-import fr.cnes.regards.modules.dataset.service.DataSetService;
+import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.service.DataSetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**

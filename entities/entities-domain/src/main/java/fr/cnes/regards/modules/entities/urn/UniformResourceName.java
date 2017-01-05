@@ -16,6 +16,7 @@ import org.springframework.util.Assert;
 
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.urn.validator.RegardsOaisUrn;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * allow us to create URN with the following format:
@@ -57,7 +58,7 @@ public class UniformResourceName {
     private OAISIdentifier oaisIdentifier;
 
     @NotNull
-    private String entityType;
+    private EntityType entityType;
 
     @NotNull
     private String tenant;
@@ -66,7 +67,7 @@ public class UniformResourceName {
     private UUID entityId;
 
     /**
-     * version number on 3 digit by specs(cf REGARDS_DSL_SYS_ARC_410)
+     * version number on 3 digits by specs(cf REGARDS_DSL_SYS_ARC_410)
      */
     @Min(MIN_VERSION_VALUE)
     @Max(MAX_VERSION_VALUE)
@@ -76,7 +77,7 @@ public class UniformResourceName {
 
     private String revision;
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, EntityType pEntityType, String pTenant, UUID pEntityId,
             int pVersion) {
         super();
         oaisIdentifier = pOaisIdentifier;
@@ -86,29 +87,26 @@ public class UniformResourceName {
         version = pVersion;
     }
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, EntityType pEntityType, String pTenant, UUID pEntityId, // NOSONAR
             int pVersion, Long pOrder, String pRevision) {
         this(pOaisIdentifier, pEntityType, pTenant, pEntityId, pVersion);
         order = pOrder;
         revision = pRevision;
     }
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
-            int pVersion, long pOrder) {
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, EntityType pEntityType, String pTenant, UUID pEntityId, // NOSONAR
+            int pVersion, long pOrder) {// NOSONAR
         this(pOaisIdentifier, pEntityType, pTenant, pEntityId, pVersion);
         order = pOrder;
     }
 
-    public UniformResourceName(OAISIdentifier pOaisIdentifier, String pEntityType, String pTenant, UUID pEntityId,
+    public UniformResourceName(OAISIdentifier pOaisIdentifier, EntityType pEntityType, String pTenant, UUID pEntityId, // NOSONAR
             int pVersion, String pRevision) {
         this(pOaisIdentifier, pEntityType, pTenant, pEntityId, pVersion);
         revision = pRevision;
     }
 
-    /**
-     *
-     */
-    public UniformResourceName() {
+    public UniformResourceName() {// NOSONAR
         // for testing purpose
     }
 
@@ -116,7 +114,7 @@ public class UniformResourceName {
     public String toString() {
         final StringJoiner urnBuilder = new StringJoiner(":", "URN:", "");
         urnBuilder.add(oaisIdentifier.toString());
-        urnBuilder.add(entityType);
+        urnBuilder.add(entityType.toString());
         urnBuilder.add(tenant);
         urnBuilder.add(entityId.toString());
         String orderString = "";
@@ -139,11 +137,11 @@ public class UniformResourceName {
         oaisIdentifier = pOaisIdentifier;
     }
 
-    public String getEntityType() {
+    public EntityType getEntityType() {
         return entityType;
     }
 
-    public void setEntityType(String pEntityType) {
+    public void setEntityType(EntityType pEntityType) {
         entityType = pEntityType;
     }
 
@@ -201,7 +199,7 @@ public class UniformResourceName {
         Assert.isTrue(pattern.matcher(pUrn).matches());
         final String[] stringFragment = pUrn.split(DELIMITER);
         final OAISIdentifier oaisIdentifier = OAISIdentifier.valueOf(stringFragment[1]);
-        final String entityType = stringFragment[2];
+        final EntityType entityType = EntityType.valueOf(stringFragment[2]);
         final String tenant = stringFragment[3];
         final UUID entityId = UUID.fromString(stringFragment[4]);
         final String[] versionWithOrder = stringFragment[5].split(",");

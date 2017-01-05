@@ -11,6 +11,9 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 public abstract class AbstractEntityEvent {
 
+    /**
+     * URN
+     */
     protected UniformResourceName ipId;
 
     /**

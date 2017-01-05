@@ -16,6 +16,30 @@
 		<type>BOOLEAN</type>
 		<computationMode>GIVEN</computationMode>
 	</attribute>
+	<attribute>
+		<name>floatnb</name>
+		<description>one floating number</description>
+		<type>FLOAT</type>
+		<restriction>
+			<float_range>
+				<min excluded="false">10</min>
+				<max excluded="false">20</max>
+			</float_range>
+		</restriction>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>integer_range</name>
+		<description>an integer range</description>
+		<type>FLOAT</type>
+		<restriction>
+			<integer_range>
+				<min excluded="true">20</min>
+				<max>30</max>
+			</integer_range>
+		</restriction>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
 	<fragment>
 		<name>GEO</name>
 		<description>Geographic information</description>
@@ -25,9 +49,9 @@
 			<type>STRING</type>
 			<restriction>
 				<enumeration>
-					<val>Earth</val>
-					<val>Mars</val>
-					<val>Venus</val>
+					<value>Earth</value>
+					<value>Mars</value>
+					<value>Venus</value>
 				</enumeration>
 			</restriction>
 			<computationMode>GIVEN</computationMode>

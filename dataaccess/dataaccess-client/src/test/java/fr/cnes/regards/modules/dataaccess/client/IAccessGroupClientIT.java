@@ -46,9 +46,6 @@ public class IAccessGroupClientIT extends AbstractRegardsWebIT {
     @Value("${server.address}")
     private String serverAddress;
 
-    @Value("${server.port}")
-    private String serverPort;
-
     /**
      *
      * Check that the access group Feign Client handle the pagination parameters.
@@ -64,7 +61,7 @@ public class IAccessGroupClientIT extends AbstractRegardsWebIT {
             final IAccessGroupClient accessGroupClient = HystrixFeign.builder().contract(new SpringMvcContract())
                     .encoder(new GsonEncoder()).decoder(new ResponseEntityDecoder(new GsonDecoder()))
                     .target(new TokenClientProvider<>(IAccessGroupClient.class,
-                            "http://" + serverAddress + ":" + serverPort));
+                            "http://" + serverAddress + ":" + getPort()));
             final ResponseEntity<PagedResources<Resource<AccessGroup>>> accessGroups = accessGroupClient
                     .retrieveAccessGroupsList(0, 10);
             Assert.assertTrue(accessGroups.getStatusCode().equals(HttpStatus.OK));

@@ -65,9 +65,14 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     private String name;
 
     /**
-     * Optional attribute description
+     * Optional model description
      */
     private String description;
+
+    /**
+     * Optional fragment version
+     */
+    private String version;
 
     /**
      * Model type
@@ -75,9 +80,9 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     @NotNull
     @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
-    private ModelType type;
+    private EntityType type;
 
-    public static Model build(String pName, String pDescription, ModelType pModelType) {
+    public static Model build(String pName, String pDescription, EntityType pModelType) {
         final Model model = new Model();
         model.setName(pName);
         model.setDescription(pDescription);
@@ -102,11 +107,11 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
         name = pName;
     }
 
-    public ModelType getType() {
+    public EntityType getType() {
         return type;
     }
 
-    public void setType(ModelType pType) {
+    public void setType(EntityType pType) {
         type = pType;
     }
 
@@ -123,6 +128,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
         final fr.cnes.regards.modules.models.schema.Model xmlModel = new fr.cnes.regards.modules.models.schema.Model();
         xmlModel.setName(name);
         xmlModel.setDescription(description);
+        xmlModel.setVersion(version);
         xmlModel.setType(type.toString());
         return xmlModel;
     }
@@ -131,6 +137,15 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     public void fromXml(fr.cnes.regards.modules.models.schema.Model pXmlElement) {
         setName(pXmlElement.getName());
         setDescription(pXmlElement.getDescription());
-        setType(ModelType.valueOf(pXmlElement.getType()));
+        setVersion(pXmlElement.getVersion());
+        setType(EntityType.valueOf(pXmlElement.getType()));
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String pVersion) {
+        version = pVersion;
     }
 }

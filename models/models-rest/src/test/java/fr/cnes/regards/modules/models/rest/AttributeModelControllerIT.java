@@ -108,19 +108,19 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatAttribute() {
-        createAttribute("FLOAT_ATT", "float description", AttributeType.FLOAT);
+        createAttribute("FLOAT_ATT", "float description", AttributeType.DOUBLE);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatArrayAttribute() {
-        createAttribute("FLOAT_ARRAY_ATT", "float array description", AttributeType.FLOAT_ARRAY);
+        createAttribute("FLOAT_ARRAY_ATT", "float array description", AttributeType.DOUBLE_ARRAY);
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatIntervalAttribute() {
-        createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.FLOAT_INTERVAL);
+        createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.DOUBLE_INTERVAL);
     }
 
     @Test
@@ -368,7 +368,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createAndUpdateAttributeWithRestriction() {
         AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.INTEGER)
-                .withIntegerRangeRestriction(1, 3, null, null);
+                .withIntegerRangeRestriction(1, 3, false, false);
         ResultActions resultActions = createAttribute(attModel);
 
         String json = payload(resultActions);
@@ -377,8 +377,8 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         // Set a new restriction
         attModel.setId(Long.valueOf(id));
         IntegerRangeRestriction irr = new IntegerRangeRestriction();
-        irr.setMinExclusive(10);
-        irr.setMaxInclusive(100);
+        irr.setMin(10);
+        irr.setMax(100);
         attModel.setRestriction(irr);
 
         final List<ResultMatcher> expectations = new ArrayList<>();
