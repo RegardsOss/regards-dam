@@ -99,8 +99,8 @@ public class AccessRightServiceTest {
         final Model model = Model.build("MODEL", DESC, EntityType.DATASET);
         AG1 = new AccessGroup("AG1");
         AG2 = new AccessGroup("AG2");
-        DS1 = new DataSet(model, DESC, "DS1");
-        DS2 = new DataSet(model, DESC, "DS2");
+        DS1 = new DataSet(model);
+        DS2 = new DataSet(model);
         USER1 = new User("user1@user1.user1");
         USER2 = new User("user2@user2.user2");
         final QualityFilter qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
