@@ -23,7 +23,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -53,9 +52,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-@Entity
-@Table(name = "T_ENTITY")
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Entity(name = "t_entity")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Gsonable
 public abstract class AbstractEntity extends AbstractIndexable implements IIdentifiable<Long> {
 
@@ -128,17 +126,17 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     @Transient
     private EntityType entityType;
 
-    private AbstractEntity(EntityType pEntityType) { // NOSONAR
+    protected AbstractEntity(EntityType pEntityType) { // NOSONAR
         this(null, pEntityType);
     }
 
-    public AbstractEntity(Model pModel, EntityType pEntityType) { // NOSONAR
-        super(pEntityType.toString());
-        ipId = new UniformResourceName(OAISIdentifier.AIP, pEntityType, JWTService.getActualTenant(), UUID.randomUUID(),
+    public AbstractEntity(Model model, EntityType entityType) { // NOSONAR
+        super(entityType.toString());
+        ipId = new UniformResourceName(OAISIdentifier.AIP, entityType, JWTService.getActualTenant(), UUID.randomUUID(),
                 1);
         super.setDocId(ipId.toString());
 
-        model = pModel;
+        this.model = model;
         creationDate = LocalDateTime.now();
         lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();
@@ -189,6 +187,7 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
 
     public void setIpId(UniformResourceName pIpId) {
         ipId = pIpId;
+        super.setDocId(ipId.toString());
     }
 
     public Set<Tag> getTags() {

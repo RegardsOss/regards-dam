@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -13,10 +16,22 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public class Document extends DataEntity {
+@Entity
+@DiscriminatorValue("DOCUMENT")
+public class Document extends AbstractDataEntity {
 
+    /**
+     * @param pId
+     * @param pSidId
+     * @param pModel
+     * @param pFiles
+     */
     public Document(Model pModel) {
-        super(EntityType.DOCUMENT, pModel);
+        super(pModel, EntityType.DOCUMENT);
+    }
+
+    public Document() {
+        this(null);
     }
 
 }

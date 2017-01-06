@@ -117,9 +117,9 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, dsDesc, ds1Name);
+        ds1 = new DataSet(model);
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, dsDesc, ds2Name);
+        ds2 = new DataSet(model);
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);

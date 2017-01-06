@@ -50,7 +50,9 @@ public abstract class AbstractIndexable implements IIndexable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        // CHECKSTYLE:OFF
         result = (prime * result) + ((docId == null) ? 0 : docId.hashCode());
+        // CHECKSTYLE:ON
         return result;
     }
 
