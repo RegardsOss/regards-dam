@@ -30,6 +30,10 @@
 			<groupId>fr.cnes.regards.modules.storage</groupId>
 			<artifactId>storage-service</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-regards</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

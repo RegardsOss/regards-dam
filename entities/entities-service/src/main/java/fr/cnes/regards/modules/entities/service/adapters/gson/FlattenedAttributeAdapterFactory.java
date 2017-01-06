@@ -17,6 +17,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -79,9 +80,15 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      */
     private final IAttributeModelService attributeModelService;
 
-    public FlattenedAttributeAdapterFactory(IAttributeModelService pAttributeModelService) {
+    /**
+     * Subscriber listening to model change events to update attribute mapping dynamically
+     */
+    private final ISubscriber subscriber;
+
+    public FlattenedAttributeAdapterFactory(IAttributeModelService pAttributeModelService, ISubscriber pSubscriber) {
         super(AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
         this.attributeModelService = pAttributeModelService;
+        this.subscriber = pSubscriber;
     }
 
     public void registerSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
@@ -101,7 +108,14 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     }
 
     @PostConstruct
-    public void initSubtypes() {
+    private void initSubtypes() {
+        // TODO
+        // subscriber.subscribeTo(NewAttributeModelEvent.class, pReceiver, pAmqpCommunicationMode,
+        // pAmqpCommunicationTarget);
+        registerAttributes();
+    }
+
+    public void refresh() {
         registerAttributes();
     }
 
