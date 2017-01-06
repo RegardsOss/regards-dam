@@ -151,7 +151,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collectionClone.setId(collection1.getId());
         collectionClone.setIpId(collection1.getIpId());
         collectionClone.setTags(collection1.getTags());
-        collectionClone.setSipId(collection1.getSipId());
+        collectionClone.setSipId(collection1.getSipId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultPut(COLLECTIONS_COLLECTION_ID, collectionClone, expectations,
@@ -165,7 +165,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         final Collection collectionClone = new Collection(collection1.getModel());
         collectionClone.setId(collection1.getId());
         collectionClone.setIpId(collection1.getIpId());
-        collectionClone.setSipId(collection1.getSipId());
+        collectionClone.setSipId(collection1.getSipId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -186,6 +186,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     @Ignore
+    // FIXME: SVG has some work to do there!
     public void testDissociateCollections() {
         final List<Collection> toDissociate = new ArrayList<>();
         toDissociate.add(collection3);
@@ -196,6 +197,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     @Ignore
+    // FIXME: SVG has some work to do there!
     public void testAssociateCollections() {
         final List<AbstractEntity> toAssociate = new ArrayList<>();
         toAssociate.add(collection4);
