@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -69,14 +70,20 @@ public class AttributeModelServiceTest {
      */
     private IAttributePropertyRepository mockAttPropertyR;
 
+    /**
+     * Publish for model changes
+     */
+    private IPublisher mockPublisher;
+
     @Before
     public void beforeTest() {
         mockAttModelR = Mockito.mock(IAttributeModelRepository.class);
         mockRestrictionR = Mockito.mock(IRestrictionRepository.class);
         mockFragmentR = Mockito.mock(IFragmentRepository.class);
         mockAttPropertyR = Mockito.mock(IAttributePropertyRepository.class);
+        mockPublisher = Mockito.mock(IPublisher.class);
         attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
-                mockAttPropertyR);
+                mockAttPropertyR, mockPublisher);
     }
 
     @Test

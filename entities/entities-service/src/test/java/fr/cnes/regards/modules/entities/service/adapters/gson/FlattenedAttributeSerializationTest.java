@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -90,17 +91,24 @@ public class FlattenedAttributeSerializationTest {
     private IAttributeModelService mockAttModelService;
 
     /**
+     * {@link ISubscriber} service
+     */
+    private ISubscriber mockSubscriber;
+
+    /**
      * Init GSON context
      */
     @Before
     public void initGson() {
 
         mockAttModelService = Mockito.mock(IAttributeModelService.class);
+        mockSubscriber = Mockito.mock(ISubscriber.class);
+
         final GsonBuilder gsonBuilder = new GsonBuilder();
 
         gsonBuilder.registerTypeAdapterFactory(new CarEntityTypeAdapterFactory());
 
-        factory = new FlattenedAttributeAdapterFactory(mockAttModelService);
+        factory = new FlattenedAttributeAdapterFactory(mockAttModelService, mockSubscriber);
         // Register sub type(s)
         factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
         factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
