@@ -35,7 +35,14 @@ public class EnumerationValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
+        if (pTarget instanceof StringAttribute) {
+            validate((StringAttribute) pTarget, pErrors);
+        } else
+            if (pTarget instanceof StringArrayAttribute) {
+                validate((StringArrayAttribute) pTarget, pErrors);
+            } else {
+                rejectUnsupported(pErrors);
+            }
     }
 
     public void validate(StringAttribute pTarget, Errors pErrors) {
@@ -53,6 +60,7 @@ public class EnumerationValidator extends AbstractAttributeValidator {
     }
 
     private void reject(Errors pErrors) {
-        pErrors.rejectValue(attributeKey, "error.enum.value.does.not.exist", "Value not acceptable.");
+        pErrors.reject("error.enum.value.does.not.exist",
+                       String.format("Value not acceptable for attribute \"%s\".", attributeKey));
     }
 }

@@ -15,8 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
+import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -28,7 +30,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
-import fr.cnes.regards.modules.entities.service.validator.RequiredAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -90,6 +91,16 @@ public class EntityService implements IEntityService {
         for (ModelAttribute modelAtt : modAtts) {
             checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
         }
+
+        if (pErrors.hasErrors()) {
+            List<String> errors = new ArrayList<>();
+            for (ObjectError error : pErrors.getAllErrors()) {
+                String errorMessage = error.getDefaultMessage();
+                LOGGER.error(errorMessage);
+                errors.add(errorMessage);
+            }
+            throw new EntityInvalidException(errors);
+        }
     }
 
     /**
@@ -114,12 +125,30 @@ public class EntityService implements IEntityService {
         // Retrieve attribute
         AbstractAttribute<?> att = pAttMap.get(key);
 
+        // Null value check
+        if (att == null) {
+            String messageKey = "error.missing.required.attribute.message";
+            String defaultMessage = String.format("Missing required attribute \"%s\".", key);
+            if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                pErrors.reject(messageKey, defaultMessage);
+                return;
+            }
+            if (!pManageAlterable && !attModel.isOptional()) {
+                pErrors.reject(messageKey, defaultMessage);
+                return;
+            }
+            LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
+            return;
+        }
+
         // Do validation
         for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
             if (validator.supports(att.getClass())) {
                 validator.validate(att, pErrors);
             } else {
-                pErrors.rejectValue(key, "error.unsupported.validator.message", "Unsupported validator.");
+                String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                      validator.getClass().getName(), key);
+                pErrors.reject("error.unsupported.validator.message", defaultMessage);
             }
         }
     }
@@ -143,10 +172,6 @@ public class EntityService implements IEntityService {
         List<Validator> validators = new ArrayList<>();
         // Check computation mode
         validators.add(new ComputationModeValidator(pModelAttribute.getMode(), pAttributeKey));
-        // Check required attribute
-        if (!pManageAlterable && !attModel.isOptional()) {
-            validators.add(new RequiredAttributeValidator(pAttributeKey));
-        }
         // Check alterable attribute
         // Update mode only :
         // FIXME retrieve not alterable attribute from database before update
@@ -176,15 +201,13 @@ public class EntityService implements IEntityService {
             final List<AbstractAttribute<?>> pAttributes) {
         if (pAttributes != null) {
             for (AbstractAttribute<?> att : pAttributes) {
-
-                // Compute key
-                String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
-
                 // Compute value
                 if (ObjectAttribute.class.equals(att.getClass())) {
                     ObjectAttribute o = (ObjectAttribute) att;
-                    buildAttributeMap(pAttMap, key, o.getValue());
+                    buildAttributeMap(pAttMap, att.getName(), o.getValue());
                 } else {
+                    // Compute key
+                    String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
                     LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     pAttMap.put(key, att);
                 }

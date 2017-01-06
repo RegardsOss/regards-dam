@@ -30,7 +30,6 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @param <T>
  *            concrete entity class
  */
-// TODO instanciate and register for all entities
 public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapterFactory {
 
     /**

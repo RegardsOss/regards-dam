@@ -7,15 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.TypeAdapter;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
@@ -39,8 +39,11 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
+ * Manage dynamic attribute (de)serialization
+ *
  * @author Marc Sordi
  *
+ *         FIXME manage model update with events
  */
 @SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactoryBean
@@ -89,14 +92,17 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
         }
     }
 
-    /*
-     * Intercept mapping method to dynamically registers attributes
-     */
-    @Override
-    protected void doMapping(Gson pGson, Map<String, TypeAdapter<?>> pDiscriminatorToDelegate,
-            Map<Class<?>, TypeAdapter<?>> pSubtypeToDelegate) {
+    public void unregisterSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
+        if (pNamespace == null) {
+            unregisterSubtype(pType, pDiscriminatorFieldValue);
+        } else {
+            unregisterSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+        }
+    }
+
+    @PostConstruct
+    public void initSubtypes() {
         registerAttributes();
-        super.doMapping(pGson, pDiscriminatorToDelegate, pSubtypeToDelegate);
     }
 
     /**

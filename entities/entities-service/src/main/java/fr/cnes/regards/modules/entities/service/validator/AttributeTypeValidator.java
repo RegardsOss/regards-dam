@@ -28,14 +28,11 @@ public class AttributeTypeValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        if (pTarget != null) {
-            AbstractAttribute<?> att = (AbstractAttribute<?>) pTarget;
-            if (!att.represents(attributeType)) {
-                pErrors.rejectValue(attributeKey, "error.inconsistent.attribute.type.message",
-                                    "Attribute not consistent with model attribute type.");
+        AbstractAttribute<?> att = (AbstractAttribute<?>) pTarget;
+        if (!att.represents(attributeType)) {
+            pErrors.reject("error.inconsistent.attribute.type.message",
+                           String.format("Attribute \"%s\" not consistent with model attribute type.", attributeKey));
 
-            }
         }
     }
-
 }

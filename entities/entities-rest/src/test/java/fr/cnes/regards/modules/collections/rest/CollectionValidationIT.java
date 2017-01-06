@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.modules.collections.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.rest.ModelController;
 import fr.cnes.regards.modules.models.service.IModelService;

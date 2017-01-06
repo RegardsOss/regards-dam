@@ -21,9 +21,9 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -106,7 +106,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     private Model createModel(String pName) {
         final Model mod = new Model();
         mod.setName("model" + pName);
-        mod.setType(ModelType.COLLECTION);
+        mod.setType(EntityType.COLLECTION);
         return modelRepository.save(mod);
     }
 
