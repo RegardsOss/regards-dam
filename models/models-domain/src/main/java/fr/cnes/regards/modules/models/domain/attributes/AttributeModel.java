@@ -62,11 +62,11 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
-            + Model.NAME_REGEXP + "\".")
+    @Pattern(regexp = Model.NAME_REGEXP,
+            message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
     /**
@@ -105,9 +105,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Optional fragment
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     // CHECKSTYLE:OFF
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false, updatable = false)
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false,
+            updatable = false)
     // CHECKSTYLE:ON
     private Fragment fragment;
 
@@ -144,9 +145,9 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Optional group for displaying purpose
      */
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Group name must conform to regular expression \""
             + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Group name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(name = "group_name", length = Model.NAME_MAX_SIZE)
     private String group;
@@ -161,10 +162,14 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private List<AttributeProperty> properties;
 
     /**
-     * Reference
+     * Reference of a root attribute (i.e. in default fragment). Identical to name.
      */
-    @Column(name = "refname")
-    private String ref;
+    // @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name reference must conform to regular expression \""
+    // + Model.NAME_REGEXP + "\".")
+    // @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name reference must be between "
+    // + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    // @Column(name = "refname", length = Model.NAME_MAX_SIZE)
+    // private String ref;
 
     @Override
     public Long getId() {
@@ -398,13 +403,13 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         defaultValue = pDefaultValue;
     }
 
-    public String getRef() {
-        return ref;
-    }
-
-    public void setRef(String pRef) {
-        ref = pRef;
-    }
+    // public String getRef() {
+    // return ref;
+    // }
+    //
+    // public void setRef(String pRef) {
+    // ref = pRef;
+    // }
 
     public List<AttributeProperty> getProperties() {
         return properties;

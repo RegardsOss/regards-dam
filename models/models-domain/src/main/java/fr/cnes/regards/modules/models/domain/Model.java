@@ -80,9 +80,9 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     @NotNull
     @Column(nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
-    private ModelType type;
+    private EntityType type;
 
-    public static Model build(String pName, String pDescription, ModelType pModelType) {
+    public static Model build(String pName, String pDescription, EntityType pModelType) {
         final Model model = new Model();
         model.setName(pName);
         model.setDescription(pDescription);
@@ -107,11 +107,11 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
         name = pName;
     }
 
-    public ModelType getType() {
+    public EntityType getType() {
         return type;
     }
 
-    public void setType(ModelType pType) {
+    public void setType(EntityType pType) {
         type = pType;
     }
 
@@ -138,7 +138,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
         setName(pXmlElement.getName());
         setDescription(pXmlElement.getDescription());
         setVersion(pXmlElement.getVersion());
-        setType(ModelType.valueOf(pXmlElement.getType()));
+        setType(EntityType.valueOf(pXmlElement.getType()));
     }
 
     public String getVersion() {

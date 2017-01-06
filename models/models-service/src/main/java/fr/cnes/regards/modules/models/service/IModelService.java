@@ -10,7 +10,7 @@ import java.util.List;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  *
@@ -21,11 +21,13 @@ import fr.cnes.regards.modules.models.domain.ModelType;
  */
 public interface IModelService {
 
-    List<Model> getModels(ModelType pType);
+    List<Model> getModels(EntityType pType);
 
     Model createModel(Model pModel) throws ModuleException;
 
     Model getModel(Long pModelId) throws ModuleException;
+
+    Model getModelByName(String pModelName) throws ModuleException;
 
     Model updateModel(Long pModelId, Model pModel) throws ModuleException;
 

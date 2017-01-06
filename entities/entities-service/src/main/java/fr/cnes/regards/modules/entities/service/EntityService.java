@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,19 +16,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
-import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
-import fr.cnes.regards.modules.entities.service.validator.RequiredAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -88,14 +92,14 @@ public class EntityService implements IEntityService {
             checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
         }
 
-        // If errors, throw exception
         if (pErrors.hasErrors()) {
+            List<String> errors = new ArrayList<>();
             for (ObjectError error : pErrors.getAllErrors()) {
-                List<String> errorMessages = new ArrayList<>();
-                errorMessages.add(error.toString());
-                LOGGER.error(error.toString());
-                throw new EntityInvalidException(errorMessages);
+                String errorMessage = error.getDefaultMessage();
+                LOGGER.error(errorMessage);
+                errors.add(errorMessage);
             }
+            throw new EntityInvalidException(errors);
         }
     }
 
@@ -121,9 +125,31 @@ public class EntityService implements IEntityService {
         // Retrieve attribute
         AbstractAttribute<?> att = pAttMap.get(key);
 
+        // Null value check
+        if (att == null) {
+            String messageKey = "error.missing.required.attribute.message";
+            String defaultMessage = String.format("Missing required attribute \"%s\".", key);
+            if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                pErrors.reject(messageKey, defaultMessage);
+                return;
+            }
+            if (!pManageAlterable && !attModel.isOptional()) {
+                pErrors.reject(messageKey, defaultMessage);
+                return;
+            }
+            LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
+            return;
+        }
+
         // Do validation
         for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
-            ValidationUtils.invokeValidator(validator, att, pErrors);
+            if (validator.supports(att.getClass())) {
+                validator.validate(att, pErrors);
+            } else {
+                String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                      validator.getClass().getName(), key);
+                pErrors.reject("error.unsupported.validator.message", defaultMessage);
+            }
         }
     }
 
@@ -146,10 +172,6 @@ public class EntityService implements IEntityService {
         List<Validator> validators = new ArrayList<>();
         // Check computation mode
         validators.add(new ComputationModeValidator(pModelAttribute.getMode(), pAttributeKey));
-        // Check required attribute
-        if (!pManageAlterable && !attModel.isOptional()) {
-            validators.add(new RequiredAttributeValidator(pAttributeKey));
-        }
         // Check alterable attribute
         // Update mode only :
         // FIXME retrieve not alterable attribute from database before update
@@ -179,19 +201,65 @@ public class EntityService implements IEntityService {
             final List<AbstractAttribute<?>> pAttributes) {
         if (pAttributes != null) {
             for (AbstractAttribute<?> att : pAttributes) {
-
-                // Compute key
-                String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
-
                 // Compute value
                 if (ObjectAttribute.class.equals(att.getClass())) {
                     ObjectAttribute o = (ObjectAttribute) att;
-                    buildAttributeMap(pAttMap, key, o.getValue());
+                    buildAttributeMap(pAttMap, att.getName(), o.getValue());
                 } else {
+                    // Compute key
+                    String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
                     LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     pAttMap.put(key, att);
                 }
             }
         }
+    }
+
+    @Override
+    public AbstractEntity associate(AbstractEntity pSource, Set<UniformResourceName> pTargetsUrn) {
+        if (pSource instanceof DataSet) {
+            // by specification, a dataset should never be the source of a tag
+            return pSource;
+        } else {
+            if (pSource instanceof Collection) {
+                return associateCollection((Collection) pSource, pTargetsUrn);
+            } else {
+                if (pSource instanceof Document) {
+                    return associateDocument((Document) pSource, pTargetsUrn);
+                } else {
+                    return associateDataObject((DataObject) pSource, pTargetsUrn);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param pSource
+     * @param pTargetsUrn
+     * @return
+     */
+    private AbstractEntity associateDataObject(DataObject pSource, Set<UniformResourceName> pTargetsUrn) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param pSource
+     * @param pTargetsUrn
+     * @return
+     */
+    private AbstractEntity associateCollection(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param pSource
+     * @param pTargetsUrn
+     * @return
+     */
+    private AbstractEntity associateDocument(Document pSource, Set<UniformResourceName> pTargetsUrn) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

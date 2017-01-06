@@ -9,7 +9,7 @@ import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 
 /**
  * @author Sylvain Vissiere-Guerinet

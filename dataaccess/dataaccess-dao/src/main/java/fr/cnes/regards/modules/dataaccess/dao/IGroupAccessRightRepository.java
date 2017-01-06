@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 
 /**
  * @author Sylvain Vissiere-Guerinet

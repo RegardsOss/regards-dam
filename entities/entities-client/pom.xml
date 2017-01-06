@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LICENSE_PLACEHOLDER -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>fr.cnes.regards.modules.entities</groupId>
+	<artifactId>entities-client</artifactId>
+	<packaging>jar</packaging>
+
+	<parent>
+		<groupId>fr.cnes.regards.modules</groupId>
+		<artifactId>entities</artifactId>
+		<version>1.1-SNAPSHOT</version>
+	</parent>
+
+	<dependencies>
+		<!-- Regards client core -->
+		<dependency>
+			<groupId>fr.cnes.regards.client</groupId>
+			<artifactId>client-core</artifactId>
+		</dependency>
+		<!-- Module domain -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>microservice-regards</artifactId>
+		</dependency>
+	</dependencies>
+</project>

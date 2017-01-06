@@ -14,7 +14,7 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.ModelType;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -38,7 +38,7 @@ public class ModelTest extends AbstractModelTest {
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Create a model of type COLLECTION - DOCUMENT, DATA or DATASET are also available -")
     public void createModel() {
-        final Model model = createModel("MISSION", "Scientist mission collection", ModelType.COLLECTION);
+        final Model model = createModel("MISSION", "Scientist mission collection", EntityType.COLLECTION);
 
         // Create attribute
         AttributeModel attModel = AttributeModelBuilder.build("NAME", AttributeType.STRING).get();

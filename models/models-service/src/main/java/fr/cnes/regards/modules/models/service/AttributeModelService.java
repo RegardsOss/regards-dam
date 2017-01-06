@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationMode;
+import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationTarget;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -18,13 +21,16 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeProperty;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
+import fr.cnes.regards.modules.models.domain.event.NewAttributeModelEvent;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
@@ -57,11 +63,24 @@ public class AttributeModelService implements IAttributeModelService {
      */
     private final IFragmentRepository fragmentRepository;
 
+    /**
+     * {@link AttributeProperty} repository
+     */
+    private final IAttributePropertyRepository attPropertyRepository;
+
+    /**
+     * Publish for model changes
+     */
+    private final IPublisher publisher;
+
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
-            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository) {
+            IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
+            IAttributePropertyRepository pAttPropertyRepository, IPublisher pPublisher) {
         this.attModelRepository = pAttModelRepository;
         this.restrictionRepository = pRestrictionRepository;
         this.fragmentRepository = pFragmentRepository;
+        this.attPropertyRepository = pAttPropertyRepository;
+        this.publisher = pPublisher;
     }
 
     @Override
@@ -91,6 +110,9 @@ public class AttributeModelService implements IAttributeModelService {
         // // TODO modelAttributeService.updateNSBind(fragment.getId());
         // // Attention au référence cyclique entre service
         // }
+        // Publish attribute creation
+        publisher.publish(new NewAttributeModelEvent(pAttributeModel), AmqpCommunicationMode.ONE_TO_MANY,
+                          AmqpCommunicationTarget.EXTERNAL);
         return pAttributeModel;
     }
 
@@ -141,6 +163,7 @@ public class AttributeModelService implements IAttributeModelService {
     public AttributeModel createAttribute(AttributeModel pAttributeModel) throws ModuleException {
         manageRestriction(pAttributeModel);
         manageFragment(pAttributeModel);
+        manageProperties(pAttributeModel);
         manageAttributeModel(pAttributeModel);
         return pAttributeModel;
     }
@@ -178,6 +201,12 @@ public class AttributeModelService implements IAttributeModelService {
         }
         pAttributeModel.setFragment(fragment);
         return fragment;
+    }
+
+    private void manageProperties(AttributeModel pAttributeModel) {
+        if (pAttributeModel.getProperties() != null) {
+            attPropertyRepository.save(pAttributeModel.getProperties());
+        }
     }
 
     private Fragment initOrRetrieveFragment(Fragment pFragment) {

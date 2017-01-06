@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DataSet;
 
 /**
  * @author Sylvain Vissiere-Guerinet

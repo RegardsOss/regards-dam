@@ -21,8 +21,8 @@
 			<artifactId>accessrights-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.dataset</groupId>
-			<artifactId>dataset-service</artifactId>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.dataaccess</groupId>

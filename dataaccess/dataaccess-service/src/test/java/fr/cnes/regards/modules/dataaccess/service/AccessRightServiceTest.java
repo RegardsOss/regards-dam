@@ -30,10 +30,10 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
-import fr.cnes.regards.modules.dataset.domain.DataSet;
-import fr.cnes.regards.modules.dataset.service.DataSetService;
+import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.service.DataSetService;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelType;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -96,7 +96,7 @@ public class AccessRightServiceTest {
         eventPublisher = Mockito.mock(IPublisher.class);
         service = new AccessRightService(arRepo, garRepo, uarRepo, agService, dsService, eventPublisher);
 
-        final Model model = Model.build("MODEL", DESC, ModelType.DATASET);
+        final Model model = Model.build("MODEL", DESC, EntityType.DATASET);
         AG1 = new AccessGroup("AG1");
         AG2 = new AccessGroup("AG2");
         DS1 = new DataSet(model, DESC, "DS1");

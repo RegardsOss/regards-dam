@@ -31,8 +31,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.dataset</groupId>
-			<artifactId>dataset-dao</artifactId>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-dao</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

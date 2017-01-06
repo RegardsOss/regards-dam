@@ -16,20 +16,22 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>multitenant-regards-starter</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
 			<artifactId>crawler-dao</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.collections</groupId>
-			<artifactId>collections-service</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.entities</groupId>
 			<artifactId>entities-domain</artifactId>
+			<scope>test</scope>
 		</dependency>
-
-
 
 		<!-- TODO : slf4j -->
 		<dependency>
