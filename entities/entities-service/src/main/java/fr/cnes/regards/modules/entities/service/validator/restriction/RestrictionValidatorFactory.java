@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.validation.Validator;
 
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 
@@ -30,6 +30,18 @@ public final class RestrictionValidatorFactory {
     }
 
     public static Validator getValidator(AbstractRestriction pRestriction, String pAttributeKey) {
+        if (pRestriction instanceof EnumerationRestriction) {
+            return getValidator((EnumerationRestriction) pRestriction, pAttributeKey);
+        }
+        if (pRestriction instanceof DoubleRangeRestriction) {
+            return getValidator((DoubleRangeRestriction) pRestriction, pAttributeKey);
+        }
+        if (pRestriction instanceof IntegerRangeRestriction) {
+            return getValidator((IntegerRangeRestriction) pRestriction, pAttributeKey);
+        }
+        if (pRestriction instanceof PatternRestriction) {
+            return getValidator((PatternRestriction) pRestriction, pAttributeKey);
+        }
         String errorMessage = String.format("No validator found for restriction type %s and attribute %s.",
                                             pRestriction.getType(), pAttributeKey);
         LOGGER.debug(errorMessage);
