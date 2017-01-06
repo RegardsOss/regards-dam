@@ -11,18 +11,19 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.DataEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
@@ -41,6 +42,7 @@ import fr.cnes.regards.modules.models.service.IModelAttributeService;
  * Entity service implementation
  *
  * @author Marc Sordi
+ * @author Sylvain Vissiere-Guerinet
  *
  */
 @Service
@@ -59,8 +61,15 @@ public class EntityService implements IEntityService {
     /**
      * Attribute model service
      */
-    @Autowired
-    private IModelAttributeService modelAttributeService;
+    private final IModelAttributeService modelAttributeService;
+
+    private final IAbstractEntityRepository<AbstractEntity> entitiesRepository;
+
+    public EntityService(IModelAttributeService pModelAttributeService,
+            IAbstractEntityRepository<AbstractEntity> pEntitiesRepository) {
+        modelAttributeService = pModelAttributeService;
+        entitiesRepository = pEntitiesRepository;
+    }
 
     @Override
     public void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable)
@@ -193,50 +202,51 @@ public class EntityService implements IEntityService {
     }
 
     @Override
-    public AbstractEntity associate(AbstractEntity pSource, Set<UniformResourceName> pTargetsUrn) {
-        if (pSource instanceof DataSet) {
-            // by specification, a dataset should never be the source of a tag
-            return pSource;
-        } else {
-            if (pSource instanceof Collection) {
-                return associateCollection((Collection) pSource, pTargetsUrn);
-            } else {
-                if (pSource instanceof Document) {
-                    return associateDocument((Document) pSource, pTargetsUrn);
-                } else {
-                    return associateDataObject((DataObject) pSource, pTargetsUrn);
-                }
+    public Collection associate(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
+        final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
+        for (AbstractEntity target : entityToAssociate) {
+            if (!(target instanceof Document)) {
+                // Collections cannot be tagged into Document
+                pSource.getTags().add(new Tag(target.getIpId().toString()));
+            }
+            // bidirectional association if it's a collection or dataset
+            if (target instanceof Collection) {
+                target.getTags().add(new Tag(pSource.getIpId().toString()));
+                entitiesRepository.save(target);
             }
         }
+
+        return entitiesRepository.save(pSource);
     }
 
-    /**
-     * @param pSource
-     * @param pTargetsUrn
-     * @return
-     */
-    private AbstractEntity associateDataObject(DataObject pSource, Set<UniformResourceName> pTargetsUrn) {
-        // TODO Auto-generated method stub
-        return null;
+    @Override
+    public DataEntity associate(DataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
+        final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
+        for (AbstractEntity target : entityToAssociate) {
+            if (target instanceof Collection) {
+                // only Collections(and DataSets) can only be associated with DataObjects
+                pSource.getTags().add(new Tag(target.getIpId().toString()));
+            }
+        }
+        return entitiesRepository.save(pSource);
     }
 
-    /**
-     * @param pSource
-     * @param pTargetsUrn
-     * @return
-     */
-    private AbstractEntity associateCollection(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
-        // TODO Auto-generated method stub
-        return null;
+    @Override
+    public DataSet associate(DataSet pSource, Set<UniformResourceName> pTargetsUrn) {
+        return pSource;
     }
 
-    /**
-     * @param pSource
-     * @param pTargetsUrn
-     * @return
-     */
-    private AbstractEntity associateDocument(Document pSource, Set<UniformResourceName> pTargetsUrn) {
-        // TODO Auto-generated method stub
-        return null;
+    @Override
+    public <T extends AbstractEntity> T dissociate(T pSource, Set<UniformResourceName> pTargetsUrn) {
+        final List<AbstractEntity> entityToDissociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
+        final Set<Tag> toDissociateAssociations = pSource.getTags();
+        for (AbstractEntity toBeDissociated : entityToDissociate) {
+            toDissociateAssociations.remove(new Tag(toBeDissociated.getIpId().toString()));
+            toBeDissociated.getTags().remove(new Tag(pSource.getIpId().toString()));
+            entitiesRepository.save(toBeDissociated);
+        }
+        pSource.setTags(toDissociateAssociations);
+        return entitiesRepository.save(pSource);
     }
+
 }

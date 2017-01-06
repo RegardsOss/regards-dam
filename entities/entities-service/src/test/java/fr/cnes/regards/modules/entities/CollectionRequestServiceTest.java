@@ -25,6 +25,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.CollectionsRequestService;
+import fr.cnes.regards.modules.entities.service.EntityService;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -57,6 +58,8 @@ public class CollectionRequestServiceTest {
     private IStorageService storageServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
+
+    private EntityService entityServiceMocked;
 
     /**
      * initialize the repo before each test
@@ -100,8 +103,10 @@ public class CollectionRequestServiceTest {
         Mockito.when(entitiesRepositoryMocked.findByTagsValue(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
+        entityServiceMocked = Mockito.mock(EntityService.class);
+
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
-                entitiesRepositoryMocked, storageServiceMocked);
+                entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked);
 
     }
 
@@ -183,61 +188,11 @@ public class CollectionRequestServiceTest {
         Assert.assertEquals(collection, collection2);
     }
 
-    @Requirement("REGARDS_DSL_DAM_COL_230")
-    @Purpose("Si la collection courante est dissociée d’une collection alors cette dernière doit aussi être dissociée de la collection courante (suppression de la navigation bidirectionnelle).")
-    @Test
-    public void testDissociate() {
-        final List<AbstractEntity> col2List = new ArrayList<>();
-        col2List.add(collection2);
-        final Set<UniformResourceName> col2URNList = new HashSet<>();
-        col2URNList.add(collection2.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col2URNList)).thenReturn(col2List);
-
-        collectionsRequestServiceMocked.dissociateCollection(collection1.getId(), col2URNList);
-        Assert.assertFalse(collection1.getTags().contains(new Tag(collection2.getIpId().toString())));
-        Assert.assertFalse(collection2.getTags().contains(new Tag(collection1.getIpId().toString())));
-    }
-
     @Requirement("REGARDS_DSL_DAM_COL_420")
     @Purpose("TODO: Le système doit permettre de manière synchrone de rechercher des collections à partir de mots-clés (recherche full text).")
     @Ignore
     public void testRetrieveByKeyWord() {
         // TODO
-    }
-
-    @Requirement("REGARDS_DSL_DAM_COL_040")
-    @Purpose("Le système doit permettre d’associer une collection à d’autres collections.")
-    @Test
-    public void testAssociateToList() {
-        final List<AbstractEntity> col3List = new ArrayList<>();
-        col3List.add(collection3);
-        final Set<UniformResourceName> col3URNList = new HashSet<>();
-        col3URNList.add(collection3.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-
-        collectionsRequestServiceMocked.associateCollection(collection1.getId(), col3URNList);
-        Assert.assertTrue(collection1.getTags().contains(new Tag(collection3.getIpId().toString())));
-    }
-
-    @Requirement("REGARDS_DSL_DAM_CAT_450")
-    @Purpose("Le système doit permettre d’ajouter un tag de type « collection » sur un ou plusieurs AIP de type « data » à partir d’une liste d’IP_ID.")
-    @Test
-    @Ignore
-    public void testAssociateToListData() {
-
-    }
-
-    @Requirement("REGARDS_DSL_DAM_COL_050")
-    @Purpose("Si une collection cible est associée à une collection source alors la collection source doit aussi être associée à la collection cible (navigation bidirectionnelle).")
-    @Test
-    public void testAssociateSourceToTarget() {
-        final List<AbstractEntity> col3List = new ArrayList<>();
-        col3List.add(collection3);
-        final Set<UniformResourceName> col3URNList = new HashSet<>();
-        col3URNList.add(collection3.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-        collectionsRequestServiceMocked.associateCollection(collection1.getId(), col3URNList);
-        Assert.assertTrue(collection3.getTags().contains(new Tag(collection1.getIpId().toString())));
     }
 
 }

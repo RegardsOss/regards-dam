@@ -67,7 +67,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private Collection collection3;
 
-    private AbstractEntity collection4;
+    private Collection collection4;
 
     @Autowired
     private ICollectionRepository collectionRepository;

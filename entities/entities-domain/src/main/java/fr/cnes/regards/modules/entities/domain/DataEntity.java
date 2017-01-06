@@ -23,13 +23,8 @@ public abstract class DataEntity extends AbstractEntity {
         super(null, pEntityType);
     }
 
-    /**
-     * @param pFiles
-     */
-    public DataEntity(EntityType pEntityType, String pSipId, Model pModel, List<Data> pFiles) {
+    public DataEntity(EntityType pEntityType, Model pModel) {
         super(pModel, pEntityType);
-        sipId = pSipId;
-        files = pFiles;
     }
 
     /**
