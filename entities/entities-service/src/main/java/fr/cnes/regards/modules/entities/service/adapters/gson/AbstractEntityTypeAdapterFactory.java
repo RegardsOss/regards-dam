@@ -110,7 +110,7 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
 
         JsonObject entity = pJsonElement.getAsJsonObject();
         JsonElement attEl = entity.get(ATTRIBUTE_FIELD_NAME);
-        if (attEl != null) {
+        if ((attEl != null) && !attEl.isJsonNull()) {
             if (attEl.isJsonArray()) {
                 entity.add(ATTRIBUTE_FIELD_NAME, mergeArray(attEl.getAsJsonArray()));
             } else {

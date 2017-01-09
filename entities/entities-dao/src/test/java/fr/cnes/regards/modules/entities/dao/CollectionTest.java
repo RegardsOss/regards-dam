@@ -40,7 +40,7 @@ public class CollectionTest extends AbstractDaoTransactionalTest {
         model1 = modelRepository.save(model1);
         UniformResourceName collectionUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION,
                 "PROJECT", UUID.randomUUID(), 1);
-        Collection coll = new Collection(model1, collectionUrn);
+        Collection coll = new Collection(model1, collectionUrn, "coll");
         coll.setSipId("IpID");
         Collection collection1 = collectionRepository.save(coll);
         Collection collection2 = collectionRepository.findOne(collection1.getId());

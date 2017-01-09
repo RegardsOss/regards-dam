@@ -13,6 +13,11 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 public class Car extends AbstractEntity {
 
     public Car() {
-        super(null, null, EntityType.DATA);
+        super(null, null, null);
+    }
+
+    @Override
+    public String getType() {
+        return EntityType.DATA.toString();
     }
 }

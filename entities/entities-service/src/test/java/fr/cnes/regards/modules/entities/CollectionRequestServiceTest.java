@@ -76,13 +76,13 @@ public class CollectionRequestServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection1 = new Collection(pModel1, getUrn());
+        collection1 = new Collection(pModel1, getUrn(), "collection1");
         collection1.setId(1L);
-        collection2 = new Collection(pModel2, getUrn());
+        collection2 = new Collection(pModel2, getUrn(), "collection2");
         collection2.setId(2L);
-        collection3 = new Collection(pModel2, getUrn());
+        collection3 = new Collection(pModel2, getUrn(), "collection3");
         collection3.setId(3L);
-        collection4 = new Collection(pModel2, getUrn());
+        collection4 = new Collection(pModel2, getUrn(), "collection4");
         collection4.setId(4L);
         collection2URN = collection2.getIpId();
         Set<Tag> collection1Tags = collection1.getTags();

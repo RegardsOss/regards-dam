@@ -30,34 +30,34 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  *
  */
 @CheckIntegerRange
-@Entity(name = "IntegerRangeRestriction")
-@DiscriminatorValue("IntegerRange")
+@Entity
+@DiscriminatorValue("INTEGER_RANGE")
 public class IntegerRangeRestriction extends AbstractRestriction {
 
     /**
      * Minimum possible value (included)
      */
-    @Column(name = "MINI")
+    @Column(name = "mini")
     @NotNull
     private Integer min;
 
     /**
      * Maximun possible value (included)
      */
-    @Column(name = "MAXI")
+    @Column(name = "maxi")
     @NotNull
     private Integer max;
 
     /**
      * Minimum possible value (excluded)
      */
-    @Column(name = "MINI_EXCLUDED")
+    @Column(name = "mini_excluded")
     private boolean minExcluded = false;
 
     /**
      * Maximum possible value (excluded)
      */
-    @Column(name = "MAXI_EXCLUDED")
+    @Column(name = "maxi_excluded")
     private boolean maxExcluded = false;
 
     public IntegerRangeRestriction() {// NOSONAR

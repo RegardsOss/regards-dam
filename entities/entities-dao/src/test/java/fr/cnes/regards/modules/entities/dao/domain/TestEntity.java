@@ -17,8 +17,13 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Entity
 public class TestEntity extends AbstractEntity {
 
-    public TestEntity(Model pModel, UniformResourceName pIpId) {
-        super(pModel, pIpId, EntityType.DATA);
+    public TestEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
+        super(pModel, pIpId, pLabel);
+    }
+
+    @Override
+    public String getType() {
+        return EntityType.COLLECTION.toString();
     }
 
 }

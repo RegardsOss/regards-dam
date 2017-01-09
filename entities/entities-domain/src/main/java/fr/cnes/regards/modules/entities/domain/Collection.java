@@ -30,12 +30,12 @@ public class Collection extends AbstractLinkEntity { // NOSONAR
             CascadeType.REFRESH })
     protected List<AbstractLinkEntity> links;
 
-    /*
-     * public Collection() { // NOSONAR super(null, EntityType.COLLECTION); }
-     */
+    public Collection(Model pModel, UniformResourceName pIpId, String pLabel) {
+        super(pModel, pIpId, pLabel);
+    }
 
-    public Collection(Model pModel, UniformResourceName pIpId) {
-        super(pModel, pIpId, EntityType.COLLECTION);
+    public Collection() {
+        this(null, null, null);
     }
 
     public List<AbstractLinkEntity> getLinks() {
@@ -44,5 +44,10 @@ public class Collection extends AbstractLinkEntity { // NOSONAR
 
     public void setLinks(List<AbstractLinkEntity> pLinks) {
         links = pLinks;
+    }
+
+    @Override
+    public String getType() {
+        return EntityType.COLLECTION.toString();
     }
 }

@@ -15,6 +15,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Type;
+
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
@@ -26,8 +28,8 @@ import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
  *
  */
 @Entity
-@Table(name = "T_FRAGMENT", indexes = { @Index(name = "IDX_NAME", columnList = "name") })
-@SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "SEQ_FRAGMENT")
+@Table(name = "t_fragment", indexes = { @Index(name = "idx_name", columnList = "name") })
+@SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "seq_fragment")
 public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.modules.models.schema.Fragment> {
 
     /**
@@ -51,8 +53,8 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
      * Fragment name
      */
     @NotNull
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Fragment name must conform to regular expression \""
-            + Model.NAME_REGEXP + "\".")
+    @Pattern(regexp = Model.NAME_REGEXP,
+            message = "Fragment name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Fragment name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(unique = true, nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
@@ -61,11 +63,14 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     /**
      * Optional fragment description
      */
+    @Column
+    @Type(type = "text")
     private String description;
 
     /**
      * Optional fragment version
      */
+    @Column(length = 16)
     private String version;
 
     // /**

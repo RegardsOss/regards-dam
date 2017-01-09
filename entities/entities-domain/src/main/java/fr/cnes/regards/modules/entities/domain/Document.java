@@ -12,8 +12,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  *
- * TODO: to be implemented, just created for the handling of links between entities
- *
  * @author Sylvain Vissiere-Guerinet
  *
  */
@@ -21,12 +19,16 @@ import fr.cnes.regards.modules.models.domain.Model;
 @DiscriminatorValue("DOCUMENT")
 public class Document extends AbstractDataEntity {
 
-    public Document(Model pModel, UniformResourceName pIpId) {
-        super(pModel, pIpId, EntityType.DOCUMENT);
+    public Document(Model pModel, UniformResourceName pIpId, String pLabel) {
+        super(pModel, pIpId, pLabel);
     }
 
     public Document() {
-        this(null, null);
+        this(null, null, null);
     }
 
+    @Override
+    public String getType() {
+        return EntityType.DOCUMENT.toString();
+    }
 }

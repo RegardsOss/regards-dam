@@ -149,8 +149,7 @@ public class AccessRightService {
      * @throws EntityNotFoundException
      * @throws RabbitMQVhostException
      */
-    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight)
-            throws EntityNotFoundException, RabbitMQVhostException {
+    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws EntityNotFoundException {
         dataSetService.retrieveDataSet(pAccessRight.getDataset().getId());
         if (pAccessRight instanceof GroupAccessRight) {
             Long accessGroupId = ((GroupAccessRight) pAccessRight).getAccessGroup().getId();

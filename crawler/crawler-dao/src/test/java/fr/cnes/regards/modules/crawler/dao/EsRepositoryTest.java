@@ -27,7 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
-import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
+import fr.cnes.regards.modules.crawler.domain.IIndexable;
 
 /**
  * EsRepository test
@@ -46,7 +46,9 @@ public class EsRepositoryTest {
 
     /**
      * Befor class setting up method
-     * @throws Exception exception
+     *
+     * @throws Exception
+     *             exception
      */
     @BeforeClass
     public static void setUp() throws Exception {
@@ -217,7 +219,9 @@ public class EsRepositoryTest {
 
     /**
      * Load generated data into Elsaticsearch
-     * @param pCount number of documents to insert
+     *
+     * @param pCount
+     *            number of documents to insert
      */
     private void loadItemsBulk(int pCount) {
         repository.createIndex("loading");
@@ -267,7 +271,9 @@ public class EsRepositoryTest {
      * Item class
      */
     // CHECKSTYLE:OFF
-    private static class Item extends AbstractIndexable implements Serializable {
+    private static class Item implements Serializable, IIndexable {
+
+        private String id;
 
         private String name;
 
@@ -280,11 +286,10 @@ public class EsRepositoryTest {
         private double price;
 
         public Item() {
-            super("item");
         }
 
         public Item(String id, String... groups) {
-            super(id, "item");
+            this.id = id;
             this.groups = Lists.newArrayList(groups);
         }
 
@@ -340,12 +345,12 @@ public class EsRepositoryTest {
         @JsonProperty("id")
         @Override
         public String getDocId() {
-            return super.getDocId();
+            return id;
         }
 
         @Override
-        public void setDocId(String pDocId) {
-            super.setDocId(pDocId);
+        public String getType() {
+            return "item";
         }
 
     }

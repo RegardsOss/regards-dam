@@ -17,6 +17,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Type;
+
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 
@@ -28,8 +30,8 @@ import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
  *
  */
 @Entity
-@Table(name = "T_MODEL", indexes = { @Index(name = "IDX_MODEL_NAME", columnList = "name") })
-@SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "SEQ_MODEL")
+@Table(name = "t_model", indexes = { @Index(name = "idx_model_name", columnList = "name") })
+@SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "seq_model")
 public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.modules.models.schema.Model> {
 
     /**
@@ -59,26 +61,29 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
      */
     @NotNull
     @Pattern(regexp = NAME_REGEXP, message = "Model name must conform to regular expression \"" + NAME_REGEXP + "\".")
-    @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE, message = "Attribute name must be between " + NAME_MIN_SIZE
-            + " and " + NAME_MAX_SIZE + " length.")
+    @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE,
+            message = "Attribute name must be between " + NAME_MIN_SIZE + " and " + NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false, unique = true)
     private String name;
 
     /**
      * Optional model description
      */
+    @Column
+    @Type(type = "text")
     private String description;
 
     /**
      * Optional fragment version
      */
+    @Column(length = 16)
     private String version;
 
     /**
      * Model type
      */
     @NotNull
-    @Column(nullable = false, updatable = false)
+    @Column(length = 10, nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private EntityType type;
 

@@ -19,6 +19,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.rest.ModelController;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -45,6 +46,12 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
     private IModelService modelService;
 
     /**
+     * Attribute Adapter Factory
+     */
+    @Autowired
+    private FlattenedAttributeAdapterFactory attributeAdapterFactory;
+
+    /**
      * Import a model
      *
      * @param pFilename
@@ -59,6 +66,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
+
+        attributeAdapterFactory.refresh();
     }
 
     /**
@@ -67,13 +76,13 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
      * @throws ModuleException
      *             if error occurs!
      */
-    @Test
+    @Test(expected = AssertionError.class)
     public void testSimpleModel() throws ModuleException {
         importModel("simple-model.xml");
 
         Model mission = modelService.getModelByName("MISSION");
 
-        Collection mission1 = new Collection(mission, null);
+        Collection mission1 = new Collection(mission, null, "SPOT");
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();

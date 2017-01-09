@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.validation.constraints.NotNull;
@@ -20,13 +21,14 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  * @author msordi
  *
  */
-@Entity(name = "PatternRestriction")
-@DiscriminatorValue("Pattern")
+@Entity
+@DiscriminatorValue("PATTERN")
 public class PatternRestriction extends AbstractRestriction {
 
     /**
      * Validation pattern
      */
+    @Column
     @NotNull
     private String pattern;
 

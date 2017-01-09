@@ -134,6 +134,11 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
     private final String collectionCreationError = "Collection should not be created";
 
     /**
+     * Collection label
+     */
+    private static final String COLLECTION_LABEL = "label";
+
+    /**
      * Import a model
      *
      * @param pFilename
@@ -174,7 +179,7 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null);
+        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         collection.setSipId(sipId);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
@@ -211,7 +216,7 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null);
+        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         // bad values
@@ -251,7 +256,7 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null);
+        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
@@ -288,7 +293,7 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null);
+        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
@@ -324,7 +329,7 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null);
+        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
