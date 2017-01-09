@@ -90,10 +90,13 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
         collection1 = new Collection(model1);
         collection1.setSipId("SipId1");
+        collection1.setLabel("label");
         collection3 = new Collection(model1);
         collection3.setSipId("SipId3");
+        collection3.setLabel("label");
         collection4 = new Collection(model1);
         collection4.setSipId("SipId4");
+        collection4.setLabel("label");
         final Set<Tag> col1Tags = new HashSet<>();
         final Set<Tag> col4Tags = new HashSet<>();
         col1Tags.add(new Tag(collection4.getIpId().toString()));
@@ -150,6 +153,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         final Collection collectionClone = new Collection(collection1.getModel());
         collectionClone.setId(collection1.getId());
         collectionClone.setIpId(collection1.getIpId());
+        collectionClone.setLabel("label");
         collectionClone.setTags(collection1.getTags());
         collectionClone.setSipId(collection1.getSipId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -166,6 +170,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collectionClone.setId(collection1.getId());
         collectionClone.setIpId(collection1.getIpId());
         collectionClone.setSipId(collection1.getSipId() + "new");
+        collectionClone.setLabel("label");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 

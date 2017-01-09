@@ -23,8 +23,8 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  *
  */
 @Entity
-@Table(name = "T_ATT_PPTY")
-@SequenceGenerator(name = "attPropertySequence", initialValue = 1, sequenceName = "SEQ_ATT_PPTY")
+@Table(name = "t_attribute_property")
+@SequenceGenerator(name = "attPropertySequence", initialValue = 1, sequenceName = "seq_att_ppty")
 public class AttributeProperty implements IIdentifiable<Long> {
 
     /**
@@ -45,14 +45,14 @@ public class AttributeProperty implements IIdentifiable<Long> {
      */
     @NotNull
     @Size(max = KEY_MAX_SIZE)
-    @Column(name = "pptkey", length = KEY_MAX_SIZE)
+    @Column(name = "ppty_key", length = KEY_MAX_SIZE, nullable = false)
     private String key;
 
     /**
      * Custom value
      */
     @NotNull
-    @Column(name = "pptvalue")
+    @Column(name = "ppty_value", nullable = false)
     private String value;
 
     public String getKey() {
