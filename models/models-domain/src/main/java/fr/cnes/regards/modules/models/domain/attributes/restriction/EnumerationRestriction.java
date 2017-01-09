@@ -6,9 +6,12 @@ package fr.cnes.regards.modules.models.domain.attributes.restriction;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -26,15 +29,17 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  * @author msordi
  *
  */
-@Entity(name = "EnumerationRestriction")
-@DiscriminatorValue("Enumeration")
+@Entity
+@DiscriminatorValue("ENUMERATION")
 public class EnumerationRestriction extends AbstractRestriction {
 
     /**
      * Acceptable values, relevant for {@link AttributeType#ENUMERATION} attributes
      */
-    @ElementCollection
     @NotNull
+    @ElementCollection
+    @JoinTable(name = "ta_enum_restr_accept_values", joinColumns = @JoinColumn(name = "restriction_id"))
+    @Column(name = "value")
     private Set<String> acceptableValues;
 
     public EnumerationRestriction() {

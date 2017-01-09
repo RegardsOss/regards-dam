@@ -20,10 +20,10 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.Transient;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -68,21 +68,21 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
      * time at which the entity was created
      */
     @PastOrNow
-    @Column
+    @Column(name = "creation_date")
     protected LocalDateTime creationDate;
 
     /**
      * entity id for SGBD purpose mainly and REST request
      */
     @Id
-    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "SEQ_ENTITY")
+    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "seq_entity")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
     protected Long id;
 
     /**
      * Information Package ID for REST request
      */
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     @Convert(converter = UrnConverter.class)
     @NotNull
     protected UniformResourceName ipId;
@@ -96,12 +96,21 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     @Column
     protected String sipId;
 
+    @NotNull
+    @Column(length = 128, nullable = false)
+    protected String label;
+
+    @Column
+    @Type(type = "text")
+    protected String description;
+
     /**
      *
      * entities list of tags affected to this entity
      */
     @ManyToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "entity_id", foreignKey = @ForeignKey(name = "FK_ENTITY_TAGS_ID"))
+    @JoinTable(name = "ta_entity_tag", joinColumns = @JoinColumn(name = "entity_id"),
+            foreignKey = @ForeignKey(name = "fk_entity_tags_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     protected Set<Tag> tags;
 
     /**
@@ -117,14 +126,9 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
      */
     @NotNull
     @ManyToOne
-    // CHECKSTYLE:OFF
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
-    // CHECKSTYLE:ON
     protected Model model;
-
-    @Transient
-    private EntityType entityType;
 
     protected AbstractEntity(EntityType pEntityType) { // NOSONAR
         this(null, pEntityType);
@@ -222,8 +226,20 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
         sipId = pSipId;
     }
 
-    public EntityType getEntityType() {
-        return entityType;
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String pLabel) {
+        label = pLabel;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String pDescription) {
+        description = pDescription;
     }
 
     @Override

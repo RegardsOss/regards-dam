@@ -3,7 +3,10 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,16 +28,16 @@ import fr.cnes.regards.modules.models.schema.Attribute;
  *
  * A {@link ModelAttribute} is linked to a {@link Model}.<br/>
  * It contains the reference to a global {@link AttributeModel} and adds the capacity to define if its value is set
- * manually or calculated threw a calculation plugin.<<br/>
+ * manually or calculated through a calculation plugin.<<br/>
  * Thus, a same {@link AttributeModel} may be linked to different model and can either be set manually or calculated
- * depending the model.
+ * depending on the model.
  *
  * @author msordi
  *
  */
 @Entity
-@Table(name = "T_MODEL_ATT", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
-@SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "SEQ_MODEL_ATT")
+@Table(name = "ta_model_att_att", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
+@SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "seq_model_att")
 public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long>, IXmlisable<Attribute> {
 
     /**
@@ -48,7 +51,7 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      * Common attribute model
      */
     @OneToOne(optional = false)
-    @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "ATTRIBUTE_ID_FK"), updatable = false)
+    @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "fk_attribute_id"), updatable = false)
     @NotNull
     private AttributeModel attribute;
 
@@ -57,18 +60,21 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
      */
     // TODO link to a calculation plugin
     @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ComputationMode mode = ComputationMode.GIVEN;
 
     /**
      * Related model
      */
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "MODEL_ID_FK"), nullable = false, updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_model_id"), nullable = false, updatable = false)
     private Model model;
 
     /**
      * Position (allows to sort attribute in model)
      */
+    @Column
     private Integer pos = 0;
 
     public ModelAttribute() { // NOSONAR
