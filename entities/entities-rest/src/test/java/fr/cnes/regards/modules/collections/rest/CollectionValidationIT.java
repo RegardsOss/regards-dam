@@ -73,8 +73,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         Model mission = modelService.getModelByName("MISSION");
 
-        Collection mission1 = new Collection();
-        mission1.setModel(mission);
+        Collection mission1 = new Collection(mission, null);
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();

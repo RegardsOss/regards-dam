@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.entities.dao;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,6 +17,7 @@ import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTe
 import fr.cnes.regards.modules.entities.dao.domain.TestEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Tag;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -46,7 +48,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         final Model model = Model.build("name", "desc", EntityType.COLLECTION);
         modelRepository.save(model);
 
-        TestEntity entity1 = new TestEntity(model);
+        TestEntity entity1 = new TestEntity(model, getUrn());
         final Set<Tag> entity1Tags = new HashSet<>();
         entity1Tags.add(TAG_TO_SEARCH);
         entity1Tags.add(TAG_TEST);
@@ -54,7 +56,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity1.setTags(entity1Tags);
         entity1 = entityRepository.save(entity1);
 
-        TestEntity entity2 = new TestEntity(model);
+        TestEntity entity2 = new TestEntity(model, getUrn());
         final Set<Tag> entity2Tags = new HashSet<>();
         entity2Tags.add(TAG_TEST);
         entity2Tags.add(TAG_LAST);
@@ -62,7 +64,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity2.setTags(entity2Tags);
         entity2 = entityRepository.save(entity2);
 
-        TestEntity entity3 = new TestEntity(model);
+        TestEntity entity3 = new TestEntity(model, getUrn());
         final Set<Tag> entity3Tags = new HashSet<>();
         entity3Tags.add(TAG_TEST);
         entity3Tags.add(TAG_TO_SEARCH);
@@ -70,7 +72,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity3.setTags(entity3Tags);
         entity3 = entityRepository.save(entity3);
 
-        TestEntity entity4 = new TestEntity(model);
+        TestEntity entity4 = new TestEntity(model, getUrn());
         final Set<Tag> entity4Tags = new HashSet<>();
         entity4Tags.add(TAG_TEST);
         entity4Tags.add(TAG_LAST);
@@ -90,16 +92,16 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         final Model model = Model.build("name", "desc", EntityType.COLLECTION);
         modelRepository.save(model);
 
-        TestEntity entity1 = new TestEntity(model);
+        TestEntity entity1 = new TestEntity(model, getUrn());
         entity1 = entityRepository.save(entity1);
 
-        TestEntity entity2 = new TestEntity(model);
+        TestEntity entity2 = new TestEntity(model, getUrn());
         entity2 = entityRepository.save(entity2);
 
-        TestEntity entity3 = new TestEntity(model);
+        TestEntity entity3 = new TestEntity(model, getUrn());
         entity3 = entityRepository.save(entity3);
 
-        TestEntity entity4 = new TestEntity(model);
+        TestEntity entity4 = new TestEntity(model, getUrn());
         entity4 = entityRepository.save(entity4);
 
         final Set<UniformResourceName> ipIds = new HashSet<>();
@@ -119,22 +121,26 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         final Model model = Model.build("name", "desc", EntityType.COLLECTION);
         modelRepository.save(model);
 
-        TestEntity entity1 = new TestEntity(model);
+        TestEntity entity1 = new TestEntity(model, getUrn());
         entity1 = entityRepository.save(entity1);
 
-        TestEntity entity2 = new TestEntity(model);
+        TestEntity entity2 = new TestEntity(model, getUrn());
         entity2 = entityRepository.save(entity2);
 
-        TestEntity entity3 = new TestEntity(model);
+        TestEntity entity3 = new TestEntity(model, getUrn());
         entity3 = entityRepository.save(entity3);
 
-        TestEntity entity4 = new TestEntity(model);
+        TestEntity entity4 = new TestEntity(model, getUrn());
         entity4 = entityRepository.save(entity4);
 
         final Set<UniformResourceName> ipIds = new HashSet<>();
 
         final List<AbstractEntity> result = entityRepository.findByIpIdIn(ipIds);
         Assert.assertEquals(0, result.size());
+    }
+
+    private UniformResourceName getUrn() {
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, "PROJECT", UUID.randomUUID(), 1);
     }
 
 }

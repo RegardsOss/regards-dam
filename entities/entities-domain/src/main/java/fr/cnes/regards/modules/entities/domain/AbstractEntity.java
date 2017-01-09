@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -35,10 +34,8 @@ import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -85,6 +82,7 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     @Column(unique = true)
     @Convert(converter = UrnConverter.class)
     @NotNull
+    @Valid
     protected UniformResourceName ipId;
 
     /**
@@ -118,8 +116,7 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     @NotNull
     @ManyToOne
     // CHECKSTYLE:OFF
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
-            updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false, updatable = false)
     // CHECKSTYLE:ON
     protected Model model;
 
@@ -127,13 +124,12 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     private EntityType entityType;
 
     protected AbstractEntity(EntityType pEntityType) { // NOSONAR
-        this(null, pEntityType);
+        this(null, null, pEntityType);
     }
 
-    public AbstractEntity(Model model, EntityType entityType) { // NOSONAR
-        super(entityType.toString());
-        ipId = new UniformResourceName(OAISIdentifier.AIP, entityType, JWTService.getActualTenant(), UUID.randomUUID(),
-                1);
+    public AbstractEntity(Model model, UniformResourceName pIpId, EntityType pEntityType) { // NOSONAR
+        super(pEntityType.toString());
+        ipId = pIpId;
         super.setDocId(ipId.toString());
 
         this.model = model;

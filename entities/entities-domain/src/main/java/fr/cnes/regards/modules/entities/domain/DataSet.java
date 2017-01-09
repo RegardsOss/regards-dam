@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.entities.domain;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -25,8 +26,8 @@ public class DataSet extends AbstractLinkEntity {
      */
     private int score;
 
-    public DataSet(Model pModel) {
-        super(pModel, EntityType.DATASET);
+    public DataSet(Model pModel, UniformResourceName pIpId) {
+        super(pModel, pIpId, EntityType.DATASET);
     }
 
     public int getScore() {

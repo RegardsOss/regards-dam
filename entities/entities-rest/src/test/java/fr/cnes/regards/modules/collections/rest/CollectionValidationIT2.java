@@ -173,7 +173,9 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        final Collection collection = new Collection(model1, null);
+        collection.setSipId(sipId);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
@@ -208,7 +210,8 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        final Collection collection = new Collection(model1, null);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         // bad values
@@ -247,7 +250,8 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        final Collection collection = new Collection(sipId, model1, "Bad mission", "notMISSION");
+        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        final Collection collection = new Collection(model1, null);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
@@ -283,7 +287,8 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        final Collection collection = new Collection(model1, null);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
@@ -318,7 +323,8 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
+        final Collection collection = new Collection(model1, null);
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));

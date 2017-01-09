@@ -36,14 +36,8 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 @Convert(converter = UrnConverter.class)
 public class UniformResourceName {
 
-    /**
-     *
-     */
     public static final String URN_PATTERN = "URN:.+:.+:.+:.+:V\\d{1,3}(,\\d+)?(:REV.+)?";
 
-    /**
-     *
-     */
     private static final String VERSION_PREFIX = "V";
 
     private static final String DELIMITER = ":";

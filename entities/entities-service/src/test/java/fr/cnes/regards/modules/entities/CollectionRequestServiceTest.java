@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +27,9 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.CollectionsRequestService;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.storage.service.IStorageService;
 
@@ -73,13 +76,13 @@ public class CollectionRequestServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection1 = new Collection(pModel1);
+        collection1 = new Collection(pModel1, getUrn());
         collection1.setId(1L);
-        collection2 = new Collection(pModel2);
+        collection2 = new Collection(pModel2, getUrn());
         collection2.setId(2L);
-        collection3 = new Collection(pModel2);
+        collection3 = new Collection(pModel2, getUrn());
         collection3.setId(3L);
-        collection4 = new Collection(pModel2);
+        collection4 = new Collection(pModel2, getUrn());
         collection4.setId(4L);
         collection2URN = collection2.getIpId();
         Set<Tag> collection1Tags = collection1.getTags();
@@ -107,6 +110,10 @@ public class CollectionRequestServiceTest {
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
                 entitiesRepositoryMocked, storageServiceMocked);
 
+    }
+
+    private UniformResourceName getUrn() {
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Test
