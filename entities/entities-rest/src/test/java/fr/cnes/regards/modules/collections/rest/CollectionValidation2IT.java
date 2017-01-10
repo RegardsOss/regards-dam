@@ -8,12 +8,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -38,13 +38,14 @@ import fr.cnes.regards.modules.models.rest.ModelController;
  * @author Maxime Bouveron
  *
  */
+@DirtiesContext
 @MultitenantTransactional
-public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
+public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
     /**
      * Logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(CollectionValidationIT2.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CollectionValidation2IT.class);
 
     /**
      * Model Repository
@@ -233,44 +234,6 @@ public class CollectionValidationIT2 extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
         expectations.add(MockMvcResultMatchers.status().is5xxServerError());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-
-        performDefaultPost(collectionAPI, collection, expectations, collectionCreationError);
-    }
-
-    /**
-     * Test if error occurs if collection has a wrong name
-     *
-     * @throws ModuleException
-     *             module exception
-     */
-    @Ignore
-    @Test
-    public void postCollectionWithBadName() throws ModuleException {
-
-        // Create a bad collection
-
-        // Model
-        importModel(modelFile);
-        final Model model1 = modelRepository.findByName(missionName);
-
-        // Collection
-        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
-
-        atts.add(AttributeBuilder.buildString(refAtt, refValue));
-        atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
-
-        // GEO
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
-
-        collection.setAttributes(atts);
-
-        final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
-
-        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPost(collectionAPI, collection, expectations, collectionCreationError);

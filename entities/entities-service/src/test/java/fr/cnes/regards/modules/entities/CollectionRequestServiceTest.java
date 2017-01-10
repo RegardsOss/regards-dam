@@ -27,6 +27,7 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.CollectionsRequestService;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
+import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -60,6 +61,8 @@ public class CollectionRequestServiceTest {
     private IStorageService storageServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
+
+    private IdentificationService idServiceMocked;
 
     /**
      * initialize the repo before each test
@@ -107,8 +110,13 @@ public class CollectionRequestServiceTest {
         Mockito.when(entitiesRepositoryMocked.findByTagsValue(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
+        idServiceMocked = Mockito.mock(IdentificationService.class);
+        Mockito.when(idServiceMocked.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION))
+                .thenReturn(new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "TENANT",
+                        UUID.randomUUID(), 1));
+
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
-                entitiesRepositoryMocked, storageServiceMocked);
+                entitiesRepositoryMocked, storageServiceMocked, idServiceMocked);
 
     }
 

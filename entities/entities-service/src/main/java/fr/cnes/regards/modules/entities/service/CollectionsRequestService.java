@@ -20,7 +20,10 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.Tag;
+import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.storage.service.IStorageService;
 
 /**
@@ -53,18 +56,18 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     private final IAbstractEntityRepository<AbstractEntity> entitiesRepository;
 
     /**
-     *
-     * @param pCollectionRepository
-     *            repository used by service to provide data
-     * @param pPersistService
-     *            service used to contact, or not, archival storage
+     * Service managing identifier
      */
+    private final IdentificationService idService;
+
     public CollectionsRequestService(ICollectionRepository pCollectionRepository,
-            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pPersistService) {
+            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pPersistService,
+            IdentificationService pIdentificationService) {
         super();
         collectionRepository = pCollectionRepository;
         storageService = pPersistService;
         entitiesRepository = pAbstractEntityRepository;
+        idService = pIdentificationService;
     }
 
     @Override
@@ -110,7 +113,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     }
 
     /**
-     * @param pCollection
+     * @param pCollectionId
      *            a {@link Collection}
      * @param pToAssociate
      *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
@@ -150,10 +153,6 @@ public class CollectionsRequestService implements ICollectionsRequestService {
         return result;
     }
 
-    /**
-     * @param pTags
-     * @return
-     */
     private Set<UniformResourceName> extractUrns(Set<Tag> pTags) {
         return pTags.parallelStream().filter(t -> UniformResourceName.isValidUrn(t.getValue()))
                 .map(t -> UniformResourceName.fromString(t.getValue())).collect(Collectors.toSet());
@@ -232,6 +231,8 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
     @Override
     public Collection createCollection(Collection pCollection) {
+        // Generate ip_id
+        pCollection.setIpId(idService.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION));
         Collection newCollection = collectionRepository.save(pCollection);
         if (!newCollection.getTags().isEmpty()) {
             associate(newCollection);

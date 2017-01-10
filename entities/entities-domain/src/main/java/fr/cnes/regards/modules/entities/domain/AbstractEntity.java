@@ -80,7 +80,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @Column(unique = true, nullable = false)
     @Convert(converter = UrnConverter.class)
-    @NotNull
     @Valid
     protected UniformResourceName ipId;
 

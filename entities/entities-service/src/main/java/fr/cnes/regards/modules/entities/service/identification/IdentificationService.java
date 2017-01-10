@@ -25,7 +25,11 @@ public class IdentificationService {
     /**
      * Resolve request tenant
      */
-    private IThreadTenantResolver threadTenantResolver;
+    private final IThreadTenantResolver threadTenantResolver;
+
+    public IdentificationService(IThreadTenantResolver pThreadTenantResolver) {
+        this.threadTenantResolver = pThreadTenantResolver;
+    }
 
     public UniformResourceName getRandomUrn(OAISIdentifier pOAISId, EntityType pEntityType) {
         return new UniformResourceName(pOAISId, pEntityType, threadTenantResolver.getTenant(), UUID.randomUUID(), 1);

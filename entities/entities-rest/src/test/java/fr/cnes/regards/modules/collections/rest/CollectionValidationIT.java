@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -31,6 +32,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Marc Sordi
  *
  */
+@DirtiesContext
 @MultitenantTransactional
 public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
