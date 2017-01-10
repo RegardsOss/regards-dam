@@ -12,8 +12,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
 
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAccessRightValidation;
-import fr.cnes.regards.modules.plugins.domain.PluginConfiguration;
 
 /**
  * @author Sylvain Vissiere-Guerinet
