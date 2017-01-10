@@ -8,7 +8,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.entities.domain.Data;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.plugins.annotations.PluginInterface;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
  * Plugin used to check if a {@link Data} from a {@link DataSet} is accessible, or not, for an {@link AccessGroup} or a
