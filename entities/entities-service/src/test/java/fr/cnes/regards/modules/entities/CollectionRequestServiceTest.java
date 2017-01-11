@@ -27,9 +27,9 @@ import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.CollectionsRequestService;
 import fr.cnes.regards.modules.entities.service.EntityService;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
+import fr.cnes.regards.modules.entities.service.IStorageService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.storage.service.IStorageService;
 
 /**
  * @author lmieulet

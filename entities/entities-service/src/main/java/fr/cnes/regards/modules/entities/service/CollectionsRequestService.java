@@ -22,7 +22,6 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.storage.service.IStorageService;
 
 /**
  * @author lmieulet
