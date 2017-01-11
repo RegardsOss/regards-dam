@@ -8,9 +8,9 @@ import java.util.Set;
 import org.springframework.validation.Errors;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -40,13 +40,13 @@ public interface IEntityService {
      * handle association of source to a set of targets represented by their ipIds
      *
      * @param pSource
-     *            {@link DataEntity} which ipId is to be added into the Set of Tags of the targets
+     *            {@link AbstractDataEntity} which ipId is to be added into the Set of Tags of the targets
      * @param pTargetsUrn
      *            {@link Set} of {@link UniformResourceName} to identify the {@link AbstractEntity} that should be
      *            linked to pSource
      * @return Updated pSource (tag of all targets has been added to pSource)
      */
-    DataEntity associate(DataEntity pSource, Set<UniformResourceName> pTargetsUrn);
+    AbstractDataEntity associate(AbstractDataEntity pSource, Set<UniformResourceName> pTargetsUrn);
 
     /**
      * handle association of source to a set of targets represented by their ipIds

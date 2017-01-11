@@ -18,9 +18,9 @@ import org.springframework.validation.Validator;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.Tag;
@@ -220,7 +220,7 @@ public class EntityService implements IEntityService {
     }
 
     @Override
-    public DataEntity associate(DataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
+    public AbstractDataEntity associate(AbstractDataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
         final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
         for (AbstractEntity target : entityToAssociate) {
             if (target instanceof Collection) {

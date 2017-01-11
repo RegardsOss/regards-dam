@@ -20,10 +20,10 @@ public abstract class AbstractDataEntity extends AbstractEntity {
     private List<Data> files;
 
     protected AbstractDataEntity(EntityType pEntityType) {
-        this(null, pEntityType);
+        this(pEntityType, null);
     }
 
-    public DataEntity(EntityType pEntityType, Model pModel) {
+    public AbstractDataEntity(EntityType pEntityType, Model pModel) {
         super(pModel, pEntityType);
     }
 
@@ -35,7 +35,8 @@ public abstract class AbstractDataEntity extends AbstractEntity {
     }
 
     /**
-     * @param pFiles the files to set
+     * @param pFiles
+     *            the files to set
      */
     public void setFiles(List<Data> pFiles) {
         files = pFiles;

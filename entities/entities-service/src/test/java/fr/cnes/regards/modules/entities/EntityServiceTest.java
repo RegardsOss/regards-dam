@@ -60,17 +60,29 @@ public class EntityServiceTest {
         Model pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection2 = new Collection(2L, pModel2, "pDescription2", "pName2");
-        collection3 = new Collection(3L, pModel2, "pDescription3", "pName3");
-        collection4 = new Collection(4L, pModel2, "pDescription4", "pName4");
+        collection2 = new Collection(pModel2);
+        collection2.setId(2L);
+        collection2.setDescription("pDescription2");
+        collection3 = new Collection(pModel2);
+        collection3.setId(3L);
+        collection3.setDescription("pDescription3");
+        collection3.setLabel("pName3");
+        collection4 = new Collection(pModel2);
+        collection4.setId(4L);
+        collection4.setDescription("pDescription4");
+        collection4.setLabel("pName4");
         Set<Tag> collection2Tags = collection2.getTags();
         collection2Tags.add(new Tag(collection4.getIpId().toString()));
         collection2.setTags(collection2Tags);
 
         data = new DataObject();
         doc = new Document(pModel2);
-        dataset = new DataSet(pModel2, "datasetDesc", "dataset");
-        dataset2 = new DataSet(pModel2, "datasetDesc2", "dataset2");
+        dataset = new DataSet(pModel2);
+        dataset.setDescription("datasetDesc");
+        dataset.setLabel("dataset");
+        dataset2 = new DataSet(pModel2);
+        dataset2.setDescription("datasetDesc2");
+        dataset2.setLabel("dataset2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
 
