@@ -3,12 +3,10 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessright;
 
-import javax.persistence.Entity;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
@@ -16,24 +14,32 @@ import javax.validation.constraints.Min;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Entity
+@Embeddable
 public class QualityFilter {
 
-    @Id
+    /*    @Id
     @SequenceGenerator(name = "QualityFilterSequence", initialValue = 1, sequenceName = "SEQ_QUALITY_FILTER")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "QualityFilterSequence")
-    private Long id;
+    private Long id;*/
 
     @Min(0)
     @Max(10)
+    @Column(name = "max_score")
     private int maxScore;
 
     @Min(0)
     @Max(10)
+    @Column(name = "min_score")
     private int minScore;
 
-    @Enumerated
+    @Column(length = 30, name = "quality_level")
+    @Enumerated(EnumType.STRING)
     private QualityLevel qualityLevel;
+
+    @SuppressWarnings("unused")
+    private QualityFilter() {
+
+    }
 
     public QualityFilter(int pMaxScore, int pMinScore, QualityLevel pQualityLevel) {
         super();
@@ -42,13 +48,13 @@ public class QualityFilter {
         qualityLevel = pQualityLevel;
     }
 
-    public Long getId() {
+    /*    public Long getId() {
         return id;
     }
-
+    
     public void setId(Long pId) {
         id = pId;
-    }
+    }*/
 
     public int getMaxScore() {
         return maxScore;

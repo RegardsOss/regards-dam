@@ -22,7 +22,7 @@ import fr.cnes.regards.modules.entities.domain.DataSet;
 public class UserAccessRight extends AbstractAccessRight {
 
     @NotNull
-    @Column(name = "USER_EMAIL")
+    @Column(name = "user_email")
     @Convert(converter = UserConverter.class)
     private User user;
 
