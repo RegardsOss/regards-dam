@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -16,7 +15,6 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Marc Sordi
  */
 @Entity
-@DiscriminatorValue("DATASET")
 public class DataSet extends AbstractLinkEntity {
 
     /**

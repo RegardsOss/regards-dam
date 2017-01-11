@@ -6,7 +6,6 @@ package fr.cnes.regards.modules.entities.domain;
 import java.util.List;
 
 import javax.persistence.CascadeType;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 
@@ -20,7 +19,6 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @Entity
-@DiscriminatorValue("COLLECTION")
 public class Collection extends AbstractLinkEntity { // NOSONAR
 
     /**

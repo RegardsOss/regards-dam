@@ -106,7 +106,8 @@ public class FlattenedAttributeSerializationTest {
 
         final GsonBuilder gsonBuilder = new GsonBuilder();
 
-        gsonBuilder.registerTypeAdapterFactory(new CarEntityTypeAdapterFactory());
+        // gsonBuilder.registerTypeAdapterFactory(new CarEntityTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new TestEntityAdapterFactory());
 
         factory = new FlattenedAttributeAdapterFactory(mockAttModelService, mockSubscriber);
         // Register sub type(s)

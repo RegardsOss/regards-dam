@@ -30,7 +30,6 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -50,7 +49,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity(name = "t_entity")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@Gsonable
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
     /**

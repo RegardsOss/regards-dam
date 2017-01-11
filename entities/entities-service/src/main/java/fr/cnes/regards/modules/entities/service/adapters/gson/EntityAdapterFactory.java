@@ -3,132 +3,79 @@
  */
 package fr.cnes.regards.modules.entities.service.adapters.gson;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 
+import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactory;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
- * Allows to customize GSON (de)serialization for an entity inheriting from {@link AbstractEntity}.
+ *
+ * Entity adapter factory
  *
  * @author Marc Sordi
  *
- * @param <T>
- *            concrete entity class
  */
-public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapterFactory {
+@GsonTypeAdapterFactory
+public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractEntity> {
 
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityTypeAdapterFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EntityAdapterFactory.class);
 
     /**
      * attributes
      */
     private static final String ATTRIBUTE_FIELD_NAME = "attributes";
 
-    /**
-     * Entity to customize
-     */
-    private final Class<T> entityClass;
-
-    public AbstractEntityTypeAdapterFactory(Class<T> pEntityClass) {
-        this.entityClass = pEntityClass;
-        LOGGER.debug("Entity type adapter factory created for {}", pEntityClass);
+    public EntityAdapterFactory() {
+        super(AbstractEntity.class, "type", true);
+        registerSubtype(Collection.class, EntityType.COLLECTION);
+        registerSubtype(DataSet.class, EntityType.DATASET);
+        registerSubtype(Document.class, EntityType.DOCUMENT);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <E> TypeAdapter<E> create(Gson pGson, TypeToken<E> pType) {
-        final Class<? super E> requestedType = pType.getRawType();
-        if (!AbstractEntity.class.isAssignableFrom(requestedType) || (requestedType != entityClass)) {
-            return null;
-        }
+    protected JsonElement beforeWrite(JsonElement pJsonElement, Class<?> pSubType) {
 
-        return (TypeAdapter<E>) customTypeAdapter(pGson, (TypeToken<T>) pType);
-    }
+        // Do injection
+        JsonElement clone = super.beforeWrite(pJsonElement, pSubType);
 
-    /**
-     * Create custom {@link TypeAdapter}
-     *
-     * @param pGson
-     *            GSON instance
-     * @param pType
-     *            linked type
-     * @return custom {@link TypeAdapter}
-     */
-    private TypeAdapter<T> customTypeAdapter(Gson pGson, TypeToken<T> pType) {
-        final TypeAdapter<T> delegate = pGson.getDelegateAdapter(this, pType);
-        final TypeAdapter<JsonElement> elementAdapter = pGson.getAdapter(JsonElement.class);
-        return new TypeAdapter<T>() {
-
-            @Override
-            public void write(JsonWriter pOut, T pValue) throws IOException {
-                JsonElement tree = delegate.toJsonTree(pValue);
-                beforeWrite(pValue, tree);
-                elementAdapter.write(pOut, tree);
-            }
-
-            @Override
-            public T read(JsonReader pIn) throws IOException {
-                JsonElement tree = elementAdapter.read(pIn);
-                beforeRead(tree);
-                return delegate.fromJsonTree(tree);
-            }
-        };
-    }
-
-    /**
-     * Hook for manipulating serialization
-     *
-     * @param pSource
-     *            {@link AbstractEntity} to write
-     * @param pJsonElement
-     *            JSON representation of {@link AbstractEntity}
-     */
-    protected void beforeWrite(T pSource, JsonElement pJsonElement) { // NOSONAR
         LOGGER.debug("Before write");
 
-        if (!pJsonElement.isJsonObject()) {
-            throw objectRequiredException(pJsonElement);
+        if (!clone.isJsonObject()) {
+            throw objectRequiredException(clone);
         }
 
-        JsonObject entity = pJsonElement.getAsJsonObject();
+        JsonObject entity = clone.getAsJsonObject();
         JsonElement attEl = entity.get(ATTRIBUTE_FIELD_NAME);
         if ((attEl != null) && !attEl.isJsonNull()) {
             if (attEl.isJsonArray()) {
                 entity.add(ATTRIBUTE_FIELD_NAME, mergeArray(attEl.getAsJsonArray()));
             } else {
-                String errorMessage = String.format("Unexpected JSON element %s. Array required.",
-                                                    pJsonElement.toString());
+                String errorMessage = String.format("Unexpected JSON element %s. Array required.", clone.toString());
                 LOGGER.error(errorMessage);
                 throw new IllegalArgumentException(errorMessage);
             }
         }
+        return entity;
     }
 
-    /**
-     * Hook to manipulate deserialization
-     *
-     * @param pJsonElement
-     *            JSON representation of {@link AbstractEntity}
-     */
-    protected void beforeRead(JsonElement pJsonElement) {
+    @Override
+    protected JsonElement beforeRead(JsonElement pJsonElement, String pDiscriminator, Class<?> pSubType) {
         LOGGER.debug("Before read");
 
         if (!pJsonElement.isJsonObject()) {
@@ -144,7 +91,7 @@ public abstract class AbstractEntityTypeAdapterFactory<T> implements TypeAdapter
                 throw objectRequiredException(attEl);
             }
         }
-
+        return entity;
     }
 
     /**
