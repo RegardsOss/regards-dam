@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationMode;
-import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationTarget;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -30,7 +28,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
-import fr.cnes.regards.modules.models.domain.event.NewAttributeModelEvent;
+import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
+import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
@@ -111,8 +110,7 @@ public class AttributeModelService implements IAttributeModelService {
         // // Attention au référence cyclique entre service
         // }
         // Publish attribute creation
-        publisher.publish(new NewAttributeModelEvent(pAttributeModel), AmqpCommunicationMode.ONE_TO_MANY,
-                          AmqpCommunicationTarget.EXTERNAL);
+        publisher.publish(new AttributeModelCreated(pAttributeModel));
         return pAttributeModel;
     }
 
@@ -154,8 +152,11 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public void deleteAttribute(Long pAttributeId) {
-        if (attModelRepository.exists(pAttributeId)) {
+        AttributeModel attMod = attModelRepository.findOne(pAttributeId);
+        if (attMod != null) {
             attModelRepository.delete(pAttributeId);
+            // Publish attribute deletion
+            publisher.publish(new AttributeModelDeleted(attMod));
         }
     }
 

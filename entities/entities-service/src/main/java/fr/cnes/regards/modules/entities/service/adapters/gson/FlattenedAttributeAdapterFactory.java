@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service.adapters.gson;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -37,6 +40,9 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.UrlAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
+import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
@@ -44,7 +50,6 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Marc Sordi
  *
- *         FIXME manage model update with events
  */
 @SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactoryBean
@@ -109,9 +114,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
 
     @PostConstruct
     private void initSubtypes() {
-        // TODO
-        // subscriber.subscribeTo(NewAttributeModelEvent.class, pReceiver, pAmqpCommunicationMode,
-        // pAmqpCommunicationTarget);
+        subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
+        subscriber.subscribeTo(AttributeModelDeleted.class, new UnregisterHandler());
         registerAttributes();
     }
 
@@ -135,61 +139,69 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
                     registerSubtype(ObjectAttribute.class, namespace);
                 }
 
-                // Retrieve matching attribute class
-                Class<?> matchingClass;
-                switch (att.getType()) {
-                    case BOOLEAN:
-                        matchingClass = BooleanAttribute.class;
-                        break;
-                    case DATE_ARRAY:
-                        matchingClass = DateArrayAttribute.class;
-                        break;
-                    case DATE_INTERVAL:
-                        matchingClass = DateIntervalAttribute.class;
-                        break;
-                    case DATE_ISO8601:
-                        matchingClass = DateAttribute.class;
-                        break;
-                    case DOUBLE:
-                        matchingClass = DoubleAttribute.class;
-                        break;
-                    case DOUBLE_ARRAY:
-                        matchingClass = DoubleArrayAttribute.class;
-                        break;
-                    case DOUBLE_INTERVAL:
-                        matchingClass = DoubleIntervalAttribute.class;
-                        break;
-                    case GEOMETRY:
-                        matchingClass = GeometryAttribute.class;
-                        break;
-                    case INTEGER:
-                        matchingClass = IntegerAttribute.class;
-                        break;
-                    case INTEGER_ARRAY:
-                        matchingClass = IntegerArrayAttribute.class;
-                        break;
-                    case INTEGER_INTERVAL:
-                        matchingClass = IntegerIntervalAttribute.class;
-                        break;
-                    case STRING:
-                        matchingClass = StringAttribute.class;
-                        break;
-                    case STRING_ARRAY:
-                        matchingClass = StringArrayAttribute.class;
-                        break;
-                    case URL:
-                        matchingClass = UrlAttribute.class;
-                        break;
-                    default:
-                        String errorMessage = String.format("Unexpected attribute type \"%s\".", att.getType());
-                        LOGGER.error(errorMessage);
-                        throw new IllegalArgumentException(errorMessage);
-                }
-
                 // Register attribute
-                registerSubtype(matchingClass, att.getName(), namespace);
+                registerSubtype(getClassByType(att.getType()), att.getName(), namespace);
             }
         }
+    }
+
+    /**
+     * @param pAttributeType
+     *            {@link AttributeType}
+     * @return corresponding {@link Serializable} class
+     */
+    protected Class<?> getClassByType(AttributeType pAttributeType) { // NOSONAR
+        // Retrieve matching attribute class
+        Class<?> matchingClass;
+        switch (pAttributeType) {
+            case BOOLEAN:
+                matchingClass = BooleanAttribute.class;
+                break;
+            case DATE_ARRAY:
+                matchingClass = DateArrayAttribute.class;
+                break;
+            case DATE_INTERVAL:
+                matchingClass = DateIntervalAttribute.class;
+                break;
+            case DATE_ISO8601:
+                matchingClass = DateAttribute.class;
+                break;
+            case DOUBLE:
+                matchingClass = DoubleAttribute.class;
+                break;
+            case DOUBLE_ARRAY:
+                matchingClass = DoubleArrayAttribute.class;
+                break;
+            case DOUBLE_INTERVAL:
+                matchingClass = DoubleIntervalAttribute.class;
+                break;
+            case GEOMETRY:
+                matchingClass = GeometryAttribute.class;
+                break;
+            case INTEGER:
+                matchingClass = IntegerAttribute.class;
+                break;
+            case INTEGER_ARRAY:
+                matchingClass = IntegerArrayAttribute.class;
+                break;
+            case INTEGER_INTERVAL:
+                matchingClass = IntegerIntervalAttribute.class;
+                break;
+            case STRING:
+                matchingClass = StringAttribute.class;
+                break;
+            case STRING_ARRAY:
+                matchingClass = StringArrayAttribute.class;
+                break;
+            case URL:
+                matchingClass = UrlAttribute.class;
+                break;
+            default:
+                String errorMessage = String.format("Unexpected attribute type \"%s\".", pAttributeType);
+                LOGGER.error(errorMessage);
+                throw new IllegalArgumentException(errorMessage);
+        }
+        return matchingClass;
     }
 
     @Override
@@ -426,5 +438,35 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
                                             pFieldName);
         LOGGER.error(errorMessage);
         return new IllegalArgumentException(errorMessage);
+    }
+
+    /**
+     * Handle {@link AttributeModel} creation
+     *
+     * @author Marc Sordi
+     *
+     */
+    private class RegisterHandler implements IHandler<AttributeModelCreated> {
+
+        @Override
+        public void handle(TenantWrapper<AttributeModelCreated> pT) {
+            AttributeModelCreated amc = pT.getContent();
+            registerSubtype(getClassByType(amc.getAttributeType()), amc.getAttributeName(), amc.getFragmentName());
+        }
+    }
+
+    /**
+     * Handle {@link AttributeModel} deletion
+     *
+     * @author Marc Sordi
+     *
+     */
+    private class UnregisterHandler implements IHandler<AttributeModelDeleted> {
+
+        @Override
+        public void handle(TenantWrapper<AttributeModelDeleted> pT) {
+            AttributeModelDeleted amd = pT.getContent();
+            unregisterSubtype(getClassByType(amd.getAttributeType()), amd.getAttributeName(), amd.getFragmentName());
+        }
     }
 }

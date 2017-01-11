@@ -166,7 +166,7 @@ public class AccessRightService {
         }
         AbstractAccessRight created = repository.save(pAccessRight);
         eventPublisher.publish(new AccessRightCreated(created.getId()), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.INTERNAL);
+                               AmqpCommunicationTarget.MICROSERVICE);
         return created;
     }
 
@@ -202,7 +202,7 @@ public class AccessRightService {
         }
         AbstractAccessRight updated = repository.save(toBeUpdated);
         eventPublisher.publish(new AccessRightUpdated(pId), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.INTERNAL);
+                               AmqpCommunicationTarget.MICROSERVICE);
         return updated;
     }
 
@@ -213,7 +213,7 @@ public class AccessRightService {
     public void deleteAccessRight(Long pId) throws RabbitMQVhostException {
         repository.delete(pId);
         eventPublisher.publish(new AccessRightDeleted(pId), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.INTERNAL);
+                               AmqpCommunicationTarget.MICROSERVICE);
     }
 
 }
