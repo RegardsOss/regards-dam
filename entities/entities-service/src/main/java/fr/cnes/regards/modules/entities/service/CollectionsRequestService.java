@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.naming.OperationNotSupportedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -109,6 +111,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pToAssociate
      *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
      *            pCollection
+     * @throws OperationNotSupportedException
      */
     public Collection associate(Collection pCollection, Set<UniformResourceName> pToAssociate) {
         return entityService.associate(pCollection, pToAssociate);

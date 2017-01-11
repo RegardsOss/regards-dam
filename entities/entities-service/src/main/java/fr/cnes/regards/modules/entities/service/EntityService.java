@@ -20,6 +20,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
@@ -201,16 +202,15 @@ public class EntityService implements IEntityService {
         }
     }
 
-    @Override
-    public Collection associate(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
+    private Collection associateCollection(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
         final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
         for (AbstractEntity target : entityToAssociate) {
             if (!(target instanceof Document)) {
-                // Collections cannot be tagged into Document
+                // Documents cannot be tagged into Collections
                 pSource.getTags().add(new Tag(target.getIpId().toString()));
             }
             // bidirectional association if it's a collection or dataset
-            if (target instanceof Collection) {
+            if (target instanceof AbstractLinkEntity) {
                 target.getTags().add(new Tag(pSource.getIpId().toString()));
                 entitiesRepository.save(target);
             }
@@ -219,11 +219,10 @@ public class EntityService implements IEntityService {
         return entitiesRepository.save(pSource);
     }
 
-    @Override
-    public AbstractDataEntity associate(AbstractDataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
+    private AbstractDataEntity associateDataEntity(AbstractDataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
         final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
         for (AbstractEntity target : entityToAssociate) {
-            if (target instanceof Collection) {
+            if (target instanceof AbstractLinkEntity) {
                 // only Collections(and DataSets) can only be associated with DataObjects
                 pSource.getTags().add(new Tag(target.getIpId().toString()));
             }
@@ -231,8 +230,7 @@ public class EntityService implements IEntityService {
         return entitiesRepository.save(pSource);
     }
 
-    @Override
-    public DataSet associate(DataSet pSource, Set<UniformResourceName> pTargetsUrn) {
+    private DataSet associateDataSet(DataSet pSource, Set<UniformResourceName> pTargetsUrn) {
         return pSource;
     }
 
@@ -247,6 +245,21 @@ public class EntityService implements IEntityService {
         }
         pSource.setTags(toDissociateAssociations);
         return entitiesRepository.save(pSource);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends AbstractEntity> T associate(T pSource, Set<UniformResourceName> pTargetsUrn) {
+        if (pSource instanceof Collection) {
+            return (T) associateCollection((Collection) pSource, pTargetsUrn);
+        }
+        if (pSource instanceof AbstractDataEntity) {
+            return (T) associateDataEntity((AbstractDataEntity) pSource, pTargetsUrn);
+        }
+        if (pSource instanceof DataSet) {
+            return (T) associateDataSet((DataSet) pSource, pTargetsUrn);
+        }
+        throw new UnsupportedOperationException("routing for " + pSource.getClass() + " is not implemented");
     }
 
 }

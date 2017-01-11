@@ -44,6 +44,10 @@
 			<artifactId>entities-rest</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
+			<artifactId>dataaccess-rest</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>
 				fr.cnes.regards.microservices.administration
 			</groupId>
