@@ -28,34 +28,34 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  *
  */
 @CheckFloatRange
-@Entity(name = "DoubleRangeRestriction")
-@DiscriminatorValue("DoubleRange")
+@Entity
+@DiscriminatorValue("DOUBLE_RANGE")
 public class DoubleRangeRestriction extends AbstractRestriction {
 
     /**
      * Minimum possible value (included)
      */
-    @Column(name = "MINF")
+    @Column(name = "minf")
     @NotNull
     private Double min;
 
     /**
      * Maximun possible value (included)
      */
-    @Column(name = "MAXF")
+    @Column(name = "maxf")
     @NotNull
     private Double max;
 
     /**
      * Minimum possible value (excluded)
      */
-    @Column(name = "MINF_EXCLUDED")
+    @Column(name = "minf_excluded")
     private boolean minExcluded = false;
 
     /**
      * Maximum possible value (excluded)
      */
-    @Column(name = "MAXF_EXCLUDED")
+    @Column(name = "maxf_excluded")
     private boolean maxExcluded = false;
 
     public DoubleRangeRestriction() {// NOSONAR

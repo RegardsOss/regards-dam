@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,6 +26,7 @@ public class Tag implements Comparable<Tag> {
     private Long id;
 
     @NotNull
+    @Column
     private String value;
 
     public Tag(String pValue) {

@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -24,9 +25,9 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  * @author msordi
  *
  */
-@Entity(name = "T_RESTRICTION")
+@Entity(name = "t_restriction")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@SequenceGenerator(name = "restrictionSequence", initialValue = 1, sequenceName = "SEQ_RESTRICTION")
+@SequenceGenerator(name = "restrictionSequence", initialValue = 1, sequenceName = "seq_restriction")
 @JsonAdapter(RestrictionJsonAdapterFactory.class)
 public abstract class AbstractRestriction implements IRestriction, IIdentifiable<Long> {
 
@@ -40,6 +41,7 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
     /**
      * Attribute restriction type
      */
+    @Column(length = 32, nullable = false)
     @Enumerated(EnumType.STRING)
     protected RestrictionType type;
 
