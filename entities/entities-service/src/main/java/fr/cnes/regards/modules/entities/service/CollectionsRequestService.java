@@ -68,9 +68,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
     public CollectionsRequestService(ICollectionRepository pCollectionRepository,
             IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pPersistService,
-            IEntityService pEntityService) {
-            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pPersistService,
-            IdentificationService pIdentificationService) {
+            IEntityService pEntityService, IdentificationService pIdentificationService) {
         super();
         collectionRepository = pCollectionRepository;
         storageService = pPersistService;
