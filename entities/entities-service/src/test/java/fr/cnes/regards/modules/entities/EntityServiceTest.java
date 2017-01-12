@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,7 +25,9 @@ import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.EntityService;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 
@@ -54,35 +57,44 @@ public class EntityServiceTest {
 
     @Before
     public void init() {
+
         JWTService jwtService = new JWTService();
         jwtService.injectMockToken("Tenant", "PUBLIC");
         // populate the repository
         Model pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection2 = new Collection(pModel2);
+        collection2 = new Collection(pModel2,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PUBLIC", UUID.randomUUID(), 1),
+                null);
         collection2.setId(2L);
         collection2.setDescription("pDescription2");
-        collection3 = new Collection(pModel2);
+        collection3 = new Collection(pModel2,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PUBLIC", UUID.randomUUID(), 1),
+                "pName3");
         collection3.setId(3L);
         collection3.setDescription("pDescription3");
-        collection3.setLabel("pName3");
-        collection4 = new Collection(pModel2);
+        collection4 = new Collection(pModel2,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PUBLIC", UUID.randomUUID(), 1),
+                "pName4");
         collection4.setId(4L);
         collection4.setDescription("pDescription4");
-        collection4.setLabel("pName4");
         Set<Tag> collection2Tags = collection2.getTags();
         collection2Tags.add(new Tag(collection4.getIpId().toString()));
         collection2.setTags(collection2Tags);
 
         data = new DataObject();
-        doc = new Document(pModel2);
-        dataset = new DataSet(pModel2);
+        data.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, "PUBLIC", UUID.randomUUID(), 1));
+        doc = new Document(pModel2,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, "PUBLIC", UUID.randomUUID(), 1), null);
+        dataset = new DataSet(pModel2,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PUBLIC", UUID.randomUUID(), 1),
+                "dataset");
         dataset.setDescription("datasetDesc");
-        dataset.setLabel("dataset");
-        dataset2 = new DataSet(pModel2);
+        dataset2 = new DataSet(pModel2,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PUBLIC", UUID.randomUUID(), 1),
+                "dataset2");
         dataset2.setDescription("datasetDesc2");
-        dataset2.setLabel("dataset2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
 

@@ -25,7 +25,6 @@ import fr.cnes.regards.modules.entities.service.identification.IdentificationSer
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.storage.service.IStorageService;
 
 /**
  * @author lmieulet

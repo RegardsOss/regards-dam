@@ -121,8 +121,10 @@ public class CollectionRequestServiceTest {
                         UUID.randomUUID(), 1));
 
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
-                entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked);
-                entitiesRepositoryMocked, storageServiceMocked, idServiceMocked);
+                entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked, idServiceMocked);
+
+        collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
+                entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked, idServiceMocked);
 
     }
 
