@@ -19,19 +19,19 @@
 	<attribute>
 		<name>floatnb</name>
 		<description>one floating number</description>
-		<type>FLOAT</type>
+		<type>DOUBLE</type>
 		<restriction>
-			<float_range>
+			<double_range>
 				<min excluded="false">10</min>
 				<max excluded="false">20</max>
-			</float_range>
+			</double_range>
 		</restriction>
 		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<attribute>
 		<name>integer_range</name>
 		<description>an integer range</description>
-		<type>FLOAT</type>
+		<type>DOUBLE</type>
 		<restriction>
 			<integer_range>
 				<min excluded="true">20</min>

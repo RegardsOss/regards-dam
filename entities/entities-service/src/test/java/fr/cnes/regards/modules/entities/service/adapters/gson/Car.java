@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.adapters.gson;
+package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -13,6 +13,11 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 public class Car extends AbstractEntity {
 
     public Car() {
-        super(null, EntityType.DATA);
+        super(null, null, null);
+    }
+
+    @Override
+    public String getType() {
+        return EntityType.DATA.toString();
     }
 }

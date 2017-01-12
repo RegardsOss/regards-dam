@@ -5,39 +5,35 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.List;
 
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ * Abstraction for entities managing data files
+ * 
  * @author lmieulet
+ * @author Marc Sordi
  *
  */
 public abstract class AbstractDataEntity extends AbstractEntity {
 
     /**
-     *
+     * Physical data file references
      */
     private List<Data> files;
 
-    protected AbstractDataEntity(EntityType pEntityType) {
-        this(pEntityType, null);
+    protected AbstractDataEntity() {
+        this(null, null, null);
     }
 
-    public AbstractDataEntity(EntityType pEntityType, Model pModel) {
-        super(pModel, pEntityType);
+    protected AbstractDataEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
+        super(pModel, pIpId, pLabel);
     }
 
-    /**
-     * @return the files
-     */
     public List<Data> getFiles() {
         return files;
     }
 
-    /**
-     * @param pFiles
-     *            the files to set
-     */
     public void setFiles(List<Data> pFiles) {
         files = pFiles;
     }

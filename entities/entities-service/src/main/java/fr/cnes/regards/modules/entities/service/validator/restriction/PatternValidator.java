@@ -45,7 +45,14 @@ public class PatternValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
+        if (pTarget instanceof StringAttribute) {
+            validate((StringAttribute) pTarget, pErrors);
+        } else
+            if (pTarget instanceof StringArrayAttribute) {
+                validate((StringArrayAttribute) pTarget, pErrors);
+            } else {
+                rejectUnsupported(pErrors);
+            }
     }
 
     public void validate(StringAttribute pTarget, Errors pErrors) {

@@ -100,6 +100,11 @@ public class ModelService implements IModelService, IModelAttributeService {
     }
 
     @Override
+    public Model getModelByName(String pModelName) throws ModuleException {
+        return modelRepository.findByName(pModelName);
+    }
+
+    @Override
     public Model updateModel(Long pModelId, Model pModel) throws ModuleException {
         if (!pModel.isIdentifiable()) {
             throw new EntityNotIdentifiableException(
@@ -309,6 +314,8 @@ public class ModelService implements IModelService, IModelAttributeService {
                 initModel = false;
             }
             // Create attribute
+            // TODO check if attribute not already exists
+            // TODO check if fragment is consistent
             attributeModelService.createAttribute(modelAtt.getAttribute());
             // Bind attribute to model
             modelAttributeRepository.save(modelAtt);

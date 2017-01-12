@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.domain.adapters.gson;
+package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,6 +12,7 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -26,6 +28,8 @@ import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  *
@@ -82,15 +86,30 @@ public class FlattenedAttributeSerializationTest {
     private Gson gson;
 
     /**
+     * {@link AttributeModel} service
+     */
+    private IAttributeModelService mockAttModelService;
+
+    /**
+     * {@link ISubscriber} service
+     */
+    private ISubscriber mockSubscriber;
+
+    /**
      * Init GSON context
      */
     @Before
     public void initGson() {
+
+        mockAttModelService = Mockito.mock(IAttributeModelService.class);
+        mockSubscriber = Mockito.mock(ISubscriber.class);
+
         final GsonBuilder gsonBuilder = new GsonBuilder();
 
-        gsonBuilder.registerTypeAdapterFactory(new CarEntityTypeAdapterFactory());
+        // gsonBuilder.registerTypeAdapterFactory(new CarEntityTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new TestEntityAdapterFactory());
 
-        factory = new FlattenedAttributeAdapterFactory();
+        factory = new FlattenedAttributeAdapterFactory(mockAttModelService, mockSubscriber);
         // Register sub type(s)
         factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
         factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace

@@ -27,13 +27,9 @@ public class ComputationModeValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        if (pTarget == null) {
-            return;
-        }
-
         if (!ComputationMode.GIVEN.equals(computationMode)) {
-            pErrors.rejectValue(attributeKey, "error.computed.attribute.given.message",
-                                "Computed attribute value must not be set.");
+            pErrors.reject("error.computed.attribute.given.message",
+                           String.format("Computed value for attribute \"%s\" must not be set.", attributeKey));
         }
     }
 

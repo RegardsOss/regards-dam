@@ -28,15 +28,12 @@ import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 
 /**
  * REST module controller
  *
- * TODO Description
- *
- * @author TODO
+ * @author Marc Sordi
  *
  */
 @MultitenantTransactional
@@ -54,8 +51,6 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
     private static final String USER1_EMAIL = "user1@user1.user1";
 
     private AccessGroup ag1;
-
-    private User user1;
 
     @Autowired
     private IAccessGroupRepository dao;

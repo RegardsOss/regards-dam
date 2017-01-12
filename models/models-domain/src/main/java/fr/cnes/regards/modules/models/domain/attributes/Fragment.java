@@ -57,7 +57,7 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
             message = "Fragment name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Fragment name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
-    @Column(unique = true, nullable = false, updatable = false)
+    @Column(unique = true, nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
     /**
@@ -72,6 +72,16 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
      */
     @Column(length = 16)
     private String version;
+
+    // /**
+    // * Fragment reference
+    // */
+    // @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name reference must conform to regular expression \""
+    // + Model.NAME_REGEXP + "\".")
+    // @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name reference must be between "
+    // + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    // @Column(name = "refname", length = Model.NAME_MAX_SIZE)
+    // private String ref;
 
     public String getName() {
         return name;
@@ -164,4 +174,12 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     public void setVersion(String pVersion) {
         version = pVersion;
     }
+
+    // public String getRef() {
+    // return ref;
+    // }
+    //
+    // public void setRef(String pRef) {
+    // ref = pRef;
+    // }
 }

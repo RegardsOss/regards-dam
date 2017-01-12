@@ -149,8 +149,7 @@ public class AccessRightService {
      * @throws EntityNotFoundException
      * @throws RabbitMQVhostException
      */
-    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight)
-            throws EntityNotFoundException, RabbitMQVhostException {
+    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws EntityNotFoundException {
         dataSetService.retrieveDataSet(pAccessRight.getDataset().getId());
         if (pAccessRight instanceof GroupAccessRight) {
             Long accessGroupId = ((GroupAccessRight) pAccessRight).getAccessGroup().getId();
@@ -167,7 +166,7 @@ public class AccessRightService {
         }
         AbstractAccessRight created = repository.save(pAccessRight);
         eventPublisher.publish(new AccessRightCreated(created.getId()), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.INTERNAL);
+                               AmqpCommunicationTarget.MICROSERVICE);
         return created;
     }
 
@@ -203,7 +202,7 @@ public class AccessRightService {
         }
         AbstractAccessRight updated = repository.save(toBeUpdated);
         eventPublisher.publish(new AccessRightUpdated(pId), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.INTERNAL);
+                               AmqpCommunicationTarget.MICROSERVICE);
         return updated;
     }
 
@@ -214,7 +213,7 @@ public class AccessRightService {
     public void deleteAccessRight(Long pId) throws RabbitMQVhostException {
         repository.delete(pId);
         eventPublisher.publish(new AccessRightDeleted(pId), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.INTERNAL);
+                               AmqpCommunicationTarget.MICROSERVICE);
     }
 
 }

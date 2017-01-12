@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,7 +29,10 @@ import fr.cnes.regards.modules.entities.service.CollectionsRequestService;
 import fr.cnes.regards.modules.entities.service.EntityService;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
 import fr.cnes.regards.modules.entities.service.IStorageService;
+import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -61,6 +65,8 @@ public class CollectionRequestServiceTest {
 
     private EntityService entityServiceMocked;
 
+    private IdentificationService idServiceMocked;
+
     /**
      * initialize the repo before each test
      *
@@ -76,13 +82,13 @@ public class CollectionRequestServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection1 = new Collection(pModel1);
+        collection1 = new Collection(pModel1, getUrn(), "collection1");
         collection1.setId(1L);
-        collection2 = new Collection(pModel2);
+        collection2 = new Collection(pModel2, getUrn(), "collection2");
         collection2.setId(2L);
-        collection3 = new Collection(pModel2);
+        collection3 = new Collection(pModel2, getUrn(), "collection3");
         collection3.setId(3L);
-        collection4 = new Collection(pModel2);
+        collection4 = new Collection(pModel2, getUrn(), "collection4");
         collection4.setId(4L);
         collection2URN = collection2.getIpId();
         Set<Tag> collection1Tags = collection1.getTags();
@@ -109,9 +115,19 @@ public class CollectionRequestServiceTest {
 
         entityServiceMocked = Mockito.mock(EntityService.class);
 
+        idServiceMocked = Mockito.mock(IdentificationService.class);
+        Mockito.when(idServiceMocked.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION))
+                .thenReturn(new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "TENANT",
+                        UUID.randomUUID(), 1));
+
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
                 entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked);
+                entitiesRepositoryMocked, storageServiceMocked, idServiceMocked);
 
+    }
+
+    private UniformResourceName getUrn() {
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Test

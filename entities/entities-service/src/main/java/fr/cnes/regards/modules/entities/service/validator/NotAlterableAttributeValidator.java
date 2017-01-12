@@ -19,10 +19,8 @@ public class NotAlterableAttributeValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        if (pTarget != null) {
-            pErrors.rejectValue(attributeKey, "error.attribute.not.alterable.message",
-                                "Attribute not alterable must not be set.");
-        }
+        pErrors.reject("error.attribute.not.alterable.message",
+                       String.format("Attribute \"%s\" not alterable must not be set.", attributeKey));
     }
 
 }
