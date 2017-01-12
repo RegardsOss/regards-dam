@@ -55,6 +55,7 @@ public class EntityServiceTest {
 
     private DataSet dataset2;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void init() {
 
@@ -64,36 +65,26 @@ public class EntityServiceTest {
         Model pModel2 = new Model();
         pModel2.setId(2L);
 
-        collection2 = new Collection(pModel2,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PUBLIC", UUID.randomUUID(), 1),
-                null);
+        collection2 = new Collection(pModel2, getUrn(EntityType.COLLECTION), "collection2");
         collection2.setId(2L);
         collection2.setDescription("pDescription2");
-        collection3 = new Collection(pModel2,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PUBLIC", UUID.randomUUID(), 1),
-                "pName3");
+        collection3 = new Collection(pModel2, getUrn(EntityType.COLLECTION), "collection3");
         collection3.setId(3L);
         collection3.setDescription("pDescription3");
-        collection4 = new Collection(pModel2,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PUBLIC", UUID.randomUUID(), 1),
-                "pName4");
+        collection3.setLabel("pName3");
+        collection4 = new Collection(pModel2, getUrn(EntityType.COLLECTION), "collection4");
         collection4.setId(4L);
         collection4.setDescription("pDescription4");
         Set<Tag> collection2Tags = collection2.getTags();
         collection2Tags.add(new Tag(collection4.getIpId().toString()));
         collection2.setTags(collection2Tags);
 
-        data = new DataObject();
-        data.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, "PUBLIC", UUID.randomUUID(), 1));
-        doc = new Document(pModel2,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, "PUBLIC", UUID.randomUUID(), 1), null);
-        dataset = new DataSet(pModel2,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PUBLIC", UUID.randomUUID(), 1),
-                "dataset");
+        data = new DataObject(null, getUrn(EntityType.DATA), "objectc");
+        doc = new Document(pModel2, getUrn(EntityType.DOCUMENT), "doc");
+        dataset = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset");
         dataset.setDescription("datasetDesc");
-        dataset2 = new DataSet(pModel2,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PUBLIC", UUID.randomUUID(), 1),
-                "dataset2");
+        dataset.setLabel("dataset");
+        dataset2 = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset2");
         dataset2.setDescription("datasetDesc2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
@@ -105,6 +96,10 @@ public class EntityServiceTest {
                 .thenReturn(findByTagsValueCol2IpId);
 
         entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked);
+    }
+
+    private UniformResourceName getUrn(EntityType pEntityType) {
+        return new UniformResourceName(OAISIdentifier.AIP, pEntityType, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_040")

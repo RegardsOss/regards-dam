@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Abstraction for entities managing data files
- * 
+ *
  * @author lmieulet
  * @author Marc Sordi
  *

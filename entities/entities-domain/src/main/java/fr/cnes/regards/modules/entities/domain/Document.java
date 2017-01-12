@@ -12,6 +12,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  *
  * @author Sylvain Vissiere-Guerinet
+ * @author Marc Sordi
  *
  */
 @Entity

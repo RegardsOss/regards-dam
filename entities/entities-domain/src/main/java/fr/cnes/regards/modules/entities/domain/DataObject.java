@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
