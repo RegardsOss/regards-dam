@@ -27,7 +27,7 @@ public class Document extends AbstractDataEntity {
      * @param pFiles
      */
     public Document(Model pModel) {
-        super(pModel, EntityType.DOCUMENT);
+        super(EntityType.DOCUMENT, pModel);
     }
 
     public Document() {

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +23,10 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.domain.adapters.gson.AttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -68,7 +67,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private Collection collection3;
 
-    private AbstractEntity collection4;
+    private Collection collection4;
 
     @Autowired
     private ICollectionRepository collectionRepository;
@@ -190,28 +189,21 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    @Ignore
-    // FIXME: SVG has some work to do there!
     public void testDissociateCollections() {
-        final List<Collection> toDissociate = new ArrayList<>();
-        toDissociate.add(collection3);
+        final List<UniformResourceName> toDissociate = new ArrayList<>();
+        toDissociate.add(collection3.getIpId());
         expectations.add(MockMvcResultMatchers.status().isOk());
         performDefaultPut(COLLECTIONS_COLLECTION_ID_DISSOCIATE, toDissociate, expectations,
                           "Failed to dissociate collections from one collection using its id", collection1.getId());
     }
 
     @Test
-    @Ignore
-    // FIXME: SVG has some work to do there!
     public void testAssociateCollections() {
-        final List<AbstractEntity> toAssociate = new ArrayList<>();
-        toAssociate.add(collection4);
-
+        final List<UniformResourceName> toAssociate = new ArrayList<>();
+        toAssociate.add(collection4.getIpId());
         expectations.add(MockMvcResultMatchers.status().isOk());
-
         performDefaultPut(COLLECTIONS_COLLECTION_ID_ASSOCIATE, toAssociate, expectations,
                           "Failed to associate collections from one collection using its id", collection1.getId());
-
     }
 
     @Override
