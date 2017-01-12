@@ -113,6 +113,8 @@ public class CollectionRequestServiceTest {
         Mockito.when(entitiesRepositoryMocked.findByTagsValue(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
+        entityServiceMocked = Mockito.mock(EntityService.class);
+
         idServiceMocked = Mockito.mock(IdentificationService.class);
         Mockito.when(idServiceMocked.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION))
                 .thenReturn(new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "TENANT",
@@ -121,7 +123,10 @@ public class CollectionRequestServiceTest {
         entityServiceMocked = Mockito.mock(IEntityService.class);
 
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
-                entitiesRepositoryMocked, storageServiceMocked, idServiceMocked, entityServiceMocked);
+                entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked, idServiceMocked);
+
+        collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
+                entitiesRepositoryMocked, storageServiceMocked, entityServiceMocked, idServiceMocked);
 
     }
 

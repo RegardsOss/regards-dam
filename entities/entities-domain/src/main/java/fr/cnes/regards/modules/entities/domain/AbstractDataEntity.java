@@ -34,10 +34,6 @@ public abstract class AbstractDataEntity extends AbstractEntity {
         return files;
     }
 
-    /**
-     * @param pFiles
-     *            the files to set
-     */
     public void setFiles(List<Data> pFiles) {
         files = pFiles;
     }
