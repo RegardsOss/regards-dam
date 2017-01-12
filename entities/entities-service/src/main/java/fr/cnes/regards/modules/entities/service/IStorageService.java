@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.storage.service;
+package fr.cnes.regards.modules.entities.service;
 
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 

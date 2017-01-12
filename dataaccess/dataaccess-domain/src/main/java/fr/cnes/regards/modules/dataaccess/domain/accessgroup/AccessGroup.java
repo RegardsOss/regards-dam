@@ -11,6 +11,8 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,7 +33,7 @@ import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
  *
  */
 @Entity
-@Table(name = "T_ACCESS_GROUP")
+@Table(name = "t_access_group")
 public class AccessGroup implements IIdentifiable<Long> {
 
     @Id
@@ -40,23 +42,25 @@ public class AccessGroup implements IIdentifiable<Long> {
     private Long id;
 
     @NotNull
-    @Column(unique = true, updatable = false)
+    @Column(length = 32, unique = true, updatable = false)
     private String name;
 
     @NotNull
     @ElementCollection
-    @CollectionTable(name = "TA_ACCESS_GROUP_USERS", joinColumns = @JoinColumn(name = "users_email"))
+    @CollectionTable(name = "ta_access_group_users", joinColumns = @JoinColumn(name = "access_group_id"),
+            foreignKey = @ForeignKey(name = "fk_access_group_users"))
     @Convert(converter = UserConverter.class)
     private Set<User> users;
 
     @NotNull
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "accessGroup")
     private Set<GroupAccessRight> accesRights;
 
+    @Column(name = "private")
     private boolean isPrivate = Boolean.TRUE;
 
-    public AccessGroup() { // NOSONAR
-        // for hibernate
+    @SuppressWarnings("unused")
+    private AccessGroup() { // NOSONAR
     }
 
     public AccessGroup(String pName) {

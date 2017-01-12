@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Abstraction for entities managing data files
- * 
+ *
  * @author lmieulet
  * @author Marc Sordi
  *
@@ -34,6 +34,10 @@ public abstract class AbstractDataEntity extends AbstractEntity {
         return files;
     }
 
+    /**
+     * @param pFiles
+     *            the files to set
+     */
     public void setFiles(List<Data> pFiles) {
         files = pFiles;
     }

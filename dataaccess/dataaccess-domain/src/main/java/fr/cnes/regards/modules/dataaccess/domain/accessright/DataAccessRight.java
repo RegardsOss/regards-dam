@@ -3,36 +3,39 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessright;
 
-import javax.persistence.Entity;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
 import javax.validation.constraints.NotNull;
 
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAccessRightValidation;
-import fr.cnes.regards.modules.plugins.domain.PluginConfiguration;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Entity
+@Embeddable
 @DataAccessRightValidation
 public class DataAccessRight {
 
-    @Id
+    /*    @Id
     @SequenceGenerator(name = "DataAccessRightSequence", initialValue = 1, sequenceName = "SEQ_DATA_ACCESS_RIGHT")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataAccessRightSequence")
-    private Long id;
+    private Long id;*/
 
     @NotNull
-    @Enumerated
+    @Column(length = 30, name = "data_access_level")
+    @Enumerated(EnumType.STRING)
     private DataAccessLevel dataAccessLevel;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plugin_conf_id", foreignKey = @ForeignKey(name = "fk_access_right_plugin_conf"))
     private PluginConfiguration pluginConfiguration;
 
     public DataAccessRight(DataAccessLevel pDataAccessLevel) {

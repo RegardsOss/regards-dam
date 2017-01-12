@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.naming.OperationNotSupportedException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,13 +20,11 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.storage.service.IStorageService;
 
 /**
  * @author lmieulet
@@ -46,6 +46,11 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     private final IStorageService storageService;
 
     /**
+     * Service handling operation similar to all entities, per example associations
+     */
+    private final IEntityService entityService;
+
+    /**
      * DAO autowired by Spring
      */
     private final ICollectionRepository collectionRepository;
@@ -62,12 +67,13 @@ public class CollectionsRequestService implements ICollectionsRequestService {
 
     public CollectionsRequestService(ICollectionRepository pCollectionRepository,
             IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pPersistService,
-            IdentificationService pIdentificationService) {
+            IdentificationService pIdentificationService, IEntityService pEntityService) {
         super();
         collectionRepository = pCollectionRepository;
         storageService = pPersistService;
         entitiesRepository = pAbstractEntityRepository;
         idService = pIdentificationService;
+        entityService = pEntityService;
     }
 
     @Override
@@ -106,10 +112,10 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pToAssociate
      *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
      *            pCollection
+     * @throws OperationNotSupportedException
      */
-    public void associate(Collection pCollection, Set<UniformResourceName> pToAssociate) {
-        final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pToAssociate);
-        associate(pCollection, entityToAssociate);
+    public Collection associate(Collection pCollection, Set<UniformResourceName> pToAssociate) {
+        return entityService.associate(pCollection, pToAssociate);
     }
 
     /**
@@ -122,8 +128,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     @Override
     public Collection associateCollection(Long pCollectionId, Set<UniformResourceName> pToAssociate) {
         final Collection collection = collectionRepository.findOne(pCollectionId);
-        associate(collection, pToAssociate);
-        return collection;
+        return associate(collection, pToAssociate);
     }
 
     /**
@@ -196,39 +201,6 @@ public class CollectionsRequestService implements ICollectionsRequestService {
         entitiesRepository.save(pTarget);
     }
 
-    /**
-     * Associate source and target
-     *
-     * @param pSource
-     * @param pCollectionList
-     */
-    public void associate(Collection pSource, List<AbstractEntity> pCollectionList) {
-
-        for (AbstractEntity target : pCollectionList) {
-            // associate target to source
-            if (!(target instanceof Document)) {
-                // Collections cannot be tagged into Document
-                pSource.getTags().add(new Tag(target.getIpId().toString()));
-            }
-            // bidirectional association if it's a collection or dataset
-            if (target instanceof Collection) {
-                associate(pSource, target);
-            }
-        }
-        collectionRepository.save(pSource);
-    }
-
-    /**
-     * Associate source to target
-     *
-     * @param pSource
-     * @param pTarget
-     */
-    private void associate(Collection pSource, AbstractEntity pTarget) {
-        pTarget.getTags().add(new Tag(pSource.getIpId().toString()));
-        entitiesRepository.save(pTarget);
-    }
-
     @Override
     public Collection createCollection(Collection pCollection) {
         // Generate ip_id
@@ -247,8 +219,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     private void associate(Collection pNewCollection) {
         final Set<Tag> tags = pNewCollection.getTags();
         final Set<UniformResourceName> toAssociateIpIds = extractUrns(tags);
-        final List<AbstractEntity> toLink = entitiesRepository.findByIpIdIn(toAssociateIpIds);
-        associate(pNewCollection, toLink);
+        associate(pNewCollection, toAssociateIpIds);
     }
 
     @Override
@@ -271,15 +242,8 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     @Override
     public Collection dissociateCollection(Long pCollectionId, Set<UniformResourceName> pToBeDissociated) {
         final Collection dissociatedCollection = collectionRepository.findOne(pCollectionId);
-        final List<AbstractEntity> toBeDissociated = entitiesRepository.findByIpIdIn(pToBeDissociated);
-        dissociate(dissociatedCollection, toBeDissociated);
-        return dissociatedCollection;
-    }
 
-    public Collection associateCollection(Long pCollectionId, List<AbstractEntity> pToBeAssociatedWith) {
-        final Collection associatedCollection = collectionRepository.findOne(pCollectionId);
-        associate(associatedCollection, pToBeAssociatedWith);
-        return associatedCollection;
+        return entityService.dissociate(dissociatedCollection, pToBeDissociated);
     }
 
 }
