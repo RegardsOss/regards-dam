@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities;
+package fr.cnes.regards.modules.entities.service;
 
 import java.util.ArrayList;
 import java.util.HashSet;
