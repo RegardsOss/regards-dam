@@ -33,13 +33,12 @@ public class SqlConnectionPluginTest {
                 .addParameter(DefaultSqlConnectionPlugin.DRIVER, "org.postgresql.Driver").getParameters();
 
         DefaultSqlConnectionPlugin sqlConn = PluginUtils.getPlugin(parameters, DefaultSqlConnectionPlugin.class,
-                                                            Arrays.asList(PLUGIN_PACKAGE));
+                                                                   Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
         Assert.assertTrue(sqlConn.testConnection());
     }
-    
-    
+
     @Test
     public void getPostGreSqlConnectionError() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
@@ -49,13 +48,12 @@ public class SqlConnectionPluginTest {
                 .addParameter(DefaultSqlConnectionPlugin.DRIVER, "org.postgresql.Driver").getParameters();
 
         DefaultSqlConnectionPlugin sqlConn = PluginUtils.getPlugin(parameters, DefaultSqlConnectionPlugin.class,
-                                                            Arrays.asList(PLUGIN_PACKAGE));
+                                                                   Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
         Assert.assertFalse(sqlConn.testConnection());
     }
-    
-    // oracle.jdbc.OracleDriver
+
     @Test
     public void getOracleSqlConnection() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
@@ -65,13 +63,10 @@ public class SqlConnectionPluginTest {
                 .addParameter(DefaultSqlConnectionPlugin.DRIVER, "oracle.jdbc.OracleDriver").getParameters();
 
         DefaultSqlConnectionPlugin sqlConn = PluginUtils.getPlugin(parameters, DefaultSqlConnectionPlugin.class,
-                                                            Arrays.asList(PLUGIN_PACKAGE));
+                                                                   Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
         Assert.assertTrue(sqlConn.testConnection());
     }
 
-    
 }
-
-

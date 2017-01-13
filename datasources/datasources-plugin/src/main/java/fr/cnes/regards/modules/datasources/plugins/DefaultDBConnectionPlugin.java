@@ -27,12 +27,12 @@ import fr.cnes.regards.modules.plugins.annotations.PluginParameter;
  * @since 1.0-SNAPSHOT
  */
 @Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a SQL database")
-public class DefaultSqlConnectionPlugin implements IConnectionPlugin {
+public class DefaultDBConnectionPlugin implements IConnectionPlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultSqlConnectionPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultDBConnectionPlugin.class);
 
     public static final String USER = "user";
 
