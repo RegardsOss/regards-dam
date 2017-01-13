@@ -7,11 +7,11 @@ import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.collections4.IterableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -266,7 +266,8 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException {
-        return IterableUtils.toList(attModelRepository.findByFragmentId(pFragmentId));
+        Iterable<AttributeModel> attributeModels = attModelRepository.findByFragmentId(pFragmentId);
+        return (attributeModels != null) ? ImmutableList.copyOf(attributeModels) : Collections.emptyList();
     }
 
     @Override
