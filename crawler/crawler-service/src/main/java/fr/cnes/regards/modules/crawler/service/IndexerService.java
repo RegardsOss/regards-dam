@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.entities.service.crawler;
+package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Map;
 
@@ -19,6 +19,11 @@ public class IndexerService implements IIndexerService {
     @Override
     public boolean createIndex(String pIndex) {
         return repository.createIndex(pIndex);
+    }
+
+    @Override
+    public boolean deleteIndex(String pIndex) {
+        return repository.deleteIndex(pIndex);
     }
 
     @Override

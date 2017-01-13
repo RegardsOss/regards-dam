@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.entities.service.crawler;
+package fr.cnes.regards.modules.crawler.service;
 
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.entities.service.crawler;
+package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Map;
 
@@ -7,6 +7,8 @@ import fr.cnes.regards.modules.crawler.domain.IIndexable;
 public interface IIndexerService {
 
     boolean createIndex(String pIndex);
+
+    boolean deleteIndex(String pIndex);
 
     boolean saveEntity(String pIndex, IIndexable pEntity);
 

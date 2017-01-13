@@ -1,7 +1,9 @@
-package fr.cnes.regards.modules.entities.service.crawler;
+package fr.cnes.regards.modules.crawler.service;
 
 import org.junit.After;
 import org.junit.Before;
+
+import fr.cnes.regards.modules.crawler.service.ICrawlerService;
 
 //@RunWith(MockitoJUnitRunner.class)
 public class CrawlerServiceTest {
