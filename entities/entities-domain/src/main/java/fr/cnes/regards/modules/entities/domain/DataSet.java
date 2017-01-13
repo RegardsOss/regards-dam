@@ -3,21 +3,18 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  *
- * FIXME: class initialized for dataaccess requirement, to be really implemented
- *
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author Marc Sordi
  */
 @Entity
-@DiscriminatorValue("DATASET")
 public class DataSet extends AbstractLinkEntity {
 
     /**
@@ -25,8 +22,8 @@ public class DataSet extends AbstractLinkEntity {
      */
     private int score;
 
-    public DataSet(Model pModel) {
-        super(pModel, EntityType.DATASET);
+    public DataSet(Model pModel, UniformResourceName pIpId, String pLabel) {
+        super(pModel, pIpId, pLabel);
     }
 
     public int getScore() {
@@ -35,6 +32,11 @@ public class DataSet extends AbstractLinkEntity {
 
     public void setScore(int pScore) {
         score = pScore;
+    }
+
+    @Override
+    public String getType() {
+        return EntityType.DATASET.toString();
     }
 
 }

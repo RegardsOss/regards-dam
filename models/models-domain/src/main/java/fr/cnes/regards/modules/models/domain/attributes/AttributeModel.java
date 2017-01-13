@@ -47,8 +47,8 @@ import fr.cnes.regards.modules.models.schema.Type;
  *
  */
 @Entity
-@Table(name = "T_ATT_MODEL", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "fragment_id" }))
-@SequenceGenerator(name = "attModelSequence", initialValue = 1, sequenceName = "SEQ_ATT_MODEL")
+@Table(name = "t_attribute_model", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "fragment_id" }))
+@SequenceGenerator(name = "attModelSequence", initialValue = 1, sequenceName = "seq_att_model")
 public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute> {
 
     /**
@@ -62,16 +62,18 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = Model.NAME_REGEXP,
-            message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+            + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
     /**
      * Optional attribute description
      */
+    @Column
+    @org.hibernate.annotations.Type(type = "text")
     private String description;
 
     /**
@@ -83,33 +85,33 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute type
      */
     @NotNull
-    @Column(nullable = false, updatable = false)
+    @Column(length = 32, nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private AttributeType type;
 
     /**
      * Unit useful for number based attributes
      */
+    @Column(length = 16)
     private String unit;
 
     /**
      * Precision useful for double based attributes
      */
+    @Column
     private Integer precision;
 
     /**
      * Array size useful for array based attributes
      */
+    @Column
     private Integer arraysize;
 
     /**
      * Optional fragment
      */
     @ManyToOne
-    // CHECKSTYLE:OFF
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "FRAGMENT_ID_FK"), nullable = false,
-            updatable = false)
-    // CHECKSTYLE:ON
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "fk_fragment_id"), nullable = false, updatable = false)
     private Fragment fragment;
 
     /**
@@ -122,32 +124,35 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Whether this attribute can be used for facet<br/>
      * Only queryable attribute can be a facet!
      */
+    @Column
     private boolean facetable;
 
     /**
      * Whether this attribute can be alterate by users
      */
+    @Column
     private boolean alterable;
 
     /**
      * Whether this attribute is optional
      */
+    @Column
     private boolean optional;
 
     /**
      * Applicable restriction
      */
     @OneToOne(orphanRemoval = true)
-    @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "RESTRICTION_ID_FK"))
+    @JoinColumn(name = "restriction_id", foreignKey = @ForeignKey(name = "fk_restriction_id"))
     @Valid
     private AbstractRestriction restriction;
 
     /**
      * Optional group for displaying purpose
      */
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
+    @Pattern(regexp = Model.NAME_REGEXP, message = "Group name must conform to regular expression \""
             + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Group name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(name = "group_name", length = Model.NAME_MAX_SIZE)
     private String group;
@@ -156,16 +161,19 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Custom attribute properties
      */
     @Valid
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "att_ppty_id", foreignKey = @ForeignKey(name = "FK_ATT_PPTY_ATT"))
-    @Column(name = "att_properties")
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "fk_att_ppty_att"))
     private List<AttributeProperty> properties;
 
     /**
-     * Reference
+     * Reference of a root attribute (i.e. in default fragment). Identical to name.
      */
-    @Column(name = "refname")
-    private String ref;
+    // @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name reference must conform to regular expression \""
+    // + Model.NAME_REGEXP + "\".")
+    // @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name reference must be between "
+    // + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    // @Column(name = "refname", length = Model.NAME_MAX_SIZE)
+    // private String ref;
 
     @Override
     public Long getId() {
@@ -399,13 +407,13 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         defaultValue = pDefaultValue;
     }
 
-    public String getRef() {
-        return ref;
-    }
-
-    public void setRef(String pRef) {
-        ref = pRef;
-    }
+    // public String getRef() {
+    // return ref;
+    // }
+    //
+    // public void setRef(String pRef) {
+    // ref = pRef;
+    // }
 
     public List<AttributeProperty> getProperties() {
         return properties;

@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -20,10 +19,10 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.Transient;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -31,17 +30,13 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
-import fr.cnes.regards.modules.crawler.domain.AbstractIndexable;
+import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -54,8 +49,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity(name = "t_entity")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@Gsonable
-public abstract class AbstractEntity extends AbstractIndexable implements IIdentifiable<Long> {
+public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
     /**
      * last time the entity was updated
@@ -68,23 +62,23 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
      * time at which the entity was created
      */
     @PastOrNow
-    @Column
+    @Column(name = "creation_date")
     protected LocalDateTime creationDate;
 
     /**
      * entity id for SGBD purpose mainly and REST request
      */
     @Id
-    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "SEQ_ENTITY")
+    @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "seq_entity")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
     protected Long id;
 
     /**
      * Information Package ID for REST request
      */
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     @Convert(converter = UrnConverter.class)
-    @NotNull
+    @Valid
     protected UniformResourceName ipId;
 
     /**
@@ -96,12 +90,20 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
     @Column
     protected String sipId;
 
+    @NotNull
+    @Column(length = 128, nullable = false)
+    protected String label;
+
+    @Column
+    @Type(type = "text")
+    protected String description;
+
     /**
      *
      * entities list of tags affected to this entity
      */
     @ManyToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "entity_id", foreignKey = @ForeignKey(name = "FK_ENTITY_TAGS_ID"))
+    @JoinTable(name = "ta_entity_tag", joinColumns = @JoinColumn(name = "entity_id"), foreignKey = @ForeignKey(name = "fk_entity_tags_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     protected Set<Tag> tags;
 
     /**
@@ -117,29 +119,25 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
      */
     @NotNull
     @ManyToOne
-    // CHECKSTYLE:OFF
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "FK_ENTITY_MODEL_ID"), nullable = false,
-            updatable = false)
-    // CHECKSTYLE:ON
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false, updatable = false)
     protected Model model;
 
-    @Transient
-    private EntityType entityType;
-
-    protected AbstractEntity(EntityType pEntityType) { // NOSONAR
-        this(null, pEntityType);
+    public AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
+        this.model = pModel;
+        this.ipId = pIpId;
+        this.label = pLabel;
+        this.creationDate = LocalDateTime.now();
+        this.lastUpdate = LocalDateTime.now();
+        tags = new HashSet<>();
     }
 
-    public AbstractEntity(Model model, EntityType entityType) { // NOSONAR
-        super(entityType.toString());
-        ipId = new UniformResourceName(OAISIdentifier.AIP, entityType, JWTService.getActualTenant(), UUID.randomUUID(),
-                1);
-        super.setDocId(ipId.toString());
+    protected AbstractEntity() { // NOSONAR
+        this(null, null, null);
+    }
 
-        this.model = model;
-        creationDate = LocalDateTime.now();
-        lastUpdate = LocalDateTime.now();
-        tags = new HashSet<>();
+    @Override
+    public String getDocId() {
+        return ipId.toString();
     }
 
     /**
@@ -187,7 +185,6 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
 
     public void setIpId(UniformResourceName pIpId) {
         ipId = pIpId;
-        super.setDocId(ipId.toString());
     }
 
     public Set<Tag> getTags() {
@@ -222,18 +219,53 @@ public abstract class AbstractEntity extends AbstractIndexable implements IIdent
         sipId = pSipId;
     }
 
-    public EntityType getEntityType() {
-        return entityType;
+    public String getLabel() {
+        return label;
     }
 
-    @Override
-    public boolean equals(Object pObj) {
-        return (pObj instanceof AbstractEntity) && ((AbstractEntity) pObj).getIpId().equals(getIpId());
+    public void setLabel(String pLabel) {
+        label = pLabel;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String pDescription) {
+        description = pDescription;
     }
 
     @Override
     public int hashCode() {
-        return ipId.hashCode();
+        final int prime = 31;
+        int result = 1;
+        // CHECKSTYLE:OFF
+        result = (prime * result) + ((ipId == null) ? 0 : ipId.hashCode());
+        // CHECKSTYLE:ON
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        if (this == pObj) {
+            return true;
+        }
+        if (pObj == null) {
+            return false;
+        }
+        if (getClass() != pObj.getClass()) {
+            return false;
+        }
+        AbstractEntity other = (AbstractEntity) pObj;
+        if (ipId == null) {
+            if (other.getIpId() != null) {
+                return false;
+            }
+        } else
+            if (!ipId.equals(other.getIpId())) {
+                return false;
+            }
+        return true;
     }
 
 }

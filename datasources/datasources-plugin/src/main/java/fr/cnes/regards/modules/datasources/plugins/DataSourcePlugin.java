@@ -4,8 +4,8 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.plugins.plugintypes.AbstractDataSourcePlugin;
-import fr.cnes.regards.modules.plugins.annotations.Plugin;
 
 /**
  * Class DataSourcePlugin

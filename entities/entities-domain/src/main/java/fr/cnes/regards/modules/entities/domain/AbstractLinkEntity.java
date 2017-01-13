@@ -1,23 +1,24 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class identifying a linkable entity (ie Collection or DataSet)
+ * Class identifying a linkable entity (i.e. Collection or DataSet)
  */
 @Entity
-public class AbstractLinkEntity extends AbstractEntity {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public abstract class AbstractLinkEntity extends AbstractEntity {
 
-    protected AbstractLinkEntity(EntityType pEntityType) {
-        this(null, pEntityType);
+    protected AbstractLinkEntity() {
+        this(null, null, null);
     }
 
-    protected AbstractLinkEntity(Model pModel, EntityType pEntityType) {
-        super(pModel, pEntityType);
-
+    protected AbstractLinkEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
+        super(pModel, pIpId, pLabel);
     }
-
 }

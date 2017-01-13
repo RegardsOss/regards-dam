@@ -47,7 +47,17 @@ public class IntegerRangeValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
+        if (pTarget instanceof IntegerAttribute) {
+            validate((IntegerAttribute) pTarget, pErrors);
+        } else
+            if (pTarget instanceof IntegerArrayAttribute) {
+                validate((IntegerArrayAttribute) pTarget, pErrors);
+            } else
+                if (pTarget instanceof IntegerIntervalAttribute) {
+                    validate((IntegerIntervalAttribute) pTarget, pErrors);
+                } else {
+                    rejectUnsupported(pErrors);
+                }
     }
 
     public void validate(IntegerAttribute pTarget, Errors pErrors) {

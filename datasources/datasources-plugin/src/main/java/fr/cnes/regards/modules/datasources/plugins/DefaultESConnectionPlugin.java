@@ -14,10 +14,10 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
-import fr.cnes.regards.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.plugins.annotations.PluginInit;
-import fr.cnes.regards.modules.plugins.annotations.PluginParameter;
 
 /**
  * Class DefaultSqlConnectionPlugin

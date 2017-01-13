@@ -4,7 +4,7 @@
 
 package fr.cnes.regards.modules.datasources.plugins.plugintypes;
 
-import fr.cnes.regards.modules.plugins.annotations.PluginInterface;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
  * Class IConnectionPlugin

@@ -25,7 +25,7 @@
 		facetable="false">
 		<name>DATA</name>
 		<description>physical data</description>
-		<type>DOUBLE_ARRAY</type>
+		<type arraysize="3" unit="km" precision="2">DOUBLE_ARRAY</type>
 	</attribute>
 	<attribute group="test">
 		<name>planets</name>

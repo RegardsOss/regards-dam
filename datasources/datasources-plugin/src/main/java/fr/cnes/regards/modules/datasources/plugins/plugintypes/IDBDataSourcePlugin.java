@@ -7,14 +7,14 @@ package fr.cnes.regards.modules.datasources.plugins.plugintypes;
 import java.util.List;
 import java.util.Map;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.datasources.plugins.domain.Column;
 import fr.cnes.regards.modules.datasources.plugins.domain.Table;
-import fr.cnes.regards.modules.plugins.annotations.PluginInterface;
 
 /**
  * Class IDBDataSourcePlugin
  * 
- * Allows to search in a data base, and to explore a 
+ * Allows to search in a data base, and to explore a
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT

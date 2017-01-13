@@ -28,8 +28,10 @@ public class SubsettedAccessRightValidator implements ConstraintValidator<Subset
         if (pValue == null) {
             return true;
         }
-        Set<AttributeModel> subsettingCriteria = pValue.getSubsettingCriteria();
-        return onlyContainsSearchCritera(subsettingCriteria);
+        // TODO à voir quand ça sera implémenté
+        // Set<AttributeModel> subsettingCriteria = pValue.getSubsettingCriteria();
+        // return onlyContainsSearchCritera(subsettingCriteria);
+        return true;
     }
 
     /**

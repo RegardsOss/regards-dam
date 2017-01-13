@@ -47,7 +47,17 @@ public class DoubleRangeValidator extends AbstractAttributeValidator {
 
     @Override
     public void validate(Object pTarget, Errors pErrors) {
-        pErrors.rejectValue(attributeKey, INCONSISTENT_ATTRIBUTE);
+        if (pTarget instanceof DoubleAttribute) {
+            validate((DoubleAttribute) pTarget, pErrors);
+        } else
+            if (pTarget instanceof DoubleArrayAttribute) {
+                validate((DoubleArrayAttribute) pTarget, pErrors);
+            } else
+                if (pTarget instanceof DoubleIntervalAttribute) {
+                    validate((DoubleIntervalAttribute) pTarget, pErrors);
+                } else {
+                    rejectUnsupported(pErrors);
+                }
     }
 
     public void validate(DoubleAttribute pTarget, Errors pErrors) {
@@ -97,7 +107,7 @@ public class DoubleRangeValidator extends AbstractAttributeValidator {
     }
 
     private void reject(Errors pErrors) {
-        pErrors.rejectValue(attributeKey, "error.double.value.not.in.required.range",
-                            "Value not constistent with restriction range.");
+        pErrors.reject("error.double.value.not.in.required.range", String
+                .format("Value not consistent with restriction range for attribute \"%s\".", attributeKey));
     }
 }

@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +24,10 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
-import fr.cnes.regards.modules.entities.domain.adapters.gson.AttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -68,16 +68,13 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private Collection collection3;
 
-    private AbstractEntity collection4;
+    private Collection collection4;
 
     @Autowired
     private ICollectionRepository collectionRepository;
 
     @Autowired
     private IModelRepository modelRepository;
-
-    @Autowired
-    private AttributeAdapterFactory attributeAdapterFactory;
 
     private List<ResultMatcher> expectations;
 
@@ -88,12 +85,15 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         model1 = Model.build("modelName1", "model desc", EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
 
-        collection1 = new Collection(model1);
+        collection1 = new Collection(model1, getUrn(), "collection1");
         collection1.setSipId("SipId1");
-        collection3 = new Collection(model1);
+        collection1.setLabel("label");
+        collection3 = new Collection(model1, getUrn(), "collection3");
         collection3.setSipId("SipId3");
-        collection4 = new Collection(model1);
+        collection3.setLabel("label");
+        collection4 = new Collection(model1, getUrn(), "collection4");
         collection4.setSipId("SipId4");
+        collection4.setLabel("label");
         final Set<Tag> col1Tags = new HashSet<>();
         final Set<Tag> col4Tags = new HashSet<>();
         col1Tags.add(new Tag(collection4.getIpId().toString()));
@@ -104,6 +104,10 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collection1 = collectionRepository.save(collection1);
         collection3 = collectionRepository.save(collection3);
         // collection4 = collectionRepository.save(collection4);
+    }
+
+    private UniformResourceName getUrn() {
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PROJECT", UUID.randomUUID(), 1);
     }
 
     // TODO: test retrieve Collection by (S)IP_ID, by modelId and sipId
@@ -122,7 +126,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Shall create a new collection")
     @Test
     public void testPostCollection() {
-        final Collection collection2 = new Collection(model1);
+        final Collection collection2 = new Collection(model1, null, "collection2");
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
@@ -147,9 +151,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
             + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
     public void testUpdateCollection() {
-        final Collection collectionClone = new Collection(collection1.getModel());
+        final Collection collectionClone = new Collection(collection1.getModel(), collection1.getIpId(),
+                "collection1clone");
         collectionClone.setId(collection1.getId());
-        collectionClone.setIpId(collection1.getIpId());
         collectionClone.setTags(collection1.getTags());
         collectionClone.setSipId(collection1.getSipId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -162,10 +166,11 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
     public void testFullUpdate() {
-        final Collection collectionClone = new Collection(collection1.getModel());
+        final Collection collectionClone = new Collection(collection1.getModel(), collection1.getIpId(),
+                "collection1clone");
         collectionClone.setId(collection1.getId());
-        collectionClone.setIpId(collection1.getIpId());
         collectionClone.setSipId(collection1.getSipId() + "new");
+        collectionClone.setLabel("label");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -185,28 +190,21 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    @Ignore
-    // FIXME: SVG has some work to do there!
     public void testDissociateCollections() {
-        final List<Collection> toDissociate = new ArrayList<>();
-        toDissociate.add(collection3);
+        final List<UniformResourceName> toDissociate = new ArrayList<>();
+        toDissociate.add(collection3.getIpId());
         expectations.add(MockMvcResultMatchers.status().isOk());
         performDefaultPut(COLLECTIONS_COLLECTION_ID_DISSOCIATE, toDissociate, expectations,
                           "Failed to dissociate collections from one collection using its id", collection1.getId());
     }
 
     @Test
-    @Ignore
-    // FIXME: SVG has some work to do there!
     public void testAssociateCollections() {
-        final List<AbstractEntity> toAssociate = new ArrayList<>();
-        toAssociate.add(collection4);
-
+        final List<UniformResourceName> toAssociate = new ArrayList<>();
+        toAssociate.add(collection4.getIpId());
         expectations.add(MockMvcResultMatchers.status().isOk());
-
         performDefaultPut(COLLECTIONS_COLLECTION_ID_ASSOCIATE, toAssociate, expectations,
                           "Failed to associate collections from one collection using its id", collection1.getId());
-
     }
 
     @Override

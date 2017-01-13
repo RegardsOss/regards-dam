@@ -4,9 +4,9 @@
 
 package fr.cnes.regards.modules.datasources.plugins.plugintypes;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.datasources.plugins.repository.IEntityPagingAndSortingRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.plugins.annotations.PluginInterface;
 
 /**
  * Class IDataSourcePlugin
@@ -22,6 +22,5 @@ public interface IDataSourcePlugin extends IEntityPagingAndSortingRepository<Abs
     public static final String MODEL = "model";
 
     int getRefreshRate();
-    
-    
+
 }
