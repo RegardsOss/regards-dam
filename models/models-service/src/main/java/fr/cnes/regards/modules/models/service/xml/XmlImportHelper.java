@@ -51,7 +51,7 @@ public final class XmlImportHelper {
      * @throws ImportException
      *             if error occurs!
      */
-    public static Iterable<AttributeModel> importFragment(InputStream pInputStream) throws ImportException {
+    public static List<AttributeModel> importFragment(InputStream pInputStream) throws ImportException {
         final Fragment xmlFragment = read(pInputStream, Fragment.class);
 
         if (xmlFragment.getAttribute().isEmpty()) {
@@ -88,7 +88,7 @@ public final class XmlImportHelper {
      * @throws ImportException
      *             if error occurs!
      */
-    public static Iterable<ModelAttribute> importModel(InputStream pInputStream) throws ImportException {
+    public static List<ModelAttribute> importModel(InputStream pInputStream) throws ImportException {
         final Model xmlModel = read(pInputStream, Model.class);
 
         if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {
@@ -109,6 +109,8 @@ public final class XmlImportHelper {
             final ModelAttribute modelAtt = new ModelAttribute();
             modelAtt.fromXml(xmlAtt);
             modelAtt.setModel(model);
+            modelAtt.getAttribute()
+                    .setFragment(fr.cnes.regards.modules.models.domain.attributes.Fragment.buildDefault());
             modelAtts.add(modelAtt);
         }
 

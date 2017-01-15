@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,17 +22,13 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.ComputationMode;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -64,12 +58,6 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Autowired
     private IModelService modelService;
-
-    /**
-     * Model repository
-     */
-    @Autowired
-    private IModelRepository modelRepository;
 
     /**
      * Attribute model service
@@ -234,106 +222,5 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
         Assert.assertNotNull(payload(resultActions));
-    }
-
-    /**
-     * Import model
-     *
-     * @throws ModuleException
-     *             if error occurs!
-     */
-    @Test
-    @Requirement("REGARDS_DSL_DAM_MOD_050")
-    @Purpose("Import model - Allows to share model or add predefined model ")
-    public void importModel() throws ModuleException {
-
-        final Path filePath = Paths.get("src", "test", "resources", "model_it.xml");
-
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
-
-        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
-                                 "Should be able to import a fragment");
-
-        // Get model from repository
-        final Model model = modelRepository.findByName("sample");
-        Assert.assertNotNull(model);
-
-        // Get model attributes
-        final List<ModelAttribute> modAtts = modelAttributeService.getModelAttributes(model.getId());
-        Assert.assertNotNull(modAtts);
-        final int expectedSize = 4;
-        Assert.assertEquals(expectedSize, modAtts.size());
-
-        for (ModelAttribute modAtt : modAtts) {
-
-            final AttributeModel attModel = modAtt.getAttribute();
-
-            if ("att_string".equals(attModel.getName())) {
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
-                Assert.assertTrue(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
-                Assert.assertNull(attModel.getRestriction());
-                Assert.assertEquals(Fragment.buildDefault(), attModel.getFragment());
-                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-            }
-
-            if ("CRS".equals(attModel.getName())) {
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
-                Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
-                Assert.assertNotNull(attModel.getRestriction());
-                Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
-                final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
-                final int expectedErSize = 3;
-                Assert.assertEquals(expectedErSize, er.getAcceptableValues().size());
-                Assert.assertTrue(er.getAcceptableValues().contains("Earth"));
-                Assert.assertTrue(er.getAcceptableValues().contains("Mars"));
-                Assert.assertTrue(er.getAcceptableValues().contains("Venus"));
-
-                Assert.assertEquals("GEO", attModel.getFragment().getName());
-
-                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-            }
-
-            if ("GEOMETRY".equals(attModel.getName())) {
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.GEOMETRY, attModel.getType());
-                Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
-                Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
-                Assert.assertNull(attModel.getRestriction());
-
-                Assert.assertEquals("GEO", attModel.getFragment().getName());
-
-                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-            }
-
-            if ("Phone".equals(attModel.getName())) {
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                Assert.assertTrue(attModel.isAlterable());
-                Assert.assertTrue(attModel.isFacetable());
-                Assert.assertTrue(attModel.isOptional());
-                Assert.assertTrue(attModel.isQueryable());
-                Assert.assertNotNull(attModel.getRestriction());
-
-                Assert.assertNotNull(attModel.getRestriction());
-                Assert.assertTrue(attModel.getRestriction() instanceof PatternRestriction);
-                final PatternRestriction pr = (PatternRestriction) attModel.getRestriction();
-                Assert.assertEquals("[0-9 ]{10}", pr.getPattern());
-
-                Assert.assertEquals("Contact", attModel.getFragment().getName());
-
-                Assert.assertEquals(ComputationMode.FROM_DESCENDANTS, modAtt.getMode());
-            }
-        }
     }
 }

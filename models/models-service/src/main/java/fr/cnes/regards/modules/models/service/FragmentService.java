@@ -39,7 +39,6 @@ public class FragmentService implements IFragmentService {
     /**
      * Class logger
      */
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FragmentService.class);
 
     /**
@@ -120,17 +119,17 @@ public class FragmentService implements IFragmentService {
         // Get fragment
         final Fragment fragment = getFragment(pFragmentId);
         // Get all related attributes
-        final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
+        final List<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
         // Export fragment to output stream
         XmlExportHelper.exportFragment(pOutputStream, fragment, attModels);
     }
 
     @Override
-    public Iterable<AttributeModel> importFragment(InputStream pInputStream) throws ModuleException {
+    public Fragment importFragment(InputStream pInputStream) throws ModuleException {
         // Import fragment from input stream
-        final Iterable<AttributeModel> attModels = XmlImportHelper.importFragment(pInputStream);
+        final List<AttributeModel> attModels = XmlImportHelper.importFragment(pInputStream);
         // Insert attributes
         attributeModelService.addAllAttributes(attModels);
-        return attModels;
+        return attModels.get(0).getFragment();
     }
 }

@@ -13,7 +13,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -50,7 +49,7 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
     /**
      * Common attribute model
      */
-    @OneToOne(optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "attribute_id", foreignKey = @ForeignKey(name = "fk_attribute_id"), updatable = false)
     @NotNull
     private AttributeModel attribute;

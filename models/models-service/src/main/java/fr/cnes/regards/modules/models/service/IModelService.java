@@ -8,9 +8,8 @@ import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  *
@@ -37,5 +36,5 @@ public interface IModelService {
 
     void exportModel(Long pModelId, OutputStream pOutputStream) throws ModuleException;
 
-    Iterable<ModelAttribute> importModel(InputStream pInputStream) throws ModuleException;
+    Model importModel(InputStream pInputStream) throws ModuleException;
 }

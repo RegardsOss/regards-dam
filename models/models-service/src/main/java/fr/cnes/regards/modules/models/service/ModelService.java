@@ -6,7 +6,9 @@ package fr.cnes.regards.modules.models.service;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +24,14 @@ import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifie
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
+import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
 import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
@@ -295,31 +300,154 @@ public class ModelService implements IModelService, IModelAttributeService {
         // Get model
         final Model model = getModel(pModelId);
         // Get all related attributes
-        final Iterable<ModelAttribute> modelAtts = getModelAttributes(pModelId);
+        final List<ModelAttribute> modelAtts = getModelAttributes(pModelId);
         // Export fragment to output stream
         XmlExportHelper.exportModel(pOutputStream, model, modelAtts);
     }
 
     @MultitenantTransactional
     @Override
-    public Iterable<ModelAttribute> importModel(InputStream pInputStream) throws ModuleException {
+    public Model importModel(InputStream pInputStream) throws ModuleException {
         // Import model from input stream
-        final Iterable<ModelAttribute> modelAtts = XmlImportHelper.importModel(pInputStream);
-        // Insert attributes
-        boolean initModel = true;
-        for (ModelAttribute modelAtt : modelAtts) {
-            // Create model once
-            if (initModel) {
-                createModel(modelAtt.getModel());
-                initModel = false;
+        final List<ModelAttribute> modelAtts = XmlImportHelper.importModel(pInputStream);
+        // Create model once
+        Model newModel = createModel(modelAtts.get(0).getModel()); // List of model attributes cannot be empty here
+        // Create or control model attributes
+        addAllModelAttributes(modelAtts);
+        // Return created model
+        LOGGER.info("New model \"{}\" with version \"{}\" created", newModel.getName(), newModel.getVersion());
+        return newModel;
+    }
+
+    /**
+     * Add all {@link ModelAttribute} related to a model
+     *
+     * @param pModelAtts
+     *            list of {@link ModelAttribute}
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    private void addAllModelAttributes(List<ModelAttribute> pModelAtts) throws ModuleException {
+
+        // Keep fragment content to check fragment consistence
+        Map<String, List<AttributeModel>> fragmentAttMap = new HashMap<>();
+
+        for (ModelAttribute modelAtt : pModelAtts) {
+
+            AttributeModel imported = modelAtt.getAttribute();
+
+            // Check if attribute already exists
+            final AttributeModel existing = attributeModelService
+                    .findByNameAndFragmentName(imported.getName(), imported.getFragment().getName());
+
+            if (existing != null) {
+                // Check compatibility if attribute already exists
+                if (checkCompatibility(imported, existing)) {
+                    LOGGER.info("Attribute model \"{}\" already exists and is compatible with imported one.",
+                                imported.getName());
+                    // Replace with existing
+                    modelAtt.setAttribute(existing);
+                } else {
+                    String format = "Attribute model \"{}\" already exists but is not compatible with imported one.";
+                    String errorMessage = String.format(format, imported.getName());
+                    LOGGER.error(errorMessage);
+                    throw new ImportException(errorMessage);
+                }
+            } else {
+                // Create attribute
+                attributeModelService.createAttribute(modelAtt.getAttribute());
             }
-            // Create attribute
-            // TODO check if attribute not already exists
-            // TODO check if fragment is consistent
-            attributeModelService.createAttribute(modelAtt.getAttribute());
             // Bind attribute to model
             modelAttributeRepository.save(modelAtt);
+
+            addToFragment(fragmentAttMap, modelAtt.getAttribute());
         }
-        return modelAtts;
+
+        for (Map.Entry<String, List<AttributeModel>> entry : fragmentAttMap.entrySet()) {
+            if (!containsExactly(entry.getKey(), entry.getValue())) {
+                String errorMessage = String.format("Imported fragment \"%s\" not compatible with existing one.",
+                                                    entry.getKey());
+                LOGGER.error(errorMessage);
+                throw new ImportException(errorMessage);
+            }
+        }
+    }
+
+    /**
+     * At the moment, compatibility check only compares {@link AttributeType}
+     *
+     * @param pImported
+     *            imported {@link AttributeModel}
+     * @param pExisting
+     *            existing {@link AttributeModel}
+     * @return true is {@link AttributeModel}s are compatible.
+     */
+    private boolean checkCompatibility(AttributeModel pImported, AttributeModel pExisting) {
+        return pImported.getType().equals(pExisting.getType());
+    }
+
+    /**
+     * Build fragment map
+     *
+     * @param pFragmentAttMap
+     *            {@link Fragment} map
+     * @param pAttributeModel
+     *            {@link AttributeModel} to dispatch
+     */
+    private void addToFragment(Map<String, List<AttributeModel>> pFragmentAttMap, AttributeModel pAttributeModel) {
+        // Nothing to do for default fragment
+        if (pAttributeModel.getFragment().isDefaultFragment()) {
+            return;
+        }
+
+        String fragmentName = pAttributeModel.getFragment().getName();
+        List<AttributeModel> fragmentAtts = pFragmentAttMap.get(fragmentName);
+        if (fragmentAtts != null) {
+            fragmentAtts.add(pAttributeModel);
+        } else {
+            fragmentAtts = new ArrayList<>();
+            fragmentAtts.add(pAttributeModel);
+            pFragmentAttMap.put(fragmentName, fragmentAtts);
+        }
+    }
+
+    /**
+     * Check if imported fragment contains the same attributes as existing one
+     *
+     * @param pFragmentName
+     *            {@link Fragment} name
+     * @param pAttModels
+     *            list of imported fragment {@link AttributeModel}
+     * @return true if existing fragment {@link AttributeModel} match with this ones.
+     * @throws ModuleException
+     *             if error occurs!
+     */
+    private boolean containsExactly(String pFragmentName, List<AttributeModel> pAttModels) throws ModuleException {
+        // Get existing fragment attributes
+        List<AttributeModel> existingAttModels = attributeModelService.findByFragmentName(pFragmentName);
+
+        // Check size
+        if (pAttModels.size() != existingAttModels.size()) {
+            LOGGER.error(String.format("Existing fragment \"%s\" contains exactly %s unique attributes (not %s).",
+                                       pFragmentName, existingAttModels.size(), pAttModels.size()));
+            return false;
+        }
+
+        // Check attributes
+        for (AttributeModel attMod : pAttModels) {
+            if (!pFragmentName.equals(attMod.getFragment().getName())) {
+                LOGGER.error(String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)",
+                                           attMod.getName(), pFragmentName, attMod.getFragment().getName()));
+                return false;
+            }
+
+            if (!existingAttModels.contains(attMod)) {
+                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(),
+                                           pFragmentName));
+                return false;
+            }
+        }
+
+        return true;
     }
 }
