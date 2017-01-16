@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
 
+import fr.cnes.regards.framework.gson.autoconfigure.GsonAutoConfiguration;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -33,7 +34,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @RunWith(SpringRunner.class)
 
 @TestPropertySource({ "classpath:application-test.properties"/*, "classpath:application-rabbit.properties"*/ })
-@ContextConfiguration(classes = { CrawlerConfiguration.class })
+@ContextConfiguration(classes = { CrawlerConfiguration.class, GsonAutoConfiguration.class })
 public class IndexerServiceTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexerServiceTest.class);

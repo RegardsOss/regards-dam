@@ -18,12 +18,18 @@ public class IndexerService implements IIndexerService {
 
     @Override
     public boolean createIndex(String pIndex) {
-        return repository.createIndex(pIndex);
+        if (!repository.indexExists(pIndex)) {
+            return repository.createIndex(pIndex);
+        }
+        return true;
     }
 
     @Override
     public boolean deleteIndex(String pIndex) {
-        return repository.deleteIndex(pIndex);
+        if (repository.indexExists(pIndex)) {
+            return repository.deleteIndex(pIndex);
+        }
+        return true;
     }
 
     @Override

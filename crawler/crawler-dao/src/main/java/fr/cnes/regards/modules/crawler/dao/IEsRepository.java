@@ -18,14 +18,15 @@ public interface IEsRepository {
     /**
      * Create specified index
      * @param pIndex index
-     * @return true if acknowledged by Elasticsearch
+     * @return true if acknowledged by Elasticsearch, false overwise.
+     * returns
      */
     boolean createIndex(String pIndex);
 
     /**
      * Delete specified index
      * @param pIndex index
-     * @return true if acknowledged by Elasticsearch
+     * @return true if acknowledged by Elasticsearch, false overwise.
      */
     boolean deleteIndex(String pIndex);
 
