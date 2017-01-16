@@ -5,50 +5,50 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>fr.cnes.regards.modules</groupId>
-	<artifactId>models</artifactId>
+	<artifactId>datasources</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
 		<artifactId>regards-parent</artifactId>
-		<version>0.0.7-SNAPSHOT</version>
+		<version>0.0.6-SNAPSHOT</version>
 		<relativePath />
 	</parent>
 
 	<modules>
-		<module>models-dao</module>
-		<module>models-domain</module>
-		<module>models-rest</module>
-		<module>models-service</module>
-		<module>models-signature</module>
+		<module>datasources-dao</module>
+		<module>datasources-domain</module>
+		<module>datasources-rest</module>
+		<module>datasources-service</module>
+		<module>datasources-plugin</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>fr.cnes.regards.modules.models</groupId>
-				<artifactId>models-dao</artifactId>
+				<groupId>fr.cnes.regards.modules.datasources</groupId>
+				<artifactId>datasources-dao</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>fr.cnes.regards.modules.models</groupId>
-				<artifactId>models-domain</artifactId>
+				<groupId>fr.cnes.regards.modules.datasources</groupId>
+				<artifactId>datasources-domain</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>fr.cnes.regards.modules.models</groupId>
-				<artifactId>models-rest</artifactId>
+				<groupId>fr.cnes.regards.modules.datasources</groupId>
+				<artifactId>datasources-rest</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>fr.cnes.regards.modules.models</groupId>
-				<artifactId>models-service</artifactId>
+				<groupId>fr.cnes.regards.modules.datasources</groupId>
+				<artifactId>datasources-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>fr.cnes.regards.modules.models</groupId>
-				<artifactId>models-signature</artifactId>
+				<groupId>fr.cnes.regards.modules.datasources</groupId>
+				<artifactId>datasources-plugin</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

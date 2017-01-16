@@ -4,15 +4,18 @@
 package fr.cnes.regards.modules.models.service;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -98,7 +101,7 @@ public class AttributeModelService implements IAttributeModelService {
                 attModels = attModelRepository.findAll();
             }
         }
-        return IterableUtils.toList(attModels);
+        return (attModels != null) ? Lists.newArrayList(attModels) : Collections.emptyList();
     }
 
     @MultitenantTransactional
@@ -263,7 +266,8 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException {
-        return IterableUtils.toList(attModelRepository.findByFragmentId(pFragmentId));
+        Iterable<AttributeModel> attributeModels = attModelRepository.findByFragmentId(pFragmentId);
+        return (attributeModels != null) ? ImmutableList.copyOf(attributeModels) : Collections.emptyList();
     }
 
     @Override

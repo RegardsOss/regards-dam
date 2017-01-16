@@ -32,6 +32,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -79,6 +80,7 @@ public class EsRepository implements IEsRepository {
     /**
      * Json mapper
      */
+    @Autowired
     private Gson gson;
 
     /**
@@ -86,7 +88,7 @@ public class EsRepository implements IEsRepository {
      * @param pGson JSon mapper bean
      */
     public EsRepository(Gson pGson) {
-        this.gson = pGson;
+        // this.gson = pGson;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", ES_CLUSTER_NAME).build());
         try {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));

@@ -16,10 +16,11 @@
 
 	<modules>
 		<module>bootstrap-dam</module>
-		<module>models</module>
-		<module>entities</module>
-    	<module>dataaccess</module>
 		<module>crawler</module>
+    	<module>dataaccess</module>
+		<module>datasources</module>
+		<module>entities</module>
+		<module>models</module>		
 	</modules>
 
 </project>
