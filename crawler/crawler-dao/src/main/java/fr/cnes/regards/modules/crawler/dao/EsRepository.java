@@ -80,15 +80,16 @@ public class EsRepository implements IEsRepository {
     /**
      * Json mapper
      */
-    @Autowired
-    private Gson gson;
+    private final Gson gson;
 
     /**
      * Constructor
-     * @param pGson JSon mapper bean
+     *
+     * @param pGson
+     *            JSon mapper bean
      */
-    public EsRepository(Gson pGson) {
-        // this.gson = pGson;
+    public EsRepository(@Autowired Gson pGson) {
+        this.gson = pGson;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", ES_CLUSTER_NAME).build());
         try {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));

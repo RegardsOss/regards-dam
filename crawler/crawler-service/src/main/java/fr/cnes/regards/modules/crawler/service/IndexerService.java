@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.crawler.domain.IIndexable;
 @Service
 public class IndexerService implements IIndexerService {
 
-    private IEsRepository repository;
+    private final IEsRepository repository;
 
     public IndexerService(IEsRepository repository) {
         this.repository = repository;
@@ -23,7 +23,11 @@ public class IndexerService implements IIndexerService {
 
     @Override
     public boolean deleteIndex(String pIndex) {
-        return repository.deleteIndex(pIndex);
+        if (repository.indexExists(pIndex)) {
+            return repository.deleteIndex(pIndex);
+        }
+        // FIXME return true if index does not exist?
+        return true;
     }
 
     @Override
