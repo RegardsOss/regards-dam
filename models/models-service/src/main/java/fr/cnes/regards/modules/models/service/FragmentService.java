@@ -5,15 +5,16 @@ package fr.cnes.regards.modules.models.service;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
@@ -65,7 +66,8 @@ public class FragmentService implements IFragmentService {
 
     @Override
     public List<Fragment> getFragments() {
-        return IterableUtils.toList(fragmentRepository.findAll());
+        Iterable<Fragment> fragments = fragmentRepository.findAll();
+        return (fragments != null) ? ImmutableList.copyOf(fragments) : Collections.emptyList();
     }
 
     @Override

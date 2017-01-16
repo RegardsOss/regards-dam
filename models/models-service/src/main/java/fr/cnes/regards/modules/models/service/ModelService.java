@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.models.service;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.ImmutableList;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.jpa.utils.IterableUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -76,10 +78,13 @@ public class ModelService implements IModelService, IModelAttributeService {
 
     @Override
     public List<Model> getModels(EntityType pType) {
+        Iterable<Model> models;
         if (pType == null) {
-            return IterableUtils.toList(modelRepository.findAll());
+            models = modelRepository.findAll();
+        } else {
+            models = modelRepository.findByType(pType);
         }
-        return IterableUtils.toList(modelRepository.findByType(pType));
+        return (models != null) ? ImmutableList.copyOf(models) : Collections.emptyList();
     }
 
     @Override
@@ -143,7 +148,8 @@ public class ModelService implements IModelService, IModelAttributeService {
     @Override
     public List<ModelAttribute> getModelAttributes(Long pModelId) throws ModuleException {
         getModel(pModelId);
-        return IterableUtils.toList(modelAttributeRepository.findByModelId(pModelId));
+        Iterable<ModelAttribute> modelAttributes = modelAttributeRepository.findByModelId(pModelId);
+        return (modelAttributes != null) ? ImmutableList.copyOf(modelAttributes) : Collections.emptyList();
     }
 
     @Override

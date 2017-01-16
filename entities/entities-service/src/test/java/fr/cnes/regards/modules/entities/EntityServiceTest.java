@@ -58,6 +58,7 @@ public class EntityServiceTest {
     @SuppressWarnings("unchecked")
     @Before
     public void init() {
+
         JWTService jwtService = new JWTService();
         jwtService.injectMockToken("Tenant", "PUBLIC");
         // populate the repository
@@ -74,7 +75,6 @@ public class EntityServiceTest {
         collection4 = new Collection(pModel2, getUrn(EntityType.COLLECTION), "collection4");
         collection4.setId(4L);
         collection4.setDescription("pDescription4");
-        collection4.setLabel("pName4");
         Set<Tag> collection2Tags = collection2.getTags();
         collection2Tags.add(new Tag(collection4.getIpId().toString()));
         collection2.setTags(collection2Tags);
@@ -86,7 +86,6 @@ public class EntityServiceTest {
         dataset.setLabel("dataset");
         dataset2 = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset2");
         dataset2.setDescription("datasetDesc2");
-        dataset2.setLabel("dataset2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
 
