@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -266,8 +265,12 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException {
-        Iterable<AttributeModel> attributeModels = attModelRepository.findByFragmentId(pFragmentId);
-        return (attributeModels != null) ? ImmutableList.copyOf(attributeModels) : Collections.emptyList();
+        return attModelRepository.findByFragmentId(pFragmentId);
+    }
+
+    @Override
+    public List<AttributeModel> findByFragmentName(String pFragmentName) throws ModuleException {
+        return attModelRepository.findByFragmentName(pFragmentName);
     }
 
     @Override
@@ -279,5 +282,10 @@ public class AttributeModelService implements IAttributeModelService {
             LOGGER.error(message);
             throw new UnsupportedRestrictionException(message);
         }
+    }
+
+    @Override
+    public AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName) {
+        return attModelRepository.findByNameAndFragmentName(pAttributeName, pFragmentName);
     }
 }

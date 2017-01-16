@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.models.dao;
 
+import java.util.List;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,13 +21,13 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @Repository
 public interface IAttributeModelRepository extends CrudRepository<AttributeModel, Long> {
 
-    Iterable<AttributeModel> findByType(AttributeType pType);
+    List<AttributeModel> findByType(AttributeType pType);
 
-    Iterable<AttributeModel> findByTypeAndFragmentName(AttributeType pType, String pFragmentName);
+    List<AttributeModel> findByTypeAndFragmentName(AttributeType pType, String pFragmentName);
 
-    Iterable<AttributeModel> findByFragmentName(String pFragmentName);
+    List<AttributeModel> findByFragmentName(String pFragmentName);
 
     AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
 
-    Iterable<AttributeModel> findByFragmentId(Long pFragmentId);
+    List<AttributeModel> findByFragmentId(Long pFragmentId);
 }

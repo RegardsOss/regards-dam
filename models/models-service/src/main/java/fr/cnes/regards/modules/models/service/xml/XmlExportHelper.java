@@ -53,13 +53,13 @@ public final class XmlExportHelper {
     }
 
     public static void exportFragment(OutputStream pOutputStream,
-            fr.cnes.regards.modules.models.domain.attributes.Fragment pFragment, Iterable<AttributeModel> pAttributes)
+            fr.cnes.regards.modules.models.domain.attributes.Fragment pFragment, List<AttributeModel> pAttributes)
             throws ExportException {
         write(pOutputStream, Fragment.class, toXmlFragment(pFragment, pAttributes));
     }
 
     public static void exportModel(OutputStream pOutputStream, fr.cnes.regards.modules.models.domain.Model pModel,
-            Iterable<ModelAttribute> pAttributes) throws ExportException {
+            List<ModelAttribute> pAttributes) throws ExportException {
         write(pOutputStream, Model.class, toXmlModel(pModel, pAttributes));
     }
 
@@ -76,7 +76,7 @@ public final class XmlExportHelper {
      *             if error occurs!
      */
     private static Model toXmlModel(fr.cnes.regards.modules.models.domain.Model pModel,
-            Iterable<ModelAttribute> pAttributes) throws ExportException {
+            List<ModelAttribute> pAttributes) throws ExportException {
 
         // Manage model
         final Model model = pModel.toXml();
@@ -142,7 +142,7 @@ public final class XmlExportHelper {
      * @return {@link Fragment}
      */
     private static Fragment toXmlFragment(fr.cnes.regards.modules.models.domain.attributes.Fragment pFragment,
-            Iterable<AttributeModel> pAttributes) {
+            List<AttributeModel> pAttributes) {
 
         // Manage fragment
         final Fragment xmlFragment = pFragment.toXml();

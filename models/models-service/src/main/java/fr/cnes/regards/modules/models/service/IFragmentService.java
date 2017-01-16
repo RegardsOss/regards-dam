@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
@@ -31,5 +30,5 @@ public interface IFragmentService {
 
     void exportFragment(Long pFragmentId, OutputStream pOutputStream) throws ModuleException;
 
-    Iterable<AttributeModel> importFragment(InputStream pInputStream) throws ModuleException;
+    Fragment importFragment(InputStream pInputStream) throws ModuleException;
 }

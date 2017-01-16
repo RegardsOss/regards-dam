@@ -76,5 +76,9 @@ public interface IAttributeModelService {
 
     List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException;
 
+    List<AttributeModel> findByFragmentName(String pFragmentName) throws ModuleException;
+
     void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;
+
+    AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
 }

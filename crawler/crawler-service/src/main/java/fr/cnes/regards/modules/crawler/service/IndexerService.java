@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.crawler.domain.IIndexable;
 @Service
 public class IndexerService implements IIndexerService {
 
-    private IEsRepository repository;
+    private final IEsRepository repository;
 
     public IndexerService(IEsRepository repository) {
         this.repository = repository;

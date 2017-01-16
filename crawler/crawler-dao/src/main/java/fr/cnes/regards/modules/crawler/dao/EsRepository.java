@@ -80,11 +80,13 @@ public class EsRepository implements IEsRepository {
     /**
      * Json mapper
      */
-    private Gson gson;
+    private final Gson gson;
 
     /**
      * Constructor
-     * @param pGson JSon mapper bean
+     *
+     * @param pGson
+     *            JSon mapper bean
      */
     public EsRepository(@Autowired Gson pGson) {
         this.gson = pGson;

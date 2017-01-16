@@ -52,9 +52,5 @@
 			<artifactId>regards-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency> <groupId>org.apache.lucene</groupId> <artifactId>lucene-test-framework</artifactId> 
-			<version>6.3.0</version> <scope>test</scope> </dependency> <dependency> <groupId>org.elasticsearch.test</groupId> 
-			<artifactId>framework</artifactId> <version>5.1.1</version> <scope>test</scope> 
-			</dependency> -->
 	</dependencies>
 </project>
