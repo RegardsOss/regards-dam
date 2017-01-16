@@ -21,6 +21,11 @@ public interface IDataSourcePlugin extends IEntityPagingAndSortingRepository<Abs
 
     public static final String MODEL = "model";
 
+    /**
+     * The refresh rate of the data source
+     * 
+     * @return the refresh rate value
+     */
     int getRefreshRate();
 
 }

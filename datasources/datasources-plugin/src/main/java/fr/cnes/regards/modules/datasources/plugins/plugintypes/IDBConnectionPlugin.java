@@ -19,6 +19,11 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 @PluginInterface(description = "Plugin to connect to a data source")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
+    /**
+     * Retrieve a {@link Connection} to a database
+     * 
+     * @return the {@link Connection}
+     */
     Connection getConnection();
 
 }

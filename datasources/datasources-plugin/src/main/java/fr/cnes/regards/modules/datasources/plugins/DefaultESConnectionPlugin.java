@@ -20,14 +20,14 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
 
 /**
- * Class DefaultSqlConnectionPlugin
+ * Class DefaultESConnectionPlugin
  *
  * A default {@link Plugin} of type {@link IConnectionPlugin}. Allows to
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Sql database")
+@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Elasticsearch engine")
 public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     /**
@@ -41,15 +41,27 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     public static final String CLUSTER = "cluster";
 
+    /**
+     * The host
+     */
     @PluginParameter(name = HOST)
     private String host;
 
+    /**
+     * The port
+     */
     @PluginParameter(name = PORT)
     private int port;
 
+    /**
+     * The cluster
+     */
     @PluginParameter(name = CLUSTER)
     private String cluster;
 
+    /**
+     * The {@link TransportClient} used to connect to one or more node
+     */
     private TransportClient client;
 
     @Override
