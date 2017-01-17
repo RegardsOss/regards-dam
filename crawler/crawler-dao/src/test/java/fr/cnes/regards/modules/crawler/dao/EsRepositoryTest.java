@@ -56,7 +56,8 @@ public class EsRepositoryTest {
         boolean repositoryOK = true;
         try {
             gson = new GsonBuilder().create();
-            repository = new EsRepository(gson);
+            // FIXME valeurs en dur pour l'instant
+            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }

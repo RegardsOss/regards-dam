@@ -164,7 +164,7 @@ public interface IEsRepository {
     <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest);
 
     /**
-     * Execute specified action or all search results
+     * Execute specified action for all search results<br/>
      * <b>No 10000 offset Elasticsearch limitation</b>
      * @param pIndex index
      * @param pAction action to be executed for each search result element

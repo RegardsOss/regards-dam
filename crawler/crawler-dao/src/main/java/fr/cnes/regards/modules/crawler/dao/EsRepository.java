@@ -33,6 +33,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -50,27 +52,38 @@ import fr.cnes.regards.modules.crawler.domain.IIndexable;
  * Elasticsearch repository implementation
  */
 @Repository
+@PropertySource("classpath:es.properties")
 public class EsRepository implements IEsRepository {
-
-    /**
-     * Elasticsearch cluster name
-     */
-    private static final int ES_PORT = 9300;
-
-    /**
-     * Elasticsearch port
-     */
-    private static final String ES_CLUSTER_NAME = "regards";
 
     /**
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
      */
-    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 500;
+    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 10000;
 
     /**
      * Default number of hits retrieved by scrolling
      */
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
+
+    /**
+     * Elasticsearch port
+     */
+    private String esClusterName;
+
+    /**
+     * Elasticsearch host
+     */
+    private String esHost;
+
+    /**
+     * Elasticsearch address
+     */
+    private String esAddress;
+
+    /**
+     * Elasticsearch TCP port
+     */
+    private int esPort = 9300;
 
     /**
      * Client to ElasticSearch base
@@ -88,11 +101,18 @@ public class EsRepository implements IEsRepository {
      * @param pGson
      *            JSon mapper bean
      */
-    public EsRepository(@Autowired Gson pGson) {
+    public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
+            @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
+            @Value("${elasticsearch.cluster.name}") String pEsClusterName) {
         this.gson = pGson;
-        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", ES_CLUSTER_NAME).build());
+        this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
+        this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
+        this.esPort = pEsPort;
+        this.esClusterName = pEsClusterName;
+        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
         try {
-            client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));
+            client.addTransportAddress(new InetSocketTransportAddress(
+                    InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         } catch (final UnknownHostException e) {
             Throwables.propagate(e);
         }
