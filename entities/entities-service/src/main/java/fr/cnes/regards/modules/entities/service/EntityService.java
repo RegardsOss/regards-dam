@@ -26,7 +26,6 @@ import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
@@ -230,11 +229,11 @@ public class EntityService implements IEntityService {
         for (AbstractEntity target : entityToAssociate) {
             if (!(target instanceof Document)) {
                 // Documents cannot be tagged into Collections
-                pSource.getTags().add(new Tag(target.getIpId().toString()));
+                pSource.getTags().add(target.getIpId().toString());
             }
             // bidirectional association if it's a collection or dataset
             if (target instanceof AbstractLinkEntity) {
-                target.getTags().add(new Tag(pSource.getIpId().toString()));
+                target.getTags().add(pSource.getIpId().toString());
                 entitiesRepository.save(target);
             }
         }
@@ -247,7 +246,7 @@ public class EntityService implements IEntityService {
         for (AbstractEntity target : entityToAssociate) {
             if (target instanceof AbstractLinkEntity) {
                 // only Collections(and DataSets) can only be associated with DataObjects
-                pSource.getTags().add(new Tag(target.getIpId().toString()));
+                pSource.getTags().add(target.getIpId().toString());
             }
         }
         return entitiesRepository.save(pSource);
@@ -260,10 +259,10 @@ public class EntityService implements IEntityService {
     @Override
     public <T extends AbstractEntity> T dissociate(T pSource, Set<UniformResourceName> pTargetsUrn) {
         final List<AbstractEntity> entityToDissociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
-        final Set<Tag> toDissociateAssociations = pSource.getTags();
+        final Set<String> toDissociateAssociations = pSource.getTags();
         for (AbstractEntity toBeDissociated : entityToDissociate) {
-            toDissociateAssociations.remove(new Tag(toBeDissociated.getIpId().toString()));
-            toBeDissociated.getTags().remove(new Tag(pSource.getIpId().toString()));
+            toDissociateAssociations.remove(toBeDissociated.getIpId().toString());
+            toBeDissociated.getTags().remove(pSource.getIpId().toString());
             entitiesRepository.save(toBeDissociated);
         }
         pSource.setTags(toDissociateAssociations);

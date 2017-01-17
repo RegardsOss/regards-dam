@@ -25,7 +25,6 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -94,10 +93,10 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collection4 = new Collection(model1, getUrn(), "collection4");
         collection4.setSipId("SipId4");
         collection4.setLabel("label");
-        final Set<Tag> col1Tags = new HashSet<>();
-        final Set<Tag> col4Tags = new HashSet<>();
-        col1Tags.add(new Tag(collection4.getIpId().toString()));
-        col4Tags.add(new Tag(collection1.getIpId().toString()));
+        final Set<String> col1Tags = new HashSet<>();
+        final Set<String> col4Tags = new HashSet<>();
+        col1Tags.add(collection4.getIpId().toString());
+        col4Tags.add(collection1.getIpId().toString());
         collection1.setTags(col1Tags);
         collection4.setTags(col4Tags);
 

@@ -8,9 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -19,8 +20,6 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.validation.Valid;
@@ -102,9 +101,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      *
      * entities list of tags affected to this entity
      */
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ta_entity_tag", joinColumns = @JoinColumn(name = "entity_id"), foreignKey = @ForeignKey(name = "fk_entity_tags_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    protected Set<Tag> tags;
+    @ElementCollection
+    @CollectionTable(name = "t_entity_tag")
+    @Column(name = "value", length = 200)
+    protected Set<String> tags;
 
     /**
      * list of attribute associated to this entity
@@ -119,7 +119,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false, updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
+            updatable = false)
     protected Model model;
 
     public AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
@@ -187,11 +188,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         ipId = pIpId;
     }
 
-    public Set<Tag> getTags() {
+    public Set<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<Tag> pTags) {
+    public void setTags(Set<String> pTags) {
         tags = pTags;
     }
 

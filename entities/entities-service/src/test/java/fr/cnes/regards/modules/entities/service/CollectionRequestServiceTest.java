@@ -24,11 +24,6 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Tag;
-import fr.cnes.regards.modules.entities.service.CollectionsRequestService;
-import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
-import fr.cnes.regards.modules.entities.service.IEntityService;
-import fr.cnes.regards.modules.entities.service.IStorageService;
 import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -91,10 +86,10 @@ public class CollectionRequestServiceTest {
         collection4 = new Collection(pModel2, getUrn(), "collection4");
         collection4.setId(4L);
         collection2URN = collection2.getIpId();
-        Set<Tag> collection1Tags = collection1.getTags();
-        collection1Tags.add(new Tag(collection2URN.toString()));
-        Set<Tag> collection2Tags = collection2.getTags();
-        collection2Tags.add(new Tag(collection1.getIpId().toString()));
+        Set<String> collection1Tags = collection1.getTags();
+        collection1Tags.add(collection2URN.toString());
+        Set<String> collection2Tags = collection2.getTags();
+        collection2Tags.add(collection1.getIpId().toString());
         collection2.setTags(collection2Tags);
 
         // create a mock repository
@@ -110,7 +105,7 @@ public class CollectionRequestServiceTest {
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection1);
-        Mockito.when(entitiesRepositoryMocked.findByTagsValue(collection2.getIpId().toString()))
+        Mockito.when(entitiesRepositoryMocked.findByTags(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
         entityServiceMocked = Mockito.mock(EntityService.class);
@@ -178,13 +173,13 @@ public class CollectionRequestServiceTest {
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
     public void testFullUpdate() throws EntityInconsistentIdentifierException, EntityNotFoundException {
-        final Tag col4Tag = new Tag(collection4.getIpId().toString());
-        final Set<Tag> newTags = new HashSet();
+        final String col4Tag = collection4.getIpId().toString();
+        final Set<String> newTags = new HashSet<>();
         newTags.add(col4Tag);
         collection1.setTags(newTags);
         collectionsRequestServiceMocked.updateCollection(collection1, collection1.getId());
         Assert.assertTrue(collection1.getTags().contains(col4Tag));
-        Assert.assertFalse(collection1.getTags().contains(new Tag(collection2.getIpId().toString())));
+        Assert.assertFalse(collection1.getTags().contains(collection2.getIpId().toString()));
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
@@ -198,7 +193,7 @@ public class CollectionRequestServiceTest {
     @Test
     public void deleteCollection() {
         collectionsRequestServiceMocked.deleteCollection(collection2.getId());
-        Assert.assertFalse(collection1.getTags().contains(new Tag(collection2.getIpId().toString())));
+        Assert.assertFalse(collection1.getTags().contains(collection2.getIpId().toString()));
         Mockito.verify(collectionRepositoryMocked).delete(collection2.getId());
     }
 
