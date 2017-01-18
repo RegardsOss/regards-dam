@@ -22,6 +22,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -46,7 +47,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-@Entity(name = "t_entity")
+@Entity
+@Table(name = "t_entity")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
@@ -98,13 +100,21 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected String description;
 
     /**
-     *
-     * entities list of tags affected to this entity
+     * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business meaning<br/>
      */
     @ElementCollection
     @CollectionTable(name = "t_entity_tag")
     @Column(name = "value", length = 200)
     protected Set<String> tags;
+
+    /**
+     * Computed indirect access collections.<br/>
+     * This is a set of URNs corresponding to computed indirect collections.
+     */
+    @ElementCollection
+    @CollectionTable(name = "t_entity_indirect_coll")
+    @Column(name = "urn", length = 200)
+    protected Set<String> indirectCollections;
 
     /**
      * list of attribute associated to this entity
@@ -269,4 +279,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
+                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", tags=" + tags
+                + ", indirectCollections=" + indirectCollections + ", attributes=" + attributes + ", model=" + model
+                + "]";
+    }
 }

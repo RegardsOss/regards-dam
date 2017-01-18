@@ -17,6 +17,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -27,7 +28,8 @@ import fr.cnes.regards.modules.entities.domain.DataSet;
  * Access right of either a group or a user
  * @author Sylvain Vissiere-Guerinet
  */
-@Entity(name = "t_access_right")
+@Entity
+@Table(name = "t_access_right")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "kind")
 @SubsettedAccessRight
@@ -73,7 +75,7 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
     /*    public Set<AttributeModel> getSubsettingCriteria() {
         return subsettingCriteria;
     }
-
+    
     public void setSubsettingCriteria(Set<AttributeModel> pSubsettingCriteria) {
         subsettingCriteria = pSubsettingCriteria;
     }*/
