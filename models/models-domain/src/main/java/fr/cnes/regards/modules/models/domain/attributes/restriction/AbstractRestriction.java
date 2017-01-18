@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import com.google.gson.annotations.JsonAdapter;
@@ -25,7 +26,8 @@ import fr.cnes.regards.modules.models.schema.Restriction;
  * @author msordi
  *
  */
-@Entity(name = "t_restriction")
+@Entity
+@Table(name = "t_restriction")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @SequenceGenerator(name = "restrictionSequence", initialValue = 1, sequenceName = "seq_restriction")
 @JsonAdapter(RestrictionJsonAdapterFactory.class)
