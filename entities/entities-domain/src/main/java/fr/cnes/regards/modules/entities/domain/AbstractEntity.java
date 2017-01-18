@@ -103,7 +103,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business meaning<br/>
      */
     @ElementCollection
-    @CollectionTable(name = "t_entity_tag")
+    @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"))
     @Column(name = "value", length = 200)
     protected Set<String> tags;
 
@@ -112,7 +112,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * This is a set of URNs corresponding to computed indirect collections.
      */
     @ElementCollection
-    @CollectionTable(name = "t_entity_indirect_coll")
+    @CollectionTable(name = "t_entity_indirect_coll", joinColumns = @JoinColumn(name = "entity_id"))
     @Column(name = "urn", length = 200)
     protected Set<String> indirectCollections;
 
