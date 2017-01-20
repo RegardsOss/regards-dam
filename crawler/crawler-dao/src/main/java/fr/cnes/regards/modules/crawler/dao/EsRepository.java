@@ -47,6 +47,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 
 /**
  * Elasticsearch repository implementation
@@ -277,6 +278,28 @@ public class EsRepository implements IEsRepository {
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
+    }
 
+    @Override
+    public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion) {
+        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion);
+    }
+
+    @Override
+    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion) {
+        try {
+            final List<T> results = new ArrayList<>();
+            final SearchResponse response = client.prepareSearch(pIndex)
+                    // .setQuery(QueryBuilders.boolQuery()
+                    // .must(QueryBuilders.matchQuery("attributes." + pAttName, pValue)))
+                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
+            final SearchHits hits = response.getHits();
+            for (final SearchHit hit : hits) {
+                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+            }
+            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

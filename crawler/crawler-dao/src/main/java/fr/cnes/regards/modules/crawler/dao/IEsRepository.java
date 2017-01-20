@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 
 /**
  * Elasticsearch DAO interface
@@ -162,6 +163,28 @@ public interface IEsRepository {
      * @return specified result page
      */
     <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest);
+
+    /**
+     * Simple Searching first page of elements from index giving page size.
+     * @param pIndex index
+     * @param pClass class of document type
+     * @param pPageSize page size
+     * @param <T> document type
+     * @return first result page containing max page size documents
+     */
+    <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion);
+
+    /**
+     * Simple searching specified page of elements from index (for first call use
+     * {@link #searchAllLimited(String, Class, int)} method)
+     * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
+     * @param pIndex index
+     * @param pClass class of document type
+     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param <T> class of document type
+     * @return specified result page
+     */
+    <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion);
 
     /**
      * Execute specified action for all search results<br/>

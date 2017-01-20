@@ -4,19 +4,25 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
 
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -48,6 +54,8 @@ public class IndexerServiceIT {
 
     private static final String TENANT = "project";
 
+    private static final String SEARCH = "project_search";
+
     @Autowired
     private IIndexerService indexerService;
 
@@ -57,6 +65,7 @@ public class IndexerServiceIT {
     @Before
     public void setUp() throws Exception {
         indexerService.deleteIndex(TENANT);
+        // indexerService.deleteIndex(SEARCH);
     }
 
     @Test
@@ -148,8 +157,78 @@ public class IndexerServiceIT {
         indexerService.saveEntity(TENANT, collection);
     }
 
+    @Test
+    @Ignore
     public void testSaveBulk() {
+        // Model for collection
+        Model collModel = new Model();
+        collModel.setDescription("model for collections");
+        collModel.setName("collModel");
+        collModel.setType(EntityType.COLLECTION);
+
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "altitude");
+        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "latitude");
+        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "longitude");
+
+        indexerService.createIndex(SEARCH);
+
+        // Creating a Collection for this model
+        int[] COUNTS = { 10, 100, 1000, 10000 };
+        int totalCount = 0;
+        for (int i = 0; i < 100; i++) {
+            int count = COUNTS[(int) (Math.random() * COUNTS.length)];
+            totalCount += count;
+            bulkSave(count, collModel);
+        }
+        System.out.println(String.format("Index %s should contain %d documents", SEARCH, totalCount));
 
     }
 
+    private void bulkSave(int count, Model collModel) {
+        List<Collection> collections = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            collections.add(createCollection(collModel, i + 1));
+        }
+        long start = System.currentTimeMillis();
+        Map<String, Throwable> errors = indexerService.saveBulkEntities(SEARCH, collections);
+        System.out.println(String.format("Bulk save (%d collections) : %d ms", collections.size(),
+                                         System.currentTimeMillis() - start));
+        Assert.assertNull(errors);
+    }
+
+    private Collection createCollection(Model collModel, int i) {
+        Collection collection = new Collection(collModel,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, SEARCH, UUID.randomUUID(), 1),
+                "coll" + i);
+        List<AbstractAttribute<?>> attributes = new ArrayList<>();
+        attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
+        attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
+        attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
+        collection.setAttributes(attributes);
+        return collection;
+    }
+
+    @Test
+    @Ignore
+    public void testSimpleSearch() {
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "altitude");
+        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "latitude");
+        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "longitude");
+
+        ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
+        Page<? extends AbstractEntity> collPage = indexerService.search(SEARCH, AbstractEntity.class, 10, criterion);
+        int count = 0;
+        while (true) {
+            for (AbstractEntity coll : collPage.getContent()) {
+                System.out.println(coll.toString());
+                count++;
+            }
+            if (collPage.isLast()) {
+                break;
+
+            }
+            collPage = indexerService.search(SEARCH, AbstractEntity.class, collPage.nextPageable(), criterion);
+        }
+        Assert.assertEquals(26, count);
+    }
 }
