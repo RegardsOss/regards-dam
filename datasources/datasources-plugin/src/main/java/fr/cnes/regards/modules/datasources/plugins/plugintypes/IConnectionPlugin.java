@@ -17,6 +17,15 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 @PluginInterface(description = "Plugin to connect to a data source")
 public interface IConnectionPlugin {
 
+    static final String USER = "user";
+
+    static final String PASSWORD = "password";
+
+    static final String URL = "url";
+
+    static final String DRIVER = "driver";
+
+
     /**
      * Test the connection 
      * @return true if the connection is active

@@ -26,7 +26,7 @@ public class PostgreSqlConnectionPluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlConnectionPluginTest.class);
 
-    private static String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+    private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     @Test
     public void getPostGreSqlConnection() throws PluginUtilsException {
@@ -40,7 +40,7 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
 
-        DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
+        final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
@@ -59,30 +59,32 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
 
-        DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
+        final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
 
-        Connection conn1 = sqlConn.getConnection();
+        final Connection conn1 = sqlConn.getConnection();
         Assert.assertNotNull(conn1);
         Assert.assertTrue(sqlConn.testConnection());
 
-        Connection conn2 = sqlConn.getConnection();
+        final Connection conn2 = sqlConn.getConnection();
         Assert.assertNotNull(conn2);
         Assert.assertTrue(sqlConn.testConnection());
 
-        Connection conn3 = sqlConn.getConnection();
+        final Connection conn3 = sqlConn.getConnection();
         Assert.assertNotNull(conn3);
 
         conn1.close();
 
         Assert.assertTrue(sqlConn.testConnection());
-        Connection conn4 = sqlConn.getConnection();
+        final Connection conn4 = sqlConn.getConnection();
         Assert.assertNotNull(conn4);
 
         conn4.close();
         Assert.assertTrue(sqlConn.testConnection());
+        conn2.close();
+        conn3.close();
     }
 
     @Test
@@ -97,20 +99,24 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
 
-        DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
+        final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
 
-        Connection conn1 = sqlConn.getConnection();
+        final Connection conn1 = sqlConn.getConnection();
         Assert.assertNotNull(conn1);
-        Connection conn2 = sqlConn.getConnection();
+        final Connection conn2 = sqlConn.getConnection();
         Assert.assertNotNull(conn2);
-        Connection conn3 = sqlConn.getConnection();
+        final Connection conn3 = sqlConn.getConnection();
         Assert.assertNotNull(conn3);
 
-        Connection conn4 = sqlConn.getConnection();
+        final Connection conn4 = sqlConn.getConnection();
         Assert.assertNull(conn4);
+
+        conn1.close();
+        conn2.close();
+        conn3.close();
     }
 
     @Test
@@ -125,25 +131,25 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
 
-        DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
+        final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
 
         // Get all the available connections
-        Connection conn1 = sqlConn.getConnection();
+        final Connection conn1 = sqlConn.getConnection();
         Assert.assertNotNull(conn1);
-        Connection conn2 = sqlConn.getConnection();
+        final Connection conn2 = sqlConn.getConnection();
         Assert.assertNotNull(conn2);
-        Connection conn3 = sqlConn.getConnection();
+        final Connection conn3 = sqlConn.getConnection();
         Assert.assertNotNull(conn3);
-        Connection conn4 = sqlConn.getConnection();
+        final Connection conn4 = sqlConn.getConnection();
         Assert.assertNotNull(conn4);
-        Connection conn5 = sqlConn.getConnection();
+        final Connection conn5 = sqlConn.getConnection();
         Assert.assertNotNull(conn5);
 
         // Lambda Runnable
-        Runnable closeConnection = () -> {
+        final Runnable closeConnection = () -> {
             try {
                 // Close 2 connections
                 conn1.close();
@@ -157,11 +163,17 @@ public class PostgreSqlConnectionPluginTest {
         new Thread(closeConnection).start();
 
         // Gest a connection
-        Connection conn6 = sqlConn.getConnection();
+        final Connection conn6 = sqlConn.getConnection();
         Assert.assertNotNull(conn6);
 
         // Test the connection
         Assert.assertTrue(sqlConn.testConnection());
+
+        conn3.close();
+        conn4.close();
+        conn5.close();
+        conn6.close();
+
     }
 
     @Test
@@ -176,11 +188,12 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
 
-        DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
+        final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
         Assert.assertFalse(sqlConn.testConnection());
+
     }
 
 }

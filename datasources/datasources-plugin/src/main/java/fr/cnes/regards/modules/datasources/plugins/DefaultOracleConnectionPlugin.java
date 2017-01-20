@@ -40,20 +40,6 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
      */
     private static final Logger LOG = LoggerFactory.getLogger(DefaultOracleConnectionPlugin.class);
 
-    public static final String USER = "user";
-
-    public static final String PASSWORD = "password";
-
-    public static final String URL = "url";
-
-    public static final String DRIVER = "driver";
-
-    public static final String MAX_POOLSIZE = "maxPoolSize";
-
-    public static final String MIN_POOLSIZE = "minPoolSize";
-
-    public static final String MAX_STATEMENTS = "maxStatements";
-
     /**
      * The user to used for the database connection
      */

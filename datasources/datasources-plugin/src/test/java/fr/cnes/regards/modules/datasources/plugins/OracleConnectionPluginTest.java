@@ -37,8 +37,8 @@ public class OracleConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
 
-        DefaultOracleConnectionPlugin sqlConn = PluginUtils.getPlugin(parameters, DefaultOracleConnectionPlugin.class,
-                                                                      Arrays.asList(PLUGIN_PACKAGE));
+        final DefaultOracleConnectionPlugin sqlConn = PluginUtils
+                .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
         Assert.assertTrue(sqlConn.testConnection());

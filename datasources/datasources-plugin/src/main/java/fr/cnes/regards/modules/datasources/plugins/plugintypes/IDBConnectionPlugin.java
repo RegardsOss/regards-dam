@@ -9,15 +9,21 @@ import java.sql.Connection;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * Class IConnectionPlugin
+ * Class IDBConnectionPlugin
  *
- * Allows to manage data sources
+ * Allows to manage a connection pool to a data source
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
 @PluginInterface(description = "Plugin to connect to a data source")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
+
+    static final String MAX_POOLSIZE = "maxPoolSize";
+
+    static final String MIN_POOLSIZE = "minPoolSize";
+
+    static final String MAX_STATEMENTS = "maxStatements";
 
     /**
      * Retrieve a {@link Connection} to a database
