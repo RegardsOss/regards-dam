@@ -48,12 +48,6 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
 
     public static final String DRIVER = "driver";
 
-    public static final String MAX_POOLSIZE = "maxPoolSize";
-
-    public static final String MIN_POOLSIZE = "minPoolSize";
-
-    public static final String MAX_STATEMENTS = "maxStatements";
-
     /**
      * The user to used for the database connection
      */
@@ -128,10 +122,10 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
             // Get a connection
             Connection conn = cpds.getConnection();
             Statement statement = conn.createStatement();
-            
-         // Execute a simple SQL request
+
+            // Execute a simple SQL request
             ResultSet rs = statement.executeQuery("select 1");
-            
+
             rs.close();
             statement.close();
             conn.close();

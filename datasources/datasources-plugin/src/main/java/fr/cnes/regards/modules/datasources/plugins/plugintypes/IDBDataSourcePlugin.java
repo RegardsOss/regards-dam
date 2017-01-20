@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 /**
  * Class IDBDataSourcePlugin
  * 
- * Allows to search in a data base, and to explore a
+ * Allows to search in a data base, and to explore the database's tables, columns and indexes
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
@@ -26,10 +26,12 @@ public interface IDBDataSourcePlugin extends IDataSourcePlugin {
 
     public Map<String, String> getColumns(String pTableName);
 
+    public List<String> getIndexes(String pTableName);
+
     public Table getConfiguredTable();
 
     public List<Column> getConfiguredColumns();
 
-    public boolean isRepositoryInit();
+    // public boolean isRepositoryInit();
 
 }
