@@ -19,7 +19,7 @@ public interface IConnectionPlugin {
 
     static final String USER = "user";
 
-    static final String PASSWORD = "password";
+    static final String PWD_PARAM = "password";
 
     static final String URL = "url";
 
