@@ -25,7 +25,7 @@ public final class ColumnMapper {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ColumnMapper.class);
 
-    private static ObjectMapper mapper_ = new ObjectMapper();
+    private final static ObjectMapper MAPPER = new ObjectMapper();
 
     /**
      *
@@ -46,9 +46,8 @@ public final class ColumnMapper {
     public static String toJson(Column... pCol) {
         String result = "";
         try {
-            result = mapper_.writeValueAsString(pCol);
-        }
-        catch (final JsonProcessingException e) {
+            result = MAPPER.writeValueAsString(pCol);
+        } catch (final JsonProcessingException e) {
             LOGGER.error(e.getMessage(), e);
             result = "";
         }
@@ -64,10 +63,9 @@ public final class ColumnMapper {
     public static List<Column> json2List(String jsonSource) {
         List<Column> result = null;
         try {
-            result = mapper_.readValue(jsonSource, new TypeReference<List<Column>>() {
+            result = MAPPER.readValue(jsonSource, new TypeReference<List<Column>>() {
             });
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
         return result;

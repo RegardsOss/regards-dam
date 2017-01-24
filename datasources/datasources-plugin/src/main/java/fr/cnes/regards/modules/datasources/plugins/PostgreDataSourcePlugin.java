@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -56,24 +58,58 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      */
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePlugin.class);
 
+    /**
+     * The SQL request parameter name
+     */
     public static final String REQUEST = "requestSQL";
 
+    /**
+     * The connection to the database
+     */
     @PluginParameter(name = CONNECTION)
     private IDBConnectionPlugin dbConnection;
 
+    /**
+     * The SQL request
+     */
     @PluginParameter(name = REQUEST)
     private String requestSql;
 
+    /**
+     * THe {@link Model} to used by the {@link Plugin} in JSon format.
+     */
     @PluginParameter(name = MODEL)
     private String modelJSon;
 
+    /**
+     * The mapping between the attributes in the {@link Model} and the data source
+     */
     private List<DataSourceAttributeMapping> attributesMapping;
 
+    /**
+     * The string LIMIT used to add the pagination information in the SQL request
+     */
     private static final String LIMIT = "LIMIT";
 
+    /**
+     * The string OFFSET used to add the pagination information in the SQL request
+     */
     private static final String OFFSET = "OFFSET";
 
+    /**
+     * A space used to add the pagination information in the SQL request
+     */
     private static final String SPACE = " ";
+
+    /**
+     * A pattern used to set a date in the statement
+     */
+    private static final String DATE_STATEMENT = "%last_modification_date%";
+    
+    /**
+     * A default date 
+     */
+    private static final LocalDateTime INIT_DATE=LocalDateTime.of(1, 1, 1, 0, 0);
 
     /*
      * (non-Javadoc)
@@ -93,8 +129,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      */
     @Override
     public boolean isOutOfDate() {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     /*
@@ -105,9 +140,34 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      * domain.Pageable)
      */
     @Override
-    public Page<AbstractEntity> getNewData(Pageable page) {
-        // TODO Auto-generated method stub
-        return null;
+    public Page<AbstractEntity> getNewData(Pageable pPageable, LocalDateTime pDate) {
+        List<DataObject> dataObjects = new ArrayList<>();
+
+        // Get a connection
+        Connection conn = dbConnection.getConnection();
+
+        try {
+            Statement statement = conn.createStatement();
+
+            // Execute SQL request
+            String sqlWithDateStatement = addDateStatement(requestSql, pDate);
+
+            String sqlRequestWithPagedInformation = buildLimitPart(sqlWithDateStatement, pPageable);
+
+            ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation);
+
+            while (rs.next()) {
+                dataObjects.add(processResultSet(rs));
+            }
+
+            rs.close();
+            statement.close();
+            conn.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
+        return new PageImpl(dataObjects, pPageable, 10);
     }
 
     /*
@@ -128,7 +188,11 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
             Statement statement = conn.createStatement();
 
             // Execute SQL request
-            ResultSet rs = statement.executeQuery(buildLimitPart(requestSql, pPageable));
+            String sqlWithDateStatement = noDateStatement(requestSql);
+
+            String sqlRequestWithPagedInformation = buildLimitPart(sqlWithDateStatement, pPageable);
+
+            ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation);
 
             while (rs.next()) {
                 dataObjects.add(processResultSet(rs));
@@ -141,7 +205,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
             LOG.error(e.getMessage(), e);
         }
 
-        return new PageImpl(dataObjects,pPageable,10);
+        return new PageImpl(dataObjects, pPageable, 10);
     }
 
     /**
@@ -205,7 +269,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
     }
 
     /**
-     * Get an attibute define in the mapping in a {@link ResultSet}
+     * Get an attribute define in the mapping in a {@link ResultSet}
      * 
      * @param pRs
      *            the {@link ResultSet}
@@ -273,6 +337,14 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
         } catch (IOException e) {
             LOG.error(e.getMessage());
         }
+    }
+
+    String noDateStatement(String pRequest) {
+        return pRequest.replaceAll(DATE_STATEMENT, INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    }
+    
+    String addDateStatement(String pRequest, LocalDateTime pDate) {
+        return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
 
     /**

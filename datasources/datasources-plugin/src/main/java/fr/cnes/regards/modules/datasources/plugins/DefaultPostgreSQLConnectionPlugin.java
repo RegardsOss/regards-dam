@@ -85,15 +85,9 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
     private Integer minPoolSize;
 
     /**
-     * A JDBC standard parameter for controlling the statement polling
-     */
-    @PluginParameter(name = MAX_STATEMENTS)
-    Integer maxStatements;
-
-    /**
      * A {@link ComboPooledDataSource} to used to connect to a data source
      */
-    ComboPooledDataSource cpds;
+    private ComboPooledDataSource cpds;
 
     /**
      * This class is used to initialize the {@link Plugin}
@@ -106,7 +100,6 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
         cpds.setPassword(password);
         cpds.setMaxPoolSize(maxPoolSize);
         cpds.setMinPoolSize(minPoolSize);
-        cpds.setMaxStatements(maxStatements);
 
         try {
             cpds.setDriverClass(driver);

@@ -154,8 +154,7 @@ public class PostgreDataSourcePluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
                 .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreSQLConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));

@@ -23,8 +23,6 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     static final String MIN_POOLSIZE = "minPoolSize";
 
-    static final String MAX_STATEMENTS = "maxStatements";
-
     /**
      * Retrieve a {@link Connection} to a database
      * 

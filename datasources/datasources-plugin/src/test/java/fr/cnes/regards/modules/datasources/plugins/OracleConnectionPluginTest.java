@@ -24,7 +24,7 @@ public class OracleConnectionPluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleConnectionPluginTest.class);
 
-    private static String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+    private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     @Test
     public void getOracleSqlConnection() throws PluginUtilsException {
@@ -34,8 +34,7 @@ public class OracleConnectionPluginTest {
                 .addParameter(DefaultPostgreSQLConnectionPlugin.URL, "jdbc:oracle:thin:@//172.26.8.122:1521/SIPADIC")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, "oracle.jdbc.OracleDriver")
                 .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_STATEMENTS, "150").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
 
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
