@@ -5,7 +5,7 @@ package fr.cnes.regards.modules.crawler.domain.criterion;
  */
 public class StringMatchCriterion extends AbstractMatchCriterion<String> {
 
-    public StringMatchCriterion(String pName, MatchType pType, String pValue) {
+    protected StringMatchCriterion(String pName, MatchType pType, String pValue) {
         super(pName, pType, pValue);
     }
 

@@ -32,6 +32,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.jboss.netty.handler.timeout.TimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -46,6 +47,7 @@ import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import fr.cnes.regards.modules.crawler.dao.querybuilder.QueryBuilderVisitor;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 
@@ -65,6 +67,11 @@ public class EsRepository implements IEsRepository {
      * Default number of hits retrieved by scrolling
      */
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
+
+    /**
+     * QueryBuilder visitor used for Elasticsearch search requests
+     */
+    private static final QueryBuilderVisitor CRITERION_VISITOR = new QueryBuilderVisitor();
 
     /**
      * Elasticsearch port
@@ -219,6 +226,12 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
+    public void refresh(String pIndex) {
+        // To make just saved documents searchable, the associated index must be refreshed
+        client.admin().indices().prepareRefresh(pIndex).get();
+    }
+
+    @Override
     public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
             @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException {
         for (T doc : pDocuments) {
@@ -238,6 +251,8 @@ public class EsRepository implements IEsRepository {
                 errorMap.put(itemResponse.getId(), itemResponse.getFailure().getCause());
             }
         }
+        // To make just saved documents searchable, the associated index must be refreshed
+        client.admin().indices().prepareRefresh(pIndex).get();
         return errorMap;
     }
 
@@ -268,8 +283,16 @@ public class EsRepository implements IEsRepository {
     public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
         try {
             final List<T> results = new ArrayList<>();
-            final SearchResponse response = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
-                    .setSize(pPageRequest.getPageSize()).get();
+            SearchResponse response;
+            int errorCount = 0;
+            do {
+                response = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
+                        .setSize(pPageRequest.getPageSize()).get();
+                errorCount += response.isTimedOut() ? 1 : 0;
+                if (errorCount == 3) {
+                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+                }
+            } while (response.isTimedOut());
             final SearchHits hits = response.getHits();
             for (final SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
@@ -289,10 +312,9 @@ public class EsRepository implements IEsRepository {
     public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion) {
         try {
             final List<T> results = new ArrayList<>();
-            final SearchResponse response = client.prepareSearch(pIndex)
-                    // .setQuery(QueryBuilders.boolQuery()
-                    // .must(QueryBuilders.matchQuery("attributes." + pAttName, pValue)))
+            final SearchResponse response = client.prepareSearch(pIndex).setQuery(criterion.accept(CRITERION_VISITOR))
                     .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
+
             final SearchHits hits = response.getHits();
             for (final SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));

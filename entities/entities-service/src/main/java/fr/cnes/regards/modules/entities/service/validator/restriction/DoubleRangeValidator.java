@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
 
+import com.google.common.collect.Range;
+
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.value.Interval;
 import fr.cnes.regards.modules.entities.service.validator.AbstractAttributeValidator;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 
@@ -71,9 +72,12 @@ public class DoubleRangeValidator extends AbstractAttributeValidator {
     }
 
     public void validate(DoubleIntervalAttribute pTarget, Errors pErrors) {
-        Interval<Double> interval = pTarget.getValue();
-        checkRange(interval.getLowerBound(), pErrors);
-        checkRange(interval.getUpperBound(), pErrors);
+        // Interval<Double> interval = pTarget.getValue();
+        Range<Double> interval = pTarget.getValue();
+        // checkRange(interval.getLowerBound(), pErrors);
+        // checkRange(interval.getUpperBound(), pErrors);
+        checkRange(interval.lowerEndpoint(), pErrors);
+        checkRange(interval.upperEndpoint(), pErrors);
     }
 
     /**

@@ -3,24 +3,25 @@ package fr.cnes.regards.modules.crawler.domain.criterion;
 import com.google.common.collect.Lists;
 
 /**
- * Defines a list of mandatory criterions (logicaly AND)
+ * Defines a list of optional criterions (logicaly OR)
  * @author oroussel
  */
-public class AndCriterion extends AbstractMultiCriterion implements ICriterion {
+public class OrCriterion extends AbstractMultiCriterion implements ICriterion {
 
-    protected AndCriterion() {
+    protected OrCriterion() {
     }
 
-    protected AndCriterion(ICriterion... pCriterions) {
+    protected OrCriterion(ICriterion... pCriterions) {
         this.criterions = Lists.newArrayList(pCriterions);
     }
 
-    protected AndCriterion(Iterable<ICriterion> pCriterions) {
+    protected OrCriterion(Iterable<ICriterion> pCriterions) {
         this.criterions = Lists.newArrayList(pCriterions);
     }
 
     @Override
     public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitAndCriterion(this);
+        return pVisitor.visitOrCriterion(this);
     }
+
 }

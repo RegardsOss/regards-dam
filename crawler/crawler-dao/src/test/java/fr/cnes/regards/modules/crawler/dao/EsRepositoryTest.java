@@ -52,7 +52,6 @@ public class EsRepositoryTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
-        // By now, repository try to connect localhost:9300 for ElasticSearch
         boolean repositoryOK = true;
         try {
             gson = new GsonBuilder().create();
@@ -323,10 +322,12 @@ public class EsRepositoryTest {
             return subItem;
         }
 
+        @SuppressWarnings("unused")
         public void setSubItem(Item subItem) {
             this.subItem = subItem;
         }
 
+        @SuppressWarnings("unused")
         public int getHeight() {
             return height;
         }
@@ -335,6 +336,7 @@ public class EsRepositoryTest {
             this.height = height;
         }
 
+        @SuppressWarnings("unused")
         public double getPrice() {
             return price;
         }

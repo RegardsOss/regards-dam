@@ -119,7 +119,7 @@ public class IndexerServiceIT {
 
         attributes.add(AttributeBuilder.buildDoubleArray("doubleArray", 0., 1., Math.PI, Math.E));
 
-        attributes.add(AttributeBuilder.buildDoubleInterval("doubleInterval", 0., 1.));
+        attributes.add(AttributeBuilder.buildDoubleInterval("doubleInterval", 0., 2.));
 
         // attributes.add(AttributeBuilder.buildGeometry("geometry", "POLYGON(...)"));
 
@@ -155,6 +155,11 @@ public class IndexerServiceIT {
 
         indexerService.createIndex(TENANT);
         indexerService.saveEntity(TENANT, collection);
+        indexerService.refresh(TENANT);
+        // Following lines are just to test Gson serialization/deserialization of all attribute types
+        List<Collection> singleCollColl = indexerService
+                .search(TENANT, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();
+        Assert.assertEquals(1, singleCollColl.size());
     }
 
     @Test

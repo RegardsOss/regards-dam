@@ -11,14 +11,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.io.Resources;
 
-import fr.cnes.regards.modules.crawler.domain.criterion.AndCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.RangeCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchCriterion;
 
 // CHECKSTYLE:OFF
@@ -73,8 +76,15 @@ public class CriterionTest {
     private static class EsQueryDslVisitor implements ICriterionVisitor<String> {
 
         @Override
-        public String visitAndCriterion(AndCriterion pCriterion) {
+        public String visitAndCriterion(AbstractMultiCriterion pCriterion) {
             return "{\n  \"bool\": {\n    \"must\": [\n"
+                    + pCriterion.getCriterions().stream().map(c -> c.accept(this)).collect(Collectors.joining(",\n"))
+                    + "\n    ]\n  }\n}";
+        }
+
+        @Override
+        public String visitOrCriterion(AbstractMultiCriterion pCriterion) {
+            return "{\n  \"bool\": {\n    \"should\": [\n"
                     + pCriterion.getCriterions().stream().map(c -> c.accept(this)).collect(Collectors.joining(",\n"))
                     + "\n    ]\n  }\n}";
         }
@@ -111,6 +121,12 @@ public class CriterionTest {
         }
 
         @Override
+        public String visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
+            return "{\"" + "match" + "\": {\"" + pCriterion.getName() + "\": \""
+                    + Joiner.on(" ").join(pCriterion.getValue()) + "\" }}";
+        }
+
+        @Override
         public <T> String visitRangeCriterion(RangeCriterion<T> pCriterion) {
             StringBuilder buf = new StringBuilder("{\n\"range\": {\n\"").append(pCriterion.getName()).append("\": {\n");
             // for all comparisons
@@ -136,6 +152,11 @@ public class CriterionTest {
             }).collect(Collectors.joining(",\n"));
             buf.append(ranges).append("\n}\n}\n}");
             return buf.toString();
+        }
+
+        @Override
+        public String visitDateRangeCriterion(DateRangeCriterion pCriterion) {
+            return null;
         }
 
     }

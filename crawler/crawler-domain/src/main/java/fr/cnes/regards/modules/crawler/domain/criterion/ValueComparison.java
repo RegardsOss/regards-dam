@@ -45,12 +45,14 @@ public class ValueComparison<T> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        // CHECKSTYLE:OFF
         result = (prime * result) + ((operator == null) ? 0 : operator.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
+        // CHECKSTYLE:ON
         if (this == obj) {
             return true;
         }

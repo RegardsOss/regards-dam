@@ -53,6 +53,14 @@ public interface IEsRepository {
     boolean save(String pIndex, IIndexable pDocument);
 
     /**
+     * Method only used for tests. Elasticsearch performs refreshes every second. So, il a search is called just after
+     * a save, the document will not be available. A manual refresh is necessary (on saveBulkEntities, it is
+     * automaticaly called)
+     * @param pIndex index to refresh
+     */
+    void refresh(String pIndex);
+
+    /**
      * Create or update several documents into same index.
      * @param pIndex index
      * @param pDocuments documents to save (docId and type are mandatory for all of them)

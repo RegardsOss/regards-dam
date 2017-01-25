@@ -42,6 +42,11 @@ public class IndexerService implements IIndexerService {
     }
 
     @Override
+    public void refresh(String pIndex) {
+        repository.refresh(pIndex);
+    }
+
+    @Override
     public Map<String, Throwable> saveBulkEntities(String pIndex, IIndexable... pEntities) {
         return repository.saveBulk(pIndex, pEntities);
     }
@@ -65,5 +70,4 @@ public class IndexerService implements IIndexerService {
     public boolean deleteEntity(String pIndex, IIndexable pEntity) {
         return repository.delete(pIndex, pEntity);
     }
-
 }

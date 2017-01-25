@@ -7,13 +7,19 @@ package fr.cnes.regards.modules.crawler.domain.criterion;
  */
 public interface ICriterionVisitor<T> {
 
-    T visitAndCriterion(AndCriterion pCriterion);
+    T visitAndCriterion(AbstractMultiCriterion pCriterion);
+
+    T visitOrCriterion(AbstractMultiCriterion pCriterion);
 
     T visitNotCriterion(NotCriterion pCriterion);
 
     T visitStringMatchCriterion(StringMatchCriterion pCriterion);
 
+    T visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion);
+
     T visitIntMatchCriterion(IntMatchCriterion pCriterion);
 
     <U> T visitRangeCriterion(RangeCriterion<U> pCriterion);
+
+    T visitDateRangeCriterion(DateRangeCriterion pCriterion);
 }
