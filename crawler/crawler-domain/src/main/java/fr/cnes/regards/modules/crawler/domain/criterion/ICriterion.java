@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import fr.cnes.regards.modules.crawler.domain.IMapping;
+
 /**
  * Search criterion
  * @author oroussel
@@ -75,6 +77,18 @@ public interface ICriterion {
 
     static ICriterion eq(String pAttName, int pValue) {
         return new IntMatchCriterion(pAttName, pValue);
+    }
+
+    static ICriterion isTrue(String pAttName) {
+        return ICriterion.eq(pAttName, true);
+    }
+
+    static ICriterion isFalse(String pAttName) {
+        return ICriterion.eq(pAttName, false);
+    }
+
+    static ICriterion eq(String pAttName, boolean pValue) {
+        return new BooleanMatchCriterion(pAttName, pValue);
     }
 
     static ICriterion in(String pAttName, int... pValues) {
@@ -182,9 +196,10 @@ public interface ICriterion {
      * @param pValue value to test inclusion
      * @return criterion
      */
+    // CHECKSTYLE:OFF
     static ICriterion into(String pAttName, Number pValue) {
-        return ICriterion.and(ICriterion.ge(pAttName + ".lowerBound", pValue),
-                              ICriterion.le(pAttName + ".upperBound", pValue));
+        return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pValue),
+                              ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pValue));
     }
 
     /**
@@ -195,8 +210,8 @@ public interface ICriterion {
      * @return criterion
      */
     static ICriterion intersects(String pAttName, LocalDateTime pLowerBound, LocalDateTime pUpperBound) {
-        return ICriterion.and(ICriterion.ge(pAttName + ".lowerBound", pUpperBound),
-                              ICriterion.le(pAttName + ".upperBound", pLowerBound));
+        return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pUpperBound),
+                              ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
     }
-
+    // CHECKSTYLE:ON
 }

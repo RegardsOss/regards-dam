@@ -11,6 +11,7 @@ import com.google.common.base.Joiner;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
@@ -76,7 +77,7 @@ public class QueryBuilderVisitor implements ICriterionVisitor<QueryBuilder> {
 
     @Override
     public QueryBuilder visitIntMatchCriterion(IntMatchCriterion pCriterion) {
-        return QueryBuilders.matchQuery(pCriterion.getName(), pCriterion.getValue());
+        return QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue());
     }
 
     @Override
@@ -127,5 +128,10 @@ public class QueryBuilderVisitor implements ICriterionVisitor<QueryBuilder> {
             }
         }
         return rangeQueryBuilder;
+    }
+
+    @Override
+    public QueryBuilder visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
+        return QueryBuilders.boolQuery().must(QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue()));
     }
 }

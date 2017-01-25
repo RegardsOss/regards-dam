@@ -15,6 +15,7 @@ import com.google.common.base.Joiner;
 import com.google.common.io.Resources;
 
 import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
@@ -159,6 +160,10 @@ public class CriterionTest {
             return null;
         }
 
+        @Override
+        public String visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
+            return null;
+        }
     }
 }
 // CHECKSTYLE:ON

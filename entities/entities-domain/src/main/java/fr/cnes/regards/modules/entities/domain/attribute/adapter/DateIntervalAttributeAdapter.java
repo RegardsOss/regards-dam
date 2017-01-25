@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.modules.crawler.domain.IMapping;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
@@ -38,11 +39,11 @@ public class DateIntervalAttributeAdapter
         LocalDateTime upperBound = null;
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
-                case "lowerBound":
+                case IMapping.RANGE_LOWER_BOUND:
                     lowerBound = LocalDateTime.parse(pIn.nextString(),
                                                      LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET);
                     break;
-                case "upperBound":
+                case IMapping.RANGE_UPPER_BOUND:
                     upperBound = LocalDateTime.parse(pIn.nextString(),
                                                      LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET);
                     break;

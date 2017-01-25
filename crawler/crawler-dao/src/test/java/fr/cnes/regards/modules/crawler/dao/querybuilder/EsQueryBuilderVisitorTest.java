@@ -191,6 +191,42 @@ public class EsQueryBuilderVisitorTest {
                 .containsDateBetween("attributes.dates", LocalDateTime.of(2017, Month.JANUARY, 2, 0, 0),
                                      LocalDateTime.of(2017, Month.JANUARY, 3, 23, 59, 59, 999));
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, containsDateCrit2).getContent().size());
+
+        // On int ranges
+        ICriterion intoIntsCrit1 = ICriterion.into("attributes.intRange", 10);
+        Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, intoIntsCrit1).getContent().size());
+        ICriterion intoIntsCrit2 = ICriterion.into("attributes.intRange", -1);
+        Assert.assertEquals(0, repository.search(INDEX, Item.class, 10, intoIntsCrit2).getContent().size());
+
+        // On double ranges
+        ICriterion intoDoublesCrit1 = ICriterion.into("attributes.doubleRange", Math.PI);
+        Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, intoDoublesCrit1).getContent().size());
+        ICriterion intoDoublesCrit2 = ICriterion.into("attributes.doubleRange", -4e12);
+        Assert.assertEquals(0, repository.search(INDEX, Item.class, 10, intoDoublesCrit2).getContent().size());
+
+        // On date ranges
+        ICriterion interDatesCrit1 = ICriterion.intersects("attributes.dateRange",
+                                                           LocalDateTime.of(2016, Month.JANUARY, 4, 12, 0, 0),
+                                                           LocalDateTime.of(2018, Month.JANUARY, 4, 12, 0, 0));
+        Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, interDatesCrit1).getContent().size());
+        ICriterion interDatesCrit2 = ICriterion.intersects("attributes.dateRange",
+                                                           LocalDateTime.of(2016, Month.JANUARY, 4, 12, 0, 0),
+                                                           LocalDateTime.of(2017, Month.JANUARY, 1, 12, 0, 0));
+        Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, interDatesCrit2).getContent().size());
+        ICriterion interDatesCrit3 = ICriterion.intersects("attributes.dateRange",
+                                                           LocalDateTime.of(2017, Month.JANUARY, 19, 12, 0, 0),
+                                                           LocalDateTime.of(2018, Month.JANUARY, 1, 12, 0, 0));
+        Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, interDatesCrit3).getContent().size());
+
+        ICriterion interDatesCrit4 = ICriterion.intersects("attributes.dateRange",
+                                                           LocalDateTime.of(2017, Month.JANUARY, 2, 12, 0, 0),
+                                                           LocalDateTime.of(2017, Month.JANUARY, 18, 12, 0, 0));
+        Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, interDatesCrit4).getContent().size());
+
+        // On boolean
+        ICriterion booleanCrit = ICriterion.eq("attributes.bool", true);
+        Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, booleanCrit).getContent().size());
+
     }
 
     private static class Item implements IIndexable, Serializable {
@@ -239,6 +275,13 @@ public class EsQueryBuilderVisitorTest {
 
     }
 
+    private static class Range<T> {
+
+        public T lowerBound;
+
+        public T upperBound;
+    }
+
     private static class Attributes implements Serializable {
 
         private int size;
@@ -257,6 +300,14 @@ public class EsQueryBuilderVisitorTest {
 
         private String[] dates;
 
+        private Range<String> dateRange;
+
+        private Range<Integer> intRange;
+
+        private Range<Double> doubleRange;
+
+        private boolean bool;
+
         public Attributes(int pSize, double pWeight, String pText, LocalDateTime pDate, String[] pTags, int[] pInts,
                 double[] pDoubles, LocalDateTime[] pDates) {
             super();
@@ -269,6 +320,16 @@ public class EsQueryBuilderVisitorTest {
             doubles = pDoubles;
             dates = Arrays.stream(pDates).map(d -> LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(d))
                     .collect(Collectors.toList()).toArray(new String[pDates.length]);
+            dateRange = new Range<>();
+            dateRange.lowerBound = dates[0];
+            dateRange.upperBound = dates[dates.length - 1];
+            intRange = new Range<>();
+            intRange.lowerBound = ints[0];
+            intRange.upperBound = ints[ints.length - 1];
+            doubleRange = new Range<>();
+            doubleRange.lowerBound = Math.min(doubles[0], doubles[doubles.length - 1]);
+            doubleRange.upperBound = Math.max(doubles[0], doubles[doubles.length - 1]);
+            bool = ((size % 2) == 0);
         }
 
         public int getSize() {
@@ -333,6 +394,14 @@ public class EsQueryBuilderVisitorTest {
 
         public void setDates(String[] pDates) {
             dates = pDates;
+        }
+
+        public boolean isBool() {
+            return bool;
+        }
+
+        public void setBool(boolean pBool) {
+            bool = pBool;
         }
 
     }

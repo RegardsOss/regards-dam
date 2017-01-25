@@ -7,6 +7,7 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import fr.cnes.regards.modules.crawler.domain.IMapping;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 
 /**
@@ -40,13 +41,13 @@ public abstract class AbstractIntervalAttributeTypeAdapter<T extends Comparable<
     @Override
     public void write(JsonWriter pOut, A pValue) throws IOException {
         pOut.beginObject();
-        pOut.name("name");
+        pOut.name(IMapping.NAME);
         pOut.value(pValue.getName());
-        pOut.name("value");
+        pOut.name(IMapping.VALUE);
         pOut.beginObject();
-        pOut.name("lowerBound");
+        pOut.name(IMapping.RANGE_LOWER_BOUND);
         this.writeValueLowerBound(pOut, pValue);
-        pOut.name("upperBound");
+        pOut.name(IMapping.RANGE_UPPER_BOUND);
         this.writeValueUpperBound(pOut, pValue);
         pOut.endObject();
         pOut.endObject();

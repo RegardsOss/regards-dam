@@ -6,6 +6,7 @@ import com.google.common.collect.Range;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import fr.cnes.regards.modules.crawler.domain.IMapping;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
@@ -34,10 +35,10 @@ public class IntegerIntervalAttributeAdapter
         int upperBound = 0;
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
-                case "lowerBound":
+                case IMapping.RANGE_LOWER_BOUND:
                     lowerBound = pIn.nextInt();
                     break;
-                case "upperBound":
+                case IMapping.RANGE_UPPER_BOUND:
                     upperBound = pIn.nextInt();
                     break;
                 default:

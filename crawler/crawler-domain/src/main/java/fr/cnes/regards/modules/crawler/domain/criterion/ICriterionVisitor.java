@@ -22,4 +22,6 @@ public interface ICriterionVisitor<T> {
     <U> T visitRangeCriterion(RangeCriterion<U> pCriterion);
 
     T visitDateRangeCriterion(DateRangeCriterion pCriterion);
+
+    T visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion);
 }
