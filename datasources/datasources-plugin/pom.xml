@@ -16,10 +16,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>regards-core-jpa-data</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards</artifactId>
 		</dependency>
 		<!-- Test -->
@@ -49,7 +45,6 @@
 			<artifactId>c3p0</artifactId>
 		</dependency>
 
-
 		<!-- Oracle driver -->
 		<dependency>
 			<groupId>com.oracle</groupId>
@@ -63,8 +58,22 @@
 			<version>11.2.0.3</version>
 			<scope>test</scope>
 		</dependency>
-
 		<!-- Oracle driver -->
+
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-service</artifactId>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-java8 -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-java8</artifactId>
+		</dependency>
 
 	</dependencies>
 </project>

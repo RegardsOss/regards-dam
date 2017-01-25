@@ -35,11 +35,11 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
      */
     private static final Logger LOG = LoggerFactory.getLogger(DefaultESConnectionPlugin.class);
 
-    public static final String HOST = "host";
+    private static final String HOST = "host";
 
-    public static final String PORT = "port";
+    private static final String PORT = "port";
 
-    public static final String CLUSTER = "cluster";
+    private static final String CLUSTER = "cluster";
 
     /**
      * The host
