@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.entities.domain.attribute.builder;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import com.google.common.collect.Range;
+
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
@@ -21,7 +23,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribut
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.value.Interval;
 
 /**
  *
@@ -60,10 +61,7 @@ public final class AttributeBuilder {
             LocalDateTime pUpperBoundDate) {
         DateIntervalAttribute att = new DateIntervalAttribute();
         att.setName(pName);
-        Interval<LocalDateTime> interval = new Interval<>();
-        interval.setLowerBound(pLowerBoundDate);
-        interval.setUpperBound(pUpperBoundDate);
-        att.setValue(interval);
+        att.setValue(Range.closed(pLowerBoundDate, pUpperBoundDate));
         return att;
     }
 
@@ -85,10 +83,7 @@ public final class AttributeBuilder {
             Double pUpperBoundDouble) {
         DoubleIntervalAttribute att = new DoubleIntervalAttribute();
         att.setName(pName);
-        Interval<Double> interval = new Interval<>();
-        interval.setLowerBound(pLowerBoundDouble);
-        interval.setUpperBound(pUpperBoundDouble);
-        att.setValue(interval);
+        att.setValue(Range.closed(pLowerBoundDouble, pUpperBoundDouble));
         return att;
     }
 
@@ -117,10 +112,7 @@ public final class AttributeBuilder {
             Integer pUpperBoundInteger) {
         IntegerIntervalAttribute att = new IntegerIntervalAttribute();
         att.setName(pName);
-        Interval<Integer> interval = new Interval<>();
-        interval.setLowerBound(pLowerBoundInteger);
-        interval.setUpperBound(pUpperBoundInteger);
-        att.setValue(interval);
+        att.setValue(Range.closed(pLowerBoundInteger, pUpperBoundInteger));
         return att;
     }
 
