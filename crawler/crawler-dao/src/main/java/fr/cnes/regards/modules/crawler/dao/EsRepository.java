@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.crawler.dao;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +48,7 @@ import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.crawler.dao.querybuilder.QueryBuilderVisitor;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
@@ -317,6 +319,41 @@ public class EsRepository implements IEsRepository {
             do {
                 response = client.prepareSearch(pIndex).setQuery(criterion.accept(CRITERION_VISITOR))
                         .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
+                errorCount += response.isTimedOut() ? 1 : 0;
+                if (errorCount == 3) {
+                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+                }
+            } while (response.isTimedOut());
+            final SearchHits hits = response.getHits();
+            for (final SearchHit hit : hits) {
+                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+            }
+            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, int pPageSize, Object pValue,
+            String... pFields) {
+        return multiFieldsSearch(pIndex, pClass, new PageRequest(0, pPageSize), pValue, pFields);
+    }
+
+    @Override
+    public <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageRequest, Object pValue,
+            String... pFields) {
+        try {
+            final List<T> results = new ArrayList<>();
+            // LocalDateTime must be formatted to be correctly used following Gson mapping
+            Object value = (pValue instanceof LocalDateTime)
+                    ? LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format((LocalDateTime) pValue) : pValue;
+            SearchResponse response;
+            int errorCount = 0;
+            do {
+                QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
+                response = client.prepareSearch(pIndex).setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
+                        .setSize(pPageRequest.getPageSize()).get();
                 errorCount += response.isTimedOut() ? 1 : 0;
                 if (errorCount == 3) {
                     throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
