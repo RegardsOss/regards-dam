@@ -173,7 +173,7 @@ public interface IEsRepository {
     <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest);
 
     /**
-     * Simple Searching first page of elements from index giving page size.
+     * Searching first page of elements from index giving page size.
      * @param pIndex index
      * @param pClass class of document type
      * @param pPageSize page size
@@ -183,7 +183,7 @@ public interface IEsRepository {
     <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion);
 
     /**
-     * Simple searching specified page of elements from index (for first call use
+     * Searching specified page of elements from index (for first call use
      * {@link #searchAllLimited(String, Class, int)} method)
      * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
      * @param pIndex index
@@ -193,6 +193,34 @@ public interface IEsRepository {
      * @return specified result page
      */
     <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion);
+
+    /**
+     * Searching first page of elements from index giving page size
+     * @param pIndex index
+     * @param pClass class of document type
+     * @param pPageSize page size
+     * @param pValue value to search
+     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags").
+     * <b>Fields types must be consistent with given value type</b>
+     * @param <T> document type
+     * @return first result page containing max page size documents
+     */
+    <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, int pPageSize, Object pValue, String... pFields);
+
+    /**
+     * Searching specified page of elements from index giving page size (for first call us
+     * {@link #multiFieldsSearch(String, Class, int, Object, String...)} method
+     * @param pIndex index
+     * @param pClass class of document type
+     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param pValue value to search
+     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be
+     * used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
+     * @param <T> document type
+     * @return specified result page
+     */
+    <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageReques, Object pValue,
+            String... pFields);
 
     /**
      * Execute specified action for all search results<br/>

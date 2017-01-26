@@ -227,6 +227,26 @@ public class EsQueryBuilderVisitorTest {
         ICriterion booleanCrit = ICriterion.eq("attributes.bool", true);
         Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, booleanCrit).getContent().size());
 
+        // Test for multiFieldsSearch, while data have been created into Elasticsearch...
+        Assert.assertEquals(1, repository.multiFieldsSearch(INDEX, Item.class, 10, 1, "attributes.ints").getContent()
+                .size());
+        Assert.assertEquals(1, repository
+                .multiFieldsSearch(INDEX, Item.class, 10, "Lorem", "attributes.text", "attributes.tags").getContent()
+                .size());
+        Assert.assertEquals(2,
+                            repository.multiFieldsSearch(INDEX, Item.class, 10,
+                                                         LocalDateTime.of(2017, Month.JANUARY, 10, 12, 0),
+                                                         "attributes.dateRange.*")
+                                    .getContent().size());
+        Assert.assertEquals(10, repository
+                .multiFieldsSearch(INDEX, Item.class, 10, LocalDateTime.of(2017, Month.JANUARY, 10, 12, 0),
+                                   "attributes.dateRange.*", "attributes.dates")
+                .getContent().size());
+        Assert.assertEquals(1, repository.multiFieldsSearch(INDEX, Item.class, 10, Math.PI, "attributes.double*")
+                .getContent().size());
+        Assert.assertEquals(5, repository.multiFieldsSearch(INDEX, Item.class, 10, true, "attributes.bool").getContent()
+                .size());
+
     }
 
     private static class Item implements IIndexable, Serializable {
