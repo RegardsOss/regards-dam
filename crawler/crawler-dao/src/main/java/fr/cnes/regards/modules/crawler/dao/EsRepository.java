@@ -312,9 +312,16 @@ public class EsRepository implements IEsRepository {
     public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion) {
         try {
             final List<T> results = new ArrayList<>();
-            final SearchResponse response = client.prepareSearch(pIndex).setQuery(criterion.accept(CRITERION_VISITOR))
-                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
-
+            SearchResponse response;
+            int errorCount = 0;
+            do {
+                response = client.prepareSearch(pIndex).setQuery(criterion.accept(CRITERION_VISITOR))
+                        .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
+                errorCount += response.isTimedOut() ? 1 : 0;
+                if (errorCount == 3) {
+                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+                }
+            } while (response.isTimedOut());
             final SearchHits hits = response.getHits();
             for (final SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
