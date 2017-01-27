@@ -26,12 +26,12 @@ public interface IDataSourcePlugin {
     /**
      * The model parameter name
      */
-    public static final String MODEL = "model";
+    public static final String MODEL_PARAM = "model";
 
     /**
      * The connection parameter name
      */
-    public static final String CONNECTION = "connection";
+    public static final String CONNECTION_PARAM = "connection";
 
     /**
      * The refresh rate of the data source

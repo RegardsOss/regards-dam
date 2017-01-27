@@ -44,16 +44,16 @@ public class PostgreDataSourcePoolConnectionTest {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    @Value("${datasource.url}")
+    @Value("${postgresql.datasource.url}")
     private String url;
 
-    @Value("${datasource.username}")
+    @Value("${postgresql.datasource.username}")
     private String user;
 
-    @Value("${datasource.password}")
+    @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${datasource.driver}")
+    @Value("${postgresql.datasource.driver}")
     private String driver;
 
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
@@ -145,12 +145,12 @@ public class PostgreDataSourcePoolConnectionTest {
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> params = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         try {
             return PluginUtils.getPluginConfiguration(params, DefaultPostgreSQLConnectionPlugin.class,
