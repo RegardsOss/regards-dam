@@ -19,9 +19,9 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 @PluginInterface(description = "Plugin to connect to a data source")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
-    static final String MAX_POOLSIZE = "maxPoolSize";
+    static final String MAX_POOLSIZE_PARAM = "maxPoolSize";
 
-    static final String MIN_POOLSIZE = "minPoolSize";
+    static final String MIN_POOLSIZE_PARAM = "minPoolSize";
 
     /**
      * Retrieve a {@link Connection} to a database

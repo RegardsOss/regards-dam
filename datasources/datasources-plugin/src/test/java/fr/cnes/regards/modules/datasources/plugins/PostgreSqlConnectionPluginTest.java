@@ -35,27 +35,27 @@ public class PostgreSqlConnectionPluginTest {
 
     private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    @Value("${datasource.url}")
+    @Value("${postgresql.datasource.url}")
     private String url;
 
-    @Value("${datasource.username}")
+    @Value("${postgresql.datasource.username}")
     private String user;
 
-    @Value("${datasource.password}")
+    @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${datasource.driver}")
+    @Value("${postgresql.datasource.driver}")
     private String driver;
 
     @Test
     public void getPostGreSqlConnection() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
@@ -67,12 +67,12 @@ public class PostgreSqlConnectionPluginTest {
     @Test
     public void getMaxPoolSizeWithClose() throws PluginUtilsException, InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
@@ -105,12 +105,12 @@ public class PostgreSqlConnectionPluginTest {
     @Test
     public void getMaxPoolSizeWithoutClose() throws PluginUtilsException, InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
@@ -135,12 +135,12 @@ public class PostgreSqlConnectionPluginTest {
     @Test
     public void getMaxPoolSizeWithCloseByThread() throws PluginUtilsException, InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "5")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "5")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
@@ -190,12 +190,12 @@ public class PostgreSqlConnectionPluginTest {
     @Test
     public void getPostGreSqlConnectionError() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, "unknown")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, "unknown")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreSQLConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreSQLConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));

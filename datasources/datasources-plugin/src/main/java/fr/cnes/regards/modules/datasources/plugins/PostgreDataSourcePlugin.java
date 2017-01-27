@@ -61,30 +61,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
     /**
      * The SQL request parameter name
      */
-    public static final String REQUEST = "requestSQL";
-
-    /**
-     * The connection to the database
-     */
-    @PluginParameter(name = CONNECTION)
-    private IDBConnectionPlugin dbConnection;
-
-    /**
-     * The SQL request
-     */
-    @PluginParameter(name = REQUEST)
-    private String requestSql;
-
-    /**
-     * THe {@link Model} to used by the {@link Plugin} in JSon format.
-     */
-    @PluginParameter(name = MODEL)
-    private String modelJSon;
-
-    /**
-     * The mapping between the attributes in the {@link Model} and the data source
-     */
-    private List<DataSourceAttributeMapping> attributesMapping;
+    public static final String REQUEST_PARAM = "requestSQL";
 
     /**
      * The string LIMIT used to add the pagination information in the SQL request
@@ -105,11 +82,34 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      * A pattern used to set a date in the statement
      */
     private static final String DATE_STATEMENT = "%last_modification_date%";
-    
+
     /**
-     * A default date 
+     * A default date
      */
-    private static final LocalDateTime INIT_DATE=LocalDateTime.of(1, 1, 1, 0, 0);
+    private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
+
+    /**
+     * The connection to the database
+     */
+    @PluginParameter(name = CONNECTION_PARAM)
+    private IDBConnectionPlugin dbConnection;
+
+    /**
+     * The SQL request
+     */
+    @PluginParameter(name = REQUEST_PARAM)
+    private String requestSql;
+
+    /**
+     * THe {@link Model} to used by the {@link Plugin} in JSon format.
+     */
+    @PluginParameter(name = MODEL_PARAM)
+    private String modelJSon;
+
+    /**
+     * The mapping between the attributes in the {@link Model} and the data source
+     */
+    private List<DataSourceAttributeMapping> attributesMapping;
 
     /*
      * (non-Javadoc)
@@ -259,8 +259,9 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
         /**
          * For each name space, add an ObjectAttribute to the list of attribute
          */
-        spaceNames.forEach((name, attrs) -> {
-            attributes.add(AttributeBuilder.buildObject(name, attrs.toArray(new AbstractAttribute<?>[attrs.size()])));
+        spaceNames.forEach((pName, pAttrs) -> {
+            attributes
+                    .add(AttributeBuilder.buildObject(pName, pAttrs.toArray(new AbstractAttribute<?>[pAttrs.size()])));
         });
 
         data.setAttributes(attributes);
@@ -335,14 +336,14 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
         try {
             attributesMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
         } catch (IOException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e.getMessage(), e);
         }
     }
 
     String noDateStatement(String pRequest) {
         return pRequest.replaceAll(DATE_STATEMENT, INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
-    
+
     String addDateStatement(String pRequest, LocalDateTime pDate) {
         return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
@@ -356,7 +357,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
                 + "model=" + this.modelJSon + "requete=" + this.requestSql);
 
         LOG.info("Init method call : "
-                + (this.dbConnection.testConnection() ? "CONNECTION IS VALID" : "ERROR CONNECTION"));
+                + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
 
         loadModel();
     }

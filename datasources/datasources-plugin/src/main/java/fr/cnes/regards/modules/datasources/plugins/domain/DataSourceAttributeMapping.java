@@ -35,11 +35,6 @@ public class DataSourceAttributeMapping {
     private String mapping;
 
     /**
-     * True if this attribute can be used to find new data in the data source
-     */
-    private Boolean isAttributeComprator;
-
-    /**
      * Default constructor
      */
     public DataSourceAttributeMapping() {
@@ -63,14 +58,6 @@ public class DataSourceAttributeMapping {
         this.type = pType;
         this.nameSpace = pNameSpace;
         this.mapping = pMapping;
-    }
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMapping, String pNameSpace, boolean pIsComparable) {
-        super();
-        this.name = pName;
-        this.type = pType;
-        this.nameSpace = pNameSpace;
-        this.mapping = pMapping;
-        this.isAttributeComprator = pIsComparable;
     }
 
     /**
@@ -120,14 +107,6 @@ public class DataSourceAttributeMapping {
 
     public void setMapping(String mapping) {
         this.mapping = mapping;
-    }
-
-    public Boolean isAttributeComprator() {
-        return isAttributeComprator;
-    }
-
-    public void setIsAttributeComprator(Boolean isAttributeComprator) {
-        this.isAttributeComprator = isAttributeComprator;
     }
 
 }
