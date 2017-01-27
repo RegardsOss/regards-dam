@@ -36,8 +36,8 @@
 			<artifactId>jpa-multitenant-regards</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>module-plugins-domain</artifactId>
 		</dependency>
 	</dependencies>
 </project>
