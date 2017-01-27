@@ -5,7 +5,10 @@ package fr.cnes.regards.modules.entities.domain.attribute;
 
 import java.time.LocalDateTime;
 
-import fr.cnes.regards.modules.entities.domain.attribute.value.Interval;
+import com.google.common.collect.Range;
+import com.google.gson.annotations.JsonAdapter;
+
+import fr.cnes.regards.modules.entities.domain.attribute.adapter.DateIntervalAttributeAdapter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -14,7 +17,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Marc Sordi
  *
  */
-public class DateIntervalAttribute extends AbstractAttribute<Interval<LocalDateTime>> {
+@JsonAdapter(DateIntervalAttributeAdapter.class)
+public class DateIntervalAttribute extends AbstractAttribute<Range<LocalDateTime>> {
 
     @Override
     public boolean represents(AttributeType pAttributeType) {

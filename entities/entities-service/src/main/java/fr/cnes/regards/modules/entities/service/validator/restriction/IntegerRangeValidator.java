@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.Errors;
 
+import com.google.common.collect.Range;
+
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.value.Interval;
 import fr.cnes.regards.modules.entities.service.validator.AbstractAttributeValidator;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 
@@ -71,9 +72,9 @@ public class IntegerRangeValidator extends AbstractAttributeValidator {
     }
 
     public void validate(IntegerIntervalAttribute pTarget, Errors pErrors) {
-        Interval<Integer> interval = pTarget.getValue();
-        checkRange(interval.getLowerBound(), pErrors);
-        checkRange(interval.getUpperBound(), pErrors);
+        Range<Integer> range = pTarget.getValue();
+        checkRange(range.lowerEndpoint(), pErrors);
+        checkRange(range.upperEndpoint(), pErrors);
     }
 
     /**

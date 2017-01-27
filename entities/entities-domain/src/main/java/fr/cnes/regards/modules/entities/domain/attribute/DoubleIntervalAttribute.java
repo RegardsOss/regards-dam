@@ -3,7 +3,10 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute;
 
-import fr.cnes.regards.modules.entities.domain.attribute.value.Interval;
+import com.google.common.collect.Range;
+import com.google.gson.annotations.JsonAdapter;
+
+import fr.cnes.regards.modules.entities.domain.attribute.adapter.DoubleIntervalAttributeAdapter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -12,7 +15,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Marc Sordi
  *
  */
-public class DoubleIntervalAttribute extends AbstractAttribute<Interval<Double>> {
+@JsonAdapter(DoubleIntervalAttributeAdapter.class)
+public class DoubleIntervalAttribute extends AbstractAttribute<Range<Double>> {
 
     @Override
     public boolean represents(AttributeType pAttributeType) {

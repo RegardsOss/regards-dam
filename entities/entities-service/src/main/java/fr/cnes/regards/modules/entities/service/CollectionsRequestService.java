@@ -20,7 +20,6 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -158,9 +157,9 @@ public class CollectionsRequestService implements ICollectionsRequestService {
         return result;
     }
 
-    private Set<UniformResourceName> extractUrns(Set<Tag> pTags) {
-        return pTags.parallelStream().filter(t -> UniformResourceName.isValidUrn(t.getValue()))
-                .map(t -> UniformResourceName.fromString(t.getValue())).collect(Collectors.toSet());
+    private Set<UniformResourceName> extractUrns(Set<String> pTags) {
+        return pTags.parallelStream().filter(t -> UniformResourceName.isValidUrn(t))
+                .map(t -> UniformResourceName.fromString(t)).collect(Collectors.toSet());
     }
 
     @Override
@@ -173,16 +172,15 @@ public class CollectionsRequestService implements ICollectionsRequestService {
     }
 
     private void dissociate(Collection pToDelete) {
-        final List<AbstractEntity> linkedToToDelete = entitiesRepository
-                .findByTagsValue(pToDelete.getIpId().toString());
+        final List<AbstractEntity> linkedToToDelete = entitiesRepository.findByTags(pToDelete.getIpId().toString());
         dissociate(pToDelete, linkedToToDelete);
     }
 
     private void dissociate(Collection pToDissociate, List<AbstractEntity> pToBeDissociated) {
 
-        final Set<Tag> toDissociateAssociations = pToDissociate.getTags();
+        final Set<String> toDissociateAssociations = pToDissociate.getTags();
         for (AbstractEntity toBeDissociated : pToBeDissociated) {
-            toDissociateAssociations.remove(new Tag(toBeDissociated.getIpId().toString()));
+            toDissociateAssociations.remove(toBeDissociated.getIpId().toString());
             dissociate(pToDissociate, toBeDissociated);
         }
         pToDissociate.setTags(toDissociateAssociations);
@@ -197,7 +195,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      */
     private void dissociate(Collection pActual, AbstractEntity pTarget) {
 
-        pTarget.getTags().remove(new Tag(pActual.getIpId().toString()));
+        pTarget.getTags().remove(pActual.getIpId().toString());
         entitiesRepository.save(pTarget);
     }
 
@@ -217,7 +215,7 @@ public class CollectionsRequestService implements ICollectionsRequestService {
      * @param pNewCollection
      */
     private void associate(Collection pNewCollection) {
-        final Set<Tag> tags = pNewCollection.getTags();
+        final Set<String> tags = pNewCollection.getTags();
         final Set<UniformResourceName> toAssociateIpIds = extractUrns(tags);
         associate(pNewCollection, toAssociateIpIds);
     }

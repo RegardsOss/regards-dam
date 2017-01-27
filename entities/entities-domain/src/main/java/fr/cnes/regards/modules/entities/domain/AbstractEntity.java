@@ -8,9 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
@@ -19,10 +20,9 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -47,7 +47,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-@Entity(name = "t_entity")
+@Entity
+@Table(name = "t_entity")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
@@ -99,12 +100,21 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected String description;
 
     /**
-     *
-     * entities list of tags affected to this entity
+     * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business meaning<br/>
      */
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ta_entity_tag", joinColumns = @JoinColumn(name = "entity_id"), foreignKey = @ForeignKey(name = "fk_entity_tags_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    protected Set<Tag> tags;
+    @ElementCollection
+    @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"))
+    @Column(name = "value", length = 200)
+    protected Set<String> tags;
+
+    /**
+     * Computed indirect access collections.<br/>
+     * This is a set of URNs corresponding to computed indirect collections.
+     */
+    @ElementCollection
+    @CollectionTable(name = "t_entity_indirect_coll", joinColumns = @JoinColumn(name = "entity_id"))
+    @Column(name = "urn", length = 200)
+    protected Set<String> indirectCollections;
 
     /**
      * list of attribute associated to this entity
@@ -119,7 +129,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false, updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
+            updatable = false)
     protected Model model;
 
     public AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
@@ -187,11 +198,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         ipId = pIpId;
     }
 
-    public Set<Tag> getTags() {
+    public Set<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<Tag> pTags) {
+    public void setTags(Set<String> pTags) {
         tags = pTags;
     }
 
@@ -268,4 +279,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
+                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", tags=" + tags
+                + ", indirectCollections=" + indirectCollections + ", attributes=" + attributes + ", model=" + model
+                + "]";
+    }
 }
