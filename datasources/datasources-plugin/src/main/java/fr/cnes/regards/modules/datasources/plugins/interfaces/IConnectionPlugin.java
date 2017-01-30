@@ -2,7 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins.plugintypes;
+package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 

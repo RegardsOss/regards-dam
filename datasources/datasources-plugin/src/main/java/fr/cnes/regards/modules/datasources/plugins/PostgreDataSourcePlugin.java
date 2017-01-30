@@ -33,9 +33,9 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -114,7 +114,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#getRefreshRate()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
      */
     @Override
     public int getRefreshRate() {
@@ -125,7 +125,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#isOutOfDate()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
      */
     @Override
     public boolean isOutOfDate() {
@@ -136,7 +136,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      * (non-Javadoc)
      * 
      * @see
-     * fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#getNewData(org.springframework.data.
+     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getNewData(org.springframework.data.
      * domain.Pageable)
      */
     @Override
@@ -174,7 +174,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      * (non-Javadoc)
      * 
      * @see
-     * fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#findAll(org.springframework.data.domain
+     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain
      * .Pageable)
      */
     @Override
