@@ -5,4 +5,4 @@
  * @author Christophe Mertz
  *
  */
-package fr.cnes.regards.modules.datasources.plugins.plugintypes;
+package fr.cnes.regards.modules.datasources.plugins.interfaces;

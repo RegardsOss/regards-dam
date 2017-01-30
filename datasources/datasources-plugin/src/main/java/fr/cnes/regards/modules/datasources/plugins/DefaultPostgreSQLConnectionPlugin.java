@@ -18,7 +18,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -132,7 +132,7 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin#getConnection()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin#getConnection()
      */
     @Override
     public Connection getConnection() {

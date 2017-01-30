@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 
 /**
  * Class DefaultESConnectionPlugin
