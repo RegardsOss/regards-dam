@@ -5,10 +5,12 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.Set;
 
+import javax.persistence.Entity;
+
 import org.springframework.validation.Errors;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -47,5 +49,11 @@ public interface IEntityService {
      * @return Updated pSource (tag of all targets has been removed from pSource)
      */
     <T extends AbstractEntity> T dissociate(T pSource, Set<UniformResourceName> pTargetsUrn);
+
+    /**
+     *
+     * method responsible for checking if every linked {@link Entity} are already present in database
+     */
+    void checkLinkedEntity(AbstractEntity pEntity) throws EntityNotFoundException;
 
 }

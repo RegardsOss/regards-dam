@@ -8,6 +8,7 @@ import java.util.List;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
  *
@@ -23,6 +24,8 @@ public interface IModelAttributeService {
     ModelAttribute bindAttributeToModel(Long pModelId, ModelAttribute pModelAttribute) throws ModuleException;
 
     ModelAttribute getModelAttribute(Long pModelId, Long pAttributeId) throws ModuleException;
+
+    ModelAttribute getModelAttribute(Long pModelId, AttributeModel pAttribute);
 
     ModelAttribute updateModelAttribute(Long pModelId, Long pAttributeId, ModelAttribute pModelAttribute)
             throws ModuleException;

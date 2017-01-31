@@ -25,6 +25,11 @@
 		</dependency>
 		<!-- Tests -->
 		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-dao</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-dao</artifactId>
 			<scope>test</scope>

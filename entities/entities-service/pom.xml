@@ -23,6 +23,10 @@
 			<artifactId>entities-domain</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-service</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
 		</dependency>
