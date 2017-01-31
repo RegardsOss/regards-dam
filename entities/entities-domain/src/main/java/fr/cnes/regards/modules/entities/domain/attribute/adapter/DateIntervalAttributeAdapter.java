@@ -24,13 +24,13 @@ public class DateIntervalAttributeAdapter
     @Override
     protected void writeValueLowerBound(JsonWriter pOut, AbstractAttribute<Range<LocalDateTime>> pValue)
             throws IOException {
-        pOut.value(LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(pValue.getValue().lowerEndpoint()));
+        pOut.value(LocalDateTimeAdapter.format(pValue.getValue().lowerEndpoint()));
     }
 
     @Override
     protected void writeValueUpperBound(JsonWriter pOut, AbstractAttribute<Range<LocalDateTime>> pValue)
             throws IOException {
-        pOut.value(LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(pValue.getValue().upperEndpoint()));
+        pOut.value(LocalDateTimeAdapter.format(pValue.getValue().upperEndpoint()));
     }
 
     @Override
@@ -40,12 +40,10 @@ public class DateIntervalAttributeAdapter
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
                 case IMapping.RANGE_LOWER_BOUND:
-                    lowerBound = LocalDateTime.parse(pIn.nextString(),
-                                                     LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET);
+                    lowerBound = LocalDateTimeAdapter.parse(pIn.nextString());
                     break;
                 case IMapping.RANGE_UPPER_BOUND:
-                    upperBound = LocalDateTime.parse(pIn.nextString(),
-                                                     LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET);
+                    upperBound = LocalDateTimeAdapter.parse(pIn.nextString());
                     break;
                 default:
             }

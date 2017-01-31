@@ -15,6 +15,10 @@ public interface ICriterion {
 
     <U> U accept(ICriterionVisitor<U> pVisitor);
 
+    static ICriterion all() {
+        return new EmptyCriterion();
+    }
+
     static ICriterion and(ICriterion... pCrits) {
         return new AndCriterion(pCrits);
     }

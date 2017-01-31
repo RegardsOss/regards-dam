@@ -7,6 +7,8 @@ package fr.cnes.regards.modules.crawler.domain.criterion;
  */
 public interface ICriterionVisitor<T> {
 
+    T visitEmptyCriterion(EmptyCriterion pCriterion);
+
     T visitAndCriterion(AbstractMultiCriterion pCriterion);
 
     T visitOrCriterion(AbstractMultiCriterion pCriterion);

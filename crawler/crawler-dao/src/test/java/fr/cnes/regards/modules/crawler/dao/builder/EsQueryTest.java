@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.crawler.dao.querybuilder;
+package fr.cnes.regards.modules.crawler.dao.builder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -6,8 +6,8 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -19,17 +19,25 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.data.domain.Page;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.crawler.dao.EsRepository;
+import fr.cnes.regards.modules.crawler.dao.FacetPage;
 import fr.cnes.regards.modules.crawler.dao.IEsRepository;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.crawler.domain.facet.DateFacet;
+import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
+import fr.cnes.regards.modules.crawler.domain.facet.IFacet;
+import fr.cnes.regards.modules.crawler.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.crawler.domain.facet.StringFacet;
 
-public class EsQueryBuilderVisitorTest {
+public class EsQueryTest {
 
     private static final String INDEX = "criterions";
 
@@ -66,14 +74,14 @@ public class EsQueryBuilderVisitorTest {
         // Do not launch tests is Elasticsearch is not available
         Assume.assumeTrue(repositoryOK);
 
-        final Consumer<String> cleanFct = (pIndex) -> {
+        /*        final Consumer<String> cleanFct = (pIndex) -> {
             try {
                 repository.deleteIndex(pIndex);
             } catch (final IndexNotFoundException infe) {
             }
         };
         // All created indices from tests
-        cleanFct.accept(INDEX);
+        cleanFct.accept(INDEX);*/
     }
 
     @AfterClass
@@ -84,6 +92,10 @@ public class EsQueryBuilderVisitorTest {
     }
 
     private void createData() {
+        try {
+            repository.deleteIndex(INDEX);
+        } catch (IndexNotFoundException infe) {
+        }
         repository.createIndex(INDEX);
         final String[] STRINGS = { "Le", "petit", "chat", "est", "mort", "de", "sa", "belle", "mort",
                 "ou écrasé on sait pas trop" };
@@ -247,6 +259,45 @@ public class EsQueryBuilderVisitorTest {
         Assert.assertEquals(5, repository.multiFieldsSearch(INDEX, Item.class, 10, true, "attributes.bool").getContent()
                 .size());
 
+        // No criterion
+        Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, ICriterion.all()).getContent().size());
+    }
+
+    @Test
+    public void testSearchWithFacets() {
+        this.createData();
+
+        // Search with aggregations
+        ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
+        Page<Item> page = repository.search(INDEX, Item.class, 10, ICriterion.all(),
+                                            facetMapBuilder.put("attributes.tags", FacetType.STRING).build());
+        Assert.assertEquals(10, page.getContent().size());
+        Assert.assertTrue(page instanceof FacetPage);
+        Map<String, IFacet<?>> facetMap = ((FacetPage<Item>) page).getFacetMap();
+        Assert.assertTrue(facetMap.containsKey("attributes.tags"));
+        Assert.assertTrue(facetMap.get("attributes.tags") instanceof StringFacet);
+        StringFacet strFacet = (StringFacet) facetMap.get("attributes.tags");
+        Assert.assertNotNull(strFacet);
+
+        FacetPage<Item> facetPage = (FacetPage<Item>) repository
+                .search(INDEX, Item.class, 10, ICriterion.all(),
+                        facetMapBuilder.put("attributes.ints", FacetType.NUMERIC).build());
+        Assert.assertEquals(10, facetPage.getContent().size());
+        facetMap = facetPage.getFacetMap();
+        Assert.assertTrue(facetMap.containsKey("attributes.ints"));
+        Assert.assertTrue(facetMap.get("attributes.ints") instanceof NumericFacet);
+        NumericFacet numFacet = (NumericFacet) facetMap.get("attributes.ints");
+        Assert.assertNotNull(numFacet);
+
+        facetPage = (FacetPage<Item>) repository
+                .search(INDEX, Item.class, 10, ICriterion.all(),
+                        facetMapBuilder.put("attributes.dates", FacetType.DATE).build());
+        Assert.assertEquals(10, facetPage.getContent().size());
+        facetMap = facetPage.getFacetMap();
+        Assert.assertTrue(facetMap.containsKey("attributes.dates"));
+        Assert.assertTrue(facetMap.get("attributes.dates") instanceof DateFacet);
+        DateFacet dateFacet = (DateFacet) facetMap.get("attributes.dates");
+        Assert.assertNotNull(dateFacet);
     }
 
     private static class Item implements IIndexable, Serializable {
@@ -334,12 +385,12 @@ public class EsQueryBuilderVisitorTest {
             size = pSize;
             weight = pWeight;
             text = pText;
-            date = LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(pDate);
+            date = LocalDateTimeAdapter.format(pDate);
             tags = pTags;
             ints = pInts;
             doubles = pDoubles;
-            dates = Arrays.stream(pDates).map(d -> LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(d))
-                    .collect(Collectors.toList()).toArray(new String[pDates.length]);
+            dates = Arrays.stream(pDates).map(d -> LocalDateTimeAdapter.format(d)).collect(Collectors.toList())
+                    .toArray(new String[pDates.length]);
             dateRange = new Range<>();
             dateRange.lowerBound = dates[0];
             dateRange.upperBound = dates[dates.length - 1];

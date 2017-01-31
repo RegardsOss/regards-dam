@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
 
 /**
  * Elasticsearch DAO interface
@@ -173,26 +174,60 @@ public interface IEsRepository {
     <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest);
 
     /**
-     * Searching first page of elements from index giving page size.
+     * Searching first page of elements from index giving page size with facets.
      * @param pIndex index
      * @param pClass class of document type
      * @param pPageSize page size
+     * @param pCriterion search criterion
+     * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion);
+    <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion,
+            Map<String, FacetType> pFacetsMap);
 
     /**
      * Searching specified page of elements from index (for first call use
-     * {@link #searchAllLimited(String, Class, int)} method)
+     * {@link #searchAllLimited(String, Class, int)} method) with facets.
      * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
      * @param pIndex index
      * @param pClass class of document type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param pCriterion search criterion
+     * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
      * @param <T> class of document type
      * @return specified result page
      */
-    <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion);
+    <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion,
+            Map<String, FacetType> pFacetsMap);
+
+    /**
+     * Searching first page of elements from index giving page size without facets.
+     * @param pIndex index
+     * @param pClass class of document type
+     * @param pPageSize page size
+     * @param pCriterion search criterion
+     * @param <T> document type
+     * @return first result page containing max page size documents
+     */
+    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion) {
+        return this.search(pIndex, pClass, pPageSize, pCriterion, null);
+    }
+
+    /**
+     * Searching specified page of elements from index (for first call use
+     * {@link #searchAllLimited(String, Class, int)} method) without facets.
+     * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
+     * @param pIndex index
+     * @param pClass class of document type
+     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param pCriterion search criterion
+     * @param <T> class of document type
+     * @return specified result page
+     */
+    default <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion) {
+        return this.search(pIndex, pClass, pPageRequest, pCriterion, null);
+    }
 
     /**
      * Searching first page of elements from index giving page size
