@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.plugins.connection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,13 +20,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -38,9 +40,9 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgreDataSourcePoolConnectionTest {
+public class PostgreSQLConnectionTestWithService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePoolConnectionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgreSQLConnectionTestWithService.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -69,7 +71,7 @@ public class PostgreDataSourcePoolConnectionTest {
     }
 
     @Test
-    public void testPoolConnectionWithGetFirstPluginByType() throws PluginUtilsException {
+    public void testPoolConnectionWithGetFirstPluginByType() throws ModuleException {
         // Save a PluginConfiguration
         final Long anId = 33L;
         final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
@@ -102,7 +104,7 @@ public class PostgreDataSourcePoolConnectionTest {
     }
 
     @Test
-    public void testPoolConnectionWithGetPlugin() throws PluginUtilsException {
+    public void testPoolConnectionWithGetPlugin() throws ModuleException {
         // Save a PluginConfiguration
         final Long anId = 33L;
         final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();

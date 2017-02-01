@@ -2,21 +2,23 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins.plugintypes;
+package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
 import java.sql.Connection;
+
+import javax.sql.DataSource;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
  * Class IDBConnectionPlugin
  *
- * Allows to manage a connection pool to a data source
+ * Allows to manage a {@link DataSource} connection pool
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@PluginInterface(description = "Plugin to connect to a data source")
+@PluginInterface(description = "Plugin to manager a datasource connection pool")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     static final String MAX_POOLSIZE_PARAM = "maxPoolSize";

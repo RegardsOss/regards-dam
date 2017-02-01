@@ -4,21 +4,25 @@
 
 package fr.cnes.regards.modules.datasources.plugins.domain;
 
+import java.sql.Types;
+
 /**
+ * This class describes a column of a SQL database.
  *
- *
- * TODO description.
- *
- * @author cmertz
- * @since 1.0-SNAPSHOT
+ * @author Christophe Mertz
+ * 
  */
 public final class Column {
 
-    private Long columnId;
-
+    /**
+     * The column name
+     */
     private String name;
 
-    private int javaSqlType;
+    /**
+     * The {@link Types} of the column
+     */
+    private String javaSqlType;
 
     /**
      * Flag for primary key column. Only one primary key is allowed for a table.<br>
@@ -39,88 +43,56 @@ public final class Column {
      * @param pJavaSqlType
      *            the SQL type of the column
      */
-    public Column(String pName, int pJavaSqlType) {
+    public Column(String pName, String pJavaSqlType) {
         super();
         name = pName;
+
         javaSqlType = pJavaSqlType;
     }
 
-    public Column(String pName, int pJavaSqlType, Boolean pIsPrimaryKey) {
+    /**
+     * 
+     * @param pName
+     *            the name of the column
+     * @param pJavaSqlType
+     *            the SQL type of the column
+     * @param pIsPrimaryKey
+     *            the column is the primary key
+     */
+    public Column(String pName, String pJavaSqlType, Boolean pIsPrimaryKey) {
         super();
         name = pName;
         javaSqlType = pJavaSqlType;
         isPrimaryKey = pIsPrimaryKey;
     }
 
-    /**
-     * @return the columnId
-     */
-    public Long getColumnId() {
-        return columnId;
-    }
-
-    /**
-     * @param pColumnId
-     *            the columnId to set
-     */
-    public void setColumnId(Long pColumnId) {
-        columnId = pColumnId;
-    }
-
-    /**
-     * @return the name
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * @param pName
-     *            the name to set
-     */
     public void setName(String pName) {
         name = pName;
     }
 
-    /**
-     * @return the javaSqlType
-     */
-    public int getJavaSqlType() {
+    public String getJavaSqlType() {
         return javaSqlType;
     }
 
-    /**
-     * @param pJavaSqlType
-     *            the javaSqlType to set
-     */
-    public void setJavaSqlType(int pJavaSqlType) {
+    public void setJavaSqlType(String pJavaSqlType) {
         javaSqlType = pJavaSqlType;
+    }
+
+    public Boolean getIsPrimaryKey() {
+        return isPrimaryKey;
+    }
+
+    public void setPrimaryKey(Boolean pIsPrimaryKey) {
+        isPrimaryKey = pIsPrimaryKey;
     }
 
     @Override
     public String toString() {
         return "[" + name + " : " + javaSqlType + (isPrimaryKey ? " : is key" : "") + "]";
-    }
-
-    /**
-     * Get method.
-     *
-     * @return the isPrimaryKey
-     * @since 1.0-SNAPSHOT
-     */
-    public Boolean getIsPrimaryKey() {
-        return isPrimaryKey;
-    }
-
-    /**
-     *
-     * Set method
-     *
-     * @param pIsPrimaryKey
-     * @since 1.0-SNAPSHOT
-     */
-    public void setPrimaryKey(Boolean pIsPrimaryKey) {
-        isPrimaryKey = pIsPrimaryKey;
     }
 
 }

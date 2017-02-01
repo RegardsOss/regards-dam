@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -24,7 +25,7 @@ import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
  * @author Christophe Mertz
  */
 @Entity
-@Table(name = "T_TEST_PLUGIN_DATA_SOURCE")
+@Table(name = "T_TEST_PLUGIN_DATA_SOURCE", indexes = { @Index(name = "iinnddeexx", columnList = "altitude", unique = true) })
 @SequenceGenerator(name = "testPlgDataSOurceSequence", initialValue = 1, sequenceName = "SEQ_TEST_PLUGIN")
 public class DataSourceEntity implements IIdentifiable<Long> {
 
