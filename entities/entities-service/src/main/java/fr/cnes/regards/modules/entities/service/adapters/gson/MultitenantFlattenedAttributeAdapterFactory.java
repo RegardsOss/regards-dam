@@ -21,7 +21,10 @@ import com.google.gson.JsonPrimitive;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
+import fr.cnes.regards.framework.gson.adapters.MultitenantPolymorphicTypeAdapterFactory;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
@@ -50,12 +53,15 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  * @author Marc Sordi
  *
  */
-public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
+@SuppressWarnings("rawtypes")
+@GsonTypeAdapterFactoryBean
+public class MultitenantFlattenedAttributeAdapterFactory
+        extends MultitenantPolymorphicTypeAdapterFactory<AbstractAttribute> {
 
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(FlattenedAttributeAdapterFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultitenantFlattenedAttributeAdapterFactory.class);
 
     /**
      * Discriminator field
@@ -78,6 +84,11 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     private static final String REGEXP_ESCAPE = "\\";
 
     /**
+     * {@link ITenantResolver}
+     */
+    private final ITenantResolver tenantResolver;
+
+    /**
      * {@link AttributeModel} service
      */
     private final IAttributeModelService attributeModelService;
@@ -87,25 +98,29 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      */
     private final ISubscriber subscriber;
 
-    public FlattenedAttributeAdapterFactory(IAttributeModelService pAttributeModelService, ISubscriber pSubscriber) {
-        super(AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
+    public MultitenantFlattenedAttributeAdapterFactory(ITenantResolver pTenantResolver,
+            IRuntimeTenantResolver pRuntimeTenantResolver, IAttributeModelService pAttributeModelService,
+            ISubscriber pSubscriber) {
+        super(pRuntimeTenantResolver, AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
+        this.tenantResolver = pTenantResolver;
         this.attributeModelService = pAttributeModelService;
         this.subscriber = pSubscriber;
+        this.runtimeTenantResolver = pRuntimeTenantResolver;
     }
 
-    public void registerSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
+    public void registerSubtype(String pTenant, Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
         if (pNamespace == null) {
-            registerSubtype(pType, pDiscriminatorFieldValue);
+            registerSubtype(pTenant, pType, pDiscriminatorFieldValue);
         } else {
-            registerSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+            registerSubtype(pTenant, pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
         }
     }
 
-    public void unregisterSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
+    public void unregisterSubtype(String pTenant, Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
         if (pNamespace == null) {
-            unregisterSubtype(pType, pDiscriminatorFieldValue);
+            unregisterSubtype(pTenant, pType, pDiscriminatorFieldValue);
         } else {
-            unregisterSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+            unregisterSubtype(pTenant, pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
         }
     }
 
@@ -113,17 +128,27 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     private void initSubtypes() {
         subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
         subscriber.subscribeTo(AttributeModelDeleted.class, new UnregisterHandler());
-        registerAttributes();
+        // FIXME add tenant listeners
+        // Retrieve all tenants
+        for (String tenant : tenantResolver.getAllTenants()) {
+            // Set thread tenant to route database retrieval
+            // TODO
+            // Register for tenant
+            registerAttributes(tenant);
+        }
     }
 
-    public void refresh() {
-        registerAttributes();
+    public void refresh(String pTenant) {
+        registerAttributes(pTenant);
     }
 
     /**
-     * Dynamically register configured {@link AttributeModel}"
+     * Dynamically register configured {@link AttributeModel} for a particular tenant
+     *
+     * @param pTenant
+     *            tenant
      */
-    protected void registerAttributes() {
+    protected void registerAttributes(String pTenant) {
         List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
         if (atts != null) {
             for (AttributeModel att : atts) {
@@ -133,11 +158,11 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
                 // Register namespace as an object wrapper
                 if (!att.getFragment().isDefaultFragment()) {
                     namespace = att.getFragment().getName();
-                    registerSubtype(ObjectAttribute.class, namespace);
+                    registerSubtype(pTenant, ObjectAttribute.class, namespace);
                 }
 
                 // Register attribute
-                registerSubtype(getClassByType(att.getType()), att.getName(), namespace);
+                registerSubtype(pTenant, getClassByType(att.getType()), att.getName(), namespace);
             }
         }
     }
@@ -448,7 +473,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
         @Override
         public void handle(TenantWrapper<AttributeModelCreated> pT) {
             AttributeModelCreated amc = pT.getContent();
-            registerSubtype(getClassByType(amc.getAttributeType()), amc.getAttributeName(), amc.getFragmentName());
+            registerSubtype(pT.getTenant(), getClassByType(amc.getAttributeType()), amc.getAttributeName(),
+                            amc.getFragmentName());
         }
     }
 
@@ -463,7 +489,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
         @Override
         public void handle(TenantWrapper<AttributeModelDeleted> pT) {
             AttributeModelDeleted amd = pT.getContent();
-            unregisterSubtype(getClassByType(amd.getAttributeType()), amd.getAttributeName(), amd.getFragmentName());
+            unregisterSubtype(pT.getTenant(), getClassByType(amd.getAttributeType()), amd.getAttributeName(),
+                              amd.getFragmentName());
         }
     }
 }
