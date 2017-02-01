@@ -15,7 +15,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 /**
  * Class IDataSourcePlugin
  *
- * Allows to manage data sources
+ * Allows to search in a data base,
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
@@ -54,7 +54,7 @@ public interface IDataSourcePlugin {
      *            the pagination information
      * @return a page of entities
      */
-    Page<AbstractEntity> getNewData(Pageable pPageable, LocalDateTime pDate);
+    Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate);
 
     /**
      * Returns a {@link Page} of entities meeting the paging restriction provided in the {@code Pageable} object.
