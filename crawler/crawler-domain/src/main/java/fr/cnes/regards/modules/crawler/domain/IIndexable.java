@@ -1,7 +1,8 @@
 package fr.cnes.regards.modules.crawler.domain;
 
 /**
- * Identifies that something is indexable into Elasticsearch (need and id and a type)
+ * Identifies that something is indexable into Elasticsearch (need andid and a type)
+ * @author oroussel
  */
 public interface IIndexable {
 

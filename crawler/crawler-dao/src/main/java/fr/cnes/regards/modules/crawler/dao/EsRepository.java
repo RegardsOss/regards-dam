@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.crawler.dao;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.jboss.netty.handler.timeout.TimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -44,33 +48,52 @@ import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.modules.crawler.dao.querybuilder.QueryBuilderVisitor;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 
 /**
  * Elasticsearch repository implementation
  */
 @Repository
+@PropertySource("classpath:es.properties")
 public class EsRepository implements IEsRepository {
-
-    /**
-     * Elasticsearch cluster name
-     */
-    private static final int ES_PORT = 9300;
-
-    /**
-     * Elasticsearch port
-     */
-    private static final String ES_CLUSTER_NAME = "regards";
 
     /**
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
      */
-    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 500;
+    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 10000;
 
     /**
      * Default number of hits retrieved by scrolling
      */
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
+
+    /**
+     * QueryBuilder visitor used for Elasticsearch search requests
+     */
+    private static final QueryBuilderVisitor CRITERION_VISITOR = new QueryBuilderVisitor();
+
+    /**
+     * Elasticsearch port
+     */
+    private String esClusterName;
+
+    /**
+     * Elasticsearch host
+     */
+    private String esHost;
+
+    /**
+     * Elasticsearch address
+     */
+    private String esAddress;
+
+    /**
+     * Elasticsearch TCP port
+     */
+    private int esPort = 9300;
 
     /**
      * Client to ElasticSearch base
@@ -88,11 +111,18 @@ public class EsRepository implements IEsRepository {
      * @param pGson
      *            JSon mapper bean
      */
-    public EsRepository(@Autowired Gson pGson) {
+    public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
+            @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
+            @Value("${elasticsearch.cluster.name}") String pEsClusterName) {
         this.gson = pGson;
-        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", ES_CLUSTER_NAME).build());
+        this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
+        this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
+        this.esPort = pEsPort;
+        this.esClusterName = pEsClusterName;
+        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
         try {
-            client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), ES_PORT));
+            client.addTransportAddress(new InetSocketTransportAddress(
+                    InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         } catch (final UnknownHostException e) {
             Throwables.propagate(e);
         }
@@ -198,6 +228,12 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
+    public void refresh(String pIndex) {
+        // To make just saved documents searchable, the associated index must be refreshed
+        client.admin().indices().prepareRefresh(pIndex).get();
+    }
+
+    @Override
     public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
             @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException {
         for (T doc : pDocuments) {
@@ -217,6 +253,8 @@ public class EsRepository implements IEsRepository {
                 errorMap.put(itemResponse.getId(), itemResponse.getFailure().getCause());
             }
         }
+        // To make just saved documents searchable, the associated index must be refreshed
+        client.admin().indices().prepareRefresh(pIndex).get();
         return errorMap;
     }
 
@@ -247,8 +285,16 @@ public class EsRepository implements IEsRepository {
     public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
         try {
             final List<T> results = new ArrayList<>();
-            final SearchResponse response = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
-                    .setSize(pPageRequest.getPageSize()).get();
+            SearchResponse response;
+            int errorCount = 0;
+            do {
+                response = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
+                        .setSize(pPageRequest.getPageSize()).get();
+                errorCount += response.isTimedOut() ? 1 : 0;
+                if (errorCount == 3) {
+                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+                }
+            } while (response.isTimedOut());
             final SearchHits hits = response.getHits();
             for (final SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
@@ -257,6 +303,69 @@ public class EsRepository implements IEsRepository {
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
+    }
 
+    @Override
+    public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion) {
+        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion);
+    }
+
+    @Override
+    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion) {
+        try {
+            final List<T> results = new ArrayList<>();
+            SearchResponse response;
+            int errorCount = 0;
+            do {
+                response = client.prepareSearch(pIndex).setQuery(criterion.accept(CRITERION_VISITOR))
+                        .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
+                errorCount += response.isTimedOut() ? 1 : 0;
+                if (errorCount == 3) {
+                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+                }
+            } while (response.isTimedOut());
+            final SearchHits hits = response.getHits();
+            for (final SearchHit hit : hits) {
+                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+            }
+            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    public <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, int pPageSize, Object pValue,
+            String... pFields) {
+        return multiFieldsSearch(pIndex, pClass, new PageRequest(0, pPageSize), pValue, pFields);
+    }
+
+    @Override
+    public <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageRequest, Object pValue,
+            String... pFields) {
+        try {
+            final List<T> results = new ArrayList<>();
+            // LocalDateTime must be formatted to be correctly used following Gson mapping
+            Object value = (pValue instanceof LocalDateTime)
+                    ? LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format((LocalDateTime) pValue) : pValue;
+            SearchResponse response;
+            int errorCount = 0;
+            do {
+                QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
+                response = client.prepareSearch(pIndex).setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
+                        .setSize(pPageRequest.getPageSize()).get();
+                errorCount += response.isTimedOut() ? 1 : 0;
+                if (errorCount == 3) {
+                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+                }
+            } while (response.isTimedOut());
+            final SearchHits hits = response.getHits();
+            for (final SearchHit hit : hits) {
+                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+            }
+            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

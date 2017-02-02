@@ -34,6 +34,6 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
      * @param pTagToSearch
      * @return
      */
-    List<AbstractEntity> findByTagsValue(String pTagToSearch);
+    List<AbstractEntity> findByTags(String pTagToSearch);
 
 }

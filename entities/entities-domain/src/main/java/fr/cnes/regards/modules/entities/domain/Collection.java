@@ -14,18 +14,19 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
 @Entity
 public class Collection extends AbstractLinkEntity { // NOSONAR
 
     /**
-     * list of other entities that this collection contains
+     * Links are direct access collections and datasets retrieved from tags (see {@link AbstractEntity})
      */
-    @OneToMany(mappedBy = "id", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST,
-            CascadeType.REFRESH })
+    @OneToMany(mappedBy = "id",
+            cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
     protected List<AbstractLinkEntity> links;
 
     public Collection(Model pModel, UniformResourceName pIpId, String pLabel) {

@@ -16,7 +16,6 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.entities.dao.domain.TestEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Tag;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -30,11 +29,11 @@ import fr.cnes.regards.modules.models.domain.Model;
 @TestPropertySource("classpath:application-test.properties")
 public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
-    private static final Tag TAG_TO_SEARCH = new Tag("tag");
+    private static final String TAG_TO_SEARCH = "tag";
 
-    private static final Tag TAG_TEST = new Tag("TEST");
+    private static final String TAG_TEST = "TEST";
 
-    private static final Tag TAG_LAST = new Tag("LAST");
+    private static final String TAG_LAST = "LAST";
 
     @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepository;
@@ -49,7 +48,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         modelRepository.save(model);
 
         TestEntity entity1 = new TestEntity(model, getUrn(), "entity1");
-        final Set<Tag> entity1Tags = new HashSet<>();
+        final Set<String> entity1Tags = new HashSet<>();
         entity1Tags.add(TAG_TO_SEARCH);
         entity1Tags.add(TAG_TEST);
         entity1Tags.add(TAG_LAST);
@@ -57,7 +56,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity1 = entityRepository.save(entity1);
 
         TestEntity entity2 = new TestEntity(model, getUrn(), "entity2");
-        final Set<Tag> entity2Tags = new HashSet<>();
+        final Set<String> entity2Tags = new HashSet<>();
         entity2Tags.add(TAG_TEST);
         entity2Tags.add(TAG_LAST);
         entity2Tags.add(TAG_TO_SEARCH);
@@ -65,7 +64,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity2 = entityRepository.save(entity2);
 
         TestEntity entity3 = new TestEntity(model, getUrn(), "entity3");
-        final Set<Tag> entity3Tags = new HashSet<>();
+        final Set<String> entity3Tags = new HashSet<>();
         entity3Tags.add(TAG_TEST);
         entity3Tags.add(TAG_TO_SEARCH);
         entity3Tags.add(TAG_LAST);
@@ -73,13 +72,13 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity3 = entityRepository.save(entity3);
 
         TestEntity entity4 = new TestEntity(model, getUrn(), "entity4");
-        final Set<Tag> entity4Tags = new HashSet<>();
+        final Set<String> entity4Tags = new HashSet<>();
         entity4Tags.add(TAG_TEST);
         entity4Tags.add(TAG_LAST);
         entity4.setTags(entity4Tags);
         entity4 = entityRepository.save(entity4);
 
-        final List<AbstractEntity> result = entityRepository.findByTagsValue(TAG_TO_SEARCH.getValue());
+        final List<AbstractEntity> result = entityRepository.findByTags(TAG_TO_SEARCH);
         Assert.assertTrue(result.contains(entity1));
         Assert.assertTrue(result.contains(entity2));
         Assert.assertTrue(result.contains(entity3));

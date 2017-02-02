@@ -63,7 +63,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     @Pattern(regexp = NAME_REGEXP, message = "Model name must conform to regular expression \"" + NAME_REGEXP + "\".")
     @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE,
             message = "Attribute name must be between " + NAME_MIN_SIZE + " and " + NAME_MAX_SIZE + " length.")
-    @Column(nullable = false, updatable = false, unique = true)
+    @Column(nullable = false, updatable = false, unique = true, length = NAME_MAX_SIZE)
     private String name;
 
     /**
@@ -74,7 +74,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     private String description;
 
     /**
-     * Optional fragment version
+     * Optional model version
      */
     @Column(length = 16)
     private String version;
@@ -152,5 +152,42 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
 
     public void setVersion(String pVersion) {
         version = pVersion;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        Model other = (Model) obj;
+        if (name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else
+            if (!name.equals(other.name)) {
+                return false;
+            }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Model [id=" + id + ", name=" + name + ", description=" + description + ", version=" + version
+                + ", type=" + type + "]";
     }
 }

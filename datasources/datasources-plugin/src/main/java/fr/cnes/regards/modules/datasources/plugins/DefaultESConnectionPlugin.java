@@ -17,17 +17,17 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 
 /**
- * Class DefaultSqlConnectionPlugin
+ * Class DefaultESConnectionPlugin
  *
  * A default {@link Plugin} of type {@link IConnectionPlugin}. Allows to
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Sql database")
+@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Elasticsearch engine")
 public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     /**
@@ -35,26 +35,39 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
      */
     private static final Logger LOG = LoggerFactory.getLogger(DefaultESConnectionPlugin.class);
 
-    public static final String HOST = "host";
+    private static final String HOST_PARAM = "host";
 
-    public static final String PORT = "port";
+    private static final String PORT_PARAM = "port";
 
-    public static final String CLUSTER = "cluster";
+    private static final String CLUSTER_PARAM = "cluster";
+    
 
-    @PluginParameter(name = HOST)
+    /**
+     * The host
+     */
+    @PluginParameter(name = HOST_PARAM)
     private String host;
 
-    @PluginParameter(name = PORT)
+    /**
+     * The port
+     */
+    @PluginParameter(name = PORT_PARAM)
     private int port;
 
-    @PluginParameter(name = CLUSTER)
+    /**
+     * The cluster
+     */
+    @PluginParameter(name = CLUSTER_PARAM)
     private String cluster;
 
+    /**
+     * The {@link TransportClient} used to connect to one or more node
+     */
     private TransportClient client;
 
     @Override
     public boolean testConnection() {
-        return client.connectedNodes().size() > 0;
+        return !client.connectedNodes().isEmpty();
     }
 
     @PluginInit

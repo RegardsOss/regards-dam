@@ -1,0 +1,83 @@
+{
+  "bool": {
+    "must": [
+{"match": {"attributes.text": "testContains" }},
+{"regexp": {"attributes.text": ".*testEndsWith" }},
+{"match_phrase_prefix": {"attributes.text": "testStartsWith" }},
+{"match_phrase": {"attributes.text": "testEquals" }},
+{
+  "bool": {
+    "must": [
+{
+"range": {
+"attributes.number1": {
+"gt": 10
+}
+}
+},
+{
+"range": {
+"attributes.number1": {
+"lt": 20
+}
+}
+},
+{
+"range": {
+"attributes.number3": {
+"lte": 100,
+"gte": 0
+}
+}
+},
+{
+"range": {
+"attributes.number2": {
+"gte": 10.0
+}
+}
+},
+{
+"range": {
+"attributes.number2": {
+"lte": 20.0
+}
+}
+},
+{
+"range": {
+"attributes.number4": {
+"lte": 100.0,
+"gte": 0.0
+}
+}
+},
+{
+"bool": {
+  "must_not": [
+{"match": { "attributes.number1": 500} }
+  ]
+}
+},
+{
+"range": {
+"attributes.number4": {
+"lte": 1001.0,
+"gte": 999.0
+}
+}
+},
+{
+"range": {
+"attributes.number3": {
+"lte": 3.141602653589793,
+"gte": 3.141582653589793
+}
+}
+}
+    ]
+  }
+}
+    ]
+  }
+}
