@@ -33,8 +33,8 @@
 			<artifactId>plugins-regards-starter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-domain</artifactId>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-domain</artifactId>
 		</dependency>
 	</dependencies>
 </project>

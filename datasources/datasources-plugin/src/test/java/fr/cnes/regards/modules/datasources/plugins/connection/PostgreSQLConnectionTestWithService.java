@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.plugins.connection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,13 +20,15 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -38,22 +40,22 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgreDataSourcePoolConnectionTest {
+public class PostgreSQLConnectionTestWithService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePoolConnectionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgreSQLConnectionTestWithService.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    @Value("${datasource.url}")
+    @Value("${postgresql.datasource.url}")
     private String url;
 
-    @Value("${datasource.username}")
+    @Value("${postgresql.datasource.username}")
     private String user;
 
-    @Value("${datasource.password}")
+    @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${datasource.driver}")
+    @Value("${postgresql.datasource.driver}")
     private String driver;
 
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
@@ -69,7 +71,7 @@ public class PostgreDataSourcePoolConnectionTest {
     }
 
     @Test
-    public void testPoolConnectionWithGetFirstPluginByType() throws PluginUtilsException {
+    public void testPoolConnectionWithGetFirstPluginByType() throws ModuleException {
         // Save a PluginConfiguration
         final Long anId = 33L;
         final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
@@ -102,7 +104,7 @@ public class PostgreDataSourcePoolConnectionTest {
     }
 
     @Test
-    public void testPoolConnectionWithGetPlugin() throws PluginUtilsException {
+    public void testPoolConnectionWithGetPlugin() throws ModuleException {
         // Save a PluginConfiguration
         final Long anId = 33L;
         final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
@@ -145,12 +147,12 @@ public class PostgreDataSourcePoolConnectionTest {
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> params = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         try {
             return PluginUtils.getPluginConfiguration(params, DefaultPostgreSQLConnectionPlugin.class,

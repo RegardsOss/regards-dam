@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -33,9 +35,9 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -45,7 +47,8 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  * Class DefaultESConnectionPlugin
  *
- * A default {@link Plugin} of type {@link IConnectionPlugin}. Allows to
+ * A default {@link Plugin} of type {@link IConnectionPlugin}.<br>
+ * Allows to search in a {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
@@ -54,37 +57,14 @@ import fr.cnes.regards.modules.models.domain.Model;
 public class PostgreDataSourcePlugin implements IDataSourcePlugin {
 
     /**
+     * The SQL request parameter name
+     */
+    public static final String REQUEST_PARAM = "requestSQL";
+
+    /**
      * Class logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePlugin.class);
-
-    /**
-     * The SQL request parameter name
-     */
-    public static final String REQUEST = "requestSQL";
-
-    /**
-     * The connection to the database
-     */
-    @PluginParameter(name = CONNECTION)
-    private IDBConnectionPlugin dbConnection;
-
-    /**
-     * The SQL request
-     */
-    @PluginParameter(name = REQUEST)
-    private String requestSql;
-
-    /**
-     * THe {@link Model} to used by the {@link Plugin} in JSon format.
-     */
-    @PluginParameter(name = MODEL)
-    private String modelJSon;
-
-    /**
-     * The mapping between the attributes in the {@link Model} and the data source
-     */
-    private List<DataSourceAttributeMapping> attributesMapping;
 
     /**
      * The string LIMIT used to add the pagination information in the SQL request
@@ -105,16 +85,39 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      * A pattern used to set a date in the statement
      */
     private static final String DATE_STATEMENT = "%last_modification_date%";
-    
+
     /**
-     * A default date 
+     * A default date
      */
-    private static final LocalDateTime INIT_DATE=LocalDateTime.of(1, 1, 1, 0, 0);
+    private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
+
+    /**
+     * The connection to the database
+     */
+    @PluginParameter(name = CONNECTION_PARAM)
+    private IDBConnectionPlugin dbConnection;
+
+    /**
+     * The SQL request
+     */
+    @PluginParameter(name = REQUEST_PARAM)
+    private String requestSql;
+
+    /**
+     * THe {@link Model} to used by the {@link Plugin} in JSon format.
+     */
+    @PluginParameter(name = MODEL_PARAM)
+    private String modelJSon;
+
+    /**
+     * The mapping between the attributes in the {@link Model} and the data source
+     */
+    private List<DataSourceAttributeMapping> attributesMapping;
 
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#getRefreshRate()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
      */
     @Override
     public int getRefreshRate() {
@@ -125,7 +128,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#isOutOfDate()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
      */
     @Override
     public boolean isOutOfDate() {
@@ -136,49 +139,38 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
      * (non-Javadoc)
      * 
      * @see
-     * fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#getNewData(org.springframework.data.
+     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getNewData(org.springframework.data.
      * domain.Pageable)
      */
     @Override
-    public Page<AbstractEntity> getNewData(Pageable pPageable, LocalDateTime pDate) {
-        List<DataObject> dataObjects = new ArrayList<>();
-
-        // Get a connection
-        Connection conn = dbConnection.getConnection();
-
-        try {
-            Statement statement = conn.createStatement();
-
-            // Execute SQL request
-            String sqlWithDateStatement = addDateStatement(requestSql, pDate);
-
-            String sqlRequestWithPagedInformation = buildLimitPart(sqlWithDateStatement, pPageable);
-
-            ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation);
-
-            while (rs.next()) {
-                dataObjects.add(processResultSet(rs));
-            }
-
-            rs.close();
-            statement.close();
-            conn.close();
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        }
-
-        return new PageImpl(dataObjects, pPageable, 10);
+    public Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate) {
+        return findAllWithDate(pPageable, pDate);
     }
 
     /*
      * (non-Javadoc)
      * 
      * @see
-     * fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin#findAll(org.springframework.data.domain
+     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain
      * .Pageable)
      */
     @Override
     public Page<AbstractEntity> findAll(Pageable pPageable) {
+        return findAllWithDate(pPageable, null);
+    }
+
+    /**
+     * Search in the data base, and replace the DATE_STATEMENT pattern with the date parameter.<br>
+     * If the date parameter is null, replace the DATE_STATEMENT pattern with the INIT_DATE constant.
+     * 
+     * @param pPageable
+     *            the pagination information
+     * @param pDate
+     *            null or the starting from date to apply the data base request
+     * 
+     * @return a page of entities
+     */
+    private Page<AbstractEntity> findAllWithDate(Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
         // Get a connection
@@ -188,9 +180,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
             Statement statement = conn.createStatement();
 
             // Execute SQL request
-            String sqlWithDateStatement = noDateStatement(requestSql);
-
-            String sqlRequestWithPagedInformation = buildLimitPart(sqlWithDateStatement, pPageable);
+            String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(requestSql, pDate), pPageable);
 
             ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation);
 
@@ -259,8 +249,9 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
         /**
          * For each name space, add an ObjectAttribute to the list of attribute
          */
-        spaceNames.forEach((name, attrs) -> {
-            attributes.add(AttributeBuilder.buildObject(name, attrs.toArray(new AbstractAttribute<?>[attrs.size()])));
+        spaceNames.forEach((pName, pAttrs) -> {
+            attributes
+                    .add(AttributeBuilder.buildObject(pName, pAttrs.toArray(new AbstractAttribute<?>[pAttrs.size()])));
         });
 
         data.setAttributes(attributes);
@@ -335,16 +326,16 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
         try {
             attributesMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
         } catch (IOException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e.getMessage(), e);
         }
     }
 
-    String noDateStatement(String pRequest) {
-        return pRequest.replaceAll(DATE_STATEMENT, INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-    }
-    
-    String addDateStatement(String pRequest, LocalDateTime pDate) {
-        return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    private String applyDateStatement(String pRequest, LocalDateTime pDate) {
+        if (pDate == null) {
+            return pRequest.replaceAll(DATE_STATEMENT, INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        } else {
+            return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        }
     }
 
     /**
@@ -356,7 +347,7 @@ public class PostgreDataSourcePlugin implements IDataSourcePlugin {
                 + "model=" + this.modelJSon + "requete=" + this.requestSql);
 
         LOG.info("Init method call : "
-                + (this.dbConnection.testConnection() ? "CONNECTION IS VALID" : "ERROR CONNECTION"));
+                + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
 
         loadModel();
     }

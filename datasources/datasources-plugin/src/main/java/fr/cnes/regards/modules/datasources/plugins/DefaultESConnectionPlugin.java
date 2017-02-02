@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -35,28 +35,29 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
      */
     private static final Logger LOG = LoggerFactory.getLogger(DefaultESConnectionPlugin.class);
 
-    private static final String HOST = "host";
+    private static final String HOST_PARAM = "host";
 
-    private static final String PORT = "port";
+    private static final String PORT_PARAM = "port";
 
-    private static final String CLUSTER = "cluster";
+    private static final String CLUSTER_PARAM = "cluster";
+    
 
     /**
      * The host
      */
-    @PluginParameter(name = HOST)
+    @PluginParameter(name = HOST_PARAM)
     private String host;
 
     /**
      * The port
      */
-    @PluginParameter(name = PORT)
+    @PluginParameter(name = PORT_PARAM)
     private int port;
 
     /**
      * The cluster
      */
-    @PluginParameter(name = CLUSTER)
+    @PluginParameter(name = CLUSTER_PARAM)
     private String cluster;
 
     /**
@@ -66,7 +67,7 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     @Override
     public boolean testConnection() {
-        return client.connectedNodes().size() > 0;
+        return !client.connectedNodes().isEmpty();
     }
 
     @PluginInit

@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,9 +27,11 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
@@ -58,16 +60,16 @@ public class PostgreDataSourcePluginTest {
     @Autowired
     IDomainDataSourceRepository repository;
 
-    @Value("${datasource.url}")
+    @Value("${postgresql.datasource.url}")
     private String url;
 
-    @Value("${datasource.username}")
+    @Value("${postgresql.datasource.username}")
     private String user;
 
-    @Value("${datasource.password}")
+    @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${datasource.driver}")
+    @Value("${postgresql.datasource.driver}")
     private String driver;
 
     private List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
@@ -94,7 +96,7 @@ public class PostgreDataSourcePluginTest {
                 LocalDateTime.now(), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
                 LocalDateTime.now().minusDays(5), false));
-        repository.save(new DataSourceEntity("Paris", 110, -3.141592653589793238462643383279502884197169399375105,
+        repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
 
         /*
@@ -108,10 +110,10 @@ public class PostgreDataSourcePluginTest {
         List<PluginParameter> parameters;
         try {
             parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION,
+                    .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostGreSqlConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL, adapter.toJson(attributes))
-                    .addParameter(PostgreDataSourcePlugin.REQUEST, "select * from T_TEST_PLUGIN_DATA_SOURCE")
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(attributes))
+                    .addParameter(PostgreDataSourcePlugin.REQUEST_PARAM, "select * from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
@@ -149,12 +151,12 @@ public class PostgreDataSourcePluginTest {
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE, "1").getParameters();
+                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreSQLConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));

@@ -34,16 +34,16 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class PostgreDataSourcePluginTestConfiguration {
 
-    @Value("${datasource.url}")
+    @Value("${postgresql.datasource.url}")
     private String url;
 
-    @Value("${datasource.username}")
+    @Value("${postgresql.datasource.username}")
     private String user;
 
-    @Value("${datasource.password}")
+    @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${datasource.driver}")
+    @Value("${postgresql.datasource.driver}")
     private String driver;
 
     /**

@@ -18,7 +18,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -32,7 +32,7 @@ import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlug
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Sql database")
+@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a PostgreSql database")
 public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
 
     /**
@@ -40,48 +40,48 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
      */
     private static final Logger LOG = LoggerFactory.getLogger(DefaultPostgreSQLConnectionPlugin.class);
 
-    public static final String USER = "user";
+    public static final String USER_PARAM = "user";
 
-    public static final String PASSWORD = "password";
+    public static final String PASSWORD_PARAM = "password";
 
-    public static final String URL = "url";
+    public static final String URL_PARAM = "url";
 
-    public static final String DRIVER = "driver";
+    public static final String DRIVER_PARAM = "driver";
 
     /**
      * The user to used for the database connection
      */
-    @PluginParameter(name = USER)
+    @PluginParameter(name = USER_PARAM)
     private String user;
 
     /**
      * The user's password to used for the database connection
      */
-    @PluginParameter(name = PASSWORD)
+    @PluginParameter(name = PASSWORD_PARAM)
     private String password;
 
     /**
-     * The URL of the database
+     * The URL_PARAM of the database
      */
-    @PluginParameter(name = URL)
+    @PluginParameter(name = URL_PARAM)
     private String url;
 
     /**
      * The JDBC driver to used
      */
-    @PluginParameter(name = DRIVER)
+    @PluginParameter(name = DRIVER_PARAM)
     private String driver;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MAX_POOLSIZE)
+    @PluginParameter(name = MAX_POOLSIZE_PARAM)
     private Integer maxPoolSize;
 
     /**
      * Minimum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MIN_POOLSIZE)
+    @PluginParameter(name = MIN_POOLSIZE_PARAM)
     private Integer minPoolSize;
 
     /**
@@ -132,7 +132,7 @@ public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin#getConnection()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin#getConnection()
      */
     @Override
     public Connection getConnection() {

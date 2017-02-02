@@ -18,7 +18,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -43,7 +43,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     /**
      * The user to used for the database connection
      */
-    @PluginParameter(name = USER)
+    @PluginParameter(name = USER_PARAM)
     private String user;
 
     /**
@@ -53,27 +53,27 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     private String password;
 
     /**
-     * The URL of the database
+     * The URL_PARAM of the database
      */
-    @PluginParameter(name = URL)
+    @PluginParameter(name = URL_PARAM)
     private String url;
 
     /**
      * The JDBC driver to used
      */
-    @PluginParameter(name = DRIVER)
+    @PluginParameter(name = DRIVER_PARAM)
     private String driver;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MAX_POOLSIZE)
+    @PluginParameter(name = MAX_POOLSIZE_PARAM)
     private Integer maxPoolSize;
 
     /**
      * Minimum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MIN_POOLSIZE)
+    @PluginParameter(name = MIN_POOLSIZE_PARAM)
     private Integer minPoolSize;
 
     /**
@@ -124,7 +124,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.plugintypes.IDBConnectionPlugin#getConnection()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin#getConnection()
      */
     @Override
     public Connection getConnection() {
