@@ -3,27 +3,38 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.domain;
 
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * TODO description.
+ * This class describes a table of a SQL database.
  *
- * @author cmertz
- * @since 1.0-SNAPSHOT
+ * @author Christophe Mertz
+ * 
  */
 public final class Table {
 
+    /**
+     * The table name
+     */
     private String name;
 
-    private String alias;
+    /**
+     * a catalog name; must match the catalog name as it is stored in the database
+     */
+    private String catalog;
 
-    private List<Column> columns = null;
-
-    private String pkName;
-
+    /**
+     * a schema name; must match the schema name as it is stored in the database
+     */
     private String schema;
+
+    // /**
+    // * The {@link Column} of the table
+    // */
+    // private Set<Column> columns = null;
+
+    /**
+     * The column that is the primary key
+     */
+    private String pkColumn;
 
     /**
      * @param pName
@@ -32,84 +43,36 @@ public final class Table {
     public Table(String pName) {
         super();
         name = pName;
-        columns = new ArrayList<Column>();
+        // columns = new HashSet<>();
     }
 
     /**
      * @param pName
      *            the name of the table
      * @param pSchema
-     *            the schema of the database
+     *            the schema name stored in the database
      */
     public Table(String pName, String pSchema) {
         super();
         name = pName;
         schema = pSchema;
-        columns = new ArrayList<Column>();
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
+        // columns = new HashSet<>();
     }
 
     /**
      * @param pName
-     *            the name to set
-     */
-    public void setName(String pName) {
-        name = pName;
-    }
-
-    /**
-     * @return the alias
-     */
-    public String getAlias() {
-        return alias;
-    }
-
-    /**
-     * @param pAlias
-     *            the alias to set
-     */
-    public void setAlias(String pAlias) {
-        alias = pAlias;
-    }
-
-    /**
-     * @return the attributes
-     */
-    public List<Column> getColumns() {
-        return columns;
-    }
-
-    /**
-     * @param pColumns
-     *            the attributes to set
-     */
-    public void setColumns(List<Column> pColumns) {
-        columns = pColumns;
-    }
-
-    public void addColumn(Column pColumn) {
-        this.columns.add(pColumn);
-    }
-
-    /**
-     * @return the schema
-     */
-    public String getSchema() {
-        return schema;
-    }
-
-    /**
+     *            the name of the table
+     * @param pCatalog
+     *            the catalog name stored in the database
      * @param pSchema
-     *            the schema to set
+     *            the schema stored stored in the database
      */
-    public void setSchema(String pSchema) {
+    public Table(String pName, String pCatalog, String pSchema) {
+        super();
+        name = pName;
         schema = pSchema;
+        catalog = pCatalog;
+        // columns = new HashSet<>();
     }
 
     /**
@@ -121,85 +84,118 @@ public final class Table {
         return schema != null ? schema + "." + name : name;
     }
 
-    /**
-     *
-     * Declare a new column to the current table
-     *
-     * @param pName
-     *            the column name
-     * @param pJavaSqlType
-     *            the SQL type @see {@link Types}
-     * @param pIsPrimaryKey
-     *            if this column is the primary key
-     * @since 1.0-SNAPSHOT
-     */
-    public void addColumn(String pName, int pJavaSqlType, Boolean pIsPrimaryKey) {
-        this.columns.add(new Column(pName, pJavaSqlType, pIsPrimaryKey));
-        if (pIsPrimaryKey) {
-            this.pkName = pName;
-        }
+    // /**
+    // *
+    // * Declare a new column to the current table
+    // *
+    // * @param pName
+    // * the column name
+    // * @param pJavaSqlType
+    // * the SQL type @see {@link Types}
+    // * @param pIsPrimaryKey
+    // * if this column is the primary key
+    // */
+    // public void addColumn(String pName, int pJavaSqlType, Boolean pIsPrimaryKey) {
+    // Column col = new Column(pName, pJavaSqlType, pIsPrimaryKey);
+    // this.columns.add(col);
+    // if (pIsPrimaryKey) {
+    // this.pkColumn = col;
+    // }
+    // }
+
+    public String getName() {
+        return name;
     }
 
-    /**
-     *
-     * Declare a new column to the current table
-     *
-     * @param pName
-     *            the column name
-     * @param pJavaSqlType
-     *            the SQL type @see {@link Types}
-     * @since 1.0-SNAPSHOT
-     */
-    public void addColumn(String pName, int pJavaSqlType) {
-        addColumn(pName, pJavaSqlType, Boolean.FALSE);
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void addColumnString(String pName) {
-        addColumn(pName, Types.VARCHAR);
+    // public Set<Column> getColumns() {
+    // return columns;
+    // }
+    //
+    // public void setColumns(Set<Column> columns) {
+    // this.columns = columns;
+    // }
+
+    public String getPkColumn() {
+        return pkColumn;
     }
 
-    public void addColumnString(String pName, Boolean pIsPrimaryKey) {
-        addColumn(pName, Types.VARCHAR, pIsPrimaryKey);
+    public void setPkColumn(String pkColumn) {
+        this.pkColumn = pkColumn;
     }
 
-    public void addColumnInteger(String pName) {
-        addColumn(pName, Types.INTEGER);
+    public String getSchema() {
+        return schema;
     }
 
-    public void addColumnInteger(String pName, Boolean pIsPrimaryKey) {
-        addColumn(pName, Types.INTEGER, pIsPrimaryKey);
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 
-    public void addColumnLong(String pName) {
-        addColumn(pName, Types.BIGINT);
+    public String getCatalog() {
+        return catalog;
     }
 
-    public void addColumnLong(String pName, Boolean pIsPrimaryKey) {
-        addColumn(pName, Types.BIGINT, pIsPrimaryKey);
+    public void setCatalog(String catalog) {
+        this.catalog = catalog;
     }
 
-    public void addColumnDate(String pName) {
-        addColumn(pName, Types.DATE);
-    }
+    // /**
+    // *
+    // * Declare a new column to the current table
+    // *
+    // * @param pName
+    // * the column name
+    // * @param pJavaSqlType
+    // * the SQL type @see {@link Types}
+    // */
+    // public void addColumn(String pName, int pJavaSqlType) {
+    // addColumn(pName, pJavaSqlType, Boolean.FALSE);
+    // }
+    //
+    // public void addColumnString(String pName) {
+    // addColumn(pName, Types.VARCHAR);
+    // }
+    //
+    // public void addColumnString(String pName, Boolean pIsPrimaryKey) {
+    // addColumn(pName, Types.VARCHAR, pIsPrimaryKey);
+    // }
+    //
+    // public void addColumnInteger(String pName) {
+    // addColumn(pName, Types.INTEGER);
+    // }
+    //
+    // public void addColumnInteger(String pName, Boolean pIsPrimaryKey) {
+    // addColumn(pName, Types.INTEGER, pIsPrimaryKey);
+    // }
+    //
+    // public void addColumnLong(String pName) {
+    // addColumn(pName, Types.BIGINT);
+    // }
+    //
+    // public void addColumnLong(String pName, Boolean pIsPrimaryKey) {
+    // addColumn(pName, Types.BIGINT, pIsPrimaryKey);
+    // }
+    //
+    // public void addColumnDate(String pName) {
+    // addColumn(pName, Types.DATE);
+    // }
+    //
+    // public void addColumnDate(String pName, Boolean pIsPrimaryKey) {
+    // addColumn(pName, Types.DATE, pIsPrimaryKey);
+    // }
 
-    public void addColumnDate(String pName, Boolean pIsPrimaryKey) {
-        addColumn(pName, Types.DATE, pIsPrimaryKey);
+    private String toString(String pName, String pVal) {
+        return pVal != null && pVal != "" ? pName + "=" + pVal : "";
     }
 
     @Override
     public String toString() {
-        return "[TABLE :" + name + "]" + " - " + alias != null && alias != "" ? "alias:" + alias
-                : "" + " - " + pkName != null && pkName != "" ? "idkey=" + pkName
-                        : "" + " - " + "attribute=" + columns.size();
+        return "[TABLE :" + name + "]" + " : " + toString("schema", schema) + " : " + toString("catalog", catalog)
+                + " : " + pkColumn != null ? "pkKey=" + pkColumn : "";
     }
 
-    /**
-     * Get method.
-     *
-     * @return the pkName
-     * @since TODO
-     */
-    public String getPkName() {
-        return pkName;
-    }
 }
