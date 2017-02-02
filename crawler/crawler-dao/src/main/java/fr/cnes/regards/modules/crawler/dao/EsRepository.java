@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetaData;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -38,6 +40,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -323,58 +326,47 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion,
-            Map<String, FacetType> pFacetsMap) {
-        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion, pFacetsMap);
+            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
+        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion, pFacetsMap, pAscSortMap);
     }
 
     @Override
     public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
-            Map<String, FacetType> pFacetsMap) {
+            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         try {
             final List<T> results = new ArrayList<>();
             QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
             SearchRequestBuilder request = client.prepareSearch(pIndex).setQuery(critBuilder)
                     .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
-            // Managing aggregations if some facets are asked
-            boolean twoPassRequestNeeded = false;
-            if (pFacetsMap != null) {
-                // Numeric/date facets needs :
-                // First to add a percentiles aggregation to retrieved 9 values corresponding to
-                // 10%, 20 %, ..., 90 % of the values
-                // Secondly to add a range aggregation with these 9 values in order to retrieve 10 buckets of equal
-                // size of values
-                for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
-                    FacetType facetType = entry.getValue();
-                    if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
-                        twoPassRequestNeeded = true;
-                    }
-                    request.addAggregation(facetType.accept(FACET_VISITOR, entry.getKey()));
-                }
+            if (pAscSortMap != null) {
+                manageSortRequest(pIndex, request, pAscSortMap);
             }
+            // Managing aggregations if some facets are asked
+            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
             // Launch the request
             SearchResponse response = getWithTimeouts(request);
 
             // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
-            Map<String, IFacet<?>> facetMap = null;
             if (twoPassRequestNeeded) {
                 // Rebuild request
                 request = client.prepareSearch(pIndex).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                         .setSize(pPageRequest.getPageSize());
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                manageTwoPassRequestAggregations(pFacetsMap, request, aggsMap);
+                manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
                 // Relaunch the request with replaced facets
                 response = getWithTimeouts(request);
             }
 
+            Map<String, IFacet<?>> facetResultsMap = null;
             if (pFacetsMap != null) {
                 // Get the new aggregations result map
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 // Create the facet map
-                facetMap = new HashMap<>();
+                facetResultsMap = new HashMap<>();
                 for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
                     FacetType facetType = entry.getValue();
                     String attributeName = entry.getKey();
-                    fillFacetMap(aggsMap, facetMap, facetType, attributeName);
+                    fillFacetMap(aggsMap, facetResultsMap, facetType, attributeName);
                 }
             }
 
@@ -383,17 +375,107 @@ public class EsRepository implements IEsRepository {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
             }
             // If no facet, juste returns a "simple" Page
-            if (facetMap == null) {
+            if (facetResultsMap == null) {
                 return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
             } else { // else returns a FacetPage
-                return new FacetPage<>(results, facetMap, pPageRequest, response.getHits().getTotalHits());
+                return new FacetPage<>(results, facetResultsMap, pPageRequest, response.getHits().getTotalHits());
             }
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
     }
 
-    private void manageTwoPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchRequestBuilder request,
+    /**
+     * Add sort to the request
+     * @param request search request
+     * @param pAscSortMap map(attribute name, true if ascending)
+     */
+    private void manageSortRequest(String pIndex, SearchRequestBuilder request,
+            LinkedHashMap<String, Boolean> pAscSortMap) {
+        // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
+        // end of attribute name into sort request. So we need to know string attributes
+        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(pIndex)
+                .setFields(pAscSortMap.keySet().toArray(new String[pAscSortMap.size()])).get();
+        // map(type, map(field, metadata)) for asked index
+        Map<String, Map<String, FieldMappingMetaData>> mappings = response.mappings().get(pIndex);
+        // All types mappings are retrieved.
+        // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
+        // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
+        LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(pAscSortMap.size());
+        for (Map.Entry<String, Boolean> sortEntry : pAscSortMap.entrySet()) {
+            String attributeName = sortEntry.getKey();
+            // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
+            String lastPathAttName = attributeName.contains(".")
+                    ? attributeName.substring(attributeName.lastIndexOf('.') + 1) : attributeName;
+            // For all type mappings
+            boolean typeText = false;
+            for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
+                // Once we found attribute name on one type, we stop to next attribute
+                if (typeEntry.getValue().containsKey(attributeName)) {
+                    FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
+                    // If field type is String, we must add ".keyword" to attribute name
+                    Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
+                    if ((metaDataMap.get(lastPathAttName) != null)
+                            && (metaDataMap.get(lastPathAttName) instanceof Map)) {
+                        Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
+                        // Should contains "type" field but...
+                        if (mappingMap.containsKey("type")) {
+                            if (mappingMap.get("type").equals("text")) {
+                                updatedAscSortMap.put(attributeName + ".keyword", sortEntry.getValue());
+                                typeText = true;
+                                break;
+                            } else { // "type" field found => it's not "text"
+                                typeText = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            // Not "text" type => add the key/value to keep the sort order
+            if (!typeText) {
+                updatedAscSortMap.put(attributeName, sortEntry.getValue());
+            }
+        }
+        // Add sort to request
+        updatedAscSortMap.entrySet()
+                .forEach(entry -> request.addSort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
+    }
+
+    /**
+     * Add aggregations to the search request.
+     * @param pFacetsMap asked facets
+     * @param request search request
+     * @return true if a second pass is needed (managing range facets)
+     */
+    private boolean manageFirstPassRequestAggregations(Map<String, FacetType> pFacetsMap,
+            SearchRequestBuilder request) {
+        boolean twoPassRequestNeeded = false;
+        if (pFacetsMap != null) {
+            // Numeric/date facets needs :
+            // First to add a percentiles aggregation to retrieved 9 values corresponding to
+            // 10%, 20 %, ..., 90 % of the values
+            // Secondly to add a range aggregation with these 9 values in order to retrieve 10 buckets of equal
+            // size of values
+            for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+                FacetType facetType = entry.getValue();
+                if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
+                    twoPassRequestNeeded = true;
+                }
+                request.addAggregation(facetType.accept(FACET_VISITOR, entry.getKey()));
+            }
+        }
+        return twoPassRequestNeeded;
+    }
+
+    /**
+     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results
+     * (from first pass request results) to create range aggregagtions.
+     * @param pFacetsMap asked facets
+     * @param request search request
+     * @param aggsMap first pass aggregagtions results
+     */
+    private void manageSecondPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchRequestBuilder request,
             Map<String, Aggregation> aggsMap) {
         for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
             FacetType facetType = entry.getValue();
@@ -413,6 +495,13 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    /**
+     * Compute aggregations results to fill results facet map of an attribute
+     * @param aggsMap aggregation resuls map
+     * @param facetMap map of results facets
+     * @param facetType type of facet for given attribute
+     * @param attributeName given attribute
+     */
     private void fillFacetMap(Map<String, Aggregation> aggsMap, Map<String, IFacet<?>> facetMap, FacetType facetType,
             String attributeName) {
         switch (facetType) {

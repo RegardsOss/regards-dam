@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,10 +20,12 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -40,6 +44,8 @@ import fr.cnes.regards.modules.crawler.domain.facet.StringFacet;
 public class EsQueryTest {
 
     private static final String INDEX = "criterions";
+
+    private static final String INDEX2 = "criterions2";
 
     private static final String TYPE1 = "type1";
 
@@ -66,8 +72,8 @@ public class EsQueryTest {
         try {
             gson = new GsonBuilder().create();
             // FIXME valeurs en dur pour l'instant
-            // repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
-            repository = new EsRepository(gson, null, "localhost", 9300, "regards");
+            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
+            // repository = new EsRepository(gson, null, "localhost", 9300, "regards");
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -120,6 +126,45 @@ public class EsQueryTest {
             items.add(new Item(Integer.toString(i), TYPE1, att));
         }
         repository.saveBulk(INDEX, items);
+    }
+
+    private void createData2() {
+        try {
+            repository.deleteIndex(INDEX2);
+        } catch (IndexNotFoundException infe) {
+        }
+        repository.createIndex(INDEX2);
+        final String[] STRINGS = { "Le", "petit", "chat", "est", "mort", "de", "sa", "belle", "mort",
+                "ou écrasé on sait pas trop" };
+        final String[] LOREM_IPSUM = { "Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
+                "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua",
+                "Ut" };
+        AtomicInteger ai = new AtomicInteger(1);
+        final int[] INTS = IntStream.generate(() -> ai.getAndIncrement()).limit(20).toArray();
+        final double[] DOUBLES = { Math.PI, Math.E, Math.sqrt(2), 1.2, 2.3, 5.e24, -0.3e12, 1.54e-12, 1.0,
+                1.1234567891011121314, 0., 0., 0., 0., 0. };
+        LocalDateTime date = LocalDateTime.of(2017, Month.JANUARY, 1, 12, 0);
+        AtomicInteger ai2 = new AtomicInteger(0);
+        final LocalDateTime[] DATES = Stream.generate(() -> date.plusDays(ai2.getAndIncrement())).limit(20)
+                .collect(Collectors.toList()).toArray(new LocalDateTime[20]);
+        List<Item> items = new ArrayList<>();
+        for (int i = 0; i < 1_000_000; i++) {
+            // size attribute from 1 to 10
+            Attributes att = new Attributes(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i % 10],
+                    LocalDateTime.of(2017, Month.JANUARY, 1 + (i % 10), 10, 47),
+                    Arrays.copyOfRange(LOREM_IPSUM, i % 10, (i % 10) + 10),
+                    Arrays.copyOfRange(INTS, i % 10, (i % 10) + 10), Arrays.copyOfRange(DOUBLES, i % 10, (i % 10) + 5),
+                    Arrays.copyOfRange(DATES, i % 10, (i % 10) + 10));
+            items.add(new Item(Integer.toString(i), TYPE1, att));
+            if ((i % 1000) == 0) {
+                long start = System.currentTimeMillis();
+                repository.saveBulk(INDEX2, items);
+                System.out.println(i + " : " + (System.currentTimeMillis() - start) + " ms");
+                items.clear();
+            }
+        }
+        repository.saveBulk(INDEX2, items);
+
     }
 
     @Test
@@ -298,6 +343,81 @@ public class EsQueryTest {
         Assert.assertTrue(facetMap.get("attributes.dates") instanceof DateFacet);
         DateFacet dateFacet = (DateFacet) facetMap.get("attributes.dates");
         Assert.assertNotNull(dateFacet);
+
+        // With criterions
+        ICriterion interDatesCrit4 = ICriterion.intersects("attributes.dateRange",
+                                                           LocalDateTime.of(2017, Month.JANUARY, 2, 12, 0, 0),
+                                                           LocalDateTime.of(2017, Month.JANUARY, 18, 12, 0, 0));
+        Map<String, FacetType> facetReqMap = new ImmutableMap.Builder<String, FacetType>()
+                .put("attributes.tags", FacetType.STRING).put("attributes.ints", FacetType.NUMERIC)
+                .put("attributes.dates", FacetType.DATE).build();
+        Assert.assertEquals(10, page.getContent().size());
+        page = repository.search(INDEX, Item.class, 10, interDatesCrit4, facetReqMap);
+        Assert.assertTrue(page instanceof FacetPage);
+        facetMap = ((FacetPage<Item>) page).getFacetMap();
+        Assert.assertTrue(facetMap.containsKey("attributes.tags"));
+        Assert.assertTrue(facetMap.get("attributes.tags") instanceof StringFacet);
+        strFacet = (StringFacet) facetMap.get("attributes.tags");
+        Assert.assertNotNull(strFacet);
+        Assert.assertTrue(facetMap.containsKey("attributes.ints"));
+        Assert.assertTrue(facetMap.get("attributes.ints") instanceof NumericFacet);
+        numFacet = (NumericFacet) facetMap.get("attributes.ints");
+        Assert.assertNotNull(numFacet);
+        Assert.assertTrue(facetMap.containsKey("attributes.dates"));
+        Assert.assertTrue(facetMap.get("attributes.dates") instanceof DateFacet);
+        dateFacet = (DateFacet) facetMap.get("attributes.dates");
+        Assert.assertNotNull(dateFacet);
+    }
+
+    @Test
+    public void testWithSort() {
+        this.createData();
+
+        LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
+        sortMap.put("attributes.text", true);
+        sortMap.put("attributes.size", false);
+        List<Item> items = repository.search(INDEX, Item.class, 10, sortMap, ICriterion.all()).getContent();
+        List<Item> itemsSorted = Lists.newArrayList(items);
+        Comparator<Item> comparator = Comparator.comparing(item -> item.getAttributes().getText());
+        comparator = comparator
+                .thenComparing(Comparator.<Item, Integer> comparing(item -> item.getAttributes().getSize()).reversed());
+        itemsSorted.sort(comparator);
+        Assert.assertEquals(items, itemsSorted);
+    }
+
+    @Test
+    @Ignore
+    public void testLoad() {
+        // this.createData2();
+        // Search with aggregations
+        ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
+        facetMapBuilder.put("attributes.size", FacetType.NUMERIC).put("attributes.weight", FacetType.NUMERIC)
+                .put("attributes.text", FacetType.STRING);
+        // .put("attributes.date", FacetType.DATE);
+        // .put("attributes.tags", FacetType.STRING)
+        // .put("attributes.ints", FacetType.NUMERIC);
+        // .put("attributes.doubles", FacetType.NUMERIC).put("attributes.dates", FacetType.DATE);
+        LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
+        /*        sortMap.put("docId", false);
+        long start = System.currentTimeMillis();
+        Page<Item> page = repository.search(INDEX2, Item.class, 100, ICriterion.all(), facetMapBuilder.build(),
+                                            sortMap);
+        System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");*/
+        // while (page.hasNext()) {
+        // start = System.currentTimeMillis();
+        // page = repository.search(INDEX2, Item.class, page.nextPageable(), ICriterion.all(), facetMapBuilder.build(),
+        // sortMap);
+        // System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
+        // }
+        sortMap.clear();
+        sortMap.put("attributes.date", Boolean.FALSE);
+        // long start = System.currentTimeMillis();
+        // Page<Item> page = repository.search(INDEX2, Item.class, 100, sortMap, ICriterion.all());
+        // System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
+
+        long start = System.currentTimeMillis();
+        repository.get(INDEX2, TYPE1, "229009", Item.class);
+        System.out.println("get : " + (System.currentTimeMillis() - start) + " ms");
     }
 
     private static class Item implements IIndexable, Serializable {
