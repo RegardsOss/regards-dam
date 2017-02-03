@@ -33,20 +33,32 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * @since 1.0-SNAPSHOT
  */
 @Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a PostgreSql database")
-public class DefaultPostgreSQLConnectionPlugin implements IDBConnectionPlugin {
+public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
+
+    /**
+     * A string for the user parameter of the Plugin
+     */
+    public static final String USER_PARAM = "user";
+
+    /**
+     * A string for the password parameter of the Plugin
+     */
+    public static final String PASSWORD_PARAM = "password";
+
+    /**
+     * A string for the url parameter of the Plugin
+     */
+    public static final String URL_PARAM = "url";
+
+    /**
+     * A string for the driver parameter of the Plugin
+     */
+    public static final String DRIVER_PARAM = "driver";
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultPostgreSQLConnectionPlugin.class);
-
-    public static final String USER_PARAM = "user";
-
-    public static final String PASSWORD_PARAM = "password";
-
-    public static final String URL_PARAM = "url";
-
-    public static final String DRIVER_PARAM = "driver";
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultPostgreConnectionPlugin.class);
 
     /**
      * The user to used for the database connection

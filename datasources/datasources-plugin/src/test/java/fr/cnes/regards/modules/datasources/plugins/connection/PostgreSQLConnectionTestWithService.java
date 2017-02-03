@@ -27,7 +27,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -83,19 +83,19 @@ public class PostgreSQLConnectionTestWithService {
         pluginConfs.add(aPluginConfiguration);
 
         Mockito.when(pluginConfRepositoryMocked
-                .findByPluginIdOrderByPriorityOrderDesc(DefaultPostgreSQLConnectionPlugin.class.getCanonicalName()))
+                .findByPluginIdOrderByPriorityOrderDesc(DefaultPostgreConnectionPlugin.class.getCanonicalName()))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
 
         // Get the first Plugin
-        final DefaultPostgreSQLConnectionPlugin aa = pluginServiceMocked
+        final DefaultPostgreConnectionPlugin aa = pluginServiceMocked
                 .getFirstPluginByType(IDBConnectionPlugin.class);
 
         Assert.assertNotNull(aa);
         Assert.assertTrue(aa.testConnection());
 
         // Get the first Plugin : the same than the previous
-        final DefaultPostgreSQLConnectionPlugin bb = pluginServiceMocked
+        final DefaultPostgreConnectionPlugin bb = pluginServiceMocked
                 .getFirstPluginByType(IDBConnectionPlugin.class);
 
         Assert.assertNotNull(bb);
@@ -116,18 +116,18 @@ public class PostgreSQLConnectionTestWithService {
         pluginConfs.add(aPluginConfiguration);
 
         Mockito.when(pluginConfRepositoryMocked
-                .findByPluginIdOrderByPriorityOrderDesc(DefaultPostgreSQLConnectionPlugin.class.getCanonicalName()))
+                .findByPluginIdOrderByPriorityOrderDesc(DefaultPostgreConnectionPlugin.class.getCanonicalName()))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
 
         // Get a Plugin for a specific configuration
-        final DefaultPostgreSQLConnectionPlugin aa = pluginServiceMocked.getPlugin(anId);
+        final DefaultPostgreConnectionPlugin aa = pluginServiceMocked.getPlugin(anId);
 
         Assert.assertNotNull(aa);
         Assert.assertTrue(aa.testConnection());
 
         // Get a Plugin for a specific configuration
-        final DefaultPostgreSQLConnectionPlugin bb = pluginServiceMocked.getPlugin(anId);
+        final DefaultPostgreConnectionPlugin bb = pluginServiceMocked.getPlugin(anId);
 
         Assert.assertNotNull(bb);
         Assert.assertTrue(bb.testConnection());
@@ -140,22 +140,22 @@ public class PostgreSQLConnectionTestWithService {
     }
 
     /**
-     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreSQLConnectionPlugin} to connect to the
+     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the
      * PostgreSql database
      * 
      * @return the {@link PluginConfiguration}
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> params = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         try {
-            return PluginUtils.getPluginConfiguration(params, DefaultPostgreSQLConnectionPlugin.class,
+            return PluginUtils.getPluginConfiguration(params, DefaultPostgreConnectionPlugin.class,
                                                       Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
             LOG.error(e.getMessage());
