@@ -25,7 +25,7 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.rest.ModelController;
@@ -57,7 +57,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
      * Attribute Adapter Factory
      */
     @Autowired
-    private FlattenedAttributeAdapterFactory attributeAdapterFactory;
+    private MultitenantFlattenedAttributeAdapterFactory attributeAdapterFactory;
 
     /**
      * The XML file used as a model
@@ -155,7 +155,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
 
-        attributeAdapterFactory.refresh();
+        attributeAdapterFactory.refresh(DEFAULT_TENANT);
     }
 
     @Test

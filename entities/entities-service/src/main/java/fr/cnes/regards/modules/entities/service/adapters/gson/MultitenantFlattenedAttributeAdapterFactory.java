@@ -23,8 +23,8 @@ import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.gson.adapters.MultitenantPolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
-import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
@@ -128,11 +128,10 @@ public class MultitenantFlattenedAttributeAdapterFactory
     private void initSubtypes() {
         subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
         subscriber.subscribeTo(AttributeModelDeleted.class, new UnregisterHandler());
-        // FIXME add tenant listeners
         // Retrieve all tenants
         for (String tenant : tenantResolver.getAllTenants()) {
             // Set thread tenant to route database retrieval
-            // TODO
+            runtimeTenantResolver.forceTenant(tenant);
             // Register for tenant
             registerAttributes(tenant);
         }
@@ -152,7 +151,6 @@ public class MultitenantFlattenedAttributeAdapterFactory
         List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
         if (atts != null) {
             for (AttributeModel att : atts) {
-
                 // Define namespace if required
                 String namespace = null;
                 // Register namespace as an object wrapper
@@ -471,9 +469,9 @@ public class MultitenantFlattenedAttributeAdapterFactory
     private class RegisterHandler implements IHandler<AttributeModelCreated> {
 
         @Override
-        public void handle(TenantWrapper<AttributeModelCreated> pT) {
-            AttributeModelCreated amc = pT.getContent();
-            registerSubtype(pT.getTenant(), getClassByType(amc.getAttributeType()), amc.getAttributeName(),
+        public void handle(TenantWrapper<AttributeModelCreated> pWrapper) {
+            AttributeModelCreated amc = pWrapper.getContent();
+            registerSubtype(pWrapper.getTenant(), getClassByType(amc.getAttributeType()), amc.getAttributeName(),
                             amc.getFragmentName());
         }
     }
@@ -487,9 +485,9 @@ public class MultitenantFlattenedAttributeAdapterFactory
     private class UnregisterHandler implements IHandler<AttributeModelDeleted> {
 
         @Override
-        public void handle(TenantWrapper<AttributeModelDeleted> pT) {
-            AttributeModelDeleted amd = pT.getContent();
-            unregisterSubtype(pT.getTenant(), getClassByType(amd.getAttributeType()), amd.getAttributeName(),
+        public void handle(TenantWrapper<AttributeModelDeleted> pWrapper) {
+            AttributeModelDeleted amd = pWrapper.getContent();
+            unregisterSubtype(pWrapper.getTenant(), getClassByType(amd.getAttributeType()), amd.getAttributeName(),
                               amd.getFragmentName());
         }
     }
