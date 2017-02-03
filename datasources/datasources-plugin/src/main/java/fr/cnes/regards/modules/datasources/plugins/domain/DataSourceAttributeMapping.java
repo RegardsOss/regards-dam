@@ -38,6 +38,7 @@ public class DataSourceAttributeMapping {
      * Default constructor
      */
     public DataSourceAttributeMapping() {
+        super();
     }
 
     /**
@@ -81,32 +82,32 @@ public class DataSourceAttributeMapping {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String pName) {
+        this.name = pName;
     }
 
     public AttributeType getType() {
         return type;
     }
 
-    public void setType(AttributeType type) {
-        this.type = type;
+    public void setType(AttributeType pType) {
+        this.type = pType;
     }
 
     public String getNameSpace() {
         return nameSpace;
     }
 
-    public void setNameSpace(String nameSpace) {
-        this.nameSpace = nameSpace;
+    public void setNameSpace(String pNameSpace) {
+        this.nameSpace = pNameSpace;
     }
 
     public String getMapping() {
         return mapping;
     }
 
-    public void setMapping(String mapping) {
-        this.mapping = mapping;
+    public void setMapping(String pMapping) {
+        this.mapping = pMapping;
     }
 
 }

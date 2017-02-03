@@ -9,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.nurkiewicz.jdbcrepository.TableDescription;
+import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.domain.Column;
 import fr.cnes.regards.modules.datasources.plugins.domain.Index;
 import fr.cnes.regards.modules.datasources.plugins.domain.Table;
@@ -30,7 +33,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugi
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 
 /**
- * Class SqlDBDataSourcePlugin
+ * Class PostgreDBDataSourcePlugin
  *
  * A {@link Plugin} to discover the tables, colums and index of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
@@ -38,13 +41,17 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Elasticsearch engine")
-public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
+public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMapping implements IDBDataSourcePlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(SqlDBDataSourcePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDBDataSourcePlugin.class);
+
+    /**
+     * The SQL request parameter name
+     */
+    public static final String REQUEST_PARAM = "requestSQL";
 
     private static final String METADATA_TABLE = "TABLE";
 
@@ -68,11 +75,40 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
 
     private static final String NON_UNIQUE = "non_unique";
 
-    /**
-     * The connection to the database
-     */
-    @PluginParameter(name = CONNECTION_PARAM)
-    private IDBConnectionPlugin dbConnection;
+    private static final String COMMA = ",";
+
+    protected abstract SqlGenerator buildSqlGenerator();
+
+    protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause);
+
+    protected abstract IDBConnectionPlugin getDBConnectionPlugin();
+
+    private TableDescription tableDescription;
+
+    private List<String> columns;
+
+    private SqlGenerator sqlGenerator;
+
+    public void setMapping(String pTable, String... pColumns) {
+        tableDescription = new TableDescription(pTable, null, pColumns);
+        columns = new ArrayList<>(pColumns.length);
+        for (String col : pColumns) {
+            columns.add(col);
+        }
+        if (pColumns.length > 0) {
+            sqlGenerator = buildSqlGenerator(buildColumnClause(pColumns));
+        } else {
+            sqlGenerator = buildSqlGenerator();
+        }
+    }
+
+    private String buildColumnClause(String... pColumns) {
+        StringBuilder clauseStr = new StringBuilder();
+        for (String col : pColumns) {
+            clauseStr.append(col + COMMA);
+        }
+        return clauseStr.substring(0, clauseStr.length() - 1);
+    }
 
     /*
      * (non-Javadoc)
@@ -81,8 +117,8 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      */
     @Override
     public int getRefreshRate() {
-        // TODO Auto-generated method stub
-        return 0;
+        // in seconds, 30 minutes
+        return 1800;
     }
 
     /*
@@ -92,8 +128,7 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      */
     @Override
     public boolean isOutOfDate() {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     /*
@@ -105,8 +140,15 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      */
     @Override
     public Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate) {
-        // TODO Auto-generated method stub
-        return null;
+        if (sqlGenerator == null) {
+            return null;
+        }
+
+        String requestSql = sqlGenerator.selectAll(tableDescription, pPageable);
+
+        LOG.debug("request :" + requestSql);
+
+        return findAll(getDBConnectionPlugin().getConnection(), requestSql, pDate);
     }
 
     /*
@@ -118,8 +160,7 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      */
     @Override
     public Page<AbstractEntity> findAll(Pageable pPageable) {
-        // TODO Auto-generated method stub
-        return null;
+        return findAll(pPageable, null);
     }
 
     /*
@@ -132,7 +173,7 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
         Map<String, Table> tables = new HashMap<>();
 
         // Get a connection
-        Connection conn = dbConnection.getConnection();
+        Connection conn = getDBConnectionPlugin().getConnection();
         try {
 
             DatabaseMetaData metaData = conn.getMetaData();
@@ -142,7 +183,7 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[TABLE] --> " + logString(rs, TABLE_NAME) + "] " + logString(rs, TABLE_CAT)
-                            + logString(rs, TABLE_SCHEM) + logString(rs, TABLE_TYPE) + logString(rs, "REMARKS"));
+                            + logString(rs, TABLE_SCHEM) + logString(rs, TABLE_TYPE) + logString(rs, REMARKS));
                 }
                 Table table = new Table(rs.getString(TABLE_NAME), rs.getString(TABLE_CAT), rs.getString(TABLE_SCHEM));
                 table.setPkColumn(getPrimaryKey(metaData, rs.getString(TABLE_CAT), rs.getString(TABLE_SCHEM),
@@ -164,9 +205,9 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
         ResultSet rs = pMetaData.getPrimaryKeys(pCatalog, pSchema, pTable);
         if (rs.next()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug(rs.getString("COLUMN_NAME") + ", " + rs.getString("PK_NAME"));
+                LOG.debug("[PKEY] --> " + rs.getString(COLUMN_NAME) + ", " + rs.getString("PK_NAME"));
             }
-            column = rs.getString("COLUMN_NAME");
+            column = rs.getString(COLUMN_NAME);
         }
         return column;
     }
@@ -178,10 +219,10 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      */
     @Override
     public Map<String, Column> getColumns(Table pTable) {
-        Map<String, Column> columns = new HashMap<>();
+        Map<String, Column> cols = new HashMap<>();
 
         // Get a connection
-        Connection conn = dbConnection.getConnection();
+        Connection conn = getDBConnectionPlugin().getConnection();
 
         try {
             DatabaseMetaData metaData = conn.getMetaData();
@@ -192,15 +233,13 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TABLE_CAT")
                             + logString(rs, "TABLE_SCHEM") + logString(rs, "TABLE_NAME") + logString(rs, "TYPE_NAME")
-                            + logString(rs, "SCOPE_CATLOG") + logInt(rs, "SQL_DATA_TYPE") + logInt(rs, "DATA_TYPE")
-                            + logString(rs, "SCOPE_SCHEMA") + logString(rs, "SCOPE_TABLE"));
+                            + logInt(rs, "SQL_DATA_TYPE") + logInt(rs, "DATA_TYPE"));
                 }
-                // ,
 
                 Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
                 column.setPrimaryKey(pTable.getPkColumn() != null && !"".equals(pTable.getPkColumn())
                         && pTable.getPkColumn().equals(column.getName()));
-                columns.put(column.getName(), column);
+                cols.put(column.getName(), column);
             }
             rs.close();
             conn.close();
@@ -208,20 +247,20 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
             LOG.error(e.getMessage(), e);
         }
 
-        return columns;
+        return cols;
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getIndexes()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getIndices()
      */
     @Override
-    public Map<String, Index> getIndexes(Table pTable) {
-        Map<String, Index> indexes = new HashMap<>();
+    public Map<String, Index> getIndices(Table pTable) {
+        Map<String, Index> indices = new HashMap<>();
 
         // Get a connection
-        Connection conn = dbConnection.getConnection();
+        Connection conn = getDBConnectionPlugin().getConnection();
 
         try {
             DatabaseMetaData metaData = conn.getMetaData();
@@ -235,7 +274,7 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
                 }
                 Index index = new Index(rs.getString(INDEX_NAME), rs.getString(COLUMN_NAME), rs.getBoolean(NON_UNIQUE),
                         rs.getString(INDEX_NAME));
-                indexes.put(index.getName(), index);
+                indices.put(index.getName(), index);
             }
             rs.close();
             conn.close();
@@ -243,7 +282,7 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
             LOG.error(e.getMessage(), e);
         }
 
-        return indexes;
+        return indices;
     }
 
     private String logBoolean(ResultSet pRs, String pParamName) throws SQLException {
@@ -270,9 +309,8 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredTable()
      */
     @Override
-    public Table getConfiguredTable() {
-        // TODO Auto-generated method stub
-        return null;
+    public String getConfiguredTable() {
+        return tableDescription.getName();
     }
 
     /*
@@ -281,9 +319,8 @@ public class SqlDBDataSourcePlugin implements IDBDataSourcePlugin {
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredColumns()
      */
     @Override
-    public List<Column> getConfiguredColumns() {
-        // TODO Auto-generated method stub
-        return null;
+    public List<String> getConfiguredColumns() {
+        return columns;
     }
 
 }

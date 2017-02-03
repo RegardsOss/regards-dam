@@ -49,32 +49,32 @@ public final class Index {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String pName) {
+        this.name = pName;
     }
 
     public String getColumm() {
         return columm;
     }
 
-    public void setColumm(String columm) {
-        this.columm = columm;
+    public void setColumm(String pColumm) {
+        this.columm = pColumm;
     }
 
     public Boolean getIsUnique() {
         return isUnique;
     }
 
-    public void setIsUnique(Boolean isUnique) {
-        this.isUnique = isUnique;
+    public void setIsUnique(Boolean pIsUnique) {
+        this.isUnique = pIsUnique;
     }
 
     public String getAscOrDesc() {
         return ascOrDesc;
     }
 
-    public void setAscOrDesc(String ascOrDesc) {
-        this.ascOrDesc = ascOrDesc;
+    public void setAscOrDesc(String pAscOrDesc) {
+        this.ascOrDesc = pAscOrDesc;
     }
 
     @Override

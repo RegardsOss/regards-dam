@@ -6,62 +6,48 @@ package fr.cnes.regards.modules.datasources.plugins;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import com.google.gson.stream.JsonReader;
+import com.nurkiewicz.jdbcrepository.sql.OracleSqlGenerator;
+import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class DefaultESConnectionPlugin
+ * Class OracleDBDataSourcePlugin
  *
- * A default {@link Plugin} of type {@link IConnectionPlugin}.<br>
- * Allows to search in a {@link DataSource}.
+ * A {@link Plugin} to discover the tables, colums and index of a SQL Database.<br>
+ * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows data extraction to a PostgreSql database")
-public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implements IDataSourcePlugin {
-
-    /**
-     * The SQL request parameter name
-     */
-    public static final String REQUEST_PARAM = "requestSQL";
+@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows introspection to a Oracle database")
+public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin implements IDBDataSourcePlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OracleDBDataSourcePlugin.class);
 
     /**
      * The connection to the database
      */
     @PluginParameter(name = CONNECTION_PARAM)
     private IDBConnectionPlugin dbConnection;
-
-    /**
-     * The SQL request
-     */
-    @PluginParameter(name = REQUEST_PARAM)
-    private String requestSql;
 
     /**
      * THe {@link Model} to used by the {@link Plugin} in JSon format.
@@ -80,7 +66,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     @PluginInit
     private void initPlugin() {
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + this.dbConnection.toString()
-                + "model=" + this.modelJSon + "requete=" + this.requestSql);
+                + "model=" + this.modelJSon);
 
         LOG.info("Init method call : "
                 + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
@@ -90,7 +76,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     }
 
     /**
-     * Converts the mapping between the attribute of the datasource and the attributes of the model from a JSon
+     * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
      * representation to a {@link List} of {@link DataSourceAttributeMapping}.
      */
     private void loadModel() {
@@ -105,47 +91,31 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
+     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator()
      */
     @Override
-    public int getRefreshRate() {
-        // in seconds, 30 minutes
-        return 1800;
+    protected SqlGenerator buildSqlGenerator() {
+        return new OracleSqlGenerator();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
+     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String)
      */
     @Override
-    public boolean isOutOfDate() {
-        return true;
+    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause) {
+        return new OracleSqlGenerator(pAllColumnsClause);
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getNewData(org.springframework.data.
-     * domain.Pageable)
-     */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate) {
-        return findAll(dbConnection.getConnection(), requestSql, pPageable, pDate);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain
-     * .Pageable)
+     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#getDBConnectionPlugin()
      */
     @Override
-    public Page<AbstractEntity> findAll(Pageable pPageable) {
-        return findAll(pPageable, null);
+    protected IDBConnectionPlugin getDBConnectionPlugin() {
+        return dbConnection;
     }
 
     /*
@@ -157,4 +127,5 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     protected List<DataSourceAttributeMapping> getAttributesMapping() {
         return attributesMapping;
     }
+
 }

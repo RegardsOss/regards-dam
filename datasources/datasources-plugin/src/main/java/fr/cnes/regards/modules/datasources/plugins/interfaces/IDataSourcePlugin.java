@@ -52,6 +52,8 @@ public interface IDataSourcePlugin {
      * 
      * @param pPageable
      *            the pagination information
+     * @param pDate
+     *            Allows to filter the new entities created after this date parameter
      * @return a page of entities
      */
     Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate);

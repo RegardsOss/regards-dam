@@ -75,5 +75,13 @@
 			<artifactId>hibernate-java8</artifactId>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/cz.jirutka.spring/spring-data-jdbc-repository -->
+		<dependency>
+			<groupId>cz.jirutka.spring</groupId>
+			<artifactId>spring-data-jdbc-repository</artifactId>
+			<version>0.5.0</version>
+		</dependency>
+
+
 	</dependencies>
 </project>
