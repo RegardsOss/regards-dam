@@ -20,7 +20,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 
@@ -386,38 +385,37 @@ public class EsQueryTest {
     }
 
     @Test
-    @Ignore
     public void testLoad() {
         // this.createData2();
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
         facetMapBuilder.put("properties.size", FacetType.NUMERIC).put("properties.weight", FacetType.NUMERIC)
-                .put("properties.text", FacetType.STRING);
-        // .put("properties.date", FacetType.DATE);
-        // .put("properties.tags", FacetType.STRING)
+                .put("properties.text", FacetType.STRING)
+                // .put("properties.date", FacetType.DATE);
+                .put("properties.tags", FacetType.STRING);
         // .put("properties.ints", FacetType.NUMERIC);
         // .put("properties.doubles", FacetType.NUMERIC).put("properties.dates", FacetType.DATE);
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
-        /*        sortMap.put("docId", false);
+        // sortMap.put("docId", false);
         long start = System.currentTimeMillis();
         Page<Item> page = repository.search(INDEX2, Item.class, 100, ICriterion.all(), facetMapBuilder.build(),
                                             sortMap);
-        System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");*/
+        System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
         // while (page.hasNext()) {
         // start = System.currentTimeMillis();
         // page = repository.search(INDEX2, Item.class, page.nextPageable(), ICriterion.all(), facetMapBuilder.build(),
         // sortMap);
         // System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
         // }
-        sortMap.clear();
-        sortMap.put("properties.date", Boolean.FALSE);
+        // sortMap.clear();
+        // sortMap.put("properties.date", Boolean.FALSE);
         // long start = System.currentTimeMillis();
         // Page<Item> page = repository.search(INDEX2, Item.class, 100, sortMap, ICriterion.all());
         // System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
 
-        long start = System.currentTimeMillis();
-        repository.get(INDEX2, TYPE1, "229009", Item.class);
-        System.out.println("get : " + (System.currentTimeMillis() - start) + " ms");
+        // long start = System.currentTimeMillis();
+        // repository.get(INDEX2, TYPE1, "229009", Item.class);
+        // System.out.println("get : " + (System.currentTimeMillis() - start) + " ms");
     }
 
     private static class Item implements IIndexable, Serializable {
