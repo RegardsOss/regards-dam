@@ -94,7 +94,7 @@ public abstract class AbstractDataObjectMapping {
     }
 
     @SuppressWarnings("unchecked")
-    public Page<DataObject> findAll(Connection conn, String requestSql, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Connection conn, Pageable pPageable, String requestSql, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
         try {
@@ -113,7 +113,7 @@ public abstract class AbstractDataObjectMapping {
             LOG.error(e.getMessage(), e);
         }
 
-        return new PageImpl(dataObjects);
+        return new PageImpl<>(dataObjects, pPageable, 3137);
     }
 
     public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable) {
