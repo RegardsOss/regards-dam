@@ -30,6 +30,8 @@ import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMap
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -111,20 +113,26 @@ public class CrawlerServiceTest {
                             "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY", "MIN_LONGITUDE",
                             "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE", "MAX_ALTITUDE",
                             "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_OBJECT_ID");
+        gsonAttributeFactory.registerSubtype(StringAttribute.class, "FILE_SIZE");
+        // etc...
+
         Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
 
         // Save to ES
-        LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
-        LOGGER.info("save 1000 entities");
         String tenant = "oracle";
-
         // Creating index if it doesn't already exist
         indexerService.createIndex(tenant);
+
+        LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
         indexerService.saveBulkEntities(tenant, page.getContent());
+        LOGGER.info("...OK");
         while (page.hasNext()) {
             page = dsPlugin.findAll(page.nextPageable());
+            LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
             indexerService.saveBulkEntities(tenant, page.getContent());
-            LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
+            LOGGER.info("...OK");
         }
         Assert.assertTrue(true);
     }
