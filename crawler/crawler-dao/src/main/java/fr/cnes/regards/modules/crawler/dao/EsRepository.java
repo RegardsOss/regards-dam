@@ -335,7 +335,10 @@ public class EsRepository implements IEsRepository {
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         try {
             final List<T> results = new ArrayList<>();
-            QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
+            // Use filter instead of "direct" query (in theory, quickest because no score is computed)
+            QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                    .filter(criterion.accept(CRITERION_VISITOR));
+            // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
             SearchRequestBuilder request = client.prepareSearch(pIndex).setQuery(critBuilder)
                     .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
             if (pAscSortMap != null) {

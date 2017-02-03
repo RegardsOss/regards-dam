@@ -178,10 +178,9 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
             if (other.name != null) {
                 return false;
             }
-        } else
-            if (!name.equals(other.name)) {
-                return false;
-            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
         return true;
     }
 
