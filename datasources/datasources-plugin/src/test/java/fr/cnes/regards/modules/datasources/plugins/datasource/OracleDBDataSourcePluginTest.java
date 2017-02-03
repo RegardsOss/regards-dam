@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -35,6 +38,7 @@ import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -126,23 +130,24 @@ public class OracleDBDataSourcePluginTest {
         Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
         Assert.assertNotNull(columns);
 
-        Map<String, Index> indices= plgDBDataSource.getIndices(tables.get(TABLE_NAME_TEST));
+        Map<String, Index> indices = plgDBDataSource.getIndices(tables.get(TABLE_NAME_TEST));
         Assert.assertNotNull(indices);
     }
 
     @Test
     public void getDataSourceIntrospection() {
-        // Assert.assertEquals(3, repository.count());
-        //
-        // plgDBDataSource.setMapping(TABLE_NAME_TEST, "id", "altitude", "latitude", "longitude", "label");
-        //
-        // Page<AbstractEntity> ll = plgDBDataSource.findAll(new PageRequest(0, 2));
-        // Assert.assertNotNull(ll);
-        // Assert.assertEquals(2, ll.getContent().size());
-        //
-        // ll = plgDBDataSource.findAll(new PageRequest(1, 2));
-        // Assert.assertNotNull(ll);
-        // Assert.assertEquals(1, ll.getContent().size());
+        plgDBDataSource.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
+                                   "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY",
+                                   "MIN_LONGITUDE", "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE",
+                                   "MAX_ALTITUDE", "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+
+        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 1000));
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(1000, ll.getContent().size());
+
+        ll = plgDBDataSource.findAll(new PageRequest(1, 1000));
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(1000, ll.getContent().size());
     }
 
     @After
@@ -171,13 +176,31 @@ public class OracleDBDataSourcePluginTest {
     }
 
     private void buildModelAttributes() {
-        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
-        attributes.add(new DataSourceAttributeMapping("alt", AttributeType.INTEGER, "altitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("lat", AttributeType.DOUBLE, "latitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("long", AttributeType.DOUBLE, "longitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("creationDate", AttributeType.DATE_ISO8601, "date", "hello"));
-        attributes.add(new DataSourceAttributeMapping("isUpdate", AttributeType.BOOLEAN, "update", "hello"));
+        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
+        attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
+        attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
+        attributes.add(new DataSourceAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
+
+        attributes.add(new DataSourceAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
+        attributes.add(new DataSourceAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
+        attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
+        attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING,
+                "DATA_AUTHOR_COMPANY"));
+
+        attributes.add(new DataSourceAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
+                Types.DECIMAL));
+        attributes.add(new DataSourceAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE",
+                Types.DECIMAL));
+        attributes.add(new DataSourceAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
+                "DATA_CREATION_DATE", Types.DECIMAL));
+
+        attributes.add(new DataSourceAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
     }
 
 }

@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -26,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import com.google.common.collect.Maps;
 
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
@@ -69,7 +68,7 @@ public abstract class AbstractDataObjectMapping {
     protected abstract List<DataSourceAttributeMapping> getAttributesMapping();
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Page<AbstractEntity> findAll(Connection conn, String requestSql, Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
         try {
@@ -95,7 +94,7 @@ public abstract class AbstractDataObjectMapping {
     }
 
     @SuppressWarnings("unchecked")
-    public Page<AbstractEntity> findAll(Connection conn, String requestSql, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Connection conn, String requestSql, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
         try {
@@ -117,8 +116,7 @@ public abstract class AbstractDataObjectMapping {
         return new PageImpl(dataObjects);
     }
 
-    
-    public Page<AbstractEntity> findAll(Connection conn, String requestSql, Pageable pPageable) {
+    public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable) {
         return findAll(conn, requestSql, pPageable, null);
     }
 
@@ -200,24 +198,32 @@ public abstract class AbstractDataObjectMapping {
 
         switch (pAttrMapping.getType()) {
             case STRING:
-                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(pAttrMapping.getMapping()));
+                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(pAttrMapping.getNameDS()));
                 break;
             case INTEGER:
-                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(pAttrMapping.getMapping()));
+                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(pAttrMapping.getNameDS()));
                 break;
             case BOOLEAN:
-                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(pAttrMapping.getMapping()));
+                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(pAttrMapping.getNameDS()));
                 break;
             case DOUBLE:
-                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(pAttrMapping.getMapping()));
+                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(pAttrMapping.getNameDS()));
                 break;
             case DATE_ISO8601:
-                Timestamp date = pRs.getTimestamp(pAttrMapping.getMapping());
-                Instant instant = Instant.ofEpochMilli(date.getTime());
+                long n = 0;
+                if (pAttrMapping.getTypeDS() == null) {
+                    n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
+                } else
+                    if (pAttrMapping.getTypeDS() == Types.DECIMAL) {
+                        n = pRs.getLong(pAttrMapping.getNameDS());
+                    } else
+                        if (pAttrMapping.getTypeDS() == Types.NUMERIC) {
+                            n = pRs.getLong(pAttrMapping.getNameDS());
+                        }
+                Instant instant = Instant.ofEpochMilli(n);
                 attr = AttributeBuilder.buildDate(pAttrMapping.getName(),
                                                   LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
                 break;
-            default:
         }
 
         return attr;

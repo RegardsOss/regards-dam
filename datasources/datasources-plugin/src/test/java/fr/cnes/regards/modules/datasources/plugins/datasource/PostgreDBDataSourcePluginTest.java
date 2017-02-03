@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -163,7 +163,7 @@ public class PostgreDBDataSourcePluginTest {
 
         plgDBDataSource.setMapping(TABLE_NAME_TEST, "id", "altitude", "latitude", "longitude", "label");
 
-        Page<AbstractEntity> ll = plgDBDataSource.findAll(new PageRequest(0, 2));
+        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
 
@@ -199,11 +199,11 @@ public class PostgreDBDataSourcePluginTest {
 
     private void buildModelAttributes() {
         attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
-        attributes.add(new DataSourceAttributeMapping("alt", AttributeType.INTEGER, "altitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("lat", AttributeType.DOUBLE, "latitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("long", AttributeType.DOUBLE, "longitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("creationDate", AttributeType.DATE_ISO8601, "date", "hello"));
-        attributes.add(new DataSourceAttributeMapping("isUpdate", AttributeType.BOOLEAN, "update", "hello"));
+        attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
+        attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
+        attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
+        attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
     }
 

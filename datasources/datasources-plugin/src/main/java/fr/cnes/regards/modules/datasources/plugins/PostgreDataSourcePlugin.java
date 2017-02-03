@@ -27,6 +27,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -132,7 +133,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
         return findAll(dbConnection.getConnection(), requestSql, pPageable, pDate);
     }
 
@@ -144,7 +145,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
      * .Pageable)
      */
     @Override
-    public Page<AbstractEntity> findAll(Pageable pPageable) {
+    public Page<DataObject> findAll(Pageable pPageable) {
         return findAll(pPageable, null);
     }
 

@@ -30,7 +30,7 @@ import fr.cnes.regards.modules.datasources.plugins.domain.Index;
 import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
  * Class PostgreDBDataSourcePlugin
@@ -139,7 +139,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
      * Pageable, java.time.LocalDateTime)
      */
     @Override
-    public Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
         if (sqlGenerator == null) {
             return null;
         }
@@ -159,7 +159,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
      * Pageable)
      */
     @Override
-    public Page<AbstractEntity> findAll(Pageable pPageable) {
+    public Page<DataObject> findAll(Pageable pPageable) {
         return findAll(pPageable, null);
     }
 
@@ -231,9 +231,8 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TABLE_CAT")
-                            + logString(rs, "TABLE_SCHEM") + logString(rs, "TABLE_NAME") + logString(rs, "TYPE_NAME")
-                            + logInt(rs, "SQL_DATA_TYPE") + logInt(rs, "DATA_TYPE"));
+                    LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
+                            + logInt(rs, "DATA_TYPE"));
                 }
 
                 Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));

@@ -4,6 +4,8 @@
 package fr.cnes.regards.modules.datasources.plugins.domain;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,19 +32,24 @@ public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttribut
     protected static final String NAME_LABEL = "name";
 
     /**
-     * Label for description field
+     * Label for type field
      */
     protected static final String TYPE_LABEL = "type";
 
     /**
-     * Label for description field
+     * Label for namespace field
      */
     protected static final String NAMESPACE_LABEL = "namespace";
 
     /**
-     * Label for description field
+     * Label for name field in data source
      */
-    protected static final String MAPPING_LABEL = "mapping";
+    protected static final String NAME_DS_LABEL = "nameDs";
+
+    /**
+     * Label for type field in data source
+     */
+    protected static final String TYPE_DS_LABEL = "typeDs";
 
     @Override
     public void write(final JsonWriter pOut, final List<DataSourceAttributeMapping> pValue) throws IOException {
@@ -55,7 +62,10 @@ public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttribut
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
-            pOut.name(MAPPING_LABEL).value(attr.getMapping());
+            pOut.name(NAME_DS_LABEL).value(attr.getNameDS());
+            if (attr.getTypeDS()!=null) {
+                pOut.name(TYPE_DS_LABEL).value(attr.getTypeDS());
+            }
             pOut.endObject();
         }
         pOut.endArray();
@@ -81,8 +91,11 @@ public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttribut
                     case NAMESPACE_LABEL:
                         attr.setNameSpace(pIn.nextString());
                         break;
-                    case MAPPING_LABEL:
-                        attr.setMapping(pIn.nextString());
+                    case NAME_DS_LABEL:
+                        attr.setNameDS(pIn.nextString());
+                        break;
+                    case TYPE_DS_LABEL:
+                        attr.setTypeDS(Integer.parseInt(pIn.nextString()));
                         break;
                     case TYPE_LABEL:
                         attr.setType(AttributeType.valueOf(pIn.nextString()));
@@ -99,6 +112,24 @@ public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttribut
         pIn.endArray();
 
         return attributes;
+    }
+
+    private Types getJdbcType(String jdbcType) throws IOException {
+        Types val = null;
+
+        // Get all field in java.sql.Types
+        Field[] fields = Types.class.getFields();
+        for (int i = 0; (val != null) && (i < fields.length); i++) {
+            try {
+                Integer value = (Integer) fields[i].get(null);
+                if (Integer.parseInt(jdbcType) == value.intValue()) {
+                    val = (Types) fields[i].get(null);
+                }
+            } catch (IllegalAccessException e) {
+                throw new IOException(e);
+            }
+        }
+        return val;
     }
 
 }
