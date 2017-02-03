@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.crawler.dao.querybuilder;
+package fr.cnes.regards.modules.crawler.dao.builder;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +13,7 @@ import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
@@ -27,7 +28,12 @@ import fr.cnes.regards.modules.crawler.domain.criterion.ValueComparison;
  * a search criterion
  * @author oroussel
  */
-public class QueryBuilderVisitor implements ICriterionVisitor<QueryBuilder> {
+public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuilder> {
+
+    @Override
+    public QueryBuilder visitEmptyCriterion(EmptyCriterion pCriterion) {
+        return QueryBuilders.matchAllQuery();
+    }
 
     @Override
     public QueryBuilder visitAndCriterion(AbstractMultiCriterion pCriterion) {
@@ -113,16 +119,16 @@ public class QueryBuilderVisitor implements ICriterionVisitor<QueryBuilder> {
             LocalDateTime date = valueComp.getValue();
             switch (valueComp.getOperator()) {
                 case GREATER:
-                    rangeQueryBuilder.gt(LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(date));
+                    rangeQueryBuilder.gt(LocalDateTimeAdapter.format(date));
                     break;
                 case GREATER_OR_EQUAL:
-                    rangeQueryBuilder.gte(LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(date));
+                    rangeQueryBuilder.gte(LocalDateTimeAdapter.format(date));
                     break;
                 case LESS:
-                    rangeQueryBuilder.lt(LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(date));
+                    rangeQueryBuilder.lt(LocalDateTimeAdapter.format(date));
                     break;
                 case LESS_OR_EQUAL:
-                    rangeQueryBuilder.lte(LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format(date));
+                    rangeQueryBuilder.lte(LocalDateTimeAdapter.format(date));
                     break;
                 default:
             }

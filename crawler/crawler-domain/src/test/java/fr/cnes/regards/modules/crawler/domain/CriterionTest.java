@@ -18,6 +18,7 @@ import com.google.common.io.Resources;
 import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
@@ -77,6 +78,11 @@ public class CriterionTest {
      * Visitor to generate Elasticsearch Query DSL syntax from criterons
      */
     private static class EsQueryDslVisitor implements ICriterionVisitor<String> {
+
+        @Override
+        public String visitEmptyCriterion(EmptyCriterion pCriterion) {
+            return null;
+        }
 
         @Override
         public String visitAndCriterion(AbstractMultiCriterion pCriterion) {
