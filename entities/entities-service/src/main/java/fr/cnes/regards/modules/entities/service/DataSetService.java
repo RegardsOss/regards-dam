@@ -5,26 +5,39 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
 @Service
-public class DataSetService {
+public class DataSetService extends AbstractEntityService {
+
+    /**
+     * Logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
 
     private final IAttributeModelService attributeService;
 
@@ -32,17 +45,16 @@ public class DataSetService {
 
     private final IDataSetRepository repository;
 
-    private final IEntityService entityService;
-
     private final DataSourceService dataSourceService;
 
     public DataSetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
-            IModelAttributeService pModelAttributeService, IEntityService pEntityService,
-            DataSourceService pDataSourceService) {
+            IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
+            IdentificationService pIdService, IAbstractEntityRepository<AbstractEntity> pEntitiesRepository,
+            IModelService pModelService, IStorageService pStorageSerivce) {
+        super(pModelAttributeService, pEntitiesRepository, pModelService, pStorageSerivce, pIdService);
         repository = pRepository;
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
-        entityService = pEntityService;
         dataSourceService = pDataSourceService;
     }
 
@@ -72,13 +84,22 @@ public class DataSetService {
         return dataset;
     }
 
-    public DataSet createDataSet(DataSet pDataSet) throws EntityInvalidException, EntityNotFoundException {
-        // check for other jpa entities
-        entityService.checkLinkedEntity(pDataSet);
-        // FIXME: should i consider that DataSource from the dataSet has an ID? this cannot be assured by the @Valid
-        // from the REST request because Id cannot be set as NotNull
-        dataSourceService.getDataSource(pDataSet.getDataSource().getId());
-        // check coherence of the subsettingcriterion
+    /**
+     * modify the DataSet in parameter if needed
+     *
+     * @param pDataSet
+     * @throws EntityNotFoundException
+     */
+    private DataSet checkDataSource(DataSet pDataSet) throws EntityNotFoundException {
+        if (pDataSet.getDataSource() == null) {
+            pDataSet.setDataSource(dataSourceService.getDefaultDataSource());
+        } else {
+            dataSourceService.getDataSource(pDataSet.getDataSource().getId());
+        }
+        return pDataSet;
+    }
+
+    private DataSet checkSubsettingCriterion(DataSet pDataSet) throws EntityInvalidException {
         ICriterion subsettingCriterion = pDataSet.getSubsettingClause();
         if (subsettingCriterion != null) {
             SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
@@ -88,15 +109,67 @@ public class DataSetService {
                         "given subsettingCriterion cannot be accepted for the DataSet : " + pDataSet.getLabel());
             }
         }
-        // everything is fine
-        return repository.save(pDataSet);
+        return pDataSet;
     }
 
-    public void associateDataSet(Long pDataSetId, List<AbstractEntity> pToBeAssociatedWith) {
-        DataSet source = repository.findOne(pDataSetId);
-        for (AbstractEntity target : pToBeAssociatedWith) {
+    /**
+     * @param pDataSet
+     */
+    private DataSet checkPluginConfigurations(DataSet pDataSet) {
+        // TODO see how to get if the plugin configuration exist on catalog feign client in catalog for plugins
+        // idea: create plugin-client sub module and create an interface without the @RestClient and then create a
+        // catalog-plugin-client which extends the interface from plugin-client and add the @RestClient
+        // this will allow us to have a plugin-client per microservice identified by the microservice name
+        return pDataSet;
+    }
 
+    /**
+     * @param pPageable
+     * @return
+     */
+    // FIXME: return deleted too?
+    public Page<DataSet> retrieveDataSetList(Pageable pPageable) {
+        return repository.findAll(pPageable);
+    }
+
+    /**
+     * @param pDataSetId
+     * @return
+     * @throws EntityNotFoundException
+     */
+    // FIXME: should return ids or the real pluginConfs?
+    public List<Long> retrieveDataSetServices(Long pDataSetId) throws EntityNotFoundException {
+        DataSet dataSetWithConfs = repository.findOneWithPluginConfigurations(pDataSetId);
+        if (dataSetWithConfs == null) {
+            throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }
+        return dataSetWithConfs.getPluginConfigurationIds();
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return LOGGER;
+    }
+
+    @Override
+    protected <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException {
+        // TODO: download the description
+        return pNewEntity;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException {
+        DataSet ds = checkDataSource((DataSet) pEntity);
+        ds = checkPluginConfigurations(ds);
+        ds = checkSubsettingCriterion(ds);
+        return (T) ds;
+    }
+
+    @Override
+    protected <T extends AbstractEntity> T doUpdate(T pEntity) {
+        // nothing to do for now
+        return pEntity;
     }
 
 }

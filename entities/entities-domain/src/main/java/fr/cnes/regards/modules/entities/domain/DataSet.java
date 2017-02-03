@@ -5,17 +5,20 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.List;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 import org.hibernate.annotations.Type;
 
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -28,24 +31,26 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Marc Sordi
  */
 @Entity
-@Table(name = "T_DATA_SET")
+@Table(name = "t_data_set")
 public class DataSet extends AbstractLinkEntity {
 
+    // TODO: add description
     /**
      * Quality mark
      */
     @Column
+    @Min(0)
+    @Max(10)
     private int score;
 
     /**
-     * this list contains IDs of plugin configuration for any plugin associated to this DataSet, for example: ids
-     * configuration for Converters, Services, Filters
+     * this list contains plugin configurations for any plugin associated to this DataSet, for example: configurations
+     * for Converters, Services, Filters
      */
-    @OneToMany
-    // this is a uni-directionnal OneToMany mapping so join column in on the Many side so it's the id of this
-    // entity(DataSet)
-    @JoinColumn(name = "data_set_id", foreignKey = @ForeignKey(name = "fk_dataset_datasource_id"))
-    private List<PluginConfiguration> pluginConfigurationIds;
+    // TODO handler for deletion events
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "t_dataset_plugin_configuration", joinColumns = @JoinColumn(name = "dataset_id"))
+    private List<Long> pluginConfigurationIds;
 
     /**
      * {@link DataSource} from which this DataSet presents data
@@ -61,6 +66,10 @@ public class DataSet extends AbstractLinkEntity {
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     private ICriterion subsettingClause;
+
+    public DataSet() {
+        super();
+    }
 
     public DataSet(Model pModel, UniformResourceName pIpId, String pLabel) {
         super(pModel, pIpId, pLabel);
@@ -79,11 +88,11 @@ public class DataSet extends AbstractLinkEntity {
         return EntityType.DATASET.toString();
     }
 
-    public List<PluginConfiguration> getPluginConfigurationIds() {
+    public List<Long> getPluginConfigurationIds() {
         return pluginConfigurationIds;
     }
 
-    public void setPluginConfigurationIds(List<PluginConfiguration> pPluginConfigurationIds) {
+    public void setPluginConfigurationIds(List<Long> pPluginConfigurationIds) {
         pluginConfigurationIds = pPluginConfigurationIds;
     }
 

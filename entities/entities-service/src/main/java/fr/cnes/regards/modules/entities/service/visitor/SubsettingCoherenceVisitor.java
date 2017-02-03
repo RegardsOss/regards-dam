@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service.visitor;
 
-import java.util.List;
+import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +12,7 @@ import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
@@ -37,9 +38,11 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SubsettingCoherenceVisitor.class);
 
-    private static final String ATTRIBUTE_DOES_NOT_EXISTS = "Attribute of name : %s could not be found in the database!";
+    private static final String ATTRIBUTE_DOES_NOT_EXISTS = "Attribute of name : %s could not be found in the database";
 
     private static final String ATTRIBUTE_IS_NOT_COHERENT = "Attribute of name : %s is not an attribute of the model : %s";
+
+    private static final String ATTRIBUTE_IS_NOT_QUERYABLE = "Attribute of name : %s of the model : %s is not queryable";
 
     private final Model referenceModel;
 
@@ -59,22 +62,20 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     @Override
     public Boolean visitAndCriterion(AbstractMultiCriterion pCriterion) {
-        Boolean result = Boolean.TRUE;
-        for (ICriterion criterion : pCriterion.getCriterions()) {
-            result &= criterion.accept(this);
+        boolean result = true;
+        Iterator<ICriterion> criterionIterator = pCriterion.getCriterions().iterator();
+        while (result && criterionIterator.hasNext()) {
+            result &= criterionIterator.next().accept(this);
         }
         return result;
     }
 
     @Override
     public Boolean visitOrCriterion(AbstractMultiCriterion pCriterion) {
-        Boolean result = Boolean.TRUE;
-        List<ICriterion> criterions = pCriterion.getCriterions();
-        int i = 0;
-        int criterionSize = criterions.size();
-        while (result && (i < criterionSize)) {
-            result &= criterions.get(i).accept(this);
-            i++;
+        boolean result = true;
+        Iterator<ICriterion> criterionIterator = pCriterion.getCriterions().iterator();
+        while (result && criterionIterator.hasNext()) {
+            result &= criterionIterator.next().accept(this);
         }
         return result;
     }
@@ -136,7 +137,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     /**
      * extract the {@link AttributeModel} from the criterion if it is possible and check if it is a attribute from the
-     * right model
+     * right model and it is queryable
      *
      * @param pCriterion
      *            {@link AbstractPropertyCriterion} from which extract the attribute
@@ -161,7 +162,11 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
         }
         if (attribute == null) {
             // attributeName is unknown
-            LOG.info(String.format(ATTRIBUTE_DOES_NOT_EXISTS, attributeFullName));
+            LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXISTS, attributeFullName));
+            return null;
+        }
+        if (!attribute.isQueryable()) {
+            LOG.error(String.format(ATTRIBUTE_IS_NOT_QUERYABLE, attributeFullName, referenceModel.getName()));
             return null;
         }
         ModelAttribute modelAttribute = modelAttributeService.getModelAttribute(referenceModel.getId(), attribute);
@@ -171,5 +176,10 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
             return null;
         }
         return attribute;
+    }
+
+    @Override
+    public Boolean visitEmptyCriterion(EmptyCriterion pCriterion) {
+        return true;
     }
 }

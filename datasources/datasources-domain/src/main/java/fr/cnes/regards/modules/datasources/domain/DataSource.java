@@ -12,6 +12,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -30,12 +31,13 @@ public class DataSource {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataSourceSequence")
     protected Long id;
 
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "data_model_id", foreignKey = @ForeignKey(name = "fk_dataset_datasource_id"))
     private Model modelOfData;
 
-    public DataSource() {
-        // TODO Auto-generated constructor stub
+    public DataSource(Model pModelOfData) {
+        modelOfData = pModelOfData;
     }
 
     public Model getModelOfData() {

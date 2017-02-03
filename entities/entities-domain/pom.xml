@@ -24,6 +24,10 @@
 			<artifactId>models-domain</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>module-plugins-domain</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
 			<artifactId>datasources-domain</artifactId>
 		</dependency>
