@@ -20,7 +20,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 
@@ -72,8 +71,8 @@ public class EsQueryTest {
         try {
             gson = new GsonBuilder().create();
             // FIXME valeurs en dur pour l'instant
-            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
-            // repository = new EsRepository(gson, null, "localhost", 9300, "regards");
+            // repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
+            repository = new EsRepository(gson, null, "localhost", 9300, "regards");
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -119,7 +118,7 @@ public class EsQueryTest {
         List<Item> items = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             // size attribute from 1 to 10
-            Attributes att = new Attributes(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i],
+            Properties att = new Properties(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i],
                     LocalDateTime.of(2017, Month.JANUARY, 1 + i, 10, 47), Arrays.copyOfRange(LOREM_IPSUM, i, i + 10),
                     Arrays.copyOfRange(INTS, i, i + 10), Arrays.copyOfRange(DOUBLES, i, i + 5),
                     Arrays.copyOfRange(DATES, i, i + 10));
@@ -150,7 +149,7 @@ public class EsQueryTest {
         List<Item> items = new ArrayList<>();
         for (int i = 0; i < 1_000_000; i++) {
             // size attribute from 1 to 10
-            Attributes att = new Attributes(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i % 10],
+            Properties att = new Properties(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i % 10],
                     LocalDateTime.of(2017, Month.JANUARY, 1 + (i % 10), 10, 47),
                     Arrays.copyOfRange(LOREM_IPSUM, i % 10, (i % 10) + 10),
                     Arrays.copyOfRange(INTS, i % 10, (i % 10) + 10), Arrays.copyOfRange(DOUBLES, i % 10, (i % 10) + 5),
@@ -172,136 +171,136 @@ public class EsQueryTest {
         this.createData();
 
         // On integers
-        ICriterion gt5crit = ICriterion.gt("attributes.size", 5);
+        ICriterion gt5crit = ICriterion.gt("properties.size", 5);
         Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, gt5crit).getContent().size());
         Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, ICriterion.not(gt5crit)).getContent().size());
 
-        ICriterion range2_4crit = ICriterion.between("attributes.size", 2, 4);
+        ICriterion range2_4crit = ICriterion.between("properties.size", 2, 4);
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, range2_4crit).getContent().size());
 
-        ICriterion lt1crit = ICriterion.lt("attributes.size", 1);
+        ICriterion lt1crit = ICriterion.lt("properties.size", 1);
         Assert.assertEquals(0, repository.search(INDEX, Item.class, 10, lt1crit).getContent().size());
 
-        ICriterion inCrit = ICriterion.in("attributes.size", 1, 3, 5, 7, 9);
+        ICriterion inCrit = ICriterion.in("properties.size", 1, 3, 5, 7, 9);
         Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, inCrit).getContent().size());
 
         ICriterion allCrit = ICriterion.ne("atributes.size", -1);
         Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, allCrit).getContent().size());
 
         // On doubles
-        ICriterion allDCrit = ICriterion.between("attributes.weight", 0., 10.);
+        ICriterion allDCrit = ICriterion.between("properties.weight", 0., 10.);
         Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, allDCrit).getContent().size());
 
-        ICriterion almostEqualsCrit = ICriterion.eq("attributes.weight", 5, 0.1);
+        ICriterion almostEqualsCrit = ICriterion.eq("properties.weight", 5, 0.1);
         Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, almostEqualsCrit).getContent().size());
 
         // On Strings
-        ICriterion mortCrit = ICriterion.equals("attributes.text", "mort");
+        ICriterion mortCrit = ICriterion.equals("properties.text", "mort");
         Assert.assertEquals(2, repository.search(INDEX, Item.class, 10, mortCrit).getContent().size());
 
-        ICriterion optionaltextWithoutBlanksCrit = ICriterion.in("attributes.text", "Le", "petit", "chat", "est",
+        ICriterion optionaltextWithoutBlanksCrit = ICriterion.in("properties.text", "Le", "petit", "chat", "est",
                                                                  "mort", "de", "sa", "belle");
         Assert.assertEquals(9, repository.search(INDEX, Item.class, 10, optionaltextWithoutBlanksCrit).getContent()
                 .size());
 
-        ICriterion optionaltextWithBlanksCrit = ICriterion.in("attributes.text", "mort", "ou écrasé on sait pas trop");
+        ICriterion optionaltextWithBlanksCrit = ICriterion.in("properties.text", "mort", "ou écrasé on sait pas trop");
         Assert.assertEquals(3,
                             repository.search(INDEX, Item.class, 10, optionaltextWithBlanksCrit).getContent().size());
-        ICriterion startsWithCrit = ICriterion.startsWith("attributes.text", "ou é");
+        ICriterion startsWithCrit = ICriterion.startsWith("properties.text", "ou é");
         Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, startsWithCrit).getContent().size());
 
-        ICriterion endsWithCrit = ICriterion.endsWith("attributes.text", "t");
+        ICriterion endsWithCrit = ICriterion.endsWith("properties.text", "t");
         // Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, endsWithCrit).getContent().size());
         // FIXME : By now, search regexp is applied on each word instead of whole phrase
         Assert.assertEquals(6, repository.search(INDEX, Item.class, 10, endsWithCrit).getContent().size());
 
         // On Dates
-        ICriterion gtDateCriterion = ICriterion.gt("attributes.date",
+        ICriterion gtDateCriterion = ICriterion.gt("properties.date",
                                                    LocalDateTime.of(2017, Month.JANUARY, 1, 10, 47, 0));
         Assert.assertEquals(9, repository.search(INDEX, Item.class, 10, gtDateCriterion).getContent().size());
-        ICriterion geDateCriterion = ICriterion.ge("attributes.date",
+        ICriterion geDateCriterion = ICriterion.ge("properties.date",
                                                    LocalDateTime.of(2017, Month.JANUARY, 1, 10, 47, 0));
         Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, geDateCriterion).getContent().size());
 
-        ICriterion betweenDateCriterion = ICriterion.between("attributes.date",
+        ICriterion betweenDateCriterion = ICriterion.between("properties.date",
                                                              LocalDateTime.of(2017, Month.JANUARY, 2, 10, 47, 0),
                                                              LocalDateTime.of(2017, Month.JANUARY, 4, 10, 47, 0));
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, betweenDateCriterion).getContent().size());
 
         // On strings array
-        ICriterion containsStringCrit = ICriterion.contains("attributes.tags", "dolor");
+        ICriterion containsStringCrit = ICriterion.contains("properties.tags", "dolor");
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, containsStringCrit).getContent().size());
         // On int array
-        ICriterion containsIntCrit = ICriterion.contains("attributes.ints", 3);
+        ICriterion containsIntCrit = ICriterion.contains("properties.ints", 3);
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, containsIntCrit).getContent().size());
         // On double array
-        ICriterion containsDoubleCrit1 = ICriterion.contains("attributes.doubles", 3.1416, 1.e-4);
+        ICriterion containsDoubleCrit1 = ICriterion.contains("properties.doubles", 3.1416, 1.e-4);
         Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, containsDoubleCrit1).getContent().size());
-        ICriterion containsDoubleCrit2 = ICriterion.contains("attributes.doubles", 1.12345678910, 1.e-11);
+        ICriterion containsDoubleCrit2 = ICriterion.contains("properties.doubles", 1.12345678910, 1.e-11);
         Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, containsDoubleCrit2).getContent().size());
         // On date array
         ICriterion containsDateCrit = ICriterion
-                .containsDateBetween("attributes.dates", LocalDateTime.of(2017, Month.JANUARY, 1, 0, 0),
+                .containsDateBetween("properties.dates", LocalDateTime.of(2017, Month.JANUARY, 1, 0, 0),
                                      LocalDateTime.of(2017, Month.JANUARY, 1, 23, 59, 59, 999));
         Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, containsDateCrit).getContent().size());
         ICriterion containsDateCrit2 = ICriterion
-                .containsDateBetween("attributes.dates", LocalDateTime.of(2017, Month.JANUARY, 2, 0, 0),
+                .containsDateBetween("properties.dates", LocalDateTime.of(2017, Month.JANUARY, 2, 0, 0),
                                      LocalDateTime.of(2017, Month.JANUARY, 3, 23, 59, 59, 999));
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, containsDateCrit2).getContent().size());
 
         // On int ranges
-        ICriterion intoIntsCrit1 = ICriterion.into("attributes.intRange", 10);
+        ICriterion intoIntsCrit1 = ICriterion.into("properties.intRange", 10);
         Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, intoIntsCrit1).getContent().size());
-        ICriterion intoIntsCrit2 = ICriterion.into("attributes.intRange", -1);
+        ICriterion intoIntsCrit2 = ICriterion.into("properties.intRange", -1);
         Assert.assertEquals(0, repository.search(INDEX, Item.class, 10, intoIntsCrit2).getContent().size());
 
         // On double ranges
-        ICriterion intoDoublesCrit1 = ICriterion.into("attributes.doubleRange", Math.PI);
+        ICriterion intoDoublesCrit1 = ICriterion.into("properties.doubleRange", Math.PI);
         Assert.assertEquals(3, repository.search(INDEX, Item.class, 10, intoDoublesCrit1).getContent().size());
-        ICriterion intoDoublesCrit2 = ICriterion.into("attributes.doubleRange", -4e12);
+        ICriterion intoDoublesCrit2 = ICriterion.into("properties.doubleRange", -4e12);
         Assert.assertEquals(0, repository.search(INDEX, Item.class, 10, intoDoublesCrit2).getContent().size());
 
         // On date ranges
-        ICriterion interDatesCrit1 = ICriterion.intersects("attributes.dateRange",
+        ICriterion interDatesCrit1 = ICriterion.intersects("properties.dateRange",
                                                            LocalDateTime.of(2016, Month.JANUARY, 4, 12, 0, 0),
                                                            LocalDateTime.of(2018, Month.JANUARY, 4, 12, 0, 0));
         Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, interDatesCrit1).getContent().size());
-        ICriterion interDatesCrit2 = ICriterion.intersects("attributes.dateRange",
+        ICriterion interDatesCrit2 = ICriterion.intersects("properties.dateRange",
                                                            LocalDateTime.of(2016, Month.JANUARY, 4, 12, 0, 0),
                                                            LocalDateTime.of(2017, Month.JANUARY, 1, 12, 0, 0));
         Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, interDatesCrit2).getContent().size());
-        ICriterion interDatesCrit3 = ICriterion.intersects("attributes.dateRange",
+        ICriterion interDatesCrit3 = ICriterion.intersects("properties.dateRange",
                                                            LocalDateTime.of(2017, Month.JANUARY, 19, 12, 0, 0),
                                                            LocalDateTime.of(2018, Month.JANUARY, 1, 12, 0, 0));
         Assert.assertEquals(1, repository.search(INDEX, Item.class, 10, interDatesCrit3).getContent().size());
 
-        ICriterion interDatesCrit4 = ICriterion.intersects("attributes.dateRange",
+        ICriterion interDatesCrit4 = ICriterion.intersects("properties.dateRange",
                                                            LocalDateTime.of(2017, Month.JANUARY, 2, 12, 0, 0),
                                                            LocalDateTime.of(2017, Month.JANUARY, 18, 12, 0, 0));
         Assert.assertEquals(10, repository.search(INDEX, Item.class, 10, interDatesCrit4).getContent().size());
 
         // On boolean
-        ICriterion booleanCrit = ICriterion.eq("attributes.bool", true);
+        ICriterion booleanCrit = ICriterion.eq("properties.bool", true);
         Assert.assertEquals(5, repository.search(INDEX, Item.class, 10, booleanCrit).getContent().size());
 
         // Test for multiFieldsSearch, while data have been created into Elasticsearch...
-        Assert.assertEquals(1, repository.multiFieldsSearch(INDEX, Item.class, 10, 1, "attributes.ints").getContent()
+        Assert.assertEquals(1, repository.multiFieldsSearch(INDEX, Item.class, 10, 1, "properties.ints").getContent()
                 .size());
         Assert.assertEquals(1, repository
-                .multiFieldsSearch(INDEX, Item.class, 10, "Lorem", "attributes.text", "attributes.tags").getContent()
+                .multiFieldsSearch(INDEX, Item.class, 10, "Lorem", "properties.text", "properties.tags").getContent()
                 .size());
         Assert.assertEquals(2,
                             repository.multiFieldsSearch(INDEX, Item.class, 10,
                                                          LocalDateTime.of(2017, Month.JANUARY, 10, 12, 0),
-                                                         "attributes.dateRange.*")
+                                                         "properties.dateRange.*")
                                     .getContent().size());
         Assert.assertEquals(10, repository
                 .multiFieldsSearch(INDEX, Item.class, 10, LocalDateTime.of(2017, Month.JANUARY, 10, 12, 0),
-                                   "attributes.dateRange.*", "attributes.dates")
+                                   "properties.dateRange.*", "properties.dates")
                 .getContent().size());
-        Assert.assertEquals(1, repository.multiFieldsSearch(INDEX, Item.class, 10, Math.PI, "attributes.double*")
+        Assert.assertEquals(1, repository.multiFieldsSearch(INDEX, Item.class, 10, Math.PI, "properties.double*")
                 .getContent().size());
-        Assert.assertEquals(5, repository.multiFieldsSearch(INDEX, Item.class, 10, true, "attributes.bool").getContent()
+        Assert.assertEquals(5, repository.multiFieldsSearch(INDEX, Item.class, 10, true, "properties.bool").getContent()
                 .size());
 
         // No criterion
@@ -315,57 +314,57 @@ public class EsQueryTest {
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
         Page<Item> page = repository.search(INDEX, Item.class, 10, ICriterion.all(),
-                                            facetMapBuilder.put("attributes.tags", FacetType.STRING).build());
+                                            facetMapBuilder.put("properties.tags", FacetType.STRING).build());
         Assert.assertEquals(10, page.getContent().size());
         Assert.assertTrue(page instanceof FacetPage);
         Map<String, IFacet<?>> facetMap = ((FacetPage<Item>) page).getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("attributes.tags"));
-        Assert.assertTrue(facetMap.get("attributes.tags") instanceof StringFacet);
-        StringFacet strFacet = (StringFacet) facetMap.get("attributes.tags");
+        Assert.assertTrue(facetMap.containsKey("properties.tags"));
+        Assert.assertTrue(facetMap.get("properties.tags") instanceof StringFacet);
+        StringFacet strFacet = (StringFacet) facetMap.get("properties.tags");
         Assert.assertNotNull(strFacet);
 
         FacetPage<Item> facetPage = (FacetPage<Item>) repository
                 .search(INDEX, Item.class, 10, ICriterion.all(),
-                        facetMapBuilder.put("attributes.ints", FacetType.NUMERIC).build());
+                        facetMapBuilder.put("properties.ints", FacetType.NUMERIC).build());
         Assert.assertEquals(10, facetPage.getContent().size());
         facetMap = facetPage.getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("attributes.ints"));
-        Assert.assertTrue(facetMap.get("attributes.ints") instanceof NumericFacet);
-        NumericFacet numFacet = (NumericFacet) facetMap.get("attributes.ints");
+        Assert.assertTrue(facetMap.containsKey("properties.ints"));
+        Assert.assertTrue(facetMap.get("properties.ints") instanceof NumericFacet);
+        NumericFacet numFacet = (NumericFacet) facetMap.get("properties.ints");
         Assert.assertNotNull(numFacet);
 
         facetPage = (FacetPage<Item>) repository
                 .search(INDEX, Item.class, 10, ICriterion.all(),
-                        facetMapBuilder.put("attributes.dates", FacetType.DATE).build());
+                        facetMapBuilder.put("properties.dates", FacetType.DATE).build());
         Assert.assertEquals(10, facetPage.getContent().size());
         facetMap = facetPage.getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("attributes.dates"));
-        Assert.assertTrue(facetMap.get("attributes.dates") instanceof DateFacet);
-        DateFacet dateFacet = (DateFacet) facetMap.get("attributes.dates");
+        Assert.assertTrue(facetMap.containsKey("properties.dates"));
+        Assert.assertTrue(facetMap.get("properties.dates") instanceof DateFacet);
+        DateFacet dateFacet = (DateFacet) facetMap.get("properties.dates");
         Assert.assertNotNull(dateFacet);
 
         // With criterions
-        ICriterion interDatesCrit4 = ICriterion.intersects("attributes.dateRange",
+        ICriterion interDatesCrit4 = ICriterion.intersects("properties.dateRange",
                                                            LocalDateTime.of(2017, Month.JANUARY, 2, 12, 0, 0),
                                                            LocalDateTime.of(2017, Month.JANUARY, 18, 12, 0, 0));
         Map<String, FacetType> facetReqMap = new ImmutableMap.Builder<String, FacetType>()
-                .put("attributes.tags", FacetType.STRING).put("attributes.ints", FacetType.NUMERIC)
-                .put("attributes.dates", FacetType.DATE).build();
+                .put("properties.tags", FacetType.STRING).put("properties.ints", FacetType.NUMERIC)
+                .put("properties.dates", FacetType.DATE).build();
         Assert.assertEquals(10, page.getContent().size());
         page = repository.search(INDEX, Item.class, 10, interDatesCrit4, facetReqMap);
         Assert.assertTrue(page instanceof FacetPage);
         facetMap = ((FacetPage<Item>) page).getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("attributes.tags"));
-        Assert.assertTrue(facetMap.get("attributes.tags") instanceof StringFacet);
-        strFacet = (StringFacet) facetMap.get("attributes.tags");
+        Assert.assertTrue(facetMap.containsKey("properties.tags"));
+        Assert.assertTrue(facetMap.get("properties.tags") instanceof StringFacet);
+        strFacet = (StringFacet) facetMap.get("properties.tags");
         Assert.assertNotNull(strFacet);
-        Assert.assertTrue(facetMap.containsKey("attributes.ints"));
-        Assert.assertTrue(facetMap.get("attributes.ints") instanceof NumericFacet);
-        numFacet = (NumericFacet) facetMap.get("attributes.ints");
+        Assert.assertTrue(facetMap.containsKey("properties.ints"));
+        Assert.assertTrue(facetMap.get("properties.ints") instanceof NumericFacet);
+        numFacet = (NumericFacet) facetMap.get("properties.ints");
         Assert.assertNotNull(numFacet);
-        Assert.assertTrue(facetMap.containsKey("attributes.dates"));
-        Assert.assertTrue(facetMap.get("attributes.dates") instanceof DateFacet);
-        dateFacet = (DateFacet) facetMap.get("attributes.dates");
+        Assert.assertTrue(facetMap.containsKey("properties.dates"));
+        Assert.assertTrue(facetMap.get("properties.dates") instanceof DateFacet);
+        dateFacet = (DateFacet) facetMap.get("properties.dates");
         Assert.assertNotNull(dateFacet);
     }
 
@@ -374,8 +373,8 @@ public class EsQueryTest {
         this.createData();
 
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
-        sortMap.put("attributes.text", true);
-        sortMap.put("attributes.size", false);
+        sortMap.put("properties.text", true);
+        sortMap.put("properties.size", false);
         List<Item> items = repository.search(INDEX, Item.class, 10, sortMap, ICriterion.all()).getContent();
         List<Item> itemsSorted = Lists.newArrayList(items);
         Comparator<Item> comparator = Comparator.comparing(item -> item.getAttributes().getText());
@@ -386,38 +385,37 @@ public class EsQueryTest {
     }
 
     @Test
-    @Ignore
     public void testLoad() {
         // this.createData2();
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
-        facetMapBuilder.put("attributes.size", FacetType.NUMERIC).put("attributes.weight", FacetType.NUMERIC)
-                .put("attributes.text", FacetType.STRING);
-        // .put("attributes.date", FacetType.DATE);
-        // .put("attributes.tags", FacetType.STRING)
-        // .put("attributes.ints", FacetType.NUMERIC);
-        // .put("attributes.doubles", FacetType.NUMERIC).put("attributes.dates", FacetType.DATE);
+        facetMapBuilder.put("properties.size", FacetType.NUMERIC).put("properties.weight", FacetType.NUMERIC)
+                .put("properties.text", FacetType.STRING)
+                // .put("properties.date", FacetType.DATE);
+                .put("properties.tags", FacetType.STRING);
+        // .put("properties.ints", FacetType.NUMERIC);
+        // .put("properties.doubles", FacetType.NUMERIC).put("properties.dates", FacetType.DATE);
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
-        /*        sortMap.put("docId", false);
+        // sortMap.put("docId", false);
         long start = System.currentTimeMillis();
         Page<Item> page = repository.search(INDEX2, Item.class, 100, ICriterion.all(), facetMapBuilder.build(),
                                             sortMap);
-        System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");*/
+        System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
         // while (page.hasNext()) {
         // start = System.currentTimeMillis();
         // page = repository.search(INDEX2, Item.class, page.nextPageable(), ICriterion.all(), facetMapBuilder.build(),
         // sortMap);
         // System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
         // }
-        sortMap.clear();
-        sortMap.put("attributes.date", Boolean.FALSE);
+        // sortMap.clear();
+        // sortMap.put("properties.date", Boolean.FALSE);
         // long start = System.currentTimeMillis();
         // Page<Item> page = repository.search(INDEX2, Item.class, 100, sortMap, ICriterion.all());
         // System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
 
-        long start = System.currentTimeMillis();
-        repository.get(INDEX2, TYPE1, "229009", Item.class);
-        System.out.println("get : " + (System.currentTimeMillis() - start) + " ms");
+        // long start = System.currentTimeMillis();
+        // repository.get(INDEX2, TYPE1, "229009", Item.class);
+        // System.out.println("get : " + (System.currentTimeMillis() - start) + " ms");
     }
 
     private static class Item implements IIndexable, Serializable {
@@ -426,16 +424,16 @@ public class EsQueryTest {
 
         private String type;
 
-        private Attributes attributes;
+        private Properties properties;
 
         private Item() {
         }
 
-        public Item(String pId, String pType, Attributes pAttributes) {
+        public Item(String pId, String pType, Properties pProperties) {
             super();
             docId = pId;
             type = pType;
-            attributes = pAttributes;
+            properties = pProperties;
         }
 
         @Override
@@ -452,12 +450,12 @@ public class EsQueryTest {
             docId = pId;
         }
 
-        public Attributes getAttributes() {
-            return attributes;
+        public Properties getAttributes() {
+            return properties;
         }
 
-        public void setAttributes(Attributes pAttributes) {
-            attributes = pAttributes;
+        public void setProperties(Properties pProperties) {
+            properties = pProperties;
         }
 
         public void setType(String pType) {
@@ -473,7 +471,7 @@ public class EsQueryTest {
         public T upperBound;
     }
 
-    private static class Attributes implements Serializable {
+    private static class Properties implements Serializable {
 
         private int size;
 
@@ -499,7 +497,7 @@ public class EsQueryTest {
 
         private boolean bool;
 
-        public Attributes(int pSize, double pWeight, String pText, LocalDateTime pDate, String[] pTags, int[] pInts,
+        public Properties(int pSize, double pWeight, String pText, LocalDateTime pDate, String[] pTags, int[] pInts,
                 double[] pDoubles, LocalDateTime[] pDates) {
             super();
             size = pSize;
