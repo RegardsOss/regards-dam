@@ -27,11 +27,11 @@ import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
-import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -57,12 +57,6 @@ public class CollectionsController implements IResourceController<Collection> {
      */
     @Autowired
     private IResourceService resourceService;
-
-    /**
-     * Entity service used for validation
-     */
-    @Autowired
-    private IEntityService entityService;
 
     /**
      * Entry point to retrieve {@link Collection}s
@@ -111,8 +105,12 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResponseBody
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @Valid @RequestBody Collection pCollection) throws ModuleException {
-        final Collection collection = collectionsRequestService.updateCollection(pCollection, pCollectionId);
+            @Valid @RequestBody Collection pCollection, BindingResult pResult) throws ModuleException {
+
+        // Validate dynamic model
+        collectionsRequestService.validate(pCollection, pResult, false);
+
+        final Collection collection = collectionsRequestService.update(pCollectionId, pCollection);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -124,12 +122,14 @@ public class CollectionsController implements IResourceController<Collection> {
      * @param pCollectionId
      *            {@link Collection} id
      * @return nothing
+     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "delete the collection of collection_id")
-    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId) {
-        collectionsRequestService.deleteCollection(pCollectionId);
+    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId)
+            throws EntityNotFoundException {
+        collectionsRequestService.delete(pCollectionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -151,9 +151,9 @@ public class CollectionsController implements IResourceController<Collection> {
             BindingResult pResult) throws ModuleException {
 
         // Validate dynamic model
-        entityService.validate(pCollection, pResult, false);
+        collectionsRequestService.validate(pCollection, pResult, false);
 
-        final Collection collection = collectionsRequestService.createCollection(pCollection);
+        final Collection collection = collectionsRequestService.create(pCollection);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }
@@ -174,7 +174,8 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
     public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
             @Valid @RequestBody Set<UniformResourceName> pToBeDissociated) throws ModuleException {
-        final Collection collection = collectionsRequestService.dissociateCollection(pCollectionId, pToBeDissociated);
+        final Collection collection = (Collection) collectionsRequestService.dissociate(pCollectionId,
+                                                                                        pToBeDissociated);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -195,7 +196,8 @@ public class CollectionsController implements IResourceController<Collection> {
     @ResourceAccess(description = "associate the collection of id collection_id to the list of entities in parameter")
     public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
             @Valid @RequestBody Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
-        final Collection collection = collectionsRequestService.associateCollection(pCollectionId, pToBeAssociatedWith);
+        final Collection collection = (Collection) collectionsRequestService.associate(pCollectionId,
+                                                                                       pToBeAssociatedWith);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }

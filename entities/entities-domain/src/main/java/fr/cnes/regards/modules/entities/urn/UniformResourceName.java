@@ -14,6 +14,9 @@ import javax.validation.constraints.NotNull;
 
 import org.springframework.util.Assert;
 
+import com.google.gson.annotations.JsonAdapter;
+
+import fr.cnes.regards.modules.entities.urn.converters.UrnAdapter;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.urn.validator.RegardsOaisUrn;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -34,6 +37,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
  */
 @RegardsOaisUrn
 @Convert(converter = UrnConverter.class)
+@JsonAdapter(UrnAdapter.class)
 public class UniformResourceName {
 
     public static final String URN_PATTERN = "URN:.+:.+:.+:.+:V\\d{1,3}(,\\d+)?(:REV.+)?";

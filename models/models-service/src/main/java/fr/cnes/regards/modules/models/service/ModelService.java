@@ -70,9 +70,9 @@ public class ModelService implements IModelService, IModelAttributeService {
     // CHECKSTYLE:OFF
     public ModelService(IModelRepository pModelRepository, IModelAttributeRepository pModelAttributeRepository,
             IAttributeModelService pAttributeModelService) {
-        this.modelRepository = pModelRepository;
-        this.modelAttributeRepository = pModelAttributeRepository;
-        this.attributeModelService = pAttributeModelService;
+        modelRepository = pModelRepository;
+        modelAttributeRepository = pModelAttributeRepository;
+        attributeModelService = pAttributeModelService;
     }
     // CHECKSTYLE:ON
 
@@ -179,15 +179,20 @@ public class ModelService implements IModelService, IModelAttributeService {
     }
 
     @Override
-    public ModelAttribute getModelAttribute(Long pModelId, Long pAttributeId) throws ModuleException {
-        final ModelAttribute modelAtt = modelAttributeRepository.findOne(pAttributeId);
+    public ModelAttribute getModelAttribute(Long pModelId, Long pModelAttributeId) throws ModuleException {
+        final ModelAttribute modelAtt = modelAttributeRepository.findOne(pModelAttributeId);
         if (modelAtt == null) {
-            throw new EntityNotFoundException(pAttributeId, ModelAttribute.class);
+            throw new EntityNotFoundException(pModelAttributeId, ModelAttribute.class);
         }
         if (!pModelId.equals(modelAtt.getModel().getId())) {
-            throw new UnexpectedModelAttributeException(pModelId, pAttributeId);
+            throw new UnexpectedModelAttributeException(pModelId, pModelAttributeId);
         }
         return modelAtt;
+    }
+
+    @Override
+    public ModelAttribute getModelAttribute(Long pModelId, AttributeModel pAttribute) {
+        return modelAttributeRepository.findByModelIdAndAttribute(pModelId, pAttribute);
     }
 
     @Override
@@ -456,4 +461,5 @@ public class ModelService implements IModelService, IModelAttributeService {
 
         return true;
     }
+
 }

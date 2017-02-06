@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities;
+package fr.cnes.regards.modules.entities.service;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,7 +13,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -23,20 +25,20 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.service.EntityService;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public class EntityServiceTest {
+public class AbstractEntityServiceTest {
 
-    private EntityService entityServiceMocked;
+    private AbstractEntityService entityServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
@@ -87,6 +89,7 @@ public class EntityServiceTest {
         dataset2.setDescription("datasetDesc2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
+        IModelService pModelService = Mockito.mock(IModelService.class);
 
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
@@ -94,7 +97,33 @@ public class EntityServiceTest {
         Mockito.when(entitiesRepositoryMocked.findByTags(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
-        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked);
+        entityServiceMocked = new AbstractEntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
+                null, null) {
+
+            @Override
+            protected Logger getLogger() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            protected <T extends AbstractEntity> T doUpdate(T pEntity) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            protected <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            protected <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        };
     }
 
     private UniformResourceName getUrn(EntityType pEntityType) {

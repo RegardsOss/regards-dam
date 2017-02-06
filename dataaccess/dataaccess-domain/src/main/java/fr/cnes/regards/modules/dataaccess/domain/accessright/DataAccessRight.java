@@ -24,11 +24,6 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAcce
 @DataAccessRightValidation
 public class DataAccessRight {
 
-    /*    @Id
-    @SequenceGenerator(name = "DataAccessRightSequence", initialValue = 1, sequenceName = "SEQ_DATA_ACCESS_RIGHT")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataAccessRightSequence")
-    private Long id;*/
-
     @NotNull
     @Column(length = 30, name = "data_access_level")
     @Enumerated(EnumType.STRING)

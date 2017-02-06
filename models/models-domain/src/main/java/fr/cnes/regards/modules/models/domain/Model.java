@@ -37,7 +37,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     /**
      * Name regular expression
      */
-    public static final String NAME_REGEXP = "[0-9a-zA-Z_]*";
+    public static final String NAME_REGEXP = "[a-zA-Z_][0-9a-zA-Z_]*";
 
     /**
      * Name min size

@@ -102,7 +102,6 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
         collection1 = collectionRepository.save(collection1);
         collection3 = collectionRepository.save(collection3);
-        // collection4 = collectionRepository.save(collection4);
     }
 
     private UniformResourceName getUrn() {
