@@ -20,8 +20,9 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -58,7 +59,7 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
     /**
      * The mapping between the attributes in the {@link Model} and the data source
      */
-    private List<DataSourceAttributeMapping> attributesMapping;
+    private DataSourceModelMapping dataSourceMapping;
 
     /**
      * Init method
@@ -80,9 +81,9 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
      * representation to a {@link List} of {@link DataSourceAttributeMapping}.
      */
     private void loadModel() {
-        AttributeMappingAdapter adapter = new AttributeMappingAdapter();
+        ModelMappingAdapter adapter = new ModelMappingAdapter();
         try {
-            attributesMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
+            dataSourceMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -121,11 +122,11 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getAttributesMapping()
+     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
      */
     @Override
-    protected List<DataSourceAttributeMapping> getAttributesMapping() {
-        return attributesMapping;
+    protected DataSourceModelMapping getModelMapping() {
+        return dataSourceMapping;
     }
 
 }

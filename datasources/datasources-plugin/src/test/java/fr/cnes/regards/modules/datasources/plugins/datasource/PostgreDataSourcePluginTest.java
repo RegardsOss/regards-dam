@@ -29,8 +29,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
@@ -74,9 +75,9 @@ public class PostgreDataSourcePluginTest {
 
     private IDataSourcePlugin plgDataSource;
 
-    private List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+    private DataSourceModelMapping modelMapping;
 
-    private final AttributeMappingAdapter adapter = new AttributeMappingAdapter();
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     /**
      * Populate the datasource as a legacy catalog
@@ -112,7 +113,7 @@ public class PostgreDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostGreSqlConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(attributes))
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     .addParameter(PostgreDataSourcePlugin.REQUEST_PARAM, "select * from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
@@ -163,12 +164,16 @@ public class PostgreDataSourcePluginTest {
     }
 
     private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+        
         attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
+        
+        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
 
     }
 

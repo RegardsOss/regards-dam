@@ -4,8 +4,6 @@
 package fr.cnes.regards.modules.datasources.plugins.domain;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,38 +22,52 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Christophe Mertz
  * 
  */
-public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttributeMapping>> {
+public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
     /**
      * Label for name field
      */
-    protected static final String NAME_LABEL = "name";
+    private static final String MODEL_LABEL = "model";
+    
+    /**
+     * Label for the apings field
+     */
+    private static final String MAPPINGS_LABEL = "mappings";
+
+    /**
+     * Label for name field
+     */
+    private static final String NAME_LABEL = "name";
 
     /**
      * Label for type field
      */
-    protected static final String TYPE_LABEL = "type";
+    private static final String TYPE_LABEL = "type";
 
     /**
      * Label for namespace field
      */
-    protected static final String NAMESPACE_LABEL = "namespace";
+    private static final String NAMESPACE_LABEL = "namespace";
 
     /**
      * Label for name field in data source
      */
-    protected static final String NAME_DS_LABEL = "nameDs";
+    private static final String NAME_DS_LABEL = "nameDs";
 
     /**
      * Label for type field in data source
      */
-    protected static final String TYPE_DS_LABEL = "typeDs";
+    private static final String TYPE_DS_LABEL = "typeDs";
 
     @Override
-    public void write(final JsonWriter pOut, final List<DataSourceAttributeMapping> pValue) throws IOException {
+    public void write(final JsonWriter pOut, final DataSourceModelMapping pValue) throws IOException {
+
+        pOut.beginObject();
+        pOut.name(MODEL_LABEL).value(pValue.getModelName());
+        pOut.name(MAPPINGS_LABEL);
 
         pOut.beginArray();
-        for (final DataSourceAttributeMapping attr : pValue) {
+        for (final DataSourceAttributeMapping attr : pValue.getAttributesMapping()) {
             pOut.beginObject();
             pOut.name(NAME_LABEL).value(attr.getName());
             pOut.name(TYPE_LABEL).value(attr.getType().name());
@@ -63,23 +75,35 @@ public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttribut
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
             pOut.name(NAME_DS_LABEL).value(attr.getNameDS());
-            if (attr.getTypeDS()!=null) {
+            if (attr.getTypeDS() != null) {
                 pOut.name(TYPE_DS_LABEL).value(attr.getTypeDS());
             }
             pOut.endObject();
         }
         pOut.endArray();
+        pOut.endObject();
     }
 
     @Override
-    public List<DataSourceAttributeMapping> read(final JsonReader pIn) throws IOException {
+    public DataSourceModelMapping read(final JsonReader pIn) throws IOException {
+        DataSourceModelMapping dataSourceModelMapping = new DataSourceModelMapping();
         final List<DataSourceAttributeMapping> attributes = new ArrayList<>();
 
+        pIn.beginObject();
+        
+        if (!pIn.nextName().equals(MODEL_LABEL)) {
+            throw new IOException(MODEL_LABEL +"is expected");
+        }
+        
+        dataSourceModelMapping.setModelName(pIn.nextString());
+        
+        if (!pIn.nextName().equals(MAPPINGS_LABEL)) {
+            throw new IOException(MAPPINGS_LABEL +"is expected");
+        }
+        
         pIn.beginArray();
-
         // Compute the element's array
         while (pIn.hasNext()) {
-
             // Compute one element
             pIn.beginObject();
             final DataSourceAttributeMapping attr = new DataSourceAttributeMapping();
@@ -110,26 +134,11 @@ public class AttributeMappingAdapter extends TypeAdapter<List<DataSourceAttribut
             pIn.endObject();
         }
         pIn.endArray();
+        pIn.endObject();
 
-        return attributes;
-    }
+        dataSourceModelMapping.setAttributesMapping(attributes);
 
-    private Types getJdbcType(String jdbcType) throws IOException {
-        Types val = null;
-
-        // Get all field in java.sql.Types
-        Field[] fields = Types.class.getFields();
-        for (int i = 0; (val != null) && (i < fields.length); i++) {
-            try {
-                Integer value = (Integer) fields[i].get(null);
-                if (Integer.parseInt(jdbcType) == value.intValue()) {
-                    val = (Types) fields[i].get(null);
-                }
-            } catch (IllegalAccessException e) {
-                throw new IOException(e);
-            }
-        }
-        return val;
+        return dataSourceModelMapping;
     }
 
 }

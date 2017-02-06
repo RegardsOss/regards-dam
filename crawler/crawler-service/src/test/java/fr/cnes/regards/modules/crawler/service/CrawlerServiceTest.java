@@ -25,8 +25,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -67,9 +68,9 @@ public class CrawlerServiceTest {
 
     private IDBDataSourcePlugin dsPlugin;
 
-    private List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+    private DataSourceModelMapping modelMapping;
 
-    private final AttributeMappingAdapter adapter = new AttributeMappingAdapter();
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Before
     public void tearUp() throws DataSourceUtilsException {
@@ -86,7 +87,7 @@ public class CrawlerServiceTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(attributes)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
         }
@@ -143,6 +144,8 @@ public class CrawlerServiceTest {
     }
 
     private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+
         attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
@@ -168,5 +171,7 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+
+        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 }

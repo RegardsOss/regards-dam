@@ -9,7 +9,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
- * This class is used to map a datasource to a {@link Model}
+ * This class is used to map a data source attribute to an attribute of a {@link Model}
  * 
  * @author Christophe Mertz
  *

@@ -30,10 +30,11 @@ import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.Column;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.domain.Index;
+import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
@@ -72,9 +73,10 @@ public class OracleDBDataSourcePluginTest {
 
     private IDBDataSourcePlugin plgDBDataSource;
 
-    private List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+    private DataSourceModelMapping dataSourceModelMapping;
 
-    private final AttributeMappingAdapter adapter = new AttributeMappingAdapter();
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+    
 
     /**
      * Initialize the plugin's parameter
@@ -100,7 +102,7 @@ public class OracleDBDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(attributes)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping)).getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
         }
@@ -176,6 +178,8 @@ public class OracleDBDataSourcePluginTest {
     }
 
     private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+        
         attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
@@ -201,6 +205,8 @@ public class OracleDBDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+        
+        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 
 }

@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import com.google.common.collect.Maps;
 
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
@@ -65,7 +66,7 @@ public abstract class AbstractDataObjectMapping {
      * 
      * @return the mapping
      */
-    protected abstract List<DataSourceAttributeMapping> getAttributesMapping();
+    protected abstract DataSourceModelMapping getModelMapping();
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable, LocalDateTime pDate) {
@@ -135,7 +136,7 @@ public abstract class AbstractDataObjectMapping {
         /**
          * Loop the attributes in the mapping
          */
-        for (DataSourceAttributeMapping attrMapping : getAttributesMapping()) {
+        for (DataSourceAttributeMapping attrMapping : getModelMapping().getAttributesMapping()) {
             final boolean asNameSpace = attrMapping.getNameSpace() != null;
             try {
                 AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
