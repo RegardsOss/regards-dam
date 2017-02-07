@@ -1,9 +1,13 @@
-package fr.cnes.regards.modules.crawler.service;
+/*
+ * LICENSE_PLACEHOLDER
+ */
+package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -12,8 +16,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
@@ -22,28 +26,34 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.domain.Column;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.Index;
 import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
+/**
+ * @author Christophe Mertz
+ *
+ */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { CrawlerConfiguration.class })
-public class CrawlerServiceTest {
+@ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+public class OracleDBDataSourcePluginTest {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
-
-    @Autowired
-    private FlattenedAttributeAdapterFactory gsonAttributeFactory;
+    private static final Logger LOG = LoggerFactory.getLogger(OracleDBDataSourcePluginTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -61,19 +71,24 @@ public class CrawlerServiceTest {
     @Value("${oracle.datasource.driver}")
     private String driver;
 
-    // private ICrawlerService service;
+    private IDBDataSourcePlugin plgDBDataSource;
 
-    @Autowired
-    private IIndexerService indexerService;
-
-    private IDBDataSourcePlugin dsPlugin;
-
-    private DataSourceModelMapping modelMapping;
+    private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+    
 
+    /**
+     * Initialize the plugin's parameter
+     * 
+     * @throws DataSourceUtilsException
+     * 
+     * @throws JwtException
+     * @throws PluginUtilsException
+     */
     @Before
-    public void tearUp() throws DataSourceUtilsException {
+    public void setUp() throws DataSourceUtilsException {
+
         /*
          * Initialize the DataSourceAttributeMapping
          */
@@ -87,50 +102,68 @@ public class CrawlerServiceTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping)).getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
         }
 
         try {
-            dsPlugin = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
-                                             Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+            plgDBDataSource = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
+                                                    Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
         }
 
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @Test
+    public void getTables() {
+        Map<String, Table> tables = plgDBDataSource.getTables();
+        Assert.assertNotNull(tables);
+        Assert.assertTrue(!tables.isEmpty());
     }
 
     @Test
-    public void testSuckUp() {
-        // Retrieve first 1000 objects
-        dsPlugin.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
-                            "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY", "MIN_LONGITUDE",
-                            "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE", "MAX_ALTITUDE",
-                            "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
-        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
+    public void getColumnsAndIndices() {
+        Map<String, Table> tables = plgDBDataSource.getTables();
+        Assert.assertNotNull(tables);
+        Assert.assertTrue(!tables.isEmpty());
 
-        // Save to ES
-        LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
-        LOGGER.info("save 1000 entities");
-        String tenant = "oracle";
+        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
+        Assert.assertNotNull(columns);
 
-        // Creating index if it doesn't already exist
-//        TODO CMZ
-//        indexerService.createIndex(tenant);
-//        indexerService.saveBulkEntities(tenant, page.getContent());
-//        while (page.hasNext()) {
-//            page = dsPlugin.findAll(page.nextPageable());
-//            indexerService.saveBulkEntities(tenant, page.getContent());
-//            LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
-//        }
-        Assert.assertTrue(true);
+        Map<String, Index> indices = plgDBDataSource.getIndices(tables.get(TABLE_NAME_TEST));
+        Assert.assertNotNull(indices);
     }
 
+    @Test
+    public void getDataSourceIntrospection() {
+        plgDBDataSource.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
+                                   "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY",
+                                   "MIN_LONGITUDE", "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE",
+                                   "MAX_ALTITUDE", "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+
+        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 1000));
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(1000, ll.getContent().size());
+
+        ll = plgDBDataSource.findAll(new PageRequest(1, 1000));
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(1000, ll.getContent().size());
+    }
+
+    @After
+    public void erase() {
+        // repository.deleteAll();
+    }
+
+    /**
+     * Define the {@link PluginConfiguration} for a {@link DefaultOracleConnectionPlugin} to connect to the Oracle
+     * database.
+     * 
+     * @return the {@link PluginConfiguration}
+     * @throws PluginUtilsException
+     */
     private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
@@ -146,7 +179,7 @@ public class CrawlerServiceTest {
 
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
-
+        
         attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
@@ -172,7 +205,8 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-
-        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        
+        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
+
 }

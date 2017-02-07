@@ -20,6 +20,9 @@ import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -29,6 +32,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
  * Attribute builder
  *
  * @author Marc Sordi
+ * @author oroussel
  *
  */
 public final class AttributeBuilder {
@@ -113,6 +117,27 @@ public final class AttributeBuilder {
         IntegerIntervalAttribute att = new IntegerIntervalAttribute();
         att.setName(pName);
         att.setValue(Range.closed(pLowerBoundInteger, pUpperBoundInteger));
+        return att;
+    }
+
+    public static LongArrayAttribute buildLongArray(String pName, Long... pValues) {
+        LongArrayAttribute att = new LongArrayAttribute();
+        att.setName(pName);
+        att.setValue(pValues);
+        return att;
+    }
+
+    public static LongAttribute buildLong(String pName, Long pValue) {
+        LongAttribute att = new LongAttribute();
+        att.setName(pName);
+        att.setValue(pValue);
+        return att;
+    }
+
+    public static LongIntervalAttribute buildLongInterval(String pName, Long pLowerBoundLong, Long pUpperBoundLong) {
+        LongIntervalAttribute att = new LongIntervalAttribute();
+        att.setName(pName);
+        att.setValue(Range.closed(pLowerBoundLong, pUpperBoundLong));
         return att;
     }
 

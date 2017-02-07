@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -25,16 +28,22 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.SqlDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.domain.Column;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.domain.Index;
+import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -45,9 +54,9 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgresDBDataSourcePluginTest {
+public class PostgreDBDataSourcePluginTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PostgresDBDataSourcePluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgreDBDataSourcePluginTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -66,6 +75,10 @@ public class PostgresDBDataSourcePluginTest {
     private String driver;
 
     private IDBDataSourcePlugin plgDBDataSource;
+
+    private DataSourceModelMapping modelMapping;
+
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     /**
      * JPA Repository
@@ -95,20 +108,25 @@ public class PostgresDBDataSourcePluginTest {
                 25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
 
         /*
+         * Initialize the DataSourceAttributeMapping
+         */
+        this.buildModelAttributes();
+
+        /*
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
         try {
             parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(SqlDBDataSourcePlugin.CONNECTION_PARAM,
-                                                     getPostGreSqlConnectionConfiguration())
-                    .getParameters();
+                    .addParameterPluginConfiguration(PostgreDBDataSourcePlugin.CONNECTION_PARAM,
+                                                     getPostgreConnectionConfiguration())
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
         }
 
         try {
-            plgDBDataSource = PluginUtils.getPlugin(parameters, SqlDBDataSourcePlugin.class,
+            plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDBDataSourcePlugin.class,
                                                     Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
             throw new DataSourceUtilsException(e.getMessage());
@@ -124,7 +142,7 @@ public class PostgresDBDataSourcePluginTest {
     }
 
     @Test
-    public void getColumnsIndexes() {
+    public void getColumnsAndIndices() {
         Assert.assertEquals(3, repository.count());
 
         Map<String, Table> tables = plgDBDataSource.getTables();
@@ -135,9 +153,24 @@ public class PostgresDBDataSourcePluginTest {
         Assert.assertNotNull(columns);
         Assert.assertEquals(7, columns.size());
 
-        Map<String, Index> indexs = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(indexs);
-        Assert.assertEquals(3, indexs.size());
+        Map<String, Index> indices = plgDBDataSource.getIndices(tables.get(TABLE_NAME_TEST));
+        Assert.assertNotNull(indices);
+        Assert.assertEquals(3, indices.size());
+    }
+
+    @Test
+    public void getDataSourceIntrospection() {
+        Assert.assertEquals(3, repository.count());
+
+        plgDBDataSource.setMapping(TABLE_NAME_TEST, "id", "altitude", "latitude", "longitude", "label");
+
+        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 2));
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(2, ll.getContent().size());
+
+        ll = plgDBDataSource.findAll(new PageRequest(1, 2));
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(1, ll.getContent().size());
     }
 
     @After
@@ -146,23 +179,36 @@ public class PostgresDBDataSourcePluginTest {
     }
 
     /**
-     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreSQLConnectionPlugin} to connect to the
-     * PostgreSql database.
+     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
+     * database.
      * 
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */
-    private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostgreConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreSQLConnectionPlugin.class,
+        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+    }
+
+    private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+
+        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
+        attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
+        attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
+        attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
+        attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
+
+        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 
 }

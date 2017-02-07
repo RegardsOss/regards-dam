@@ -23,9 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public final class ColumnMapper {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(ColumnMapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ColumnMapper.class);
 
-    private final static ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
      *
@@ -55,15 +55,15 @@ public final class ColumnMapper {
     }
 
     /**
-     * Trasform a Json in a list of Column
+     * Transform a Json in a list of Column
      *
-     * @param jsonSource
+     * @param pJsonSource
      * @return the list of column
      */
-    public static List<Column> json2List(String jsonSource) {
+    public static List<Column> json2List(String pJsonSource) {
         List<Column> result = null;
         try {
-            result = MAPPER.readValue(jsonSource, new TypeReference<List<Column>>() {
+            result = MAPPER.readValue(pJsonSource, new TypeReference<List<Column>>() {
             });
         } catch (final IOException e) {
             LOGGER.error(e.getMessage(), e);

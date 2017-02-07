@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.domain;
 
+import java.util.HashSet;
+
 /**
  * This class describes a table of a SQL database.
  *
@@ -26,11 +28,6 @@ public final class Table {
      */
     private String schema;
 
-    // /**
-    // * The {@link Column} of the table
-    // */
-    // private Set<Column> columns = null;
-
     /**
      * The column that is the primary key
      */
@@ -43,7 +40,6 @@ public final class Table {
     public Table(String pName) {
         super();
         name = pName;
-        // columns = new HashSet<>();
     }
 
     /**
@@ -56,7 +52,6 @@ public final class Table {
         super();
         name = pName;
         schema = pSchema;
-        // columns = new HashSet<>();
     }
 
     /**
@@ -72,7 +67,6 @@ public final class Table {
         name = pName;
         schema = pSchema;
         catalog = pCatalog;
-        // columns = new HashSet<>();
     }
 
     /**
@@ -84,109 +78,37 @@ public final class Table {
         return schema != null ? schema + "." + name : name;
     }
 
-    // /**
-    // *
-    // * Declare a new column to the current table
-    // *
-    // * @param pName
-    // * the column name
-    // * @param pJavaSqlType
-    // * the SQL type @see {@link Types}
-    // * @param pIsPrimaryKey
-    // * if this column is the primary key
-    // */
-    // public void addColumn(String pName, int pJavaSqlType, Boolean pIsPrimaryKey) {
-    // Column col = new Column(pName, pJavaSqlType, pIsPrimaryKey);
-    // this.columns.add(col);
-    // if (pIsPrimaryKey) {
-    // this.pkColumn = col;
-    // }
-    // }
-
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setName(String pName) {
+        this.name = pName;
     }
-
-    // public Set<Column> getColumns() {
-    // return columns;
-    // }
-    //
-    // public void setColumns(Set<Column> columns) {
-    // this.columns = columns;
-    // }
 
     public String getPkColumn() {
         return pkColumn;
     }
 
-    public void setPkColumn(String pkColumn) {
-        this.pkColumn = pkColumn;
+    public void setPkColumn(String pColumn) {
+        this.pkColumn = pColumn;
     }
 
     public String getSchema() {
         return schema;
     }
 
-    public void setSchema(String schema) {
-        this.schema = schema;
+    public void setSchema(String pSchema) {
+        this.schema = pSchema;
     }
 
     public String getCatalog() {
         return catalog;
     }
 
-    public void setCatalog(String catalog) {
-        this.catalog = catalog;
+    public void setCatalog(String pCatalog) {
+        this.catalog = pCatalog;
     }
-
-    // /**
-    // *
-    // * Declare a new column to the current table
-    // *
-    // * @param pName
-    // * the column name
-    // * @param pJavaSqlType
-    // * the SQL type @see {@link Types}
-    // */
-    // public void addColumn(String pName, int pJavaSqlType) {
-    // addColumn(pName, pJavaSqlType, Boolean.FALSE);
-    // }
-    //
-    // public void addColumnString(String pName) {
-    // addColumn(pName, Types.VARCHAR);
-    // }
-    //
-    // public void addColumnString(String pName, Boolean pIsPrimaryKey) {
-    // addColumn(pName, Types.VARCHAR, pIsPrimaryKey);
-    // }
-    //
-    // public void addColumnInteger(String pName) {
-    // addColumn(pName, Types.INTEGER);
-    // }
-    //
-    // public void addColumnInteger(String pName, Boolean pIsPrimaryKey) {
-    // addColumn(pName, Types.INTEGER, pIsPrimaryKey);
-    // }
-    //
-    // public void addColumnLong(String pName) {
-    // addColumn(pName, Types.BIGINT);
-    // }
-    //
-    // public void addColumnLong(String pName, Boolean pIsPrimaryKey) {
-    // addColumn(pName, Types.BIGINT, pIsPrimaryKey);
-    // }
-    //
-    // public void addColumnDate(String pName) {
-    // addColumn(pName, Types.DATE);
-    // }
-    //
-    // public void addColumnDate(String pName, Boolean pIsPrimaryKey) {
-    // addColumn(pName, Types.DATE, pIsPrimaryKey);
-    // }
 
     private String toString(String pName, String pVal) {
         return pVal != null && pVal != "" ? pName + "=" + pVal : "";
