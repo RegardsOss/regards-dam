@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
  * Class IDataSourcePlugin
@@ -52,9 +53,11 @@ public interface IDataSourcePlugin {
      * 
      * @param pPageable
      *            the pagination information
+     * @param pDate
+     *            Allows to filter the new entities created after this date parameter
      * @return a page of entities
      */
-    Page<AbstractEntity> findAll(Pageable pPageable, LocalDateTime pDate);
+    Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate);
 
     /**
      * Returns a {@link Page} of entities meeting the paging restriction provided in the {@code Pageable} object.
@@ -63,6 +66,6 @@ public interface IDataSourcePlugin {
      *            the pagination information
      * @return a page of entities
      */
-    Page<AbstractEntity> findAll(Pageable pPageable);
+    Page<DataObject> findAll(Pageable pPageable);
 
 }

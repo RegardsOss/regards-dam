@@ -18,7 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -50,12 +50,12 @@ public class OracleConnectionPluginTest {
     @Test
     public void getOracleSqlConnection() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));

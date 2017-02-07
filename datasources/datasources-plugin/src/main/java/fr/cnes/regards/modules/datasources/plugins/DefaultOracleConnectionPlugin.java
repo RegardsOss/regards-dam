@@ -49,7 +49,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     /**
      * The user's password to used for the database connection
      */
-    @PluginParameter(name = PWD_PARAM)
+    @PluginParameter(name = PASSWORD_PARAM)
     private String password;
 
     /**

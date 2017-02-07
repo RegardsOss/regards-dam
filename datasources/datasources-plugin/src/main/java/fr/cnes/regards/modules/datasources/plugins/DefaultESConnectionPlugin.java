@@ -70,6 +70,7 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
         return !client.connectedNodes().isEmpty();
     }
 
+    @SuppressWarnings("resource")
     @PluginInit
     private void createTransportClient() {
         Settings settings = Settings.EMPTY;
