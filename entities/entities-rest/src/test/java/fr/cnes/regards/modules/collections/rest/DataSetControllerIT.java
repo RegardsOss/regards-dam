@@ -88,7 +88,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     public void testGetAllDataSets() {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultGet(DataSetController.DATASET_PATH, expectations, "Failed to fetch collection list");
+        performDefaultGet(DataSetController.DATASET_PATH, expectations, "Failed to fetch dataset list");
     }
 
     @Test
@@ -98,29 +98,28 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(DataSetController.DATASET_PATH, dataSet2, expectations, "Failed to create a new collection");
+        performDefaultPost(DataSetController.DATASET_PATH, dataSet2, expectations, "Failed to create a new dataset");
 
     }
 
-    // TODO add get by ip id
     @Test
     public void testGetDataSetById() {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_PATH, expectations,
-                          "Failed to fetch a specific collection using its id", dataSet1.getId());
+                          "Failed to fetch a specific dataset using its id", dataSet1.getId());
     }
 
     @Test
     public void testUpdateDataSet() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "collection1clone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "dataset1clone");
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultPut(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_PATH, dataSetClone,
-                          expectations, "Failed to update a specific collection using its id", dataSet1.getId());
+                          expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
     }
 
     @Test
@@ -133,16 +132,23 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         performDefaultPut(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_PATH, dataSetClone,
-                          expectations, "Failed to update a specific collection using its id", dataSet1.getId());
+                          expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
 
     }
 
-    // TODO: add delete by ip id
     @Test
     public void testDeleteDataSet() {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_PATH, expectations,
-                             "Failed to delete a specific collection using its id", dataSet1.getId());
+                             "Failed to delete a specific dataset using its id", dataSet1.getId());
+    }
+
+    @Test
+    public void testGetServices() {
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultGet(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_SERVICES_PATH, expectations,
+                          "Failed to fetch services list", dataSet1.getId());
     }
 
     private UniformResourceName getUrn() {

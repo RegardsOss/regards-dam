@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.entities.service.DataSetService;
  *
  */
 @RestController
-@RequestMapping(value = DataSetController.DATASET_PATH)
+@RequestMapping(value = DataSetController.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class DataSetController implements IResourceController<DataSet> {
 
     public static final String DATASET_PATH = "/datasets";
@@ -56,7 +56,7 @@ public class DataSetController implements IResourceController<DataSet> {
     @Autowired
     private DataSetService service;
 
-    @RequestMapping(method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create and send the dataset")
     public HttpEntity<Resource<DataSet>> createDataSet(@Valid @RequestBody DataSet pDataSet, BindingResult pResult)
@@ -69,7 +69,7 @@ public class DataSetController implements IResourceController<DataSet> {
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
-    @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
     public HttpEntity<PagedResources<Resource<DataSet>>> retrieveDataSetList(final Pageable pPageable,
@@ -81,7 +81,7 @@ public class DataSetController implements IResourceController<DataSet> {
 
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
     @ResponseBody
     @ResourceAccess(description = "Retrieves a dataset")
     public HttpEntity<Resource<DataSet>> retrieveDataSet(@PathVariable("dataset_id") Long pDataSetId)
@@ -91,7 +91,7 @@ public class DataSetController implements IResourceController<DataSet> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     @ResponseBody
     @ResourceAccess(description = "Retrieves a dataset")
     public HttpEntity<Void> deleteDataSet(@PathVariable("dataset_id") Long pDataSetId) throws EntityNotFoundException {
@@ -99,7 +99,7 @@ public class DataSetController implements IResourceController<DataSet> {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResponseBody
     @ResourceAccess(description = "Updates a DataSet")
     public HttpEntity<Resource<DataSet>> updateDataSet(@PathVariable("dataset_id") Long pDataSetId,
@@ -113,8 +113,7 @@ public class DataSetController implements IResourceController<DataSet> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_SERVICES_PATH,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_SERVICES_PATH)
     @ResponseBody
     @ResourceAccess(description = "Retrieves the list of configurations of Services of a DataSet")
     public HttpEntity<List<Long>> retrieveDataSetServices(@PathVariable("dataset_id") Long pDataSetId)

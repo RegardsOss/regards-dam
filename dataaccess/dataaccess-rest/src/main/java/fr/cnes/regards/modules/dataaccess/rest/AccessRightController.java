@@ -14,6 +14,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -42,7 +43,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  *
  */
 @RestController
-@RequestMapping(AccessRightController.PATH_ACCESS_RIGHTS)
+@RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class AccessRightController implements IResourceController<AbstractAccessRight> {
 
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
@@ -75,7 +76,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
             @Valid @RequestBody AbstractAccessRight pAccessRight)
             throws EntityNotFoundException, RabbitMQVhostException {
         AbstractAccessRight created = accessRightService.createAccessRight(pAccessRight);
-        return new ResponseEntity<>(toResource(created), HttpStatus.OK);
+        return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
@@ -91,7 +92,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
     public ResponseEntity<Resource<AbstractAccessRight>> updateAccessRight(
-            @Valid @PathVariable("accessright_id") Long pId, @Valid AbstractAccessRight pToBe)
+            @Valid @PathVariable("accessright_id") Long pId, @Valid @RequestBody AbstractAccessRight pToBe)
             throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
         AbstractAccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);

@@ -18,10 +18,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
 			<artifactId>datasources-dao</artifactId>
 		</dependency>
 		<dependency>
