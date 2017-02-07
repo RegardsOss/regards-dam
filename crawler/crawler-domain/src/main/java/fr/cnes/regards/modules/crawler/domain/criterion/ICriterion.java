@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.domain.criterion;
 
 import java.time.LocalDateTime;
@@ -5,12 +8,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.modules.crawler.domain.IMapping;
 
 /**
  * Search criterion
+ *
  * @author oroussel
  */
+@Gsonable
 public interface ICriterion {
 
     <U> U accept(ICriterionVisitor<U> pVisitor);
@@ -133,8 +139,11 @@ public interface ICriterion {
 
     /**
      * Criterion to test if an array parameter contains specified value
-     * @param pAttName attribute name
-     * @param pValue value to search
+     *
+     * @param pAttName
+     *            attribute name
+     * @param pValue
+     *            value to search
      * @return criterion
      */
     static ICriterion contains(String pAttName, int pValue) {
@@ -142,11 +151,14 @@ public interface ICriterion {
     }
 
     /**
-     * Criterion to test if a double array parameter contains specified double value
-     * specifying precision
-     * @param pAttName attribute name
-     * @param pValue value to search
-     * @param pPrecision wanted precision
+     * Criterion to test if a double array parameter contains specified double value specifying precision
+     *
+     * @param pAttName
+     *            attribute name
+     * @param pValue
+     *            value to search
+     * @param pPrecision
+     *            wanted precision
      * @return criterion
      */
     static ICriterion contains(String pAttName, double pValue, double pPrecision) {
@@ -155,9 +167,13 @@ public interface ICriterion {
 
     /**
      * Criterion to test if a date array parameter contains a date between given lower and upper dates
-     * @param pAttName attribute name
-     * @param pLowerDate lower bound
-     * @param pUpperDate upper bound
+     *
+     * @param pAttName
+     *            attribute name
+     * @param pLowerDate
+     *            lower bound
+     * @param pUpperDate
+     *            upper bound
      * @return criterion
      */
     static ICriterion containsDateBetween(String pAttName, LocalDateTime pLowerDate, LocalDateTime pUpperDate) {
@@ -196,8 +212,11 @@ public interface ICriterion {
 
     /**
      * Criterion to test if a numeric value (int or double) is into (inclusive) given interval attribute name
-     * @param pAttName interval attribute name
-     * @param pValue value to test inclusion
+     *
+     * @param pAttName
+     *            interval attribute name
+     * @param pValue
+     *            value to test inclusion
      * @return criterion
      */
     // CHECKSTYLE:OFF
@@ -208,9 +227,13 @@ public interface ICriterion {
 
     /**
      * Criterion to tes if given date range intersects given interval attribute name
-     * @param pAttName interval attribute name
-     * @param pLowerBound lower bound
-     * @param pUpperBound upper bound
+     *
+     * @param pAttName
+     *            interval attribute name
+     * @param pLowerBound
+     *            lower bound
+     * @param pUpperBound
+     *            upper bound
      * @return criterion
      */
     static ICriterion intersects(String pAttName, LocalDateTime pLowerBound, LocalDateTime pUpperBound) {
@@ -218,4 +241,5 @@ public interface ICriterion {
                               ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
     }
     // CHECKSTYLE:ON
+
 }

@@ -15,6 +15,11 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>gson-regards</artifactId>
+		</dependency>
+
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

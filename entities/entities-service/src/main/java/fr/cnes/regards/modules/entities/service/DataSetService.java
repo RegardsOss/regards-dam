@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -120,6 +121,7 @@ public class DataSetService extends AbstractEntityService {
         // idea: create plugin-client sub module and create an interface without the @RestClient and then create a
         // catalog-plugin-client which extends the interface from plugin-client and add the @RestClient
         // this will allow us to have a plugin-client per microservice identified by the microservice name
+        // TODO: also check if it is a IService or IConverter or IFilter or IProcessingService configuration!
         return pDataSet;
     }
 
@@ -137,13 +139,17 @@ public class DataSetService extends AbstractEntityService {
      * @return
      * @throws EntityNotFoundException
      */
-    // FIXME: should return ids or the real pluginConfs?
+    // TODO: return only IService not IConverter or IFilter or IProcessingService(not implemented yet anyway)
     public List<Long> retrieveDataSetServices(Long pDataSetId) throws EntityNotFoundException {
         DataSet dataSetWithConfs = repository.findOneWithPluginConfigurations(pDataSetId);
         if (dataSetWithConfs == null) {
             throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }
-        return dataSetWithConfs.getPluginConfigurationIds();
+        List<Long> pluginConfIds = dataSetWithConfs.getPluginConfigurationIds();
+        if (pluginConfIds == null) {
+            pluginConfIds = new ArrayList<>();
+        }
+        return pluginConfIds;
     }
 
     @Override

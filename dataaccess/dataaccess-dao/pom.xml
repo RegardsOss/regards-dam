@@ -26,6 +26,11 @@
 		</dependency>
 		
 		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-dao</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>jpa-multitenant-regards-test</artifactId>
 			<scope>test</scope>
