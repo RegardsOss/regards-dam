@@ -71,7 +71,9 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
-     * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
+     * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
+     * page limit clause in the request. TODO à revoir, marche pas pour Oracle. l faudrait utiliser le SqlGenerator
+     * adapté
      * 
      * @param pConn
      *            a {@link Connection} to a database
@@ -84,7 +86,8 @@ public abstract class AbstractDataObjectMapping {
      * @return a page of {@link DataObject}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAllApplyPageAndDate(Connection pConn, String pRequestSql, Pageable pPageable,
+            LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
         Statement statement = null;
         ResultSet rs = null;
@@ -119,18 +122,64 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
+     * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
+     * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
+     * 
+     * @param pConn
+     *            a {@link Connection} to a database
+     * @param pRequestSql
+     *            the SQL request
+     * @param pPageable
+     *            the page information
+     * @param pDate
+     *            a {@link Date} used to apply returns the {@link DataObject} update or create after this date
+     * @return a page of {@link DataObject}
+     */
+    @SuppressWarnings("unchecked")
+    public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable, LocalDateTime pDate) {
+        List<DataObject> dataObjects = new ArrayList<>();
+        Statement statement = null;
+        ResultSet rs = null;
+
+        try {
+            statement = pConn.createStatement();
+
+            rs = statement.executeQuery(pRequestSql);
+
+            while (rs.next()) {
+                dataObjects.add(processResultSet(rs));
+            }
+
+            rs.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                pConn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
+        }
+        // TODO, il faut le nombre total d'élément
+        return new PageImpl<>(dataObjects, pPageable, 3137);
+    }
+
+    /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL.
      * 
-     * @param conn
+     * @param pConn
      *            a {@link Connection} to a database
-     * @param requestSql
+     * @param pRequestSql
      *            the SQL request
      * @param pPageable
      *            the page information
      * @return a page of {@link DataObject}
      */
-    public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable) {
-        return findAll(conn, requestSql, pPageable, null);
+    public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable) {
+        return findAllApplyPageAndDate(pConn, pRequestSql, pPageable, null);
     }
 
     /**

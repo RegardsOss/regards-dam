@@ -134,7 +134,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
-        return findAll(dbConnection.getConnection(), requestSql, pPageable, pDate);
+        return findAllApplyPageAndDate(dbConnection.getConnection(), requestSql, pPageable, pDate);
     }
 
     /*
