@@ -5,7 +5,6 @@
 package fr.cnes.regards.modules.datasources.plugins.repository;
 
 import org.hibernate.criterion.Restrictions;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;

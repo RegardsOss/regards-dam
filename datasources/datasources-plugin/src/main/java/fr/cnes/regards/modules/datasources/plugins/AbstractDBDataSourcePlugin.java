@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 /**
  * Class PostgreDBDataSourcePlugin
  *
- * A {@link Plugin} to discover the tables, colums and index of a SQL Database.<br>
+ * A {@link Plugin} to discover the tables, columns and indices of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
@@ -77,17 +77,27 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     private static final String COMMA = ",";
 
+    /**
+     * The description of the {@link Table} used by this {@link Plugin} to requests the database.
+     */
+    private TableDescription tableDescription;
+
+    /**
+     * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
+     * {@link Table}.
+     */
+    private List<String> columns;
+
+    /**
+     * 
+     */
+    private SqlGenerator sqlGenerator;
+
     protected abstract SqlGenerator buildSqlGenerator();
 
     protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause);
 
     protected abstract IDBConnectionPlugin getDBConnectionPlugin();
-
-    private TableDescription tableDescription;
-
-    private List<String> columns;
-
-    private SqlGenerator sqlGenerator;
 
     public void setMapping(String pTable, String... pColumns) {
         tableDescription = new TableDescription(pTable, null, pColumns);
@@ -148,7 +158,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
         LOG.debug("request :" + requestSql);
 
-        return findAll(getDBConnectionPlugin().getConnection(), pPageable, requestSql, pDate);
+        return findAll(getDBConnectionPlugin().getConnection(), requestSql, pPageable, pDate);
     }
 
     /*

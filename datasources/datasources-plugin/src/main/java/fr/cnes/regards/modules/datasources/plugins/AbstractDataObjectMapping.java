@@ -29,6 +29,7 @@ import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMap
 import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -68,17 +69,31 @@ public abstract class AbstractDataObjectMapping {
      */
     protected abstract DataSourceModelMapping getModelMapping();
 
+    /**
+     * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
+     * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
+     * 
+     * @param pConn
+     *            a {@link Connection} to a database
+     * @param pRequestSql
+     *            the SQL request
+     * @param pPageable
+     *            the page information
+     * @param pDate
+     *            a {@link Date} used to apply returns the {@link DataObject} update or create after this date
+     * @return a page of {@link DataObject}
+     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
         Statement statement = null;
         ResultSet rs = null;
 
         try {
-            statement = conn.createStatement();
+            statement = pConn.createStatement();
 
             // Execute SQL request
-            String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(requestSql, pDate), pPageable);
+            String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(pRequestSql, pDate), pPageable);
 
             rs = statement.executeQuery(sqlRequestWithPagedInformation);
 
@@ -94,7 +109,7 @@ public abstract class AbstractDataObjectMapping {
                 if (statement != null) {
                     statement.close();
                 }
-                conn.close();
+                pConn.close();
             } catch (SQLException e) {
                 LOG.error(e.getMessage(), e);
             }
@@ -103,38 +118,17 @@ public abstract class AbstractDataObjectMapping {
         return new PageImpl(dataObjects);
     }
 
-    @SuppressWarnings("unchecked")
-    public Page<DataObject> findAll(Connection conn, Pageable pPageable, String requestSql, LocalDateTime pDate) {
-        List<DataObject> dataObjects = new ArrayList<>();
-        Statement statement = null;
-        ResultSet rs = null;
-
-        try {
-            statement = conn.createStatement();
-
-            rs = statement.executeQuery(requestSql);
-
-            while (rs.next()) {
-                dataObjects.add(processResultSet(rs));
-            }
-
-            rs.close();
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                conn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        }
-
-        return new PageImpl<>(dataObjects, pPageable, 3137);
-    }
-
+    /**
+     * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL.
+     * 
+     * @param conn
+     *            a {@link Connection} to a database
+     * @param requestSql
+     *            the SQL request
+     * @param pPageable
+     *            the page information
+     * @return a page of {@link DataObject}
+     */
     public Page<DataObject> findAll(Connection conn, String requestSql, Pageable pPageable) {
         return findAll(conn, requestSql, pPageable, null);
     }
@@ -229,22 +223,40 @@ public abstract class AbstractDataObjectMapping {
                 attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(pAttrMapping.getNameDS()));
                 break;
             case DATE_ISO8601:
-                long n = 0;
-                if (pAttrMapping.getTypeDS() == null) {
-                    n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
-                } else
-                    if (pAttrMapping.getTypeDS() == Types.DECIMAL) {
-                        n = pRs.getLong(pAttrMapping.getNameDS());
-                    } else
-                        if (pAttrMapping.getTypeDS() == Types.NUMERIC) {
-                            n = pRs.getLong(pAttrMapping.getNameDS());
-                        }
-                Instant instant = Instant.ofEpochMilli(n);
-                attr = AttributeBuilder.buildDate(pAttrMapping.getName(),
-                                                  LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
+                attr = buildDateAttribute(pRs, pAttrMapping);
+                break;
+            default:
                 break;
         }
 
+        return attr;
+    }
+
+    /**
+     * Get {@link DateAttribute}.
+     * 
+     * @param pRs
+     *            the {@link ResultSet}
+     * @param pAttrMapping
+     *            the {@link DataSourceAttributeMapping}
+     * @return a new {@link DateAttribute}
+     * @throws SQLException
+     *             if an error occurs in the {@link ResultSet}
+     */
+    private AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException {
+        AbstractAttribute<?> attr = null;
+        long n = 0;
+        if (pAttrMapping.getTypeDS() == null) {
+            n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
+        } else {
+            if (pAttrMapping.getTypeDS() == Types.DECIMAL || pAttrMapping.getTypeDS() == Types.NUMERIC) {
+                n = pRs.getLong(pAttrMapping.getNameDS());
+            }
+        }
+        Instant instant = Instant.ofEpochMilli(n);
+        attr = AttributeBuilder.buildDate(pAttrMapping.getName(),
+                                          LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
         return attr;
     }
 
