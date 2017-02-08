@@ -86,13 +86,11 @@ public abstract class AbstractDataObjectMapping {
                 dataObjects.add(processResultSet(rs));
             }
 
+            rs.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
         } finally {
             try {
-                if (rs != null) {
-                    rs.close();
-                }
                 if (statement != null) {
                     statement.close();
                 }
@@ -108,21 +106,30 @@ public abstract class AbstractDataObjectMapping {
     @SuppressWarnings("unchecked")
     public Page<DataObject> findAll(Connection conn, Pageable pPageable, String requestSql, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
+        Statement statement = null;
+        ResultSet rs = null;
 
         try {
-            Statement statement = conn.createStatement();
+            statement = conn.createStatement();
 
-            ResultSet rs = statement.executeQuery(requestSql);
+            rs = statement.executeQuery(requestSql);
 
             while (rs.next()) {
                 dataObjects.add(processResultSet(rs));
             }
 
             rs.close();
-            statement.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
 
         return new PageImpl<>(dataObjects, pPageable, 3137);

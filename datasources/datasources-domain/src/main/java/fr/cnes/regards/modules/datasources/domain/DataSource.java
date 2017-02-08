@@ -24,11 +24,12 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Entity
 @Table(name = "T_DATA_SOURCE")
+@SequenceGenerator(name = "dataSourceSequence", initialValue = 1, sequenceName = "seq_data_source")
 public class DataSource {
 
     @Id
-    @SequenceGenerator(name = "DataSourceSequence", initialValue = 1, sequenceName = "seq_data_source")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataSourceSequence")
+
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataSourceSequence")
     protected Long id;
 
     @NotNull
