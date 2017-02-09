@@ -70,9 +70,6 @@ public class PostgreDBDataSourcePlugin extends AbstractDBDataSourcePlugin implem
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + this.dbConnection.toString()
                 + "model=" + this.modelJSon);
 
-        LOG.info("Init method call : "
-                + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
-
         // Converts the modelJson to a list of DataSourceAttributeMapping
         loadModel();
     }

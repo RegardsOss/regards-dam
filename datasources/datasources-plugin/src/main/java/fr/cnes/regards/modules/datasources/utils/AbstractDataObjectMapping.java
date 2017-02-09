@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -292,7 +293,6 @@ public abstract class AbstractDataObjectMapping {
      */
     private AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException {
-        AbstractAttribute<?> attr = null;
         long n = 0;
         if (pAttrMapping.getTypeDS() == null) {
             n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
@@ -302,9 +302,8 @@ public abstract class AbstractDataObjectMapping {
             }
         }
         Instant instant = Instant.ofEpochMilli(n);
-        attr = AttributeBuilder.buildDate(pAttrMapping.getName(),
+        return AttributeBuilder.buildDate(pAttrMapping.getName(),
                                           LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
-        return attr;
     }
 
     /**
