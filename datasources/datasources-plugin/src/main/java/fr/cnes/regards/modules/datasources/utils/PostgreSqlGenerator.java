@@ -2,7 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.utils;
 import org.springframework.data.domain.Pageable;
 
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;

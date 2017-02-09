@@ -29,14 +29,14 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -82,13 +82,13 @@ public class PostgreDataSourcePluginTest {
     /**
      * Populate the datasource as a legacy catalog
      * 
-     * @throws DataSourceUtilsException
+     * @throws DataSourcesPluginException
      * 
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourceUtilsException {
+    public void setUp() throws DataSourcesPluginException {
         /*
          * Add data to the data source
          */
@@ -117,14 +117,14 @@ public class PostgreDataSourcePluginTest {
                     .addParameter(PostgreDataSourcePlugin.REQUEST_PARAM, "select * from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
         try {
             plgDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
     }

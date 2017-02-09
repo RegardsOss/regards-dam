@@ -2,7 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.utils;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -25,8 +25,6 @@ import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;

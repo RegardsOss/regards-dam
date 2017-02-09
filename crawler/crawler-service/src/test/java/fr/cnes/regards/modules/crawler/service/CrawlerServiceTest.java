@@ -25,11 +25,11 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -73,7 +73,7 @@ public class CrawlerServiceTest {
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Before
-    public void tearUp() throws DataSourceUtilsException {
+    public void tearUp() throws DataSourcesPluginException {
         /*
          * Initialize the DataSourceAttributeMapping
          */
@@ -89,14 +89,14 @@ public class CrawlerServiceTest {
                                                      getOracleConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
         try {
             dsPlugin = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
     }

@@ -2,7 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins.domain;
+package fr.cnes.regards.modules.datasources.utils;
 
 /**
  * This class describes an index of a SQL database.

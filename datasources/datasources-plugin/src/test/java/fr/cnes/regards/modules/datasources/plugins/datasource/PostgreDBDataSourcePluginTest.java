@@ -31,17 +31,17 @@ import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.Column;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.Index;
-import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.Column;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
+import fr.cnes.regards.modules.datasources.utils.Index;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
+import fr.cnes.regards.modules.datasources.utils.Table;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -89,13 +89,13 @@ public class PostgreDBDataSourcePluginTest {
     /**
      * Initialize the plugin's parameter
      * 
-     * @throws DataSourceUtilsException
+     * @throws DataSourcesPluginException
      * 
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourceUtilsException {
+    public void setUp() throws DataSourcesPluginException {
         /*
          * Add data to the data source
          */
@@ -122,14 +122,14 @@ public class PostgreDBDataSourcePluginTest {
                                                      getPostgreConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
         try {
             plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDBDataSourcePlugin.class,
                                                     Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
     }

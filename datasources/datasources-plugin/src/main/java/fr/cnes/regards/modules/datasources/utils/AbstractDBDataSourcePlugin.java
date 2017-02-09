@@ -2,7 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.utils;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -25,9 +25,6 @@ import com.nurkiewicz.jdbcrepository.TableDescription;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.Column;
-import fr.cnes.regards.modules.datasources.plugins.domain.Index;
-import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
