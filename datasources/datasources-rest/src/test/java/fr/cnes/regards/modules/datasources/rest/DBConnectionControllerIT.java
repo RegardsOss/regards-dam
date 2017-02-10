@@ -6,7 +6,10 @@ package fr.cnes.regards.modules.datasources.rest;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.AssertTrue;
+
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +20,11 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.service.DBConnectionService;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
@@ -62,9 +67,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
      * A constant for an URL for a database connection test
      */
     private static final String URL = "jdbc:oracle:thin:@//localhost:1521/BDD";
-    
+
     @Autowired
     IDBConnectionService service;
+
+    @Autowired
+    DBConnectionService dbConnectionService;
 
     @Override
     protected Logger getLogger() {
@@ -129,13 +137,104 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void getAllDBConnection() throws ModuleException {
-        service.createDBConnection(createADbConnection("Hello Toulouse", "coucou"));
+        service.createDBConnection(createADbConnection("Hello Toulouse",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin"));
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
         performDefaultGet(DBConnectionController.TYPE_MAPPING, expectations, "Could not get all DBConnection.");
+    }
+
+    @Test
+    public void getDBConnection() throws ModuleException {
+        PluginConfiguration plgConf = service
+                .createDBConnection(createADbConnection("Hello Toulouse",
+                                                        "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin"));
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.content.id", Matchers.hasToString(plgConf.getId().toString())));
+
+        performDefaultGet(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", expectations,
+                          "Could not get a DBConnection.", plgConf.getId());
+    }
+
+    @Test
+    public void getUnknownDBConnection() throws ModuleException {
+        PluginConfiguration plgConf = service
+                .createDBConnection(createADbConnection("Hello Toulouse",
+                                                        "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin"));
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNotFound());
+
+        performDefaultGet(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", expectations,
+                          "Could not get an unknown DBConnection.", plgConf.getId() + 1000);
+    }
+
+    @Test
+    public void deleteDBConnection() throws ModuleException {
+        PluginConfiguration plgConf = service
+                .createDBConnection(createADbConnection("Hello Toulouse",
+                                                        "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin"));
+        service.createDBConnection(createADbConnection("Hello Paris",
+                                                       "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin"));
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
+
+        performDefaultDelete(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", expectations,
+                             "Could not delete a DBConnection.", plgConf.getId());
+
+        PluginConfiguration plgCondDelete = null;
+        try {
+            plgCondDelete = service.getDBConnection(plgConf.getId());
+            Assert.fail();
+        } catch (ModuleException e) {
+            Assert.assertTrue(true);
+        }
+        Assert.assertNull(plgCondDelete);
+    }
+
+    @Test
+    public void updateDBConnection() throws ModuleException {
+        DBConnection dbConnection = createADbConnection("Hello",
+                                                        "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin");
+
+        PluginConfiguration plgConf = service.createDBConnection(dbConnection);
+        
+        dbConnection.setPluginConfigurationId(plgConf.getId());
+        dbConnection.setMinPoolSize(0);
+        dbConnection.setMinPoolSize(133);
+        dbConnection.setUser("Bob");
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", dbConnection, expectations,
+                          "Could not update a DBConnection.", dbConnection.getPluginConfigurationId());
+
     }
 
     private DBConnection createADbConnection(String pLabel, String pPluginClassName) {
@@ -147,7 +246,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel(pLabel);
-        dbConnection.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
+        dbConnection.setPluginClassName(pPluginClassName);
         return dbConnection;
     }
 
