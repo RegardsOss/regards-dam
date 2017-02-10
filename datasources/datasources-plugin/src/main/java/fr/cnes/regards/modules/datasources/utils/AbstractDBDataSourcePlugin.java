@@ -178,14 +178,14 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     @Override
     public Map<String, Table> getTables() {
         Map<String, Table> tables = new HashMap<>();
+        ResultSet rs = null;
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
         try {
-
             DatabaseMetaData metaData = conn.getMetaData();
 
-            ResultSet rs = metaData.getTables(conn.getCatalog(), null, null, new String[] { METADATA_TABLE });
+            rs = metaData.getTables(conn.getCatalog(), null, null, new String[] { METADATA_TABLE });
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -197,10 +197,17 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                                                 rs.getString(TABLE_NAME)));
                 tables.put(table.getName(), table);
             }
-            rs.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
 
         return tables;
@@ -227,6 +234,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     @Override
     public Map<String, Column> getColumns(Table pTable) {
         Map<String, Column> cols = new HashMap<>();
+        ResultSet rs = null;
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
@@ -234,7 +242,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         try {
             DatabaseMetaData metaData = conn.getMetaData();
 
-            ResultSet rs = metaData.getColumns(null, null, pTable.getName(), null);
+            rs = metaData.getColumns(null, null, pTable.getName(), null);
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -247,12 +255,18 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                         && pTable.getPkColumn().equals(column.getName()));
                 cols.put(column.getName(), column);
             }
-            rs.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
-
         return cols;
     }
 
@@ -264,6 +278,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     @Override
     public Map<String, Index> getIndices(Table pTable) {
         Map<String, Index> indices = new HashMap<>();
+        ResultSet rs = null;
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
@@ -271,7 +286,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         try {
             DatabaseMetaData metaData = conn.getMetaData();
 
-            ResultSet rs = metaData.getIndexInfo(null, null, pTable.getName(), true, false);
+            rs = metaData.getIndexInfo(null, null, pTable.getName(), true, false);
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -282,10 +297,17 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                         rs.getString(INDEX_NAME));
                 indices.put(index.getName(), index);
             }
-            rs.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
 
         return indices;
