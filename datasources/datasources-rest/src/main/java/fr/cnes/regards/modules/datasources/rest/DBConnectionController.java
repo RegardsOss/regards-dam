@@ -28,7 +28,6 @@ import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.service.FragmentService;
 
 /**

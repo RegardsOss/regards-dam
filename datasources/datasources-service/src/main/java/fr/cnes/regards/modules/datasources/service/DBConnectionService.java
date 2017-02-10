@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.datasources.service;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.springframework.stereotype.Service;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -21,9 +23,13 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * @author Christophe Mertz
  *
  */
+@Service
 public class DBConnectionService implements IDBConnectionService {
 
-    IPluginService service;
+    /**
+     * Attribute plugin service 
+     */
+    private IPluginService service;
 
     /**
      * The constructor with an instance of the {@link PluginService}
@@ -34,6 +40,7 @@ public class DBConnectionService implements IDBConnectionService {
     public DBConnectionService(IPluginService pPluginService) {
         super();
         this.service = pPluginService;
+        this.service.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
     }
 
     /*
