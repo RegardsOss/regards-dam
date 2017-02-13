@@ -138,6 +138,10 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     @Override
     public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
         Connection conn = dbConnection.getConnection();
+        if (conn == null) {
+            LOG.error("Unable to obtain a database connection.");
+            return null;
+        }
 
         Page<DataObject> pages = findAllApplyPageAndDate(conn, requestSql, pPageable, pDate);
 
