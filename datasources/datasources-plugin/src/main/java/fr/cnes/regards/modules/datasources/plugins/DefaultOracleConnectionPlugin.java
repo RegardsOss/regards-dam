@@ -92,6 +92,9 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         cpds.setPassword(password);
         cpds.setMaxPoolSize(maxPoolSize);
         cpds.setMinPoolSize(minPoolSize);
+        cpds.setAcquireRetryAttempts(5);
+        cpds.setAcquireRetryDelay(5000);
+        cpds.setIdleConnectionTestPeriod(20);
 
         try {
             cpds.setDriverClass(driver);
