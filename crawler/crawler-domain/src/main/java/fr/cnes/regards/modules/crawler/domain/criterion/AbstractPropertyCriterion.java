@@ -1,7 +1,11 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.domain.criterion;
 
 /**
  * Property criterion. Provides a property name
+ *
  * @author oroussel
  */
 public abstract class AbstractPropertyCriterion implements ICriterion {
@@ -16,6 +20,9 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
         name = pName;
     }
 
+    /**
+     * @return {@link #name}
+     */
     public String getName() {
         return name;
     }

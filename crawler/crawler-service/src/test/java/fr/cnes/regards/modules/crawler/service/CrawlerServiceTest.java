@@ -25,10 +25,11 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -69,12 +70,12 @@ public class CrawlerServiceTest {
 
     private IDBDataSourcePlugin dsPlugin;
 
-    private List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+    private DataSourceModelMapping modelMapping;
 
-    private final AttributeMappingAdapter adapter = new AttributeMappingAdapter();
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Before
-    public void tearUp() throws DataSourceUtilsException {
+    public void tearUp() throws DataSourcesPluginException {
         /*
          * Initialize the DataSourceAttributeMapping
          */
@@ -88,16 +89,16 @@ public class CrawlerServiceTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(attributes)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
         try {
             dsPlugin = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
     }
@@ -123,6 +124,7 @@ public class CrawlerServiceTest {
         // Save to ES
         String tenant = "oracle";
         // Creating index if it doesn't already exist
+<<<<<<< HEAD
         indexerService.createIndex(tenant);
 
         LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
@@ -134,6 +136,16 @@ public class CrawlerServiceTest {
             indexerService.saveBulkEntities(tenant, page.getContent());
             LOGGER.info("...OK");
         }
+=======
+//        TODO CMZ
+//        indexerService.createIndex(tenant);
+//        indexerService.saveBulkEntities(tenant, page.getContent());
+//        while (page.hasNext()) {
+//            page = dsPlugin.findAll(page.nextPageable());
+//            indexerService.saveBulkEntities(tenant, page.getContent());
+//            LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
+//        }
+>>>>>>> master
         Assert.assertTrue(true);
     }
 
@@ -151,6 +163,8 @@ public class CrawlerServiceTest {
     }
 
     private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+
         attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
@@ -176,5 +190,7 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+
+        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 }

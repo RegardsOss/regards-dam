@@ -153,13 +153,13 @@ public class AccessRightService {
         dataSetService.retrieveDataSet(pAccessRight.getDataset().getId());
         if (pAccessRight instanceof GroupAccessRight) {
             Long accessGroupId = ((GroupAccessRight) pAccessRight).getAccessGroup().getId();
-            if (accessGroupService.existGroup(accessGroupId)) {
+            if (!accessGroupService.existGroup(accessGroupId)) {
                 throw new EntityNotFoundException(accessGroupId, AccessGroup.class);
             }
         } else {
             if (pAccessRight instanceof UserAccessRight) {
                 User user = ((UserAccessRight) pAccessRight).getUser();
-                if (accessGroupService.existUser(user)) {
+                if (!accessGroupService.existUser(user)) {
                     throw new EntityNotFoundException(user.getEmail(), User.class);
                 }
             }

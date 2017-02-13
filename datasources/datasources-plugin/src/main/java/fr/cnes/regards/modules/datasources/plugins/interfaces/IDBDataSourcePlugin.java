@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.datasources.plugins.domain.Column;
-import fr.cnes.regards.modules.datasources.plugins.domain.Index;
-import fr.cnes.regards.modules.datasources.plugins.domain.Table;
+import fr.cnes.regards.modules.datasources.utils.Column;
+import fr.cnes.regards.modules.datasources.utils.Index;
+import fr.cnes.regards.modules.datasources.utils.Table;
 
 /**
  * Class IDBDataSourcePlugin

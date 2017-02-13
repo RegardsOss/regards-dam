@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
+	<name>sample</name>
+	<description>Sample model of data</description>
+	<type>DATA</type>
+	<attribute optional="true" queryable="true">
+		<name>att_string</name>
+		<type>STRING</type>
+	</attribute>
+	<attribute alterable="true" queryable="true">
+		<name>att_boolean</name>
+		<type>BOOLEAN</type>
+		<computationMode>CUSTOM</computationMode>
+	</attribute>
+	<fragment>
+		<name>GEO</name>
+		<description>Geographic information</description>
+		<attribute queryable="true">
+			<name>CRS</name>
+			<type>STRING</type>
+			<restriction>
+				<enumeration>
+					<value>Earth</value>
+					<value>Mars</value>
+					<value>Venus</value>
+				</enumeration>
+			</restriction>
+		</attribute>
+		<attribute>
+			<name>GEOMETRY</name>
+			<type>GEOMETRY</type>
+			<property key="utype" value="ivoa.geometry"/>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>Contact</name>
+		<description>Contact information</description>
+		<attribute alterable="true" optional="true" queryable="true"
+			facetable="true">
+			<name>Phone</name>
+			<type>STRING</type>
+			<restriction>
+				<pattern>[0-9 ]{10}</pattern>
+			</restriction>
+			<computationMode>FROM_DESCENDANTS</computationMode>
+		</attribute>
+	</fragment>
+</model>

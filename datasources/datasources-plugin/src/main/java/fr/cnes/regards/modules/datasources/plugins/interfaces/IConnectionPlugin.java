@@ -21,7 +21,7 @@ public interface IConnectionPlugin {
 
     static final String USER_PARAM = "user";
 
-    static final String PASSWORD_PARAM = "password";
+    static final String PASSWORD_PARAM = "password"; // NOSONAR
 
     static final String URL_PARAM = "url";
 

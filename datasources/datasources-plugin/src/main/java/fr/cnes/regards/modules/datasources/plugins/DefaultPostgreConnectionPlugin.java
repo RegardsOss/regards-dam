@@ -43,7 +43,7 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
     /**
      * A string for the password parameter of the Plugin
      */
-    public static final String PASSWORD_PARAM = "password";
+    public static final String PASSWORD_PARAM = "password";// NOSONAR
 
     /**
      * A string for the url parameter of the Plugin

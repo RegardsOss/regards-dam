@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -20,6 +23,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.gson.Gson;
 
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -61,6 +65,9 @@ public class IndexerServiceIT {
 
     @Autowired
     private FlattenedAttributeAdapterFactory gsonAttributeFactory;
+
+    @Autowired
+    private Gson gson;
 
     @Before
     public void setUp() throws Exception {
@@ -152,6 +159,8 @@ public class IndexerServiceIT {
 
         collection.setAttributes(attributes);
         collection.setTags(new ImmutableSet.Builder<String>().add("TAG1").add("TAG2").add("TAG3").build());
+
+        String collectionString = gson.toJson(collection);
 
         indexerService.createIndex(TENANT);
         indexerService.saveEntity(TENANT, collection);
