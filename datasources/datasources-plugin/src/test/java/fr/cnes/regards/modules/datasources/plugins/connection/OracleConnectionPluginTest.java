@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@Ignore
 public class OracleConnectionPluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleConnectionPluginTest.class);

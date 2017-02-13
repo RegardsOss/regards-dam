@@ -12,6 +12,7 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+@Ignore
 public class OracleDBDataSourcePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleDBDataSourcePluginTest.class);
