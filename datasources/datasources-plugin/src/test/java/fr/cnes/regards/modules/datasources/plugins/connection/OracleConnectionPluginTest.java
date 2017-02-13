@@ -50,12 +50,12 @@ public class OracleConnectionPluginTest {
     @Test
     public void getOracleSqlConnection() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));

@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.datasources.plugins;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -135,7 +137,17 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
-        return findAllApplyPageAndDate(dbConnection.getConnection(), requestSql, pPageable, pDate);
+        Connection conn = dbConnection.getConnection();
+
+        Page<DataObject> pages = findAllApplyPageAndDate(conn, requestSql, pPageable, pDate);
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
+        return pages;
     }
 
     /*
@@ -150,13 +162,14 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
         return findAll(pPageable, null);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
      */
     @Override
     protected DataSourceModelMapping getModelMapping() {
         return dataSourceMapping;
     }
-
 
 }

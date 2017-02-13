@@ -155,7 +155,18 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
         LOG.debug("request :" + requestSql);
 
-        return findAll(getDBConnectionPlugin().getConnection(), requestSql, pPageable, pDate);
+        // Get a connection
+        Connection conn = getDBConnectionPlugin().getConnection();
+
+        Page<DataObject> pages = findAll(conn, requestSql, pPageable, pDate);
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(),e);
+        }
+
+        return pages;
     }
 
     /*

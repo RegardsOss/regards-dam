@@ -111,7 +111,6 @@ public abstract class AbstractDataObjectMapping {
                 if (statement != null) {
                     statement.close();
                 }
-                pConn.close();
             } catch (SQLException e) {
                 LOG.error(e.getMessage(), e);
             }
@@ -138,12 +137,10 @@ public abstract class AbstractDataObjectMapping {
     public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
         Statement statement = null;
-        ResultSet rs = null;
 
         try {
             statement = pConn.createStatement();
-
-            rs = statement.executeQuery(pRequestSql);
+            ResultSet rs = statement.executeQuery(pRequestSql);
 
             while (rs.next()) {
                 dataObjects.add(processResultSet(rs));
@@ -153,13 +150,12 @@ public abstract class AbstractDataObjectMapping {
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
         } finally {
-            try {
-                if (statement != null) {
+            if (statement != null) {
+                try {
                     statement.close();
+                } catch (SQLException e) {
+                    LOG.error(e.getMessage(), e);
                 }
-                pConn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
             }
         }
         // TODO, il faut le nombre total d'élément
