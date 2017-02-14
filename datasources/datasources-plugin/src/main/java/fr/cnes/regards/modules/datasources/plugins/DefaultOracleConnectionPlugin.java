@@ -92,6 +92,9 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         cpds.setPassword(password);
         cpds.setMaxPoolSize(maxPoolSize);
         cpds.setMinPoolSize(minPoolSize);
+        cpds.setAcquireRetryAttempts(5);
+        cpds.setAcquireRetryDelay(5000);
+        cpds.setIdleConnectionTestPeriod(20);
 
         try {
             cpds.setDriverClass(driver);
@@ -143,7 +146,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         try {
             return cpds.getConnection();
         } catch (SQLException e) {
-            LOG.equals(e);
+            LOG.error(e.getMessage(),e);
         }
         return null;
     }

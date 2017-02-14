@@ -40,6 +40,11 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     private static final String NAME_LABEL = "name";
 
     /**
+     * Label for primary key field
+     */
+    private static final String PRIMARY_KEY_LABEL = "pKey";
+
+    /**
      * Label for type field
      */
     private static final String TYPE_LABEL = "type";
@@ -71,6 +76,9 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             pOut.beginObject();
             pOut.name(NAME_LABEL).value(attr.getName());
             pOut.name(TYPE_LABEL).value(attr.getType().name());
+            if (attr.isPrimaryKey()) {
+                pOut.name(PRIMARY_KEY_LABEL).value(attr.isPrimaryKey().toString());
+            }
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
@@ -145,6 +153,9 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     break;
                 case TYPE_LABEL:
                     attr.setType(AttributeType.valueOf(pIn.nextString()));
+                    break;
+                case PRIMARY_KEY_LABEL:
+                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()) ? true : false);
                     break;
                 default:
                     break;

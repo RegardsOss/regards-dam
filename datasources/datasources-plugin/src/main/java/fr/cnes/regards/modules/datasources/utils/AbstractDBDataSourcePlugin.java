@@ -73,6 +73,8 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     private static final String NON_UNIQUE = "non_unique";
 
     private static final String COMMA = ",";
+    
+    private static final String DATABASE_ACCESS_ERROR = "Unable to obtain a database connection";
 
     /**
      * The description of the {@link Table} used by this {@link Plugin} to requests the database.
@@ -155,7 +157,23 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
         LOG.debug("request :" + requestSql);
 
-        return findAll(getDBConnectionPlugin().getConnection(), requestSql, pPageable, pDate);
+        // Get a connection
+        Connection conn = getDBConnectionPlugin().getConnection();
+
+        if (conn == null) {
+            LOG.error(DATABASE_ACCESS_ERROR);
+            return null;
+        }
+
+        Page<DataObject> pages = findAll(conn, requestSql, pPageable, pDate);
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
+        return pages;
     }
 
     /*
@@ -239,6 +257,11 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
 
+        if (conn == null) {
+            LOG.error(DATABASE_ACCESS_ERROR);
+            return null;
+        }
+
         try {
             DatabaseMetaData metaData = conn.getMetaData();
 
@@ -282,6 +305,11 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
+
+        if (conn == null) {
+            LOG.error(DATABASE_ACCESS_ERROR);
+            return null;
+        }
 
         try {
             DatabaseMetaData metaData = conn.getMetaData();

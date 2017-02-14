@@ -5,20 +5,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
@@ -40,6 +44,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
+@Ignore
 public class CrawlerServiceTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
@@ -64,6 +69,11 @@ public class CrawlerServiceTest {
     private String driver;
 
     // private ICrawlerService service;
+    
+    @Bean
+    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
+        return new CurrentTenantIdentifierResolverImpl();
+    }
 
     @Autowired
     private IIndexerService indexerService;
@@ -90,11 +100,6 @@ public class CrawlerServiceTest {
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
-
-        try {
             dsPlugin = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
@@ -110,32 +115,30 @@ public class CrawlerServiceTest {
     @Test
     public void testSuckUp() {
         // Retrieve first 1000 objects
-        dsPlugin.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
-                            "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY", "MIN_LONGITUDE",
-                            "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE", "MAX_ALTITUDE",
-                            "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+        dsPlugin.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE",
+                            "DATA_SET_ID", "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY",
+                            "MIN_LONGITUDE", "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE",
+                            "MAX_ALTITUDE", "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
 
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_OBJECT_ID");
-        gsonAttributeFactory.registerSubtype(StringAttribute.class, "FILE_SIZE");
-        // etc...
+//        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
 
-        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
+      Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
 
         // Save to ES
-        String tenant = "oracle";
+        LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
+        LOGGER.info("save 1000 entities");
+        String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+
         // Creating index if it doesn't already exist
-        // TODO
-        // indexerService.createIndex(tenant);
-        //
-        // LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-        // indexerService.saveBulkEntities(tenant, page.getContent());
-        // LOGGER.info("...OK");
-        // while (page.hasNext()) {
-        // page = dsPlugin.findAll(page.nextPageable());
-        // LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-        // indexerService.saveBulkEntities(tenant, page.getContent());
-        // LOGGER.info("...OK");
-        // }
+        // TODO CMZ
+        indexerService.createIndex(tenant);
+        
+        indexerService.saveBulkEntities(tenant, page.getContent());
+        while (page.hasNext()) {
+            page = dsPlugin.findAll(page.nextPageable());
+            indexerService.saveBulkEntities(tenant, page.getContent());
+            LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
+        }
         Assert.assertTrue(true);
     }
 
@@ -155,7 +158,7 @@ public class CrawlerServiceTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
+        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID", true));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
