@@ -201,6 +201,7 @@ public class PostgreDBDataSourcePluginTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
+        attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
         attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));

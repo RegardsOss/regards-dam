@@ -17,19 +17,26 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 
+import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -40,6 +47,11 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  */
 public abstract class AbstractDataObjectMapping {
+
+    @Bean
+    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
+        return new CurrentTenantIdentifierResolverImpl();
+    }
 
     /**
      * Class logger
@@ -183,8 +195,9 @@ public abstract class AbstractDataObjectMapping {
      * @param pRs
      *            the {@link ResultSet}
      * @return the {@link DataObject} created
+     * @throws SQLException
      */
-    protected DataObject processResultSet(ResultSet pRs) {
+    protected DataObject processResultSet(ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
         final List<AbstractAttribute<?>> attributes = new ArrayList<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
@@ -193,34 +206,42 @@ public abstract class AbstractDataObjectMapping {
          * Loop the attributes in the mapping
          */
         for (DataSourceAttributeMapping attrMapping : getModelMapping().getAttributesMapping()) {
-            final boolean asNameSpace = attrMapping.getNameSpace() != null;
-            try {
-                AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
 
-                if (attr != null) {
-                    if (asNameSpace) {
-                        /**
-                         * The attribute has a name space
-                         */
-                        if (spaceNames.containsKey(attrMapping.getNameSpace())) {
+            if (attrMapping.isPrimaryKey()) {
+                String val = pRs.getString(attrMapping.getNameDS());
+                data.setIpId(buildUrn(val, attrMapping));
+                data.setSipId(val);
+            } else {
+
+                final boolean asNameSpace = attrMapping.getNameSpace() != null;
+                try {
+                    AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
+
+                    if (attr != null) {
+                        if (asNameSpace) {
                             /**
-                             * The name space already exists
+                             * The attribute has a name space
                              */
-                            spaceNames.get(attrMapping.getNameSpace()).add(attr);
+                            if (spaceNames.containsKey(attrMapping.getNameSpace())) {
+                                /**
+                                 * The name space already exists
+                                 */
+                                spaceNames.get(attrMapping.getNameSpace()).add(attr);
+                            } else {
+                                /**
+                                 * It is a new name space
+                                 */
+                                final List<AbstractAttribute<?>> nameSpaceAttributes = new ArrayList<>();
+                                nameSpaceAttributes.add(attr);
+                                spaceNames.put(attrMapping.getNameSpace(), nameSpaceAttributes);
+                            }
                         } else {
-                            /**
-                             * It is a new name space
-                             */
-                            final List<AbstractAttribute<?>> nameSpaceAttributes = new ArrayList<>();
-                            nameSpaceAttributes.add(attr);
-                            spaceNames.put(attrMapping.getNameSpace(), nameSpaceAttributes);
+                            attributes.add(attr);
                         }
-                    } else {
-                        attributes.add(attr);
                     }
+                } catch (SQLException e) {
+                    LOG.error(e.getMessage(), e);
                 }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
             }
 
         }
@@ -274,6 +295,12 @@ public abstract class AbstractDataObjectMapping {
         }
 
         return attr;
+    }
+
+    private UniformResourceName buildUrn(String pVal, DataSourceAttributeMapping pAttrMapping) throws SQLException {
+        String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+        return new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant,
+                UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
     }
 
     /**
