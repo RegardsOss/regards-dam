@@ -124,28 +124,18 @@ public class CrawlerServiceTest {
         // Save to ES
         String tenant = "oracle";
         // Creating index if it doesn't already exist
-<<<<<<< HEAD
-        indexerService.createIndex(tenant);
-
-        LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-        indexerService.saveBulkEntities(tenant, page.getContent());
-        LOGGER.info("...OK");
-        while (page.hasNext()) {
-            page = dsPlugin.findAll(page.nextPageable());
-            LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-            indexerService.saveBulkEntities(tenant, page.getContent());
-            LOGGER.info("...OK");
-        }
-=======
-//        TODO CMZ
-//        indexerService.createIndex(tenant);
-//        indexerService.saveBulkEntities(tenant, page.getContent());
-//        while (page.hasNext()) {
-//            page = dsPlugin.findAll(page.nextPageable());
-//            indexerService.saveBulkEntities(tenant, page.getContent());
-//            LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
-//        }
->>>>>>> master
+        // TODO
+        // indexerService.createIndex(tenant);
+        //
+        // LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
+        // indexerService.saveBulkEntities(tenant, page.getContent());
+        // LOGGER.info("...OK");
+        // while (page.hasNext()) {
+        // page = dsPlugin.findAll(page.nextPageable());
+        // LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
+        // indexerService.saveBulkEntities(tenant, page.getContent());
+        // LOGGER.info("...OK");
+        // }
         Assert.assertTrue(true);
     }
 

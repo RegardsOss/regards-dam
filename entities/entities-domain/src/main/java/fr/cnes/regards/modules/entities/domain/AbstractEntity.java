@@ -122,7 +122,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Set<String> indirectCollections;
 
     /**
-     * list of attribute associated to this entity
+     * list of attributes associated to this entity
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
@@ -138,8 +138,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             updatable = false)
     protected Model model;
 
-    @Column
-    private boolean isDeleted = false;
+    /**
+     * Is this entity has been deleted ?
+     */
+    @Column(name = "deleted")
+    private boolean deleted = false;
 
     public AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;
@@ -255,11 +258,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     }
 
     public boolean isDeleted() {
-        return isDeleted;
+        return deleted;
     }
 
     public void setDeleted(boolean pIsDeleted) {
-        isDeleted = pIsDeleted;
+        deleted = pIsDeleted;
     }
 
     public LocalDateTime getDeletionDate() {
@@ -296,10 +299,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 
