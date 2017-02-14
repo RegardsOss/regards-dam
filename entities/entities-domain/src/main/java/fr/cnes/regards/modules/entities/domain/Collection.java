@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -27,7 +28,7 @@ public class Collection extends AbstractLinkEntity { // NOSONAR
      */
     @OneToMany(mappedBy = "id",
             cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-    protected List<AbstractLinkEntity> links;
+    protected List<AbstractLinkEntity> links = new ArrayList<>();
 
     public Collection(Model pModel, UniformResourceName pIpId, String pLabel) {
         super(pModel, pIpId, pLabel);
@@ -43,6 +44,10 @@ public class Collection extends AbstractLinkEntity { // NOSONAR
 
     public void setLinks(List<AbstractLinkEntity> pLinks) {
         links = pLinks;
+    }
+
+    public void addLink(AbstractLinkEntity pLink) {
+        links.add(pLink);
     }
 
     @Override
