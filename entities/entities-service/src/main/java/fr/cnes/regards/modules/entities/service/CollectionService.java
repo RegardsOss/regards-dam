@@ -23,20 +23,20 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Sylvain Vissiere-Guerinet
  */
 @Service
-public class CollectionsRequestService extends AbstractEntityService implements ICollectionsRequestService {
+public class CollectionService extends AbstractEntityService implements ICollectionsRequestService {
 
     // TODO: interactions with catalog
     /**
      * Logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(CollectionsRequestService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CollectionService.class);
 
     /**
      * DAO autowired by Spring
      */
     private final ICollectionRepository collectionRepository;
 
-    public CollectionsRequestService(ICollectionRepository pCollectionRepository,
+    public CollectionService(ICollectionRepository pCollectionRepository,
             IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pStorageService,
             IdentificationService pIdentificationService, IModelAttributeService pModelAttributeService,
             IModelService pModelService) {

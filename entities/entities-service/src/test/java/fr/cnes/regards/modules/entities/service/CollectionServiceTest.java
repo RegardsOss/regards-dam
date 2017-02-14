@@ -37,7 +37,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
-public class CollectionRequestServiceTest {
+public class CollectionServiceTest {
 
     private Model pModel1;
 
@@ -119,7 +119,7 @@ public class CollectionRequestServiceTest {
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
-        collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
+        collectionsRequestServiceMocked = new CollectionService(collectionRepositoryMocked,
                 entitiesRepositoryMocked, storageServiceMocked, idServiceMocked, pModelAttributeService, pModelService);
 
     }
