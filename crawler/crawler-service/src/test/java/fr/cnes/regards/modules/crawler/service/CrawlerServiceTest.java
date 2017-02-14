@@ -4,12 +4,13 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -21,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -35,6 +38,9 @@ import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -42,7 +48,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@Ignore
 public class CrawlerServiceTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
@@ -67,7 +72,7 @@ public class CrawlerServiceTest {
     private String driver;
 
     // private ICrawlerService service;
-    
+
     @Bean
     public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
         return new CurrentTenantIdentifierResolverImpl();
@@ -112,30 +117,36 @@ public class CrawlerServiceTest {
 
     @Test
     public void testSuckUp() {
-        // Retrieve first 1000 objects
-        dsPlugin.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE",
-                            "DATA_SET_ID", "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY",
-                            "MIN_LONGITUDE", "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE",
-                            "MAX_ALTITUDE", "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
-
-//        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
-
-      Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
-
-        // Save to ES
-        LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
-        LOGGER.info("save 1000 entities");
+        // register JSon data types (for ES)
+        registerJSonModelAttributes();
         String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
 
         // Creating index if it doesn't already exist
-        // TODO CMZ
+        indexerService.deleteIndex(tenant);
         indexerService.createIndex(tenant);
-        
-        indexerService.saveBulkEntities(tenant, page.getContent());
+
+        // Retrieve first 1000 objects
+        dsPlugin.setMapping(TABLE_NAME_TEST, "DATA_OBJECTS_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
+                            "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY", "MIN_LONGITUDE",
+                            "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE", "MAX_ALTITUDE",
+                            "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+
+        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
+
+        LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
+        Set<DataObject> set = Sets.newHashSet(page.getContent());
+        Assert.assertEquals(page.getContent().size(), set.size());
+        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(tenant, page.getContent());
+        LOGGER.info(String.format("...%d entities saved",
+                                  page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         while (page.hasNext()) {
             page = dsPlugin.findAll(page.nextPageable());
-            indexerService.saveBulkEntities(tenant, page.getContent());
-            LOGGER.info(String.format("save %d/%d entities", page.getNumberOfElements(), page.getTotalElements()));
+            set = Sets.newHashSet(page.getContent());
+            Assert.assertEquals(page.getContent().size(), set.size());
+            LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
+            errorMap = indexerService.saveBulkEntities(tenant, page.getContent());
+            LOGGER.info(String.format("...%d entities saved",
+                                      page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         }
         Assert.assertTrue(true);
     }
@@ -156,7 +167,8 @@ public class CrawlerServiceTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID", true));
+        attributes
+                .add(new DataSourceAttributeMapping("DATA_OBJECTS_ID", AttributeType.INTEGER, "DATA_OBJECTS_ID", true));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -183,5 +195,26 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
 
         modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+    }
+
+    private void registerJSonModelAttributes() {
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_OBJECTS_ID");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "FILE_SIZE");
+        gsonAttributeFactory.registerSubtype(StringAttribute.class, "FILE_TYPE");
+        gsonAttributeFactory.registerSubtype(StringAttribute.class, "FILE_NAME_ORIGINE");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_SET_ID");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_TITLE");
+        gsonAttributeFactory.registerSubtype(StringAttribute.class, "DATA_AUTHOR");
+        gsonAttributeFactory.registerSubtype(StringAttribute.class, "DATA_AUTHOR_COMPANY");
+        gsonAttributeFactory.registerSubtype(DateAttribute.class, "START_DATE");
+        gsonAttributeFactory.registerSubtype(DateAttribute.class, "STOP_DATE");
+        gsonAttributeFactory.registerSubtype(DateAttribute.class, "DATA_CREATION_DATE");
+
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MIN_LONGITUDE");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MAX_LONGITUDE");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MIN_LATITUDE");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MAX_LATITUDE");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MIN_ALTITUDE");
+        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MAX_ALTITUDE");
     }
 }

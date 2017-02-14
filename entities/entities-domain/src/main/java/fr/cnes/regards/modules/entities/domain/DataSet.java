@@ -64,7 +64,7 @@ public class DataSet extends AbstractLinkEntity {
      * DataSource has been given to the catalog
      */
     @Type(type = "jsonb")
-    @Column(columnDefinition = "jsonb")
+    @Column(name = "sub_setting_clause", columnDefinition = "jsonb")
     private ICriterion subsettingClause;
 
     public DataSet() {
