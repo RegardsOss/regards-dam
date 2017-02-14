@@ -75,7 +75,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * The mapping between the attributes in the {@link Model} and the data source
-     * 
+     *
      * @return the mapping
      */
     protected abstract DataSourceModelMapping getModelMapping();
@@ -85,7 +85,7 @@ public abstract class AbstractDataObjectMapping {
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
      * page limit clause in the request. TODO à revoir, marche pas pour Oracle. l faudrait utiliser le SqlGenerator
      * adapté
-     * 
+     *
      * @param pConn
      *            a {@link Connection} to a database
      * @param pRequestSql
@@ -134,7 +134,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
-     * 
+     *
      * @param pConn
      *            a {@link Connection} to a database
      * @param pRequestSql
@@ -176,7 +176,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL.
-     * 
+     *
      * @param pConn
      *            a {@link Connection} to a database
      * @param pRequestSql
@@ -191,7 +191,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
-     * 
+     *
      * @param pRs
      *            the {@link ResultSet}
      * @return the {@link DataObject} created
@@ -261,7 +261,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Get an attribute define in the mapping in a {@link ResultSet}
-     * 
+     *
      * @param pRs
      *            the {@link ResultSet}
      * @param pAttrMapping
@@ -278,6 +278,9 @@ public abstract class AbstractDataObjectMapping {
             case STRING:
                 attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(pAttrMapping.getNameDS()));
                 break;
+            case LONG:
+                attr = AttributeBuilder.buildLong(pAttrMapping.getName(), pRs.getLong(pAttrMapping.getNameDS()));
+                break;
             case INTEGER:
                 attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(pAttrMapping.getNameDS()));
                 break;
@@ -293,7 +296,10 @@ public abstract class AbstractDataObjectMapping {
             default:
                 break;
         }
-
+        // If value was null => no attribute value
+        if (pRs.wasNull()) {
+            return null;
+        }
         return attr;
     }
 
@@ -305,7 +311,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Get {@link DateAttribute}.
-     * 
+     *
      * @param pRs
      *            the {@link ResultSet}
      * @param pAttrMapping
@@ -320,7 +326,7 @@ public abstract class AbstractDataObjectMapping {
         if (pAttrMapping.getTypeDS() == null) {
             n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
         } else {
-            if (pAttrMapping.getTypeDS() == Types.DECIMAL || pAttrMapping.getTypeDS() == Types.NUMERIC) {
+            if ((pAttrMapping.getTypeDS() == Types.DECIMAL) || (pAttrMapping.getTypeDS() == Types.NUMERIC)) {
                 n = pRs.getLong(pAttrMapping.getNameDS());
             }
         }
@@ -331,7 +337,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Add the elements to the request to fetch only a portion of the results
-     * 
+     *
      * @param pRequest
      *            the SQL request
      * @param pPage

@@ -17,6 +17,7 @@ import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactory;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -46,6 +47,7 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
         registerSubtype(Collection.class, EntityType.COLLECTION);
         registerSubtype(DataSet.class, EntityType.DATASET);
         registerSubtype(Document.class, EntityType.DOCUMENT);
+        registerSubtype(DataObject.class, EntityType.DATA);
     }
 
     @Override

@@ -56,7 +56,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * last time the entity was updated
      */
     @PastOrNow
-    @Column(name = "last_update")
+    @Column(name = "update_date")
     protected LocalDateTime lastUpdate;
 
     /**
