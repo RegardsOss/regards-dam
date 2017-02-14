@@ -48,11 +48,6 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 public abstract class AbstractDataObjectMapping {
 
-    @Bean
-    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
-        return new CurrentTenantIdentifierResolverImpl();
-    }
-
     /**
      * Class logger
      */
@@ -81,10 +76,22 @@ public abstract class AbstractDataObjectMapping {
     protected abstract DataSourceModelMapping getModelMapping();
 
     /**
+     * 
+     */
+    private int nn = RESET_COUNT;
+    
+    private static final int RESET_COUNT = -1;
+
+    @Bean
+    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
+        return new CurrentTenantIdentifierResolverImpl();
+    }
+
+    /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
-     * page limit clause in the request. TODO à revoir, marche pas pour Oracle. l faudrait utiliser le SqlGenerator
-     * adapté
+     * page limit clause in the request.</br>
+     * TODO : does not work for Oracle, need to used the right SqlGenerator
      *
      * @param pConn
      *            a {@link Connection} to a database
@@ -139,6 +146,8 @@ public abstract class AbstractDataObjectMapping {
      *            a {@link Connection} to a database
      * @param pRequestSql
      *            the SQL request
+     * @param pCountRequest
+     *            the SQL count request
      * @param pPageable
      *            the page information
      * @param pDate
@@ -146,12 +155,16 @@ public abstract class AbstractDataObjectMapping {
      * @return a page of {@link DataObject}
      */
     @SuppressWarnings("unchecked")
-    public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(Connection pConn, String pRequestSql, String pCountRequest, Pageable pPageable,
+            LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
+
         Statement statement = null;
 
         try {
             statement = pConn.createStatement();
+
+            // Execute the request to get the elements
             ResultSet rs = statement.executeQuery(pRequestSql);
 
             while (rs.next()) {
@@ -159,6 +172,16 @@ public abstract class AbstractDataObjectMapping {
             }
 
             rs.close();
+
+            if (nn == -1) {
+                // Execute the request ot count the element
+                rs = statement.executeQuery(pCountRequest);
+                if (rs.next()) {
+                    nn = rs.getInt(1);
+                }
+                rs.close();
+            }
+
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
         } finally {
@@ -170,8 +193,8 @@ public abstract class AbstractDataObjectMapping {
                 }
             }
         }
-        // TODO, il faut le nombre total d'élément
-        return new PageImpl<>(dataObjects, pPageable, 3137);
+
+        return new PageImpl<>(dataObjects, pPageable, nn);
     }
 
     /**
@@ -363,5 +386,12 @@ public abstract class AbstractDataObjectMapping {
         } else {
             return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
+    }
+    
+    /**
+     * This method reset the number of data element from the database.<br>
+     */
+    protected void reset() {
+        nn = RESET_COUNT;
     }
 }

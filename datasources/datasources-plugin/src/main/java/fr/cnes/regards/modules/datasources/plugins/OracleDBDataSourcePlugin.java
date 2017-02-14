@@ -100,10 +100,11 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String)
+     * @see fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String,
+     * java.lang.String)
      */
     @Override
-    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause) {
+    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
         return new OracleSqlGenerator(pAllColumnsClause);
     }
 

@@ -73,7 +73,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     private static final String NON_UNIQUE = "non_unique";
 
     private static final String COMMA = ",";
-    
+
     private static final String DATABASE_ACCESS_ERROR = "Unable to obtain a database connection";
 
     /**
@@ -88,26 +88,53 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     private List<String> columns;
 
     /**
+     * The column name used in the ORDER BY clause
+     */
+    private String orderByColumn = "";
+
+    /**
      * 
      */
     private SqlGenerator sqlGenerator;
 
     protected abstract SqlGenerator buildSqlGenerator();
 
-    protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause);
+    protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy);
 
     protected abstract IDBConnectionPlugin getDBConnectionPlugin();
 
-    public void setMapping(String pTable, String... pColumns) {
-        tableDescription = new TableDescription(pTable, null, pColumns);
-        columns = new ArrayList<>(pColumns.length);
-        for (String col : pColumns) {
-            columns.add(col);
+    /**
+     * This method initialize the mapping used to request the database.<br>
+     * 
+     * @param pTable
+     *            the table used to requests the database
+     * @param pMapping
+     *            the mapping between the attributes's model and the attributes of the database
+     */
+    public void setMapping(String pTable, DataSourceModelMapping pMapping) {
+
+        // reset the number of data element hosted by the datasource
+        this.reset();
+
+        if (columns == null) {
+            columns = new ArrayList<>();
         }
-        if (pColumns.length > 0) {
-            sqlGenerator = buildSqlGenerator(buildColumnClause(pColumns));
-        } else {
+
+        pMapping.getAttributesMapping().forEach(d -> {
+            columns.add(d.getNameDS());
+            if (d.isPrimaryKey()) {
+                orderByColumn = d.getNameDS();
+            }
+        });
+
+        tableDescription = new TableDescription(pTable, null, columns.toArray(new String[0]));
+        if (columns.isEmpty()) {
             sqlGenerator = buildSqlGenerator();
+        } else {
+            if ("".equals(orderByColumn)) {
+                orderByColumn = columns.get(0);
+            }
+            sqlGenerator = buildSqlGenerator(buildColumnClause(columns.toArray(new String[0])), orderByColumn);
         }
     }
 
@@ -137,7 +164,15 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
      */
     @Override
     public boolean isOutOfDate() {
-        return true;
+        boolean outDated = true;
+
+        // TODO compute the out dated value
+
+        if (isOutOfDate()) {
+            this.reset();
+        }
+
+        return outDated;
     }
 
     /*
@@ -154,6 +189,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         }
 
         String requestSql = sqlGenerator.selectAll(tableDescription, pPageable);
+        String countRequestSql = sqlGenerator.count(tableDescription);
 
         LOG.debug("request :" + requestSql);
 
@@ -165,7 +201,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
             return null;
         }
 
-        Page<DataObject> pages = findAll(conn, requestSql, pPageable, pDate);
+        Page<DataObject> pages = findAll(conn, requestSql, countRequestSql, pPageable, pDate);
 
         try {
             conn.close();

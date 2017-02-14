@@ -100,11 +100,12 @@ public class PostgreDBDataSourcePlugin extends AbstractDBDataSourcePlugin implem
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String)
+     * @see fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String,
+     * java.lang.String)
      */
     @Override
-    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause) {
-        return new PostgreSqlGenerator(pAllColumnsClause);
+    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
+        return new PostgreSqlGenerator(pAllColumnsClause, pOrderBy);
     }
 
     /*
@@ -117,13 +118,14 @@ public class PostgreDBDataSourcePlugin extends AbstractDBDataSourcePlugin implem
         return dbConnection;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
      */
     @Override
     protected DataSourceModelMapping getModelMapping() {
         return dataSourceMapping;
     }
-
 
 }

@@ -78,7 +78,6 @@ public class OracleDBDataSourcePluginTest {
     private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-    
 
     /**
      * Initialize the plugin's parameter
@@ -104,7 +103,8 @@ public class OracleDBDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
@@ -140,10 +140,7 @@ public class OracleDBDataSourcePluginTest {
 
     @Test
     public void getDataSourceIntrospection() {
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
-                                   "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY",
-                                   "MIN_LONGITUDE", "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE",
-                                   "MAX_ALTITUDE", "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
         Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
@@ -181,7 +178,7 @@ public class OracleDBDataSourcePluginTest {
 
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
-        
+
         attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
@@ -205,9 +202,9 @@ public class OracleDBDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        
+        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
+
         dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 

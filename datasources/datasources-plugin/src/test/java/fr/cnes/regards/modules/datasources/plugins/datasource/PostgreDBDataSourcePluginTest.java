@@ -76,7 +76,7 @@ public class PostgreDBDataSourcePluginTest {
 
     private IDBDataSourcePlugin plgDBDataSource;
 
-    private DataSourceModelMapping modelMapping;
+    private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
@@ -120,7 +120,7 @@ public class PostgreDBDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostgreConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping)).getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
@@ -162,7 +162,7 @@ public class PostgreDBDataSourcePluginTest {
     public void getDataSourceIntrospection() {
         Assert.assertEquals(3, repository.count());
 
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, "id", "altitude", "latitude", "longitude", "label");
+        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
         Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 2));
         Assert.assertNotNull(ll);
@@ -209,7 +209,7 @@ public class PostgreDBDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 
 }
