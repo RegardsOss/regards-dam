@@ -27,6 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDBDataSourcePlugin;
@@ -58,6 +59,8 @@ public class PostgreDBDataSourcePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDBDataSourcePluginTest.class);
 
+    private static final String TENANT = "PGDB_TENANT";
+
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
@@ -87,15 +90,24 @@ public class PostgreDBDataSourcePluginTest {
     IDomainDataSourceRepository repository;
 
     /**
+     * Resolve tenant at runtime
+     */
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
+    /**
      * Initialize the plugin's parameter
-     * 
+     *
      * @throws DataSourcesPluginException
-     * 
+     *
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
     public void setUp() throws DataSourcesPluginException {
+
+        runtimeTenantResolver.forceTenant("DEFAULT");
+
         /*
          * Add data to the data source
          */
@@ -120,7 +132,8 @@ public class PostgreDBDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostgreConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
@@ -164,11 +177,11 @@ public class PostgreDBDataSourcePluginTest {
 
         plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
-        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 2));
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
 
-        ll = plgDBDataSource.findAll(new PageRequest(1, 2));
+        ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
     }
@@ -181,7 +194,7 @@ public class PostgreDBDataSourcePluginTest {
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
      * database.
-     * 
+     *
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */

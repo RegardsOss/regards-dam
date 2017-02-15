@@ -106,44 +106,27 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
-     */
     @Override
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
-     */
     @Override
     public boolean isOutOfDate() {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getNewData(org.springframework.data.
-     * domain.Pageable)
-     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
         Connection conn = dbConnection.getConnection();
         if (conn == null) {
             LOG.error("Unable to obtain a database connection.");
             return null;
         }
 
-        Page<DataObject> pages = findAllApplyPageAndDate(conn, requestSql, pPageable, pDate);
+        Page<DataObject> pages = findAllApplyPageAndDate(pTenant, conn, requestSql, pPageable, pDate);
 
         try {
             conn.close();
@@ -154,23 +137,11 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
         return pages;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain
-     * .Pageable)
-     */
     @Override
-    public Page<DataObject> findAll(Pageable pPageable) {
-        return findAll(pPageable, null);
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
+        return findAll(pTenant, pPageable, null);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
-     */
     @Override
     protected DataSourceModelMapping getModelMapping() {
         return dataSourceMapping;

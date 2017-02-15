@@ -124,7 +124,7 @@ public class CrawlerServiceTest {
         // Retrieve first 1000 objects
         dsPlugin.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
-        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
+        Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
 
         LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
         Set<DataObject> set = Sets.newHashSet(page.getContent());
@@ -133,7 +133,7 @@ public class CrawlerServiceTest {
         LOGGER.info(String.format("...%d entities saved",
                                   page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         while (page.hasNext()) {
-            page = dsPlugin.findAll(page.nextPageable());
+            page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
             LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));

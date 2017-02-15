@@ -26,6 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -71,8 +72,15 @@ public class IndexerServiceIT {
     @Autowired
     private Gson gson;
 
+    /**
+     * Resolve thread tenant at runtime
+     */
+    @Autowired
+    protected IRuntimeTenantResolver runtimeTenantResolver;
+
     @Before
     public void setUp() throws Exception {
+        runtimeTenantResolver.forceTenant(tenant);
         indexerService.deleteIndex(tenant);
         // indexerService.deleteIndex(SEARCH);
     }

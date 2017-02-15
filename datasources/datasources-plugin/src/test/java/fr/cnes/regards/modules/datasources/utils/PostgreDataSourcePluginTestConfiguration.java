@@ -19,6 +19,9 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.test.SingleRuntimeTenantResolver;
+
 /**
  *
  * Class PostgreDataSourcePluginTestConfiguration
@@ -96,5 +99,10 @@ public class PostgreDataSourcePluginTestConfiguration {
         final JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory());
         return txManager;
+    }
+
+    @Bean
+    public IRuntimeTenantResolver runtimeTenantResolver() {
+        return new SingleRuntimeTenantResolver(null);
     }
 }
