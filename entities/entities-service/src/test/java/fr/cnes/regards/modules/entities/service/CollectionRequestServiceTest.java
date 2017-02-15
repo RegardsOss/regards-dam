@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +19,6 @@ import org.mockito.Mockito;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -32,6 +32,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author lmieulet
@@ -70,8 +71,6 @@ public class CollectionRequestServiceTest {
     @SuppressWarnings("unchecked")
     @Before
     public void init() {
-        JWTService jwtService = new JWTService();
-        jwtService.injectMockToken("Tenant", "PUBLIC");
         // populate the repository
         pModel1 = new Model();
         pModel1.setId(1L);
@@ -99,10 +98,6 @@ public class CollectionRequestServiceTest {
         Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         Mockito.when(collectionRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
 
-        storageServiceMocked = Mockito.mock(IStorageService.class);
-        Mockito.when(storageServiceMocked.persist(collection1)).thenReturn(collection1);
-        Mockito.when(storageServiceMocked.persist(collection2)).thenReturn(collection2);
-
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection1);
@@ -120,7 +115,7 @@ public class CollectionRequestServiceTest {
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         collectionsRequestServiceMocked = new CollectionsRequestService(collectionRepositoryMocked,
-                entitiesRepositoryMocked, storageServiceMocked, idServiceMocked, pModelAttributeService, pModelService);
+                entitiesRepositoryMocked, idServiceMocked, pModelAttributeService, pModelService);
 
     }
 
@@ -153,7 +148,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Purpose("Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
-    public void updateCollection() throws ModuleException {
+    public void updateCollection() throws ModuleException, PluginUtilsException {
         final Collection updatedCollection1 = collection1;
 
         Mockito.when(entitiesRepositoryMocked.findOne(collection1.getId())).thenReturn(collection1);
@@ -170,7 +165,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_220")
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
-    public void testFullUpdate() throws ModuleException {
+    public void testFullUpdate() throws ModuleException, PluginUtilsException {
         final String col4Tag = collection4.getIpId().toString();
         final Set<String> newTags = new HashSet<>();
         newTags.add(col4Tag);
@@ -181,7 +176,7 @@ public class CollectionRequestServiceTest {
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateCollectionWithWrongURL() throws ModuleException {
+    public void updateCollectionWithWrongURL() throws ModuleException, PluginUtilsException {
         Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         collectionsRequestServiceMocked.update(collection2.getId(), collection1);
     }
@@ -189,7 +184,7 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_120")
     @Purpose("Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
-    public void deleteCollection() throws EntityNotFoundException {
+    public void deleteCollection() throws EntityNotFoundException, PluginUtilsException {
         collectionsRequestServiceMocked.delete(collection2.getId());
         Assert.assertFalse(collection1.getTags().contains(collection2.getIpId().toString()));
         Assert.assertTrue(collection2.isDeleted());
@@ -198,9 +193,9 @@ public class CollectionRequestServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une collection à partir d’un modèle préalablement défini et d’archiver cette collection sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createCollection() throws ModuleException {
+    public void createCollection() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(collection2)).thenReturn(collection2);
-        final Collection collection = collectionsRequestServiceMocked.create(collection2);
+        final Collection collection = collectionsRequestServiceMocked.create(collection2, null);
         Assert.assertEquals(collection2, collection);
     }
 

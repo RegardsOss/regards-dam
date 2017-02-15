@@ -56,8 +56,6 @@ public class CollectionServiceTest {
 
     private ICollectionsRequestService collectionsRequestServiceMocked;
 
-    private IStorageService storageServiceMocked;
-
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
     private IdentificationService idServiceMocked;
@@ -97,10 +95,6 @@ public class CollectionServiceTest {
         Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         Mockito.when(collectionRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
 
-        storageServiceMocked = Mockito.mock(IStorageService.class);
-        Mockito.when(storageServiceMocked.persist(collection1)).thenReturn(collection1);
-        Mockito.when(storageServiceMocked.persist(collection2)).thenReturn(collection2);
-
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection1);
@@ -118,7 +112,7 @@ public class CollectionServiceTest {
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         collectionsRequestServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-                storageServiceMocked, idServiceMocked, pModelAttributeService, pModelService);
+                idServiceMocked, pModelAttributeService, pModelService);
 
     }
 
