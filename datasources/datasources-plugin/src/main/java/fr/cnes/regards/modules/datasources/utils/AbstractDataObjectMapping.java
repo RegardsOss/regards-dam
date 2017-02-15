@@ -19,17 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 
-import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
@@ -76,16 +74,16 @@ public abstract class AbstractDataObjectMapping {
     protected abstract DataSourceModelMapping getModelMapping();
 
     /**
-     * 
+     * Resolver tenant at runtime
+     */
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
+    /**
+     *
      */
     private int nn = RESET_COUNT;
-    
-    private static final int RESET_COUNT = -1;
 
-    @Bean
-    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
-        return new CurrentTenantIdentifierResolverImpl();
-    }
+    private static final int RESET_COUNT = -1;
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
@@ -327,7 +325,7 @@ public abstract class AbstractDataObjectMapping {
     }
 
     private UniformResourceName buildUrn(String pVal, DataSourceAttributeMapping pAttrMapping) throws SQLException {
-        String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+        String tenant = runtimeTenantResolver.getTenant();
         return new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant,
                 UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
     }
@@ -387,7 +385,7 @@ public abstract class AbstractDataObjectMapping {
             return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
     }
-    
+
     /**
      * This method reset the number of data element from the database.<br>
      */
