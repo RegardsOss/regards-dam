@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.plugins.domain;
+package fr.cnes.regards.modules.datasources.utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
      * Label for name field
      */
     private static final String MODEL_LABEL = "model";
-    
+
     /**
      * Label for the apings field
      */
@@ -38,6 +38,11 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
      * Label for name field
      */
     private static final String NAME_LABEL = "name";
+
+    /**
+     * Label for primary key field
+     */
+    private static final String PRIMARY_KEY_LABEL = "pKey";
 
     /**
      * Label for type field
@@ -71,6 +76,9 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             pOut.beginObject();
             pOut.name(NAME_LABEL).value(attr.getName());
             pOut.name(TYPE_LABEL).value(attr.getType().name());
+            if (attr.isPrimaryKey()) {
+                pOut.name(PRIMARY_KEY_LABEL).value(attr.isPrimaryKey().toString());
+            }
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
@@ -90,47 +98,24 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
         final List<DataSourceAttributeMapping> attributes = new ArrayList<>();
 
         pIn.beginObject();
-        
+
         if (!pIn.nextName().equals(MODEL_LABEL)) {
-            throw new IOException(MODEL_LABEL +"is expected");
+            throw new IOException(MODEL_LABEL + " is expected");
         }
-        
+
         dataSourceModelMapping.setModelName(pIn.nextString());
-        
+
         if (!pIn.nextName().equals(MAPPINGS_LABEL)) {
-            throw new IOException(MAPPINGS_LABEL +"is expected");
+            throw new IOException(MAPPINGS_LABEL + " is expected");
         }
-        
+
         pIn.beginArray();
         // Compute the element's array
         while (pIn.hasNext()) {
-            // Compute one element
             pIn.beginObject();
-            final DataSourceAttributeMapping attr = new DataSourceAttributeMapping();
-            while (pIn.hasNext()) {
-                switch (pIn.nextName()) {
-                    case NAME_LABEL:
-                        attr.setName(pIn.nextString());
-                        break;
-                    case NAMESPACE_LABEL:
-                        attr.setNameSpace(pIn.nextString());
-                        break;
-                    case NAME_DS_LABEL:
-                        attr.setNameDS(pIn.nextString());
-                        break;
-                    case TYPE_DS_LABEL:
-                        attr.setTypeDS(Integer.parseInt(pIn.nextString()));
-                        break;
-                    case TYPE_LABEL:
-                        attr.setType(AttributeType.valueOf(pIn.nextString()));
-                        break;
-                    default:
-                        break;
-                }
-            }
 
             // Add the new attribute to the list
-            attributes.add(attr);
+            attributes.add(readMapping(pIn));
             pIn.endObject();
         }
         pIn.endArray();
@@ -139,6 +124,44 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
         dataSourceModelMapping.setAttributesMapping(attributes);
 
         return dataSourceModelMapping;
+    }
+
+    /**
+     * Read one attribute mapping and create a {@link DataSourceAttributeMapping}
+     * 
+     * @param pIn
+     *            the {@link JsonReader} used to read a JSon and to convert in a data object
+     * @return a {@link DataSourceAttributeMapping}
+     * @throws IOException
+     *             An error throw, the Json format format is no correct
+     */
+    private DataSourceAttributeMapping readMapping(final JsonReader pIn) throws IOException {
+        final DataSourceAttributeMapping attr = new DataSourceAttributeMapping();
+        while (pIn.hasNext()) {
+            switch (pIn.nextName()) {
+                case NAME_LABEL:
+                    attr.setName(pIn.nextString());
+                    break;
+                case NAMESPACE_LABEL:
+                    attr.setNameSpace(pIn.nextString());
+                    break;
+                case NAME_DS_LABEL:
+                    attr.setNameDS(pIn.nextString());
+                    break;
+                case TYPE_DS_LABEL:
+                    attr.setTypeDS(Integer.parseInt(pIn.nextString()));
+                    break;
+                case TYPE_LABEL:
+                    attr.setType(AttributeType.valueOf(pIn.nextString()));
+                    break;
+                case PRIMARY_KEY_LABEL:
+                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()) ? true : false);
+                    break;
+                default:
+                    break;
+            }
+        }
+        return attr;
     }
 
 }

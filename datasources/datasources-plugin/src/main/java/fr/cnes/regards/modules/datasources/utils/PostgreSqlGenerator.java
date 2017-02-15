@@ -2,7 +2,8 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.utils;
+
 import org.springframework.data.domain.Pageable;
 
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
@@ -13,9 +14,15 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
  *
  */
 public class PostgreSqlGenerator extends SqlGenerator {
-    
-    public PostgreSqlGenerator(String pAllColumnsClause) {
+
+    /**
+     * The table name used in a "ORDER BY" clause 
+     */
+    private String orderByTable;
+
+    public PostgreSqlGenerator(String pAllColumnsClause, String pOrderTable) {
         super(pAllColumnsClause);
+        this.orderByTable = pOrderTable;
     }
 
     public PostgreSqlGenerator() {
@@ -26,6 +33,6 @@ public class PostgreSqlGenerator extends SqlGenerator {
     protected String limitClause(Pageable pPage) {
         int offset = pPage.getPageNumber() * pPage.getPageSize();
 
-        return String.format(" LIMIT %d OFFSET %d", pPage.getPageSize(), offset);
+        return String.format(" ORDER BY %s LIMIT %d OFFSET %d", orderByTable, pPage.getPageSize(), offset);
     }
 }

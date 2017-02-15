@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.event;
 
-import fr.cnes.regards.framework.amqp.event.EventProperties;
+import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
@@ -13,7 +13,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  * @author Marc Sordi
  *
  */
-@EventProperties(target = Target.MICROSERVICE)
+@Event(target = Target.MICROSERVICE)
 public class AttributeModelCreated extends AbstractAttributeModelEvent {
 
     public AttributeModelCreated(AttributeModel pAttributeModel) {

@@ -151,7 +151,7 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
         try {
             return cpds.getConnection();
         } catch (SQLException e) {
-            LOG.equals(e);
+            LOG.error(e.getMessage(),e);
         }
         return null;
     }

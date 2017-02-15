@@ -12,6 +12,7 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -30,15 +31,15 @@ import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.Column;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.Index;
-import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.Column;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.utils.Index;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
+import fr.cnes.regards.modules.datasources.utils.Table;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -51,6 +52,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+@Ignore
 public class OracleDBDataSourcePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleDBDataSourcePluginTest.class);
@@ -58,6 +60,8 @@ public class OracleDBDataSourcePluginTest {
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
+
+    private static final String TENANT = "ORA_TENANT";
 
     @Value("${oracle.datasource.url}")
     private String url;
@@ -76,18 +80,17 @@ public class OracleDBDataSourcePluginTest {
     private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-    
 
     /**
      * Initialize the plugin's parameter
-     * 
-     * @throws DataSourceUtilsException
-     * 
+     *
+     * @throws DataSourcesPluginException
+     *
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourceUtilsException {
+    public void setUp() throws DataSourcesPluginException {
 
         /*
          * Initialize the DataSourceAttributeMapping
@@ -102,16 +105,17 @@ public class OracleDBDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping)).getParameters();
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .getParameters();
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
         try {
             plgDBDataSource = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
                                                     Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
     }
@@ -138,16 +142,13 @@ public class OracleDBDataSourcePluginTest {
 
     @Test
     public void getDataSourceIntrospection() {
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, "DATA_OBJECT_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
-                                   "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY",
-                                   "MIN_LONGITUDE", "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE",
-                                   "MAX_ALTITUDE", "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
-        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 1000));
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
 
-        ll = plgDBDataSource.findAll(new PageRequest(1, 1000));
+        ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
     }
@@ -160,7 +161,7 @@ public class OracleDBDataSourcePluginTest {
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultOracleConnectionPlugin} to connect to the Oracle
      * database.
-     * 
+     *
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */
@@ -179,7 +180,7 @@ public class OracleDBDataSourcePluginTest {
 
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
-        
+
         attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
@@ -203,9 +204,9 @@ public class OracleDBDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        
+        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
+
         dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 

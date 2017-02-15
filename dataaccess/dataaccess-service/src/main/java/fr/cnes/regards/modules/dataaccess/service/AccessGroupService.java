@@ -113,7 +113,7 @@ public class AccessGroupService {
      */
     public AccessGroup associateUserToAccessGroup(String pUserEmail, String pAccessGroupName)
             throws EntityNotFoundException {
-        final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUserEmail, jwtService)
+        final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUserEmail, jwtService, null)
                 .apply(RoleAuthority.getSysRole(microserviceName));
         if (user == null) {
             throw new EntityNotFoundException(pUserEmail, ProjectUser.class);
@@ -146,7 +146,7 @@ public class AccessGroupService {
      */
     public AccessGroup dissociateUserFromAccessGroup(String pUserEmail, String pAccessGroupName)
             throws EntityNotFoundException {
-        final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUserEmail, jwtService)
+        final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUserEmail, jwtService, null)
                 .apply(RoleAuthority.getSysRole(microserviceName));
         if (user == null) {
             throw new EntityNotFoundException(pUserEmail, ProjectUser.class);
@@ -196,7 +196,7 @@ public class AccessGroupService {
      * @return
      */
     public boolean existUser(User pUser) {
-        final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUser.getEmail(), jwtService)
+        final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUser.getEmail(), jwtService, null)
                 .apply(RoleAuthority.getSysRole(microserviceName));
         return user != null;
     }

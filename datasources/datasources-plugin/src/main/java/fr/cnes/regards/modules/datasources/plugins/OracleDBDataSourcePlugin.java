@@ -20,11 +20,12 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -69,9 +70,6 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + this.dbConnection.toString()
                 + "model=" + this.modelJSon);
 
-        LOG.info("Init method call : "
-                + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
-
         // Converts the modelJson to a list of DataSourceAttributeMapping
         loadModel();
     }
@@ -102,10 +100,11 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String)
+     * @see fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String,
+     * java.lang.String)
      */
     @Override
-    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause) {
+    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
         return new OracleSqlGenerator(pAllColumnsClause);
     }
 

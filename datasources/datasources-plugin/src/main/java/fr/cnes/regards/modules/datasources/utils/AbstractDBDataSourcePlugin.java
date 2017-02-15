@@ -2,7 +2,7 @@
  * LICENSE_PLACEHOLDER
  */
 
-package fr.cnes.regards.modules.datasources.plugins;
+package fr.cnes.regards.modules.datasources.utils;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -25,9 +25,6 @@ import com.nurkiewicz.jdbcrepository.TableDescription;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.Column;
-import fr.cnes.regards.modules.datasources.plugins.domain.Index;
-import fr.cnes.regards.modules.datasources.plugins.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -35,7 +32,7 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 /**
  * Class PostgreDBDataSourcePlugin
  *
- * A {@link Plugin} to discover the tables, colums and index of a SQL Database.<br>
+ * A {@link Plugin} to discover the tables, columns and indices of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
@@ -77,28 +74,68 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     private static final String COMMA = ",";
 
+    private static final String DATABASE_ACCESS_ERROR = "Unable to obtain a database connection";
+
+    /**
+     * The description of the {@link Table} used by this {@link Plugin} to requests the database.
+     */
+    private TableDescription tableDescription;
+
+    /**
+     * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
+     * {@link Table}.
+     */
+    private List<String> columns;
+
+    /**
+     * The column name used in the ORDER BY clause
+     */
+    private String orderByColumn = "";
+
+    /**
+     *
+     */
+    private SqlGenerator sqlGenerator;
+
     protected abstract SqlGenerator buildSqlGenerator();
 
-    protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause);
+    protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy);
 
     protected abstract IDBConnectionPlugin getDBConnectionPlugin();
 
-    private TableDescription tableDescription;
+    /**
+     * This method initialize the mapping used to request the database.<br>
+     *
+     * @param pTable
+     *            the table used to requests the database
+     * @param pMapping
+     *            the mapping between the attributes's model and the attributes of the database
+     */
+    @Override
+    public void setMapping(String pTable, DataSourceModelMapping pMapping) {
 
-    private List<String> columns;
+        // reset the number of data element hosted by the datasource
+        this.reset();
 
-    private SqlGenerator sqlGenerator;
-
-    public void setMapping(String pTable, String... pColumns) {
-        tableDescription = new TableDescription(pTable, null, pColumns);
-        columns = new ArrayList<>(pColumns.length);
-        for (String col : pColumns) {
-            columns.add(col);
+        if (columns == null) {
+            columns = new ArrayList<>();
         }
-        if (pColumns.length > 0) {
-            sqlGenerator = buildSqlGenerator(buildColumnClause(pColumns));
-        } else {
+
+        pMapping.getAttributesMapping().forEach(d -> {
+            columns.add(d.getNameDS());
+            if (d.isPrimaryKey()) {
+                orderByColumn = d.getNameDS();
+            }
+        });
+
+        tableDescription = new TableDescription(pTable, null, columns.toArray(new String[0]));
+        if (columns.isEmpty()) {
             sqlGenerator = buildSqlGenerator();
+        } else {
+            if ("".equals(orderByColumn)) {
+                orderByColumn = columns.get(0);
+            }
+            sqlGenerator = buildSqlGenerator(buildColumnClause(columns.toArray(new String[0])), orderByColumn);
         }
     }
 
@@ -112,7 +149,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
      */
     @Override
@@ -123,62 +160,73 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
      */
     @Override
     public boolean isOutOfDate() {
-        return true;
+        boolean outDated = true;
+
+        // TODO compute the out dated value
+
+        if (isOutOfDate()) {
+            this.reset();
+        }
+
+        return outDated;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain.
-     * Pageable, java.time.LocalDateTime)
-     */
     @Override
-    public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
         if (sqlGenerator == null) {
             return null;
         }
 
         String requestSql = sqlGenerator.selectAll(tableDescription, pPageable);
+        String countRequestSql = sqlGenerator.count(tableDescription);
 
         LOG.debug("request :" + requestSql);
 
-        return findAll(getDBConnectionPlugin().getConnection(), pPageable, requestSql, pDate);
+        // Get a connection
+        Connection conn = getDBConnectionPlugin().getConnection();
+
+        if (conn == null) {
+            LOG.error(DATABASE_ACCESS_ERROR);
+            return null;
+        }
+
+        Page<DataObject> pages = findAll(pTenant, conn, requestSql, countRequestSql, pPageable, pDate);
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
+        return pages;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain.
-     * Pageable)
-     */
     @Override
-    public Page<DataObject> findAll(Pageable pPageable) {
-        return findAll(pPageable, null);
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
+        return findAll(pTenant, pPageable, null);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getTables()
      */
     @Override
     public Map<String, Table> getTables() {
         Map<String, Table> tables = new HashMap<>();
+        ResultSet rs = null;
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
         try {
-
             DatabaseMetaData metaData = conn.getMetaData();
 
-            ResultSet rs = metaData.getTables(conn.getCatalog(), null, null, new String[] { METADATA_TABLE });
+            rs = metaData.getTables(conn.getCatalog(), null, null, new String[] { METADATA_TABLE });
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -190,10 +238,17 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                                                 rs.getString(TABLE_NAME)));
                 tables.put(table.getName(), table);
             }
-            rs.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
 
         return tables;
@@ -214,20 +269,26 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getColumns(java.lang.String)
      */
     @Override
     public Map<String, Column> getColumns(Table pTable) {
         Map<String, Column> cols = new HashMap<>();
+        ResultSet rs = null;
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
 
+        if (conn == null) {
+            LOG.error(DATABASE_ACCESS_ERROR);
+            return null;
+        }
+
         try {
             DatabaseMetaData metaData = conn.getMetaData();
 
-            ResultSet rs = metaData.getColumns(null, null, pTable.getName(), null);
+            rs = metaData.getColumns(null, null, pTable.getName(), null);
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -236,35 +297,47 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                 }
 
                 Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
-                column.setPrimaryKey(pTable.getPkColumn() != null && !"".equals(pTable.getPkColumn())
+                column.setPrimaryKey((pTable.getPkColumn() != null) && !"".equals(pTable.getPkColumn())
                         && pTable.getPkColumn().equals(column.getName()));
                 cols.put(column.getName(), column);
             }
-            rs.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
-
         return cols;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getIndices()
      */
     @Override
     public Map<String, Index> getIndices(Table pTable) {
         Map<String, Index> indices = new HashMap<>();
+        ResultSet rs = null;
 
         // Get a connection
         Connection conn = getDBConnectionPlugin().getConnection();
 
+        if (conn == null) {
+            LOG.error(DATABASE_ACCESS_ERROR);
+            return null;
+        }
+
         try {
             DatabaseMetaData metaData = conn.getMetaData();
 
-            ResultSet rs = metaData.getIndexInfo(null, null, pTable.getName(), true, false);
+            rs = metaData.getIndexInfo(null, null, pTable.getName(), true, false);
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -275,10 +348,17 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                         rs.getString(INDEX_NAME));
                 indices.put(index.getName(), index);
             }
-            rs.close();
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
 
         return indices;
@@ -304,7 +384,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredTable()
      */
     @Override
@@ -314,7 +394,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredColumns()
      */
     @Override

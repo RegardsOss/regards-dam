@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.datasources.plugins;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,12 +23,13 @@ import com.google.gson.stream.JsonReader;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDataObjectMapping;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -103,59 +106,45 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
-     */
     @Override
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
-     */
     @Override
     public boolean isOutOfDate() {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getNewData(org.springframework.data.
-     * domain.Pageable)
-     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
-        return findAll(dbConnection.getConnection(), requestSql, pPageable, pDate);
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
+        Connection conn = dbConnection.getConnection();
+        if (conn == null) {
+            LOG.error("Unable to obtain a database connection.");
+            return null;
+        }
+
+        Page<DataObject> pages = findAllApplyPageAndDate(pTenant, conn, requestSql, pPageable, pDate);
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
+        return pages;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain
-     * .Pageable)
-     */
     @Override
-    public Page<DataObject> findAll(Pageable pPageable) {
-        return findAll(pPageable, null);
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
+        return findAll(pTenant, pPageable, null);
     }
 
-    /* (non-Javadoc)
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
-     */
     @Override
     protected DataSourceModelMapping getModelMapping() {
         return dataSourceMapping;
     }
-
 
 }

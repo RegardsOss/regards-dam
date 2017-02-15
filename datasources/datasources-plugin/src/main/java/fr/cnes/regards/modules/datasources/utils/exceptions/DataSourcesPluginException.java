@@ -7,54 +7,52 @@
  * END-VERSION-HISTORY
  */
 
-package fr.cnes.regards.modules.datasources.utils;
+package fr.cnes.regards.modules.datasources.utils.exceptions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *
- * Exception for DAO utils package
+ * Exception for Datasources Plugin
  *
- * @author msordi
- * @since 1.0-SNAPSHOT
+ * @author Christophe Mertz
+ * 
  */
-public class DataSourceUtilsException extends Exception {
+public class DataSourcesPluginException extends Exception {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceUtilsException.class);
+    /**
+     * Class Logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourcesPluginException.class);
 
     /**
      * serialVersionUID field.
-     *
-     * @author CS
-     * @since 1.0-SNAPSHOT
      */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 3517283873163069739L;
 
     /**
      *
-     * Constructeur
+     * Constructor
      *
      * @param pMessage
      *            an error message
-     * @since 1.0-SNAPSHOT
      */
-    public DataSourceUtilsException(String pMessage) {
+    public DataSourcesPluginException(String pMessage) {
         super(pMessage);
         LOGGER.error(pMessage);
     }
 
     /**
      *
-     * Constructeur
+     * Constructor
      *
      * @param pMessage
      *            an error message
      * @param pCause
      *            the exception
-     * @since 1.0-SNAPSHOT
      */
-    public DataSourceUtilsException(String pMessage, Throwable pCause) {
+    public DataSourcesPluginException(String pMessage, Throwable pCause) {
         super(pMessage, pCause);
         LOGGER.error(pMessage, pCause);
     }
@@ -65,9 +63,8 @@ public class DataSourceUtilsException extends Exception {
      *
      * @param pCause
      *            the exception
-     * @since 1.0-SNAPSHOT
      */
-    public DataSourceUtilsException(Throwable pCause) {
+    public DataSourcesPluginException(Throwable pCause) {
         super(pCause);
     }
 }

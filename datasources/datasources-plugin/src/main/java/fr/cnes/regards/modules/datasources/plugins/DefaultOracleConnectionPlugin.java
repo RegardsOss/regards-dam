@@ -92,6 +92,9 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         cpds.setPassword(password);
         cpds.setMaxPoolSize(maxPoolSize);
         cpds.setMinPoolSize(minPoolSize);
+        cpds.setAcquireRetryAttempts(5);
+        cpds.setAcquireRetryDelay(5000);
+        cpds.setIdleConnectionTestPeriod(20);
 
         try {
             cpds.setDriverClass(driver);
@@ -103,21 +106,33 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     @Override
     public boolean testConnection() {
         boolean isConnected = false;
+        Statement statement = null;
+        ResultSet rs = null;
+        Connection conn = null;
         try {
-            // Get a connection
-            Connection conn = cpds.getConnection();
-            Statement statement = conn.createStatement();
-            
+            conn = cpds.getConnection();
+            statement = conn.createStatement();
+
             // Execute a simple SQL request
-            ResultSet rs = statement.executeQuery("select 1 from DUAL");
-            
+            rs = statement.executeQuery("select 1 from DUAL");
+
             rs.close();
-            statement.close();
-            conn.close();
             isConnected = true;
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
+
         return isConnected;
     }
 
@@ -131,7 +146,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         try {
             return cpds.getConnection();
         } catch (SQLException e) {
-            LOG.equals(e);
+            LOG.error(e.getMessage(),e);
         }
         return null;
     }

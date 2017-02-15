@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain.event;
 
-import fr.cnes.regards.framework.amqp.event.ISubscribableEvent;
+import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  * @author Marc Sordi
  *
  */
-public abstract class AbstractAttributeModelEvent implements ISubscribableEvent {
+public abstract class AbstractAttributeModelEvent implements ISubscribable {
 
     /**
      * {@link Fragment} name

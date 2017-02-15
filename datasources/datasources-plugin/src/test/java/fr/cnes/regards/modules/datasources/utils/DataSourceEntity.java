@@ -25,7 +25,8 @@ import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
  * @author Christophe Mertz
  */
 @Entity
-@Table(name = "T_TEST_PLUGIN_DATA_SOURCE", indexes = { @Index(name = "iinnddeexx", columnList = "altitude", unique = true) })
+@Table(name = "T_TEST_PLUGIN_DATA_SOURCE",
+        indexes = { @Index(name = "ndex_test", columnList = "altitude", unique = true) })
 @SequenceGenerator(name = "testPlgDataSOurceSequence", initialValue = 1, sequenceName = "SEQ_TEST_PLUGIN")
 public class DataSourceEntity implements IIdentifiable<Long> {
 

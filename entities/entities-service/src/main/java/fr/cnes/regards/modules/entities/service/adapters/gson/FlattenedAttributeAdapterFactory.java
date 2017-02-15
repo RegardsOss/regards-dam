@@ -22,7 +22,6 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
-import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
@@ -51,8 +50,6 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  * @author Marc Sordi
  *
  */
-@SuppressWarnings("rawtypes")
-@GsonTypeAdapterFactoryBean
 public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
 
     /**
