@@ -57,7 +57,7 @@ public class IAccessGroupClientIT extends AbstractRegardsWebIT {
         try {
             authService.setAuthorities(DEFAULT_TENANT, IAccessGroupClient.PATH_ACCESS_GROUPS, RequestMethod.GET,
                                        DefaultRole.INSTANCE_ADMIN.toString());
-            jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString());
+            jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString(), "");
             final IAccessGroupClient accessGroupClient = HystrixFeign.builder().contract(new SpringMvcContract())
                     .encoder(new GsonEncoder()).decoder(new ResponseEntityDecoder(new GsonDecoder()))
                     .target(new TokenClientProvider<>(IAccessGroupClient.class,

@@ -17,7 +17,6 @@ import org.mockito.Mockito;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -69,8 +68,7 @@ public class CollectionRequestServiceTest {
     @SuppressWarnings("unchecked")
     @Before
     public void init() {
-        JWTService jwtService = new JWTService();
-        jwtService.injectMockToken("Tenant", "PUBLIC");
+
         // populate the repository
         pModel1 = new Model();
         pModel1.setId(1L);

@@ -14,7 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -58,8 +57,6 @@ public class EntityServiceTest {
     @Before
     public void init() {
 
-        JWTService jwtService = new JWTService();
-        jwtService.injectMockToken("Tenant", "PUBLIC");
         // populate the repository
         Model pModel2 = new Model();
         pModel2.setId(2L);
