@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
  * @author Christophe Mertz
  *
  */
-@TestPropertySource(locations = { "classpath:test.properties" })
+@TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
