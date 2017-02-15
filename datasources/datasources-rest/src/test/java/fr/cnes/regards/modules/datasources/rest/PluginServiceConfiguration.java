@@ -19,7 +19,7 @@ import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 
 /**
  *
- * Class PluginServiceAutoConfiguration
+ * Class PluginServiceConfiguration
  *
  * A bean used to defined a implementation of {@link PluginService}.
  *
@@ -29,7 +29,7 @@ import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 @ComponentScan(basePackages = { "fr.cnes.regards.framework.modules.plugins" })
 @PropertySource("classpath:datasource-test.properties")
 @AutoConfigureAfter({ MultitenantJpaAutoConfiguration.class })
-public class PluginServiceAutoConfiguration {
+public class PluginServiceConfiguration {
 
     /**
      * {@link List} of the package to scan to find plugins
