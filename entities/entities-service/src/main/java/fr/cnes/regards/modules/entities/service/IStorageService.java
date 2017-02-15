@@ -3,12 +3,15 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
+@PluginInterface(
+        description = "plugins interface which are responsible for storing entities(Collection, Dataset, Document, Data)")
 public interface IStorageService {
 
     /**
@@ -21,8 +24,10 @@ public interface IStorageService {
      *            {@link AbstractEntity} to be persisted
      * @return persisted {@link AbstractEntity}
      */
-    public <T extends AbstractEntity> T persist(T pToPersist);
+    public <T extends AbstractEntity> T storeAIP(T pToPersist);
 
-    public void delete(AbstractEntity pToDelete);
+    public void deleteAIP(AbstractEntity pToDelete);
+
+    public <T extends AbstractEntity> T updateAIP(T pToUpdate);
 
 }

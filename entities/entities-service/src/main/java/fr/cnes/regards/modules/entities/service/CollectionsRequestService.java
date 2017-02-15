@@ -37,11 +37,10 @@ public class CollectionsRequestService extends AbstractEntityService implements 
     private final ICollectionRepository collectionRepository;
 
     public CollectionsRequestService(ICollectionRepository pCollectionRepository,
-            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pStorageService,
+            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository,
             IdentificationService pIdentificationService, IModelAttributeService pModelAttributeService,
             IModelService pModelService) {
-        super(pModelAttributeService, pAbstractEntityRepository, pModelService, pStorageService,
-              pIdentificationService);
+        super(pModelAttributeService, pAbstractEntityRepository, pModelService, pIdentificationService);
         collectionRepository = pCollectionRepository;
     }
 

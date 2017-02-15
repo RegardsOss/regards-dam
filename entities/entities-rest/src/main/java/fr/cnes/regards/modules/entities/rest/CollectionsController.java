@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -33,6 +34,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author lmieulet
@@ -100,12 +102,14 @@ public class CollectionsController implements IResourceController<Collection> {
      * @return update {@link Collection} as a {@link Resource}
      * @throws ModuleException
      *             if error occurs!
+     * @throws PluginUtilsException
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @Valid @RequestBody Collection pCollection, BindingResult pResult) throws ModuleException {
+            @Valid @RequestBody Collection pCollection, BindingResult pResult)
+            throws ModuleException, PluginUtilsException {
 
         // Validate dynamic model
         collectionsRequestService.validate(pCollection, pResult, false);
@@ -123,12 +127,13 @@ public class CollectionsController implements IResourceController<Collection> {
      *            {@link Collection} id
      * @return nothing
      * @throws EntityNotFoundException
+     * @throws PluginUtilsException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "delete the collection of collection_id")
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId)
-            throws EntityNotFoundException {
+            throws EntityNotFoundException, PluginUtilsException {
         collectionsRequestService.delete(pCollectionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -143,17 +148,19 @@ public class CollectionsController implements IResourceController<Collection> {
      * @return {@link Collection} as a {@link Resource}
      * @throws ModuleException
      *             if validation fails
+     * @throws IOException
+     * @throws PluginUtilsException
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
     public HttpEntity<Resource<Collection>> createCollection(@Valid @RequestBody Collection pCollection,
-            BindingResult pResult) throws ModuleException {
+            BindingResult pResult) throws ModuleException, IOException, PluginUtilsException {
 
         // Validate dynamic model
         collectionsRequestService.validate(pCollection, pResult, false);
 
-        final Collection collection = collectionsRequestService.create(pCollection);
+        final Collection collection = collectionsRequestService.create(pCollection, null);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }

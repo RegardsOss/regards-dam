@@ -3,8 +3,10 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,22 +15,28 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
@@ -46,6 +54,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.plugins.utils.PluginUtils;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Entity service implementation
@@ -59,7 +69,7 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * bean toward the module responsible to contact, or not, the archival storage
      */
-    private final IStorageService storageService;
+    private IStorageService storageService;
 
     /**
      * Class logger
@@ -87,11 +97,10 @@ public abstract class AbstractEntityService implements IEntityService {
 
     public AbstractEntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
-            IStorageService pStorageService, IdentificationService pIdService) {
+            IdentificationService pIdService) {
         modelAttributeService = pModelAttributeService;
         entitiesRepository = pEntitiesRepository;
         modelService = pModelService;
-        storageService = pStorageService;
         idService = pIdService;
     }
 
@@ -365,19 +374,73 @@ public abstract class AbstractEntityService implements IEntityService {
 
     @Override
     @MultitenantTransactional
-    public <T extends AbstractEntity> T create(T pEntity) throws ModuleException {
+    public <T extends AbstractEntity> T create(T pEntity, MultipartFile file)
+            throws ModuleException, IOException, PluginUtilsException {
         T newEntity = check(pEntity);
         // Generate ip_id
         newEntity.setIpId(idService.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION));
+        newEntity = setDescription(newEntity, file);
         newEntity = doCreate(newEntity);
         if (!newEntity.getTags().isEmpty()) {
             newEntity = associate(newEntity);
         } else {
-            // associate already do the save so it doesn't do it, has to be done
+            // associate already do the save so if the method is not called, it has to be done
             newEntity = entitiesRepository.save(newEntity);
         }
-        newEntity = storageService.persist(newEntity);
+        storageService = getStorageService();
+        newEntity = storageService.storeAIP(newEntity);
         return newEntity;
+    }
+
+    /**
+     * TODO make it possible to switch configuration dynamically between local and remote
+     *
+     * @return
+     * @throws PluginUtilsException
+     */
+    private IStorageService getStorageService() throws PluginUtilsException {
+
+        List<PluginParameter> parameters;
+
+        parameters = PluginParametersFactory.build().getParameters();
+        return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
+                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
+    }
+
+    /**
+     * @param pNewEntity
+     * @param pFile
+     * @return
+     * @throws IOException
+     * @throws EntityDescriptionUnacceptableCharsetException
+     */
+    private <T extends AbstractEntity> T setDescription(T newEntity, MultipartFile file)
+            throws IOException, EntityDescriptionUnacceptableCharsetException {
+        if ((newEntity instanceof AbstractLinkEntity) && (file != null) && !file.isEmpty()) {
+            // collections and dataset only has a description which is a url or a file
+            String charsetOfFile = getCharset(file);
+            if ((charsetOfFile != null) && (charsetOfFile != "utf-8")) {
+                throw new EntityDescriptionUnacceptableCharsetException(charsetOfFile);
+            }
+            newEntity.setDescription(null);
+            ((AbstractLinkEntity) newEntity)
+                    .setDescriptionFile(new DescriptionFile(file.getBytes(), MediaType.valueOf(file.getContentType())));
+        }
+        return newEntity;
+    }
+
+    /**
+     * check if the file has a charset compliant with the application
+     *
+     * @param pFile
+     *            description file from the user
+     * @return true is charset is utf8 or not set(considered us-ascii) or if the file is a pdf, false otherwise
+     */
+    private String getCharset(MultipartFile pFile) {
+        String contentType = pFile.getContentType();
+        int charsetIndex = contentType.indexOf("charset=");
+        return charsetIndex == -1 ? null
+                : contentType.substring(charsetIndex + 8, contentType.length() - 1).toLowerCase();
     }
 
     /**
@@ -432,11 +495,12 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param pEntity
      * @return updated entity
      * @throws ModuleException
+     * @throws PluginUtilsException
      */
     // FIXME: should i use a clone of the parameter instead of modifying it?
     @Override
     @MultitenantTransactional
-    public <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException {
+    public <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException, PluginUtilsException {
         // checks
         T toBeUpdated = checkUpdate(pEntityId, pEntity);
         // update fields
@@ -451,12 +515,13 @@ public abstract class AbstractEntityService implements IEntityService {
         pEntity = doUpdate(pEntity);
         pEntity.setLastUpdate(LocalDateTime.now());
         T updated = entitiesRepository.save(pEntity);
-        storageService.persist(updated);
+        storageService = getStorageService();
+        storageService.updateAIP(updated);
         return updated;
     }
 
     @Override
-    public AbstractEntity delete(Long pEntityId) throws EntityNotFoundException {
+    public AbstractEntity delete(Long pEntityId) throws EntityNotFoundException, PluginUtilsException {
         final AbstractEntity toDelete = entitiesRepository.findOne(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId);
@@ -467,20 +532,22 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * @param pToDelete
      * @return
+     * @throws PluginUtilsException
      */
     @MultitenantTransactional
-    private AbstractEntity delete(AbstractEntity pToDelete) {
+    private AbstractEntity delete(AbstractEntity pToDelete) throws PluginUtilsException {
         dissociate(pToDelete);
         // FIXME: repo.delete and then persist.delete? ou c'est que storage qui gère le delete?
         pToDelete.setDeletionDate(LocalDateTime.now());
         pToDelete.setDeleted(true);
         AbstractEntity deleted = entitiesRepository.save(pToDelete);
-        storageService.delete(pToDelete);
+        storageService = getStorageService();
+        storageService.deleteAIP(pToDelete);
         return deleted;
     }
 
     @Override
-    public AbstractEntity delete(String pEntityIpId) throws EntityNotFoundException {
+    public AbstractEntity delete(String pEntityIpId) throws EntityNotFoundException, PluginUtilsException {
         final AbstractEntity toDelete = entitiesRepository.findOneByIpId(UniformResourceName.fromString(pEntityIpId));
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityIpId);

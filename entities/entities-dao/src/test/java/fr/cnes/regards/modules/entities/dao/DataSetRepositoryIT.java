@@ -87,7 +87,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
         pModel = modelRepo.save(pModel);
         dataset = new DataSet(pModel,
                 new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
-                "dataset");
+                "dataset", "licence");
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);

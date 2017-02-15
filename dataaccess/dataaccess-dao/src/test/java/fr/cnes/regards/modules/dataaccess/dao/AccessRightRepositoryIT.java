@@ -69,17 +69,17 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     private QualityFilter qf;
 
-    private final AccessLevel al = AccessLevel.FULL_ACCES;
+    private final AccessLevel al = AccessLevel.FULL_ACCESS;
 
     private DataSet ds1;
 
     private DataSet ds2;
 
-//    private final String ds1Name = "DS1";
-//
-//    private final String ds2Name = "DS2";
-//
-//    private final String dsDesc = "DESC";
+    // private final String ds1Name = "DS1";
+    //
+    // private final String ds2Name = "DS2";
+    //
+    // private final String dsDesc = "DESC";
 
     private UserAccessRight uar1;
 
@@ -94,10 +94,10 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, getUrn(), "ds1");
+        ds1 = new DataSet(model, getUrn(), "ds1", "licence");
         ds1.setLabel("label");
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, getUrn(), "ds2");
+        ds2 = new DataSet(model, getUrn(), "ds2", "licence");
         ds2.setLabel("label");
         ds2 = dsRepo.save(ds2);
 

@@ -13,7 +13,7 @@ public enum AccessLevel {
     /**
      * no access at all on the dataset
      */
-    NO_ACCES,
+    NO_ACCESS,
     /**
      * only acces to FIXME
      */
@@ -21,5 +21,5 @@ public enum AccessLevel {
     /**
      * full acces to the dataset( both metadata and the data)
      */
-    FULL_ACCES;
+    FULL_ACCESS;
 }

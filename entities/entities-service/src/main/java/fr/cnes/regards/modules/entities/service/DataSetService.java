@@ -51,8 +51,8 @@ public class DataSetService extends AbstractEntityService {
     public DataSetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
             IdentificationService pIdService, IAbstractEntityRepository<AbstractEntity> pEntitiesRepository,
-            IModelService pModelService, IStorageService pStorageSerivce) {
-        super(pModelAttributeService, pEntitiesRepository, pModelService, pStorageSerivce, pIdService);
+            IModelService pModelService) {
+        super(pModelAttributeService, pEntitiesRepository, pModelService, pIdService);
         repository = pRepository;
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;

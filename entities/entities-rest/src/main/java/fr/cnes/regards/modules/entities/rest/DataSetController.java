@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -22,8 +23,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -32,9 +35,9 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.service.DataSetService;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -56,16 +59,27 @@ public class DataSetController implements IResourceController<DataSet> {
     @Autowired
     private DataSetService service;
 
+    /**
+     *
+     * @param pDataSet
+     * @param file
+     * @param pResult
+     * @return
+     * @throws ModuleException
+     * @throws IOException
+     * @throws PluginUtilsException
+     */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create and send the dataset")
-    public HttpEntity<Resource<DataSet>> createDataSet(@Valid @RequestBody DataSet pDataSet, BindingResult pResult)
-            throws ModuleException {
+    public HttpEntity<Resource<DataSet>> createDataSet(@Valid @RequestPart("dataset") DataSet pDataSet,
+            @RequestPart("file") MultipartFile file, BindingResult pResult)
+            throws ModuleException, IOException, PluginUtilsException {
 
         // Validate dynamic model
         service.validate(pDataSet, pResult, false);
 
-        DataSet created = service.create(pDataSet);
+        DataSet created = service.create(pDataSet, file);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
@@ -94,7 +108,8 @@ public class DataSetController implements IResourceController<DataSet> {
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     @ResponseBody
     @ResourceAccess(description = "Retrieves a dataset")
-    public HttpEntity<Void> deleteDataSet(@PathVariable("dataset_id") Long pDataSetId) throws EntityNotFoundException {
+    public HttpEntity<Void> deleteDataSet(@PathVariable("dataset_id") Long pDataSetId)
+            throws EntityNotFoundException, PluginUtilsException {
         service.delete(pDataSetId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -103,7 +118,7 @@ public class DataSetController implements IResourceController<DataSet> {
     @ResponseBody
     @ResourceAccess(description = "Updates a DataSet")
     public HttpEntity<Resource<DataSet>> updateDataSet(@PathVariable("dataset_id") Long pDataSetId,
-            @Valid @RequestBody DataSet pDataSet, BindingResult pResult) throws ModuleException {
+            @Valid @RequestBody DataSet pDataSet, BindingResult pResult) throws ModuleException, PluginUtilsException {
 
         // Validate dynamic model
         service.validate(pDataSet, pResult, false);
@@ -132,7 +147,7 @@ public class DataSetController implements IResourceController<DataSet> {
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataSet", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Collection.class));
+                                MethodParamFactory.build(DataSet.class));
         return resource;
     }
 

@@ -33,6 +33,9 @@ public class DataAccessRight {
     @JoinColumn(name = "plugin_conf_id", foreignKey = @ForeignKey(name = "fk_access_right_plugin_conf"))
     private PluginConfiguration pluginConfiguration;
 
+    protected DataAccessRight() {
+    }
+
     public DataAccessRight(DataAccessLevel pDataAccessLevel) {
         dataAccessLevel = pDataAccessLevel;
     }

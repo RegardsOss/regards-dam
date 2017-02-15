@@ -49,6 +49,7 @@ import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -90,8 +91,6 @@ public class DataSetServiceTest {
 
     private DataSetService dataSetServiceMocked;
 
-    private IStorageService storageServiceMocked;
-
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
     private IdentificationService idServiceMocked;
@@ -114,7 +113,6 @@ public class DataSetServiceTest {
         JWTService jwtService = new JWTService();
         jwtService.injectMockToken("Tenant", "PUBLIC");
         dataSetRepositoryMocked = Mockito.mock(IDataSetRepository.class);
-        storageServiceMocked = Mockito.mock(IStorageService.class);
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         idServiceMocked = Mockito.mock(IdentificationService.class);
         pModelAttributeService = Mockito.mock(IModelAttributeService.class);
@@ -127,21 +125,21 @@ public class DataSetServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        dataSet1 = new DataSet(pModel1, getUrn(), "dataSet1");
+        dataSet1 = new DataSet(pModel1, getUrn(), "dataSet1", "licence");
         dataSet1.setId(1L);
-        dataSet2 = new DataSet(pModel2, getUrn(), "dataSet2");
+        dataSet2 = new DataSet(pModel2, getUrn(), "dataSet2", "licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet2.setDataSource(new DataSource(modelOfObjects));
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
-        dataSet22 = new DataSet(pModel2, getUrn(), "dataSet22");
+        dataSet22 = new DataSet(pModel2, getUrn(), "dataSet22", "licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet22.setDataSource(new DataSource(modelOfObjects));
         dataSet22.setSubsettingClause(getInvalidClause());
         dataSet22.setId(22L);
-        dataSet3 = new DataSet(pModel2, getUrn(), "dataSet3");
+        dataSet3 = new DataSet(pModel2, getUrn(), "dataSet3", "licence");
         dataSet3.setId(3L);
-        dataSet4 = new DataSet(pModel2, getUrn(), "dataSet4");
+        dataSet4 = new DataSet(pModel2, getUrn(), "dataSet4", "licence");
         dataSet4.setId(4L);
         dataSet2URN = dataSet2.getIpId();
         Set<String> dataSet1Tags = dataSet1.getTags();
@@ -155,10 +153,6 @@ public class DataSetServiceTest {
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet22.getId())).thenReturn(dataSet22);
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet3.getId())).thenReturn(dataSet3);
-
-        Mockito.when(storageServiceMocked.persist(dataSet1)).thenReturn(dataSet1);
-        Mockito.when(storageServiceMocked.persist(dataSet2)).thenReturn(dataSet2);
-        Mockito.when(storageServiceMocked.persist(dataSet22)).thenReturn(dataSet22);
 
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(dataSet1);
@@ -175,7 +169,7 @@ public class DataSetServiceTest {
 
         dataSetServiceMocked = new DataSetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, idServiceMocked, entitiesRepositoryMocked,
-                pModelService, storageServiceMocked);
+                pModelService);
 
     }
 
@@ -307,7 +301,7 @@ public class DataSetServiceTest {
     // @Requirement("REGARDS_DSL_DAM_COL_210")
     @Purpose("Le système doit permettre de mettre à jour les valeurs d’une dataSet via son IP_ID et d’archiver ces modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
-    public void updateDataSet() throws ModuleException {
+    public void updateDataSet() throws ModuleException, PluginUtilsException {
         final DataSet updatedDataSet1 = dataSet1;
 
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
@@ -324,7 +318,7 @@ public class DataSetServiceTest {
     // @Requirement("REGARDS_DSL_DAM_COL_220")
     @Purpose("Le système doit permettre d’associer/dissocier des dataSets à la dataSet courante lors de la mise à jour.")
     @Test
-    public void testFullUpdate() throws ModuleException {
+    public void testFullUpdate() throws ModuleException, PluginUtilsException {
         final String col4Tag = dataSet4.getIpId().toString();
         final Set<String> newTags = new HashSet<>();
         newTags.add(col4Tag);
@@ -335,7 +329,7 @@ public class DataSetServiceTest {
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateDataSetWithWrongURL() throws ModuleException {
+    public void updateDataSetWithWrongURL() throws ModuleException, PluginUtilsException {
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
         dataSetServiceMocked.update(dataSet2.getId(), dataSet1);
     }
@@ -343,7 +337,7 @@ public class DataSetServiceTest {
     // @Requirement("REGARDS_DSL_DAM_COL_120")
     @Purpose("Si la suppression d’une dataSet est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
-    public void deleteDataSet() throws EntityNotFoundException {
+    public void deleteDataSet() throws EntityNotFoundException, PluginUtilsException {
         dataSetServiceMocked.delete(dataSet2.getId());
         Assert.assertFalse(dataSet1.getTags().contains(dataSet2.getIpId().toString()));
         Assert.assertTrue(dataSet2.isDeleted());
@@ -352,17 +346,17 @@ public class DataSetServiceTest {
     // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createDataSet() throws ModuleException {
+    public void createDataSet() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
-        final DataSet dataSet = dataSetServiceMocked.create(dataSet2);
+        final DataSet dataSet = dataSetServiceMocked.create(dataSet2, null);
         // Mockito.verify(dataSourceServiceMocked).getDefaultDataSource();
         Assert.assertEquals(dataSet2, dataSet);
     }
 
     @Test(expected = EntityInvalidException.class)
-    public void createDataSetInvalid() throws ModuleException {
+    public void createDataSetInvalid() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(dataSet22)).thenReturn(dataSet22);
-        final DataSet dataSet = dataSetServiceMocked.create(dataSet22);
+        final DataSet dataSet = dataSetServiceMocked.create(dataSet22, null);
         // exception expected
     }
 

@@ -3,15 +3,18 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.validation.Errors;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -48,7 +51,7 @@ public interface IEntityService {
 
     AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
 
-    <T extends AbstractEntity> T create(T pEntity) throws ModuleException;
+    // <T extends AbstractEntity> T create(T pEntity) throws ModuleException;
 
     /**
      * updates entity of id pEntityId according to pEntity
@@ -57,14 +60,26 @@ public interface IEntityService {
      * @param pEntity
      * @return updated entity
      * @throws ModuleException
+     * @throws PluginUtilsException
      */
     // FIXME: should i use a clone of the parameter instead of modifying it?
-    <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException;
+    <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException, PluginUtilsException;
 
-    AbstractEntity delete(Long pEntityId) throws EntityNotFoundException;
+    AbstractEntity delete(Long pEntityId) throws EntityNotFoundException, PluginUtilsException;
 
-    AbstractEntity delete(String pEntityIpId) throws EntityNotFoundException;
+    AbstractEntity delete(String pEntityIpId) throws EntityNotFoundException, PluginUtilsException;
 
     void checkLinkedEntity(AbstractEntity pEntity) throws ModuleException;
+
+    /**
+     * @param pEntity
+     * @param pFile
+     * @return
+     * @throws ModuleException
+     * @throws IOException
+     * @throws PluginUtilsException
+     */
+    <T extends AbstractEntity> T create(T pEntity, MultipartFile pFile)
+            throws ModuleException, IOException, PluginUtilsException;
 
 }
