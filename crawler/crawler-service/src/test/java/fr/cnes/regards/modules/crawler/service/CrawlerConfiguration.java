@@ -16,7 +16,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler" }, basePackageClasses = {
         MultitenantFlattenedAttributeAdapterFactory.class, GsonAutoConfiguration.class,
         MultitenantAutoConfiguration.class })
-@PropertySource({ "classpath:crawler.properties" })
+@PropertySource("classpath:datasource-test.properties")
 public class CrawlerConfiguration {
 
     @Bean

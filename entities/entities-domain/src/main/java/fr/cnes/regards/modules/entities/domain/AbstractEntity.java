@@ -56,7 +56,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * last time the entity was updated
      */
     @PastOrNow
-    @Column(name = "last_update")
+    @Column(name = "update_date")
     protected LocalDateTime lastUpdate;
 
     /**
@@ -65,6 +65,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @PastOrNow
     @Column(name = "creation_date")
     protected LocalDateTime creationDate;
+
+    @PastOrNow
+    @Column(name = "deletion_date")
+    protected LocalDateTime deletionDate;
 
     /**
      * entity id for SGBD purpose mainly and REST request
@@ -100,7 +104,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected String description;
 
     /**
-     * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business meaning<br/>
+     * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
+     * meaning<br/>
      */
     @ElementCollection
     @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"))
@@ -117,7 +122,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Set<String> indirectCollections;
 
     /**
-     * list of attribute associated to this entity
+     * list of attributes associated to this entity
      */
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
@@ -133,12 +138,18 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             updatable = false)
     protected Model model;
 
+    /**
+     * Is this entity has been deleted ?
+     */
+    @Column(name = "deleted")
+    private boolean deleted = false;
+
     public AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
-        this.model = pModel;
-        this.ipId = pIpId;
-        this.label = pLabel;
-        this.creationDate = LocalDateTime.now();
-        this.lastUpdate = LocalDateTime.now();
+        model = pModel;
+        ipId = pIpId;
+        label = pLabel;
+        creationDate = LocalDateTime.now();
+        lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();
     }
 
@@ -246,6 +257,22 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         description = pDescription;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean pIsDeleted) {
+        deleted = pIsDeleted;
+    }
+
+    public LocalDateTime getDeletionDate() {
+        return deletionDate;
+    }
+
+    public void setDeletionDate(LocalDateTime pDeletionDate) {
+        deletionDate = pDeletionDate;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -272,10 +299,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 

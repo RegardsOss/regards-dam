@@ -54,7 +54,7 @@ public class AccessGroup implements IIdentifiable<Long> {
 
     @NotNull
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "accessGroup")
-    private Set<GroupAccessRight> accesRights;
+    private Set<GroupAccessRight> accessRights;
 
     @Column(name = "private")
     private boolean isPrivate = Boolean.TRUE;
@@ -66,7 +66,7 @@ public class AccessGroup implements IIdentifiable<Long> {
     public AccessGroup(String pName) {
         super();
         users = new HashSet<>();
-        accesRights = new HashSet<>();
+        accessRights = new HashSet<>();
         name = pName;
     }
 
@@ -83,8 +83,8 @@ public class AccessGroup implements IIdentifiable<Long> {
         return name;
     }
 
-    public Set<GroupAccessRight> getAccesRights() {
-        return accesRights;
+    public Set<GroupAccessRight> getAccessRights() {
+        return accessRights;
     }
 
     public void setName(String pName) {
@@ -99,8 +99,8 @@ public class AccessGroup implements IIdentifiable<Long> {
         users.remove(pUser);
     }
 
-    public void setAccesRights(Set<GroupAccessRight> pAccesRights) {
-        accesRights = pAccesRights;
+    public void setAccessRights(Set<GroupAccessRight> pAccessRights) {
+        accessRights = pAccessRights;
     }
 
     public Set<User> getUsers() {

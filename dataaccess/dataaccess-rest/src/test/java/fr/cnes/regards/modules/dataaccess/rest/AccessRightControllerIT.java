@@ -106,6 +106,8 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private GroupAccessRight gar2;
 
+    private GroupAccessRight gar3;
+
     @Autowired
     private AccessGroupService agService;
 
@@ -140,6 +142,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         ag2 = agRepo.save(ag2);
         gar2 = new GroupAccessRight(qf, al, ds2, ag2);
         gar2 = groupRepo.save(gar2);
+        gar3 = new GroupAccessRight(qf, al, ds2, ag2);
     }
 
     private UniformResourceName getUrn() {
@@ -255,6 +258,31 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
                           expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
+    }
+
+    @Test
+    public void testCreateAccessRight() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isCreated());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        performDefaultPost(AccessRightController.PATH_ACCESS_RIGHTS, gar3, expectations, ACCESS_RIGHTS_ERROR_MSG);
+    }
+
+    @Test
+    public void testUpdateAccessRight() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID, uar1,
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
+    }
+
+    @Test
+    public void testDeleteAccessRight() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
+        performDefaultDelete(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
+                             expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
     }
 
     @Override

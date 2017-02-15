@@ -6,17 +6,21 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetaData;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
@@ -32,6 +36,11 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,13 +54,20 @@ import org.springframework.stereotype.Repository;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
-import fr.cnes.regards.modules.crawler.dao.querybuilder.QueryBuilderVisitor;
+import fr.cnes.regards.modules.crawler.dao.builder.AggregationBuilderFacetTypeVisitor;
+import fr.cnes.regards.modules.crawler.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.crawler.domain.facet.DateFacet;
+import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
+import fr.cnes.regards.modules.crawler.domain.facet.IFacet;
+import fr.cnes.regards.modules.crawler.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.crawler.domain.facet.StringFacet;
 
 /**
  * Elasticsearch repository implementation
@@ -71,9 +87,19 @@ public class EsRepository implements IEsRepository {
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
 
     /**
+     * Maximum number of retries after a timeout
+     */
+    private static final int MAX_TIMEOUT_RETRIES = 3;
+
+    /**
      * QueryBuilder visitor used for Elasticsearch search requests
      */
-    private static final QueryBuilderVisitor CRITERION_VISITOR = new QueryBuilderVisitor();
+    private static final QueryBuilderCriterionVisitor CRITERION_VISITOR = new QueryBuilderCriterionVisitor();
+
+    /**
+     * AggregationBuilder visitor used for Elasticsearch search requests with facets
+     */
+    private static final AggregationBuilderFacetTypeVisitor FACET_VISITOR = new AggregationBuilderFacetTypeVisitor();
 
     /**
      * Elasticsearch port
@@ -285,18 +311,11 @@ public class EsRepository implements IEsRepository {
     public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
         try {
             final List<T> results = new ArrayList<>();
-            SearchResponse response;
-            int errorCount = 0;
-            do {
-                response = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
-                        .setSize(pPageRequest.getPageSize()).get();
-                errorCount += response.isTimedOut() ? 1 : 0;
-                if (errorCount == 3) {
-                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
-                }
-            } while (response.isTimedOut());
-            final SearchHits hits = response.getHits();
-            for (final SearchHit hit : hits) {
+            SearchRequestBuilder request = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
+                    .setSize(pPageRequest.getPageSize());
+            SearchResponse response = getWithTimeouts(request);
+            SearchHits hits = response.getHits();
+            for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
@@ -306,31 +325,248 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion) {
-        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion);
+    public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion,
+            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
+        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion, pFacetsMap, pAscSortMap);
     }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion) {
+    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
+            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         try {
             final List<T> results = new ArrayList<>();
-            SearchResponse response;
-            int errorCount = 0;
-            do {
-                response = client.prepareSearch(pIndex).setQuery(criterion.accept(CRITERION_VISITOR))
-                        .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize()).get();
-                errorCount += response.isTimedOut() ? 1 : 0;
-                if (errorCount == 3) {
-                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
+            // Use filter instead of "direct" query (in theory, quickest because no score is computed)
+            QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                    .filter(criterion.accept(CRITERION_VISITOR));
+            // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
+            SearchRequestBuilder request = client.prepareSearch(pIndex).setQuery(critBuilder)
+                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
+            if (pAscSortMap != null) {
+                manageSortRequest(pIndex, request, pAscSortMap);
+            }
+            // Managing aggregations if some facets are asked
+            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
+            // Launch the request
+            SearchResponse response = getWithTimeouts(request);
+
+            // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
+            if (twoPassRequestNeeded) {
+                // Rebuild request
+                request = client.prepareSearch(pIndex).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
+                        .setSize(pPageRequest.getPageSize());
+                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
+                // Relaunch the request with replaced facets
+                response = getWithTimeouts(request);
+            }
+
+            Map<String, IFacet<?>> facetResultsMap = null;
+            if (pFacetsMap != null) {
+                // Get the new aggregations result map
+                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                // Create the facet map
+                facetResultsMap = new HashMap<>();
+                for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+                    FacetType facetType = entry.getValue();
+                    String attributeName = entry.getKey();
+                    fillFacetMap(aggsMap, facetResultsMap, facetType, attributeName);
                 }
-            } while (response.isTimedOut());
-            final SearchHits hits = response.getHits();
-            for (final SearchHit hit : hits) {
+            }
+
+            SearchHits hits = response.getHits();
+            for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
             }
-            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+            // If no facet, juste returns a "simple" Page
+            if (facetResultsMap == null) {
+                return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+            } else { // else returns a FacetPage
+                return new FacetPage<>(results, facetResultsMap, pPageRequest, response.getHits().getTotalHits());
+            }
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
+        }
+    }
+
+    /**
+     * Add sort to the request
+     * @param request search request
+     * @param pAscSortMap map(attribute name, true if ascending)
+     */
+    private void manageSortRequest(String pIndex, SearchRequestBuilder request,
+            LinkedHashMap<String, Boolean> pAscSortMap) {
+        // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
+        // end of attribute name into sort request. So we need to know string attributes
+        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(pIndex)
+                .setFields(pAscSortMap.keySet().toArray(new String[pAscSortMap.size()])).get();
+        // map(type, map(field, metadata)) for asked index
+        Map<String, Map<String, FieldMappingMetaData>> mappings = response.mappings().get(pIndex);
+        // All types mappings are retrieved.
+        // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
+        // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
+        LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(pAscSortMap.size());
+        for (Map.Entry<String, Boolean> sortEntry : pAscSortMap.entrySet()) {
+            String attributeName = sortEntry.getKey();
+            // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
+            String lastPathAttName = attributeName.contains(".")
+                    ? attributeName.substring(attributeName.lastIndexOf('.') + 1) : attributeName;
+            // For all type mappings
+            boolean typeText = false;
+            for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
+                // Once we found attribute name on one type, we stop to next attribute
+                if (typeEntry.getValue().containsKey(attributeName)) {
+                    FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
+                    // If field type is String, we must add ".keyword" to attribute name
+                    Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
+                    if ((metaDataMap.get(lastPathAttName) != null)
+                            && (metaDataMap.get(lastPathAttName) instanceof Map)) {
+                        Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
+                        // Should contains "type" field but...
+                        if (mappingMap.containsKey("type")) {
+                            if (mappingMap.get("type").equals("text")) {
+                                updatedAscSortMap.put(attributeName + ".keyword", sortEntry.getValue());
+                                typeText = true;
+                                break;
+                            } else { // "type" field found => it's not "text"
+                                typeText = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            // Not "text" type => add the key/value to keep the sort order
+            if (!typeText) {
+                updatedAscSortMap.put(attributeName, sortEntry.getValue());
+            }
+        }
+        // Add sort to request
+        updatedAscSortMap.entrySet()
+                .forEach(entry -> request.addSort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
+    }
+
+    /**
+     * Add aggregations to the search request.
+     * @param pFacetsMap asked facets
+     * @param request search request
+     * @return true if a second pass is needed (managing range facets)
+     */
+    private boolean manageFirstPassRequestAggregations(Map<String, FacetType> pFacetsMap,
+            SearchRequestBuilder request) {
+        boolean twoPassRequestNeeded = false;
+        if (pFacetsMap != null) {
+            // Numeric/date facets needs :
+            // First to add a percentiles aggregation to retrieved 9 values corresponding to
+            // 10%, 20 %, ..., 90 % of the values
+            // Secondly to add a range aggregation with these 9 values in order to retrieve 10 buckets of equal
+            // size of values
+            for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+                FacetType facetType = entry.getValue();
+                if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
+                    twoPassRequestNeeded = true;
+                }
+                request.addAggregation(facetType.accept(FACET_VISITOR, entry.getKey()));
+            }
+        }
+        return twoPassRequestNeeded;
+    }
+
+    /**
+     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results
+     * (from first pass request results) to create range aggregagtions.
+     * @param pFacetsMap asked facets
+     * @param request search request
+     * @param aggsMap first pass aggregagtions results
+     */
+    private void manageSecondPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchRequestBuilder request,
+            Map<String, Aggregation> aggsMap) {
+        for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+            FacetType facetType = entry.getValue();
+            String attributeName = entry.getKey();
+            // Replace percentiles aggregations by range aggregagtions
+            if (facetType == FacetType.NUMERIC) {
+                Percentiles percentiles = (Percentiles) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_POSTFIX);
+                request.addAggregation(FacetType.RANGE.accept(FACET_VISITOR, attributeName, percentiles));
+            } else if (facetType == FacetType.DATE) {
+                Percentiles percentiles = (Percentiles) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
+                request.addAggregation(FacetType.RANGE.accept(FACET_VISITOR, attributeName, percentiles));
+            } else { // Let it as upper
+                request.addAggregation(facetType.accept(FACET_VISITOR, attributeName));
+            }
+        }
+    }
+
+    /**
+     * Compute aggregations results to fill results facet map of an attribute
+     * @param aggsMap aggregation resuls map
+     * @param facetMap map of results facets
+     * @param facetType type of facet for given attribute
+     * @param attributeName given attribute
+     */
+    private void fillFacetMap(Map<String, Aggregation> aggsMap, Map<String, IFacet<?>> facetMap, FacetType facetType,
+            String attributeName) {
+        switch (facetType) {
+            case STRING: {
+                Terms terms = (Terms) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_POSTFIX);
+                Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
+                terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
+                facetMap.put(attributeName, new StringFacet(attributeName, valueMap));
+                break;
+            }
+            case NUMERIC: {
+                org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
+                Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
+                for (Bucket bucket : numRange.getBuckets()) {
+                    Range<Double> valueRange;
+                    // (-∞ -> ?
+                    if (bucket.getFrom() == null) {
+                        // (-∞ -> +∞) (completely dumb but...who knows ?)
+                        if (bucket.getTo() == null) {
+                            valueRange = Range.all();
+                        } else { // (-∞ -> value]
+                            valueRange = Range.atMost((Double) bucket.getTo());
+                        }
+                    } else if (bucket.getTo() == null) { // ? -> +∞)
+                        valueRange = Range.greaterThan((Double) bucket.getFrom());
+                    } else { // [value -> value)
+                        valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                    }
+                    valueMap.put(valueRange, bucket.getDocCount());
+                }
+                facetMap.put(attributeName, new NumericFacet(attributeName, valueMap));
+                break;
+            }
+            case DATE: {
+                org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
+                Map<com.google.common.collect.Range<LocalDateTime>, Long> valueMap = new LinkedHashMap<>();
+                for (Bucket bucket : dateRange.getBuckets()) {
+                    Range<LocalDateTime> valueRange;
+                    // (-∞ -> ?
+                    if (bucket.getFromAsString() == null) {
+                        // (-∞ -> +∞) (completely dumb but...who knows ?)
+                        if (bucket.getToAsString() == null) {
+                            valueRange = Range.all();
+                        } else { // (-∞ -> value]
+                            valueRange = Range.atMost(LocalDateTimeAdapter.parse(bucket.getToAsString()));
+                        }
+                    } else if (bucket.getToAsString() == null) { // ? -> +∞)
+                        valueRange = Range.greaterThan(LocalDateTimeAdapter.parse(bucket.getFromAsString()));
+                    } else { // [value -> value)
+                        valueRange = Range.closedOpen(LocalDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                      LocalDateTimeAdapter.parse(bucket.getToAsString()));
+                    }
+                    valueMap.put(valueRange, bucket.getDocCount());
+                }
+                facetMap.put(attributeName, new DateFacet(attributeName, valueMap));
+                break;
+            }
+            default:
+                break;
         }
     }
 
@@ -346,26 +582,38 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
             // LocalDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof LocalDateTime)
-                    ? LocalDateTimeAdapter.ISO_DATE_TIME_OPTIONAL_OFFSET.format((LocalDateTime) pValue) : pValue;
-            SearchResponse response;
-            int errorCount = 0;
-            do {
-                QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
-                response = client.prepareSearch(pIndex).setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
-                        .setSize(pPageRequest.getPageSize()).get();
-                errorCount += response.isTimedOut() ? 1 : 0;
-                if (errorCount == 3) {
-                    throw new TimeoutException("Get 3 timeouts while attempting to retrieve data");
-                }
-            } while (response.isTimedOut());
-            final SearchHits hits = response.getHits();
-            for (final SearchHit hit : hits) {
+            Object value = (pValue instanceof LocalDateTime) ? LocalDateTimeAdapter.format((LocalDateTime) pValue)
+                    : pValue;
+            QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
+            SearchRequestBuilder request = client.prepareSearch(pIndex).setQuery(queryBuilder)
+                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
+            SearchResponse response = getWithTimeouts(request);
+            SearchHits hits = response.getHits();
+            for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), pClass));
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    /**
+     * Call specified request at least MAX_TIMEOUT_RETRIES
+     * @param request
+     * @return
+     */
+    private SearchResponse getWithTimeouts(SearchRequestBuilder request) {
+        SearchResponse response;
+        int errorCount = 0;
+        do {
+            response = request.get();
+            errorCount += response.isTimedOut() ? 1 : 0;
+            if (errorCount == MAX_TIMEOUT_RETRIES) {
+                throw new TimeoutException(
+                        String.format("Get %d timeouts while attempting to retrieve data", MAX_TIMEOUT_RETRIES));
+            }
+        } while (response.isTimedOut());
+        return response;
     }
 }

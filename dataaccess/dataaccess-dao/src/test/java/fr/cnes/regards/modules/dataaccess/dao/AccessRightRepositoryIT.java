@@ -75,11 +75,11 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     private DataSet ds2;
 
-    private final String ds1Name = "DS1";
-
-    private final String ds2Name = "DS2";
-
-    private final String dsDesc = "DESC";
+//    private final String ds1Name = "DS1";
+//
+//    private final String ds2Name = "DS2";
+//
+//    private final String dsDesc = "DESC";
 
     private UserAccessRight uar1;
 

@@ -27,16 +27,17 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreSQLConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.domain.AttributeMappingAdapter;
-import fr.cnes.regards.modules.datasources.plugins.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.DataSourceUtilsException;
+import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -72,22 +73,22 @@ public class PostgreDataSourcePluginTest {
     @Value("${postgresql.datasource.driver}")
     private String driver;
 
-    private List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
-
     private IDataSourcePlugin plgDataSource;
 
-    private final AttributeMappingAdapter adapter = new AttributeMappingAdapter();
+    private DataSourceModelMapping modelMapping;
+
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     /**
      * Populate the datasource as a legacy catalog
      * 
-     * @throws DataSourceUtilsException
+     * @throws DataSourcesPluginException
      * 
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourceUtilsException {
+    public void setUp() throws DataSourcesPluginException {
         /*
          * Add data to the data source
          */
@@ -112,18 +113,18 @@ public class PostgreDataSourcePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostGreSqlConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(attributes))
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     .addParameter(PostgreDataSourcePlugin.REQUEST_PARAM, "select * from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
         try {
             plgDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
-            throw new DataSourceUtilsException(e.getMessage());
+            throw new DataSourcesPluginException(e.getMessage());
         }
 
     }
@@ -132,9 +133,9 @@ public class PostgreDataSourcePluginTest {
     public void firstTest() {
         Assert.assertEquals(3, repository.count());
 
-        Page<AbstractEntity> ll = plgDataSource.findAll(new PageRequest(0, 10));
-
+        Page<DataObject> ll = plgDataSource.findAll(new PageRequest(0, 10));
         Assert.assertNotNull(ll);
+        Assert.assertEquals(3, ll.getContent().size());
     }
 
     @After
@@ -143,32 +144,37 @@ public class PostgreDataSourcePluginTest {
     }
 
     /**
-     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreSQLConnectionPlugin} to connect to the
-     * PostgreSql database
+     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
+     * database
      * 
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreSQLConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.DRIVER_PARAM, driver)
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreSQLConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreSQLConnectionPlugin.class,
+        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+        
+        attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
         attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
-        attributes.add(new DataSourceAttributeMapping("alt", AttributeType.INTEGER, "altitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("lat", AttributeType.DOUBLE, "latitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("long", AttributeType.DOUBLE, "longitude", "geometry"));
-        attributes.add(new DataSourceAttributeMapping("creationDate", AttributeType.DATE_ISO8601, "date", "hello"));
-        attributes.add(new DataSourceAttributeMapping("isUpdate", AttributeType.BOOLEAN, "update", "hello"));
+        attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
+        attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
+        attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
+        attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
+        
+        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
 
     }
 

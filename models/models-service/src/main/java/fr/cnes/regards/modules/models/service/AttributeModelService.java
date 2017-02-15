@@ -77,11 +77,11 @@ public class AttributeModelService implements IAttributeModelService {
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
             IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
             IAttributePropertyRepository pAttPropertyRepository, IPublisher pPublisher) {
-        this.attModelRepository = pAttModelRepository;
-        this.restrictionRepository = pRestrictionRepository;
-        this.fragmentRepository = pFragmentRepository;
-        this.attPropertyRepository = pAttPropertyRepository;
-        this.publisher = pPublisher;
+        attModelRepository = pAttModelRepository;
+        restrictionRepository = pRestrictionRepository;
+        fragmentRepository = pFragmentRepository;
+        attPropertyRepository = pAttPropertyRepository;
+        publisher = pPublisher;
     }
 
     @Override
@@ -286,6 +286,9 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName) {
+        if (pFragmentName == null) {
+            return attModelRepository.findByNameAndFragmentName(pAttributeName, Fragment.getDefaultName());
+        }
         return attModelRepository.findByNameAndFragmentName(pAttributeName, pFragmentName);
     }
 }

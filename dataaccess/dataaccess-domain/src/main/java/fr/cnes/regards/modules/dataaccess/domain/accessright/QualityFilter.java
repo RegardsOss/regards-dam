@@ -17,11 +17,6 @@ import javax.validation.constraints.Min;
 @Embeddable
 public class QualityFilter {
 
-    /*    @Id
-    @SequenceGenerator(name = "QualityFilterSequence", initialValue = 1, sequenceName = "SEQ_QUALITY_FILTER")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "QualityFilterSequence")
-    private Long id;*/
-
     @Min(0)
     @Max(10)
     @Column(name = "max_score")
@@ -48,13 +43,11 @@ public class QualityFilter {
         qualityLevel = pQualityLevel;
     }
 
-    /*    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long pId) {
-        id = pId;
-    }*/
+    /*
+     * public Long getId() { return id; }
+     * 
+     * public void setId(Long pId) { id = pId; }
+     */
 
     public int getMaxScore() {
         return maxScore;

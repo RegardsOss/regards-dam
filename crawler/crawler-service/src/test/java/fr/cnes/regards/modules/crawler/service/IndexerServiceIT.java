@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -21,6 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.gson.Gson;
 
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -63,6 +67,9 @@ public class IndexerServiceIT {
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
+
+    @Autowired
+    private Gson gson;
 
     @Before
     public void setUp() throws Exception {
@@ -158,6 +165,7 @@ public class IndexerServiceIT {
         indexerService.createIndex(tenant);
         indexerService.saveEntity(tenant, collection);
         indexerService.refresh(tenant);
+
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         List<Collection> singleCollColl = indexerService
                 .search(tenant, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();

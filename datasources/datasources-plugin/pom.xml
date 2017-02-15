@@ -50,20 +50,18 @@
 			<groupId>com.oracle</groupId>
 			<artifactId>ojdbc6</artifactId>
 			<version>12.1.0.1-atlassian-hosted</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.oracle</groupId>
 			<artifactId>orai18n</artifactId>
 			<version>11.2.0.3</version>
-			<scope>test</scope>
 		</dependency>
 		<!-- Oracle driver -->
-
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-service</artifactId>
-		</dependency>
+<!-- TODO: check dependencies needed -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>fr.cnes.regards.modules.entities</groupId> -->
+<!-- 			<artifactId>entities-service</artifactId> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
@@ -74,6 +72,14 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-java8</artifactId>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/cz.jirutka.spring/spring-data-jdbc-repository -->
+		<dependency>
+			<groupId>cz.jirutka.spring</groupId>
+			<artifactId>spring-data-jdbc-repository</artifactId>
+			<version>0.5.0</version>
+		</dependency>
+
 
 	</dependencies>
 </project>
