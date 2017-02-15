@@ -29,7 +29,7 @@ public class DBConnectionService implements IDBConnectionService {
     /**
      * Attribute plugin service 
      */
-    private IPluginService service;
+    private final IPluginService service;
 
     /**
      * The constructor with an instance of the {@link PluginService}
