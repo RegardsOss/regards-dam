@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
  * @author Christophe Mertz
  *
  */
-@TestPropertySource(locations = { "classpath:test.properties" })
+@TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
@@ -211,8 +211,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     public void updateDBConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello",
                                                         "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin");
-        dbConnection.setMinPoolSize(0);
-        dbConnection.setMinPoolSize(133);
+        dbConnection.setMinPoolSize(3);
+        dbConnection.setMaxPoolSize(7);
         dbConnection.setUser("Bob");
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setPluginConfigurationId(plgConf.getId());
@@ -232,8 +232,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
                                                         "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setPluginConfigurationId(plgConf.getId());
-        dbConnection.setMinPoolSize(0);
-        dbConnection.setMinPoolSize(133);
+        dbConnection.setMinPoolSize(3);
+        dbConnection.setMaxPoolSize(5);
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
@@ -247,8 +247,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     public void tesConnectionFailed() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello",
                                                         "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
-        dbConnection.setMinPoolSize(0);
-        dbConnection.setMinPoolSize(133);
+        dbConnection.setMinPoolSize(5);
+        dbConnection.setMaxPoolSize(9);
         dbConnection.setUser("dardevil");
 
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);

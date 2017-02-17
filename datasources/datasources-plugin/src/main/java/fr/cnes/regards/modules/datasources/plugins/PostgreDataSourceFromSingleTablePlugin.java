@@ -14,22 +14,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.stream.JsonReader;
-import com.nurkiewicz.jdbcrepository.sql.OracleSqlGenerator;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class OracleDBDataSourcePlugin
+ * Class PostgreDataSourceFromSingleTablePlugin
  *
  * A {@link Plugin} to discover the tables, colums and index of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
@@ -37,13 +37,13 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows introspection to a Oracle database")
-public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin implements IDBDataSourcePlugin {
+@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows introspection to a PostgreSql database")
+public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin implements IDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(OracleDBDataSourcePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePlugin.class);
 
     /**
      * The connection to the database
@@ -94,18 +94,18 @@ public class OracleDBDataSourcePlugin extends AbstractDBDataSourcePlugin impleme
      */
     @Override
     protected SqlGenerator buildSqlGenerator() {
-        return new OracleSqlGenerator();
+        return new PostgreSqlGenerator();
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin#buildSqlGenerator(java.lang.String,
+     * @see fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.String,
      * java.lang.String)
      */
     @Override
     protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
-        return new OracleSqlGenerator(pAllColumnsClause);
+        return new PostgreSqlGenerator(pAllColumnsClause, pOrderBy);
     }
 
     /*

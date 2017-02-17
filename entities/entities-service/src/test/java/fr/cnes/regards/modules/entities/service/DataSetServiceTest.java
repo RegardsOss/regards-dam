@@ -129,12 +129,12 @@ public class DataSetServiceTest {
         dataSet1.setId(1L);
         dataSet2 = new DataSet(pModel2, getUrn(), "dataSet2", "licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet2.setDataSource(new DataSource(modelOfObjects));
+        dataSet2.setModelOfData(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
         dataSet22 = new DataSet(pModel2, getUrn(), "dataSet22", "licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet22.setDataSource(new DataSource(modelOfObjects));
+        dataSet22.setModelOfData(modelOfObjects);
         dataSet22.setSubsettingClause(getInvalidClause());
         dataSet22.setId(22L);
         dataSet3 = new DataSet(pModel2, getUrn(), "dataSet3", "licence");

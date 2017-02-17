@@ -16,6 +16,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
@@ -25,6 +26,7 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -87,25 +89,42 @@ public class DataSetService extends AbstractEntityService {
     }
 
     /**
-     * modify the DataSet in parameter if needed
+     * Control the DataSource associated to the {@link DataSet} in parameter if needed.</br>
+     * If any DataSource is associated, sets the default DataSource.
      *
      * @param pDataSet
+     *            the {@link DataSet} to check
+     * @return the modified {@link DataSet}
      * @throws EntityNotFoundException
+     *             the DataSet to check does not exist
      */
     private DataSet checkDataSource(DataSet pDataSet) throws EntityNotFoundException {
         if (pDataSet.getDataSource() == null) {
+            // If any DataSource, set the default DataSource
             pDataSet.setDataSource(dataSourceService.getDefaultDataSource());
         } else {
+            // Verify the existence of the DataSource associated to the DataSet
             dataSourceService.getDataSource(pDataSet.getDataSource().getId());
         }
         return pDataSet;
     }
 
+    /**
+     * Check that the sub-setting criterion setting on a DataSet are coherent with the {@link Model} associated to the
+     * {@link DataSource}.
+     * 
+     * @param pDataSet
+     *            the {@link DataSet} to check
+     * @return the modified {@link DataSet}
+     * @throws EntityInvalidException
+     *             the subsetting criterion are not coherent with the DataSet
+     */
     private DataSet checkSubsettingCriterion(DataSet pDataSet) throws EntityInvalidException {
         ICriterion subsettingCriterion = pDataSet.getSubsettingClause();
         if (subsettingCriterion != null) {
+
             SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
-                    pDataSet.getDataSource().getModelOfData(), attributeService, modelAttributeService);
+                    pDataSet.getModelOfData(), attributeService, modelAttributeService);
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
                         "given subsettingCriterion cannot be accepted for the DataSet : " + pDataSet.getLabel());

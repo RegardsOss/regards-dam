@@ -26,7 +26,6 @@ import com.google.gson.Gson;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.datasources.dao.IDataSourceRepository;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
@@ -54,9 +53,6 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Autowired
     private IModelRepository modelRepo;
-
-    @Autowired
-    private IDataSourceRepository dataSourceRepo;
 
     @Autowired
     private IDataSetRepository dataSetRepo;
@@ -103,10 +99,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataset.setSubsettingClause(getValidClause());
-
-        DataSource dataSource = new DataSource(srcModel);
-        dataSource = dataSourceRepo.save(dataSource);
-        dataset.setDataSource(dataSource);
+        dataset.setModelOfData(srcModel);
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
@@ -124,6 +117,8 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     @Test
     public void testFindOneWithPluginConfigurations() {
         LOG.info("START OF find one with plugin Configurations");
+        Assert.assertTrue(dataSetRepo.count()==1);
+        
         DataSet result = dataSetRepo.findOneWithPluginConfigurations(dataset.getId());
         LOG.info("END OF find one with plugin Configurations");
         Assert.assertTrue(result.getPluginConfigurationIds() != null);
