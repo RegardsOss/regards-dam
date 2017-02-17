@@ -27,13 +27,13 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 public class DBConnectionService implements IDBConnectionService {
 
     /**
-     * Attribute plugin service 
+     * Attribute plugin service
      */
     private IPluginService service;
 
     /**
      * The constructor with an instance of the {@link PluginService}
-     * 
+     *
      * @param pPluginService
      *            The {@link PluginService} to used by this service
      */
@@ -45,7 +45,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#getAllDBConnections()
      */
     @Override
@@ -55,7 +55,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#saveDBConnection(fr.cnes.regards.modules.
      * datasources.domain.DBConnection)
      */
@@ -83,7 +83,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#getDBConnection(java.lang.Long)
      */
     @Override
@@ -93,7 +93,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#updateDBConnection(fr.cnes.regards.modules.
      * datasources.domain.DBConnection)
      */
@@ -112,7 +112,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#deleteDBConnection(java.lang.Long)
      */
     @Override
@@ -122,7 +122,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#testDBConnection(java.lang.Long)
      */
     @Override
@@ -133,7 +133,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Build a {@link List} of {@link PluginParameter} for the {@link IDBConnectionPlugin}.
-     * 
+     *
      * @param pDbConn
      * @return a {@link List} of {@link PluginParameter}
      */
@@ -151,7 +151,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DBConnection} attribute
-     * 
+     *
      * @param pDbConn
      *            A {@link DBConnection}
      * @return a {{@link PluginParameter}

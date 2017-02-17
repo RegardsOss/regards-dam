@@ -25,10 +25,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-domain</artifactId>
 		</dependency>
@@ -81,5 +77,18 @@
 		</dependency>
 
 
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>module-plugins-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.utils</groupId>
+			<artifactId>plugin-utils</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>module-plugins-service</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

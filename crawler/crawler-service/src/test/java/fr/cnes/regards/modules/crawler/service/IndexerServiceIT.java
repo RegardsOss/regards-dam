@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,8 +43,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -83,9 +80,7 @@ public class IndexerServiceIT {
         model.setType(EntityType.COLLECTION);
 
         // Creating a Collection with all types of attributes
-        Collection collection = new Collection(model,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, TENANT, UUID.randomUUID(), 1),
-                "coll1");
+        Collection collection = new Collection(model, TENANT, "coll1");
         List<AbstractAttribute<?>> attributes = new ArrayList<>();
 
         gsonAttributeFactory.registerSubtype(BooleanAttribute.class, "booleanAtt");
@@ -211,9 +206,7 @@ public class IndexerServiceIT {
     }
 
     private Collection createCollection(Model collModel, int i) {
-        Collection collection = new Collection(collModel,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, SEARCH, UUID.randomUUID(), 1),
-                "coll" + i);
+        Collection collection = new Collection(collModel, SEARCH, "coll" + i);
         List<AbstractAttribute<?>> attributes = new ArrayList<>();
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));

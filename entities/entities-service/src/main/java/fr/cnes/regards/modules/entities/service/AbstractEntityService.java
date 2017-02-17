@@ -12,18 +12,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
+import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
@@ -32,14 +37,12 @@ import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
+import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -80,19 +83,26 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private final IAbstractEntityRepository<AbstractEntity> entitiesRepository;
 
-    /**
-     * Service managing identifier
-     */
-    private final IdentificationService idService;
+    protected final ICollectionRepository collectionRepository;
+
+    protected final IDataSetRepository datasetRepository;
+
+    private final IDeletedEntityRepository deletedEntityRepository;
+
+    @Autowired
+    private EntityManager em;
 
     public AbstractEntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
-            IStorageService pStorageService, IdentificationService pIdService) {
+            IStorageService pStorageService, IDeletedEntityRepository pDeletedEntityRepository,
+            ICollectionRepository pCollectionRepository, IDataSetRepository pDatasetRepository) {
         modelAttributeService = pModelAttributeService;
         entitiesRepository = pEntitiesRepository;
         modelService = pModelService;
         storageService = pStorageService;
-        idService = pIdService;
+        deletedEntityRepository = pDeletedEntityRepository;
+        collectionRepository = pCollectionRepository;
+        datasetRepository = pDatasetRepository;
     }
 
     @Override
@@ -247,70 +257,75 @@ public abstract class AbstractEntityService implements IEntityService {
         }
     }
 
-    private Collection associateCollection(Collection pSource, Set<UniformResourceName> pTargetsUrn) {
-        final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
-        for (AbstractEntity target : entityToAssociate) {
+    /**
+     * Associate entities URNs to a collection : add URNs into tags
+     * @param pColl concerned collection
+     * @param pTargetsUrn URNs to be associated with collection
+     * @return updated collection
+     */
+    private Collection associateCollection(Collection pColl, Set<UniformResourceName> pTargetsUrn) {
+        final List<AbstractEntity> existingEntities = entitiesRepository.findByIpIdIn(pTargetsUrn);
+        for (AbstractEntity target : existingEntities) {
             if (!(target instanceof Document)) {
                 // Documents cannot be tagged into Collections
-                pSource.getTags().add(target.getIpId().toString());
-            }
-            // bidirectional association if it's a collection or dataset
-            if (target instanceof AbstractLinkEntity) {
-                target.getTags().add(pSource.getIpId().toString());
-                entitiesRepository.save(target);
+                pColl.getTags().add(target.getIpId().toString());
             }
         }
-
-        return entitiesRepository.save(pSource);
+        // Manage groups of new associated collection
+        this.manageGroups(pColl);
+        return entitiesRepository.save(pColl);
     }
 
     private AbstractDataEntity associateDataEntity(AbstractDataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
         final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
         for (AbstractEntity target : entityToAssociate) {
             if (target instanceof AbstractLinkEntity) {
-                // only Collections(and DataSets) can only be associated with DataObjects
+                // only Collections (and DataSets) can be associated with DataObjects
                 pSource.getTags().add(target.getIpId().toString());
             }
         }
         return entitiesRepository.save(pSource);
     }
 
-    private DataSet associateDataSet(DataSet pSource, Set<UniformResourceName> pTargetsUrn) {
-        return pSource;
-    }
-
     /**
-     * dissociates specified entity from all associated entities
-     *
-     * @param pToDelete
+     * Associate entities URNs to a dataset : add URNs into tags
+     * @param pDataset concerned dataset
+     * @param pTargetsUrn URNs to be associated with dataset
+     * @return updated dataset
      */
-    @Override
-    public void dissociate(AbstractEntity pToDelete) {
-        final List<AbstractEntity> linkedToToDelete = entitiesRepository.findByTags(pToDelete.getIpId().toString());
-        dissociate(pToDelete, linkedToToDelete);
+    private DataSet associateDataSet(DataSet pDataset, Set<UniformResourceName> pTargetsUrn) {
+        final List<AbstractEntity> existingEntities = entitiesRepository.findByIpIdIn(pTargetsUrn);
+        for (AbstractEntity target : existingEntities) {
+            if (target instanceof Collection) {
+                // Only collections can be tagged into Dataset
+                pDataset.getTags().add(target.getIpId().toString());
+            }
+        }
+        return pDataset;
     }
 
-    @Override
+    /*    @Override
     public <T extends AbstractEntity> T dissociate(T pSource, Set<UniformResourceName> pTargetsUrn) {
         final List<AbstractEntity> entityToDissociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
         return dissociate(pSource, entityToDissociate);
-    }
+    }*/
 
-    @Override
-    public <T extends AbstractEntity> T dissociate(T pSource, List<AbstractEntity> pEntityToDissociate) {
-        final Set<String> toDissociateAssociations = pSource.getTags();
-        for (AbstractEntity toBeDissociated : pEntityToDissociate) {
-            toDissociateAssociations.remove(toBeDissociated.getIpId().toString());
+    private <T extends AbstractEntity> T dissociate(T pSource, List<AbstractEntity> pTaggingEntities) {
+        // Manage groups
+        Set<String> groups = pSource.getGroups();
+
+        // Manage tags
+        final Set<String> taggedEntities = pSource.getTags();
+        for (AbstractEntity toBeDissociated : pTaggingEntities) {
+            taggedEntities.remove(toBeDissociated.getIpId().toString());
             toBeDissociated.getTags().remove(pSource.getIpId().toString());
             entitiesRepository.save(toBeDissociated);
         }
-        pSource.setTags(toDissociateAssociations);
         return entitiesRepository.save(pSource);
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public <T extends AbstractEntity> T associate(T pSource, Set<UniformResourceName> pTargetsUrn) {
+    private <T extends AbstractEntity> T associate(T pSource, Set<UniformResourceName> pTargetsUrn) {
         if (pSource instanceof Collection) {
             return (T) associateCollection((Collection) pSource, pTargetsUrn);
         }
@@ -324,80 +339,132 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     protected Set<UniformResourceName> extractUrns(Set<String> pTags) {
-        return pTags.parallelStream().filter(t -> UniformResourceName.isValidUrn(t))
-                .map(t -> UniformResourceName.fromString(t)).collect(Collectors.toSet());
+        return pTags.stream().filter(UniformResourceName::isValidUrn).map(UniformResourceName::fromString)
+                .collect(Collectors.toSet());
     }
 
     /**
-     * @param pEntityId
-     *            a {@link AbstractEntity}
-     * @param pToAssociate
-     *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
-     *            pCollection
+     * @param pEntityId a {@link AbstractEntity}
+     * @param pToAssociate {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate
+     * to pCollection
      * @throws EntityNotFoundException
      */
     @Override
     public AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pToAssociate)
             throws EntityNotFoundException {
-        final AbstractEntity entity = entitiesRepository.findOne(pEntityId);
+        final AbstractEntity entity = entitiesRepository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
-        return associate(entity, pToAssociate);
-    }
-
-    @Override
-    public <T extends AbstractEntity> T associate(T pEntity) {
-        final Set<String> tags = pEntity.getTags();
-        final Set<UniformResourceName> toAssociateIpIds = extractUrns(tags);
-        return associate(pEntity, toAssociateIpIds);
+        // Adding new tags to detached entity
+        em.detach(entity);
+        entity.getTags().addAll(pToAssociate.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        final AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
+        // And detach it too because it is the over one that will be persisted
+        em.detach(entityInDb);
+        this.updateWithoutCheck(entity, entityInDb);
+        return entity;
     }
 
     @Override
     public AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated)
             throws EntityNotFoundException {
-        final AbstractEntity dissociatedEntity = entitiesRepository.findOne(pEntityId);
-        if (dissociatedEntity == null) {
+        final AbstractEntity entity = entitiesRepository.findById(pEntityId);
+        if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
-        return dissociate(dissociatedEntity, pToBeDissociated);
+        // Removing tags to detached entity
+        em.detach(entity);
+        entity.getTags()
+                .removeAll(pToBeDissociated.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        final AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
+        // And detach it too because it is the over one that will be persisted
+        em.detach(entityInDb);
+        this.updateWithoutCheck(entity, entityInDb);
+        return entity;
     }
 
     @Override
-    @MultitenantTransactional
     public <T extends AbstractEntity> T create(T pEntity) throws ModuleException {
-        T newEntity = check(pEntity);
-        // Generate ip_id
-        newEntity.setIpId(idService.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION));
-        newEntity = doCreate(newEntity);
-        if (!newEntity.getTags().isEmpty()) {
-            newEntity = associate(newEntity);
-        } else {
-            // associate already do the save so it doesn't do it, has to be done
-            newEntity = entitiesRepository.save(newEntity);
-        }
-        newEntity = storageService.persist(newEntity);
-        return newEntity;
+        T entity = check(pEntity);
+        this.manageGroups(entity);
+        entity = beforeCreate(entity);
+        entity.setCreationDate(LocalDateTime.now());
+        entity = entitiesRepository.save(entity);
+        entity = storageService.persist(entity);
+        return entity;
     }
 
     /**
+     * If entity is a collection, find all tagged entities and retrieved their groups.
+     * Then find all collections tagging this entity and recursively propagate entity group to them.
+     * @param entity entity to manage the add of groups
+     */
+    private <T extends AbstractEntity> void manageGroups(T entity) {
+        // If entity tags entities => retrieve all groups of tagged entities (only for collection)
+        if (entity instanceof Collection) {
+            if (!entity.getTags().isEmpty()) {
+                List<AbstractEntity> taggedEntities = entitiesRepository.findByIpIdIn(extractUrns(entity.getTags()));
+                final T finalEntity = entity;
+                taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
+            }
+        }
+        UniformResourceName urn = entity.getIpId();
+        // If entity contains groups => update all entities tagging this entity (recursively)
+        // Need to manage groups one by one
+        for (String group : entity.getGroups()) {
+            Set<Collection> collectionsToUpdate = new HashSet<>();
+            // Find all collections tagging this entity and try adding group
+            manageGroup(group, collectionsToUpdate, urn);
+            // Recursively continue to collections tagging updated collections and so on until no more collections
+            // has to be updated
+            while (!collectionsToUpdate.isEmpty()) {
+                Collection firstColl = collectionsToUpdate.iterator().next();
+                manageGroup(group, collectionsToUpdate, firstColl.getIpId());
+                collectionsToUpdate.remove(firstColl);
+            }
+        }
+    }
+
+    /**
+     * For all collections tagging specified urn, try to add specified group.
+     * If group was not already present, it is added and concerned collection is added to set, overwise it is removed
+     * from set (means that collection has already been updated with the group)
+     * @param group
+     * @param collectionsToUpdate
+     * @param urn
+     */
+    private void manageGroup(String group, Set<Collection> collectionsToUpdate, UniformResourceName urn) {
+        List<AbstractEntity> taggingCollections = entitiesRepository.findByTags(urn.toString());
+        for (AbstractEntity e : taggingCollections) {
+            if (e instanceof Collection) {
+                Collection coll = (Collection) e;
+                // if adding a new group
+                if (e.getGroups().add(group)) {
+                    entitiesRepository.save(coll);
+                    collectionsToUpdate.add(coll);
+                } else { // Group has been already added, nothing more to do => remove collection from map
+                    collectionsToUpdate.remove(coll);
+                }
+            }
+        }
+    }
+
+    /**
+     * Specific operations before creating entity
      * @param pNewEntity
      * @return
      */
-    protected abstract <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException;
+    protected abstract <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException;
 
-    /**
-     * @param pEntity
-     * @return
-     * @throws ModuleException
-     */
     private <T extends AbstractEntity> T check(T pEntity) throws ModuleException {
-        checkLinkedEntity(pEntity);
+        checkModelExists(pEntity);
         pEntity = doCheck(pEntity);
         return pEntity;
     }
 
     /**
+     * Specific check depending on entity type
      * @param pEntity
      * @return
      */
@@ -414,11 +481,11 @@ public abstract class AbstractEntityService implements IEntityService {
      *             thrown if the entity cannot be found or if entities' id do not match
      */
     private <T extends AbstractEntity> T checkUpdate(Long pEntityId, T pEntity) throws ModuleException {
-        AbstractEntity toBeUpdatedEntity = entitiesRepository.findOne(pEntityId);
-        if ((toBeUpdatedEntity == null) || !toBeUpdatedEntity.getClass().equals(pEntity.getClass())) {
+        AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
+        if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
             throw new EntityNotFoundException(pEntityId);
         }
-        if (!pEntity.getId().equals(pEntityId)) {
+        if (!pEntityId.equals(pEntity.getId())) {
             throw new EntityInconsistentIdentifierException(pEntityId, pEntity.getId(), pEntity.getClass());
         }
         T toBeUpdated = doCheck(pEntity);
@@ -433,31 +500,46 @@ public abstract class AbstractEntityService implements IEntityService {
      * @return updated entity
      * @throws ModuleException
      */
-    // FIXME: should i use a clone of the parameter instead of modifying it?
     @Override
-    @MultitenantTransactional
     public <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException {
         // checks
-        T toBeUpdated = checkUpdate(pEntityId, pEntity);
-        // update fields
-        Set<UniformResourceName> oldLinks = extractUrns(toBeUpdated.getTags());
-        Set<UniformResourceName> newLinks = extractUrns(toBeUpdated.getTags());
+        T entityInDb = checkUpdate(pEntityId, pEntity);
+        return updateWithoutCheck(pEntity, entityInDb);
+    }
+
+    private <T extends AbstractEntity> T updateWithoutCheck(T pEntity, T entityInDb) {
+        Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
+        Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
+        // Update entity
+        T updated = beforeUpdate(pEntity);
+        updated.setLastUpdate(LocalDateTime.now());
+        updated = entitiesRepository.save(pEntity);
+        // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks)) {
-            final Set<UniformResourceName> toDissociate = getDiff(oldLinks, newLinks);
-            dissociate(toBeUpdated, toDissociate);
-            final Set<UniformResourceName> toAssociate = getDiff(newLinks, oldLinks);
-            associate(toBeUpdated, toAssociate);
+            Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
+            // For all previously tagged entities, retrieve all groups...
+            Set<String> groupsToRemove = new HashSet<>();
+            List<AbstractEntity> taggedEntitiesWithGroupsToRemove = entitiesRepository.findByIpIdIn(tagsToRemove);
+            taggedEntitiesWithGroupsToRemove.forEach(e -> groupsToRemove.addAll(e.getGroups()));
+            // ... delete all these groups on all collections...
+            for (String group : groupsToRemove) {
+                List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
+                collectionsWithGroup.forEach(c -> c.getGroups().remove(group));
+                collectionsWithGroup.forEach(collectionRepository::save);
+                // ... then manage concerned groups on all datasets containing therm
+                List<DataSet> datasetsWithGroup = datasetRepository.findByGroups(group);
+                datasetsWithGroup.forEach(this::manageGroups);
+            }
+            // Don't forget to manage groups for current entity too
+            this.manageGroups(updated);
         }
-        pEntity = doUpdate(pEntity);
-        pEntity.setLastUpdate(LocalDateTime.now());
-        T updated = entitiesRepository.save(pEntity);
         storageService.persist(updated);
         return updated;
     }
 
     @Override
     public AbstractEntity delete(Long pEntityId) throws EntityNotFoundException {
-        final AbstractEntity toDelete = entitiesRepository.findOne(pEntityId);
+        final AbstractEntity toDelete = entitiesRepository.findById(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -468,24 +550,40 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param pToDelete
      * @return
      */
-    @MultitenantTransactional
     private AbstractEntity delete(AbstractEntity pToDelete) {
-        dissociate(pToDelete);
-        // FIXME: repo.delete and then persist.delete? ou c'est que storage qui gère le delete?
-        pToDelete.setDeletionDate(LocalDateTime.now());
-        pToDelete.setDeleted(true);
-        AbstractEntity deleted = entitiesRepository.save(pToDelete);
-        storageService.delete(pToDelete);
-        return deleted;
-    }
+        UniformResourceName urn = pToDelete.getIpId();
 
-    @Override
-    public AbstractEntity delete(String pEntityIpId) throws EntityNotFoundException {
-        final AbstractEntity toDelete = entitiesRepository.findOneByIpId(UniformResourceName.fromString(pEntityIpId));
-        if (toDelete == null) {
-            throw new EntityNotFoundException(pEntityIpId);
+        // Manage tags (must be done before group managing to avoid bad propagation)
+        // Retrieve all entities tagging the one to delete
+        final List<AbstractEntity> taggingEntities = entitiesRepository.findByTags(pToDelete.getIpId().toString());
+        // Manage tags
+        for (AbstractEntity taggingEntity : taggingEntities) {
+            // remove tag to ipId
+            taggingEntity.getTags().remove(urn.toString());
         }
-        return delete(toDelete);
+        // Save all these tagging entities
+        entitiesRepository.save(taggingEntities);
+
+        // datasets that contain one of the entity groups
+        Set<DataSet> datasets = new HashSet<>();
+        // If entity contains groups => update all entities tagging this entity (recursively)
+        // Need to manage groups one by one
+        for (String group : pToDelete.getGroups()) {
+            // Find all collections containing group.
+            List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
+            // Remove group from collections groups
+            collectionsWithGroup.stream().filter(c -> !c.equals(pToDelete)).forEach(c -> c.getGroups().remove(group));
+            // Find all datasets containing group and adding new group on all collections tagging
+            datasets.addAll(datasetRepository.findByGroups(group));
+        }
+        // Delete the entity
+        entitiesRepository.delete(pToDelete);
+        // Manage all impacted datasets groups from scratch
+        datasets.forEach(this::manageGroups);
+
+        deletedEntityRepository.save(createDeletedEntity(pToDelete));
+        storageService.delete(pToDelete);
+        return pToDelete;
     }
 
     /**
@@ -494,13 +592,11 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param pEntity
      * @return updated entity
      */
-    protected abstract <T extends AbstractEntity> T doUpdate(T pEntity);
+    protected abstract <T extends AbstractEntity> T beforeUpdate(T pEntity);
 
     /**
-     * @param pSource
-     *            {@link Set} of {@link UniformResourceName}
-     * @param pOther
-     *            {@link Set} of {@link UniformResourceName} to remove from pSource
+     * @param pSource {@link Set} of {@link UniformResourceName}
+     * @param pOther {@link Set} of {@link UniformResourceName} to remove from pSource
      * @return a new {@link Set} of {@link UniformResourceName} containing only the elements present into pSource and
      *         not in pOther
      */
@@ -512,10 +608,19 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     @Override
-    public void checkLinkedEntity(AbstractEntity pEntity) throws ModuleException {
+    public void checkModelExists(AbstractEntity pEntity) throws ModuleException {
+        // model must exist : EntityNotFoundException thrown if not
         modelService.getModel(pEntity.getModel().getId());
     }
 
     protected abstract Logger getLogger();
+
+    private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
+        DeletedEntity delEntity = new DeletedEntity();
+        delEntity.setDeletionDate(LocalDateTime.now());
+        delEntity.setIpId(entity.getIpId());
+        delEntity.setLastUpdate(entity.getLastUpdate());
+        return delEntity;
+    }
 
 }

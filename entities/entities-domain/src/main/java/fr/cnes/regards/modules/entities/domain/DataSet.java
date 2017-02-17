@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -21,6 +22,7 @@ import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -71,8 +73,9 @@ public class DataSet extends AbstractLinkEntity {
         super();
     }
 
-    public DataSet(Model pModel, UniformResourceName pIpId, String pLabel) {
-        super(pModel, pIpId, pLabel);
+    public DataSet(Model pModel, String pTenant, String pLabel) {
+        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, pTenant, UUID.randomUUID(), 1),
+              pLabel);
     }
 
     public int getScore() {

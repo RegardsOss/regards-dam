@@ -18,10 +18,11 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -33,27 +34,26 @@ import fr.cnes.regards.modules.models.service.IModelService;
  *
  */
 @Service
-public class DataSetService extends AbstractEntityService {
+public class DatasetService extends AbstractEntityService implements IDatasetService {
 
     /**
      * Logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatasetService.class);
 
     private final IAttributeModelService attributeService;
 
     private final IModelAttributeService modelAttributeService;
 
-    private final IDataSetRepository repository;
-
     private final DataSourceService dataSourceService;
 
-    public DataSetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
+    public DatasetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
-            IdentificationService pIdService, IAbstractEntityRepository<AbstractEntity> pEntitiesRepository,
-            IModelService pModelService, IStorageService pStorageSerivce) {
-        super(pModelAttributeService, pEntitiesRepository, pModelService, pStorageSerivce, pIdService);
-        repository = pRepository;
+            IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
+            IStorageService pStorageService, IDeletedEntityRepository deletedEntityRepository,
+            ICollectionRepository pCollectionRepository) {
+        super(pModelAttributeService, pEntitiesRepository, pModelService, pStorageService, deletedEntityRepository,
+              pCollectionRepository, pRepository);
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
         dataSourceService = pDataSourceService;
@@ -64,8 +64,9 @@ public class DataSetService extends AbstractEntityService {
      * @return
      * @throws EntityNotFoundException
      */
+    @Override
     public DataSet retrieveDataSet(UniformResourceName pDataSetIpId) throws EntityNotFoundException {
-        DataSet result = (DataSet) repository.findOneByIpId(pDataSetIpId);
+        DataSet result = (DataSet) datasetRepository.findOneByIpId(pDataSetIpId);
         if (result == null) {
             throw new EntityNotFoundException(pDataSetIpId.toString(), DataSet.class);
         }
@@ -77,8 +78,9 @@ public class DataSetService extends AbstractEntityService {
      * @return
      * @throws EntityNotFoundException
      */
+    @Override
     public DataSet retrieveDataSet(Long pDataSetId) throws EntityNotFoundException {
-        DataSet dataset = repository.findOne(pDataSetId);
+        DataSet dataset = datasetRepository.findOne(pDataSetId);
         if (dataset == null) {
             throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }
@@ -130,8 +132,9 @@ public class DataSetService extends AbstractEntityService {
      * @return
      */
     // FIXME: return deleted too?
-    public Page<DataSet> retrieveDataSetList(Pageable pPageable) {
-        return repository.findAll(pPageable);
+    @Override
+    public Page<DataSet> retrieveDataSets(Pageable pPageable) {
+        return datasetRepository.findAll(pPageable);
     }
 
     /**
@@ -140,8 +143,9 @@ public class DataSetService extends AbstractEntityService {
      * @throws EntityNotFoundException
      */
     // TODO: return only IService not IConverter or IFilter or IProcessingService(not implemented yet anyway)
+    @Override
     public List<Long> retrieveDataSetServices(Long pDataSetId) throws EntityNotFoundException {
-        DataSet dataSetWithConfs = repository.findOneWithPluginConfigurations(pDataSetId);
+        DataSet dataSetWithConfs = datasetRepository.findOneWithPluginConfigurations(pDataSetId);
         if (dataSetWithConfs == null) {
             throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }
@@ -158,7 +162,7 @@ public class DataSetService extends AbstractEntityService {
     }
 
     @Override
-    protected <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException {
+    protected <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException {
         // TODO: download the description
         return pNewEntity;
     }
@@ -173,7 +177,7 @@ public class DataSetService extends AbstractEntityService {
     }
 
     @Override
-    protected <T extends AbstractEntity> T doUpdate(T pEntity) {
+    protected <T extends AbstractEntity> T beforeUpdate(T pEntity) {
         // nothing to do for now
         return pEntity;
     }

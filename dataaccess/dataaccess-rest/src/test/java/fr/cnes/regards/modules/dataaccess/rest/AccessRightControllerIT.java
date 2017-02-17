@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.dataaccess.rest;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,8 +38,6 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -122,10 +119,10 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, getUrn(), ds1Name);
+        ds1 = new DataSet(model, "PROJECT", ds1Name);
         ds1.setDescription(dsDesc);
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, getUrn(), ds2Name);
+        ds2 = new DataSet(model, "PROJECT", ds2Name);
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);
@@ -143,10 +140,6 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         gar2 = new GroupAccessRight(qf, al, ds2, ag2);
         gar2 = groupRepo.save(gar2);
         gar3 = new GroupAccessRight(qf, al, ds2, ag2);
-    }
-
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Test

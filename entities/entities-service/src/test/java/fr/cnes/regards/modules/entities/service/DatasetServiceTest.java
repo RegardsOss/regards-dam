@@ -51,9 +51,9 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public class DataSetServiceTest {
+public class DatasetServiceTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DataSetServiceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DatasetServiceTest.class);
 
     private Model pModel1;
 

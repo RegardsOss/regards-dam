@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,8 +26,6 @@ import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.dao.IDataSourceRepository;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -85,9 +82,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     public void init() {
         Model pModel = Model.build("datasetModel", "pDescription", EntityType.DATASET);
         pModel = modelRepo.save(pModel);
-        dataset = new DataSet(pModel,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
-                "dataset");
+        dataset = new DataSet(pModel, "pTenant", "dataset");
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);

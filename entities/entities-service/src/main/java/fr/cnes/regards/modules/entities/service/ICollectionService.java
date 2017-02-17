@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.entities.domain.Collection;
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
-public interface ICollectionsRequestService extends IEntityService {
+public interface ICollectionService extends IEntityService {
 
     /**
      * @return all {@link Collection}s

@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.dao;
 
+import java.util.List;
+
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -28,4 +30,5 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
      */
     Collection findOneByIpId(String pCollectionIpId);
 
+    List<Collection> findByGroups(String group);
 }

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,8 +23,6 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.rest.DataSetController;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -63,13 +60,13 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         model1 = Model.build("modelName1", "model desc", EntityType.DATASET);
         model1 = modelRepository.save(model1);
 
-        dataSet1 = new DataSet(model1, getUrn(), "collection1");
+        dataSet1 = new DataSet(model1, "PROJECT", "collection1");
         dataSet1.setSipId("SipId1");
         dataSet1.setLabel("label");
-        dataSet3 = new DataSet(model1, getUrn(), "collection3");
+        dataSet3 = new DataSet(model1, "PROJECT", "collection3");
         dataSet3.setSipId("SipId3");
         dataSet3.setLabel("label");
-        dataSet4 = new DataSet(model1, getUrn(), "collection4");
+        dataSet4 = new DataSet(model1, "PROJECT", "collection4");
         dataSet4.setSipId("SipId4");
         dataSet4.setLabel("label");
         final Set<String> col1Tags = new HashSet<>();
@@ -112,7 +109,8 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testUpdateDataSet() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "dataset1clone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
+        dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
@@ -124,7 +122,8 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testFullUpdate() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "collection1clone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "collection1clone");
+        dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
         dataSetClone.setLabel("label");
@@ -149,10 +148,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_SERVICES_PATH, expectations,
                           "Failed to fetch services list", dataSet1.getId());
-    }
-
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Override

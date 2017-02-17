@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,7 +24,6 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -84,13 +82,13 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         model1 = Model.build("modelName1", "model desc", EntityType.COLLECTION);
         model1 = modelRepository.save(model1);
 
-        collection1 = new Collection(model1, getUrn(), "collection1");
+        collection1 = new Collection(model1, "PROJECT", "collection1");
         collection1.setSipId("SipId1");
         collection1.setLabel("label");
-        collection3 = new Collection(model1, getUrn(), "collection3");
+        collection3 = new Collection(model1, "PROJECT", "collection3");
         collection3.setSipId("SipId3");
         collection3.setLabel("label");
-        collection4 = new Collection(model1, getUrn(), "collection4");
+        collection4 = new Collection(model1, "PROJECT", "collection4");
         collection4.setSipId("SipId4");
         collection4.setLabel("label");
         final Set<String> col1Tags = new HashSet<>();
@@ -102,10 +100,6 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
         collection1 = collectionRepository.save(collection1);
         collection3 = collectionRepository.save(collection3);
-    }
-
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "PROJECT", UUID.randomUUID(), 1);
     }
 
     // TODO: test retrieve Collection by (S)IP_ID, by modelId and sipId
@@ -145,12 +139,12 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_210")
-    @Purpose("Le système doit permettre de mettre à jour les vaaleurs d’une collection via son IP_ID et d’archiver ces "
+    @Purpose("Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
             + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
     public void testUpdateCollection() {
-        final Collection collectionClone = new Collection(collection1.getModel(), collection1.getIpId(),
-                "collection1clone");
+        final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
+        collectionClone.setIpId(collection1.getIpId());
         collectionClone.setId(collection1.getId());
         collectionClone.setTags(collection1.getTags());
         collectionClone.setSipId(collection1.getSipId() + "new");
@@ -164,8 +158,8 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
     public void testFullUpdate() {
-        final Collection collectionClone = new Collection(collection1.getModel(), collection1.getIpId(),
-                "collection1clone");
+        final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
+        collectionClone.setIpId(collection1.getIpId());
         collectionClone.setId(collection1.getId());
         collectionClone.setSipId(collection1.getSipId() + "new");
         collectionClone.setLabel("label");
