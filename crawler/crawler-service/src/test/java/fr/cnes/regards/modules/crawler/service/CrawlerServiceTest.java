@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
@@ -26,7 +24,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
-import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
@@ -61,6 +58,8 @@ public class CrawlerServiceTest {
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
+    private static final String TENANT = "default";
+
     @Value("${oracle.datasource.url}")
     private String url;
 
@@ -74,11 +73,6 @@ public class CrawlerServiceTest {
     private String driver;
 
     // private ICrawlerService service;
-
-    @Bean
-    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
-        return new CurrentTenantIdentifierResolverImpl();
-    }
 
     @Autowired
     private IIndexerService indexerService;
@@ -122,29 +116,28 @@ public class CrawlerServiceTest {
     public void testSuckUp() {
         // register JSon data types (for ES)
         registerJSonModelAttributes();
-        String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
 
         // Creating index if it doesn't already exist
-        indexerService.deleteIndex(tenant);
-        indexerService.createIndex(tenant);
+        indexerService.deleteIndex(TENANT);
+        indexerService.createIndex(TENANT);
 
         // Retrieve first 1000 objects
         dsPlugin.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
-        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
+        Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
 
         LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
         Set<DataObject> set = Sets.newHashSet(page.getContent());
         Assert.assertEquals(page.getContent().size(), set.size());
-        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(tenant, page.getContent());
+        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
         LOGGER.info(String.format("...%d entities saved",
                                   page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         while (page.hasNext()) {
-            page = dsPlugin.findAll(page.nextPageable());
+            page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
             LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-            errorMap = indexerService.saveBulkEntities(tenant, page.getContent());
+            errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
             LOGGER.info(String.format("...%d entities saved",
                                       page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         }

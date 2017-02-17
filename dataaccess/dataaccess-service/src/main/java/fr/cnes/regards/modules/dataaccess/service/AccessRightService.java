@@ -12,8 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationMode;
-import fr.cnes.regards.framework.amqp.domain.AmqpCommunicationTarget;
 import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -165,8 +163,7 @@ public class AccessRightService {
             }
         }
         AbstractAccessRight created = repository.save(pAccessRight);
-        eventPublisher.publish(new AccessRightCreated(created.getId()), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.MICROSERVICE);
+        eventPublisher.publish(new AccessRightCreated(created.getId()));
         return created;
     }
 
@@ -201,8 +198,7 @@ public class AccessRightService {
             throw new EntityInconsistentIdentifierException(pId, pToBe.getId(), AbstractAccessRight.class);
         }
         AbstractAccessRight updated = repository.save(toBeUpdated);
-        eventPublisher.publish(new AccessRightUpdated(pId), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.MICROSERVICE);
+        eventPublisher.publish(new AccessRightUpdated(pId));
         return updated;
     }
 
@@ -212,8 +208,7 @@ public class AccessRightService {
      */
     public void deleteAccessRight(Long pId) throws RabbitMQVhostException {
         repository.delete(pId);
-        eventPublisher.publish(new AccessRightDeleted(pId), AmqpCommunicationMode.ONE_TO_MANY,
-                               AmqpCommunicationTarget.MICROSERVICE);
+        eventPublisher.publish(new AccessRightDeleted(pId));
     }
 
 }

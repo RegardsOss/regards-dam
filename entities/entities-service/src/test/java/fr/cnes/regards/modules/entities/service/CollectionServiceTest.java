@@ -18,7 +18,6 @@ import org.mockito.Mockito;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -70,8 +69,7 @@ public class CollectionServiceTest {
     @SuppressWarnings("unchecked")
     @Before
     public void init() {
-        JWTService jwtService = new JWTService();
-        jwtService.injectMockToken("Tenant", "PUBLIC");
+
         // populate the repository
         pModel1 = new Model();
         pModel1.setId(1L);
@@ -119,8 +117,8 @@ public class CollectionServiceTest {
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
-        collectionsRequestServiceMocked = new CollectionService(collectionRepositoryMocked,
-                entitiesRepositoryMocked, storageServiceMocked, idServiceMocked, pModelAttributeService, pModelService);
+        collectionsRequestServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
+                storageServiceMocked, idServiceMocked, pModelAttributeService, pModelService);
 
     }
 

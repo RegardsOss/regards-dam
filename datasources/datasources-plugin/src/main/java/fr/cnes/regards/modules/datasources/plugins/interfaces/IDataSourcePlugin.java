@@ -10,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -36,36 +35,40 @@ public interface IDataSourcePlugin {
 
     /**
      * The refresh rate of the data source
-     * 
+     *
      * @return the refresh rate value
      */
     int getRefreshRate();
 
     /**
      * Returns true if the content of the data source has been modified.
-     * 
+     *
      * @return boolean
      */
     boolean isOutOfDate();
 
     /**
      * Returns a {@link Page} of new entities meeting the paging restriction provided in the {@code Pageable} object.
-     * 
+     *
+     * @param pTenant
+     *            tenant to build URN
      * @param pPageable
      *            the pagination information
      * @param pDate
      *            Allows to filter the new entities created after this date parameter
      * @return a page of entities
      */
-    Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate);
+    Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate);
 
     /**
      * Returns a {@link Page} of entities meeting the paging restriction provided in the {@code Pageable} object.
-     * 
+     *
+     * @param pTenant
+     *            tenant to build URN
      * @param pPageable
      *            the pagination information
      * @return a page of entities
      */
-    Page<DataObject> findAll(Pageable pPageable);
+    Page<DataObject> findAll(String pTenant, Pageable pPageable);
 
 }

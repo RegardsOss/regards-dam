@@ -61,6 +61,8 @@ public class OracleDBDataSourcePluginTest {
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
+    private static final String TENANT = "ORA_TENANT";
+
     @Value("${oracle.datasource.url}")
     private String url;
 
@@ -81,9 +83,9 @@ public class OracleDBDataSourcePluginTest {
 
     /**
      * Initialize the plugin's parameter
-     * 
+     *
      * @throws DataSourcesPluginException
-     * 
+     *
      * @throws JwtException
      * @throws PluginUtilsException
      */
@@ -142,11 +144,11 @@ public class OracleDBDataSourcePluginTest {
     public void getDataSourceIntrospection() {
         plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
-        Page<DataObject> ll = plgDBDataSource.findAll(new PageRequest(0, 1000));
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
 
-        ll = plgDBDataSource.findAll(new PageRequest(1, 1000));
+        ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
     }
@@ -159,7 +161,7 @@ public class OracleDBDataSourcePluginTest {
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultOracleConnectionPlugin} to connect to the Oracle
      * database.
-     * 
+     *
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */

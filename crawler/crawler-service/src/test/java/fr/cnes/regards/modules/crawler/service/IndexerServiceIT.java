@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -25,6 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -43,7 +45,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -56,22 +58,30 @@ public class IndexerServiceIT {
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexerServiceIT.class);
 
-    private static final String TENANT = "project";
-
     private static final String SEARCH = "project_search";
+
+    @Value("${regards.tenant}")
+    private String tenant;
 
     @Autowired
     private IIndexerService indexerService;
 
     @Autowired
-    private FlattenedAttributeAdapterFactory gsonAttributeFactory;
+    private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
     @Autowired
     private Gson gson;
 
+    /**
+     * Resolve thread tenant at runtime
+     */
+    @Autowired
+    protected IRuntimeTenantResolver runtimeTenantResolver;
+
     @Before
     public void setUp() throws Exception {
-        indexerService.deleteIndex(TENANT);
+        runtimeTenantResolver.forceTenant(tenant);
+        indexerService.deleteIndex(tenant);
         // indexerService.deleteIndex(SEARCH);
     }
 
@@ -84,29 +94,29 @@ public class IndexerServiceIT {
 
         // Creating a Collection with all types of attributes
         Collection collection = new Collection(model,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, TENANT, UUID.randomUUID(), 1),
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, tenant, UUID.randomUUID(), 1),
                 "coll1");
         List<AbstractAttribute<?>> attributes = new ArrayList<>();
 
-        gsonAttributeFactory.registerSubtype(BooleanAttribute.class, "booleanAtt");
-        gsonAttributeFactory.registerSubtype(DateArrayAttribute.class, "dateArrayAtt");
-        gsonAttributeFactory.registerSubtype(DateAttribute.class, "dateAtt");
-        gsonAttributeFactory.registerSubtype(DateIntervalAttribute.class, "dateInterval");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "maxDoubleValue");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "minDoubleValue");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "double");
-        gsonAttributeFactory.registerSubtype(DoubleArrayAttribute.class, "doubleArray");
-        gsonAttributeFactory.registerSubtype(DoubleIntervalAttribute.class, "doubleInterval");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "maxInt");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "minInt");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "int");
-        gsonAttributeFactory.registerSubtype(IntegerArrayAttribute.class, "intArray");
-        gsonAttributeFactory.registerSubtype(IntegerIntervalAttribute.class, "intInterval");
-        gsonAttributeFactory.registerSubtype(IntegerIntervalAttribute.class, "N");
-        gsonAttributeFactory.registerSubtype(StringAttribute.class, "string");
-        gsonAttributeFactory.registerSubtype(ObjectAttribute.class, "correspondance");
-        gsonAttributeFactory.registerSubtype(StringArrayAttribute.class, "stringArrayMusset", "correspondance");
-        gsonAttributeFactory.registerSubtype(StringArrayAttribute.class, "stringArraySand", "correspondance");
+        gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
+        gsonAttributeFactory.registerSubtype(tenant, DateArrayAttribute.class, "dateArrayAtt");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "dateAtt");
+        gsonAttributeFactory.registerSubtype(tenant, DateIntervalAttribute.class, "dateInterval");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "maxDoubleValue");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "minDoubleValue");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "double");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleArrayAttribute.class, "doubleArray");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleIntervalAttribute.class, "doubleInterval");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "maxInt");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "minInt");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "int");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerArrayAttribute.class, "intArray");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerIntervalAttribute.class, "intInterval");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerIntervalAttribute.class, "N");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "string");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "correspondance");
+        gsonAttributeFactory.registerSubtype(tenant, StringArrayAttribute.class, "stringArrayMusset", "correspondance");
+        gsonAttributeFactory.registerSubtype(tenant, StringArrayAttribute.class, "stringArraySand", "correspondance");
 
         attributes.add(AttributeBuilder.buildBoolean("booleanAtt", true));
         attributes.add(AttributeBuilder.buildDateArray("dateArrayAtt", LocalDateTime.of(2016, 1, 13, 11, 5),
@@ -160,14 +170,13 @@ public class IndexerServiceIT {
         collection.setAttributes(attributes);
         collection.setTags(new ImmutableSet.Builder<String>().add("TAG1").add("TAG2").add("TAG3").build());
 
-        String collectionString = gson.toJson(collection);
+        indexerService.createIndex(tenant);
+        indexerService.saveEntity(tenant, collection);
+        indexerService.refresh(tenant);
 
-        indexerService.createIndex(TENANT);
-        indexerService.saveEntity(TENANT, collection);
-        indexerService.refresh(TENANT);
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         List<Collection> singleCollColl = indexerService
-                .search(TENANT, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();
+                .search(tenant, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
@@ -180,9 +189,9 @@ public class IndexerServiceIT {
         collModel.setName("collModel");
         collModel.setType(EntityType.COLLECTION);
 
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "altitude");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "latitude");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "longitude");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "altitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
         indexerService.createIndex(SEARCH);
 
@@ -225,9 +234,9 @@ public class IndexerServiceIT {
     @Test
     @Ignore
     public void testSimpleSearch() {
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "altitude");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "latitude");
-        gsonAttributeFactory.registerSubtype(DoubleAttribute.class, "longitude");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "altitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
         ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
         Page<? extends AbstractEntity> collPage = indexerService.search(SEARCH, AbstractEntity.class, 10, criterion);

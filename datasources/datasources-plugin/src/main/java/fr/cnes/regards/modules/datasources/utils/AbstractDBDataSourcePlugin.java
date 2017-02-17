@@ -93,7 +93,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     private String orderByColumn = "";
 
     /**
-     * 
+     *
      */
     private SqlGenerator sqlGenerator;
 
@@ -105,12 +105,13 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /**
      * This method initialize the mapping used to request the database.<br>
-     * 
+     *
      * @param pTable
      *            the table used to requests the database
      * @param pMapping
      *            the mapping between the attributes's model and the attributes of the database
      */
+    @Override
     public void setMapping(String pTable, DataSourceModelMapping pMapping) {
 
         // reset the number of data element hosted by the datasource
@@ -148,7 +149,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#getRefreshRate()
      */
     @Override
@@ -159,7 +160,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#isOutOfDate()
      */
     @Override
@@ -175,15 +176,8 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         return outDated;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain.
-     * Pageable, java.time.LocalDateTime)
-     */
     @Override
-    public Page<DataObject> findAll(Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
         if (sqlGenerator == null) {
             return null;
         }
@@ -201,7 +195,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
             return null;
         }
 
-        Page<DataObject> pages = findAll(conn, requestSql, countRequestSql, pPageable, pDate);
+        Page<DataObject> pages = findAll(pTenant, conn, requestSql, countRequestSql, pPageable, pDate);
 
         try {
             conn.close();
@@ -212,21 +206,14 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         return pages;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin#findAll(org.springframework.data.domain.
-     * Pageable)
-     */
     @Override
-    public Page<DataObject> findAll(Pageable pPageable) {
-        return findAll(pPageable, null);
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
+        return findAll(pTenant, pPageable, null);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getTables()
      */
     @Override
@@ -282,7 +269,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getColumns(java.lang.String)
      */
     @Override
@@ -310,7 +297,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
                 }
 
                 Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
-                column.setPrimaryKey(pTable.getPkColumn() != null && !"".equals(pTable.getPkColumn())
+                column.setPrimaryKey((pTable.getPkColumn() != null) && !"".equals(pTable.getPkColumn())
                         && pTable.getPkColumn().equals(column.getName()));
                 cols.put(column.getName(), column);
             }
@@ -331,7 +318,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getIndices()
      */
     @Override
@@ -397,7 +384,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredTable()
      */
     @Override
@@ -407,7 +394,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredColumns()
      */
     @Override

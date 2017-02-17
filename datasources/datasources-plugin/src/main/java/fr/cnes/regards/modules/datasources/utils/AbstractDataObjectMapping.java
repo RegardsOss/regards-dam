@@ -19,17 +19,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 
-import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
@@ -76,16 +73,11 @@ public abstract class AbstractDataObjectMapping {
     protected abstract DataSourceModelMapping getModelMapping();
 
     /**
-     * 
+     *
      */
     private int nn = RESET_COUNT;
-    
-    private static final int RESET_COUNT = -1;
 
-    @Bean
-    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
-        return new CurrentTenantIdentifierResolverImpl();
-    }
+    private static final int RESET_COUNT = -1;
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
@@ -104,8 +96,8 @@ public abstract class AbstractDataObjectMapping {
      * @return a page of {@link DataObject}
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Page<DataObject> findAllApplyPageAndDate(Connection pConn, String pRequestSql, Pageable pPageable,
-            LocalDateTime pDate) {
+    public Page<DataObject> findAllApplyPageAndDate(String pTenant, Connection pConn, String pRequestSql,
+            Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
         Statement statement = null;
         ResultSet rs = null;
@@ -119,7 +111,7 @@ public abstract class AbstractDataObjectMapping {
             rs = statement.executeQuery(sqlRequestWithPagedInformation);
 
             while (rs.next()) {
-                dataObjects.add(processResultSet(rs));
+                dataObjects.add(processResultSet(pTenant, rs));
             }
 
             rs.close();
@@ -155,8 +147,8 @@ public abstract class AbstractDataObjectMapping {
      * @return a page of {@link DataObject}
      */
     @SuppressWarnings("unchecked")
-    public Page<DataObject> findAll(Connection pConn, String pRequestSql, String pCountRequest, Pageable pPageable,
-            LocalDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Connection pConn, String pRequestSql, String pCountRequest,
+            Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
         Statement statement = null;
@@ -168,7 +160,7 @@ public abstract class AbstractDataObjectMapping {
             ResultSet rs = statement.executeQuery(pRequestSql);
 
             while (rs.next()) {
-                dataObjects.add(processResultSet(rs));
+                dataObjects.add(processResultSet(pTenant, rs));
             }
 
             rs.close();
@@ -208,8 +200,8 @@ public abstract class AbstractDataObjectMapping {
      *            the page information
      * @return a page of {@link DataObject}
      */
-    public Page<DataObject> findAll(Connection pConn, String pRequestSql, Pageable pPageable) {
-        return findAllApplyPageAndDate(pConn, pRequestSql, pPageable, null);
+    public Page<DataObject> findAll(String pTenant, Connection pConn, String pRequestSql, Pageable pPageable) {
+        return findAllApplyPageAndDate(pTenant, pConn, pRequestSql, pPageable, null);
     }
 
     /**
@@ -220,7 +212,7 @@ public abstract class AbstractDataObjectMapping {
      * @return the {@link DataObject} created
      * @throws SQLException
      */
-    protected DataObject processResultSet(ResultSet pRs) throws SQLException {
+    protected DataObject processResultSet(String pTenant, ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
         final List<AbstractAttribute<?>> attributes = new ArrayList<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
@@ -232,7 +224,7 @@ public abstract class AbstractDataObjectMapping {
 
             if (attrMapping.isPrimaryKey()) {
                 String val = pRs.getString(attrMapping.getNameDS());
-                data.setIpId(buildUrn(val, attrMapping));
+                data.setIpId(buildUrn(pTenant, val, attrMapping));
                 data.setSipId(val);
             } else {
 
@@ -326,9 +318,9 @@ public abstract class AbstractDataObjectMapping {
         return attr;
     }
 
-    private UniformResourceName buildUrn(String pVal, DataSourceAttributeMapping pAttrMapping) throws SQLException {
-        String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
-        return new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, tenant,
+    private UniformResourceName buildUrn(String pTenant, String pVal, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException {
+        return new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, pTenant,
                 UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
     }
 
@@ -387,7 +379,7 @@ public abstract class AbstractDataObjectMapping {
             return pRequest.replaceAll(DATE_STATEMENT, pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
     }
-    
+
     /**
      * This method reset the number of data element from the database.<br>
      */

@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.multitenant.IThreadTenantResolver;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -25,9 +25,9 @@ public class IdentificationService {
     /**
      * Resolve request tenant
      */
-    private final IThreadTenantResolver threadTenantResolver;
+    private final IRuntimeTenantResolver threadTenantResolver;
 
-    public IdentificationService(IThreadTenantResolver pThreadTenantResolver) {
+    public IdentificationService(IRuntimeTenantResolver pThreadTenantResolver) {
         this.threadTenantResolver = pThreadTenantResolver;
     }
 
