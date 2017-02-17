@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -27,6 +28,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @TestPropertySource("classpath:application-test.properties")
+@Ignore
 public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
     private static final String TAG_TO_SEARCH = "tag";

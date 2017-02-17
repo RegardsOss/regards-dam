@@ -32,6 +32,8 @@ import fr.cnes.regards.modules.dataaccess.dao.IUserAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
@@ -86,7 +88,9 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private QualityFilter qf;
 
-    private final AccessLevel al = AccessLevel.FULL_ACCES;
+    private final AccessLevel al = AccessLevel.FULL_ACCESS;
+
+    private DataAccessRight dar;
 
     private DataSet ds1;
 
@@ -120,12 +124,14 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
 
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
+        dar = new DataAccessRight(DataAccessLevel.NO_ACCESS);
+
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, getUrn(), ds1Name);
+        ds1 = new DataSet(model, getUrn(), ds1Name, "licence");
         ds1.setDescription(dsDesc);
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, getUrn(), ds2Name);
+        ds2 = new DataSet(model, getUrn(), ds2Name, "licence");
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);
@@ -137,6 +143,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         ag1 = new AccessGroup(ag1Name);
         ag1 = agRepo.save(ag1);
         gar1 = new GroupAccessRight(qf, al, ds1, ag1);
+        gar1.setDataAccessRight(dar);
         gar1 = groupRepo.save(gar1);
         ag2 = new AccessGroup(ag2Name);
         ag2 = agRepo.save(ag2);

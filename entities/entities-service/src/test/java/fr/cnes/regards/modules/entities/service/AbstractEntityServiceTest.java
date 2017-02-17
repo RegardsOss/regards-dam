@@ -79,10 +79,10 @@ public class AbstractEntityServiceTest {
 
         data = new DataObject(null, getUrn(EntityType.DATA), "objectc");
         doc = new Document(pModel2, getUrn(EntityType.DOCUMENT), "doc");
-        dataset = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset");
+        dataset = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset", "licence");
         dataset.setDescription("datasetDesc");
         dataset.setLabel("dataset");
-        dataset2 = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset2");
+        dataset2 = new DataSet(pModel2, getUrn(EntityType.DATASET), "dataset2", "licence");
         dataset2.setDescription("datasetDesc2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
@@ -95,7 +95,7 @@ public class AbstractEntityServiceTest {
                 .thenReturn(findByTagsValueCol2IpId);
 
         entityServiceMocked = new AbstractEntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                null, null) {
+                null) {
 
             @Override
             protected Logger getLogger() {

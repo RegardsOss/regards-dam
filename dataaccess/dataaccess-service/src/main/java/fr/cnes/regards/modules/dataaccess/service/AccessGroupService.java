@@ -16,7 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
 import fr.cnes.regards.framework.security.utils.endpoint.RoleAuthority;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
@@ -199,6 +201,26 @@ public class AccessGroupService {
         final User user = JwtTokenUtils.asSafeCallableOnRole(this::getUser, pUser.getEmail(), jwtService, null)
                 .apply(RoleAuthority.getSysRole(microserviceName));
         return user != null;
+    }
+
+    /**
+     * only update the privacy of the group
+     *
+     * @param pAccessGroupName
+     * @param pAccessGroup
+     * @return updated accessGroup
+     * @throws ModuleException
+     */
+    public AccessGroup update(String pAccessGroupName, AccessGroup pAccessGroup) throws ModuleException {
+        AccessGroup group = accessGroupDao.findOneByName(pAccessGroupName);
+        if (group == null) {
+            throw new EntityNotFoundException(pAccessGroupName);
+        }
+        if (!group.getId().equals(pAccessGroup.getId())) {
+            throw new EntityInconsistentIdentifierException(group.getId(), pAccessGroup.getId(), AccessGroup.class);
+        }
+        group.setPrivate(pAccessGroup.isPrivate());
+        return accessGroupDao.save(group);
     }
 
 }

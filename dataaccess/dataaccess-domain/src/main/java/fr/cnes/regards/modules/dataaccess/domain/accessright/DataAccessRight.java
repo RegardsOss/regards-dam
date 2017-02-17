@@ -17,6 +17,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAccessRightValidation;
 
 /**
+ * Only matters if the {@link AccessLevel} to the dataset is {@link AccessLevel#FULL_ACCESS}
+ *
  * @author Sylvain Vissiere-Guerinet
  *
  */
@@ -32,6 +34,9 @@ public class DataAccessRight {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plugin_conf_id", foreignKey = @ForeignKey(name = "fk_access_right_plugin_conf"))
     private PluginConfiguration pluginConfiguration;
+
+    protected DataAccessRight() {
+    }
 
     public DataAccessRight(DataAccessLevel pDataAccessLevel) {
         dataAccessLevel = pDataAccessLevel;
