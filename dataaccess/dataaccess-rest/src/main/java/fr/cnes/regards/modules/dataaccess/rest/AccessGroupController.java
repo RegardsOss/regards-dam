@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
@@ -88,6 +89,15 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") String pAccessGroupName) {
         accessGroupService.deleteAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME)
+    @ResponseBody
+    @ResourceAccess(description = "only used to modify the privacy of the group")
+    public ResponseEntity<Resource<AccessGroup>> updateAccessGroup(@Valid @PathVariable("name") String pAccessGroupName,
+            @Valid AccessGroup pAccessGroup) throws ModuleException {
+        final AccessGroup ag = accessGroupService.update(pAccessGroupName, pAccessGroup);
+        return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)

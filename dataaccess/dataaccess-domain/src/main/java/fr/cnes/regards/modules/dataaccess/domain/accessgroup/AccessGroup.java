@@ -61,6 +61,8 @@ public class AccessGroup implements IIdentifiable<Long> {
 
     @SuppressWarnings("unused")
     private AccessGroup() { // NOSONAR
+        users = new HashSet<>();
+        accessRights = new HashSet<>();
     }
 
     public AccessGroup(String pName) {
