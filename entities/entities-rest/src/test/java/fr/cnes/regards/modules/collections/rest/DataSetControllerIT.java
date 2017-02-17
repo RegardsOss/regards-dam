@@ -26,7 +26,6 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.datasources.dao.IDataSourceRepository;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.DataSet;
@@ -65,9 +64,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelRepository modelRepository;
 
-    @Autowired
-    private IDataSourceRepository dataSourceRepository;
-
     private List<ResultMatcher> expectations;
 
     @Before
@@ -80,10 +76,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
         Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
-        dataSource1 = new DataSource(modelOfData);
-        dataSource1 = dataSourceRepository.save(dataSource1);
-        dataSource2 = new DataSource(modelOfData);
-        dataSource2 = dataSourceRepository.save(dataSource2);
 
         dataSet1 = new DataSet(model1, getUrn(), "collection1", "licence");
         dataSet1.setSipId("SipId1");
@@ -121,7 +113,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
     public void testPostDataSet() throws Exception {
         final DataSet dataSet2 = new DataSet(model1, null, "dataSet2", "licence");
-        dataSet2.setDataSource(dataSource1);
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -138,7 +129,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
                                  "Failed to create a new dataset");
 
         DataSet dataSet21 = new DataSet(model1, null, "dataSet21", "licence");
-        dataSet21.setDataSource(dataSource1);
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources",
                                                           "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf"));
@@ -183,7 +173,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
-        dataSetClone.setDataSource(dataSource2);
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultPut(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_PATH, dataSetClone,
