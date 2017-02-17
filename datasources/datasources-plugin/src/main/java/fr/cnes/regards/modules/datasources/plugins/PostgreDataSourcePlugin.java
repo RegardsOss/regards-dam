@@ -23,12 +23,12 @@ import com.google.gson.stream.JsonReader;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataObjectMapping;
-import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -68,7 +68,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     private String requestSql;
 
     /**
-     * THe {@link Model} to used by the {@link Plugin} in JSon format.
+     * The {@link Model} to used by the {@link Plugin} in JSon format.
      */
     @PluginParameter(name = MODEL_PARAM)
     private String modelJSon;

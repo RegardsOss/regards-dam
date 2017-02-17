@@ -20,11 +20,11 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.models.domain.Model;
 

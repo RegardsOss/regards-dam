@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.Column;
-import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.Index;
 import fr.cnes.regards.modules.datasources.utils.Table;
 
@@ -27,12 +27,12 @@ public interface IDBDataSourcePlugin extends IDataSourcePlugin {
     /**
      * The model parameter name
      */
-    public static final String MODEL_PARAM = "model";
+//    public static final String MODEL_PARAM = "model";
 
     /**
      * The connection parameter name
      */
-    public static final String CONNECTION_PARAM = "connection";
+//    public static final String CONNECTION_PARAM = "connection";
 
     /**
      * Requests the database to get the {@link List} of database's table.

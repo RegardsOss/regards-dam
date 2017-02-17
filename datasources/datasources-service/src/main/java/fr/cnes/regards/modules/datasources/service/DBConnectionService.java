@@ -43,22 +43,11 @@ public class DBConnectionService implements IDBConnectionService {
         this.service.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#getAllDBConnections()
-     */
     @Override
     public List<PluginConfiguration> getAllDBConnections() {
         return service.getPluginConfigurationsByType(IDBConnectionPlugin.class);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#saveDBConnection(fr.cnes.regards.modules.
-     * datasources.domain.DBConnection)
-     */
     @Override
     public PluginConfiguration createDBConnection(DBConnection pDbConnection) throws ModuleException {
         PluginMetaData metaData = null;
@@ -81,22 +70,11 @@ public class DBConnectionService implements IDBConnectionService {
                 buildParameters(pDbConnection), 0));
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#getDBConnection(java.lang.Long)
-     */
     @Override
     public PluginConfiguration getDBConnection(Long pId) throws ModuleException {
         return service.getPluginConfiguration(pId);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#updateDBConnection(fr.cnes.regards.modules.
-     * datasources.domain.DBConnection)
-     */
     @Override
     public PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException {
         // Get the PluginConfiguration
@@ -110,21 +88,11 @@ public class DBConnectionService implements IDBConnectionService {
         return service.updatePluginConfiguration(plgConf);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#deleteDBConnection(java.lang.Long)
-     */
     @Override
     public void deleteDBConnection(Long pId) throws ModuleException {
         service.deletePluginConfiguration(pId);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.service.IDBConnectionService#testDBConnection(java.lang.Long)
-     */
     @Override
     public Boolean testDBConnection(Long pId) throws ModuleException {
         IDBConnectionPlugin plg = service.getPlugin(pId);

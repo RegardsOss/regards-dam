@@ -13,14 +13,13 @@ import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 import org.hibernate.annotations.Type;
 
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -29,9 +28,9 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
+ * @author Christophe Mertz
  */
 @Entity
-@Table(name = "t_data_set")
 public class DataSet extends AbstractLinkEntity {
 
     // TODO: add description
@@ -53,11 +52,17 @@ public class DataSet extends AbstractLinkEntity {
     private List<Long> pluginConfigurationIds;
 
     /**
-     * {@link DataSource} from which this DataSet presents data
+     * A PluginConfiguration for a plugin type IDataSourcePlugin.</br>
+     * This PluginConfiguration defined the DataSource from which this DataSet presents data.
      */
     @ManyToOne
-    @JoinColumn(name = "datasource_id", foreignKey = @ForeignKey(name = "fk_dataset_datasource_id"))
-    private DataSource dataSource;
+    @JoinColumn(name = "plgconf_id", foreignKey = @ForeignKey(name = "fk_pluginconf_id"), nullable = true,
+            updatable = true)
+    private PluginConfiguration plgConfDataSource;
+
+    @ManyToOne
+    @JoinColumn(name = "model_data_id", foreignKey = @ForeignKey(name = "fk_model_id"), nullable = true, updatable = true)
+    private Model modelOfData;
 
     /**
      * request clause to subset a data from the DataSource, only used by the catalog(elasticsearch) as all data from
@@ -96,20 +101,28 @@ public class DataSet extends AbstractLinkEntity {
         pluginConfigurationIds = pPluginConfigurationIds;
     }
 
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
-    public void setDataSource(DataSource pDataSource) {
-        dataSource = pDataSource;
-    }
-
     public ICriterion getSubsettingClause() {
         return subsettingClause;
     }
 
+    public PluginConfiguration getDataSource() {
+        return plgConfDataSource;
+    }
+
+    public void setDataSource(PluginConfiguration plgConfDataSource) {
+        this.plgConfDataSource = plgConfDataSource;
+    }
+
     public void setSubsettingClause(ICriterion pSubsettingClause) {
         subsettingClause = pSubsettingClause;
+    }
+
+    public Model getModelOfData() {
+        return modelOfData;
+    }
+
+    public void setModelOfData(Model modelOfData) {
+        this.modelOfData = modelOfData;
     }
 
 }

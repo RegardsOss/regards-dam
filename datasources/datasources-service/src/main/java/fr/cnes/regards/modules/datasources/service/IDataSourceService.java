@@ -6,11 +6,10 @@ package fr.cnes.regards.modules.datasources.service;
 
 import java.util.List;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 
 /**
@@ -20,7 +19,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugi
  * 
  * @author Christophe Mertz
  */
-public interface IDBDataSourceService {
+public interface IDataSourceService {
 
     /**
      *
@@ -40,52 +39,44 @@ public interface IDBDataSourceService {
      * @throws ModuleException
      *             throw if an error occurs
      */
-    PluginConfiguration createDBDataSource(DataSource pDataSource) throws ModuleException;
+    PluginConfiguration createDataSource(DataSource pDataSource) throws ModuleException;
 
     /**
-     *
      * Get the {@link PluginConfiguration}.
      *
      * @param pId
      *            a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
+     * @throws EntityNotFoundException
+     *             throw if an error occurs
+     */
+    PluginConfiguration getDataSource(Long pId) throws EntityNotFoundException;
+
+    /**
+     * Update the {@link PluginConfiguration} linked to the {@link DataSource}
+     *
+     * @param pDataSource
+     *            the {@link DataSource} to update
+     * @return the updated {@link PluginConfiguration}
      * @throws ModuleException
      *             throw if an error occurs
      */
-    PluginConfiguration getDBConnection(Long pId) throws ModuleException;
+    PluginConfiguration updateDataSource(DataSource pDataSource) throws ModuleException;
 
     /**
-     *
-     * Update a {@link PluginConfiguration}.
-     *
-     * @param pPlugin
-     *            the {@link PluginConfiguration} to update
-     * @return the updated {@link PluginConfiguration}
-     * @throws ModuleException
-     *             plugin to update does not exists
-     */
-    PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException;
-
-    /**
-     * Delete a {@link DBConnection}.
+     * Delete a {@link DataSource}.
      * 
      * @param pId
-     *            a {@link DBConnection} identifier
+     *            a {@link DataSource} identifier
      * @throws ModuleException
+     *             throw if an error occurs
      */
-    void deleteDBConnection(Long pId) throws ModuleException;
+    void deleteDataSouce(Long pId) throws ModuleException;
 
-    /**
-     * Querying the status of a database connection pools.
-     * 
-     * @param pId
-     *            a {@link DBConnection} identifier
-     * @return true success to the connection to the database.</br>
-     *         false unable to connect to the database
-     * 
-     * 
-     * @throws ModuleException
-     */
-    Boolean testDBConnection(Long pId) throws ModuleException;
+    void getTables(Long pId) throws ModuleException;
+
+    void getColumns(Long pId) throws ModuleException;
+
+    void getIndeses(Long pId) throws ModuleException;
 
 }

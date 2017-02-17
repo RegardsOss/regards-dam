@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.utils;
+package fr.cnes.regards.modules.datasources.domain;
 
 import java.util.List;
 
