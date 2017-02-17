@@ -53,7 +53,7 @@ public class AccessGroup implements IIdentifiable<Long> {
     private Set<User> users;
 
     @NotNull
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "accessGroup")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "accessGroup")
     private Set<GroupAccessRight> accessRights;
 
     @Column(name = "private")

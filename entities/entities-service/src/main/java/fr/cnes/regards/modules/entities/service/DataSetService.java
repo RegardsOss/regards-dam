@@ -21,6 +21,7 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -176,6 +177,19 @@ public class DataSetService extends AbstractEntityService {
     protected <T extends AbstractEntity> T doUpdate(T pEntity) {
         // nothing to do for now
         return pEntity;
+    }
+
+    /**
+     * @param pDataSetId
+     * @return
+     * @throws EntityNotFoundException
+     */
+    public DescriptionFile retrieveDataSetDescription(Long pDataSetId) throws EntityNotFoundException {
+        DataSet ds = repository.findOneDescriptionFile(pDataSetId);
+        if (ds == null) {
+            throw new EntityNotFoundException(pDataSetId, DataSet.class);
+        }
+        return ds.getDescriptionFile();
     }
 
 }

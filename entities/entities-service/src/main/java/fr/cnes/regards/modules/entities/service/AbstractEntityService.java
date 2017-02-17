@@ -23,7 +23,9 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -409,15 +411,29 @@ public abstract class AbstractEntityService implements IEntityService {
 
     /**
      * @param pNewEntity
+     *            entity being created
      * @param pFile
-     * @return
+     *            the description of the entity
+     * @return modified entity with the description properly set
      * @throws IOException
      * @throws EntityDescriptionUnacceptableCharsetException
+     *             thrown if charset is not utf-8
+     * @throws EntityDescriptionTooLargeException
+     *             thrown if file is bigger than 10MB
+     * @throws EntityDescriptionUnacceptableType
+     *             thrown if file is not a PDF or markdown
      */
     private <T extends AbstractEntity> T setDescription(T newEntity, MultipartFile file)
-            throws IOException, EntityDescriptionUnacceptableCharsetException {
+            throws IOException, ModuleException {
         if ((newEntity instanceof AbstractLinkEntity) && (file != null) && !file.isEmpty()) {
             // collections and dataset only has a description which is a url or a file
+            if (!acceptacleContentType(file)) {
+                throw new EntityDescriptionUnacceptableType(file.getContentType());
+            }
+            // 10 000 000B=10MB
+            if (file.getSize() > 10000000) {
+                throw new EntityDescriptionTooLargeException(file.getOriginalFilename());
+            }
             String charsetOfFile = getCharset(file);
             if ((charsetOfFile != null) && (charsetOfFile != "utf-8")) {
                 throw new EntityDescriptionUnacceptableCharsetException(charsetOfFile);
@@ -427,6 +443,18 @@ public abstract class AbstractEntityService implements IEntityService {
                     .setDescriptionFile(new DescriptionFile(file.getBytes(), MediaType.valueOf(file.getContentType())));
         }
         return newEntity;
+    }
+
+    /**
+     * @param pFile
+     * @return
+     */
+    private boolean acceptacleContentType(MultipartFile pFile) {
+        String fileContentTypeWithCharset = pFile.getContentType();
+        int indexOfCharset = fileContentTypeWithCharset.indexOf(";charset");
+        String contentType = indexOfCharset == -1 ? fileContentTypeWithCharset
+                : fileContentTypeWithCharset.substring(0, indexOfCharset);
+        return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
     }
 
     /**

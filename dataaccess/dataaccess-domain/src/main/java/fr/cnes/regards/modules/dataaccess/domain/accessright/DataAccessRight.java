@@ -17,6 +17,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAccessRightValidation;
 
 /**
+ * Only matters if the {@link AccessLevel} to the dataset is {@link AccessLevel#FULL_ACCESS}
+ *
  * @author Sylvain Vissiere-Guerinet
  *
  */

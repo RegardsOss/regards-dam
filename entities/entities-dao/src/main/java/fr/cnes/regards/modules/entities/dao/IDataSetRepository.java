@@ -19,4 +19,11 @@ public interface IDataSetRepository extends IAbstractEntityRepository<DataSet> {
     @Query("from DataSet ds left join fetch ds.pluginConfigurationIds where ds.id=:id")
     DataSet findOneWithPluginConfigurations(@Param("id") Long pDataSetId);
 
+    /**
+     * @param pDataSetId
+     * @return
+     */
+    @Query("from DataSet ds left join fetch ds.descriptionFile where ds.id=:id")
+    DataSet findOneDescriptionFile(@Param("id") Long pDataSetId);
+
 }

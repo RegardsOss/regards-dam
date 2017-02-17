@@ -253,10 +253,6 @@ public class DataSetServiceTest {
         return rootCrit;
     }
 
-    /**
-     * @return
-     * @throws ModuleException
-     */
     private ICriterion getInvalidClause() throws ModuleException {
         // textAtt contains "testContains"
         ICriterion containsCrit = ICriterion.contains("attributes." + attString.getName(), "testContains");
@@ -288,7 +284,6 @@ public class DataSetServiceTest {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_310")
     @Test
     public void retrieveDataSetById() throws EntityNotFoundException {
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
@@ -298,7 +293,6 @@ public class DataSetServiceTest {
         Assert.assertEquals(dataSet.getModel().getId(), pModel2.getId());
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_210")
     @Purpose("Le système doit permettre de mettre à jour les valeurs d’une dataSet via son IP_ID et d’archiver ces modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
     public void updateDataSet() throws ModuleException, PluginUtilsException {
@@ -315,7 +309,6 @@ public class DataSetServiceTest {
         }
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_220")
     @Purpose("Le système doit permettre d’associer/dissocier des dataSets à la dataSet courante lors de la mise à jour.")
     @Test
     public void testFullUpdate() throws ModuleException, PluginUtilsException {
@@ -334,7 +327,6 @@ public class DataSetServiceTest {
         dataSetServiceMocked.update(dataSet2.getId(), dataSet1);
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_120")
     @Purpose("Si la suppression d’une dataSet est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
     public void deleteDataSet() throws EntityNotFoundException, PluginUtilsException {
@@ -343,13 +335,11 @@ public class DataSetServiceTest {
         Assert.assertTrue(dataSet2.isDeleted());
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createDataSet() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final DataSet dataSet = dataSetServiceMocked.create(dataSet2, null);
-        // Mockito.verify(dataSourceServiceMocked).getDefaultDataSource();
         Assert.assertEquals(dataSet2, dataSet);
     }
 

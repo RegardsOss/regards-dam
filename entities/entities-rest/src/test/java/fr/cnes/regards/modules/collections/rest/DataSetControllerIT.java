@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.collections.rest;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +21,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.context.WebApplicationContext;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
@@ -68,9 +69,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     private IDataSourceRepository dataSourceRepository;
 
     private List<ResultMatcher> expectations;
-
-    @Autowired
-    private WebApplicationContext webApplicationContext;
 
     @Before
     public void init() {
@@ -122,12 +120,12 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_120")
     @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
     public void testPostDataSet() throws Exception {
-        final DataSet dataSet2 = new DataSet(model1, null, "collection2", "licence");
+        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2", "licence");
         dataSet2.setDataSource(dataSource1);
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/plain",
+        MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/markdown",
                 "some xml".getBytes());
         MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
                 gson(dataSet2).getBytes());
@@ -136,6 +134,21 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         fileList.add(dataset);
         fileList.add(firstFile);
 
+        performDefaultFileUpload(DataSetController.DATASET_PATH, fileList, expectations,
+                                 "Failed to create a new dataset");
+
+        DataSet dataSet21 = new DataSet(model1, null, "dataSet21", "licence");
+        dataSet21.setDataSource(dataSource1);
+
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources",
+                                                          "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf"));
+        MockMultipartFile pdf = new MockMultipartFile("file",
+                "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf", MediaType.APPLICATION_PDF_VALUE, input);
+        MockMultipartFile dataset21 = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+                gson(dataSet21).getBytes());
+        fileList.clear();
+        fileList.add(pdf);
+        fileList.add(dataset21);
         performDefaultFileUpload(DataSetController.DATASET_PATH, fileList, expectations,
                                  "Failed to create a new dataset");
     }

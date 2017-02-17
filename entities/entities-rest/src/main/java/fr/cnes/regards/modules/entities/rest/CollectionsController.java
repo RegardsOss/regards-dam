@@ -220,6 +220,12 @@ public class CollectionsController implements IResourceController<Collection> {
         resourceService.addLink(resource, this.getClass(), "updateCollection", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Collection.class));
+        resourceService.addLink(resource, this.getClass(), "dissociateCollection", "dissociate",
+                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(Set.class));
+        resourceService.addLink(resource, this.getClass(), "associateCollection", "associate",
+                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(Set.class));
         return resource;
     }
 }
