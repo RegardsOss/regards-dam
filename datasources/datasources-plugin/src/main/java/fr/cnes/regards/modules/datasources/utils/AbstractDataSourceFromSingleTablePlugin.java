@@ -27,11 +27,11 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
- * Class PostgreDBDataSourcePlugin
+ * Class AbstractDataSourceFromSingleTablePlugin
  *
  * A {@link Plugin} to discover the tables, columns and indices of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
@@ -39,12 +39,12 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMapping implements IDBDataSourcePlugin {
+public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping implements IDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDBDataSourcePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceFromSingleTablePlugin.class);
 
     /**
      * The SQL request parameter name
@@ -215,7 +215,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     /*
      * (non-Javadoc)
      *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getTables()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getTables()
      */
     @Override
     public Map<String, Table> getTables() {
@@ -271,7 +271,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     /*
      * (non-Javadoc)
      *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getColumns(java.lang.String)
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getColumns(java.lang.String)
      */
     @Override
     public Map<String, Column> getColumns(Table pTable) {
@@ -320,7 +320,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     /*
      * (non-Javadoc)
      *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getIndices()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getIndices()
      */
     @Override
     public Map<String, Index> getIndices(Table pTable) {
@@ -386,7 +386,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     /*
      * (non-Javadoc)
      *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredTable()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getConfiguredTable()
      */
     @Override
     public String getConfiguredTable() {
@@ -396,7 +396,7 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     /*
      * (non-Javadoc)
      *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin#getConfiguredColumns()
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getConfiguredColumns()
      */
     @Override
     public List<String> getConfiguredColumns() {

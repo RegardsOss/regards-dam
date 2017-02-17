@@ -10,7 +10,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 
 /**
  *
@@ -23,7 +23,7 @@ public interface IDataSourceService {
 
     /**
      *
-     * Get all the {@link PluginConfiguration} for the plugin types {@link IDBDataSourcePlugin}.
+     * Get all the {@link PluginConfiguration} for the plugin types {@link IDataSourceFromSingleTablePlugin}.
      *
      * @return all the {@link PluginConfiguration}.
      */
@@ -31,7 +31,7 @@ public interface IDataSourceService {
 
     /**
      *
-     * Create a {@link PluginConfiguration} for the plugin types {@link IDBDataSourcePlugin}.
+     * Create a {@link PluginConfiguration} for the plugin types {@link IDataSourceFromSingleTablePlugin}.
      *
      * @param pDataSource
      *            the {@link DataSource} to the database

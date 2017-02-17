@@ -14,25 +14,15 @@ import fr.cnes.regards.modules.datasources.utils.Index;
 import fr.cnes.regards.modules.datasources.utils.Table;
 
 /**
- * Class IDBDataSourcePlugin
+ * Class IDataSourceFromSingleTablePlugin
  * 
  * Allows to search in a database, and to explore the database's tables, columns and indices.
  *
  * @author Christophe Mertz
  * 
  */
-@PluginInterface(description = "Plugin to explore and search in a data source")
-public interface IDBDataSourcePlugin extends IDataSourcePlugin {
-
-    /**
-     * The model parameter name
-     */
-//    public static final String MODEL_PARAM = "model";
-
-    /**
-     * The connection parameter name
-     */
-//    public static final String CONNECTION_PARAM = "connection";
+@PluginInterface(description = "Plugin to explore a data source and search in a single table of the data source")
+public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
 
     /**
      * Requests the database to get the {@link List} of database's table.

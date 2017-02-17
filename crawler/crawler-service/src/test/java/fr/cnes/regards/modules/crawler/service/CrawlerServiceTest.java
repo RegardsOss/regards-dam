@@ -30,9 +30,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -77,7 +77,7 @@ public class CrawlerServiceTest {
     @Autowired
     private IIndexerService indexerService;
 
-    private IDBDataSourcePlugin dsPlugin;
+    private IDataSourceFromSingleTablePlugin dsPlugin;
 
     private DataSourceModelMapping dataSourceModelMapping;
 
@@ -96,11 +96,11 @@ public class CrawlerServiceTest {
         List<PluginParameter> parameters;
         try {
             parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
+                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                     .getParameters();
-            dsPlugin = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
+            dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());

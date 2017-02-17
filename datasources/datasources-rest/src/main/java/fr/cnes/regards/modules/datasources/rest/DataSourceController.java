@@ -85,8 +85,8 @@ public class DataSourceController implements IResourceController<PluginConfigura
     /**
      * Create a {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
      *
-     * @param pDbConnection
-     *            the database connection used to create the {@link PluginConfiguration}
+     * @param pDatasource
+     *            the DataSource used to create the {@link PluginConfiguration}
      * @return the created {@link PluginConfiguration}
      * @throws ModuleException
      *             if problem occurs during plugin configuration creation
@@ -139,7 +139,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
     /**
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDataSourcePlugin}
      *
-     * @param pConnectionId
+     * @param pPluginConfId
      *            {@link PluginConfiguration} identifier
      * @return nothing
      * @throws ModuleException

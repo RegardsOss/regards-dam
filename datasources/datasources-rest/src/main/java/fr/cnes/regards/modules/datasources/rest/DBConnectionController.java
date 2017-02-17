@@ -107,14 +107,14 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      *             if plugin configuration cannot be retrieved
      */
     @ResourceAccess(description = "Get a plugin configuration for a plugin type IDBConnectionPlugin")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable Long pPluginConfId)
+    @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}")
+    public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable Long pConnectionId)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(dbConnectionService.getDBConnection(pPluginConfId)));
+        return ResponseEntity.ok(toResource(dbConnectionService.getDBConnection(pConnectionId)));
     }
 
     /**
-     * Allow to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
+     * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
      *
      * @param pPluginConfId
      *            {@link PluginConfiguration} identifier
@@ -125,11 +125,11 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      *             if plugin configuration cannot be updated
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDBConnectionPlugin")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable Long pPluginConfId,
+    @RequestMapping(method = RequestMethod.PUT, value = "/{pConnectionId}")
+    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable Long pConnectionId,
             @Valid @RequestBody DBConnection pDbConnection) throws ModuleException {
-        if (!pPluginConfId.equals(pDbConnection.getPluginConfigurationId())) {
-            throw new EntityInconsistentIdentifierException(pPluginConfId, pDbConnection.getPluginConfigurationId(),
+        if (!pConnectionId.equals(pDbConnection.getPluginConfigurationId())) {
+            throw new EntityInconsistentIdentifierException(pConnectionId, pDbConnection.getPluginConfigurationId(),
                     PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dbConnectionService.updateDBConnection(pDbConnection)));
