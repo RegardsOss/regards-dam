@@ -48,5 +48,15 @@
 			<artifactId>regards-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>multitenant-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

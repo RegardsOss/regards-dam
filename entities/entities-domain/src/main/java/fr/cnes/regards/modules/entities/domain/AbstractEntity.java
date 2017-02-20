@@ -66,10 +66,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Column(name = "creation_date")
     protected LocalDateTime creationDate;
 
-    @PastOrNow
-    @Column(name = "deletion_date")
-    protected LocalDateTime deletionDate;
-
     /**
      * entity id for SGBD purpose mainly and REST request
      */
@@ -113,13 +109,15 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Set<String> tags;
 
     /**
-     * Computed indirect access collections.<br/>
-     * This is a set of URNs corresponding to computed indirect collections.
+     * Computed indirect access groups.<br/>
+     * This is a set of group names that the entity can reach (access groups are positionned on datasets and then
+     * added to collections that tag the dataset and then added to collections that tag collections containing
+     * groups)
      */
     @ElementCollection
-    @CollectionTable(name = "t_entity_indirect_coll", joinColumns = @JoinColumn(name = "entity_id"))
-    @Column(name = "urn", length = 200)
-    protected Set<String> indirectCollections;
+    @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"))
+    @Column(name = "name", length = 200)
+    protected Set<String> groups;
 
     /**
      * list of attributes associated to this entity
@@ -138,19 +136,12 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             updatable = false)
     protected Model model;
 
-    /**
-     * Is this entity has been deleted ?
-     */
-    @Column(name = "deleted")
-    private boolean deleted = false;
-
-    public AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
+    protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;
         ipId = pIpId;
         label = pLabel;
-        creationDate = LocalDateTime.now();
-        lastUpdate = LocalDateTime.now();
         tags = new HashSet<>();
+        groups = new HashSet<>();
     }
 
     protected AbstractEntity() { // NOSONAR
@@ -162,32 +153,18 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return ipId.toString();
     }
 
-    /**
-     * @return the lastUpdate
-     */
     public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    /**
-     * @param pLastUpdate
-     *            the lastUpdate to set
-     */
     public void setLastUpdate(LocalDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
 
-    /**
-     * @return the creationDate
-     */
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
 
-    /**
-     * @param pCreationDate
-     *            the creationDate to set
-     */
     public void setCreationDate(LocalDateTime pCreationDate) {
         creationDate = pCreationDate;
     }
@@ -257,20 +234,12 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         description = pDescription;
     }
 
-    public boolean isDeleted() {
-        return deleted;
+    public Set<String> getGroups() {
+        return groups;
     }
 
-    public void setDeleted(boolean pIsDeleted) {
-        deleted = pIsDeleted;
-    }
-
-    public LocalDateTime getDeletionDate() {
-        return deletionDate;
-    }
-
-    public void setDeletionDate(LocalDateTime pDeletionDate) {
-        deletionDate = pDeletionDate;
+    public void setGroups(Set<String> pGroups) {
+        groups = pGroups;
     }
 
     @Override
@@ -310,7 +279,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
                 + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", tags=" + tags
-                + ", indirectCollections=" + indirectCollections + ", attributes=" + attributes + ", model=" + model
-                + "]";
+                + ", groups=" + groups + ", attributes=" + attributes + ", model=" + model + "]";
     }
 }

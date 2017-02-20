@@ -8,10 +8,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,24 +18,18 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -89,11 +81,9 @@ public class DataSetServiceTest {
 
     private IDataSetRepository dataSetRepositoryMocked;
 
-    private DataSetService dataSetServiceMocked;
+    private DatasetService dataSetServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
-
-    private IdentificationService idServiceMocked;
 
     private DataSourceService dataSourceServiceMocked;
 
@@ -114,7 +104,6 @@ public class DataSetServiceTest {
         jwtService.injectMockToken("Tenant", "PUBLIC");
         dataSetRepositoryMocked = Mockito.mock(IDataSetRepository.class);
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
-        idServiceMocked = Mockito.mock(IdentificationService.class);
         pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
@@ -125,21 +114,26 @@ public class DataSetServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        dataSet1 = new DataSet(pModel1, getUrn(), "dataSet1", "licence");
+        dataSet1 = new DataSet(pModel1, "PROJECT", "dataSet1");
+        dataSet1.setLicence("licence");
         dataSet1.setId(1L);
-        dataSet2 = new DataSet(pModel2, getUrn(), "dataSet2", "licence");
+        dataSet2 = new DataSet(pModel2, "PROJECT", "dataSet2");
+        dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet2.setModelOfData(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
-        dataSet22 = new DataSet(pModel2, getUrn(), "dataSet22", "licence");
+        dataSet22 = new DataSet(pModel2, "PROJECT", "dataSet22");
+        dataSet22.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet22.setModelOfData(modelOfObjects);
         dataSet22.setSubsettingClause(getInvalidClause());
         dataSet22.setId(22L);
-        dataSet3 = new DataSet(pModel2, getUrn(), "dataSet3", "licence");
+        dataSet3 = new DataSet(pModel2, "PROJECT", "dataSet3");
+        dataSet3.setLicence("licence");
         dataSet3.setId(3L);
-        dataSet4 = new DataSet(pModel2, getUrn(), "dataSet4", "licence");
+        dataSet4 = new DataSet(pModel2, "PROJECT", "dataSet4");
+        dataSet4.setLicence("licence");
         dataSet4.setId(4L);
         dataSet2URN = dataSet2.getIpId();
         Set<String> dataSet1Tags = dataSet1.getTags();
@@ -163,13 +157,10 @@ public class DataSetServiceTest {
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet22.getId())).thenReturn(dataSet22);
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet3.getId())).thenReturn(dataSet3);
 
-        Mockito.when(idServiceMocked.getRandomUrn(OAISIdentifier.AIP, EntityType.COLLECTION))
-                .thenReturn(new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "TENANT",
-                        UUID.randomUUID(), 1));
-
-        dataSetServiceMocked = new DataSetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, dataSourceServiceMocked, idServiceMocked, entitiesRepositoryMocked,
-                pModelService);
+        IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
+        dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
+                pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, pModelService,
+                deletedEntityRepositoryMocked, null, null);
 
     }
 
@@ -280,74 +271,13 @@ public class DataSetServiceTest {
         return rootCrit;
     }
 
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
-    }
-
-    @Test
-    public void retrieveDataSetById() throws EntityNotFoundException {
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
-        final DataSet dataSet = dataSetServiceMocked.retrieveDataSet(dataSet2.getId());
-
-        Assert.assertEquals(dataSet.getId(), dataSet2.getId());
-        Assert.assertEquals(dataSet.getModel().getId(), pModel2.getId());
-    }
-
-    @Purpose("Le système doit permettre de mettre à jour les valeurs d’une dataSet via son IP_ID et d’archiver ces modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
-    @Test
-    public void updateDataSet() throws ModuleException, PluginUtilsException {
-        final DataSet updatedDataSet1 = dataSet1;
-
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
-        Mockito.when(entitiesRepositoryMocked.save(updatedDataSet1)).thenReturn(updatedDataSet1);
-        try {
-            final DataSet result = dataSetServiceMocked.update(dataSet1.getId(), updatedDataSet1);
-            Assert.assertEquals(updatedDataSet1, result);
-        } catch (final EntityInconsistentIdentifierException e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-    }
-
-    @Purpose("Le système doit permettre d’associer/dissocier des dataSets à la dataSet courante lors de la mise à jour.")
-    @Test
-    public void testFullUpdate() throws ModuleException, PluginUtilsException {
-        final String col4Tag = dataSet4.getIpId().toString();
-        final Set<String> newTags = new HashSet<>();
-        newTags.add(col4Tag);
-        dataSet1.setTags(newTags);
-        dataSetServiceMocked.update(dataSet1.getId(), dataSet1);
-        Assert.assertTrue(dataSet1.getTags().contains(col4Tag));
-        Assert.assertFalse(dataSet1.getTags().contains(dataSet2.getIpId().toString()));
-    }
-
-    @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateDataSetWithWrongURL() throws ModuleException, PluginUtilsException {
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
-        dataSetServiceMocked.update(dataSet2.getId(), dataSet1);
-    }
-
-    @Purpose("Si la suppression d’une dataSet est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
-    @Test
-    public void deleteDataSet() throws EntityNotFoundException, PluginUtilsException {
-        dataSetServiceMocked.delete(dataSet2.getId());
-        Assert.assertFalse(dataSet1.getTags().contains(dataSet2.getIpId().toString()));
-        Assert.assertTrue(dataSet2.isDeleted());
-    }
-
+    // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createDataSet() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final DataSet dataSet = dataSetServiceMocked.create(dataSet2, null);
         Assert.assertEquals(dataSet2, dataSet);
-    }
-
-    @Test(expected = EntityInvalidException.class)
-    public void createDataSetInvalid() throws ModuleException, IOException, PluginUtilsException {
-        Mockito.when(entitiesRepositoryMocked.save(dataSet22)).thenReturn(dataSet22);
-        final DataSet dataSet = dataSetServiceMocked.create(dataSet22, null);
-        // exception expected
     }
 
     private List<ModelAttribute> importModel(String pFilename) {

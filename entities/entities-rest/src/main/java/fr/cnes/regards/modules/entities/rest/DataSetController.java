@@ -38,7 +38,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.service.DataSetService;
+import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -66,7 +66,7 @@ public class DataSetController implements IResourceController<DataSet> {
     private IResourceService resourceService;
 
     @Autowired
-    private DataSetService service;
+    private DatasetService service;
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
@@ -88,7 +88,7 @@ public class DataSetController implements IResourceController<DataSet> {
     public HttpEntity<PagedResources<Resource<DataSet>>> retrieveDataSetList(final Pageable pPageable,
             final PagedResourcesAssembler<DataSet> pAssembler) {
 
-        final Page<DataSet> datasets = service.retrieveDataSetList(pPageable);
+        final Page<DataSet> datasets = service.retrieveDataSets(pPageable);
         final PagedResources<Resource<DataSet>> resources = toPagedResources(datasets, pAssembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 

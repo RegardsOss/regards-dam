@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,8 +29,6 @@ import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.rest.DataSetController;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -76,14 +73,16 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
         Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
-
-        dataSet1 = new DataSet(model1, getUrn(), "collection1", "licence");
+        dataSet1 = new DataSet(model1, "PROJECT", "collection1");
+        dataSet1.setLicence("licence");
         dataSet1.setSipId("SipId1");
         dataSet1.setLabel("label");
-        dataSet3 = new DataSet(model1, getUrn(), "collection3", "licence");
+        dataSet3 = new DataSet(model1, "PROJECT", "collection3");
+        dataSet3.setLicence("licence");
         dataSet3.setSipId("SipId3");
         dataSet3.setLabel("label");
-        dataSet4 = new DataSet(model1, getUrn(), "collection4", "licence");
+        dataSet4 = new DataSet(model1, "PROJECT", "collection4");
+        dataSet4.setLicence("licence");
         dataSet4.setSipId("SipId4");
         dataSet4.setLabel("label");
         final Set<String> col1Tags = new HashSet<>();
@@ -112,7 +111,8 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_120")
     @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
     public void testPostDataSet() throws Exception {
-        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2", "licence");
+        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2");
+        dataSet2.setLicence("licence");
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -128,7 +128,8 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(DataSetController.DATASET_PATH, fileList, expectations,
                                  "Failed to create a new dataset");
 
-        DataSet dataSet21 = new DataSet(model1, null, "dataSet21", "licence");
+        DataSet dataSet21 = new DataSet(model1, null, "dataSet21");
+        dataSet21.setLicence("licence");
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources",
                                                           "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf"));
@@ -153,8 +154,9 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testUpdateDataSet() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "dataset1clone",
-                "licenceClone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
+        dataSetClone.setLicence("licence");
+        dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
@@ -168,8 +170,8 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_210")
     @Purpose("Le système permet de changer la vue associée au jeu de données.")
     public void testUpdateDataSetDataSource() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "dataset1clone",
-                "licenceClone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
+        dataSetClone.setLicence("licence");
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
@@ -181,8 +183,9 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testFullUpdate() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "collection1clone",
-                "licenceClone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "collection1clone");
+        dataSetClone.setLicence("licence");
+        dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
         dataSetClone.setLabel("label");
@@ -207,10 +210,6 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_SERVICES_PATH, expectations,
                           "Failed to fetch services list", dataSet1.getId());
-    }
-
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Override

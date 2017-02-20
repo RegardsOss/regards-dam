@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.dataaccess.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,9 +31,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.service.DataSetService;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.service.DatasetService;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -56,7 +54,7 @@ public class AccessRightServiceTest {
 
     private AccessGroupService agService;
 
-    private DataSetService dsService;
+    private IDatasetService dsService;
 
     private IPublisher eventPublisher;
 
@@ -95,15 +93,15 @@ public class AccessRightServiceTest {
         garRepo = Mockito.mock(IGroupAccessRightRepository.class);
         uarRepo = Mockito.mock(IUserAccessRightRepository.class);
         agService = Mockito.mock(AccessGroupService.class);
-        dsService = Mockito.mock(DataSetService.class);
+        dsService = Mockito.mock(DatasetService.class);
         eventPublisher = Mockito.mock(IPublisher.class);
         service = new AccessRightService(arRepo, garRepo, uarRepo, agService, dsService, eventPublisher);
 
         final Model model = Model.build("MODEL", DESC, EntityType.DATASET);
         AG1 = new AccessGroup("AG1");
         AG2 = new AccessGroup("AG2");
-        DS1 = new DataSet(model, getUrn(), "DS1", "licence");
-        DS2 = new DataSet(model, getUrn(), "DS2", "licence");
+        DS1 = new DataSet(model, "PROJECT", "DS1");
+        DS2 = new DataSet(model, "PROJECT", "DS2");
         USER1 = new User("user1@user1.user1");
         USER2 = new User("user2@user2.user2");
         final QualityFilter qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
@@ -117,10 +115,6 @@ public class AccessRightServiceTest {
         UAR12 = new UserAccessRight(qf, al, DS1, USER2);
         UAR21 = new UserAccessRight(qf, al, DS2, USER1);
         UAR22 = new UserAccessRight(qf, al, DS2, USER2);
-    }
-
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Test

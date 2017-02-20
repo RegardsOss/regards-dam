@@ -27,13 +27,13 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 public class DBConnectionService implements IDBConnectionService {
 
     /**
-     * Attribute plugin service 
+     * Attribute plugin service
      */
     private final IPluginService service;
 
     /**
      * The constructor with an instance of the {@link PluginService}
-     * 
+     *
      * @param pPluginService
      *            The {@link PluginService} to used by this service
      */
@@ -101,7 +101,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Build a {@link List} of {@link PluginParameter} for the {@link IDBConnectionPlugin}.
-     * 
+     *
      * @param pDbConn
      * @return a {@link List} of {@link PluginParameter}
      */
@@ -119,7 +119,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DBConnection} attribute
-     * 
+     *
      * @param pDbConn
      *            A {@link DBConnection}
      * @return a {{@link PluginParameter}

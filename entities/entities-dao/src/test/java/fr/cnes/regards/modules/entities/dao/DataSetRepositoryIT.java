@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,8 +27,6 @@ import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -87,9 +84,8 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     public void init() {
         Model pModel = Model.build("datasetModel", "pDescription", EntityType.DATASET);
         pModel = modelRepo.save(pModel);
-        dataset = new DataSet(pModel,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
-                "dataset", "licence");
+        dataset = new DataSet(pModel, "pTenant", "dataset");
+        dataset.setLicence("licence");
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
@@ -102,12 +98,10 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
-        ICriterion criterion = gson.fromJson(stringCLause, ICriterion.class);
         dataset = dataSetRepo.save(dataset);
 
-        dsDescription = new DataSet(srcModel,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
-                "dataSetWiothDescription", "Licence");
+        dsDescription = new DataSet(srcModel, "pTenant", "dataSetWithDescription");
+        dsDescription.setLicence("licence");
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = dataSetRepo.save(dsDescription);

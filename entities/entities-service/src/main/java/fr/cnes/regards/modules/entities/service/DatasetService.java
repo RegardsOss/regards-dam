@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.entities.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -16,17 +18,16 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.service.identification.IdentificationService;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -36,27 +37,26 @@ import fr.cnes.regards.modules.models.service.IModelService;
  *
  */
 @Service
-public class DataSetService extends AbstractEntityService {
+public class DatasetService extends AbstractEntityService implements IDatasetService {
 
     /**
      * Logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSetService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatasetService.class);
 
     private final IAttributeModelService attributeService;
 
     private final IModelAttributeService modelAttributeService;
 
-    private final IDataSetRepository repository;
-
     private final DataSourceService dataSourceService;
 
-    public DataSetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
+    public DatasetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
-            IdentificationService pIdService, IAbstractEntityRepository<AbstractEntity> pEntitiesRepository,
-            IModelService pModelService) {
-        super(pModelAttributeService, pEntitiesRepository, pModelService, pIdService);
-        repository = pRepository;
+            IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
+            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
+            EntityManager pEm) {
+        super(pModelAttributeService, pEntitiesRepository, pModelService, deletedEntityRepository,
+              pCollectionRepository, pRepository, pEm);
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
         dataSourceService = pDataSourceService;
@@ -67,8 +67,9 @@ public class DataSetService extends AbstractEntityService {
      * @return
      * @throws EntityNotFoundException
      */
+    @Override
     public DataSet retrieveDataSet(UniformResourceName pDataSetIpId) throws EntityNotFoundException {
-        DataSet result = (DataSet) repository.findOneByIpId(pDataSetIpId);
+        DataSet result = (DataSet) datasetRepository.findOneByIpId(pDataSetIpId);
         if (result == null) {
             throw new EntityNotFoundException(pDataSetIpId.toString(), DataSet.class);
         }
@@ -80,8 +81,9 @@ public class DataSetService extends AbstractEntityService {
      * @return
      * @throws EntityNotFoundException
      */
+    @Override
     public DataSet retrieveDataSet(Long pDataSetId) throws EntityNotFoundException {
-        DataSet dataset = repository.findOne(pDataSetId);
+        DataSet dataset = datasetRepository.findOne(pDataSetId);
         if (dataset == null) {
             throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }
@@ -93,10 +95,7 @@ public class DataSetService extends AbstractEntityService {
      * If any DataSource is associated, sets the default DataSource.
      *
      * @param pDataSet
-     *            the {@link DataSet} to check
-     * @return the modified {@link DataSet}
      * @throws EntityNotFoundException
-     *             the DataSet to check does not exist
      */
     private DataSet checkDataSource(DataSet pDataSet) throws EntityNotFoundException {
         if (pDataSet.getDataSource() == null) {
@@ -112,7 +111,7 @@ public class DataSetService extends AbstractEntityService {
     /**
      * Check that the sub-setting criterion setting on a DataSet are coherent with the {@link Model} associated to the
      * {@link DataSource}.
-     * 
+     *
      * @param pDataSet
      *            the {@link DataSet} to check
      * @return the modified {@link DataSet}
@@ -123,8 +122,8 @@ public class DataSetService extends AbstractEntityService {
         ICriterion subsettingCriterion = pDataSet.getSubsettingClause();
         if (subsettingCriterion != null) {
 
-            SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
-                    pDataSet.getModelOfData(), attributeService, modelAttributeService);
+            SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(pDataSet.getModelOfData(),
+                    attributeService, modelAttributeService);
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
                         "given subsettingCriterion cannot be accepted for the DataSet : " + pDataSet.getLabel());
@@ -150,8 +149,9 @@ public class DataSetService extends AbstractEntityService {
      * @return
      */
     // FIXME: return deleted too?
-    public Page<DataSet> retrieveDataSetList(Pageable pPageable) {
-        return repository.findAll(pPageable);
+    @Override
+    public Page<DataSet> retrieveDataSets(Pageable pPageable) {
+        return datasetRepository.findAll(pPageable);
     }
 
     /**
@@ -160,8 +160,9 @@ public class DataSetService extends AbstractEntityService {
      * @throws EntityNotFoundException
      */
     // TODO: return only IService not IConverter or IFilter or IProcessingService(not implemented yet anyway)
+    @Override
     public List<Long> retrieveDataSetServices(Long pDataSetId) throws EntityNotFoundException {
-        DataSet dataSetWithConfs = repository.findOneWithPluginConfigurations(pDataSetId);
+        DataSet dataSetWithConfs = datasetRepository.findOneWithPluginConfigurations(pDataSetId);
         if (dataSetWithConfs == null) {
             throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }
@@ -178,7 +179,7 @@ public class DataSetService extends AbstractEntityService {
     }
 
     @Override
-    protected <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException {
+    protected <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException {
         // TODO: download the description
         return pNewEntity;
     }
@@ -193,7 +194,7 @@ public class DataSetService extends AbstractEntityService {
     }
 
     @Override
-    protected <T extends AbstractEntity> T doUpdate(T pEntity) {
+    protected <T extends AbstractEntity> T beforeUpdate(T pEntity) {
         // nothing to do for now
         return pEntity;
     }
@@ -204,7 +205,7 @@ public class DataSetService extends AbstractEntityService {
      * @throws EntityNotFoundException
      */
     public DescriptionFile retrieveDataSetDescription(Long pDataSetId) throws EntityNotFoundException {
-        DataSet ds = repository.findOneDescriptionFile(pDataSetId);
+        DataSet ds = datasetRepository.findOneDescriptionFile(pDataSetId);
         if (ds == null) {
             throw new EntityNotFoundException(pDataSetId, DataSet.class);
         }

@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
-import java.util.UUID;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,8 +22,6 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -75,11 +71,11 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     private DataSet ds2;
 
-    // private final String ds1Name = "DS1";
+    //    private final String ds1Name = "DS1";
     //
-    // private final String ds2Name = "DS2";
+    //    private final String ds2Name = "DS2";
     //
-    // private final String dsDesc = "DESC";
+    //    private final String dsDesc = "DESC";
 
     private UserAccessRight uar1;
 
@@ -94,10 +90,10 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, getUrn(), "ds1", "licence");
+        ds1 = new DataSet(model, "PROJECT", "ds1");
         ds1.setLabel("label");
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, getUrn(), "ds2", "licence");
+        ds2 = new DataSet(model, "PROJECT", "ds2");
         ds2.setLabel("label");
         ds2 = dsRepo.save(ds2);
 
@@ -115,10 +111,6 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         ag2 = agRepo.save(ag2);
         gar2 = new GroupAccessRight(qf, al, ds2, ag2);
         gar2 = groupRepo.save(gar2);
-    }
-
-    private UniformResourceName getUrn() {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "PROJECT", UUID.randomUUID(), 1);
     }
 
     @Test

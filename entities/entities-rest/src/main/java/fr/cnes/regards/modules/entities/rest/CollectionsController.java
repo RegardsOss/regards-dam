@@ -32,7 +32,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.service.ICollectionsRequestService;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -52,7 +52,7 @@ public class CollectionsController implements IResourceController<Collection> {
      * Service
      */
     @Autowired
-    private ICollectionsRequestService collectionsRequestService;
+    private ICollectionService collectionsRequestService;
 
     /**
      * HATEOAS service

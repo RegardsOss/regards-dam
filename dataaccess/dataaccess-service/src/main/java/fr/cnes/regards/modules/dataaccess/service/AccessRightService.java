@@ -27,7 +27,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightCr
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightDeleted;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightUpdated;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.service.DataSetService;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -45,13 +45,13 @@ public class AccessRightService {
 
     private final AccessGroupService accessGroupService;
 
-    private final DataSetService dataSetService;
+    private final IDatasetService dataSetService;
 
     private final IPublisher eventPublisher;
 
     public AccessRightService(IAccessRightRepository<AbstractAccessRight> pAccessRightRepository,
             IGroupAccessRightRepository pGroupRepository, IUserAccessRightRepository pUserRepository,
-            AccessGroupService pAccessGroupService, DataSetService pDataSetService, IPublisher pEventPublisher) {
+            AccessGroupService pAccessGroupService, IDatasetService pDataSetService, IPublisher pEventPublisher) {
         repository = pAccessRightRepository;
         groupRepository = pGroupRepository;
         userRepository = pUserRepository;
