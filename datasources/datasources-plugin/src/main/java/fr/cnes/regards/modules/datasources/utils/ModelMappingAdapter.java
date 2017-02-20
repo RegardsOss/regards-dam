@@ -11,6 +11,8 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**

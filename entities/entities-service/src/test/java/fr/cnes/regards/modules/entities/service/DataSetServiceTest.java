@@ -42,6 +42,7 @@ import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -83,8 +84,6 @@ public class DataSetServiceTest {
 
     private DatasetService dataSetServiceMocked;
 
-    private IStorageService storageServiceMocked;
-
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
     private DataSourceService dataSourceServiceMocked;
@@ -105,7 +104,6 @@ public class DataSetServiceTest {
         JWTService jwtService = new JWTService();
         jwtService.injectMockToken("Tenant", "PUBLIC");
         dataSetRepositoryMocked = Mockito.mock(IDataSetRepository.class);
-        storageServiceMocked = Mockito.mock(IStorageService.class);
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
@@ -121,12 +119,12 @@ public class DataSetServiceTest {
         dataSet1.setId(1L);
         dataSet2 = new DataSet(pModel2, "PROJECT", "dataSet2");
         setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet2.setDataSource(new DataSource(modelOfObjects));
+        dataSet2.setModelOfData(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
         dataSet22 = new DataSet(pModel2, "PROJECT", "dataSet22");
         setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet22.setDataSource(new DataSource(modelOfObjects));
+        dataSet22.setModelOfData(modelOfObjects);
         dataSet22.setSubsettingClause(getInvalidClause());
         dataSet22.setId(22L);
         dataSet3 = new DataSet(pModel2, "PROJECT", "dataSet3");
@@ -145,10 +143,6 @@ public class DataSetServiceTest {
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet22.getId())).thenReturn(dataSet22);
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet3.getId())).thenReturn(dataSet3);
-
-        Mockito.when(storageServiceMocked.persist(dataSet1)).thenReturn(dataSet1);
-        Mockito.when(storageServiceMocked.persist(dataSet2)).thenReturn(dataSet2);
-        Mockito.when(storageServiceMocked.persist(dataSet22)).thenReturn(dataSet22);
 
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(dataSet1);
@@ -246,10 +240,6 @@ public class DataSetServiceTest {
         return rootCrit;
     }
 
-    /**
-     * @return
-     * @throws ModuleException
-     */
     private ICriterion getInvalidClause() throws ModuleException {
         // textAtt contains "testContains"
         ICriterion containsCrit = ICriterion.contains("attributes." + attString.getName(), "testContains");
@@ -280,10 +270,9 @@ public class DataSetServiceTest {
     // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createDataSet() throws ModuleException {
+    public void createDataSet() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
-        final DataSet dataSet = dataSetServiceMocked.create(dataSet2);
-        // Mockito.verify(dataSourceServiceMocked).getDefaultDataSource();
+        final DataSet dataSet = dataSetServiceMocked.create(dataSet2, null);
         Assert.assertEquals(dataSet2, dataSet);
     }
 

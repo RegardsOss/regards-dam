@@ -65,7 +65,7 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     private QualityFilter qf;
 
-    private final AccessLevel al = AccessLevel.FULL_ACCES;
+    private final AccessLevel al = AccessLevel.FULL_ACCESS;
 
     private DataSet ds1;
 

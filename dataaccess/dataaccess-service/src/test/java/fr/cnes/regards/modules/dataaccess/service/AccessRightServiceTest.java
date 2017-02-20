@@ -105,7 +105,7 @@ public class AccessRightServiceTest {
         USER1 = new User("user1@user1.user1");
         USER2 = new User("user2@user2.user2");
         final QualityFilter qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
-        final AccessLevel al = AccessLevel.FULL_ACCES;
+        final AccessLevel al = AccessLevel.FULL_ACCESS;
         GAR11 = new GroupAccessRight(qf, al, DS1, AG1);
         GAR12 = new GroupAccessRight(qf, al, DS1, AG2);
         GAR21 = new GroupAccessRight(qf, al, DS2, AG1);

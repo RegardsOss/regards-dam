@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.collections.rest;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,12 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.rest.DataSetController;
@@ -45,6 +51,10 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
     private DataSet dataSet4;
 
+    private DataSource dataSource1;
+
+    private DataSource dataSource2;
+
     @Autowired
     private IDataSetRepository dataSetRepository;
 
@@ -55,11 +65,14 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void init() {
+
         expectations = new ArrayList<>();
         // Bootstrap default values
         model1 = Model.build("modelName1", "model desc", EntityType.DATASET);
         model1 = modelRepository.save(model1);
 
+        Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
+        modelOfData = modelRepository.save(modelOfData);
         dataSet1 = new DataSet(model1, "PROJECT", "collection1");
         dataSet1.setSipId("SipId1");
         dataSet1.setLabel("label");
@@ -89,14 +102,41 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testPostDataSet() {
-        final DataSet dataSet2 = new DataSet(model1, null, "collection2");
-
+    @Requirement("REGARDS_DSL_DAM_SET_010")
+    @Requirement("REGARDS_DSL_DAM_SET_020")
+    @Requirement("REGARDS_DSL_DAM_SET_110")
+    @Requirement("REGARDS_DSL_DAM_SET_120")
+    @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
+    public void testPostDataSet() throws Exception {
+        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2", "licence");
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(DataSetController.DATASET_PATH, dataSet2, expectations, "Failed to create a new dataset");
+        MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/markdown",
+                "some xml".getBytes());
+        MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+                gson(dataSet2).getBytes());
 
+        List<MockMultipartFile> fileList = new ArrayList<>(2);
+        fileList.add(dataset);
+        fileList.add(firstFile);
+
+        performDefaultFileUpload(DataSetController.DATASET_PATH, fileList, expectations,
+                                 "Failed to create a new dataset");
+
+        DataSet dataSet21 = new DataSet(model1, null, "dataSet21", "licence");
+
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources",
+                                                          "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf"));
+        MockMultipartFile pdf = new MockMultipartFile("file",
+                "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf", MediaType.APPLICATION_PDF_VALUE, input);
+        MockMultipartFile dataset21 = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+                gson(dataSet21).getBytes());
+        fileList.clear();
+        fileList.add(pdf);
+        fileList.add(dataset21);
+        performDefaultFileUpload(DataSetController.DATASET_PATH, fileList, expectations,
+                                 "Failed to create a new dataset");
     }
 
     @Test
@@ -111,6 +151,21 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     public void testUpdateDataSet() {
         final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
         dataSetClone.setIpId(dataSet1.getIpId());
+        dataSetClone.setId(dataSet1.getId());
+        dataSetClone.setTags(dataSet1.getTags());
+        dataSetClone.setSipId(dataSet1.getSipId() + "new");
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        performDefaultPut(DataSetController.DATASET_PATH + DataSetController.DATASET_ID_PATH, dataSetClone,
+                          expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_DAM_SET_210")
+    @Purpose("Le système permet de changer la vue associée au jeu de données.")
+    public void testUpdateDataSetDataSource() {
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "dataset1clone",
+                "licenceClone");
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");

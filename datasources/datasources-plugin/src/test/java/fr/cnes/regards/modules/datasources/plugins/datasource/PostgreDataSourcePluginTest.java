@@ -27,12 +27,12 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
@@ -54,6 +54,8 @@ public class PostgreDataSourcePluginTest {
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePluginTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+
+    private static final String TENANT = "PG_TENANT";
 
     /**
      * JPA Repository
@@ -81,9 +83,9 @@ public class PostgreDataSourcePluginTest {
 
     /**
      * Populate the datasource as a legacy catalog
-     * 
+     *
      * @throws DataSourcesPluginException
-     * 
+     *
      * @throws JwtException
      * @throws PluginUtilsException
      */
@@ -133,7 +135,7 @@ public class PostgreDataSourcePluginTest {
     public void firstTest() {
         Assert.assertEquals(3, repository.count());
 
-        Page<DataObject> ll = plgDataSource.findAll(new PageRequest(0, 10));
+        Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10));
         Assert.assertNotNull(ll);
         Assert.assertEquals(3, ll.getContent().size());
     }
@@ -146,7 +148,7 @@ public class PostgreDataSourcePluginTest {
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
      * database
-     * 
+     *
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */
@@ -165,7 +167,7 @@ public class PostgreDataSourcePluginTest {
 
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
-        
+
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
         attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
@@ -173,7 +175,7 @@ public class PostgreDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
-        
+
         modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
 
     }

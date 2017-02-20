@@ -82,10 +82,6 @@
 			<artifactId>module-plugins-domain</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.utils</groupId>
-			<artifactId>plugin-utils</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>module-plugins-service</artifactId>
 			<scope>test</scope>

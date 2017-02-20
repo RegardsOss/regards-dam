@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +14,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -25,6 +25,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author lmieulet
@@ -50,8 +51,6 @@ public class CollectionServiceTest {
 
     private ICollectionService collectionServiceMocked;
 
-    private IStorageService storageServiceMocked;
-
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
     /**
@@ -61,8 +60,7 @@ public class CollectionServiceTest {
     @SuppressWarnings("unchecked")
     @Before
     public void init() {
-        JWTService jwtService = new JWTService();
-        jwtService.injectMockToken("Tenant", "PUBLIC");
+
         // populate the repository
         pModel1 = new Model();
         pModel1.setId(1L);
@@ -90,10 +88,6 @@ public class CollectionServiceTest {
         Mockito.when(collectionRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         Mockito.when(collectionRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
 
-        storageServiceMocked = Mockito.mock(IStorageService.class);
-        Mockito.when(storageServiceMocked.persist(collection1)).thenReturn(collection1);
-        Mockito.when(storageServiceMocked.persist(collection2)).thenReturn(collection2);
-
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection1);
@@ -114,7 +108,7 @@ public class CollectionServiceTest {
     @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une collection à partir d’un modèle préalablement défini et d’archiver cette collection sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createCollection() throws ModuleException {
+    public void createCollection() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(collection2)).thenReturn(collection2);
         final Collection collection = collectionServiceMocked.create(collection2);
         Assert.assertEquals(collection2, collection);

@@ -8,11 +8,13 @@ import java.util.Set;
 import javax.transaction.Transactional;
 
 import org.springframework.validation.Errors;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -53,6 +55,7 @@ public interface IEntityService {
      * @param pEntity "content" of entity to update
      * @return updated entity from database
      * @throws ModuleException
+     * @throws PluginUtilsException
      */
     <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException;
 

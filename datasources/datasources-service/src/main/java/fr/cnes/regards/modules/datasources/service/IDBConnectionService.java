@@ -55,13 +55,13 @@ public interface IDBConnectionService {
 
     /**
      *
-     * Update a {@link PluginConfiguration}.
+     * Update the {@link PluginConfiguration} linked to the {@link DBConnection}
      *
-     * @param pPlugin
-     *            the {@link PluginConfiguration} to update
+     * @param pDbConnection
+     *            the {@link DBConnection} to update
      * @return the updated {@link PluginConfiguration}
      * @throws ModuleException
-     *             plugin to update does not exists
+     *             throw if an error occurs
      */
     PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException;
 
@@ -69,8 +69,9 @@ public interface IDBConnectionService {
      * Delete a {@link DBConnection}.
      * 
      * @param pId
-     *            a {@link DBConnection} identifier
+     *            a {@link PluginConfiguration} identifier
      * @throws ModuleException
+     *             throw if an error occurs
      */
     void deleteDBConnection(Long pId) throws ModuleException;
 
@@ -78,12 +79,11 @@ public interface IDBConnectionService {
      * Querying the status of a database connection pools.
      * 
      * @param pId
-     *            a {@link DBConnection} identifier
+     *            a {@link PluginConfiguration} identifier
      * @return true success to the connection to the database.</br>
      *         false unable to connect to the database
-     * 
-     * 
      * @throws ModuleException
+     *             throw if an error occurs
      */
     Boolean testDBConnection(Long pId) throws ModuleException;
 

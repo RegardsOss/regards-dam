@@ -53,7 +53,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(FragmentService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionController.class);
 
     /**
      * DBConnectionService attribute service
@@ -75,7 +75,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      *
      * @return a list of {@link PluginConfiguration}
      */
-    @ResourceAccess(description = "List all plugins configurations defined for the plugin type IDBConnectionPlugin")
+    @ResourceAccess(description = "List all plugin'ss configurations defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<PluginConfiguration>>> getAllDBConnections() {
         return ResponseEntity.ok(toResources(dbConnectionService.getAllDBConnections()));
@@ -100,13 +100,13 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Get a {@link PluginConfiguration}
      *
-     * @param pConnectionId
+     * @param pPluginConfId
      *            {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException
      *             if plugin configuration cannot be retrieved
      */
-    @ResourceAccess(description = "Get a model")
+    @ResourceAccess(description = "Get a plugin configuration for a plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}")
     public ResponseEntity<Resource<PluginConfiguration>> getDBConnection(@PathVariable Long pConnectionId)
             throws ModuleException {
@@ -114,9 +114,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     }
 
     /**
-     * Allow to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
+     * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
      *
-     * @param pConnectionId
+     * @param pPluginConfId
      *            {@link PluginConfiguration} identifier
      * @param pDbConnection
      *            {@link DBConnection} to update

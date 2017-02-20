@@ -3,8 +3,10 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,15 +17,22 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
+import org.springframework.web.multipart.MultipartFile;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
@@ -31,6 +40,8 @@ import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -45,6 +56,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.plugins.utils.PluginUtils;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Entity service implementation
@@ -58,7 +71,7 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * bean toward the module responsible to contact, or not, the archival storage
      */
-    private final IStorageService storageService;
+    private IStorageService storageService;
 
     /**
      * Class logger
@@ -312,6 +325,7 @@ public abstract class AbstractEntityService implements IEntityService {
                 final T finalEntity = entity;
                 taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
             }
+        newEntity = setDescription(newEntity, file);
         }
         UniformResourceName urn = entity.getIpId();
         // If entity contains groups => update all entities tagging this entity (recursively)
@@ -328,9 +342,64 @@ public abstract class AbstractEntityService implements IEntityService {
                 collectionsToUpdate.remove(firstColl);
             }
         }
+        storageService = getStorageService();
+        newEntity = storageService.storeAIP(newEntity);
     }
 
     /**
+     * TODO make it possible to switch configuration dynamically between local and remote
+     *
+     * @return
+     * @throws PluginUtilsException
+     */
+    private IStorageService getStorageService() throws PluginUtilsException {
+
+        List<PluginParameter> parameters;
+
+        parameters = PluginParametersFactory.build().getParameters();
+        return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
+                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
+    }
+
+    /**
+     * @param pNewEntity
+     *            entity being created
+     * @param pFile
+     *            the description of the entity
+     * @return modified entity with the description properly set
+     * @throws IOException
+     * @throws EntityDescriptionUnacceptableCharsetException
+     *             thrown if charset is not utf-8
+     * @throws EntityDescriptionTooLargeException
+     *             thrown if file is bigger than 10MB
+     * @throws EntityDescriptionUnacceptableType
+     *             thrown if file is not a PDF or markdown
+     */
+    private <T extends AbstractEntity> T setDescription(T newEntity, MultipartFile file)
+            throws IOException, ModuleException {
+        if ((newEntity instanceof AbstractLinkEntity) && (file != null) && !file.isEmpty()) {
+            // collections and dataset only has a description which is a url or a file
+            if (!acceptacleContentType(file)) {
+                throw new EntityDescriptionUnacceptableType(file.getContentType());
+            }
+            // 10 000 000B=10MB
+            if (file.getSize() > 10000000) {
+                throw new EntityDescriptionTooLargeException(file.getOriginalFilename());
+            }
+            String charsetOfFile = getCharset(file);
+            if ((charsetOfFile != null) && (charsetOfFile != "utf-8")) {
+                throw new EntityDescriptionUnacceptableCharsetException(charsetOfFile);
+            }
+            newEntity.setDescription(null);
+            ((AbstractLinkEntity) newEntity)
+                    .setDescriptionFile(new DescriptionFile(file.getBytes(), MediaType.valueOf(file.getContentType())));
+        }
+        return newEntity;
+    }
+
+    /**
+     * @param pFile
+     * @return
      * For all collections tagging specified urn, try to add specified group.
      * If group was not already present, it is added and concerned collection is added to set, overwise it is removed
      * from set (means that collection has already been updated with the group)
@@ -353,6 +422,33 @@ public abstract class AbstractEntityService implements IEntityService {
             }
         }
     }
+    private boolean acceptacleContentType(MultipartFile pFile) {
+        String fileContentTypeWithCharset = pFile.getContentType();
+        int indexOfCharset = fileContentTypeWithCharset.indexOf(";charset");
+        String contentType = indexOfCharset == -1 ? fileContentTypeWithCharset
+                : fileContentTypeWithCharset.substring(0, indexOfCharset);
+        return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+    }
+
+    /**
+     * check if the file has a charset compliant with the application
+     *
+     * @param pFile
+     *            description file from the user
+     * @return true is charset is utf8 or not set(considered us-ascii) or if the file is a pdf, false otherwise
+     */
+    private String getCharset(MultipartFile pFile) {
+        String contentType = pFile.getContentType();
+        int charsetIndex = contentType.indexOf("charset=");
+        return charsetIndex == -1 ? null
+                : contentType.substring(charsetIndex + 8, contentType.length() - 1).toLowerCase();
+    }
+
+    /**
+     * @param pNewEntity
+     * @return
+     */
+    protected abstract <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException;
 
     /**
      * Specific operations before creating entity
@@ -441,7 +537,8 @@ public abstract class AbstractEntityService implements IEntityService {
             // Don't forget to manage groups for current entity too
             this.manageGroups(updated);
         }
-        storageService.persist(updated);
+        storageService = getStorageService();
+        storageService.updateAIP(updated);
         return updated;
     }
 
@@ -457,7 +554,10 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * @param pToDelete
      * @return
+     * @throws PluginUtilsException
      */
+        storageService = getStorageService();
+        storageService.deleteAIP(pToDelete);
     private AbstractEntity delete(AbstractEntity pToDelete) {
         UniformResourceName urn = pToDelete.getIpId();
 

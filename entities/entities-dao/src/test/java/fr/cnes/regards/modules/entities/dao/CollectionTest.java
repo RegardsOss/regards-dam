@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.dao;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -20,6 +21,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  */
 @TestPropertySource("classpath:application-test.properties")
+@Ignore
 public class CollectionTest extends AbstractDaoTransactionalTest {
 
     @Autowired

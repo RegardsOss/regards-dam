@@ -20,6 +20,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 
@@ -79,14 +80,10 @@ public class EsQueryTest {
         // Do not launch tests is Elasticsearch is not available
         Assume.assumeTrue(repositoryOK);
 
-        /*        final Consumer<String> cleanFct = (pIndex) -> {
-            try {
-                repository.deleteIndex(pIndex);
-            } catch (final IndexNotFoundException infe) {
-            }
-        };
-        // All created indices from tests
-        cleanFct.accept(INDEX);*/
+        /*
+         * final Consumer<String> cleanFct = (pIndex) -> { try { repository.deleteIndex(pIndex); } catch (final
+         * IndexNotFoundException infe) { } }; // All created indices from tests cleanFct.accept(INDEX);
+         */
     }
 
     @AfterClass
@@ -384,6 +381,7 @@ public class EsQueryTest {
         Assert.assertEquals(items, itemsSorted);
     }
 
+    @Ignore
     @Test
     public void testLoad() {
         // this.createData2();
@@ -489,11 +487,11 @@ public class EsQueryTest {
 
         private String[] dates;
 
-        private Range<String> dateRange;
+        private final Range<String> dateRange;
 
-        private Range<Integer> intRange;
+        private final Range<Integer> intRange;
 
-        private Range<Double> doubleRange;
+        private final Range<Double> doubleRange;
 
         private boolean bool;
 

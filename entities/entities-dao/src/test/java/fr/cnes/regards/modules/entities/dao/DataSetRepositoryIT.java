@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.entities.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.gson.Gson;
@@ -23,9 +25,10 @@ import com.google.gson.Gson;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.datasources.dao.IDataSourceRepository;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -50,9 +53,6 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     private IModelRepository modelRepo;
 
     @Autowired
-    private IDataSourceRepository dataSourceRepo;
-
-    @Autowired
     private IDataSetRepository dataSetRepo;
 
     @Autowired
@@ -62,6 +62,10 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     private IAttributeModelRepository attModelRepo;
 
     private DataSet dataset;
+
+    private DataSet dsDescription;
+
+    private final String description = "some content";
 
     private Model srcModel;
 
@@ -91,24 +95,41 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataset.setSubsettingClause(getValidClause());
-
-        DataSource dataSource = new DataSource(srcModel);
-        dataSource = dataSourceRepo.save(dataSource);
-        dataset.setDataSource(dataSource);
+        dataset.setModelOfData(srcModel);
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
         ICriterion criterion = gson.fromJson(stringCLause, ICriterion.class);
         dataset = dataSetRepo.save(dataset);
+
+        dsDescription = new DataSet(srcModel,
+                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
+                "dataSetWiothDescription", "Licence");
+        dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
+                MediaType.TEXT_MARKDOWN));
+        dsDescription = dataSetRepo.save(dsDescription);
     }
 
     @Test
     public void testFindOneWithPluginConfigurations() {
+        LOG.info("START OF find one with plugin Configurations");
+
         DataSet result = dataSetRepo.findOneWithPluginConfigurations(dataset.getId());
+        LOG.info("END OF find one with plugin Configurations");
         Assert.assertTrue(result.getPluginConfigurationIds() != null);
         Assert.assertTrue(result.getPluginConfigurationIds().size() == 2);
         Assert.assertTrue(result.getPluginConfigurationIds().contains(1L));
         Assert.assertTrue(result.getPluginConfigurationIds().contains(2L));
+    }
+
+    @Test
+    public void testFindOneDescription() {
+        LOG.info("START OF find one DescriptionFile");
+        DataSet result = dataSetRepo.findOneDescriptionFile(dsDescription.getId());
+        LOG.info("END OF find one DescriptionFile");
+        Assert.assertNotNull(result.getDescriptionFile());
+        Assert.assertArrayEquals(description.getBytes(Charset.forName("utf-8")),
+                                 result.getDescriptionFile().getContent());
     }
 
     /**

@@ -7,17 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,16 +24,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
-import fr.cnes.regards.framework.jpa.multitenant.resolver.CurrentTenantIdentifierResolverImpl;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.OracleDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.utils.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -48,6 +46,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
+@Ignore
 public class CrawlerServiceTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
@@ -58,6 +57,8 @@ public class CrawlerServiceTest {
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
+
+    private static final String TENANT = "default";
 
     @Value("${oracle.datasource.url}")
     private String url;
@@ -73,17 +74,12 @@ public class CrawlerServiceTest {
 
     // private ICrawlerService service;
 
-    @Bean
-    public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
-        return new CurrentTenantIdentifierResolverImpl();
-    }
-
     @Autowired
     private IIndexerService indexerService;
 
-    private IDBDataSourcePlugin dsPlugin;
+    private IDataSourceFromSingleTablePlugin dsPlugin;
 
-    private DataSourceModelMapping modelMapping;
+    private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
@@ -100,10 +96,11 @@ public class CrawlerServiceTest {
         List<PluginParameter> parameters;
         try {
             parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(OracleDBDataSourcePlugin.CONNECTION_PARAM,
+                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping)).getParameters();
-            dsPlugin = PluginUtils.getPlugin(parameters, OracleDBDataSourcePlugin.class,
+                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .getParameters();
+            dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -119,32 +116,28 @@ public class CrawlerServiceTest {
     public void testSuckUp() {
         // register JSon data types (for ES)
         registerJSonModelAttributes();
-        String tenant = currentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
 
         // Creating index if it doesn't already exist
-        indexerService.deleteIndex(tenant);
-        indexerService.createIndex(tenant);
+        indexerService.deleteIndex(TENANT);
+        indexerService.createIndex(TENANT);
 
         // Retrieve first 1000 objects
-        dsPlugin.setMapping(TABLE_NAME_TEST, "DATA_OBJECTS_ID", "FILE_SIZE", "FILE_TYPE", "DATA_SET_ID",
-                            "FILE_NAME_ORIGINE", "DATA_TITLE", "DATA_AUTHOR", "DATA_AUTHOR_COMPANY", "MIN_LONGITUDE",
-                            "MAX_LONGITUDE", "MIN_LATITUDE", "MAX_LATITUDE", "MIN_ALTITUDE", "MAX_ALTITUDE",
-                            "DATA_CREATION_DATE", "START_DATE", "STOP_DATE");
+        dsPlugin.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
-        Page<DataObject> page = dsPlugin.findAll(new PageRequest(0, 1000));
+        Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
 
         LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
         Set<DataObject> set = Sets.newHashSet(page.getContent());
         Assert.assertEquals(page.getContent().size(), set.size());
-        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(tenant, page.getContent());
+        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
         LOGGER.info(String.format("...%d entities saved",
                                   page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         while (page.hasNext()) {
-            page = dsPlugin.findAll(page.nextPageable());
+            page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
             LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-            errorMap = indexerService.saveBulkEntities(tenant, page.getContent());
+            errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
             LOGGER.info(String.format("...%d entities saved",
                                       page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
         }
@@ -191,10 +184,10 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
         attributes.add(new DataSourceAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
     }
 
     private void registerJSonModelAttributes() {
