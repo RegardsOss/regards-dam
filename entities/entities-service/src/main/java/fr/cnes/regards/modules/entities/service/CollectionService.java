@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -35,9 +37,10 @@ public class CollectionService extends AbstractEntityService implements ICollect
     public CollectionService(ICollectionRepository pCollectionRepository,
             IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pStorageService,
             IModelAttributeService pModelAttributeService, IModelService pModelService,
-            IDeletedEntityRepository deletedEntityRepository, IDataSetRepository pDatasetRepository) {
+            IDeletedEntityRepository deletedEntityRepository, IDataSetRepository pDatasetRepository,
+            EntityManager pEm) {
         super(pModelAttributeService, pAbstractEntityRepository, pModelService, pStorageService,
-              deletedEntityRepository, pCollectionRepository, pDatasetRepository);
+              deletedEntityRepository, pCollectionRepository, pDatasetRepository, pEm);
     }
 
     @Override

@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,9 +18,6 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -166,7 +162,7 @@ public class DataSetServiceTest {
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, pModelService,
-                storageServiceMocked, deletedEntityRepositoryMocked, null);
+                storageServiceMocked, deletedEntityRepositoryMocked, null, null);
 
     }
 
@@ -281,62 +277,6 @@ public class DataSetServiceTest {
         return rootCrit;
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_310")
-    @Test
-    public void retrieveDataSetById() throws EntityNotFoundException {
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
-        final DataSet dataSet = dataSetServiceMocked.retrieveDataSet(dataSet2.getId());
-
-        Assert.assertEquals(dataSet.getId(), dataSet2.getId());
-        Assert.assertEquals(dataSet.getModel().getId(), pModel2.getId());
-    }
-
-    // @Requirement("REGARDS_DSL_DAM_COL_210")
-    @Purpose("Le système doit permettre de mettre à jour les valeurs d’une dataSet via son IP_ID et d’archiver ces modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
-    @Test
-    public void updateDataSet() throws ModuleException {
-        final DataSet updatedDataSet1 = dataSet1;
-
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
-        Mockito.when(entitiesRepositoryMocked.save(updatedDataSet1)).thenReturn(updatedDataSet1);
-        try {
-            final DataSet result = dataSetServiceMocked.update(dataSet1.getId(), updatedDataSet1);
-            Assert.assertEquals(updatedDataSet1, result);
-        } catch (final EntityInconsistentIdentifierException e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-    }
-
-    // @Requirement("REGARDS_DSL_DAM_COL_220")
-    @Purpose("Le système doit permettre d’associer/dissocier des dataSets à la dataSet courante lors de la mise à jour.")
-    @Test
-    public void testFullUpdate() throws ModuleException {
-        final String col4Tag = dataSet4.getIpId().toString();
-        final Set<String> newTags = new HashSet<>();
-        newTags.add(col4Tag);
-        dataSet1.setTags(newTags);
-        dataSetServiceMocked.update(dataSet1.getId(), dataSet1);
-        Assert.assertTrue(dataSet1.getTags().contains(col4Tag));
-        Assert.assertFalse(dataSet1.getTags().contains(dataSet2.getIpId().toString()));
-    }
-
-    @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateDataSetWithWrongURL() throws ModuleException {
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
-        dataSetServiceMocked.update(dataSet2.getId(), dataSet1);
-    }
-
-    // @Requirement("REGARDS_DSL_DAM_COL_120")
-    @Purpose("Si la suppression d’une dataSet est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
-    @Test
-    public void deleteDataSet() throws EntityNotFoundException {
-        dataSetServiceMocked.delete(dataSet2.getId());
-        // FIXME
-        //        Assert.assertFalse(dataSet1.getTags().contains(dataSet2.getIpId().toString()));
-        //        Assert.assertTrue(dataSet2.isDeleted());
-    }
-
     // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
@@ -345,13 +285,6 @@ public class DataSetServiceTest {
         final DataSet dataSet = dataSetServiceMocked.create(dataSet2);
         // Mockito.verify(dataSourceServiceMocked).getDefaultDataSource();
         Assert.assertEquals(dataSet2, dataSet);
-    }
-
-    @Test(expected = EntityInvalidException.class)
-    public void createDataSetInvalid() throws ModuleException {
-        Mockito.when(entitiesRepositoryMocked.save(dataSet22)).thenReturn(dataSet22);
-        final DataSet dataSet = dataSetServiceMocked.create(dataSet22);
-        // exception expected
     }
 
     private List<ModelAttribute> importModel(String pFilename) {

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.assertj.core.util.Arrays;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -189,19 +188,19 @@ public class FlattenedAttributeSerializationTest {
         expectedRootAttributes.add(DISCRIMINATOR_GEO);
 
         for (AbstractAttribute<?> att : attributes) {
-            Assert.assertThat(att.getName(), Matchers.isIn(expectedRootAttributes));
+            Assert.assertTrue(expectedRootAttributes.contains(att.getName()));
 
             if (DISCRIMINATOR_DESCRIPTION.equals(att.getName())) {
-                Assert.assertThat(att, Matchers.instanceOf(StringAttribute.class));
+                Assert.assertTrue(att instanceof StringAttribute);
             }
 
             if (DISCRIMINATOR_GEO.equals(att.getName())) {
-                Assert.assertThat(att, Matchers.instanceOf(ObjectAttribute.class));
+                Assert.assertTrue(att instanceof ObjectAttribute);
                 ObjectAttribute geo = (ObjectAttribute) att;
 
                 for (AbstractAttribute<?> nested : geo.getValue()) {
                     if (DISCRIMINATOR_COORDINATE.equals(nested.getName())) {
-                        Assert.assertThat(nested, Matchers.instanceOf(GeometryAttribute.class));
+                        Assert.assertTrue(nested instanceof GeometryAttribute);
                     }
                 }
             }
@@ -224,7 +223,7 @@ public class FlattenedAttributeSerializationTest {
         List<AbstractAttribute<?>> attributes = parsedCar.getAttributes();
 
         final int expectedSize = 3;
-        Assert.assertThat(attributes, Matchers.hasSize(expectedSize));
+        Assert.assertEquals(expectedSize, attributes.size());
 
         List<String> expectedRootAttributes = new ArrayList<>();
         expectedRootAttributes.add(DISCRIMINATOR_DESCRIPTION);
@@ -232,19 +231,19 @@ public class FlattenedAttributeSerializationTest {
         expectedRootAttributes.add(DISCRIMINATOR_ORG);
 
         for (AbstractAttribute<?> att : attributes) {
-            Assert.assertThat(att.getName(), Matchers.isIn(expectedRootAttributes));
+            Assert.assertTrue(expectedRootAttributes.contains(att.getName()));
 
             if (DISCRIMINATOR_DESCRIPTION.equals(att.getName())) {
-                Assert.assertThat(att, Matchers.instanceOf(StringAttribute.class));
+                Assert.assertTrue(att instanceof StringAttribute);
             }
 
             if (DISCRIMINATOR_ORG.equals(att.getName())) {
-                Assert.assertThat(att, Matchers.instanceOf(ObjectAttribute.class));
+                Assert.assertTrue(att instanceof ObjectAttribute);
                 ObjectAttribute geo = (ObjectAttribute) att;
 
                 for (AbstractAttribute<?> nested : geo.getValue()) {
                     if (DISCRIMINATOR_DESCRIPTION.equals(nested.getName())) {
-                        Assert.assertThat(nested, Matchers.instanceOf(StringArrayAttribute.class));
+                        Assert.assertTrue(nested instanceof StringArrayAttribute);
                     }
                 }
             }

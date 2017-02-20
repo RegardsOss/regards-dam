@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -29,12 +28,9 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractDataEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -89,13 +85,12 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private final IDeletedEntityRepository deletedEntityRepository;
 
-    @Autowired
-    private EntityManager em;
+    private final EntityManager em;
 
     public AbstractEntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
             IStorageService pStorageService, IDeletedEntityRepository pDeletedEntityRepository,
-            ICollectionRepository pCollectionRepository, IDataSetRepository pDatasetRepository) {
+            ICollectionRepository pCollectionRepository, IDataSetRepository pDatasetRepository, EntityManager pEm) {
         modelAttributeService = pModelAttributeService;
         entitiesRepository = pEntitiesRepository;
         modelService = pModelService;
@@ -103,6 +98,7 @@ public abstract class AbstractEntityService implements IEntityService {
         deletedEntityRepository = pDeletedEntityRepository;
         collectionRepository = pCollectionRepository;
         datasetRepository = pDatasetRepository;
+        this.em = pEm;
     }
 
     @Override
@@ -198,12 +194,9 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * Compute available validators
      *
-     * @param pModelAttribute
-     *            {@link ModelAttribute}
-     * @param pAttributeKey
-     *            attribute key
-     * @param pManageAlterable
-     *            manage update or not
+     * @param pModelAttribute {@link ModelAttribute}
+     * @param pAttributeKey attribute key
+     * @param pManageAlterable manage update or not
      * @return {@link Validator} list
      */
     protected List<Validator> getValidators(ModelAttribute pModelAttribute, String pAttributeKey,
@@ -232,12 +225,9 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * Build real attribute map extracting namespace from {@link ObjectAttribute} (i.e. fragment name)
      *
-     * @param pAttMap
-     *            {@link Map} to build
-     * @param pNamespace
-     *            namespace context
-     * @param pAttributes
-     *            {@link AbstractAttribute} list to analyze
+     * @param pAttMap {@link Map} to build
+     * @param pNamespace namespace context
+     * @param pAttributes {@link AbstractAttribute} list to analyze
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
             final List<AbstractAttribute<?>> pAttributes) {
@@ -255,92 +245,6 @@ public abstract class AbstractEntityService implements IEntityService {
                 }
             }
         }
-    }
-
-    /**
-     * Associate entities URNs to a collection : add URNs into tags
-     * @param pColl concerned collection
-     * @param pTargetsUrn URNs to be associated with collection
-     * @return updated collection
-     */
-    private Collection associateCollection(Collection pColl, Set<UniformResourceName> pTargetsUrn) {
-        final List<AbstractEntity> existingEntities = entitiesRepository.findByIpIdIn(pTargetsUrn);
-        for (AbstractEntity target : existingEntities) {
-            if (!(target instanceof Document)) {
-                // Documents cannot be tagged into Collections
-                pColl.getTags().add(target.getIpId().toString());
-            }
-        }
-        // Manage groups of new associated collection
-        this.manageGroups(pColl);
-        return entitiesRepository.save(pColl);
-    }
-
-    private AbstractDataEntity associateDataEntity(AbstractDataEntity pSource, Set<UniformResourceName> pTargetsUrn) {
-        final List<AbstractEntity> entityToAssociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
-        for (AbstractEntity target : entityToAssociate) {
-            if (target instanceof AbstractLinkEntity) {
-                // only Collections (and DataSets) can be associated with DataObjects
-                pSource.getTags().add(target.getIpId().toString());
-            }
-        }
-        return entitiesRepository.save(pSource);
-    }
-
-    /**
-     * Associate entities URNs to a dataset : add URNs into tags
-     * @param pDataset concerned dataset
-     * @param pTargetsUrn URNs to be associated with dataset
-     * @return updated dataset
-     */
-    private DataSet associateDataSet(DataSet pDataset, Set<UniformResourceName> pTargetsUrn) {
-        final List<AbstractEntity> existingEntities = entitiesRepository.findByIpIdIn(pTargetsUrn);
-        for (AbstractEntity target : existingEntities) {
-            if (target instanceof Collection) {
-                // Only collections can be tagged into Dataset
-                pDataset.getTags().add(target.getIpId().toString());
-            }
-        }
-        return pDataset;
-    }
-
-    /*    @Override
-    public <T extends AbstractEntity> T dissociate(T pSource, Set<UniformResourceName> pTargetsUrn) {
-        final List<AbstractEntity> entityToDissociate = entitiesRepository.findByIpIdIn(pTargetsUrn);
-        return dissociate(pSource, entityToDissociate);
-    }*/
-
-    private <T extends AbstractEntity> T dissociate(T pSource, List<AbstractEntity> pTaggingEntities) {
-        // Manage groups
-        Set<String> groups = pSource.getGroups();
-
-        // Manage tags
-        final Set<String> taggedEntities = pSource.getTags();
-        for (AbstractEntity toBeDissociated : pTaggingEntities) {
-            taggedEntities.remove(toBeDissociated.getIpId().toString());
-            toBeDissociated.getTags().remove(pSource.getIpId().toString());
-            entitiesRepository.save(toBeDissociated);
-        }
-        return entitiesRepository.save(pSource);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T extends AbstractEntity> T associate(T pSource, Set<UniformResourceName> pTargetsUrn) {
-        if (pSource instanceof Collection) {
-            return (T) associateCollection((Collection) pSource, pTargetsUrn);
-        }
-        if (pSource instanceof AbstractDataEntity) {
-            return (T) associateDataEntity((AbstractDataEntity) pSource, pTargetsUrn);
-        }
-        if (pSource instanceof DataSet) {
-            return (T) associateDataSet((DataSet) pSource, pTargetsUrn);
-        }
-        throw new UnsupportedOperationException("routing for " + pSource.getClass() + " is not implemented");
-    }
-
-    protected Set<UniformResourceName> extractUrns(Set<String> pTags) {
-        return pTags.stream().filter(UniformResourceName::isValidUrn).map(UniformResourceName::fromString)
-                .collect(Collectors.toSet());
     }
 
     /**
@@ -477,8 +381,7 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param pEntityId
      * @param pEntity
      * @return current entity
-     * @throws ModuleException
-     *             thrown if the entity cannot be found or if entities' id do not match
+     * @throws ModuleException thrown if the entity cannot be found or if entities' id do not match
      */
     private <T extends AbstractEntity> T checkUpdate(Long pEntityId, T pEntity) throws ModuleException {
         AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
@@ -492,19 +395,24 @@ public abstract class AbstractEntityService implements IEntityService {
         return toBeUpdated;
     }
 
-    /**
-     * updates entity of id pEntityId according to pEntity
-     *
-     * @param pEntityId
-     * @param pEntity
-     * @return updated entity
-     * @throws ModuleException
-     */
     @Override
     public <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException {
         // checks
         T entityInDb = checkUpdate(pEntityId, pEntity);
         return updateWithoutCheck(pEntity, entityInDb);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends AbstractEntity> T update(UniformResourceName pEntityUrn, T pEntity) throws ModuleException {
+        AbstractEntity entityInDb = entitiesRepository.findOneByIpId(pEntityUrn);
+        if (entityInDb == null) {
+            throw new EntityNotFoundException(pEntity.getIpId().toString());
+        }
+        pEntity.setId(entityInDb.getId());
+        // checks
+        entityInDb = checkUpdate(entityInDb.getId(), pEntity);
+        return updateWithoutCheck(pEntity, (T) entityInDb);
     }
 
     private <T extends AbstractEntity> T updateWithoutCheck(T pEntity, T entityInDb) {
@@ -607,10 +515,14 @@ public abstract class AbstractEntityService implements IEntityService {
         return result;
     }
 
-    @Override
     public void checkModelExists(AbstractEntity pEntity) throws ModuleException {
         // model must exist : EntityNotFoundException thrown if not
         modelService.getModel(pEntity.getModel().getId());
+    }
+
+    private static Set<UniformResourceName> extractUrns(Set<String> pTags) {
+        return pTags.stream().filter(UniformResourceName::isValidUrn).map(UniformResourceName::fromString)
+                .collect(Collectors.toSet());
     }
 
     protected abstract Logger getLogger();

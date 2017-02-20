@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.entities.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -51,9 +53,9 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
             IStorageService pStorageService, IDeletedEntityRepository deletedEntityRepository,
-            ICollectionRepository pCollectionRepository) {
+            ICollectionRepository pCollectionRepository, EntityManager pEm) {
         super(pModelAttributeService, pEntitiesRepository, pModelService, pStorageService, deletedEntityRepository,
-              pCollectionRepository, pRepository);
+              pCollectionRepository, pRepository, pEm);
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
         dataSourceService = pDataSourceService;
