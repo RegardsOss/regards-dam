@@ -38,5 +38,10 @@
 			<artifactId>regards-integration-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>plugins-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
