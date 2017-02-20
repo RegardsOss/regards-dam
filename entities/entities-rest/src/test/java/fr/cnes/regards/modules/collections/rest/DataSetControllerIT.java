@@ -74,12 +74,15 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
         dataSet1 = new DataSet(model1, "PROJECT", "collection1");
+        dataSet1.setLicence("licence");
         dataSet1.setSipId("SipId1");
         dataSet1.setLabel("label");
         dataSet3 = new DataSet(model1, "PROJECT", "collection3");
+        dataSet3.setLicence("licence");
         dataSet3.setSipId("SipId3");
         dataSet3.setLabel("label");
         dataSet4 = new DataSet(model1, "PROJECT", "collection4");
+        dataSet4.setLicence("licence");
         dataSet4.setSipId("SipId4");
         dataSet4.setLabel("label");
         final Set<String> col1Tags = new HashSet<>();
@@ -109,6 +112,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
     public void testPostDataSet() throws Exception {
         final DataSet dataSet2 = new DataSet(model1, null, "dataSet2");
+        dataSet2.setLicence("licence");
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -125,6 +129,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
                                  "Failed to create a new dataset");
 
         DataSet dataSet21 = new DataSet(model1, null, "dataSet21");
+        dataSet21.setLicence("licence");
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources",
                                                           "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf"));
@@ -150,6 +155,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testUpdateDataSet() {
         final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
+        dataSetClone.setLicence("licence");
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
@@ -165,6 +171,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Le système permet de changer la vue associée au jeu de données.")
     public void testUpdateDataSetDataSource() {
         final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
+        dataSetClone.setLicence("licence");
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
@@ -177,6 +184,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testFullUpdate() {
         final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "collection1clone");
+        dataSetClone.setLicence("licence");
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");

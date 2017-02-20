@@ -82,10 +82,12 @@ public class AbstractEntityServiceTest {
         doc = new Document(pModel2, "PROJECT", "doc");
         doc.setId(2L);
         dataset = new DataSet(pModel2, "PROJECT", "dataset");
+        dataset.setLicence("licence");
         dataset.setId(3L);
         dataset.setDescription("datasetDesc");
         dataset.setLabel("dataset");
         dataset2 = new DataSet(pModel2, "PROJECT", "dataset2");
+        dataset2.setLicence("licence");
         dataset2.setDescription("datasetDesc2");
 
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
@@ -162,7 +164,7 @@ public class AbstractEntityServiceTest {
         final Set<UniformResourceName> col3URNList = new HashSet<>();
         col3URNList.add(collection3.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-    
+
         // TODO
         //        entityServiceMocked.associate(collection2, col3URNList);
         Assert.assertTrue(collection3.getTags().contains(collection2.getIpId().toString()));

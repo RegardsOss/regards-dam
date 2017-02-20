@@ -115,20 +115,25 @@ public class DataSetServiceTest {
         pModel2.setId(2L);
 
         dataSet1 = new DataSet(pModel1, "PROJECT", "dataSet1");
+        dataSet1.setLicence("licence");
         dataSet1.setId(1L);
         dataSet2 = new DataSet(pModel2, "PROJECT", "dataSet2");
+        dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet2.setModelOfData(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
         dataSet22 = new DataSet(pModel2, "PROJECT", "dataSet22");
+        dataSet22.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet22.setModelOfData(modelOfObjects);
         dataSet22.setSubsettingClause(getInvalidClause());
         dataSet22.setId(22L);
         dataSet3 = new DataSet(pModel2, "PROJECT", "dataSet3");
+        dataSet3.setLicence("licence");
         dataSet3.setId(3L);
         dataSet4 = new DataSet(pModel2, "PROJECT", "dataSet4");
+        dataSet4.setLicence("licence");
         dataSet4.setId(4L);
         dataSet2URN = dataSet2.getIpId();
         Set<String> dataSet1Tags = dataSet1.getTags();

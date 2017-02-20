@@ -85,6 +85,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
         Model pModel = Model.build("datasetModel", "pDescription", EntityType.DATASET);
         pModel = modelRepo.save(pModel);
         dataset = new DataSet(pModel, "pTenant", "dataset");
+        dataset.setLicence("licence");
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
@@ -100,6 +101,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
         dataset = dataSetRepo.save(dataset);
 
         dsDescription = new DataSet(srcModel, "pTenant", "dataSetWithDescription");
+        dsDescription.setLicence("licence");
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = dataSetRepo.save(dsDescription);

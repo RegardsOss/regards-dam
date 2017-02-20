@@ -107,14 +107,17 @@ public class CollectionDataSetGroupsIT {
         modelDataSet = modelRepository.save(modelDataSet);
 
         dataset1 = new DataSet(modelDataSet, "PROJECT", "labelDs1");
+        dataset1.setLicence("licence");
         dataset1.setSipId("SipId1");
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
         dataset2 = new DataSet(modelDataSet, "PROJECT", "labelDs2");
+        dataset2.setLicence("licence");
         dataset2.setSipId("SipId2");
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
         dataset3 = new DataSet(modelDataSet, "PROJECT", "labelDs3");
+        dataset3.setLicence("licence");
         dataset3.setSipId("SipId3");
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));

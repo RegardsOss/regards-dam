@@ -24,7 +24,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.netflix.servo.util.Throwables;
+import com.google.common.base.Throwables;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
