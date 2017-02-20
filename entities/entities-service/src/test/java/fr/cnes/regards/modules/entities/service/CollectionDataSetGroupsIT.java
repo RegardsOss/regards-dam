@@ -1,5 +1,6 @@
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -135,7 +136,7 @@ public class CollectionDataSetGroupsIT {
 
     @Requirement("REGARDS_DSL_DAM_COL_310")
     @Test
-    public void testCollectionsFirst() throws ModuleException {
+    public void testCollectionsFirst() throws ModuleException, IOException {
         this.buildData1();
         // First create collections
         coll1 = collService.create(coll1);
@@ -167,7 +168,7 @@ public class CollectionDataSetGroupsIT {
     }
 
     @Test
-    public void testDatasetsFirst() throws ModuleException {
+    public void testDatasetsFirst() throws ModuleException, IOException {
         this.buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
@@ -208,7 +209,7 @@ public class CollectionDataSetGroupsIT {
     }
 
     @Test
-    public void testLoop() throws ModuleException {
+    public void testLoop() throws ModuleException, IOException {
         this.buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
@@ -251,7 +252,7 @@ public class CollectionDataSetGroupsIT {
     }
 
     @Test
-    public void testAssociateDissociate() throws ModuleException {
+    public void testAssociateDissociate() throws ModuleException, IOException {
         this.buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
@@ -304,7 +305,7 @@ public class CollectionDataSetGroupsIT {
             + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Test
-    public void testUpdate() throws ModuleException {
+    public void testUpdate() throws ModuleException, IOException {
         this.buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
@@ -355,7 +356,7 @@ public class CollectionDataSetGroupsIT {
     @Requirement("REGARDS_DSL_DAM_COL_120")
     @Purpose("Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
-    public void testDelete() throws ModuleException {
+    public void testDelete() throws ModuleException, IOException {
         this.buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
@@ -381,7 +382,7 @@ public class CollectionDataSetGroupsIT {
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all collections.")
     @Test
-    public void testFindAll() throws ModuleException {
+    public void testFindAll() throws ModuleException, IOException {
         this.buildData1();
 
         // Then collections => groups must have been updated on collections
@@ -397,7 +398,7 @@ public class CollectionDataSetGroupsIT {
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
-    public void updateEntityWithWrongId() throws ModuleException {
+    public void updateEntityWithWrongId() throws ModuleException, IOException {
         this.buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);

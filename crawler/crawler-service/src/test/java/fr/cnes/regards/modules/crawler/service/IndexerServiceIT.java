@@ -45,8 +45,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -92,7 +90,7 @@ public class IndexerServiceIT {
         model.setType(EntityType.COLLECTION);
 
         // Creating a Collection with all types of attributes
-        Collection collection = new Collection(model, TENANT, "coll1");
+        Collection collection = new Collection(model, tenant, "coll1");
         List<AbstractAttribute<?>> attributes = new ArrayList<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");

@@ -35,12 +35,12 @@ public class CollectionService extends AbstractEntityService implements ICollect
     private static final Logger LOGGER = LoggerFactory.getLogger(CollectionService.class);
 
     public CollectionService(ICollectionRepository pCollectionRepository,
-            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository, IStorageService pStorageService,
+            IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository,
             IModelAttributeService pModelAttributeService, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, IDataSetRepository pDatasetRepository,
             EntityManager pEm) {
-        super(pModelAttributeService, pAbstractEntityRepository, pModelService, pStorageService,
-              deletedEntityRepository, pCollectionRepository, pDatasetRepository, pEm);
+        super(pModelAttributeService, pAbstractEntityRepository, pModelService, deletedEntityRepository,
+              pCollectionRepository, pDatasetRepository, pEm);
     }
 
     @Override

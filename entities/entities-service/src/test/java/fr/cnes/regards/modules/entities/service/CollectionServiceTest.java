@@ -101,7 +101,7 @@ public class CollectionServiceTest {
         IModelService pModelService = Mockito.mock(IModelService.class);
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
         collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-                storageServiceMocked, pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null);
+                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null);
 
     }
 

@@ -25,6 +25,7 @@ import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -52,9 +53,9 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
     public DatasetService(IDataSetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
-            IStorageService pStorageService, IDeletedEntityRepository deletedEntityRepository,
-            ICollectionRepository pCollectionRepository, EntityManager pEm) {
-        super(pModelAttributeService, pEntitiesRepository, pModelService, pStorageService, deletedEntityRepository,
+            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
+            EntityManager pEm) {
+        super(pModelAttributeService, pEntitiesRepository, pModelService, deletedEntityRepository,
               pCollectionRepository, pRepository, pEm);
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
@@ -90,25 +91,39 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
     }
 
     /**
-     * modify the DataSet in parameter if needed
+     * Control the DataSource associated to the {@link DataSet} in parameter if needed.</br>
+     * If any DataSource is associated, sets the default DataSource.
      *
      * @param pDataSet
      * @throws EntityNotFoundException
      */
     private DataSet checkDataSource(DataSet pDataSet) throws EntityNotFoundException {
         if (pDataSet.getDataSource() == null) {
+            // If any DataSource, set the default DataSource
             pDataSet.setDataSource(dataSourceService.getDefaultDataSource());
         } else {
+            // Verify the existence of the DataSource associated to the DataSet
             dataSourceService.getDataSource(pDataSet.getDataSource().getId());
         }
         return pDataSet;
     }
 
+    /**
+     * Check that the sub-setting criterion setting on a DataSet are coherent with the {@link Model} associated to the
+     * {@link DataSource}.
+     *
+     * @param pDataSet
+     *            the {@link DataSet} to check
+     * @return the modified {@link DataSet}
+     * @throws EntityInvalidException
+     *             the subsetting criterion are not coherent with the DataSet
+     */
     private DataSet checkSubsettingCriterion(DataSet pDataSet) throws EntityInvalidException {
         ICriterion subsettingCriterion = pDataSet.getSubsettingClause();
         if (subsettingCriterion != null) {
-            SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
-                    pDataSet.getDataSource().getModelOfData(), attributeService, modelAttributeService);
+
+            SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(pDataSet.getModelOfData(),
+                    attributeService, modelAttributeService);
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
                         "given subsettingCriterion cannot be accepted for the DataSet : " + pDataSet.getLabel());
@@ -182,6 +197,19 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
     protected <T extends AbstractEntity> T beforeUpdate(T pEntity) {
         // nothing to do for now
         return pEntity;
+    }
+
+    /**
+     * @param pDataSetId
+     * @return
+     * @throws EntityNotFoundException
+     */
+    public DescriptionFile retrieveDataSetDescription(Long pDataSetId) throws EntityNotFoundException {
+        DataSet ds = datasetRepository.findOneDescriptionFile(pDataSetId);
+        if (ds == null) {
+            throw new EntityNotFoundException(pDataSetId, DataSet.class);
+        }
+        return ds.getDescriptionFile();
     }
 
 }

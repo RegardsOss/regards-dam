@@ -108,7 +108,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_120")
     @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
     public void testPostDataSet() throws Exception {
-        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2", "licence");
+        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2");
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -124,7 +124,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(DataSetController.DATASET_PATH, fileList, expectations,
                                  "Failed to create a new dataset");
 
-        DataSet dataSet21 = new DataSet(model1, null, "dataSet21", "licence");
+        DataSet dataSet21 = new DataSet(model1, null, "dataSet21");
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources",
                                                           "SGDS-CP-12200-0010-CS[DossierConceptionPréliminaire].pdf"));
@@ -164,8 +164,7 @@ public class DataSetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_210")
     @Purpose("Le système permet de changer la vue associée au jeu de données.")
     public void testUpdateDataSetDataSource() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), dataSet1.getIpId(), "dataset1clone",
-                "licenceClone");
+        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");

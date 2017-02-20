@@ -99,10 +99,8 @@ public class AbstractEntityServiceTest {
 
         EntityManager emMocked = Mockito.mock(EntityManager.class);
 
-        StorageService storageServiceMocked = Mockito.mock(StorageService.class);
-
         entityServiceMocked = new AbstractEntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                storageServiceMocked, null, null, null, emMocked) {
+                null, null, null, emMocked) {
 
             @Override
             protected Logger getLogger() {

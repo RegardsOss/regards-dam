@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.Set;
 
 import javax.transaction.Transactional;
@@ -44,10 +45,21 @@ public interface IEntityService {
     /**
      * Create entity
      * @param pEntity entity to create
+     * @param pFile description file (or null)
      * @return updated entity from database
      * @throws ModuleException
      */
-    <T extends AbstractEntity> T create(T pEntity) throws ModuleException;
+    <T extends AbstractEntity> T create(T pEntity, MultipartFile pFile) throws ModuleException, IOException;
+
+    /**
+     * Create entity without description file
+     * @param pEntity entioty to create
+     * @return updated entity from database
+     * @throws ModuleException
+     */
+    default <T extends AbstractEntity> T create(T pEntity) throws ModuleException, IOException {
+        return this.create(pEntity, null);
+    }
 
     /**
      * Update entity of id pEntityId according to pEntity

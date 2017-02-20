@@ -27,8 +27,6 @@ import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -99,12 +97,9 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
-        ICriterion criterion = gson.fromJson(stringCLause, ICriterion.class);
         dataset = dataSetRepo.save(dataset);
 
-        dsDescription = new DataSet(srcModel,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
-                "dataSetWiothDescription", "Licence");
+        dsDescription = new DataSet(srcModel, "pTenant", "dataSetWithDescription");
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = dataSetRepo.save(dsDescription);

@@ -24,6 +24,8 @@ import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.netflix.servo.util.Throwables;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
@@ -38,10 +40,10 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataSet;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -67,11 +69,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  *
  */
 public abstract class AbstractEntityService implements IEntityService {
-
-    /**
-     * bean toward the module responsible to contact, or not, the archival storage
-     */
-    private IStorageService storageService;
 
     /**
      * Class logger
@@ -102,12 +99,11 @@ public abstract class AbstractEntityService implements IEntityService {
 
     public AbstractEntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
-            IStorageService pStorageService, IDeletedEntityRepository pDeletedEntityRepository,
-            ICollectionRepository pCollectionRepository, IDataSetRepository pDatasetRepository, EntityManager pEm) {
+            IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
+            IDataSetRepository pDatasetRepository, EntityManager pEm) {
         modelAttributeService = pModelAttributeService;
         entitiesRepository = pEntitiesRepository;
         modelService = pModelService;
-        storageService = pStorageService;
         deletedEntityRepository = pDeletedEntityRepository;
         collectionRepository = pCollectionRepository;
         datasetRepository = pDatasetRepository;
@@ -302,13 +298,14 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     @Override
-    public <T extends AbstractEntity> T create(T pEntity) throws ModuleException {
+    public <T extends AbstractEntity> T create(T pEntity, MultipartFile file) throws ModuleException, IOException {
         T entity = check(pEntity);
+        entity = setDescription(entity, file);
         this.manageGroups(entity);
         entity = beforeCreate(entity);
         entity.setCreationDate(LocalDateTime.now());
         entity = entitiesRepository.save(entity);
-        entity = storageService.persist(entity);
+        entity = getStorageService().storeAIP(entity);
         return entity;
     }
 
@@ -325,7 +322,6 @@ public abstract class AbstractEntityService implements IEntityService {
                 final T finalEntity = entity;
                 taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
             }
-        newEntity = setDescription(newEntity, file);
         }
         UniformResourceName urn = entity.getIpId();
         // If entity contains groups => update all entities tagging this entity (recursively)
@@ -342,23 +338,22 @@ public abstract class AbstractEntityService implements IEntityService {
                 collectionsToUpdate.remove(firstColl);
             }
         }
-        storageService = getStorageService();
-        newEntity = storageService.storeAIP(newEntity);
     }
 
     /**
      * TODO make it possible to switch configuration dynamically between local and remote
-     *
-     * @return
+     * Dynamically get the storage service
+     * @return the storage service
      * @throws PluginUtilsException
      */
-    private IStorageService getStorageService() throws PluginUtilsException {
-
-        List<PluginParameter> parameters;
-
-        parameters = PluginParametersFactory.build().getParameters();
-        return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
-                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
+    private IStorageService getStorageService() {
+        try {
+            List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+            return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
+                                         Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
+        } catch (PluginUtilsException pue) {
+            throw Throwables.propagate(pue);
+        }
     }
 
     /**
@@ -386,10 +381,11 @@ public abstract class AbstractEntityService implements IEntityService {
             if (file.getSize() > 10000000) {
                 throw new EntityDescriptionTooLargeException(file.getOriginalFilename());
             }
-            String charsetOfFile = getCharset(file);
+            String charsetOfFile = this.getCharset(file);
             if ((charsetOfFile != null) && (charsetOfFile != "utf-8")) {
                 throw new EntityDescriptionUnacceptableCharsetException(charsetOfFile);
             }
+            // description or description file
             newEntity.setDescription(null);
             ((AbstractLinkEntity) newEntity)
                     .setDescriptionFile(new DescriptionFile(file.getBytes(), MediaType.valueOf(file.getContentType())));
@@ -398,8 +394,6 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     /**
-     * @param pFile
-     * @return
      * For all collections tagging specified urn, try to add specified group.
      * If group was not already present, it is added and concerned collection is added to set, overwise it is removed
      * from set (means that collection has already been updated with the group)
@@ -422,10 +416,11 @@ public abstract class AbstractEntityService implements IEntityService {
             }
         }
     }
+
     private boolean acceptacleContentType(MultipartFile pFile) {
         String fileContentTypeWithCharset = pFile.getContentType();
         int indexOfCharset = fileContentTypeWithCharset.indexOf(";charset");
-        String contentType = indexOfCharset == -1 ? fileContentTypeWithCharset
+        String contentType = (indexOfCharset == -1) ? fileContentTypeWithCharset
                 : fileContentTypeWithCharset.substring(0, indexOfCharset);
         return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
     }
@@ -440,15 +435,9 @@ public abstract class AbstractEntityService implements IEntityService {
     private String getCharset(MultipartFile pFile) {
         String contentType = pFile.getContentType();
         int charsetIndex = contentType.indexOf("charset=");
-        return charsetIndex == -1 ? null
+        return (charsetIndex == -1) ? null
                 : contentType.substring(charsetIndex + 8, contentType.length() - 1).toLowerCase();
     }
-
-    /**
-     * @param pNewEntity
-     * @return
-     */
-    protected abstract <T extends AbstractEntity> T doCreate(T pNewEntity) throws ModuleException;
 
     /**
      * Specific operations before creating entity
@@ -537,8 +526,7 @@ public abstract class AbstractEntityService implements IEntityService {
             // Don't forget to manage groups for current entity too
             this.manageGroups(updated);
         }
-        storageService = getStorageService();
-        storageService.updateAIP(updated);
+        updated = getStorageService().updateAIP(updated);
         return updated;
     }
 
@@ -548,16 +536,10 @@ public abstract class AbstractEntityService implements IEntityService {
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId);
         }
+        getStorageService().deleteAIP(toDelete);
         return delete(toDelete);
     }
 
-    /**
-     * @param pToDelete
-     * @return
-     * @throws PluginUtilsException
-     */
-        storageService = getStorageService();
-        storageService.deleteAIP(pToDelete);
     private AbstractEntity delete(AbstractEntity pToDelete) {
         UniformResourceName urn = pToDelete.getIpId();
 
@@ -590,7 +572,7 @@ public abstract class AbstractEntityService implements IEntityService {
         datasets.forEach(this::manageGroups);
 
         deletedEntityRepository.save(createDeletedEntity(pToDelete));
-        storageService.delete(pToDelete);
+        getStorageService().deleteAIP(pToDelete);
         return pToDelete;
     }
 
