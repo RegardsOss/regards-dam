@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugi
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
+import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
@@ -61,7 +61,7 @@ public class PostgreDataSourcePluginTest {
      * JPA Repository
      */
     @Autowired
-    IDomainDataSourceRepository repository;
+    IDataSourceRepositoryTest repository;
 
     @Value("${postgresql.datasource.url}")
     private String url;
@@ -116,7 +116,8 @@ public class PostgreDataSourcePluginTest {
                     .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostGreSqlConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
-                    .addParameter(PostgreDataSourcePlugin.REQUEST_PARAM, "select * from T_TEST_PLUGIN_DATA_SOURCE")
+                    // TODO CMZ non il doit y avoir qu'à partir du from
+                    .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "select * from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -177,7 +178,6 @@ public class PostgreDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
-
     }
 
 }

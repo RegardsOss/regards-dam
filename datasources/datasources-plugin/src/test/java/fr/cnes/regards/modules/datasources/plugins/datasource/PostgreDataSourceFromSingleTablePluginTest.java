@@ -29,19 +29,19 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.Index;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.Column;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
-import fr.cnes.regards.modules.datasources.utils.Index;
+import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
-import fr.cnes.regards.modules.datasources.utils.Table;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -87,7 +87,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      * JPA Repository
      */
     @Autowired
-    IDomainDataSourceRepository repository;
+    IDataSourceRepositoryTest repository;
 
     /**
      * Resolve tenant at runtime
@@ -166,7 +166,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         Assert.assertNotNull(columns);
         Assert.assertEquals(7, columns.size());
 
-        Map<String, Index> indices = plgDBDataSource.getIndices(tables.get(TABLE_NAME_TEST));
+        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
         Assert.assertNotNull(indices);
         Assert.assertEquals(3, indices.size());
     }

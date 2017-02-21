@@ -10,6 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * @author Christophe Mertz
  */
-public interface IDomainDataSourceRepository extends JpaRepository<DataSourceEntity, Long> {
+public interface IDataSourceRepositoryTest extends JpaRepository<DataSourceEntity, Long> {
 
 }

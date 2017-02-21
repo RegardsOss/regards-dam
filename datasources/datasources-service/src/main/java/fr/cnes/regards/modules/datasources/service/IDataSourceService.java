@@ -5,11 +5,15 @@
 package fr.cnes.regards.modules.datasources.service;
 
 import java.util.List;
+import java.util.Map;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
+import fr.cnes.regards.modules.datasources.domain.Index;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 
 /**
@@ -73,10 +77,10 @@ public interface IDataSourceService {
      */
     void deleteDataSouce(Long pId) throws ModuleException;
 
-    void getTables(Long pId) throws ModuleException;
+    Map<String, Table> getTables(Long pId) throws ModuleException;
 
-    void getColumns(Long pId) throws ModuleException;
+    Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException;
 
-    void getIndeses(Long pId) throws ModuleException;
+    Map<String, Index> getIndexes(Long pId, Table pTable) throws ModuleException;
 
 }

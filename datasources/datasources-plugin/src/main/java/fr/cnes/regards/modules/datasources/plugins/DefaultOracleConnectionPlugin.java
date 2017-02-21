@@ -32,7 +32,8 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Sql database")
+@Plugin(id = "oracle-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Connection to a Sql database")
 public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
 
     /**
@@ -146,7 +147,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         try {
             return cpds.getConnection();
         } catch (SQLException e) {
-            LOG.error(e.getMessage(),e);
+            LOG.error(e.getMessage(), e);
         }
         return null;
     }

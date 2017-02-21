@@ -23,7 +23,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.service.DBConnectionService;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
@@ -42,11 +41,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionControllerIT.class);
 
-    /**
-     * JSON path
-     */
-    private static final String JSON_ID = "$.content.id";
-
     @Value("${postgresql.datasource.url}")
     private String url;
 
@@ -61,9 +55,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     IDBConnectionService service;
-
-    @Autowired
-    DBConnectionService dbConnectionService;
 
     @Override
     protected Logger getLogger() {

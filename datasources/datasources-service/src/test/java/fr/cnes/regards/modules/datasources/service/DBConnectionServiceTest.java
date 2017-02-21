@@ -82,10 +82,10 @@ public class DBConnectionServiceTest {
 
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameter();
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters,
-                0));
+        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters
+                ));
         plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre(), "second configuration", parameters,
-                0));
+                5));
     }
 
     @Test
@@ -97,9 +97,10 @@ public class DBConnectionServiceTest {
     }
 
     @Test
-    public void createdConnection() throws ModuleException {
+    public void createConnection() throws ModuleException {
         DBConnection dbConnection = new DBConnection();
-        dbConnection.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin");
+        String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
+        dbConnection.setPluginClassName(className);
         dbConnection.setUser(JOHN_DOE);
         dbConnection.setPassword(PWD_JOHN);
         dbConnection.setDriver(DRIVER);
@@ -107,25 +108,27 @@ public class DBConnectionServiceTest {
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
-        Mockito.when(pluginServiceMock.getPluginsByType(IDBConnectionPlugin.class))
-                .thenReturn(Arrays.asList(initializePluginMetaDataOracle(), initializePluginMetaDataPostGre()));
+        Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
+                .thenReturn(initializePluginMetaDataPostGre());
         dbConnectionServiceMock.createDBConnection(dbConnection);
         Assert.assertTrue(true);
     }
 
+    @SuppressWarnings("unchecked")
     @Test(expected = EntityInvalidException.class)
-    public void createdConnectionUnknownPluginClassName() throws ModuleException {
+    public void createConnectionUnknownPluginClassName() throws ModuleException {
         DBConnection dbConnection = new DBConnection();
-        dbConnection.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultOrConnectionPlugin");
+        String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
+        dbConnection.setPluginClassName(className);
         dbConnection.setUser(JOHN_DOE);
         dbConnection.setPassword(PWD_JOHN);
         dbConnection.setDriver(DRIVER);
         dbConnection.setUrl(URL);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
-        dbConnection.setLabel("the label of the new connection");
-        Mockito.when(pluginServiceMock.getPluginsByType(IDBConnectionPlugin.class))
-                .thenReturn(Arrays.asList(initializePluginMetaDataOracle(), initializePluginMetaDataPostGre()));
+        dbConnection.setLabel("the label of the new connection failed");
+        Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
+                .thenThrow(EntityInvalidException.class);
         dbConnectionServiceMock.createDBConnection(dbConnection);
         Assert.fail();
     }
@@ -143,9 +146,9 @@ public class DBConnectionServiceTest {
     private PluginMetaData initializePluginMetaDataPostGre() {
         final PluginMetaData pluginMetaData = new PluginMetaData();
         pluginMetaData.setPluginClassName(DefaultPostgreConnectionPlugin.class.getCanonicalName());
-        pluginMetaData.setPluginId("plugin-id");
+        pluginMetaData.setPluginId("plugin-id-01");
         pluginMetaData.setAuthor("CS-SI");
-        pluginMetaData.setVersion("1.0");
+        pluginMetaData.setVersion("1.1");
         pluginMetaData.setParameters(initializePluginParameterType());
         return pluginMetaData;
     }

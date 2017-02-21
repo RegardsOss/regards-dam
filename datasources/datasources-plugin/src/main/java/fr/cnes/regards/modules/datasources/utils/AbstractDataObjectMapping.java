@@ -41,8 +41,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  * Class AbstractDataObjectMapping
  *
- * TODO
- *
  * @author Christophe Mertz
  */
 public abstract class AbstractDataObjectMapping {
@@ -67,6 +65,8 @@ public abstract class AbstractDataObjectMapping {
      */
     private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
 
+    private static final int RESET_COUNT = -1;
+
     /**
      * The mapping between the attributes in the {@link Model} and the data source
      *
@@ -75,11 +75,9 @@ public abstract class AbstractDataObjectMapping {
     protected abstract DataSourceModelMapping getModelMapping();
 
     /**
-     *
+     * The result of the count request
      */
-    private int nn = RESET_COUNT;
-
-    private static final int RESET_COUNT = -1;
+    private int nbItems = RESET_COUNT;
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
@@ -148,7 +146,6 @@ public abstract class AbstractDataObjectMapping {
      *            a {@link Date} used to apply returns the {@link DataObject} update or create after this date
      * @return a page of {@link DataObject}
      */
-    @SuppressWarnings("unchecked")
     public Page<DataObject> findAll(String pTenant, Connection pConn, String pRequestSql, String pCountRequest,
             Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
@@ -167,11 +164,11 @@ public abstract class AbstractDataObjectMapping {
 
             rs.close();
 
-            if (nn == -1) {
-                // Execute the request ot count the element
+            if (nbItems == -1) {
+                // Execute the request to count the element
                 rs = statement.executeQuery(pCountRequest);
                 if (rs.next()) {
-                    nn = rs.getInt(1);
+                    nbItems = rs.getInt(1);
                 }
                 rs.close();
             }
@@ -188,7 +185,7 @@ public abstract class AbstractDataObjectMapping {
             }
         }
 
-        return new PageImpl<>(dataObjects, pPageable, nn);
+        return new PageImpl<>(dataObjects, pPageable, nbItems);
     }
 
     /**
@@ -386,6 +383,6 @@ public abstract class AbstractDataObjectMapping {
      * This method reset the number of data element from the database.<br>
      */
     protected void reset() {
-        nn = RESET_COUNT;
+        nbItems = RESET_COUNT;
     }
 }

@@ -25,7 +25,10 @@ import com.nurkiewicz.jdbcrepository.TableDescription;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.Index;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -33,13 +36,14 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 /**
  * Class AbstractDataSourceFromSingleTablePlugin
  *
- * A {@link Plugin} to discover the tables, columns and indices of a SQL Database.<br>
+ * A {@link Plugin} to discover the tables, columns and indexes of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping implements IDataSourceFromSingleTablePlugin {
+public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping
+        implements IDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger
@@ -271,7 +275,9 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     /*
      * (non-Javadoc)
      *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getColumns(java.lang.String)
+     * @see
+     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getColumns(java.lang.
+     * String)
      */
     @Override
     public Map<String, Column> getColumns(Table pTable) {
@@ -317,14 +323,9 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return cols;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getIndices()
-     */
     @Override
-    public Map<String, Index> getIndices(Table pTable) {
-        Map<String, Index> indices = new HashMap<>();
+    public Map<String, Index> getIndexes(Table pTable) {
+        Map<String, Index> indexes = new HashMap<>();
         ResultSet rs = null;
 
         // Get a connection
@@ -347,7 +348,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
                 }
                 Index index = new Index(rs.getString(INDEX_NAME), rs.getString(COLUMN_NAME), rs.getBoolean(NON_UNIQUE),
                         rs.getString(INDEX_NAME));
-                indices.put(index.getName(), index);
+                indexes.put(index.getName(), index);
             }
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
@@ -362,7 +363,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
             }
         }
 
-        return indices;
+        return indexes;
     }
 
     private String logBoolean(ResultSet pRs, String pParamName) throws SQLException {
@@ -383,21 +384,13 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return pParamName + "=" + pRs.getInt(pParamName) + ",";
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getConfiguredTable()
-     */
+    // TODO CMZ utilité ?
     @Override
     public String getConfiguredTable() {
         return tableDescription.getName();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getConfiguredColumns()
-     */
+    // TODO CMZ utilité ?
     @Override
     public List<String> getConfiguredColumns() {
         return columns;

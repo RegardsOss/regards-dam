@@ -157,7 +157,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     attr.setType(AttributeType.valueOf(pIn.nextString()));
                     break;
                 case PRIMARY_KEY_LABEL:
-                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()) ? true : false);
+                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()));
                     break;
                 default:
                     break;

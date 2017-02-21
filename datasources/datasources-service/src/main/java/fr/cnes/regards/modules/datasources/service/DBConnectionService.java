@@ -8,7 +8,6 @@ import java.util.function.UnaryOperator;
 
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -27,7 +26,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 public class DBConnectionService implements IDBConnectionService {
 
     /**
-     * Attribute plugin service 
+     * Attribute plugin service
      */
     private final IPluginService service;
 
@@ -50,24 +49,12 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public PluginConfiguration createDBConnection(DBConnection pDbConnection) throws ModuleException {
-        PluginMetaData metaData = null;
-        final List<PluginMetaData> metaDatas = service.getPluginsByType(IDBConnectionPlugin.class);
 
-        // is the DbConnection match a PluginMetada
-        boolean isFound = false;
-        for (PluginMetaData pMd : metaDatas) {
-            if (!isFound && pMd.getPluginClassName().equals(pDbConnection.getPluginClassName())) {
-                isFound = true;
-                metaData = pMd;
-            }
-        }
-        if (!isFound) {
-            throw new EntityInvalidException(
-                    "The DBConnection contains an unknown plugin class name : " + pDbConnection.getPluginClassName());
-        }
+        PluginMetaData metaData = service.checkPluginClassName(IDBConnectionPlugin.class,
+                                                               pDbConnection.getPluginClassName());
 
         return service.savePluginConfiguration(new PluginConfiguration(metaData, pDbConnection.getLabel(),
-                buildParameters(pDbConnection), 0));
+                buildParameters(pDbConnection)));
     }
 
     @Override
@@ -79,7 +66,6 @@ public class DBConnectionService implements IDBConnectionService {
     public PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException {
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDbConnection.getPluginConfigurationId());
-        plgConf.setLabel(pDbConnection.getLabel());
 
         // Update the PluginParamater of the PluginConfiguration
         UnaryOperator<PluginParameter> unaryOpt = pn -> mergeParameters(pn, pDbConnection);
@@ -103,6 +89,7 @@ public class DBConnectionService implements IDBConnectionService {
      * Build a {@link List} of {@link PluginParameter} for the {@link IDBConnectionPlugin}.
      * 
      * @param pDbConn
+     *            A {@link DBConnection}
      * @return a {@link List} of {@link PluginParameter}
      */
     private List<PluginParameter> buildParameters(DBConnection pDbConn) {
@@ -120,6 +107,8 @@ public class DBConnectionService implements IDBConnectionService {
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DBConnection} attribute
      * 
+     * @param pPlgParam
+     *            a {@link PluginParameter}
      * @param pDbConn
      *            A {@link DBConnection}
      * @return a {{@link PluginParameter}
