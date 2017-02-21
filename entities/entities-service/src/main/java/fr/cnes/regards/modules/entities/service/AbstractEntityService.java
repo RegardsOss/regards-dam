@@ -87,7 +87,7 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private final IModelService modelService;
 
-    private final IAbstractEntityRepository<AbstractEntity> entitiesRepository;
+    private final IAbstractEntityRepository<AbstractEntity> entityRepository;
 
     protected final ICollectionRepository collectionRepository;
 
@@ -98,11 +98,11 @@ public abstract class AbstractEntityService implements IEntityService {
     private final EntityManager em;
 
     public AbstractEntityService(IModelAttributeService pModelAttributeService,
-            IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
+            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDataSetRepository pDatasetRepository, EntityManager pEm) {
         modelAttributeService = pModelAttributeService;
-        entitiesRepository = pEntitiesRepository;
+        entityRepository = pEntityRepository;
         modelService = pModelService;
         deletedEntityRepository = pDeletedEntityRepository;
         collectionRepository = pCollectionRepository;
@@ -265,14 +265,14 @@ public abstract class AbstractEntityService implements IEntityService {
     @Override
     public AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pToAssociate)
             throws EntityNotFoundException {
-        final AbstractEntity entity = entitiesRepository.findById(pEntityId);
+        final AbstractEntity entity = entityRepository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
         // Adding new tags to detached entity
         em.detach(entity);
         entity.getTags().addAll(pToAssociate.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
-        final AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
+        final AbstractEntity entityInDb = entityRepository.findById(pEntityId);
         // And detach it too because it is the over one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
@@ -282,7 +282,7 @@ public abstract class AbstractEntityService implements IEntityService {
     @Override
     public AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated)
             throws EntityNotFoundException {
-        final AbstractEntity entity = entitiesRepository.findById(pEntityId);
+        final AbstractEntity entity = entityRepository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -290,7 +290,7 @@ public abstract class AbstractEntityService implements IEntityService {
         em.detach(entity);
         entity.getTags()
                 .removeAll(pToBeDissociated.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
-        final AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
+        final AbstractEntity entityInDb = entityRepository.findById(pEntityId);
         // And detach it too because it is the over one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
@@ -304,7 +304,7 @@ public abstract class AbstractEntityService implements IEntityService {
         this.manageGroups(entity);
         entity = beforeCreate(entity);
         entity.setCreationDate(LocalDateTime.now());
-        entity = entitiesRepository.save(entity);
+        entity = entityRepository.save(entity);
         entity = getStorageService().storeAIP(entity);
         return entity;
     }
@@ -318,7 +318,7 @@ public abstract class AbstractEntityService implements IEntityService {
         // If entity tags entities => retrieve all groups of tagged entities (only for collection)
         if (entity instanceof Collection) {
             if (!entity.getTags().isEmpty()) {
-                List<AbstractEntity> taggedEntities = entitiesRepository.findByIpIdIn(extractUrns(entity.getTags()));
+                List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
                 final T finalEntity = entity;
                 taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
             }
@@ -402,13 +402,13 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param urn
      */
     private void manageGroup(String group, Set<Collection> collectionsToUpdate, UniformResourceName urn) {
-        List<AbstractEntity> taggingCollections = entitiesRepository.findByTags(urn.toString());
+        List<AbstractEntity> taggingCollections = entityRepository.findByTags(urn.toString());
         for (AbstractEntity e : taggingCollections) {
             if (e instanceof Collection) {
                 Collection coll = (Collection) e;
                 // if adding a new group
                 if (e.getGroups().add(group)) {
-                    entitiesRepository.save(coll);
+                    entityRepository.save(coll);
                     collectionsToUpdate.add(coll);
                 } else { // Group has been already added, nothing more to do => remove collection from map
                     collectionsToUpdate.remove(coll);
@@ -469,7 +469,7 @@ public abstract class AbstractEntityService implements IEntityService {
      * @throws ModuleException thrown if the entity cannot be found or if entities' id do not match
      */
     private <T extends AbstractEntity> T checkUpdate(Long pEntityId, T pEntity) throws ModuleException {
-        AbstractEntity entityInDb = entitiesRepository.findById(pEntityId);
+        AbstractEntity entityInDb = entityRepository.findById(pEntityId);
         if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -490,7 +490,7 @@ public abstract class AbstractEntityService implements IEntityService {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends AbstractEntity> T update(UniformResourceName pEntityUrn, T pEntity) throws ModuleException {
-        AbstractEntity entityInDb = entitiesRepository.findOneByIpId(pEntityUrn);
+        AbstractEntity entityInDb = entityRepository.findOneByIpId(pEntityUrn);
         if (entityInDb == null) {
             throw new EntityNotFoundException(pEntity.getIpId().toString());
         }
@@ -506,13 +506,13 @@ public abstract class AbstractEntityService implements IEntityService {
         // Update entity
         T updated = beforeUpdate(pEntity);
         updated.setLastUpdate(LocalDateTime.now());
-        updated = entitiesRepository.save(pEntity);
+        updated = entityRepository.save(pEntity);
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks)) {
             Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
             // For all previously tagged entities, retrieve all groups...
             Set<String> groupsToRemove = new HashSet<>();
-            List<AbstractEntity> taggedEntitiesWithGroupsToRemove = entitiesRepository.findByIpIdIn(tagsToRemove);
+            List<AbstractEntity> taggedEntitiesWithGroupsToRemove = entityRepository.findByIpIdIn(tagsToRemove);
             taggedEntitiesWithGroupsToRemove.forEach(e -> groupsToRemove.addAll(e.getGroups()));
             // ... delete all these groups on all collections...
             for (String group : groupsToRemove) {
@@ -532,7 +532,7 @@ public abstract class AbstractEntityService implements IEntityService {
 
     @Override
     public AbstractEntity delete(Long pEntityId) throws EntityNotFoundException {
-        final AbstractEntity toDelete = entitiesRepository.findById(pEntityId);
+        final AbstractEntity toDelete = entityRepository.findById(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -545,14 +545,14 @@ public abstract class AbstractEntityService implements IEntityService {
 
         // Manage tags (must be done before group managing to avoid bad propagation)
         // Retrieve all entities tagging the one to delete
-        final List<AbstractEntity> taggingEntities = entitiesRepository.findByTags(pToDelete.getIpId().toString());
+        final List<AbstractEntity> taggingEntities = entityRepository.findByTags(pToDelete.getIpId().toString());
         // Manage tags
         for (AbstractEntity taggingEntity : taggingEntities) {
             // remove tag to ipId
             taggingEntity.getTags().remove(urn.toString());
         }
         // Save all these tagging entities
-        entitiesRepository.save(taggingEntities);
+        entityRepository.save(taggingEntities);
 
         // datasets that contain one of the entity groups
         Set<DataSet> datasets = new HashSet<>();
@@ -567,7 +567,7 @@ public abstract class AbstractEntityService implements IEntityService {
             datasets.addAll(datasetRepository.findByGroups(group));
         }
         // Delete the entity
-        entitiesRepository.delete(pToDelete);
+        entityRepository.delete(pToDelete);
         // Manage all impacted datasets groups from scratch
         datasets.forEach(this::manageGroups);
 
