@@ -197,7 +197,6 @@ public class EsRepository implements IEsRepository {
                 return null;
             }
             return gson.fromJson(response.getSourceAsString(), pClass);
-            // return jsonMapper.readValue(response.getSourceAsBytes(), pClass);
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }

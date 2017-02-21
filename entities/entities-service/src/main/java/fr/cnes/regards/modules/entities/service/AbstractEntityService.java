@@ -448,8 +448,7 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private <T extends AbstractEntity> T check(T pEntity) throws ModuleException {
         checkModelExists(pEntity);
-        pEntity = doCheck(pEntity);
-        return pEntity;
+        return doCheck(pEntity);
     }
 
     /**
@@ -476,8 +475,7 @@ public abstract class AbstractEntityService implements IEntityService {
         if (!pEntityId.equals(pEntity.getId())) {
             throw new EntityInconsistentIdentifierException(pEntityId, pEntity.getId(), pEntity.getClass());
         }
-        T toBeUpdated = doCheck(pEntity);
-        return toBeUpdated;
+        return doCheck(pEntity);
     }
 
     @Override
