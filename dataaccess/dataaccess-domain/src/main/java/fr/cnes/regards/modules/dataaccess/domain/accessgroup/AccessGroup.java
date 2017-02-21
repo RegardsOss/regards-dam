@@ -50,25 +50,21 @@ public class AccessGroup implements IIdentifiable<Long> {
     @CollectionTable(name = "ta_access_group_users", joinColumns = @JoinColumn(name = "access_group_id"),
             foreignKey = @ForeignKey(name = "fk_access_group_users"))
     @Convert(converter = UserConverter.class)
-    private Set<User> users;
+    private Set<User> users = new HashSet<>();;
 
     @NotNull
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "accessGroup")
-    private Set<GroupAccessRight> accessRights;
+    private Set<GroupAccessRight> accessRights = new HashSet<>();
 
     @Column(name = "private")
     private boolean isPrivate = Boolean.TRUE;
 
     @SuppressWarnings("unused")
     private AccessGroup() { // NOSONAR
-        users = new HashSet<>();
-        accessRights = new HashSet<>();
     }
 
     public AccessGroup(String pName) {
         super();
-        users = new HashSet<>();
-        accessRights = new HashSet<>();
         name = pName;
     }
 

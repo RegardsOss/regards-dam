@@ -212,28 +212,30 @@ public class EsRepository implements IEsRepository {
     public boolean merge(String pIndex, String pType, String pId, Map<String, Object> pMergedPropertiesMap) {
         try {
             final Map<String, Map<String, Object>> mapMap = new HashMap<>();
-            final XContentBuilder builder = XContentFactory.jsonBuilder().startObject();
-            for (final Map.Entry<String, Object> entry : pMergedPropertiesMap.entrySet()) {
-                // Simple key = value
-                if (!entry.getKey().contains(".")) {
-                    builder.field(entry.getKey(), entry.getValue());
-                } else { // Complex key => key.subKey = value
-                    final String name = entry.getKey().substring(0, entry.getKey().indexOf('.'));
-                    if (!mapMap.containsKey(name)) {
-                        mapMap.put(name, new HashMap<>());
+            try (XContentBuilder builder = XContentFactory.jsonBuilder().startObject()) {
+                for (final Map.Entry<String, Object> entry : pMergedPropertiesMap.entrySet()) {
+                    // Simple key = value
+                    if (!entry.getKey().contains(".")) {
+                        builder.field(entry.getKey(), entry.getValue());
+                    } else { // Complex key => key.subKey = value
+                        final String name = entry.getKey().substring(0, entry.getKey().indexOf('.'));
+                        if (!mapMap.containsKey(name)) {
+                            mapMap.put(name, new HashMap<>());
+                        }
+                        final Map<String, Object> subMap = mapMap.get(name);
+                        subMap.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
                     }
-                    final Map<String, Object> subMap = mapMap.get(name);
-                    subMap.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
                 }
-            }
-            // Pending sub objects ?
-            if (!mapMap.isEmpty()) {
-                for (final Map.Entry<String, Map<String, Object>> entry : mapMap.entrySet()) {
-                    builder.field(entry.getKey(), entry.getValue());
+                // Pending sub objects ?
+                if (!mapMap.isEmpty()) {
+                    for (final Map.Entry<String, Map<String, Object>> entry : mapMap.entrySet()) {
+                        builder.field(entry.getKey(), entry.getValue());
+                    }
                 }
+                final UpdateResponse response = client.prepareUpdate(pIndex, pType, pId).setDoc(builder.endObject())
+                        .get();
+                return (response.getResult() == Result.UPDATED);
             }
-            final UpdateResponse response = client.prepareUpdate(pIndex, pType, pId).setDoc(builder.endObject()).get();
-            return (response.getResult() == Result.UPDATED);
         } catch (final IOException jpe) {
             throw Throwables.propagate(jpe);
         }
