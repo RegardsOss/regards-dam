@@ -92,9 +92,11 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         model = modelRepo.save(model);
         ds1 = new Dataset(model, "PROJECT", "ds1");
         ds1.setLabel("label");
+        ds1.setLicence("licence");
         ds1 = dsRepo.save(ds1);
         ds2 = new Dataset(model, "PROJECT", "ds2");
         ds2.setLabel("label");
+        ds2.setLicence("licence");
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);
