@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -22,6 +22,6 @@ public interface IAccessRightRepository<T extends AbstractAccessRight>
      * @param pPageable
      * @return
      */
-    Page<T> findAllByDataSet(DataSet pDs, Pageable pPageable);
+    Page<T> findAllByDataset(Dataset pDs, Pageable pPageable);
 
 }

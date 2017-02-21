@@ -61,10 +61,10 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
     public ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
-            @RequestParam(name = "dataset", required = false) UniformResourceName pDataSetIpId,
+            @RequestParam(name = "dataset", required = false) UniformResourceName pDatasetIpId,
             @RequestParam(name = "useremail", required = false) String pUserEmail, final Pageable pPageable,
             final PagedResourcesAssembler<AbstractAccessRight> pAssembler) throws EntityNotFoundException {
-        Page<AbstractAccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDataSetIpId,
+        Page<AbstractAccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDatasetIpId,
                                                                                          pUserEmail, pPageable);
         return new ResponseEntity<>(toPagedResources(accessRights, pAssembler), HttpStatus.OK);
     }

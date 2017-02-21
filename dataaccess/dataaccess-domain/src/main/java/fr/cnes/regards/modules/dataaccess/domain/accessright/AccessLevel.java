@@ -11,15 +11,16 @@ package fr.cnes.regards.modules.dataaccess.domain.accessright;
  */
 public enum AccessLevel {
     /**
-     * no access at all on the dataset
+     * no access at all on the dataset and so we do not have access to its data
      */
-    NO_ACCES,
+    NO_ACCESS,
     /**
-     * only acces to FIXME
+     * only acces to meta data of the dataset but do not have access to its data at all(meta data and data)
      */
     RESTRICTED_ACCESS,
     /**
-     * full acces to the dataset( both metadata and the data)
+     * full acces to the dataset(so the meta data of the dataset and the meta data of its data), the access to the
+     * physical data of the datum is constrained by the {@link DataAccessRight}
      */
-    FULL_ACCES;
+    FULL_ACCESS;
 }

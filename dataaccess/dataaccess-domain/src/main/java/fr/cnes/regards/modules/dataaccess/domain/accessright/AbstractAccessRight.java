@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.SubsettedAccessRight;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * Access right of either a group or a user
@@ -67,16 +67,16 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
-    private DataSet dataSet;
+    private Dataset dataset;
 
     protected AbstractAccessRight() {
     }
 
-    public AbstractAccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, DataSet pDataset) {
+    public AbstractAccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, Dataset pDataset) {
         super();
         qualityFilter = pQualityFilter;
         accessLevel = pAccessLevel;
-        dataSet = pDataset;
+        dataset = pDataset;
         // subsettingCriteria = new HashSet<>();
     }
 
@@ -87,12 +87,12 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
      * pSubsettingCriteria; }
      */
 
-    public DataSet getDataSet() {
-        return dataSet;
+    public Dataset getDataset() {
+        return dataset;
     }
 
-    public void setDataSet(DataSet pDataSet) {
-        dataSet = pDataSet;
+    public void setDataset(Dataset pDataset) {
+        dataset = pDataset;
     }
 
     public QualityFilter getQualityFilter() {
@@ -119,12 +119,12 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
         dataAccessRight = pDataAccessRight;
     }
 
-    public DataSet getConstrained() {
-        return dataSet;
+    public Dataset getConstrained() {
+        return dataset;
     }
 
-    public void setConstrained(DataSet pConstrained) {
-        dataSet = pConstrained;
+    public void setConstrained(Dataset pConstrained) {
+        dataset = pConstrained;
     }
 
     @Override
@@ -134,14 +134,6 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
 
     public void setId(Long pId) {
         id = pId;
-    }
-
-    public DataSet getDataset() {
-        return dataSet;
-    }
-
-    public void setDataset(DataSet pDataset) {
-        dataSet = pDataset;
     }
 
 }

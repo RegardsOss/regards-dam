@@ -24,9 +24,9 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * Class DefaultESConnectionPlugin
  *
  * A default {@link Plugin} of type {@link IDBConnectionPlugin}.
- * 
+ *
  * For the test of the connection :
- * 
+ *
  * @see http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most
  *
  * @author Christophe Mertz
@@ -126,15 +126,13 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
         boolean isConnected = false;
         try {
             // Get a connection
-            Connection conn = cpds.getConnection();
-            Statement statement = conn.createStatement();
-
-            // Execute a simple SQL request
-            ResultSet rs = statement.executeQuery("select 1");
-
-            rs.close();
-            statement.close();
-            conn.close();
+            try (Connection conn = cpds.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    // Execute a simple SQL request
+                    try (ResultSet rs = statement.executeQuery("select 1")) {
+                    }
+                }
+            }
             isConnected = true;
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
@@ -144,7 +142,7 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin#getConnection()
      */
     @Override

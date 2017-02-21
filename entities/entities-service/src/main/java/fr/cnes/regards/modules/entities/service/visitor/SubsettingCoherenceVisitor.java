@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.crawler.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchCriterion;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 
 /**
- * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link DataSet}
+ * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}
  *
  * @author Sylvain Vissiere-Guerinet
  *

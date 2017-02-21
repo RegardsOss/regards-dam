@@ -5,11 +5,11 @@ package fr.cnes.regards.modules.entities.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.gson.Gson;
@@ -24,10 +25,8 @@ import com.google.gson.Gson;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.entities.domain.DataSet;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -44,15 +43,15 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  *
  */
 @TestPropertySource("classpath:application-test.properties")
-public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
+public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DataSetRepositoryIT.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DatasetRepositoryIT.class);
 
     @Autowired
     private IModelRepository modelRepo;
 
     @Autowired
-    private IDataSetRepository dataSetRepo;
+    private IDatasetRepository datasetRepo;
 
     @Autowired
     private IModelAttributeRepository modelAttRepo;
@@ -60,7 +59,11 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     @Autowired
     private IAttributeModelRepository attModelRepo;
 
-    private DataSet dataset;
+    private Dataset dataset;
+
+    private Dataset dsDescription;
+
+    private final String description = "some content";
 
     private Model srcModel;
 
@@ -81,9 +84,8 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     public void init() {
         Model pModel = Model.build("datasetModel", "pDescription", EntityType.DATASET);
         pModel = modelRepo.save(pModel);
-        dataset = new DataSet(pModel,
-                new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, "pTenant", UUID.randomUUID(), 1),
-                "dataset");
+        dataset = new Dataset(pModel, "pTenant", "dataset");
+        dataset.setLicence("licence");
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
@@ -96,19 +98,35 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
-        ICriterion criterion = gson.fromJson(stringCLause, ICriterion.class);
-        dataset = dataSetRepo.save(dataset);
+        dataset = datasetRepo.save(dataset);
+
+        dsDescription = new Dataset(srcModel, "pTenant", "dataSetWithDescription");
+        dsDescription.setLicence("licence");
+        dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
+                MediaType.TEXT_MARKDOWN));
+        dsDescription = datasetRepo.save(dsDescription);
     }
 
     @Test
     public void testFindOneWithPluginConfigurations() {
-        Assert.assertTrue(dataSetRepo.count()==1);
-        
-        DataSet result = dataSetRepo.findOneWithPluginConfigurations(dataset.getId());
+        LOG.info("START OF find one with plugin Configurations");
+
+        Dataset result = datasetRepo.findOneWithPluginConfigurations(dataset.getId());
+        LOG.info("END OF find one with plugin Configurations");
         Assert.assertTrue(result.getPluginConfigurationIds() != null);
         Assert.assertTrue(result.getPluginConfigurationIds().size() == 2);
         Assert.assertTrue(result.getPluginConfigurationIds().contains(1L));
         Assert.assertTrue(result.getPluginConfigurationIds().contains(2L));
+    }
+
+    @Test
+    public void testFindOneDescription() {
+        LOG.info("START OF find one DescriptionFile");
+        Dataset result = datasetRepo.findOneDescriptionFile(dsDescription.getId());
+        LOG.info("END OF find one DescriptionFile");
+        Assert.assertNotNull(result.getDescriptionFile());
+        Assert.assertArrayEquals(description.getBytes(Charset.forName("utf-8")),
+                                 result.getDescriptionFile().getContent());
     }
 
     /**

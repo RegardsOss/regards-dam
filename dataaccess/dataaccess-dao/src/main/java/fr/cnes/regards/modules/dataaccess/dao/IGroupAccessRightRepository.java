@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -29,6 +29,6 @@ public interface IGroupAccessRightRepository extends IAccessRightRepository<Grou
      * @param pPageable
      * @return
      */
-    Page<GroupAccessRight> findAllByAccessGroupAndDataSet(AccessGroup pAccessGroup, DataSet pDs, Pageable pPageable);
+    Page<GroupAccessRight> findAllByAccessGroupAndDataset(AccessGroup pAccessGroup, Dataset pDs, Pageable pPageable);
 
 }

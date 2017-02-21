@@ -32,7 +32,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * The constructor with an instance of the {@link PluginService}
-     * 
+     *
      * @param pPluginService
      *            The {@link PluginService} to used by this service
      */
@@ -87,7 +87,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Build a {@link List} of {@link PluginParameter} for the {@link IDBConnectionPlugin}.
-     * 
+     *
      * @param pDbConn
      *            A {@link DBConnection}
      * @return a {@link List} of {@link PluginParameter}
