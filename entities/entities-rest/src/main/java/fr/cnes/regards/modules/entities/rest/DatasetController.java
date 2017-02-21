@@ -36,7 +36,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -48,7 +48,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  */
 @RestController
 @RequestMapping(value = DatasetController.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-public class DatasetController implements IResourceController<DataSet> {
+public class DatasetController implements IResourceController<Dataset> {
 
     public static final String DATASET_PATH = "/datasets";
 
@@ -71,25 +71,25 @@ public class DatasetController implements IResourceController<DataSet> {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create and send the dataset")
-    public HttpEntity<Resource<DataSet>> createDataset(@Valid @RequestPart("dataset") DataSet pDataSet,
+    public HttpEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") Dataset pDataset,
             @RequestPart("file") MultipartFile descriptionFile, BindingResult pResult)
             throws ModuleException, IOException, PluginUtilsException {
 
         // Validate dynamic model
-        service.validate(pDataSet, pResult, false);
+        service.validate(pDataset, pResult, false);
 
-        DataSet created = service.create(pDataSet, descriptionFile);
+        Dataset created = service.create(pDataset, descriptionFile);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
-    public HttpEntity<PagedResources<Resource<DataSet>>> retrieveDatasets(final Pageable pPageable,
-            final PagedResourcesAssembler<DataSet> pAssembler) {
+    public HttpEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(final Pageable pPageable,
+            final PagedResourcesAssembler<Dataset> pAssembler) {
 
-        final Page<DataSet> datasets = service.retrieveDataSets(pPageable);
-        final PagedResources<Resource<DataSet>> resources = toPagedResources(datasets, pAssembler);
+        final Page<Dataset> datasets = service.retrieveDatasets(pPageable);
+        final PagedResources<Resource<Dataset>> resources = toPagedResources(datasets, pAssembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 
     }
@@ -97,99 +97,99 @@ public class DatasetController implements IResourceController<DataSet> {
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
     @ResponseBody
     @ResourceAccess(description = "Retrieves a dataset")
-    public HttpEntity<Resource<DataSet>> retrieveDataset(@PathVariable("dataset_id") Long pDataSetId)
+    public HttpEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException {
-        DataSet dataSet = service.retrieveDataSet(pDataSetId);
-        final Resource<DataSet> resource = toResource(dataSet);
+        Dataset dataSet = service.retrieveDataset(pDatasetId);
+        final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     @ResponseBody
     @ResourceAccess(description = "Deletes a dataset")
-    public HttpEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDataSetId)
+    public HttpEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException, PluginUtilsException {
-        service.delete(pDataSetId);
+        service.delete(pDatasetId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResponseBody
-    @ResourceAccess(description = "Updates a DataSet")
-    public HttpEntity<Resource<DataSet>> updateDataset(@PathVariable("dataset_id") Long pDataSetId,
-            @Valid @RequestBody DataSet pDataSet, BindingResult pResult) throws ModuleException, PluginUtilsException {
+    @ResourceAccess(description = "Updates a Dataset")
+    public HttpEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
+            @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException, PluginUtilsException {
 
         // Validate dynamic model
-        service.validate(pDataSet, pResult, false);
+        service.validate(pDataset, pResult, false);
 
-        DataSet dataSet = service.update(pDataSetId, pDataSet);
-        final Resource<DataSet> resource = toResource(dataSet);
+        Dataset dataSet = service.update(pDatasetId, pDataset);
+        final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_SERVICES_PATH)
     @ResponseBody
-    @ResourceAccess(description = "Retrieves the list of service configurations of a DataSet")
-    public HttpEntity<List<Long>> retrieveDatasetServices(@PathVariable("dataset_id") Long pDataSetId)
+    @ResourceAccess(description = "Retrieves the list of service configurations of a Dataset")
+    public HttpEntity<List<Long>> retrieveDatasetServices(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException {
-        List<Long> services = service.retrieveDataSetServices(pDataSetId);
+        List<Long> services = service.retrieveDatasetServices(pDatasetId);
         return new ResponseEntity<>(services, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_DESCRIPTION_PATH)
     @ResponseBody
-    @ResourceAccess(description = "Retrieve the description file of the specified DataSet")
-    public HttpEntity<byte[]> retrieveDescription(@PathVariable("dataset_id") Long pDataSetId)
+    @ResourceAccess(description = "Retrieve the description file of the specified Dataset")
+    public HttpEntity<byte[]> retrieveDescription(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException {
-        DescriptionFile descriptionToSend = service.retrieveDataSetDescription(pDataSetId);
+        DescriptionFile descriptionToSend = service.retrieveDatasetDescription(pDatasetId);
         return null;
     }
 
     /**
-     * Entry point to handle dissociation of {@link DataSet} specified by its id to other entities
+     * Entry point to handle dissociation of {@link Dataset} specified by its id to other entities
      *
-     * @param pDataSetId
-     *            {@link DataSet} id
+     * @param pDatasetId
+     *            {@link Dataset} id
      * @param pToBeDissociated
      *            entity to dissociate
-     * @return {@link DataSet} as a {@link Resource}
+     * @return {@link Dataset} as a {@link Resource}
      * @throws ModuleException
      *             if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
     @ResponseBody
     @ResourceAccess(description = "Dissociate a list of entities from a dataset")
-    public HttpEntity<Resource<DataSet>> dissociateDataset(@PathVariable("dataset_id") Long pDataSetId,
+    public HttpEntity<Resource<Dataset>> dissociateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Set<UniformResourceName> pToBeDissociated) throws ModuleException {
-        final DataSet dataSet = (DataSet) service.dissociate(pDataSetId, pToBeDissociated);
-        final Resource<DataSet> resource = toResource(dataSet);
+        final Dataset dataSet = (Dataset) service.dissociate(pDatasetId, pToBeDissociated);
+        final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     /**
-     * Entry point to handle association of {@link DataSet} specified by its id to other entities
+     * Entry point to handle association of {@link Dataset} specified by its id to other entities
      *
-     * @param pDataSetId
-     *            {@link DataSet} id
+     * @param pDatasetId
+     *            {@link Dataset} id
      * @param pToBeAssociatedWith
      *            entities to be associated
-     * @return {@link DataSet} as a {@link Resource}
+     * @return {@link Dataset} as a {@link Resource}
      * @throws ModuleException
      *             if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
     @ResponseBody
     @ResourceAccess(description = "associate the list of entities to the dataset")
-    public HttpEntity<Resource<DataSet>> associateDataset(@PathVariable("dataset_id") Long pDataSetId,
+    public HttpEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
-        final DataSet dataset = (DataSet) service.associate(pDataSetId, pToBeAssociatedWith);
-        final Resource<DataSet> resource = toResource(dataset);
+        final Dataset dataset = (Dataset) service.associate(pDatasetId, pToBeAssociatedWith);
+        final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
     @Override
-    public Resource<DataSet> toResource(DataSet pElement, Object... pExtras) {
-        final Resource<DataSet> resource = resourceService.toResource(pElement);
+    public Resource<Dataset> toResource(Dataset pElement, Object... pExtras) {
+        final Resource<Dataset> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "retrieveDataset", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "retrieveDatasets", LinkRels.LIST,
@@ -199,7 +199,7 @@ public class DatasetController implements IResourceController<DataSet> {
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(DataSet.class), MethodParamFactory.build(BindingResult.class));
+                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociateDataset", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));

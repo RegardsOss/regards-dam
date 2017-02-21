@@ -37,7 +37,7 @@ public interface IAccessRightClient { // NOSONAR
     @ResponseBody
     public ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
-            @RequestParam(name = "dataset", required = false) UniformResourceName pDataSetIpId,
+            @RequestParam(name = "dataset", required = false) UniformResourceName pDatasetIpId,
             @RequestParam(name = "useremail", required = false) String pUserEmail, @RequestParam("page") int pPage,
             @RequestParam("size") int pSize);
 

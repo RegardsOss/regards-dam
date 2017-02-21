@@ -38,8 +38,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
-import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -66,7 +66,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
     private IModelRepository modelRepo;
 
     @Autowired
-    private IDataSetRepository dsRepo;
+    private IDatasetRepository dsRepo;
 
     @Autowired
     private IAccessGroupRepository agRepo;
@@ -89,9 +89,9 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private DataAccessRight dar;
 
-    private DataSet ds1;
+    private Dataset ds1;
 
-    private DataSet ds2;
+    private Dataset ds2;
 
     private final String ds1Name = "DS1";
 
@@ -125,10 +125,10 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, "PROJECT", ds1Name);
+        ds1 = new Dataset(model, "PROJECT", ds1Name);
         ds1.setDescription(dsDesc);
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, "PROJECT", ds2Name);
+        ds2 = new Dataset(model, "PROJECT", ds2Name);
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);

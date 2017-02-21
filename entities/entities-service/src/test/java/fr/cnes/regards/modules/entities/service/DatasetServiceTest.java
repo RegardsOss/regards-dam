@@ -25,10 +25,10 @@ import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
-import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
@@ -67,19 +67,19 @@ public class DatasetServiceTest {
 
     private AttributeModel Contact_Phone;
 
-    private DataSet dataSet1;
+    private Dataset dataSet1;
 
-    private DataSet dataSet2;
+    private Dataset dataSet2;
 
-    private DataSet dataSet22;
+    private Dataset dataSet22;
 
-    private DataSet dataSet3;
+    private Dataset dataSet3;
 
-    private DataSet dataSet4;
+    private Dataset dataSet4;
 
     private UniformResourceName dataSet2URN;
 
-    private IDataSetRepository dataSetRepositoryMocked;
+    private IDatasetRepository dataSetRepositoryMocked;
 
     private DatasetService dataSetServiceMocked;
 
@@ -102,7 +102,7 @@ public class DatasetServiceTest {
     public void init() throws ModuleException {
         JWTService jwtService = new JWTService();
         jwtService.injectMockToken("Tenant", "PUBLIC");
-        dataSetRepositoryMocked = Mockito.mock(IDataSetRepository.class);
+        dataSetRepositoryMocked = Mockito.mock(IDatasetRepository.class);
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
@@ -114,25 +114,25 @@ public class DatasetServiceTest {
         pModel2 = new Model();
         pModel2.setId(2L);
 
-        dataSet1 = new DataSet(pModel1, "PROJECT", "dataSet1");
+        dataSet1 = new Dataset(pModel1, "PROJECT", "dataSet1");
         dataSet1.setLicence("licence");
         dataSet1.setId(1L);
-        dataSet2 = new DataSet(pModel2, "PROJECT", "dataSet2");
+        dataSet2 = new Dataset(pModel2, "PROJECT", "dataSet2");
         dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet2.setModelOfData(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
-        dataSet22 = new DataSet(pModel2, "PROJECT", "dataSet22");
+        dataSet22 = new Dataset(pModel2, "PROJECT", "dataSet22");
         dataSet22.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataSet22.setModelOfData(modelOfObjects);
         dataSet22.setSubsettingClause(getInvalidClause());
         dataSet22.setId(22L);
-        dataSet3 = new DataSet(pModel2, "PROJECT", "dataSet3");
+        dataSet3 = new Dataset(pModel2, "PROJECT", "dataSet3");
         dataSet3.setLicence("licence");
         dataSet3.setId(3L);
-        dataSet4 = new DataSet(pModel2, "PROJECT", "dataSet4");
+        dataSet4 = new Dataset(pModel2, "PROJECT", "dataSet4");
         dataSet4.setLicence("licence");
         dataSet4.setId(4L);
         dataSet2URN = dataSet2.getIpId();
@@ -274,9 +274,9 @@ public class DatasetServiceTest {
     // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createDataSet() throws ModuleException, IOException, PluginUtilsException {
+    public void createDataset() throws ModuleException, IOException, PluginUtilsException {
         Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
-        final DataSet dataSet = dataSetServiceMocked.create(dataSet2, null);
+        final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
         Assert.assertEquals(dataSet2, dataSet);
     }
 

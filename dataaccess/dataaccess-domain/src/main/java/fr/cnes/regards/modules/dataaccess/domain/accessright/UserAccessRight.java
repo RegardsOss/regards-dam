@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -26,7 +26,7 @@ public class UserAccessRight extends AbstractAccessRight {
     @Convert(converter = UserConverter.class)
     private User user;
 
-    public UserAccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, DataSet pDataset, User pUser) {
+    public UserAccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, Dataset pDataset, User pUser) {
         super(pQualityFilter, pAccessLevel, pDataset);
         user = pUser;
     }

@@ -37,12 +37,12 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
-import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
@@ -91,7 +91,7 @@ public abstract class AbstractEntityService implements IEntityService {
 
     protected final ICollectionRepository collectionRepository;
 
-    protected final IDataSetRepository datasetRepository;
+    protected final IDatasetRepository datasetRepository;
 
     private final IDeletedEntityRepository deletedEntityRepository;
 
@@ -100,7 +100,7 @@ public abstract class AbstractEntityService implements IEntityService {
     public AbstractEntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDataSetRepository pDatasetRepository, EntityManager pEm) {
+            IDatasetRepository pDatasetRepository, EntityManager pEm) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
@@ -520,7 +520,7 @@ public abstract class AbstractEntityService implements IEntityService {
                 collectionsWithGroup.forEach(c -> c.getGroups().remove(group));
                 collectionsWithGroup.forEach(collectionRepository::save);
                 // ... then manage concerned groups on all datasets containing therm
-                List<DataSet> datasetsWithGroup = datasetRepository.findByGroups(group);
+                List<Dataset> datasetsWithGroup = datasetRepository.findByGroups(group);
                 datasetsWithGroup.forEach(this::manageGroups);
             }
             // Don't forget to manage groups for current entity too
@@ -555,7 +555,7 @@ public abstract class AbstractEntityService implements IEntityService {
         entityRepository.save(taggingEntities);
 
         // datasets that contain one of the entity groups
-        Set<DataSet> datasets = new HashSet<>();
+        Set<Dataset> datasets = new HashSet<>();
         // If entity contains groups => update all entities tagging this entity (recursively)
         // Need to manage groups one by one
         for (String group : pToDelete.getGroups()) {

@@ -25,7 +25,7 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -35,19 +35,19 @@ import fr.cnes.regards.modules.models.domain.Model;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ServiceConfiguration.class)
 @Transactional
-public class CollectionDataSetGroupsIT {
+public class CollectionDatasetGroupsIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CollectionDataSetGroupsIT.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CollectionDatasetGroupsIT.class);
 
     private Model modelColl;
 
-    private Model modelDataSet;
+    private Model modelDataset;
 
-    private DataSet dataset1;
+    private Dataset dataset1;
 
-    private DataSet dataset2;
+    private Dataset dataset2;
 
-    private DataSet dataset3;
+    private Dataset dataset3;
 
     private Collection coll1;
 
@@ -103,25 +103,25 @@ public class CollectionDataSetGroupsIT {
         modelColl = Model.build("modelColl", "model desc", EntityType.COLLECTION);
         modelColl = modelRepository.save(modelColl);
 
-        modelDataSet = Model.build("modelDataSet", "model desc", EntityType.DATASET);
-        modelDataSet = modelRepository.save(modelDataSet);
+        modelDataset = Model.build("modelDataset", "model desc", EntityType.DATASET);
+        modelDataset = modelRepository.save(modelDataset);
 
-        dataset1 = new DataSet(modelDataSet, "PROJECT", "labelDs1");
+        dataset1 = new Dataset(modelDataset, "PROJECT", "labelDs1");
         dataset1.setLicence("licence");
         dataset1.setSipId("SipId1");
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
-        dataset2 = new DataSet(modelDataSet, "PROJECT", "labelDs2");
+        dataset2 = new Dataset(modelDataset, "PROJECT", "labelDs2");
         dataset2.setLicence("licence");
         dataset2.setSipId("SipId2");
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
-        dataset3 = new DataSet(modelDataSet, "PROJECT", "labelDs3");
+        dataset3 = new Dataset(modelDataset, "PROJECT", "labelDs3");
         dataset3.setLicence("licence");
         dataset3.setSipId("SipId3");
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));
-        // No tags on DataSets, it doesn't matter
+        // No tags on Datasets, it doesn't matter
 
         coll1 = new Collection(modelColl, "PROJECT", "coll1");
         coll1.setSipId("SipId4");

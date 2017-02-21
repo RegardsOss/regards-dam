@@ -26,8 +26,8 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.rest.DatasetController;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -45,18 +45,18 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     private Model model1;
 
-    private DataSet dataSet1;
+    private Dataset dataSet1;
 
-    private DataSet dataSet3;
+    private Dataset dataSet3;
 
-    private DataSet dataSet4;
+    private Dataset dataSet4;
 
     private DataSource dataSource1;
 
     private DataSource dataSource2;
 
     @Autowired
-    private IDataSetRepository datasetRepository;
+    private IDatasetRepository datasetRepository;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -73,15 +73,15 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
-        dataSet1 = new DataSet(model1, "PROJECT", "collection1");
+        dataSet1 = new Dataset(model1, "PROJECT", "collection1");
         dataSet1.setLicence("licence");
         dataSet1.setSipId("SipId1");
         dataSet1.setLabel("label");
-        dataSet3 = new DataSet(model1, "PROJECT", "collection3");
+        dataSet3 = new Dataset(model1, "PROJECT", "collection3");
         dataSet3.setLicence("licence");
         dataSet3.setSipId("SipId3");
         dataSet3.setLabel("label");
-        dataSet4 = new DataSet(model1, "PROJECT", "collection4");
+        dataSet4 = new Dataset(model1, "PROJECT", "collection4");
         dataSet4.setLicence("licence");
         dataSet4.setSipId("SipId4");
         dataSet4.setLabel("label");
@@ -98,7 +98,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testGetAllDataSets() {
+    public void testGetAllDatasets() {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DatasetController.DATASET_PATH, expectations, "Failed to fetch dataset list");
@@ -110,8 +110,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_SET_110")
     @Requirement("REGARDS_DSL_DAM_SET_120")
     @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
-    public void testPostDataSet() throws Exception {
-        final DataSet dataSet2 = new DataSet(model1, null, "dataSet2");
+    public void testPostDataset() throws Exception {
+        final Dataset dataSet2 = new Dataset(model1, null, "dataSet2");
         dataSet2.setLicence("licence");
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
@@ -128,7 +128,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
                                  "Failed to create a new dataset");
 
-        DataSet dataSet21 = new DataSet(model1, null, "dataSet21");
+        Dataset dataSet21 = new Dataset(model1, null, "dataSet21");
         dataSet21.setLicence("licence");
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
@@ -143,7 +143,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testGetDataSetById() {
+    public void testGetDatasetById() {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, expectations,
@@ -151,8 +151,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testUpdateDataSet() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "dataset1clone");
+    public void testUpdateDataset() {
+        final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "dataset1clone");
         dataSetClone.setLicence("licence");
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
@@ -166,7 +166,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testFullUpdate() {
-        final DataSet dataSetClone = new DataSet(dataSet1.getModel(), "", "collection1clone");
+        final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "collection1clone");
         dataSetClone.setLicence("licence");
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
@@ -181,7 +181,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testDeleteDataSet() {
+    public void testDeleteDataset() {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, expectations,
                              "Failed to delete a specific dataset using its id", dataSet1.getId());

@@ -6,37 +6,37 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 public interface IDatasetService extends IEntityService {
 
     /**
-     * @param pDataSetIpId
+     * @param pDatasetIpId
      * @return
      * @throws EntityNotFoundException
      */
-    DataSet retrieveDataSet(UniformResourceName pDataSetIpId) throws EntityNotFoundException;
+    Dataset retrieveDataset(UniformResourceName pDatasetIpId) throws EntityNotFoundException;
 
     /**
-     * @param pDataSetId
+     * @param pDatasetId
      * @return
      * @throws EntityNotFoundException
      */
-    DataSet retrieveDataSet(Long pDataSetId) throws EntityNotFoundException;
+    Dataset retrieveDataset(Long pDatasetId) throws EntityNotFoundException;
 
     /**
      * @param pPageable
      * @return
      */
-    Page<DataSet> retrieveDataSets(Pageable pPageable);
+    Page<Dataset> retrieveDatasets(Pageable pPageable);
 
     /**
-     * @param pDataSetId
+     * @param pDatasetId
      * @return
      * @throws EntityNotFoundException
      */
     // TODO: return only IService not IConverter or IFilter or IProcessingService(not implemented yet anyway)
-    List<Long> retrieveDataSetServices(Long pDataSetId) throws EntityNotFoundException;
+    List<Long> retrieveDatasetServices(Long pDatasetId) throws EntityNotFoundException;
 
 }

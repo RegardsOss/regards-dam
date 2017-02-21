@@ -36,7 +36,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  */
 @Entity
-public class DataSet extends AbstractLinkEntity {
+public class Dataset extends AbstractLinkEntity {
 
     /**
      * Quality mark
@@ -47,7 +47,7 @@ public class DataSet extends AbstractLinkEntity {
     private int score;
 
     /**
-     * this list contains plugin configurations for any plugin associated to this DataSet, for example: configurations
+     * this list contains plugin configurations for any plugin associated to this Dataset, for example: configurations
      * for Converters, Services, Filters
      */
     // TODO handler for deletion events
@@ -57,7 +57,7 @@ public class DataSet extends AbstractLinkEntity {
 
     /**
      * A PluginConfiguration for a plugin type IDataSourcePlugin.</br>
-     * This PluginConfiguration defined the DataSource from which this DataSet presents data.
+     * This PluginConfiguration defined the DataSource from which this Dataset presents data.
      */
     // FIXME: PluginConfiguration de dam ou peut-être autre chose
     @ManyToOne
@@ -79,28 +79,27 @@ public class DataSet extends AbstractLinkEntity {
     private ICriterion subsettingClause;
 
     /**
-     * set of quotations associated to the {@link DataSet}
+     * set of quotations associated to the {@link Dataset}
      */
-    @ElementCollection // FIXME: LAZY?
+    @ElementCollection // FIXME: LAZY ?
     @CollectionTable(name = "t_dataset_quotation", joinColumns = @JoinColumn(name = "dataset_id"))
-    private Set<String> quotations;
+    private Set<String> quotations = new HashSet<>();
 
     /**
-     * licence of the DataSet
+     * Dataset licence
      */
     @Type(type = "text")
     @Column
     @NotNull
     private String licence;
 
-    public DataSet() {
+    public Dataset() {
         this(null, null, null);
     }
 
-    public DataSet(Model pModel, String pTenant, String pLabel) {
+    public Dataset(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, pTenant, UUID.randomUUID(), 1),
               pLabel);
-        quotations = new HashSet<>();
     }
 
     public int getScore() {

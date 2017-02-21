@@ -25,7 +25,7 @@ import com.google.gson.Gson;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
@@ -43,15 +43,15 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  *
  */
 @TestPropertySource("classpath:application-test.properties")
-public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
+public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DataSetRepositoryIT.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DatasetRepositoryIT.class);
 
     @Autowired
     private IModelRepository modelRepo;
 
     @Autowired
-    private IDataSetRepository dataSetRepo;
+    private IDatasetRepository datasetRepo;
 
     @Autowired
     private IModelAttributeRepository modelAttRepo;
@@ -59,9 +59,9 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     @Autowired
     private IAttributeModelRepository attModelRepo;
 
-    private DataSet dataset;
+    private Dataset dataset;
 
-    private DataSet dsDescription;
+    private Dataset dsDescription;
 
     private final String description = "some content";
 
@@ -84,7 +84,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     public void init() {
         Model pModel = Model.build("datasetModel", "pDescription", EntityType.DATASET);
         pModel = modelRepo.save(pModel);
-        dataset = new DataSet(pModel, "pTenant", "dataset");
+        dataset = new Dataset(pModel, "pTenant", "dataset");
         dataset.setLicence("licence");
 
         List<Long> confs = new ArrayList<>(2);
@@ -98,20 +98,20 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
-        dataset = dataSetRepo.save(dataset);
+        dataset = datasetRepo.save(dataset);
 
-        dsDescription = new DataSet(srcModel, "pTenant", "dataSetWithDescription");
+        dsDescription = new Dataset(srcModel, "pTenant", "dataSetWithDescription");
         dsDescription.setLicence("licence");
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
-        dsDescription = dataSetRepo.save(dsDescription);
+        dsDescription = datasetRepo.save(dsDescription);
     }
 
     @Test
     public void testFindOneWithPluginConfigurations() {
         LOG.info("START OF find one with plugin Configurations");
 
-        DataSet result = dataSetRepo.findOneWithPluginConfigurations(dataset.getId());
+        Dataset result = datasetRepo.findOneWithPluginConfigurations(dataset.getId());
         LOG.info("END OF find one with plugin Configurations");
         Assert.assertTrue(result.getPluginConfigurationIds() != null);
         Assert.assertTrue(result.getPluginConfigurationIds().size() == 2);
@@ -122,7 +122,7 @@ public class DataSetRepositoryIT extends AbstractDaoTransactionalTest {
     @Test
     public void testFindOneDescription() {
         LOG.info("START OF find one DescriptionFile");
-        DataSet result = dataSetRepo.findOneDescriptionFile(dsDescription.getId());
+        Dataset result = datasetRepo.findOneDescriptionFile(dsDescription.getId());
         LOG.info("END OF find one DescriptionFile");
         Assert.assertNotNull(result.getDescriptionFile());
         Assert.assertArrayEquals(description.getBytes(Charset.forName("utf-8")),
