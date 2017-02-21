@@ -126,9 +126,11 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
         ds1 = new Dataset(model, "PROJECT", ds1Name);
+        ds1.setLicence("licence");
         ds1.setDescription(dsDesc);
         ds1 = dsRepo.save(ds1);
         ds2 = new Dataset(model, "PROJECT", ds2Name);
+        ds2.setLicence("licence");
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);
