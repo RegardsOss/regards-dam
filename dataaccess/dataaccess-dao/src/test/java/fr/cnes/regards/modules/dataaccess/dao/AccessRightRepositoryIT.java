@@ -20,8 +20,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
-import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -46,7 +46,7 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
     private IModelRepository modelRepo;
 
     @Autowired
-    private IDataSetRepository dsRepo;
+    private IDatasetRepository dsRepo;
 
     @Autowired
     private IAccessGroupRepository agRepo;
@@ -67,9 +67,9 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     private final AccessLevel al = AccessLevel.FULL_ACCESS;
 
-    private DataSet ds1;
+    private Dataset ds1;
 
-    private DataSet ds2;
+    private Dataset ds2;
 
     //    private final String ds1Name = "DS1";
     //
@@ -90,10 +90,10 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
-        ds1 = new DataSet(model, "PROJECT", "ds1");
+        ds1 = new Dataset(model, "PROJECT", "ds1");
         ds1.setLabel("label");
         ds1 = dsRepo.save(ds1);
-        ds2 = new DataSet(model, "PROJECT", "ds2");
+        ds2 = new Dataset(model, "PROJECT", "ds2");
         ds2.setLabel("label");
         ds2 = dsRepo.save(ds2);
 
@@ -123,8 +123,8 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
     }
 
     @Test
-    public void testfindAllByDataSet() {
-        Page<AbstractAccessRight> response = repo.findAllByDataSet(ds1, new PageRequest(0, 10));
+    public void testfindAllByDataset() {
+        Page<AbstractAccessRight> response = repo.findAllByDataset(ds1, new PageRequest(0, 10));
         Assert.assertTrue(response.getContent().contains(gar1));
         Assert.assertTrue(response.getContent().contains(uar1));
         Assert.assertFalse(response.getContent().contains(gar2));
@@ -132,14 +132,14 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
     }
 
     @Test
-    public void testfindAllByAccessGroupNameByDataSet() {
-        Page<GroupAccessRight> response = groupRepo.findAllByAccessGroupAndDataSet(ag1, ds1, new PageRequest(0, 10));
+    public void testfindAllByAccessGroupNameByDataset() {
+        Page<GroupAccessRight> response = groupRepo.findAllByAccessGroupAndDataset(ag1, ds1, new PageRequest(0, 10));
         Assert.assertTrue(response.getContent().contains(gar1));
         Assert.assertFalse(response.getContent().contains(gar2));
         Assert.assertFalse(response.getContent().contains(uar1));
         Assert.assertFalse(response.getContent().contains(uar2));
 
-        response = groupRepo.findAllByAccessGroupAndDataSet(ag1, ds2, new PageRequest(0, 10));
+        response = groupRepo.findAllByAccessGroupAndDataset(ag1, ds2, new PageRequest(0, 10));
         Assert.assertFalse(response.hasContent());
     }
 

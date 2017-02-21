@@ -12,7 +12,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class identifying a linkable entity (i.e. Collection or DataSet)
+ * Class identifying a linkable entity (i.e. Collection or Dataset)
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)

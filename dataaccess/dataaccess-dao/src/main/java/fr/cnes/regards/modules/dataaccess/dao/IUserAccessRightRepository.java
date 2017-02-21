@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -29,6 +29,6 @@ public interface IUserAccessRightRepository extends IAccessRightRepository<UserA
      * @param pPageable
      * @return
      */
-    Page<UserAccessRight> findAllByUserAndDataSet(User pUser, DataSet pDs, Pageable pPageable);
+    Page<UserAccessRight> findAllByUserAndDataset(User pUser, Dataset pDs, Pageable pPageable);
 
 }

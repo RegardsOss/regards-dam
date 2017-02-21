@@ -24,7 +24,7 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -51,9 +51,9 @@ public class AbstractEntityServiceTest {
 
     private Document doc;
 
-    private DataSet dataset;
+    private Dataset dataset;
 
-    private DataSet dataset2;
+    private Dataset dataset2;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -81,12 +81,12 @@ public class AbstractEntityServiceTest {
         data.setId(1L);
         doc = new Document(pModel2, "PROJECT", "doc");
         doc.setId(2L);
-        dataset = new DataSet(pModel2, "PROJECT", "dataset");
+        dataset = new Dataset(pModel2, "PROJECT", "dataset");
         dataset.setLicence("licence");
         dataset.setId(3L);
         dataset.setDescription("datasetDesc");
         dataset.setLabel("dataset");
-        dataset2 = new DataSet(pModel2, "PROJECT", "dataset2");
+        dataset2 = new Dataset(pModel2, "PROJECT", "dataset2");
         dataset2.setLicence("licence");
         dataset2.setDescription("datasetDesc2");
 
@@ -164,7 +164,7 @@ public class AbstractEntityServiceTest {
         final Set<UniformResourceName> col3URNList = new HashSet<>();
         col3URNList.add(collection3.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-
+    
         // TODO
         //        entityServiceMocked.associate(collection2, col3URNList);
         Assert.assertTrue(collection3.getTags().contains(collection2.getIpId().toString()));
@@ -186,9 +186,9 @@ public class AbstractEntityServiceTest {
     }
 
     @Requirement("REGARDS_DSL_DAM_CAT_310")
-    @Purpose("Le système doit permettre d’ajouter un AIP de données dans un jeu de données à partir de son IP_ID(ajout d'un tag sur l'AIP de données).")
+    @Purpose("Le système doit permettre d’ajouter un AIP de données dans un jeu de données à partir de son IP_ID (ajout d'un tag sur l'AIP de données).")
     @Test
-    public void testAssociateDataToDataSetList() throws EntityNotFoundException {
+    public void testAssociateDataToDatasetList() throws EntityNotFoundException {
         final List<AbstractEntity> datasetList = new ArrayList<>();
         datasetList.add(dataset);
         final Set<UniformResourceName> datasetURNList = new HashSet<>();
@@ -216,7 +216,7 @@ public class AbstractEntityServiceTest {
     }
 
     @Test
-    public void testAssociateDataSetToAnything() {
+    public void testAssociateDatasetToAnything() {
         final List<AbstractEntity> entityList = new ArrayList<>();
         entityList.add(collection3);
         entityList.add(dataset2);

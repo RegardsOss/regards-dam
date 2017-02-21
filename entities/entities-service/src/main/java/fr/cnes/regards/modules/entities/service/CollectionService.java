@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
-import fr.cnes.regards.modules.entities.dao.IDataSetRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -37,7 +37,7 @@ public class CollectionService extends AbstractEntityService implements ICollect
     public CollectionService(ICollectionRepository pCollectionRepository,
             IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository,
             IModelAttributeService pModelAttributeService, IModelService pModelService,
-            IDeletedEntityRepository deletedEntityRepository, IDataSetRepository pDatasetRepository,
+            IDeletedEntityRepository deletedEntityRepository, IDatasetRepository pDatasetRepository,
             EntityManager pEm) {
         super(pModelAttributeService, pAbstractEntityRepository, pModelService, deletedEntityRepository,
               pCollectionRepository, pDatasetRepository, pEm);

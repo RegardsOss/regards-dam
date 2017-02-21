@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightCreated;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightDeleted;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightUpdated;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -45,97 +45,97 @@ public class AccessRightService {
 
     private final AccessGroupService accessGroupService;
 
-    private final IDatasetService dataSetService;
+    private final IDatasetService datasetService;
 
     private final IPublisher eventPublisher;
 
     public AccessRightService(IAccessRightRepository<AbstractAccessRight> pAccessRightRepository,
             IGroupAccessRightRepository pGroupRepository, IUserAccessRightRepository pUserRepository,
-            AccessGroupService pAccessGroupService, IDatasetService pDataSetService, IPublisher pEventPublisher) {
+            AccessGroupService pAccessGroupService, IDatasetService pDatasetService, IPublisher pEventPublisher) {
         repository = pAccessRightRepository;
         groupRepository = pGroupRepository;
         userRepository = pUserRepository;
         accessGroupService = pAccessGroupService;
-        dataSetService = pDataSetService;
+        datasetService = pDatasetService;
         eventPublisher = pEventPublisher;
     }
 
     /**
      * @param pAccessGroupName
-     * @param pDataSetIpId
+     * @param pDatasetIpId
      * @param pPageable
      * @return
      * @throws EntityNotFoundException
      */
-    public Page<AbstractAccessRight> retrieveAccessRights(String pAccessGroupName, UniformResourceName pDataSetIpId,
+    public Page<AbstractAccessRight> retrieveAccessRights(String pAccessGroupName, UniformResourceName pDatasetIpId,
             String pUserEmail, Pageable pPageable) throws EntityNotFoundException {
         if (pUserEmail != null) {
-            Page<UserAccessRight> page = retrieveAccessRightsByUser(pDataSetIpId, pUserEmail, pPageable);
+            Page<UserAccessRight> page = retrieveAccessRightsByUser(pDatasetIpId, pUserEmail, pPageable);
             List<AbstractAccessRight> content = page.getContent().stream().map(gar -> (AbstractAccessRight) gar)
                     .collect(Collectors.toList());
             return new PageImpl<>(content, pPageable, page.getTotalElements());
         }
         if (pAccessGroupName != null) {
-            Page<GroupAccessRight> page = retrieveAccessRightsByAccessGroup(pDataSetIpId, pAccessGroupName, pPageable);
+            Page<GroupAccessRight> page = retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
             List<AbstractAccessRight> content = page.getContent().stream().map(uar -> (AbstractAccessRight) uar)
                     .collect(Collectors.toList());
             return new PageImpl<>(content, pPageable, page.getTotalElements());
         }
-        return retrieveAccessRightsByDataSet(pDataSetIpId, pPageable);
+        return retrieveAccessRightsByDataset(pDatasetIpId, pPageable);
     }
 
     /**
-     * @param pDataSetIpId
+     * @param pDatasetIpId
      * @param pPageable
      * @return
      * @throws EntityNotFoundException
      */
-    private Page<AbstractAccessRight> retrieveAccessRightsByDataSet(UniformResourceName pDataSetIpId,
+    private Page<AbstractAccessRight> retrieveAccessRightsByDataset(UniformResourceName pDatasetIpId,
             Pageable pPageable) throws EntityNotFoundException {
-        if (pDataSetIpId != null) {
-            DataSet ds = dataSetService.retrieveDataSet(pDataSetIpId);
-            return repository.findAllByDataSet(ds, pPageable);
+        if (pDatasetIpId != null) {
+            Dataset ds = datasetService.retrieveDataset(pDatasetIpId);
+            return repository.findAllByDataset(ds, pPageable);
         }
         return repository.findAll(pPageable);
     }
 
     /**
-     * @param pDataSetIpId
+     * @param pDatasetIpId
      * @param pUserEmail
      * @param pPageable
      * @return
      * @throws EntityNotFoundException
      */
-    private Page<UserAccessRight> retrieveAccessRightsByUser(UniformResourceName pDataSetIpId, String pUserEmail,
+    private Page<UserAccessRight> retrieveAccessRightsByUser(UniformResourceName pDatasetIpId, String pUserEmail,
             Pageable pPageable) throws EntityNotFoundException {
         if (!accessGroupService.existUser(new User(pUserEmail))) {
             throw new EntityNotFoundException(pUserEmail, User.class);
         }
         User user = new User(pUserEmail);
-        if (pDataSetIpId != null) {
-            DataSet ds = dataSetService.retrieveDataSet(pDataSetIpId);
-            return userRepository.findAllByUserAndDataSet(user, ds, pPageable);
+        if (pDatasetIpId != null) {
+            Dataset ds = datasetService.retrieveDataset(pDatasetIpId);
+            return userRepository.findAllByUserAndDataset(user, ds, pPageable);
         } else {
             return userRepository.findAllByUser(user, pPageable);
         }
     }
 
     /**
-     * @param pDataSetIpId
+     * @param pDatasetIpId
      * @param pAccessGroupName
      * @param pPageable
      * @return
      * @throws EntityNotFoundException
      */
-    private Page<GroupAccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDataSetIpId,
+    private Page<GroupAccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
             String pAccessGroupName, Pageable pPageable) throws EntityNotFoundException {
         AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         if (ag == null) {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
-        if (pDataSetIpId != null) {
-            DataSet ds = dataSetService.retrieveDataSet(pDataSetIpId);
-            return groupRepository.findAllByAccessGroupAndDataSet(ag, ds, pPageable);
+        if (pDatasetIpId != null) {
+            Dataset ds = datasetService.retrieveDataset(pDatasetIpId);
+            return groupRepository.findAllByAccessGroupAndDataset(ag, ds, pPageable);
         } else {
             return groupRepository.findAllByAccessGroup(ag, pPageable);
         }
@@ -148,7 +148,7 @@ public class AccessRightService {
      * @throws RabbitMQVhostException
      */
     public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws EntityNotFoundException {
-        dataSetService.retrieveDataSet(pAccessRight.getDataset().getId());
+        datasetService.retrieveDataset(pAccessRight.getDataset().getId());
         if (pAccessRight instanceof GroupAccessRight) {
             Long accessGroupId = ((GroupAccessRight) pAccessRight).getAccessGroup().getId();
             if (!accessGroupService.existGroup(accessGroupId)) {
