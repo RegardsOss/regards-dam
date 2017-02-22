@@ -99,32 +99,21 @@ public abstract class AbstractDataObjectMapping {
     public Page<DataObject> findAllApplyPageAndDate(String pTenant, Connection pConn, String pRequestSql,
             Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
-        Statement statement = null;
-        ResultSet rs = null;
 
-        try {
-            statement = pConn.createStatement();
+        try (Statement statement = pConn.createStatement()) {
 
             // Execute SQL request
             String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(pRequestSql, pDate), pPageable);
 
-            rs = statement.executeQuery(sqlRequestWithPagedInformation);
-
-            while (rs.next()) {
-                dataObjects.add(processResultSet(pTenant, rs));
+            try (ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation)) {
+                while (rs.next()) {
+                    dataObjects.add(processResultSet(pTenant, rs));
+                }
             }
-
-            rs.close();
+            
+            statement.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
         }
 
         return new PageImpl(dataObjects);

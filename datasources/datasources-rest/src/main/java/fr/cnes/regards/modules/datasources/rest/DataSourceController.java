@@ -173,7 +173,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
     @ResourceAccess(description = "Get the indexes of a specific table of the data source")
     @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}/tables/{pTableName}/indexes")
     public ResponseEntity<Map<String, Index>> getIndexes(@PathVariable Long pPluginConfId,
-            @PathVariable Long pTableName, @RequestBody final Table pTable) throws ModuleException {
+            @PathVariable String pTableName, @RequestBody final Table pTable) throws ModuleException {
         // Check the Table name
         if (!pTableName.equals(pTable.getName())) {
             throw new ModuleException(
