@@ -42,6 +42,11 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultOracleConnectionPlugin.class);
 
     /**
+     * The JDBC Oracle driver
+     */
+    private static final String ORACLE_JDBC_DRIVER = "oracle.jdbc.OracleDriver";
+
+    /**
      * The user to used for the database connection
      */
     @PluginParameter(name = USER_PARAM)
@@ -58,12 +63,6 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
      */
     @PluginParameter(name = URL_PARAM)
     private String url;
-
-    /**
-     * The JDBC driver to used
-     */
-    @PluginParameter(name = DRIVER_PARAM)
-    private String driver;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
@@ -98,7 +97,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         cpds.setIdleConnectionTestPeriod(20);
 
         try {
-            cpds.setDriverClass(driver);
+            cpds.setDriverClass(ORACLE_JDBC_DRIVER);
         } catch (PropertyVetoException e) {
             LOG.error(e.getMessage(), e);
         }

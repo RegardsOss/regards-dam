@@ -72,9 +72,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
     @Value("${oracle.datasource.password}")
     private String password;
 
-    @Value("${oracle.datasource.driver}")
-    private String driver;
-
     private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
     private DataSourceModelMapping dataSourceModelMapping;
@@ -170,7 +167,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

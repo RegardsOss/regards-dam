@@ -25,6 +25,12 @@ public interface IConnectionPlugin {
 
     static final String URL_PARAM = "url";
 
+    static final String DB_HOST_PARAM = "dbHost";
+
+    static final String DB_PORT_PARAM = "dbPort";
+
+    static final String DB_NAME_PARAM = "dbName";
+
     static final String DRIVER_PARAM = "driver";
 
     /**

@@ -50,9 +50,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
-
     @Autowired
     IDBConnectionService service;
 
@@ -257,7 +254,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         final DBConnection dbConnection = new DBConnection();
         dbConnection.setUser(user);
         dbConnection.setPassword(password);
-        dbConnection.setDriver(driver);
         dbConnection.setUrl(url);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);

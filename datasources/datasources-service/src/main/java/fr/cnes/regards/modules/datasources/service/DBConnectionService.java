@@ -97,7 +97,6 @@ public class DBConnectionService implements IDBConnectionService {
         factory.addParameter(IDBConnectionPlugin.USER_PARAM, pDbConn.getUser())
                 .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, pDbConn.getPassword())
                 .addParameter(IDBConnectionPlugin.URL_PARAM, pDbConn.getUrl())
-                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, pDbConn.getDriver())
                 .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, pDbConn.getMaxPoolSize().toString())
                 .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, pDbConn.getMinPoolSize().toString());
 
@@ -123,9 +122,6 @@ public class DBConnectionService implements IDBConnectionService {
                 break;
             case IDBConnectionPlugin.URL_PARAM:
                 pPlgParam.setValue(pDbConn.getUrl());
-                break;
-            case IDBConnectionPlugin.DRIVER_PARAM:
-                pPlgParam.setValue(pDbConn.getDriver());
                 break;
             case IDBConnectionPlugin.MIN_POOLSIZE_PARAM:
                 pPlgParam.setValue(pDbConn.getMinPoolSize().toString());

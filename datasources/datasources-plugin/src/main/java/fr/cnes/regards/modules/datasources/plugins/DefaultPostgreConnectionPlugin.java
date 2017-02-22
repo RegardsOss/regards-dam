@@ -37,29 +37,14 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
 
     /**
-     * A string for the user parameter of the Plugin
-     */
-    public static final String USER_PARAM = "user";
-
-    /**
-     * A string for the password parameter of the Plugin
-     */
-    public static final String PASSWORD_PARAM = "password";// NOSONAR
-
-    /**
-     * A string for the url parameter of the Plugin
-     */
-    public static final String URL_PARAM = "url";
-
-    /**
-     * A string for the driver parameter of the Plugin
-     */
-    public static final String DRIVER_PARAM = "driver";
-
-    /**
      * Class logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(DefaultPostgreConnectionPlugin.class);
+
+    /**
+     * The JDBC PostgreSQL driver
+     */
+    private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
 
     /**
      * The user to used for the database connection
@@ -78,12 +63,6 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
      */
     @PluginParameter(name = URL_PARAM)
     private String url;
-
-    /**
-     * The JDBC driver to used
-     */
-    @PluginParameter(name = DRIVER_PARAM)
-    private String driver;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
@@ -115,7 +94,7 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
         cpds.setMinPoolSize(minPoolSize);
 
         try {
-            cpds.setDriverClass(driver);
+            cpds.setDriverClass(POSTGRESQL_JDBC_DRIVER);
         } catch (PropertyVetoException e) {
             LOG.error(e.getMessage(), e);
         }

@@ -72,9 +72,6 @@ public class PostgreDataSourcePluginTest {
     @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
-
     private IDataSourcePlugin plgDataSource;
 
     private DataSourceModelMapping modelMapping;
@@ -158,7 +155,6 @@ public class PostgreDataSourcePluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

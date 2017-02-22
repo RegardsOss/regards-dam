@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Value;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -37,24 +38,19 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 public class DBConnectionServiceTest {
 
     /**
-     * A constant for a user name for a database connection test
+     * The JDBC PostgreSQL driver
      */
-    private static final String JOHN_DOE = "john.doe";
+    private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
 
-    /**
-     * A constant for a password for a database connection test
-     */
-    private static final String PWD_JOHN = "azertyuiop";
+    @Value("${postgresql.datasource.url}")
+    private String url;
 
-    /**
-     * A constant for a driver for a database connection test
-     */
-    private static final String DRIVER = "oracle.jdbc.OracleDriver";
+    @Value("${postgresql.datasource.username}")
+    private String user;
 
-    /**
-     * A constant for an URL for a database connection test
-     */
-    private static final String URL = "jdbc:oracle:thin:@//localhost:1521/BDD";
+    @Value("${postgresql.datasource.password}")
+    private String password;
+
 
     /**
      *
@@ -82,8 +78,7 @@ public class DBConnectionServiceTest {
 
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameter();
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters
-                ));
+        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters));
         plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre(), "second configuration", parameters,
                 5));
     }
@@ -101,10 +96,9 @@ public class DBConnectionServiceTest {
         DBConnection dbConnection = new DBConnection();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
         dbConnection.setPluginClassName(className);
-        dbConnection.setUser(JOHN_DOE);
-        dbConnection.setPassword(PWD_JOHN);
-        dbConnection.setDriver(DRIVER);
-        dbConnection.setUrl(URL);
+        dbConnection.setUser(user);
+        dbConnection.setPassword(password);
+        dbConnection.setUrl(url);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
@@ -120,10 +114,9 @@ public class DBConnectionServiceTest {
         DBConnection dbConnection = new DBConnection();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
         dbConnection.setPluginClassName(className);
-        dbConnection.setUser(JOHN_DOE);
-        dbConnection.setPassword(PWD_JOHN);
-        dbConnection.setDriver(DRIVER);
-        dbConnection.setUrl(URL);
+        dbConnection.setUser(user);
+        dbConnection.setPassword(password);
+        dbConnection.setUrl(url);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection failed");
@@ -154,17 +147,17 @@ public class DBConnectionServiceTest {
     }
 
     private List<PluginParameter> initializePluginParameter() {
-        return PluginParametersFactory.build().addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, JOHN_DOE)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, PWD_JOHN)
-                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, URL)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, DRIVER)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+        return PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, user)
+                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, password)
+                .addParameter(IDBConnectionPlugin.URL_PARAM, url)
+                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER)
+                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
         return Arrays.asList(new PluginParameterType("model", String.class.getName(), ParamType.PRIMITIVE),
-                             new PluginParameterType("connection", IConnectionPlugin.class.getCanonicalName(),
+                             new PluginParameterType("connection", IDBConnectionPlugin.class.getCanonicalName(),
                                      ParamType.PLUGIN));
     }
 

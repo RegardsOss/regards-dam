@@ -38,7 +38,7 @@ public class OracleConnectionPluginTest {
     private static final Logger LOG = LoggerFactory.getLogger(OracleConnectionPluginTest.class);
 
     private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-    
+
     @Value("${oracle.datasource.url}")
     private String url;
 
@@ -48,16 +48,12 @@ public class OracleConnectionPluginTest {
     @Value("${oracle.datasource.password}")
     private String password;
 
-    @Value("${oracle.datasource.driver}")
-    private String driver;
-
     @Test
     public void getOracleSqlConnection() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -74,7 +70,6 @@ public class OracleConnectionPluginTest {
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -105,14 +100,13 @@ public class OracleConnectionPluginTest {
         conn2.close();
         conn3.close();
     }
-    
+
     @Test
     public void getMaxPoolSizeWithoutClose() throws PluginUtilsException, InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -135,14 +129,13 @@ public class OracleConnectionPluginTest {
         conn2.close();
         conn3.close();
     }
-    
+
     @Test
     public void getMaxPoolSizeWithCloseByThread() throws PluginUtilsException, InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "5")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -191,21 +184,21 @@ public class OracleConnectionPluginTest {
 
     }
 
-//    @Test
-//    public void getOracleConnectionError() throws PluginUtilsException {
-//        final List<PluginParameter> parameters = PluginParametersFactory.build()
-//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
-//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "unknown")
-//                .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
-//                .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
-//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-//
-//        final DefaultOracleConnectionPlugin sqlConn = PluginUtils
-//                .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
-//
-//        Assert.assertNotNull(sqlConn);
-//        Assert.assertFalse(sqlConn.testConnection());
-//
-//    }
+    // @Test
+    // public void getOracleConnectionError() throws PluginUtilsException {
+    // final List<PluginParameter> parameters = PluginParametersFactory.build()
+    // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
+    // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "unknown")
+    // .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
+    // .addParameter(DefaultOracleConnectionPlugin.DRIVER_PARAM, driver)
+    // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+    // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+    //
+    // final DefaultOracleConnectionPlugin sqlConn = PluginUtils
+    // .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+    //
+    // Assert.assertNotNull(sqlConn);
+    // Assert.assertFalse(sqlConn.testConnection());
+    //
+    // }
 }

@@ -66,9 +66,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
-
     @Autowired
     IPluginService pluginService;
     
@@ -192,7 +189,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

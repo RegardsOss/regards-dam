@@ -42,11 +42,6 @@ public class DBConnection {
     private String url;
 
     /**
-     * The JDBC driver to used
-     */
-    private String driver;
-
-    /**
      * Maximum number of Connections a pool will maintain at any given time.
      */
     private Integer maxPoolSize;
@@ -94,14 +89,6 @@ public class DBConnection {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public String getDriver() {
-        return driver;
-    }
-
-    public void setDriver(String driver) {
-        this.driver = driver;
     }
 
     public Integer getMaxPoolSize() {

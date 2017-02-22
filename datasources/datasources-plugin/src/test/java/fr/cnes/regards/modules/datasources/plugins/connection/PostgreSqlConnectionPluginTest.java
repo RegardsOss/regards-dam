@@ -45,16 +45,12 @@ public class PostgreSqlConnectionPluginTest {
     @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
-
     @Test
     public void getPostGreSqlConnection() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -71,7 +67,6 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -109,7 +104,6 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -139,7 +133,6 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "5")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
@@ -194,7 +187,6 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, "unknown")
                 .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

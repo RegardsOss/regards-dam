@@ -36,6 +36,12 @@ import fr.cnes.regards.framework.multitenant.test.SingleRuntimeTenantResolver;
 @EnableJpaRepositories(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
 @EnableTransactionManagement
 public class PostgreDataSourcePluginTestConfiguration {
+    
+    /**
+     * The JDBC PostgreSQL driver
+     */
+    private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
+
 
     @Value("${postgresql.datasource.url}")
     private String url;
@@ -46,9 +52,6 @@ public class PostgreDataSourcePluginTestConfiguration {
     @Value("${postgresql.datasource.password}")
     private String password;
 
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
-
     /**
      *
      * Create the datasource
@@ -58,7 +61,7 @@ public class PostgreDataSourcePluginTestConfiguration {
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(driver);
+        dataSource.setDriverClassName(POSTGRESQL_JDBC_DRIVER);
         dataSource.setUrl(url);
         dataSource.setUsername(user);
         dataSource.setPassword(password);
