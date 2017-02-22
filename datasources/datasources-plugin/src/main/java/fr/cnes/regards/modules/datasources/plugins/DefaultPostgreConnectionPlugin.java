@@ -50,19 +50,31 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
      * The user to used for the database connection
      */
     @PluginParameter(name = USER_PARAM)
-    private String user;
+    private String dbUser;
 
     /**
      * The user's password to used for the database connection
      */
     @PluginParameter(name = PASSWORD_PARAM)
-    private String password;
+    private String dbPassword;
 
     /**
-     * The URL_PARAM of the database
+     * The URL to the database's host
      */
-    @PluginParameter(name = URL_PARAM)
-    private String url;
+    @PluginParameter(name = DB_HOST_PARAM)
+    private String dbHost;
+
+    /**
+     * The PORT to the database's host
+     */
+    @PluginParameter(name = DB_PORT_PARAM)
+    private String dbPort;
+
+    /**
+     * The NAME of the database
+     */
+    @PluginParameter(name = DB_NAME_PARAM)
+    private String dbName;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
@@ -87,9 +99,9 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
     @PluginInit
     private void createPoolConnection() {
         cpds = new ComboPooledDataSource();
-        cpds.setJdbcUrl(url);
-        cpds.setUser(user);
-        cpds.setPassword(password);
+        cpds.setJdbcUrl(buildUrl());
+        cpds.setUser(dbUser);
+        cpds.setPassword(dbPassword);
         cpds.setMaxPoolSize(maxPoolSize);
         cpds.setMinPoolSize(minPoolSize);
 
@@ -119,11 +131,6 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
         return isConnected;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin#getConnection()
-     */
     @Override
     public Connection getConnection() {
         try {
@@ -132,6 +139,11 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
             LOG.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    @Override
+    public String buildUrl() {
+        return "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
     }
 
 }

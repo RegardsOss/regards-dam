@@ -46,14 +46,20 @@ public class PostgreSQLConnectionTestWithService {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
+    private String dbPassword;
 
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
 
@@ -85,15 +91,13 @@ public class PostgreSQLConnectionTestWithService {
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
 
         // Get the first Plugin
-        final DefaultPostgreConnectionPlugin aa = pluginServiceMocked
-                .getFirstPluginByType(IDBConnectionPlugin.class);
+        final DefaultPostgreConnectionPlugin aa = pluginServiceMocked.getFirstPluginByType(IDBConnectionPlugin.class);
 
         Assert.assertNotNull(aa);
         Assert.assertTrue(aa.testConnection());
 
         // Get the first Plugin : the same than the previous
-        final DefaultPostgreConnectionPlugin bb = pluginServiceMocked
-                .getFirstPluginByType(IDBConnectionPlugin.class);
+        final DefaultPostgreConnectionPlugin bb = pluginServiceMocked.getFirstPluginByType(IDBConnectionPlugin.class);
 
         Assert.assertNotNull(bb);
         Assert.assertTrue(bb.testConnection());
@@ -137,16 +141,18 @@ public class PostgreSQLConnectionTestWithService {
     }
 
     /**
-     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the
-     * PostgreSql database
+     * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
+     * database
      * 
      * @return the {@link PluginConfiguration}
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> params = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

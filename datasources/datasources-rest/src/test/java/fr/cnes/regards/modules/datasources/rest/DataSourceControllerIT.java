@@ -57,14 +57,20 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
+    private String dbPassword;
 
     @Autowired
     IPluginService pluginService;
@@ -186,9 +192,11 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

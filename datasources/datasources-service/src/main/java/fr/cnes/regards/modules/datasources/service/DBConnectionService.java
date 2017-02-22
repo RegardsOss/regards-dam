@@ -96,7 +96,9 @@ public class DBConnectionService implements IDBConnectionService {
         PluginParametersFactory factory = PluginParametersFactory.build();
         factory.addParameter(IDBConnectionPlugin.USER_PARAM, pDbConn.getUser())
                 .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, pDbConn.getPassword())
-                .addParameter(IDBConnectionPlugin.URL_PARAM, pDbConn.getUrl())
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, pDbConn.getDbHost())
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, pDbConn.getDbPort())
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, pDbConn.getDbName())
                 .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, pDbConn.getMaxPoolSize().toString())
                 .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, pDbConn.getMinPoolSize().toString());
 
@@ -120,9 +122,16 @@ public class DBConnectionService implements IDBConnectionService {
             case IDBConnectionPlugin.PASSWORD_PARAM:
                 pPlgParam.setValue(pDbConn.getPassword());
                 break;
-            case IDBConnectionPlugin.URL_PARAM:
-                pPlgParam.setValue(pDbConn.getUrl());
+            case IDBConnectionPlugin.DB_HOST_PARAM:
+                pPlgParam.setValue(pDbConn.getDbHost());
                 break;
+            case IDBConnectionPlugin.DB_PORT_PARAM:
+                pPlgParam.setValue(pDbConn.getDbPort());
+                break;
+            case IDBConnectionPlugin.DB_NAME_PARAM:
+                pPlgParam.setValue(pDbConn.getDbName());
+                break;
+
             case IDBConnectionPlugin.MIN_POOLSIZE_PARAM:
                 pPlgParam.setValue(pDbConn.getMinPoolSize().toString());
                 break;

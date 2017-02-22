@@ -92,8 +92,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Get a {@link PluginConfiguration}
      *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId
+     *            a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException
      *             if plugin configuration cannot be retrieved
@@ -108,10 +108,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
      *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId
+     *            a {@link PluginConfiguration} identifier
      * @param pDbConnection
-     *            {@link DBConnection} to update
+     *            the {@link DBConnection} to update
      * @return updated {@link PluginConfiguration}
      * @throws ModuleException
      *             if plugin configuration cannot be updated

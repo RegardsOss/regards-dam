@@ -42,7 +42,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "postgresql-datasource", author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows data extraction to a PostgreSql database")
+@Plugin(id = "postgresql-datasource", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Allows data extraction to a PostgreSql database")
 public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implements IDataSourcePlugin {
 
     /**

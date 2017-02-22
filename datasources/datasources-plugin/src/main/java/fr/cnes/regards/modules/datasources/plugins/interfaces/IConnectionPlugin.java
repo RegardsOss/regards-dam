@@ -23,8 +23,6 @@ public interface IConnectionPlugin {
 
     static final String PASSWORD_PARAM = "password"; // NOSONAR
 
-    static final String URL_PARAM = "url";
-
     static final String DB_HOST_PARAM = "dbHost";
 
     static final String DB_PORT_PARAM = "dbPort";

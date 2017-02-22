@@ -26,7 +26,6 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
@@ -42,15 +41,20 @@ public class DBConnectionServiceTest {
      */
     private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
-
+    private String dbPassword;
 
     /**
      *
@@ -96,9 +100,11 @@ public class DBConnectionServiceTest {
         DBConnection dbConnection = new DBConnection();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
         dbConnection.setPluginClassName(className);
-        dbConnection.setUser(user);
-        dbConnection.setPassword(password);
-        dbConnection.setUrl(url);
+        dbConnection.setUser(dbUser);
+        dbConnection.setPassword(dbPassword);
+        dbConnection.setDbHost(dbHost);
+        dbConnection.setDbPort(dbPort);
+        dbConnection.setDbName(dbName);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
@@ -114,9 +120,11 @@ public class DBConnectionServiceTest {
         DBConnection dbConnection = new DBConnection();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
         dbConnection.setPluginClassName(className);
-        dbConnection.setUser(user);
-        dbConnection.setPassword(password);
-        dbConnection.setUrl(url);
+        dbConnection.setUser(dbUser);
+        dbConnection.setPassword(dbPassword);
+        dbConnection.setDbHost(dbHost);
+        dbConnection.setDbPort(dbPort);
+        dbConnection.setDbName(dbName);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection failed");
@@ -147,9 +155,11 @@ public class DBConnectionServiceTest {
     }
 
     private List<PluginParameter> initializePluginParameter() {
-        return PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, user)
-                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(IDBConnectionPlugin.URL_PARAM, url)
+        return PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
                 .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER)
                 .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();

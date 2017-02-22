@@ -41,14 +41,20 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionControllerIT.class);
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
+    private String dbPassword;
 
     @Autowired
     IDBConnectionService service;
@@ -252,9 +258,11 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private DBConnection createADbConnection(String pLabel, String pPluginClassName) {
         final DBConnection dbConnection = new DBConnection();
-        dbConnection.setUser(user);
-        dbConnection.setPassword(password);
-        dbConnection.setUrl(url);
+        dbConnection.setUser(dbUser);
+        dbConnection.setPassword(dbPassword);
+        dbConnection.setDbHost(dbHost);
+        dbConnection.setDbPort(dbPort);
+        dbConnection.setDbName(dbName);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel(pLabel);

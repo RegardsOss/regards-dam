@@ -31,5 +31,7 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
      * @return the {@link Connection}
      */
     Connection getConnection();
+    
+    String buildUrl();
 
 }

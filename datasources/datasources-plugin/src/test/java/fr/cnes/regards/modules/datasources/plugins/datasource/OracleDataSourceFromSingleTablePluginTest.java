@@ -63,14 +63,20 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     private static final String TENANT = "ORA_TENANT";
 
-    @Value("${oracle.datasource.url}")
-    private String url;
+    @Value("${oracle.datasource.host}")
+    private String dbHost;
+
+    @Value("${oracle.datasource.port}")
+    private String dbPort;
+    
+    @Value("${oracle.datasource.name}")
+    private String dbName;
 
     @Value("${oracle.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${oracle.datasource.password}")
-    private String password;
+    private String dbPassword;
 
     private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
@@ -164,9 +170,11 @@ public class OracleDataSourceFromSingleTablePluginTest {
      */
     private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultOracleConnectionPlugin.URL_PARAM, url)
+                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
