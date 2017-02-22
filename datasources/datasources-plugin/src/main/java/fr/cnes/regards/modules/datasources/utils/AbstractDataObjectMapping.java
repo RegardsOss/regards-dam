@@ -110,7 +110,7 @@ public abstract class AbstractDataObjectMapping {
                     dataObjects.add(processResultSet(pTenant, rs));
                 }
             }
-            
+
             statement.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
@@ -139,39 +139,28 @@ public abstract class AbstractDataObjectMapping {
             Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
-        Statement statement = null;
-
-        try {
-            statement = pConn.createStatement();
+        try (Statement statement = pConn.createStatement();) {
 
             // Execute the request to get the elements
-            ResultSet rs = statement.executeQuery(pRequestSql);
+            try (ResultSet rs = statement.executeQuery(pRequestSql)) {
 
-            while (rs.next()) {
-                dataObjects.add(processResultSet(pTenant, rs));
-            }
-
-            rs.close();
-
-            if (nbItems == -1) {
-                // Execute the request to count the element
-                rs = statement.executeQuery(pCountRequest);
-                if (rs.next()) {
-                    nbItems = rs.getInt(1);
+                while (rs.next()) {
+                    dataObjects.add(processResultSet(pTenant, rs));
                 }
-                rs.close();
-            }
 
+                if (nbItems == RESET_COUNT) {
+                    // Execute the request to count the elements
+                    try (ResultSet rsCount = statement.executeQuery(pCountRequest)) {
+                        if (rs.next()) {
+                            nbItems = rs.getInt(1);
+                        }
+                    }
+                }
+            }
+            
+            statement.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
-        } finally {
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            }
         }
 
         return new PageImpl<>(dataObjects, pPageable, nbItems);
