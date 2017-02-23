@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
 
     /**
-     * Load entity with tags (eager) and groups
+     * Find entity giving its id eagerly loading its relations
      * @param pId id of entity
      * @return entity
      */
@@ -35,11 +35,19 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
     List<AbstractEntity> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
-     * Find entity of which given ipId
+     * Find entity of given ipId
      * @param pIpId ipId of which entity
      * @return found entity
      */
     AbstractEntity findOneByIpId(UniformResourceName pIpId);
+
+    /**
+     * Find entity of given ipId eagerly loading all relations
+     * @param pIpId ipId of which entity
+     * @return found entity
+     */
+    @EntityGraph(attributePaths = { "tags", "groups" })
+    AbstractEntity findByIpId(UniformResourceName pIpId);
 
     /**
      * Find all entities containing given tag

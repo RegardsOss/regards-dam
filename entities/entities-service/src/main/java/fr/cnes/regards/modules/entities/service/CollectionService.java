@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
@@ -22,8 +23,9 @@ import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
- * @author lmieulet
+ * Specific EntityService for collections
  * @author Sylvain Vissiere-Guerinet
+ * @author oroussel
  */
 @Service
 public class CollectionService extends AbstractEntityService implements ICollectionService {
@@ -37,10 +39,10 @@ public class CollectionService extends AbstractEntityService implements ICollect
     public CollectionService(ICollectionRepository pCollectionRepository,
             IAbstractEntityRepository<AbstractEntity> pAbstractEntityRepository,
             IModelAttributeService pModelAttributeService, IModelService pModelService,
-            IDeletedEntityRepository deletedEntityRepository, IDatasetRepository pDatasetRepository,
-            EntityManager pEm) {
+            IDeletedEntityRepository deletedEntityRepository, IDatasetRepository pDatasetRepository, EntityManager pEm,
+            IPublisher pPublisher) {
         super(pModelAttributeService, pAbstractEntityRepository, pModelService, deletedEntityRepository,
-              pCollectionRepository, pDatasetRepository, pEm);
+              pCollectionRepository, pDatasetRepository, pEm, pPublisher);
     }
 
     @Override
@@ -58,16 +60,8 @@ public class CollectionService extends AbstractEntityService implements ICollect
         return collectionRepository.findOneByIpId(pCollectionIpId);
     }
 
-    @Override
-    protected Logger getLogger() {
+    protected static Logger getLogger() {
         return LOGGER;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected AbstractEntity beforeUpdate(AbstractEntity pEntity) {
-        // nothing specific to do
-        return pEntity;
     }
 
     @SuppressWarnings("unchecked")
@@ -76,11 +70,4 @@ public class CollectionService extends AbstractEntityService implements ICollect
         // nothing specific to check
         return pEntity;
     }
-
-    @Override
-    protected <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException {
-        // nothing specific to do
-        return pNewEntity;
-    }
-
 }
