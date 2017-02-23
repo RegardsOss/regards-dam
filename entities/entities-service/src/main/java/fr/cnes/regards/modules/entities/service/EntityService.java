@@ -17,7 +17,9 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -26,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Throwables;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
@@ -47,6 +50,7 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
+import fr.cnes.regards.modules.entities.domain.event.CreateEntityEvent;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
@@ -62,13 +66,15 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
- * Entity service implementation
+ * Entity service implementation. This class isn't abstract in order to permit to be used directly.
+ * But it is also used as a base for specific services (CollectionService, ...).
  *
  * @author Marc Sordi
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
-public abstract class AbstractEntityService implements IEntityService {
+@Service
+public class EntityService implements IEntityService {
 
     /**
      * Class logger
@@ -97,17 +103,20 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private final EntityManager em;
 
-    public AbstractEntityService(IModelAttributeService pModelAttributeService,
+    private IPublisher publisher;
+
+    public EntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDatasetRepository pDatasetRepository, EntityManager pEm) {
+            IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
         deletedEntityRepository = pDeletedEntityRepository;
         collectionRepository = pCollectionRepository;
         datasetRepository = pDatasetRepository;
-        this.em = pEm;
+        em = pEm;
+        publisher = pPublisher;
     }
 
     @Override
@@ -302,10 +311,10 @@ public abstract class AbstractEntityService implements IEntityService {
         T entity = check(pEntity);
         entity = setDescription(entity, file);
         this.manageGroups(entity);
-        entity = beforeCreate(entity);
         entity.setCreationDate(LocalDateTime.now());
         entity = entityRepository.save(entity);
         entity = getStorageService().storeAIP(entity);
+        publisher.publish(new CreateEntityEvent(entity.getIpId()));
         return entity;
     }
 
@@ -374,7 +383,7 @@ public abstract class AbstractEntityService implements IEntityService {
             throws IOException, ModuleException {
         if ((newEntity instanceof AbstractLinkEntity) && (file != null) && !file.isEmpty()) {
             // collections and dataset only has a description which is a url or a file
-            if (!acceptacleContentType(file)) {
+            if (!acceptableContentType(file)) {
                 throw new EntityDescriptionUnacceptableType(file.getContentType());
             }
             // 10 000 000B=10MB
@@ -417,7 +426,7 @@ public abstract class AbstractEntityService implements IEntityService {
         }
     }
 
-    private boolean acceptacleContentType(MultipartFile pFile) {
+    private boolean acceptableContentType(MultipartFile pFile) {
         String fileContentTypeWithCharset = pFile.getContentType();
         int indexOfCharset = fileContentTypeWithCharset.indexOf(";charset");
         String contentType = (indexOfCharset == -1) ? fileContentTypeWithCharset
@@ -439,17 +448,9 @@ public abstract class AbstractEntityService implements IEntityService {
                 : contentType.substring(charsetIndex + 8, contentType.length() - 1).toLowerCase();
     }
 
-    /**
-     * Specific operations before creating entity
-     * @param pNewEntity
-     * @return
-     */
-    protected abstract <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException;
-
     private <T extends AbstractEntity> T check(T pEntity) throws ModuleException {
         checkModelExists(pEntity);
-        pEntity = doCheck(pEntity);
-        return pEntity;
+        return doCheck(pEntity);
     }
 
     /**
@@ -457,7 +458,10 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param pEntity
      * @return
      */
-    protected abstract <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException;
+    protected <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException {
+        // nothing by default
+        return pEntity;
+    }
 
     /**
      * checks if the entity requested exists and that it is modified according to one of it's former version( pEntity's
@@ -476,8 +480,7 @@ public abstract class AbstractEntityService implements IEntityService {
         if (!pEntityId.equals(pEntity.getId())) {
             throw new EntityInconsistentIdentifierException(pEntityId, pEntity.getId(), pEntity.getClass());
         }
-        T toBeUpdated = doCheck(pEntity);
-        return toBeUpdated;
+        return doCheck(pEntity);
     }
 
     @Override
@@ -504,9 +507,8 @@ public abstract class AbstractEntityService implements IEntityService {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
         // Update entity
-        T updated = beforeUpdate(pEntity);
-        updated.setLastUpdate(LocalDateTime.now());
-        updated = entityRepository.save(pEntity);
+        pEntity.setLastUpdate(LocalDateTime.now());
+        T updated = entityRepository.save(pEntity);
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks)) {
             Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
@@ -577,19 +579,11 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     /**
-     * handles specific updates to perform according to the instanciation type of the entity
-     *
-     * @param pEntity
-     * @return updated entity
-     */
-    protected abstract <T extends AbstractEntity> T beforeUpdate(T pEntity);
-
-    /**
-     * @param pSource {@link Set} of {@link UniformResourceName}
-     * @param pOther {@link Set} of {@link UniformResourceName} to remove from pSource
-     * @return a new {@link Set} of {@link UniformResourceName} containing only the elements present into pSource and
-     *         not in pOther
-     */
+    * @param pSource {@link Set} of {@link UniformResourceName}
+    * @param pOther {@link Set} of {@link UniformResourceName} to remove from pSource
+    * @return a new {@link Set} of {@link UniformResourceName} containing only the elements present into pSource and
+    *         not in pOther
+    */
     private Set<UniformResourceName> getDiff(Set<UniformResourceName> pSource, Set<UniformResourceName> pOther) {
         final Set<UniformResourceName> result = new HashSet<>();
         result.addAll(pSource);
@@ -607,7 +601,9 @@ public abstract class AbstractEntityService implements IEntityService {
                 .collect(Collectors.toSet());
     }
 
-    protected abstract Logger getLogger();
+    protected static Logger getLogger() {
+        return LoggerFactory.getLogger(EntityService.class);
+    }
 
     private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
         DeletedEntity delEntity = new DeletedEntity();
