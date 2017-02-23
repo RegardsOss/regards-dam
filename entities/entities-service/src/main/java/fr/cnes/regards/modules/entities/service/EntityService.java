@@ -74,7 +74,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  * @author oroussel
  */
 @Service
-public class AbstractEntityService implements IEntityService {
+public class EntityService implements IEntityService {
 
     /**
      * Class logger
@@ -105,7 +105,7 @@ public class AbstractEntityService implements IEntityService {
 
     private IPublisher publisher;
 
-    public AbstractEntityService(IModelAttributeService pModelAttributeService,
+    public EntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher) {
@@ -602,7 +602,7 @@ public class AbstractEntityService implements IEntityService {
     }
 
     protected static Logger getLogger() {
-        return LoggerFactory.getLogger(AbstractEntityService.class);
+        return LoggerFactory.getLogger(EntityService.class);
     }
 
     private static DeletedEntity createDeletedEntity(AbstractEntity entity) {

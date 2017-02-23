@@ -34,9 +34,9 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public class AbstractEntityServiceTest {
+public class EntityServiceTest {
 
-    private AbstractEntityService entityServiceMocked;
+    private EntityService entityServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
@@ -102,7 +102,7 @@ public class AbstractEntityServiceTest {
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
-        entityServiceMocked = new AbstractEntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
+        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
                 null, null, null, emMocked, publisherMocked);
         Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);
         Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(doc);

@@ -67,9 +67,9 @@ public class CrawlerService implements ICrawlerService {
             // For all tenants
             for (String tenant : tenantResolver.getAllTenants()) {
                 try {
-                    poller.bind(tenant);
+                    //                    poller.bind(tenant);
                     // Try polling message from current tenant
-                    TenantWrapper<CreateEntityEvent> wrapper = poller.poll(tenant, CreateEntityEvent.class);
+                    TenantWrapper<CreateEntityEvent> wrapper = poller.poll(CreateEntityEvent.class);
                     if (wrapper != null) {
                         UniformResourceName ipId = wrapper.getContent().getIpId();
                         System.out.println(ipId);
@@ -81,7 +81,7 @@ public class CrawlerService implements ICrawlerService {
                 } catch (IllegalStateException ise) {
                     System.out.println("ISE thrown");
                 } finally {
-                    poller.unbind();
+                    //                    poller.unbind();
                 }
             }
             try {

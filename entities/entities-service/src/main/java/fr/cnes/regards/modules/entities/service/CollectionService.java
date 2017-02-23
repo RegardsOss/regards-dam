@@ -28,7 +28,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author oroussel
  */
 @Service
-public class CollectionService extends AbstractEntityService implements ICollectionService {
+public class CollectionService extends EntityService implements ICollectionService {
 
     // TODO: interactions with catalog
     /**

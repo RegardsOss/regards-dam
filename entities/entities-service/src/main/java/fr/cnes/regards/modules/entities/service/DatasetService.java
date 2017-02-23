@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author oroussel
  */
 @Service
-public class DatasetService extends AbstractEntityService implements IDatasetService {
+public class DatasetService extends EntityService implements IDatasetService {
 
     /**
      * Logger

@@ -15,8 +15,6 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.transaction.AfterTransaction;
-import org.springframework.test.context.transaction.BeforeTransaction;
 
 import com.google.common.collect.Sets;
 
@@ -76,15 +74,15 @@ public class CollectionDatasetGroupsIT {
     @Autowired
     private RegardsAmqpAdmin regardsAmqpAdmin;
 
-    @BeforeTransaction
-    public void beforeTx() {
-        regardsAmqpAdmin.bind("PROJECT");
-    }
-
-    @AfterTransaction
-    public void afterTx() {
-        regardsAmqpAdmin.unbind();
-    }
+    //    @BeforeTransaction
+    //    public void beforeTx() {
+    //        regardsAmqpAdmin.bind("PROJECT");
+    //    }
+    //
+    //    @AfterTransaction
+    //    public void afterTx() {
+    //        regardsAmqpAdmin.unbind();
+    //    }
 
     @Before
     public void setUp() throws Exception {
