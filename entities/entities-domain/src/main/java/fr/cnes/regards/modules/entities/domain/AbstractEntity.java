@@ -268,17 +268,16 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", tags=" + tags
-                + ", groups=" + groups + ", attributes=" + attributes + ", model=" + model + "]";
+                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", attributes="
+                + attributes + ", model=" + model + "]";
     }
 }

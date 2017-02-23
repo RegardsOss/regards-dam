@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -47,11 +48,13 @@ import fr.cnes.regards.modules.search.service.IFilter;
 import fr.cnes.regards.modules.search.service.IService;
 
 /**
- * @author Sylvain Vissiere-Guerinet
+ * Specific EntityService for Datasets
  *
+ * @author Sylvain Vissiere-Guerinet
+ * @author oroussel
  */
 @Service
-public class DatasetService extends AbstractEntityService implements IDatasetService {
+public class DatasetService extends EntityService implements IDatasetService {
 
     /**
      * Logger
@@ -75,9 +78,10 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
+            EntityManager pEm, IPublisher pPublisher) {
             EntityManager pEm, ICatalogPluginClient pPluginClient, JWTService pJwtService) {
         super(pModelAttributeService, pEntitiesRepository, pModelService, deletedEntityRepository,
-              pCollectionRepository, pRepository, pEm);
+              pCollectionRepository, pRepository, pEm, pPublisher);
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
         dataSourceService = pDataSourceService;
@@ -256,15 +260,8 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
         return pluginConf.getInterfaceName().equals(IService.class.getName());
     }
 
-    @Override
-    protected Logger getLogger() {
+    protected static Logger getLogger() {
         return LOGGER;
-    }
-
-    @Override
-    protected <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException {
-        // nothing to do, description is handled into the abstract
-        return pNewEntity;
     }
 
     @SuppressWarnings("unchecked")
@@ -274,12 +271,6 @@ public class DatasetService extends AbstractEntityService implements IDatasetSer
         ds = checkPluginConfigurations(ds);
         ds = checkSubsettingCriterion(ds);
         return (T) ds;
-    }
-
-    @Override
-    protected <T extends AbstractEntity> T beforeUpdate(T pEntity) {
-        // nothing to do for now
-        return pEntity;
     }
 
     /**

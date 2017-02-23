@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -158,9 +159,12 @@ public class DatasetServiceTest {
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet3.getId())).thenReturn(dataSet3);
 
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
+        IPublisher publisherMocked = Mockito.mock(IPublisher.class);
+
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, pModelService,
                 deletedEntityRepositoryMocked, null, null, null, null);
+                deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 

@@ -6,11 +6,10 @@ package fr.cnes.regards.modules.entities.service;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.transaction.Transactional;
-
 import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -21,8 +20,22 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
-@Transactional
+@MultitenantTransactional
 public interface IEntityService {
+
+    /**
+     * Load entity by IpId without relations
+     * @param ipId business id
+     * @return entity without its relations (ie. groups, tags, ...)
+     */
+    AbstractEntity load(UniformResourceName ipId);
+
+    /**
+     * Load entity by IpId with all its relations
+     * @param ipId business id
+     * @return entity with all its relations (ie. groups, tags, ...)
+     */
+    AbstractEntity loadWithRelations(UniformResourceName ipId);
 
     void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 

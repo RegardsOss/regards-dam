@@ -3,8 +3,6 @@ package fr.cnes.regards.modules.entities.service;
 import java.io.IOException;
 import java.util.List;
 
-import javax.transaction.Transactional;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,12 +11,15 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -33,8 +34,8 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 @TestPropertySource(locations = { "classpath:test.properties" })
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = ServiceConfiguration.class)
-@Transactional
+@ContextConfiguration(classes = { ServiceConfiguration.class })
+@MultitenantTransactional
 public class CollectionDatasetGroupsIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(CollectionDatasetGroupsIT.class);
@@ -70,9 +71,21 @@ public class CollectionDatasetGroupsIT {
     @Autowired
     private IModelRepository modelRepository;
 
+    @Autowired
+    private RegardsAmqpAdmin regardsAmqpAdmin;
+
+    //    @BeforeTransaction
+    //    public void beforeTx() {
+    //        regardsAmqpAdmin.bind("PROJECT");
+    //    }
+    //
+    //    @AfterTransaction
+    //    public void afterTx() {
+    //        regardsAmqpAdmin.unbind();
+    //    }
+
     @Before
     public void setUp() throws Exception {
-
     }
 
     @After
@@ -139,8 +152,10 @@ public class CollectionDatasetGroupsIT {
 
     @Requirement("REGARDS_DSL_DAM_COL_310")
     @Test
+    @Commit
     public void testCollectionsFirst() throws ModuleException, IOException {
         this.buildData1();
+
         // First create collections
         coll1 = collService.create(coll1);
         coll2 = collService.create(coll2);

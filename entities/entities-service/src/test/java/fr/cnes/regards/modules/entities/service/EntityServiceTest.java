@@ -14,10 +14,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -35,9 +34,9 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public class AbstractEntityServiceTest {
+public class EntityServiceTest {
 
-    private AbstractEntityService entityServiceMocked;
+    private EntityService entityServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
@@ -101,29 +100,10 @@ public class AbstractEntityServiceTest {
 
         EntityManager emMocked = Mockito.mock(EntityManager.class);
 
-        entityServiceMocked = new AbstractEntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                null, null, null, emMocked) {
+        IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
-            @Override
-            protected Logger getLogger() {
-                return null;
-            }
-
-            @Override
-            protected <T extends AbstractEntity> T beforeUpdate(T pEntity) {
-                return pEntity;
-            }
-
-            @Override
-            protected <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException {
-                return pNewEntity;
-            }
-
-            @Override
-            protected <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException {
-                return pEntity;
-            }
-        };
+        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
+                null, null, null, emMocked, publisherMocked);
         Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);
         Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(doc);
         Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(dataset);
@@ -164,7 +144,7 @@ public class AbstractEntityServiceTest {
         final Set<UniformResourceName> col3URNList = new HashSet<>();
         col3URNList.add(collection3.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-    
+
         // TODO
         //        entityServiceMocked.associate(collection2, col3URNList);
         Assert.assertTrue(collection3.getTags().contains(collection2.getIpId().toString()));

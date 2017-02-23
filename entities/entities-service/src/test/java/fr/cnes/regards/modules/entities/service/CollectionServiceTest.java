@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -100,8 +101,11 @@ public class CollectionServiceTest {
         IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
+
+        IPublisher publisherMocked = Mockito.mock(IPublisher.class);
+
         collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null);
+                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 

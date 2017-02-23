@@ -39,20 +39,19 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.service.adapters.gson.FlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@Ignore
 public class CrawlerServiceTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
 
     @Autowired
-    private FlattenedAttributeAdapterFactory gsonAttributeFactory;
+    private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -74,6 +73,12 @@ public class CrawlerServiceTest {
 
     @Value("${oracle.datasource.password}")
     private String dbPpassword;
+
+    @Value("${oracle.datasource.driver}")
+    private String driver;
+
+    @Autowired
+    private ICrawlerService service;
 
     @Autowired
     private IIndexerService indexerService;
@@ -113,6 +118,13 @@ public class CrawlerServiceTest {
     public void tearDown() throws Exception {
     }
 
+    @Test
+    public void testCrawl() throws InterruptedException {
+        System.out.println("Test crawl");
+        Thread.sleep(30000);
+    }
+
+    @Ignore
     @Test
     public void testSuckUp() {
         // register JSon data types (for ES)
@@ -193,23 +205,23 @@ public class CrawlerServiceTest {
     }
 
     private void registerJSonModelAttributes() {
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_OBJECTS_ID");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "FILE_SIZE");
-        gsonAttributeFactory.registerSubtype(StringAttribute.class, "FILE_TYPE");
-        gsonAttributeFactory.registerSubtype(StringAttribute.class, "FILE_NAME_ORIGINE");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_SET_ID");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "DATA_TITLE");
-        gsonAttributeFactory.registerSubtype(StringAttribute.class, "DATA_AUTHOR");
-        gsonAttributeFactory.registerSubtype(StringAttribute.class, "DATA_AUTHOR_COMPANY");
-        gsonAttributeFactory.registerSubtype(DateAttribute.class, "START_DATE");
-        gsonAttributeFactory.registerSubtype(DateAttribute.class, "STOP_DATE");
-        gsonAttributeFactory.registerSubtype(DateAttribute.class, "DATA_CREATION_DATE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "DATA_OBJECTS_ID");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "FILE_SIZE");
+        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "FILE_TYPE");
+        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "FILE_NAME_ORIGINE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "DATA_SET_ID");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "DATA_TITLE");
+        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "DATA_AUTHOR");
+        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "DATA_AUTHOR_COMPANY");
+        gsonAttributeFactory.registerSubtype(TENANT, DateAttribute.class, "START_DATE");
+        gsonAttributeFactory.registerSubtype(TENANT, DateAttribute.class, "STOP_DATE");
+        gsonAttributeFactory.registerSubtype(TENANT, DateAttribute.class, "DATA_CREATION_DATE");
 
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MIN_LONGITUDE");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MAX_LONGITUDE");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MIN_LATITUDE");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MAX_LATITUDE");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MIN_ALTITUDE");
-        gsonAttributeFactory.registerSubtype(IntegerAttribute.class, "MAX_ALTITUDE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MIN_LONGITUDE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MAX_LONGITUDE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MIN_LATITUDE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MAX_LATITUDE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MIN_ALTITUDE");
+        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MAX_ALTITUDE");
     }
 }
