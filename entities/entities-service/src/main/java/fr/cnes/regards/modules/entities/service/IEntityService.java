@@ -23,6 +23,20 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @MultitenantTransactional
 public interface IEntityService {
 
+    /**
+     * Load entity by IpId without relations
+     * @param ipId business id
+     * @return entity without its relations (ie. groups, tags, ...)
+     */
+    AbstractEntity load(UniformResourceName ipId);
+
+    /**
+     * Load entity by IpId with all its relations
+     * @param ipId business id
+     * @return entity with all its relations (ie. groups, tags, ...)
+     */
+    AbstractEntity loadWithRelations(UniformResourceName ipId);
+
     void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 
     /**

@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
 
     /**
-     * Find entity giving its id eagerly loading its relations
+     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
      * @param pId id of entity
      * @return entity
      */
@@ -42,7 +42,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
     AbstractEntity findOneByIpId(UniformResourceName pIpId);
 
     /**
-     * Find entity of given ipId eagerly loading all relations
+     * Find entity of given IpId eagerly loading all common relations
      * @param pIpId ipId of which entity
      * @return found entity
      */

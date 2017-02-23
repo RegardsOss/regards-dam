@@ -73,7 +73,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
-@Service
+@Service(value = "entityService")
 public class EntityService implements IEntityService {
 
     /**
@@ -117,6 +117,16 @@ public class EntityService implements IEntityService {
         datasetRepository = pDatasetRepository;
         em = pEm;
         publisher = pPublisher;
+    }
+
+    @Override
+    public AbstractEntity load(UniformResourceName pIpId) {
+        return entityRepository.findOneByIpId(pIpId);
+    }
+
+    @Override
+    public AbstractEntity loadWithRelations(UniformResourceName pIpId) {
+        return entityRepository.findByIpId(pIpId);
     }
 
     @Override
