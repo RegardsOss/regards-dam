@@ -37,39 +37,46 @@ import fr.cnes.regards.framework.multitenant.test.SingleRuntimeTenantResolver;
 @EnableTransactionManagement
 public class PostgreDataSourcePluginTestConfiguration {
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    /**
+     * The JDBC PostgreSQL driver
+     */
+    private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
+
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
-
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
+    private String dbPassword;
 
     /**
      *
-     * Create the datasource
+     * Create the {@link DataSource}
      *
-     * @return the datasource
+     * @return the {@link DataSource} created
      */
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(driver);
-        dataSource.setUrl(url);
-        dataSource.setUsername(user);
-        dataSource.setPassword(password);
+        dataSource.setDriverClassName(POSTGRESQL_JDBC_DRIVER);
+        dataSource.setUrl(buildUrl());
+        dataSource.setUsername(dbUser);
+        dataSource.setPassword(dbPassword);
         return dataSource;
     }
 
     /**
-     * Create entity manager factory
+     * Create an {@link EntityManagerFactory}
      *
-     * @param pApplicationDataSource
-     * @return
+     * @return the {@link EntityManagerFactory} created
      */
     @Bean
     public EntityManagerFactory entityManagerFactory() {
@@ -105,4 +112,9 @@ public class PostgreDataSourcePluginTestConfiguration {
     public IRuntimeTenantResolver runtimeTenantResolver() {
         return new SingleRuntimeTenantResolver(null);
     }
+
+    private String buildUrl() {
+        return "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
+    }
+
 }

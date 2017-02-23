@@ -1,9 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.utils;
-
-import java.util.HashSet;
+package fr.cnes.regards.modules.datasources.domain;
 
 /**
  * This class describes a table of a SQL database.
@@ -111,13 +109,13 @@ public final class Table {
     }
 
     private String toString(String pName, String pVal) {
-        return pVal != null && pVal != "" ? pName + "=" + pVal : "";
+        return (pVal != null && pVal != "") ? (pName + "=" + pVal) : "";
     }
 
     @Override
     public String toString() {
         return "[TABLE :" + name + "]" + " : " + toString("schema", schema) + " : " + toString("catalog", catalog)
-                + " : " + pkColumn != null ? "pkKey=" + pkColumn : "";
+                + " : " + (pkColumn != null ? "pkKey=" + pkColumn : "");
     }
 
 }

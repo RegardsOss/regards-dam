@@ -37,8 +37,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows introspection to a Oracle database")
-public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin implements IDataSourceFromSingleTablePlugin {
+@Plugin(id = "oracle-datasource-single-table", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Allows introspection to a Oracle database")
+public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin
+        implements IDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger
@@ -100,8 +102,9 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.String,
-     * java.lang.String)
+     * @see
+     * fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.
+     * String, java.lang.String)
      */
     @Override
     protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {

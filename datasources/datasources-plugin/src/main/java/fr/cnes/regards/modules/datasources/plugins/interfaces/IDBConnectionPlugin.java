@@ -13,12 +13,12 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 /**
  * Class IDBConnectionPlugin
  *
- * Allows to manage a {@link DataSource} connection pool
+ * Allows to manage a connection pool to a {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@PluginInterface(description = "Plugin to manager a datasource connection pool")
+@PluginInterface(description = "Plugin to manager a connection pool to a datasource")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     static final String MAX_POOLSIZE_PARAM = "maxPoolSize";
@@ -31,5 +31,7 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
      * @return the {@link Connection}
      */
     Connection getConnection();
+    
+    String buildUrl();
 
 }

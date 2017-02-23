@@ -31,10 +31,6 @@ public class DataSource {
     // une table
     private String tableName;
 
-    // ou les clauses from et where d'une requête
-
-    private String whereClause;
-
     private String fromClause;
 
     private DataSourceModelMapping mapping;
@@ -77,14 +73,6 @@ public class DataSource {
 
     public void setTableName(String tableName) {
         this.tableName = tableName;
-    }
-
-    public String getWhereClause() {
-        return whereClause;
-    }
-
-    public void setWhereClause(String whereClause) {
-        this.whereClause = whereClause;
     }
 
     public String getFromClause() {

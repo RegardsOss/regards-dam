@@ -7,8 +7,6 @@ import java.util.List;
 
 import javax.validation.Valid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +26,6 @@ import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.FragmentService;
 
 /**
  *
@@ -49,11 +46,6 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      * Type mapping
      */
     public static final String TYPE_MAPPING = "/connections";
-
-    /**
-     * Class logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionController.class);
 
     /**
      * DBConnectionService attribute service
@@ -100,8 +92,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Get a {@link PluginConfiguration}
      *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId
+     *            a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException
      *             if plugin configuration cannot be retrieved
@@ -116,10 +108,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
      *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId
+     *            a {@link PluginConfiguration} identifier
      * @param pDbConnection
-     *            {@link DBConnection} to update
+     *            the {@link DBConnection} to update
      * @return updated {@link PluginConfiguration}
      * @throws ModuleException
      *             if plugin configuration cannot be updated
@@ -164,8 +156,8 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     @RequestMapping(method = RequestMethod.POST, value = "/{pConnectionId}")
     public ResponseEntity<Boolean> testDBConnection(@PathVariable Long pConnectionId) throws ModuleException {
         return ResponseEntity.ok(dbConnectionService.testDBConnection(pConnectionId));
-    }  
-    
+    }
+
     @Override
     public Resource<PluginConfiguration> toResource(PluginConfiguration pElement, Object... pExtras) {
         final Resource<PluginConfiguration> resource = resourceService.toResource(pElement);

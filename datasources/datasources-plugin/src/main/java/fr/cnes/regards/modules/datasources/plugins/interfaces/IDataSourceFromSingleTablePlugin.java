@@ -8,15 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.utils.Column;
-import fr.cnes.regards.modules.datasources.utils.Index;
-import fr.cnes.regards.modules.datasources.utils.Table;
+import fr.cnes.regards.modules.datasources.domain.Index;
+import fr.cnes.regards.modules.datasources.domain.Table;
 
 /**
  * Class IDataSourceFromSingleTablePlugin
  * 
- * Allows to search in a database, and to explore the database's tables, columns and indices.
+ * Allows to search in a database, and to explore the database's tables, columns and indexes.
  *
  * @author Christophe Mertz
  * 
@@ -25,7 +25,7 @@ import fr.cnes.regards.modules.datasources.utils.Table;
 public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
 
     /**
-     * Requests the database to get the {@link List} of database's table.
+     * Requests the database to get the tables of a data source.
      * 
      * @return a {@link Map} of the database's table
      */
@@ -35,13 +35,20 @@ public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
      * Requests the database to get the columns of a specific table.
      * 
      * @param pTable
-     *            the database's table to which teh colmns
+     *            the database's table
      * @return a {@link Map} of the columns
      * 
      */
     public Map<String, Column> getColumns(Table pTable);
 
-    public Map<String, Index> getIndices(Table pTable);
+    /**
+     * Requests the database to get the indexes of a specific table.
+     * 
+     * @param pTable
+     *            the database's table
+     * @return a {@link Map} of the indexes
+     */
+    public Map<String, Index> getIndexes(Table pTable);
 
     /**
      * Allows to define the database table used, and the columns of this table.</br>

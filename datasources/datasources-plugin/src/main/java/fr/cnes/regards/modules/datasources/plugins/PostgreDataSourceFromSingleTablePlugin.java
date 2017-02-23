@@ -37,8 +37,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows introspection to a PostgreSql database")
-public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin implements IDataSourceFromSingleTablePlugin {
+@Plugin(id = "postgresql-datasource-single-table", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Allows introspection to a PostgreSql database")
+public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin
+        implements IDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger
@@ -52,7 +54,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     private IDBConnectionPlugin dbConnection;
 
     /**
-     * THe {@link Model} to used by the {@link Plugin} in JSon format.
+     * The {@link Model} to used by the {@link Plugin} in JSon format.
      */
     @PluginParameter(name = MODEL_PARAM)
     private String modelJSon;
@@ -100,8 +102,9 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     /*
      * (non-Javadoc)
      * 
-     * @see fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.String,
-     * java.lang.String)
+     * @see
+     * fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.
+     * String, java.lang.String)
      */
     @Override
     protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {

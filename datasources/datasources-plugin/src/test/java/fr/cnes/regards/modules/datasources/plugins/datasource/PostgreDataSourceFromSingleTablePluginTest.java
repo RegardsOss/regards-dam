@@ -29,19 +29,19 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.Index;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.Column;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.IDomainDataSourceRepository;
-import fr.cnes.regards.modules.datasources.utils.Index;
+import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
-import fr.cnes.regards.modules.datasources.utils.Table;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -65,17 +65,20 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
-
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
+    private String dbPassword;
 
     private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
@@ -87,7 +90,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      * JPA Repository
      */
     @Autowired
-    IDomainDataSourceRepository repository;
+    IDataSourceRepositoryTest repository;
 
     /**
      * Resolve tenant at runtime
@@ -166,7 +169,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         Assert.assertNotNull(columns);
         Assert.assertEquals(7, columns.size());
 
-        Map<String, Index> indices = plgDBDataSource.getIndices(tables.get(TABLE_NAME_TEST));
+        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
         Assert.assertNotNull(indices);
         Assert.assertEquals(3, indices.size());
     }
@@ -200,10 +203,11 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      */
     private PluginConfiguration getPostgreConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, user)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, password)
-                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, url)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, driver)
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 

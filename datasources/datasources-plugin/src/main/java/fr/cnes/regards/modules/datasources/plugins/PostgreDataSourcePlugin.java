@@ -42,13 +42,9 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Allows data extraction to a PostgreSql database")
+@Plugin(id = "postgresql-datasource", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Allows data extraction to a PostgreSql database")
 public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implements IDataSourcePlugin {
-
-    /**
-     * The SQL request parameter name
-     */
-    public static final String REQUEST_PARAM = "requestSQL";
 
     /**
      * Class logger
@@ -64,7 +60,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     /**
      * The SQL request
      */
-    @PluginParameter(name = REQUEST_PARAM)
+    @PluginParameter(name = FROM_CLAUSE)
     private String requestSql;
 
     /**
@@ -117,7 +113,6 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
         return true;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
         Connection conn = dbConnection.getConnection();

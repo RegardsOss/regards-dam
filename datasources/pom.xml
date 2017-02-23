@@ -17,7 +17,6 @@
 	</parent>
 
 	<modules>
-		<module>datasources-dao</module>
 		<module>datasources-domain</module>
 		<module>datasources-rest</module>
 		<module>datasources-service</module>
@@ -26,11 +25,6 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.datasources</groupId>
-				<artifactId>datasources-dao</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.datasources</groupId>
 				<artifactId>datasources-domain</artifactId>

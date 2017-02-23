@@ -41,8 +41,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  * Class AbstractDataObjectMapping
  *
- * TODO
- *
  * @author Christophe Mertz
  */
 public abstract class AbstractDataObjectMapping {
@@ -67,6 +65,8 @@ public abstract class AbstractDataObjectMapping {
      */
     private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
 
+    private static final int RESET_COUNT = -1;
+
     /**
      * The mapping between the attributes in the {@link Model} and the data source
      *
@@ -75,11 +75,9 @@ public abstract class AbstractDataObjectMapping {
     protected abstract DataSourceModelMapping getModelMapping();
 
     /**
-     *
+     * The result of the count request
      */
-    private int nn = RESET_COUNT;
-
-    private static final int RESET_COUNT = -1;
+    private int nbItems = RESET_COUNT;
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
@@ -101,32 +99,21 @@ public abstract class AbstractDataObjectMapping {
     public Page<DataObject> findAllApplyPageAndDate(String pTenant, Connection pConn, String pRequestSql,
             Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
-        Statement statement = null;
-        ResultSet rs = null;
 
-        try {
-            statement = pConn.createStatement();
+        try (Statement statement = pConn.createStatement()) {
 
             // Execute SQL request
             String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(pRequestSql, pDate), pPageable);
 
-            rs = statement.executeQuery(sqlRequestWithPagedInformation);
-
-            while (rs.next()) {
-                dataObjects.add(processResultSet(pTenant, rs));
+            try (ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation)) {
+                while (rs.next()) {
+                    dataObjects.add(processResultSet(pTenant, rs));
+                }
             }
 
-            rs.close();
+            statement.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
         }
 
         return new PageImpl(dataObjects);
@@ -148,47 +135,35 @@ public abstract class AbstractDataObjectMapping {
      *            a {@link Date} used to apply returns the {@link DataObject} update or create after this date
      * @return a page of {@link DataObject}
      */
-    @SuppressWarnings("unchecked")
     public Page<DataObject> findAll(String pTenant, Connection pConn, String pRequestSql, String pCountRequest,
             Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
-        Statement statement = null;
-
-        try {
-            statement = pConn.createStatement();
+        try (Statement statement = pConn.createStatement();) {
 
             // Execute the request to get the elements
-            ResultSet rs = statement.executeQuery(pRequestSql);
+            try (ResultSet rs = statement.executeQuery(pRequestSql)) {
 
-            while (rs.next()) {
-                dataObjects.add(processResultSet(pTenant, rs));
-            }
-
-            rs.close();
-
-            if (nn == -1) {
-                // Execute the request ot count the element
-                rs = statement.executeQuery(pCountRequest);
-                if (rs.next()) {
-                    nn = rs.getInt(1);
+                while (rs.next()) {
+                    dataObjects.add(processResultSet(pTenant, rs));
                 }
-                rs.close();
-            }
 
+                if (nbItems == RESET_COUNT) {
+                    // Execute the request to count the elements
+                    try (ResultSet rsCount = statement.executeQuery(pCountRequest)) {
+                        if (rs.next()) {
+                            nbItems = rs.getInt(1);
+                        }
+                    }
+                }
+            }
+            
+            statement.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
-        } finally {
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            }
         }
 
-        return new PageImpl<>(dataObjects, pPageable, nn);
+        return new PageImpl<>(dataObjects, pPageable, nbItems);
     }
 
     /**
@@ -386,6 +361,6 @@ public abstract class AbstractDataObjectMapping {
      * This method reset the number of data element from the database.<br>
      */
     protected void reset() {
-        nn = RESET_COUNT;
+        nbItems = RESET_COUNT;
     }
 }
