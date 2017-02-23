@@ -24,6 +24,11 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 public interface IDataSourcePlugin {
 
     /**
+     * The from clause to apply to the SQL request parameter name
+     */
+    public static final String FROM_CLAUSE = "fromClause";
+
+    /**
      * The model parameter name
      */
     public static final String MODEL_PARAM = "model";

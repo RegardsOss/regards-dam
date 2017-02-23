@@ -32,7 +32,8 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Sql database")
+@Plugin(id = "oracle-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Connection to a Sql database")
 public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
 
     /**
@@ -41,28 +42,39 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultOracleConnectionPlugin.class);
 
     /**
+     * The JDBC Oracle driver
+     */
+    private static final String ORACLE_JDBC_DRIVER = "oracle.jdbc.OracleDriver";
+
+    /**
      * The user to used for the database connection
      */
     @PluginParameter(name = USER_PARAM)
-    private String user;
+    private String dbUser;
 
     /**
      * The user's password to used for the database connection
      */
     @PluginParameter(name = PASSWORD_PARAM)
-    private String password;
+    private String dbPassword;
 
     /**
-     * The URL_PARAM of the database
+     * The URL to the database's host
      */
-    @PluginParameter(name = URL_PARAM)
-    private String url;
+    @PluginParameter(name = DB_HOST_PARAM)
+    private String dbHost;
 
     /**
-     * The JDBC driver to used
+     * The PORT to the database's host
      */
-    @PluginParameter(name = DRIVER_PARAM)
-    private String driver;
+    @PluginParameter(name = DB_PORT_PARAM)
+    private String dbPort;
+
+    /**
+     * The NAME of the database
+     */
+    @PluginParameter(name = DB_NAME_PARAM)
+    private String dbName;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
@@ -87,9 +99,9 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     @PluginInit
     private void createPoolConnection() {
         cpds = new ComboPooledDataSource();
-        cpds.setJdbcUrl(url);
-        cpds.setUser(user);
-        cpds.setPassword(password);
+        cpds.setJdbcUrl(buildUrl());
+        cpds.setUser(dbUser);
+        cpds.setPassword(dbPassword);
         cpds.setMaxPoolSize(maxPoolSize);
         cpds.setMinPoolSize(minPoolSize);
         cpds.setAcquireRetryAttempts(5);
@@ -97,7 +109,7 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         cpds.setIdleConnectionTestPeriod(20);
 
         try {
-            cpds.setDriverClass(driver);
+            cpds.setDriverClass(ORACLE_JDBC_DRIVER);
         } catch (PropertyVetoException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -136,19 +148,19 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
         return isConnected;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin#getConnection()
-     */
     @Override
     public Connection getConnection() {
         try {
             return cpds.getConnection();
         } catch (SQLException e) {
-            LOG.error(e.getMessage(),e);
+            LOG.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    @Override
+    public String buildUrl() {
+        return "jdbc:oracle:thin:@//" + dbHost + ":" + dbPort + "/" + dbName;
     }
 
 }

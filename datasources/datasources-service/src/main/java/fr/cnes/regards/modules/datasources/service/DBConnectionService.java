@@ -8,7 +8,6 @@ import java.util.function.UnaryOperator;
 
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -50,24 +49,12 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public PluginConfiguration createDBConnection(DBConnection pDbConnection) throws ModuleException {
-        PluginMetaData metaData = null;
-        final List<PluginMetaData> metaDatas = service.getPluginsByType(IDBConnectionPlugin.class);
 
-        // is the DbConnection match a PluginMetada
-        boolean isFound = false;
-        for (PluginMetaData pMd : metaDatas) {
-            if (!isFound && pMd.getPluginClassName().equals(pDbConnection.getPluginClassName())) {
-                isFound = true;
-                metaData = pMd;
-            }
-        }
-        if (!isFound) {
-            throw new EntityInvalidException(
-                    "The DBConnection contains an unknown plugin class name : " + pDbConnection.getPluginClassName());
-        }
+        PluginMetaData metaData = service.checkPluginClassName(IDBConnectionPlugin.class,
+                                                               pDbConnection.getPluginClassName());
 
         return service.savePluginConfiguration(new PluginConfiguration(metaData, pDbConnection.getLabel(),
-                buildParameters(pDbConnection), 0));
+                buildParameters(pDbConnection)));
     }
 
     @Override
@@ -79,7 +66,6 @@ public class DBConnectionService implements IDBConnectionService {
     public PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException {
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDbConnection.getPluginConfigurationId());
-        plgConf.setLabel(pDbConnection.getLabel());
 
         // Update the PluginParamater of the PluginConfiguration
         UnaryOperator<PluginParameter> unaryOpt = pn -> mergeParameters(pn, pDbConnection);
@@ -103,14 +89,16 @@ public class DBConnectionService implements IDBConnectionService {
      * Build a {@link List} of {@link PluginParameter} for the {@link IDBConnectionPlugin}.
      *
      * @param pDbConn
+     *            A {@link DBConnection}
      * @return a {@link List} of {@link PluginParameter}
      */
     private List<PluginParameter> buildParameters(DBConnection pDbConn) {
         PluginParametersFactory factory = PluginParametersFactory.build();
         factory.addParameter(IDBConnectionPlugin.USER_PARAM, pDbConn.getUser())
                 .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, pDbConn.getPassword())
-                .addParameter(IDBConnectionPlugin.URL_PARAM, pDbConn.getUrl())
-                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, pDbConn.getDriver())
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, pDbConn.getDbHost())
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, pDbConn.getDbPort())
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, pDbConn.getDbName())
                 .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, pDbConn.getMaxPoolSize().toString())
                 .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, pDbConn.getMinPoolSize().toString());
 
@@ -119,7 +107,9 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DBConnection} attribute
-     *
+     * 
+     * @param pPlgParam
+     *            a {@link PluginParameter}
      * @param pDbConn
      *            A {@link DBConnection}
      * @return a {{@link PluginParameter}
@@ -132,12 +122,16 @@ public class DBConnectionService implements IDBConnectionService {
             case IDBConnectionPlugin.PASSWORD_PARAM:
                 pPlgParam.setValue(pDbConn.getPassword());
                 break;
-            case IDBConnectionPlugin.URL_PARAM:
-                pPlgParam.setValue(pDbConn.getUrl());
+            case IDBConnectionPlugin.DB_HOST_PARAM:
+                pPlgParam.setValue(pDbConn.getDbHost());
                 break;
-            case IDBConnectionPlugin.DRIVER_PARAM:
-                pPlgParam.setValue(pDbConn.getDriver());
+            case IDBConnectionPlugin.DB_PORT_PARAM:
+                pPlgParam.setValue(pDbConn.getDbPort());
                 break;
+            case IDBConnectionPlugin.DB_NAME_PARAM:
+                pPlgParam.setValue(pDbConn.getDbName());
+                break;
+
             case IDBConnectionPlugin.MIN_POOLSIZE_PARAM:
                 pPlgParam.setValue(pDbConn.getMinPoolSize().toString());
                 break;

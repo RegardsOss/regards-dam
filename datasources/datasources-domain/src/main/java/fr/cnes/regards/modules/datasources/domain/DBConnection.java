@@ -37,14 +37,19 @@ public class DBConnection {
     private String password;
 
     /**
-     * The URL_PARAM of the database
+     * The URL to the database's host
      */
-    private String url;
+    private String dbHost;
 
     /**
-     * The JDBC driver to used
+     * The PORT to the database's host
      */
-    private String driver;
+    private String dbPort;
+
+    /**
+     * The NAME of the database
+     */
+    private String dbName;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
@@ -88,20 +93,28 @@ public class DBConnection {
         this.password = password;
     }
 
-    public String getUrl() {
-        return url;
+    public String getDbHost() {
+        return dbHost;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setDbHost(String dbHost) {
+        this.dbHost = dbHost;
     }
 
-    public String getDriver() {
-        return driver;
+    public String getDbPort() {
+        return dbPort;
     }
 
-    public void setDriver(String driver) {
-        this.driver = driver;
+    public void setDbPort(String dbPort) {
+        this.dbPort = dbPort;
+    }
+
+    public String getDbName() {
+        return dbName;
+    }
+
+    public void setDbName(String dbName) {
+        this.dbName = dbName;
     }
 
     public Integer getMaxPoolSize() {

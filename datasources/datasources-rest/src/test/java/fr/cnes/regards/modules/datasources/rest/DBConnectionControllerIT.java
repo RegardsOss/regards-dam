@@ -23,7 +23,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.service.DBConnectionService;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
@@ -42,28 +41,23 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DBConnectionControllerIT.class);
 
-    /**
-     * JSON path
-     */
-    private static final String JSON_ID = "$.content.id";
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
 
-    @Value("${postgresql.datasource.url}")
-    private String url;
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
 
     @Value("${postgresql.datasource.username}")
-    private String user;
+    private String dbUser;
 
     @Value("${postgresql.datasource.password}")
-    private String password;
-
-    @Value("${postgresql.datasource.driver}")
-    private String driver;
+    private String dbPassword;
 
     @Autowired
     IDBConnectionService service;
-
-    @Autowired
-    DBConnectionService dbConnectionService;
 
     @Override
     protected Logger getLogger() {
@@ -264,10 +258,11 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private DBConnection createADbConnection(String pLabel, String pPluginClassName) {
         final DBConnection dbConnection = new DBConnection();
-        dbConnection.setUser(user);
-        dbConnection.setPassword(password);
-        dbConnection.setDriver(driver);
-        dbConnection.setUrl(url);
+        dbConnection.setUser(dbUser);
+        dbConnection.setPassword(dbPassword);
+        dbConnection.setDbHost(dbHost);
+        dbConnection.setDbPort(dbPort);
+        dbConnection.setDbName(dbName);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel(pLabel);
