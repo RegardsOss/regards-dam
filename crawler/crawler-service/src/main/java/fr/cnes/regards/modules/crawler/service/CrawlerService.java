@@ -8,15 +8,16 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.event.CreateEntityEvent;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 @Service
@@ -26,13 +27,14 @@ public class CrawlerService implements ICrawlerService {
     private ITenantResolver tenantResolver;
 
     @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
+    @Autowired
     private IPoller poller;
 
     @Autowired
-    private ICollectionService entityService;
-
-    @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepository;
+    @Qualifier(value = "entityService")
+    private IEntityService entityService;
 
     private ExecutorService executor;
 
@@ -67,13 +69,14 @@ public class CrawlerService implements ICrawlerService {
             // For all tenants
             for (String tenant : tenantResolver.getAllTenants()) {
                 try {
+                    runtimeTenantResolver.forceTenant(tenant);
                     //                    poller.bind(tenant);
                     // Try polling message from current tenant
                     TenantWrapper<CreateEntityEvent> wrapper = poller.poll(CreateEntityEvent.class);
                     if (wrapper != null) {
                         UniformResourceName ipId = wrapper.getContent().getIpId();
                         System.out.println(ipId);
-                        AbstractEntity entity = entityRepository.findByIpId(ipId);
+                        AbstractEntity entity = entityService.loadWithRelations(ipId);
                         entity.getGroups().toArray();
                         entity.getTags().toArray();
                         System.out.println(entity + ", " + Arrays.toString(entity.getTags().toArray()));
