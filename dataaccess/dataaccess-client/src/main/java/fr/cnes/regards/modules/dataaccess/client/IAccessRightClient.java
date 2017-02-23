@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import fr.cnes.regards.client.core.annotation.RestClient;
-import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -26,7 +25,8 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  *
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessRightClient { // NOSONAR
 
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
@@ -58,7 +58,6 @@ public interface IAccessRightClient { // NOSONAR
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
-            throws RabbitMQVhostException;
+    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
 }

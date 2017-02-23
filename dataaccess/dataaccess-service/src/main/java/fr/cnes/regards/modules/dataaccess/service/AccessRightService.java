@@ -189,7 +189,7 @@ public class AccessRightService {
      * @throws RabbitMQVhostException
      */
     public AbstractAccessRight updateAccessRight(Long pId, AbstractAccessRight pToBe)
-            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
+            throws EntityNotFoundException, EntityInconsistentIdentifierException {
         AbstractAccessRight toBeUpdated = repository.findOne(pId);
         if (toBeUpdated == null) {
             throw new EntityNotFoundException(pId, AbstractAccessRight.class);
@@ -206,7 +206,7 @@ public class AccessRightService {
      * @param pId
      * @throws RabbitMQVhostException
      */
-    public void deleteAccessRight(Long pId) throws RabbitMQVhostException {
+    public void deleteAccessRight(Long pId) {
         repository.delete(pId);
         eventPublisher.publish(new AccessRightDeleted(pId));
     }

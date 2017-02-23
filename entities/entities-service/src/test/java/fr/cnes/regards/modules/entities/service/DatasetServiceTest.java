@@ -160,7 +160,7 @@ public class DatasetServiceTest {
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, null, null);
+                deletedEntityRepositoryMocked, null, null, null, null);
 
     }
 
@@ -271,7 +271,6 @@ public class DatasetServiceTest {
         return rootCrit;
     }
 
-    // @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createDataset() throws ModuleException, IOException, PluginUtilsException {
