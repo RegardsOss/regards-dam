@@ -22,7 +22,6 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.SubsettedAccessRight;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
@@ -34,7 +33,6 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 @Table(name = "t_access_right")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "kind")
-@SubsettedAccessRight
 @Gsonable
 public abstract class AbstractAccessRight implements IIdentifiable<Long> {
 

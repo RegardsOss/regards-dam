@@ -5,19 +5,31 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.security.utils.endpoint.RoleAuthority;
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.framework.security.utils.jwt.JwtTokenUtils;
+import fr.cnes.regards.microservices.catalog.plugin.client.ICatalogPluginClient;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -32,6 +44,9 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.search.service.IConverter;
+import fr.cnes.regards.modules.search.service.IFilter;
+import fr.cnes.regards.modules.search.service.IService;
 
 /**
  * Specific EntityService for Datasets
@@ -40,6 +55,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author oroussel
  */
 @Service
+@EnableFeignClients(clients = ICatalogPluginClient.class)
 public class DatasetService extends EntityService implements IDatasetService {
 
     /**
@@ -53,22 +69,35 @@ public class DatasetService extends EntityService implements IDatasetService {
 
     private final DataSourceService dataSourceService;
 
+    private final ICatalogPluginClient catalogPluginClient;
+
+    private final JWTService jwtService;
+
+    @Value("${spring.application.name}")
+    private String microserviceName;
+
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher) {
+            EntityManager pEm, ICatalogPluginClient pPluginClient, JWTService pJwtService, IPublisher pPublisher) {
         super(pModelAttributeService, pEntitiesRepository, pModelService, deletedEntityRepository,
               pCollectionRepository, pRepository, pEm, pPublisher);
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
         dataSourceService = pDataSourceService;
+        catalogPluginClient = pPluginClient;
+        jwtService = pJwtService;
     }
 
     /**
+     *
+     * retrieve a Dataset by its IpId
+     *
      * @param pDatasetIpId
-     * @return
+     * @return the Dataset of IpId pDatasetIpId
      * @throws EntityNotFoundException
+     *             when the entity does not exist
      */
     @Override
     public Dataset retrieveDataset(UniformResourceName pDatasetIpId) throws EntityNotFoundException {
@@ -80,9 +109,13 @@ public class DatasetService extends EntityService implements IDatasetService {
     }
 
     /**
+     *
+     * retrieve a Dataset by its id
+     *
      * @param pDatasetId
-     * @return
+     * @return the Dataset of Id pDatasetId
      * @throws EntityNotFoundException
+     *             when entity does not exist
      */
     @Override
     public Dataset retrieveDataset(Long pDatasetId) throws EntityNotFoundException {
@@ -136,15 +169,55 @@ public class DatasetService extends EntityService implements IDatasetService {
     }
 
     /**
+     * Check that the given set of configuration Id exist in rs-catalog and that they are of the right type(IService,
+     * IFilter, IConverter)
+     *
      * @param pDataset
+     *            Dataset to check
+     * @return checked Dataset
+     * @throws EntityNotFoundException
+     * @throws EntityInvalidException
      */
-    private Dataset checkPluginConfigurations(Dataset pDataset) {
-        // TODO see how to get if the plugin configuration exist on catalog feign client in catalog for plugins
-        // idea: create plugin-client sub module and create an interface without the @RestClient and then create a
-        // catalog-plugin-client which extends the interface from plugin-client and add the @RestClient
-        // this will allow us to have a plugin-client per microservice identified by the microservice name
-        // TODO: also check if it is a IService or IConverter or IFilter or IProcessingService configuration!
+    private Dataset checkPluginConfigurations(Dataset pDataset) throws EntityNotFoundException, EntityInvalidException {
+        // TODO: IProcessingService configuration!
+        List<Long> configurationIds = pDataset.getPluginConfigurationIds();
+        List<String> possiblePluginTypeNames = new ArrayList<>();
+        possiblePluginTypeNames.add(IFilter.class.getName());
+        possiblePluginTypeNames.add(IConverter.class.getName());
+        possiblePluginTypeNames.add(IService.class.getName());
+        for (Long configId : configurationIds) {
+            PluginConfiguration pluginConf = JwtTokenUtils
+                    .asSafeCallableOnRole(this::getPluginConfiguration, configId, jwtService, null)
+                    .apply(RoleAuthority.getSysRole(microserviceName));
+            if (pluginConf == null) {
+                throw new EntityNotFoundException(configId, PluginConfiguration.class);
+            }
+            String pluginType = pluginConf.getInterfaceName();
+            if (!possiblePluginTypeNames.contains(pluginType)) {
+                throw new EntityInvalidException(
+                        "The Datasets can only contains configuration of Service, convert or Filter, not "
+                                + pluginType);
+            }
+        }
         return pDataset;
+    }
+
+    /**
+     *
+     * Handle the use of RestClient(Client Feign) for plugins of rs-catalog
+     *
+     * @param pConfigurationId
+     * @return the PluginConfiguration if it exist or null
+     */
+    private PluginConfiguration getPluginConfiguration(Long pConfigurationId) {
+        final ResponseEntity<Resource<PluginConfiguration>> response = catalogPluginClient
+                .getPluginConfigurationDirectAccess(pConfigurationId);
+        final HttpStatus responseStatus = response.getStatusCode();
+        if (!HttpUtils.isSuccess(responseStatus)) {
+            // if it gets here it's mainly because of 404 so it means entity not found
+            return null;
+        }
+        return response.getBody().getContent();
     }
 
     /**
@@ -158,11 +231,13 @@ public class DatasetService extends EntityService implements IDatasetService {
     }
 
     /**
+     * extract the identifier of {@link IService} to be applied to the DataSet
+     *
      * @param pDatasetId
-     * @return
+     * @return List of Ids of IService
      * @throws EntityNotFoundException
+     *             thrown if the DataSet does not exist
      */
-    // TODO: return only IService not IConverter or IFilter or IProcessingService(not implemented yet anyway)
     @Override
     public List<Long> retrieveDatasetServices(Long pDatasetId) throws EntityNotFoundException {
         Dataset dataSetWithConfs = datasetRepository.findOneWithPluginConfigurations(pDatasetId);
@@ -170,10 +245,22 @@ public class DatasetService extends EntityService implements IDatasetService {
             throw new EntityNotFoundException(pDatasetId, Dataset.class);
         }
         List<Long> pluginConfIds = dataSetWithConfs.getPluginConfigurationIds();
-        if (pluginConfIds == null) {
-            pluginConfIds = new ArrayList<>();
-        }
-        return pluginConfIds;
+        return pluginConfIds.stream().filter(confId -> isServiceId(confId)).collect(Collectors.toList());
+    }
+
+    /**
+     * check either the pluginConfiguration of id pConfigId is a configuration for a {@link IService} or not
+     *
+     * @param pConfigId
+     * @return either it is a PluginConfiguration Id of a service or not
+     */
+    private boolean isServiceId(Long pConfigId) {
+        PluginConfiguration pluginConf = JwtTokenUtils
+                .asSafeCallableOnRole(this::getPluginConfiguration, pConfigId, jwtService, null)
+                .apply(RoleAuthority.getSysRole(microserviceName));
+        // pluginConf cannot be null here because it is called after the DataSet has been created and creation assured
+        // that
+        return pluginConf.getInterfaceName().equals(IService.class.getName());
     }
 
     protected static Logger getLogger() {
@@ -190,8 +277,12 @@ public class DatasetService extends EntityService implements IDatasetService {
     }
 
     /**
+     *
+     * retrieve the descriptionFile of a DataSet.
+     *
+     *
      * @param pDatasetId
-     * @return
+     * @return the DescriptionFile or null
      * @throws EntityNotFoundException
      */
     public DescriptionFile retrieveDatasetDescription(Long pDatasetId) throws EntityNotFoundException {

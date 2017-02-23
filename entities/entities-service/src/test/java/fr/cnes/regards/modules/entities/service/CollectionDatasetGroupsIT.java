@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
@@ -11,7 +14,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -74,15 +76,15 @@ public class CollectionDatasetGroupsIT {
     @Autowired
     private RegardsAmqpAdmin regardsAmqpAdmin;
 
-    //    @BeforeTransaction
-    //    public void beforeTx() {
-    //        regardsAmqpAdmin.bind("PROJECT");
-    //    }
+    // @BeforeTransaction
+    // public void beforeTx() {
+    // regardsAmqpAdmin.bind("PROJECT");
+    // }
     //
-    //    @AfterTransaction
-    //    public void afterTx() {
-    //        regardsAmqpAdmin.unbind();
-    //    }
+    // @AfterTransaction
+    // public void afterTx() {
+    // regardsAmqpAdmin.unbind();
+    // }
 
     @Before
     public void setUp() throws Exception {
@@ -92,19 +94,19 @@ public class CollectionDatasetGroupsIT {
     public void tearDown() throws Exception {
     }
 
-    //      (G1, G2, G3)    (G3)
-    //             C2        C3
-    //             /\        |
-    //            /  \       |
-    //           /    \      |
-    //           v     \     |
-    // (G1, G2) C1      \    |
-    //          /\       \   |
-    //         /  \       \  |
-    //        /    \       \ |
-    //       / G1   \ G2    \|G3
-    //       v       v       v
-    //      DS1    DS2     DS3
+    // (G1, G2, G3) (G3)
+    // C2 C3
+    // /\ |
+    // / \ |
+    // / \ |
+    // v \ |
+    // (G1, G2) C1 \ |
+    // /\ \ |
+    // / \ \ |
+    // / \ \ |
+    // / G1 \ G2 \|G3
+    // v v v
+    // DS1 DS2 DS3
     //
     // DS1 (G1)
     // DS2 (G2)
@@ -152,9 +154,9 @@ public class CollectionDatasetGroupsIT {
 
     @Requirement("REGARDS_DSL_DAM_COL_310")
     @Test
-    @Commit
+    // @Commit FIXME
     public void testCollectionsFirst() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
 
         // First create collections
         coll1 = collService.create(coll1);
@@ -187,7 +189,7 @@ public class CollectionDatasetGroupsIT {
 
     @Test
     public void testDatasetsFirst() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
         dataset2 = dataSetService.create(dataset2);
@@ -228,7 +230,7 @@ public class CollectionDatasetGroupsIT {
 
     @Test
     public void testLoop() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
         dataset2 = dataSetService.create(dataset2);
@@ -271,7 +273,7 @@ public class CollectionDatasetGroupsIT {
 
     @Test
     public void testAssociateDissociate() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
         dataset2 = dataSetService.create(dataset2);
@@ -324,7 +326,7 @@ public class CollectionDatasetGroupsIT {
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Test
     public void testUpdate() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
         dataset2 = dataSetService.create(dataset2);
@@ -375,7 +377,7 @@ public class CollectionDatasetGroupsIT {
     @Purpose("Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
     public void testDelete() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
         dataset2 = dataSetService.create(dataset2);
@@ -401,7 +403,7 @@ public class CollectionDatasetGroupsIT {
     @Purpose("Shall retrieve all collections.")
     @Test
     public void testFindAll() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
 
         // Then collections => groups must have been updated on collections
         coll1 = collService.create(coll1); // C1 tags DS1 and DS2 => (G1, G2)
@@ -417,7 +419,7 @@ public class CollectionDatasetGroupsIT {
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateEntityWithWrongId() throws ModuleException, IOException {
-        this.buildData1();
+        buildData1();
         // First create datasets
         dataset1 = dataSetService.create(dataset1);
         dataset2 = dataSetService.create(dataset2);

@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,13 +54,12 @@ public class Dataset extends AbstractLinkEntity {
     // TODO handler for deletion events
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "t_dataset_plugin_configuration", joinColumns = @JoinColumn(name = "dataset_id"))
-    private List<Long> pluginConfigurationIds;
+    private List<Long> pluginConfigurationIds = new ArrayList<>();
 
     /**
      * A PluginConfiguration for a plugin type IDataSourcePlugin.</br>
      * This PluginConfiguration defined the DataSource from which this Dataset presents data.
      */
-    // FIXME: PluginConfiguration de dam ou peut-être autre chose
     @ManyToOne
     @JoinColumn(name = "plgconf_id", foreignKey = @ForeignKey(name = "fk_pluginconf_id"), nullable = true,
             updatable = true)
@@ -81,7 +81,7 @@ public class Dataset extends AbstractLinkEntity {
     /**
      * set of quotations associated to the {@link Dataset}
      */
-    @ElementCollection // FIXME: LAZY ?
+    @ElementCollection
     @CollectionTable(name = "t_dataset_quotation", joinColumns = @JoinColumn(name = "dataset_id"))
     private Set<String> quotations = new HashSet<>();
 

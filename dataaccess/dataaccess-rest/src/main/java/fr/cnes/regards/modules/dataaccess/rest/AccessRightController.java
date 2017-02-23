@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -73,8 +72,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
     public ResponseEntity<Resource<AbstractAccessRight>> createAccessRight(
-            @Valid @RequestBody AbstractAccessRight pAccessRight)
-            throws EntityNotFoundException, RabbitMQVhostException {
+            @Valid @RequestBody AbstractAccessRight pAccessRight) throws EntityNotFoundException {
         AbstractAccessRight created = accessRightService.createAccessRight(pAccessRight);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
@@ -93,7 +91,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
     public ResponseEntity<Resource<AbstractAccessRight>> updateAccessRight(
             @Valid @PathVariable("accessright_id") Long pId, @Valid @RequestBody AbstractAccessRight pToBe)
-            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
+            throws EntityNotFoundException, EntityInconsistentIdentifierException {
         AbstractAccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
@@ -101,8 +99,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "delete the access right of id requested")
-    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
-            throws RabbitMQVhostException {
+    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId) {
         accessRightService.deleteAccessRight(pId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
