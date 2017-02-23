@@ -163,8 +163,7 @@ public class DatasetServiceTest {
 
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, null, null, null, null);
-                deletedEntityRepositoryMocked, null, null, publisherMocked);
+                deletedEntityRepositoryMocked, null, null, null, null, publisherMocked);
 
     }
 

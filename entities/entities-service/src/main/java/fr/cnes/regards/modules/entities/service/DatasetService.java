@@ -12,6 +12,7 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Resource;
@@ -54,6 +55,7 @@ import fr.cnes.regards.modules.search.service.IService;
  * @author oroussel
  */
 @Service
+@EnableFeignClients(clients = ICatalogPluginClient.class)
 public class DatasetService extends EntityService implements IDatasetService {
 
     /**
@@ -78,8 +80,7 @@ public class DatasetService extends EntityService implements IDatasetService {
             IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntitiesRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher) {
-            EntityManager pEm, ICatalogPluginClient pPluginClient, JWTService pJwtService) {
+            EntityManager pEm, ICatalogPluginClient pPluginClient, JWTService pJwtService, IPublisher pPublisher) {
         super(pModelAttributeService, pEntitiesRepository, pModelService, deletedEntityRepository,
               pCollectionRepository, pRepository, pEm, pPublisher);
         attributeService = pAttributeService;
@@ -174,8 +175,10 @@ public class DatasetService extends EntityService implements IDatasetService {
      * @param pDataset
      *            Dataset to check
      * @return checked Dataset
+     * @throws EntityNotFoundException
+     * @throws EntityInvalidException
      */
-    private Dataset checkPluginConfigurations(Dataset pDataset) {
+    private Dataset checkPluginConfigurations(Dataset pDataset) throws EntityNotFoundException, EntityInvalidException {
         // TODO: IProcessingService configuration!
         List<Long> configurationIds = pDataset.getPluginConfigurationIds();
         List<String> possiblePluginTypeNames = new ArrayList<>();
