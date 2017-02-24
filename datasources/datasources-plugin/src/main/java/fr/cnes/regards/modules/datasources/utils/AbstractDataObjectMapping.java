@@ -56,6 +56,11 @@ public abstract class AbstractDataObjectMapping {
     private static final String LIMIT_CLAUSE = " LIMIT %d OFFSET %d";
 
     /**
+     * The PL/SQL key word AS
+     */
+    private static final String AS = "as";
+
+    /**
      * A pattern used to set a date in the statement
      */
     private static final String DATE_STATEMENT = "%last_modification_date%";
@@ -65,14 +70,10 @@ public abstract class AbstractDataObjectMapping {
      */
     private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
 
-    private static final int RESET_COUNT = -1;
-
     /**
-     * The mapping between the attributes in the {@link Model} and the data source
-     *
-     * @return the mapping
+     * A default value to indicates that the count request should be execute
      */
-    protected abstract DataSourceModelMapping getModelMapping();
+    private static final int RESET_COUNT = -1;
 
     /**
      * The result of the count request
@@ -80,11 +81,20 @@ public abstract class AbstractDataObjectMapping {
     private int nbItems = RESET_COUNT;
 
     /**
+     * The mapping between the attributes in the {@link Model} and the data source
+     *
+     * @return the mapping
+     */
+    protected abstract DataSourceModelMapping getDataSourceModelMapping();
+
+    /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
      * page limit clause in the request.</br>
      * TODO : does not work for Oracle, need to used the right SqlGenerator
      *
+     * @param pTenant
+     *            the tenant name
      * @param pConn
      *            a {@link Connection} to a database
      * @param pRequestSql
@@ -123,6 +133,8 @@ public abstract class AbstractDataObjectMapping {
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
      *
+     * @param pTenant
+     *            the tenant name
      * @param pConn
      *            a {@link Connection} to a database
      * @param pRequestSql
@@ -151,13 +163,13 @@ public abstract class AbstractDataObjectMapping {
                 if (nbItems == RESET_COUNT) {
                     // Execute the request to count the elements
                     try (ResultSet rsCount = statement.executeQuery(pCountRequest)) {
-                        if (rs.next()) {
-                            nbItems = rs.getInt(1);
+                        if (rsCount.next()) {
+                            nbItems = rsCount.getInt(1);
                         }
                     }
                 }
             }
-            
+
             statement.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
@@ -169,6 +181,8 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL.
      *
+     * @param pTenant
+     *            the tenant name
      * @param pConn
      *            a {@link Connection} to a database
      * @param pRequestSql
@@ -184,10 +198,13 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
      *
+     * @param pTenant
+     *            the tenant name
      * @param pRs
      *            the {@link ResultSet}
      * @return the {@link DataObject} created
      * @throws SQLException
+     *             An SQL error occurred
      */
     protected DataObject processResultSet(String pTenant, ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
@@ -197,45 +214,44 @@ public abstract class AbstractDataObjectMapping {
         /**
          * Loop the attributes in the mapping
          */
-        for (DataSourceAttributeMapping attrMapping : getModelMapping().getAttributesMapping()) {
+        for (DataSourceAttributeMapping attrMapping : getDataSourceModelMapping().getAttributesMapping()) {
 
-            if (attrMapping.isPrimaryKey()) {
-                String val = pRs.getString(attrMapping.getNameDS());
-                data.setIpId(buildUrn(pTenant, val, attrMapping));
-                data.setSipId(val);
-            } else {
+            final boolean asNameSpace = attrMapping.getNameSpace() != null;
+            try {
+                AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
 
-                final boolean asNameSpace = attrMapping.getNameSpace() != null;
-                try {
-                    AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
-
-                    if (attr != null) {
-                        if (asNameSpace) {
+                if (attr != null) {
+                    if (asNameSpace) {
+                        /**
+                         * The attribute has a name space
+                         */
+                        if (spaceNames.containsKey(attrMapping.getNameSpace())) {
                             /**
-                             * The attribute has a name space
+                             * The name space already exists
                              */
-                            if (spaceNames.containsKey(attrMapping.getNameSpace())) {
-                                /**
-                                 * The name space already exists
-                                 */
-                                spaceNames.get(attrMapping.getNameSpace()).add(attr);
-                            } else {
-                                /**
-                                 * It is a new name space
-                                 */
-                                final List<AbstractAttribute<?>> nameSpaceAttributes = new ArrayList<>();
-                                nameSpaceAttributes.add(attr);
-                                spaceNames.put(attrMapping.getNameSpace(), nameSpaceAttributes);
-                            }
+                            spaceNames.get(attrMapping.getNameSpace()).add(attr);
                         } else {
-                            attributes.add(attr);
+                            /**
+                             * It is a new name space
+                             */
+                            final List<AbstractAttribute<?>> nameSpaceAttributes = new ArrayList<>();
+                            nameSpaceAttributes.add(attr);
+                            spaceNames.put(attrMapping.getNameSpace(), nameSpaceAttributes);
                         }
+                    } else {
+                        attributes.add(attr);
                     }
-                } catch (SQLException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            }
 
+                    if (attrMapping.isPrimaryKey()) {
+                        String val = attr.getValue().toString();
+                        data.setIpId(buildUrn(pTenant, val));
+                        data.setSipId(val);
+                    }
+
+                }
+            } catch (SQLException e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
 
         /**
@@ -266,21 +282,27 @@ public abstract class AbstractDataObjectMapping {
             throws SQLException {
         AbstractAttribute<?> attr = null;
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("get value for <" + pAttrMapping.getNameDS() + "> of type <" + pAttrMapping.getType() + ">");
+        }
+
+        String label = extractCollumnName(pAttrMapping.getNameDS());
+
         switch (pAttrMapping.getType()) {
             case STRING:
-                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(pAttrMapping.getNameDS()));
+                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(label));
                 break;
             case LONG:
-                attr = AttributeBuilder.buildLong(pAttrMapping.getName(), pRs.getLong(pAttrMapping.getNameDS()));
+                attr = AttributeBuilder.buildLong(pAttrMapping.getName(), pRs.getLong(label));
                 break;
             case INTEGER:
-                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(pAttrMapping.getNameDS()));
+                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(label));
                 break;
             case BOOLEAN:
-                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(pAttrMapping.getNameDS()));
+                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(label));
                 break;
             case DOUBLE:
-                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(pAttrMapping.getNameDS()));
+                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(label));
                 break;
             case DATE_ISO8601:
                 attr = buildDateAttribute(pRs, pAttrMapping);
@@ -288,15 +310,52 @@ public abstract class AbstractDataObjectMapping {
             default:
                 break;
         }
+
         // If value was null => no attribute value
         if (pRs.wasNull()) {
             return null;
         }
+
+        if (LOG.isDebugEnabled() && attr != null) {
+            LOG.debug("the value for <" + pAttrMapping.getNameDS() + "> is :" + attr.getValue());
+        }
+
         return attr;
     }
 
-    private UniformResourceName buildUrn(String pTenant, String pVal, DataSourceAttributeMapping pAttrMapping)
-            throws SQLException {
+    /**
+     * Extracts a column label from a PL/SQL expression.</br>
+     * The column label is placed after the word 'AS'.
+     * 
+     * @param pAttrMapping
+     *            The PL/SQL expression to analyze
+     * @return the column label extracted from the PL/SQL
+     */
+    private String extractCollumnName(String pAttrMapping) {
+        int pos = pAttrMapping.toLowerCase().lastIndexOf(AS);
+
+        if (pos > 0) {
+            String str = pAttrMapping.substring(pos + AS.length()).trim();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("the column label extracted is :<" + str + ">");
+            }
+            return str;
+        } else {
+            return pAttrMapping;
+        }
+    }
+
+    /**
+     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
+     * {@link UUID#nameUUIDFromBytes(byte[]).
+     * 
+     * @param pTenant
+     *            the tenant name
+     * @param pVal
+     *            the value used to build the UUID
+     * @return the URN
+     */
+    private UniformResourceName buildUrn(String pTenant, String pVal) {
         return new UniformResourceName(OAISIdentifier.SIP, EntityType.DATA, pTenant,
                 UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
     }
@@ -328,7 +387,8 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Add the elements to the request to fetch only a portion of the results
+     * Add to the SQL request the part to fetch only a portion of the results.
+     *  
      *
      * @param pRequest
      *            the SQL request

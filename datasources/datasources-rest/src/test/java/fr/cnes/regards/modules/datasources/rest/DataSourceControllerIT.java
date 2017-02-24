@@ -74,7 +74,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     IPluginService pluginService;
-    
+
     @Autowired
     IDataSourceService dataSourceService;
 
@@ -103,7 +103,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createDataSourceWithFromClauseTest() {
         final DataSource dataSource = createDataSourceWithFromClause();
-        
+
         Assert.assertEquals(0, dataSourceService.getAllDataSources().size());
 
         // Define expectations
@@ -113,16 +113,16 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
-        
+
         Assert.assertEquals(1, dataSourceService.getAllDataSources().size());
     }
 
     @Test
     public void createDataSourceWithSingleTableTest() {
         final DataSource dataSource = createDataSourceSingleTable();
-        
+
         Assert.assertEquals(0, dataSourceService.getAllDataSources().size());
-        
+
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -130,26 +130,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
-        
+
         Assert.assertEquals(1, dataSourceService.getAllDataSources().size());
-    }
-
-    private DataSource createDataSourceWithFromClause() {
-        final DataSource dataSource = new DataSource();
-        dataSource.setFromClause("select * from T_TEST_PLUGIN_DATA_SOURCE");
-        dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
-        dataSource.setMapping(dataSourceModelMapping);
-        dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
-
-        return dataSource;
-    }
-
-    private DataSource createDataSourceSingleTable() {
-        final DataSource dataSource = new DataSource();
-        dataSource.setTableName(TABLE_NAME_TEST);
-        dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getCanonicalName());
-        dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
-        return dataSource;
     }
 
     @Test
@@ -163,24 +145,44 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                            "DataSource shouldn't be created.");
         List<PluginConfiguration> pluginConfs = dataSourceService.getAllDataSources();
         Assert.assertEquals(1, pluginConfs.size());
-        
-        final Long plugConfId = pluginConfs.get(0).getId();
-        dataSource.setPluginConfigurationId(plugConfId);
+
+        final Long pluginConfId = pluginConfs.get(0).getId();
+        dataSource.setPluginConfigurationId(pluginConfId);
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", dataSource, expectations,
-                           "DataSource shouldn't be created.", pluginConfs.get(0).getId());
+                          "DataSource shouldn't be created.", pluginConfId);
+    }
 
+    private DataSource createDataSourceWithFromClause() {
+        final DataSource dataSource = new DataSource();
+        dataSource.setFromClause("from T_TEST_PLUGIN_DATA_SOURCE");
+        dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
+        dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
+        dataSource.setMapping(dataSourceModelMapping);
+
+        return dataSource;
+    }
+
+    private DataSource createDataSourceSingleTable() {
+        final DataSource dataSource = new DataSource();
+        dataSource.setTableName(TABLE_NAME_TEST);
+        dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getCanonicalName());
+        dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
+        dataSource.setMapping(dataSourceModelMapping);
+
+        return dataSource;
     }
 
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
-        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
+        attributes
+                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));

@@ -109,7 +109,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     protected abstract IDBConnectionPlugin getDBConnectionPlugin();
 
     /**
-     * This method initialize the mapping used to request the database.<br>
+     * This method builds the request initialize the mapping used to request the database.<br>
      *
      * @param pTable
      *            the table used to requests the database
@@ -216,154 +216,17 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return findAll(pTenant, pPageable, null);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getTables()
-     */
-    @Override
-    public Map<String, Table> getTables() {
-        Map<String, Table> tables = new HashMap<>();
-        ResultSet rs = null;
-
-        // Get a connection
-        Connection conn = getDBConnectionPlugin().getConnection();
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-
-            rs = metaData.getTables(conn.getCatalog(), null, null, new String[] { METADATA_TABLE });
-
-            while (rs.next()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[TABLE] --> " + logString(rs, TABLE_NAME) + "] " + logString(rs, TABLE_CAT)
-                            + logString(rs, TABLE_SCHEM) + logString(rs, TABLE_TYPE) + logString(rs, REMARKS));
-                }
-                Table table = new Table(rs.getString(TABLE_NAME), rs.getString(TABLE_CAT), rs.getString(TABLE_SCHEM));
-                table.setPkColumn(getPrimaryKey(metaData, rs.getString(TABLE_CAT), rs.getString(TABLE_SCHEM),
-                                                rs.getString(TABLE_NAME)));
-                tables.put(table.getName(), table);
-            }
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                conn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        }
-
-        return tables;
-    }
-
     private String getPrimaryKey(DatabaseMetaData pMetaData, String pCatalog, String pSchema, String pTable)
             throws SQLException {
         String column = "";
         ResultSet rs = pMetaData.getPrimaryKeys(pCatalog, pSchema, pTable);
         if (rs.next()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("[PKEY] --> " + rs.getString(COLUMN_NAME) + ", " + rs.getString("PK_NAME"));
-            }
             column = rs.getString(COLUMN_NAME);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[PKEY] --> " + column + ", " + rs.getString("PK_NAME"));
+            }
         }
         return column;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin#getColumns(java.lang.
-     * String)
-     */
-    @Override
-    public Map<String, Column> getColumns(Table pTable) {
-        Map<String, Column> cols = new HashMap<>();
-        ResultSet rs = null;
-
-        // Get a connection
-        Connection conn = getDBConnectionPlugin().getConnection();
-
-        if (conn == null) {
-            LOG.error(DATABASE_ACCESS_ERROR);
-            return null;
-        }
-
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-
-            rs = metaData.getColumns(null, null, pTable.getName(), null);
-
-            while (rs.next()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
-                            + logInt(rs, "DATA_TYPE"));
-                }
-
-                Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
-                column.setPrimaryKey((pTable.getPkColumn() != null) && !"".equals(pTable.getPkColumn())
-                        && pTable.getPkColumn().equals(column.getName()));
-                cols.put(column.getName(), column);
-            }
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                conn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        }
-        return cols;
-    }
-
-    @Override
-    public Map<String, Index> getIndexes(Table pTable) {
-        Map<String, Index> indexes = new HashMap<>();
-        ResultSet rs = null;
-
-        // Get a connection
-        Connection conn = getDBConnectionPlugin().getConnection();
-
-        if (conn == null) {
-            LOG.error(DATABASE_ACCESS_ERROR);
-            return null;
-        }
-
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-
-            rs = metaData.getIndexInfo(null, null, pTable.getName(), true, false);
-
-            while (rs.next()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[INDEX] --> " + logString(rs, TABLE_NAME) + logString(rs, INDEX_NAME)
-                            + logString(rs, COLUMN_NAME) + logBoolean(rs, NON_UNIQUE) + logString(rs, ASC_OR_DESC));
-                }
-                Index index = new Index(rs.getString(INDEX_NAME), rs.getString(COLUMN_NAME), rs.getBoolean(NON_UNIQUE),
-                        rs.getString(INDEX_NAME));
-                indexes.put(index.getName(), index);
-            }
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                conn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        }
-
-        return indexes;
     }
 
     private String logBoolean(ResultSet pRs, String pParamName) throws SQLException {
@@ -388,12 +251,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     @Override
     public String getConfiguredTable() {
         return tableDescription.getName();
-    }
-
-    // TODO CMZ utilité ?
-    @Override
-    public List<String> getConfiguredColumns() {
-        return columns;
     }
 
 }

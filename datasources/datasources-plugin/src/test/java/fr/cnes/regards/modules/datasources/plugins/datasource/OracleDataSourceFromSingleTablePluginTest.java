@@ -22,6 +22,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -50,7 +51,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  *
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
 @Ignore
 public class OracleDataSourceFromSingleTablePluginTest {
@@ -123,25 +124,25 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     }
 
-    @Test
-    public void getTables() {
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-    }
-
-    @Test
-    public void getColumnsAndIndices() {
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-
-        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(columns);
-
-        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(indices);
-    }
+//    @Test
+//    public void getTables() {
+//        Map<String, Table> tables = plgDBDataSource.getTables();
+//        Assert.assertNotNull(tables);
+//        Assert.assertTrue(!tables.isEmpty());
+//    }
+//
+//    @Test
+//    public void getColumnsAndIndices() {
+//        Map<String, Table> tables = plgDBDataSource.getTables();
+//        Assert.assertNotNull(tables);
+//        Assert.assertTrue(!tables.isEmpty());
+//
+//        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
+//        Assert.assertNotNull(columns);
+//
+//        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
+//        Assert.assertNotNull(indices);
+//    }
 
     @Test
     public void getDataSourceIntrospection() {

@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import org.springframework.stereotype.Service;
@@ -15,7 +16,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
@@ -143,4 +146,17 @@ public class DBConnectionService implements IDBConnectionService {
         }
         return pPlgParam;
     }
+
+    @Override
+    public Map<String, Table> getTables(Long pId) throws ModuleException {
+        IDBConnectionPlugin plg = service.getPlugin(pId);
+        return plg.getTables();
+    }
+
+    @Override
+    public Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException {
+        IDBConnectionPlugin plg = service.getPlugin(pId);
+        return plg.getColumns(pTable);
+    }
+
 }

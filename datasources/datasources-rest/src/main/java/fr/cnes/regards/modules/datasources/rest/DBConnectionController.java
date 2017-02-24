@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.rest;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -22,7 +23,9 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -158,25 +161,31 @@ public class DBConnectionController implements IResourceController<PluginConfigu
         return ResponseEntity.ok(dbConnectionService.testDBConnection(pConnectionId));
     }
 
+    @ResourceAccess(description = "Get the tables of the database")
+    @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables")
+    public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long pConnectionId) throws ModuleException {
+        Map<String, Table> tables = dbConnectionService.getTables(pConnectionId);
+        return ResponseEntity.ok(tables);
+    }
+
+    @ResourceAccess(description = "Get the columns of a specific table of the database")
+    @RequestMapping(method = RequestMethod.POST, value = "/{pConnectionId}/tables/{pTableName}/columns")
+    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable Long pConnectionId,
+            @PathVariable String pTableName, @RequestBody final Table pTable) throws ModuleException {
+        // Check the Table name
+        if (!pTableName.equals(pTable.getName())) {
+            throw new ModuleException(
+                    "The table name <" + pTableName + "> is incompatible with the name of the Table in the request.");
+        }
+
+        Map<String, Column> columns = dbConnectionService.getColumns(pConnectionId, pTable);
+
+        return ResponseEntity.ok(columns);
+    }
+
     @Override
     public Resource<PluginConfiguration> toResource(PluginConfiguration pElement, Object... pExtras) {
         final Resource<PluginConfiguration> resource = resourceService.toResource(pElement);
-        // resourceService.addLink(resource, this.getClass(), "getModel", LinkRels.SELF,
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
-        // MethodParamFactory.build(Long.class, pElement.getId()),
-        // MethodParamFactory.build(Model.class));
-        // resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
-        // MethodParamFactory.build(EntityType.class));
-        // // Import / Export
-        // resourceService.addLink(resource, this.getClass(), "exportModel", "export",
-        // MethodParamFactory.build(HttpServletRequest.class),
-        // MethodParamFactory.build(HttpServletResponse.class),
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "importModel", "import",
-        // MethodParamFactory.build(MultipartFile.class));
         return resource;
     }
 

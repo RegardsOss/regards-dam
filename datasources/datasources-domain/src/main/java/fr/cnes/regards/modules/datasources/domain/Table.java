@@ -29,7 +29,7 @@ public final class Table {
     /**
      * The column that is the primary key
      */
-    private String pkColumn;
+    private String pKey;
 
     /**
      * @param pName
@@ -84,12 +84,12 @@ public final class Table {
         this.name = pName;
     }
 
-    public String getPkColumn() {
-        return pkColumn;
+    public String getPKey() {
+        return pKey;
     }
 
-    public void setPkColumn(String pColumn) {
-        this.pkColumn = pColumn;
+    public void setPKey(String pKey) {
+        this.pKey = pKey;
     }
 
     public String getSchema() {
@@ -115,7 +115,7 @@ public final class Table {
     @Override
     public String toString() {
         return "[TABLE :" + name + "]" + " : " + toString("schema", schema) + " : " + toString("catalog", catalog)
-                + " : " + (pkColumn != null ? "pkKey=" + pkColumn : "");
+                + " : " + (pKey != null ? "pKey=" + pKey : "");
     }
 
 }

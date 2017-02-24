@@ -22,6 +22,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
@@ -254,6 +255,36 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", dbConnection, expectations,
                            "The DBConnection is not valid.", dbConnection.getPluginConfigurationId());
+    }
+
+    @Test
+    public void getTables() throws ModuleException {
+        DBConnection dbConnection = createADbConnection("Hello",
+                                                        "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
+        PluginConfiguration plgConf = service.createDBConnection(dbConnection);
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        performDefaultGet(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}/tables", expectations,
+                          "Could not get the tables.", plgConf.getId());
+    }
+
+    @Test
+    public void getColumns() throws ModuleException {
+        DBConnection dbConnection = createADbConnection("Hello",
+                                                        "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
+        PluginConfiguration plgConf = service.createDBConnection(dbConnection);
+        final String columnName = "t_test_plugin_data_source";
+        Table table = new Table(columnName);
+        table.setPKey("id");
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_STAR, Matchers.hasSize(7)));
+
+        performDefaultPost(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}/tables/{pTableName}/columns", table,
+                           expectations, "Could not get the columns.", plgConf.getId(), columnName);
     }
 
     private DBConnection createADbConnection(String pLabel, String pPluginClassName) {

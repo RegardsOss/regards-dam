@@ -60,6 +60,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
     private static final String TENANT = "PGDB_TENANT";
+    
+    private static final String HELLO = "Hello Toulouse";
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -85,6 +87,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+
+    private static int nbElements;
 
     /**
      * JPA Repository
@@ -121,11 +125,12 @@ public class PostgreDataSourceFromSingleTablePluginTest {
                 LocalDateTime.now().minusDays(5), false));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
+        nbElements = 3;
 
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         /*
          * Instantiate the SQL DataSource plugin
@@ -150,43 +155,33 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     }
 
-    @Test
-    public void getTables() {
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-    }
-
-    @Test
-    public void getColumnsAndIndices() {
-        Assert.assertEquals(3, repository.count());
-
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-
-        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(columns);
-        Assert.assertEquals(7, columns.size());
-
-        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(indices);
-        Assert.assertEquals(3, indices.size());
-    }
 
     @Test
     public void getDataSourceIntrospection() {
-        Assert.assertEquals(3, repository.count());
+        Assert.assertEquals(nbElements, repository.count());
 
         plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
+        
+        ll.getContent().get(0).getAttributes().forEach(attr -> {
+            if (attr.getName().equals("name")) {
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO));
+            }
+        });
 
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
+        
+        ll.getContent().get(0).getAttributes().forEach(attr -> {
+            if (attr.getName().equals("name")) {
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO+""));
+            }
+        });
+
     }
 
     @After
@@ -219,7 +214,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
-        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
+        attributes
+                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "-'||label as label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));

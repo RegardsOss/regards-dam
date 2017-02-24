@@ -19,6 +19,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceIntrospection;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -34,7 +35,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  */
 @Plugin(id = "postgresql-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
         description = "Connection to a PostgreSql database")
-public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
+public class DefaultPostgreConnectionPlugin extends AbstractDataSourceIntrospection implements IDBConnectionPlugin {
 
     /**
      * Class logger
@@ -144,6 +145,11 @@ public class DefaultPostgreConnectionPlugin implements IDBConnectionPlugin {
     @Override
     public String buildUrl() {
         return "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
+    }
+
+    @Override
+    protected IDBConnectionPlugin getDBConnectionPlugin() {
+        return this;
     }
 
 }

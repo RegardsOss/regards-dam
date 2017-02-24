@@ -199,24 +199,6 @@ public class DataSourceService implements IDataSourceService {
         service.deletePluginConfiguration(pId);
     }
 
-    @Override
-    public Map<String, Table> getTables(Long pId) throws ModuleException {
-        IDataSourceFromSingleTablePlugin plg = service.getPlugin(pId);
-        return plg.getTables();
-    }
-
-    @Override
-    public Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException {
-        IDataSourceFromSingleTablePlugin plg = service.getPlugin(pId);
-        return plg.getColumns(pTable);
-    }
-
-    @Override
-    public Map<String, Index> getIndexes(Long pId, Table pTable) throws ModuleException {
-        IDataSourceFromSingleTablePlugin plg = service.getPlugin(pId);
-        return plg.getIndexes(pTable);
-    }
-
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DataSource} attribute
      * 

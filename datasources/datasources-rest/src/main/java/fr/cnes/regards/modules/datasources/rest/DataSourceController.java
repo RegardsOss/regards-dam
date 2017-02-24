@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.datasources.rest;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -23,10 +22,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.domain.Index;
-import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
@@ -148,62 +144,9 @@ public class DataSourceController implements IResourceController<PluginConfigura
         return ResponseEntity.noContent().build();
     }
 
-    @ResourceAccess(description = "Get the tables of the data source")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}/tables")
-    public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long pPluginConfId) throws ModuleException {
-        Map<String, Table> tables = dataSourceService.getTables(pPluginConfId);
-        return ResponseEntity.ok(tables);
-    }
-
-    @ResourceAccess(description = "Get the columns of a specific table of the data source")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}/tables/{pTableName}/columns")
-    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable Long pPluginConfId,
-            @PathVariable String pTableName, @RequestBody final Table pTable) throws ModuleException {
-        // Check the Table name
-        if (!pTableName.equals(pTable.getName())) {
-            throw new ModuleException(
-                    "The table name <" + pTableName + "> is incompatible with the name of the Table in the request.");
-        }
-
-        Map<String, Column> columns = dataSourceService.getColumns(pPluginConfId, pTable);
-
-        return ResponseEntity.ok(columns);
-    }
-
-    @ResourceAccess(description = "Get the indexes of a specific table of the data source")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}/tables/{pTableName}/indexes")
-    public ResponseEntity<Map<String, Index>> getIndexes(@PathVariable Long pPluginConfId,
-            @PathVariable String pTableName, @RequestBody final Table pTable) throws ModuleException {
-        // Check the Table name
-        if (!pTableName.equals(pTable.getName())) {
-            throw new ModuleException(
-                    "The table name <" + pTableName + "> is incompatible with the name of the Table in the request.");
-        }
-
-        Map<String, Index> indexes = dataSourceService.getIndexes(pPluginConfId, pTable);
-
-        return ResponseEntity.ok(indexes);
-    }
-
     @Override
     public Resource<PluginConfiguration> toResource(PluginConfiguration pElement, Object... pExtras) {
         final Resource<PluginConfiguration> resource = resourceService.toResource(pElement);
-        // resourceService.addLink(resource, this.getClass(), "getModel", LinkRels.SELF,
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
-        // MethodParamFactory.build(Long.class, pElement.getId()),
-        // MethodParamFactory.build(Model.class));
-        // resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
-        // MethodParamFactory.build(EntityType.class));
-        // // Import / Export
-        // resourceService.addLink(resource, this.getClass(), "exportModel", "export",
-        // MethodParamFactory.build(HttpServletRequest.class),
-        // MethodParamFactory.build(HttpServletResponse.class),
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "importModel", "import",
-        // MethodParamFactory.build(MultipartFile.class));
         return resource;
     }
 

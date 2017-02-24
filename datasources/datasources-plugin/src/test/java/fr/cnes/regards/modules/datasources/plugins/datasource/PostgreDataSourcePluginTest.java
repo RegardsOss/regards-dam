@@ -57,6 +57,8 @@ public class PostgreDataSourcePluginTest {
 
     private static final String TENANT = "PG_TENANT";
 
+    private static final String HELLO = "Hello Toulouse";
+
     /**
      * JPA Repository
      */
@@ -84,6 +86,8 @@ public class PostgreDataSourcePluginTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
+    private static int nbElements;
+
     /**
      * Populate the datasource as a legacy catalog
      *
@@ -104,6 +108,7 @@ public class PostgreDataSourcePluginTest {
                 LocalDateTime.now().minusDays(5), false));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
+        nbElements = 3;
 
         /*
          * Initialize the DataSourceAttributeMapping
@@ -120,7 +125,8 @@ public class PostgreDataSourcePluginTest {
                                                      getPostGreSqlConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     // TODO CMZ non il doit y avoir qu'à partir du from
-                    .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "select * from T_TEST_PLUGIN_DATA_SOURCE")
+                    .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE,
+                                  "select id,altitude,date,latitude,longitude,update,'Hello Toulouse-'||label as label from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -137,11 +143,17 @@ public class PostgreDataSourcePluginTest {
 
     @Test
     public void firstTest() {
-        Assert.assertEquals(3, repository.count());
+        Assert.assertEquals(nbElements, repository.count());
 
         Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10));
         Assert.assertNotNull(ll);
-        Assert.assertEquals(3, ll.getContent().size());
+        Assert.assertEquals(nbElements, ll.getContent().size());
+
+        ll.getContent().get(0).getAttributes().forEach(attr -> {
+            if (attr.getName().equals("name")) {
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO));
+            }
+        });
     }
 
     @After
@@ -174,8 +186,10 @@ public class PostgreDataSourcePluginTest {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
-        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
-        attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
+        attributes
+                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "-'||label as label"));
+        attributes
+                .add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));

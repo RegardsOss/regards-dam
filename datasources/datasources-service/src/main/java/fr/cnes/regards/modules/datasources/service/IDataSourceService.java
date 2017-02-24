@@ -77,10 +77,4 @@ public interface IDataSourceService {
      */
     void deleteDataSouce(Long pId) throws ModuleException;
 
-    Map<String, Table> getTables(Long pId) throws ModuleException;
-
-    Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException;
-
-    Map<String, Index> getIndexes(Long pId, Table pTable) throws ModuleException;
-
 }

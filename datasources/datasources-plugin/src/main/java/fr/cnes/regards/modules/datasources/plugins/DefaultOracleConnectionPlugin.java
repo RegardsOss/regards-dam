@@ -19,6 +19,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceIntrospection;
 
 /**
  * Class DefaultESConnectionPlugin
@@ -34,7 +35,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  */
 @Plugin(id = "oracle-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
         description = "Connection to a Sql database")
-public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
+public class DefaultOracleConnectionPlugin extends AbstractDataSourceIntrospection implements IDBConnectionPlugin {
 
     /**
      * Class logger
@@ -118,33 +119,20 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     @Override
     public boolean testConnection() {
         boolean isConnected = false;
-        Statement statement = null;
-        ResultSet rs = null;
-        Connection conn = null;
         try {
-            conn = cpds.getConnection();
-            statement = conn.createStatement();
-
-            // Execute a simple SQL request
-            rs = statement.executeQuery("select 1 from DUAL");
-
-            rs.close();
-            isConnected = true;
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
+            try (Connection conn = cpds.getConnection()) {
+                try (Statement statement = conn.createStatement()) {
+                    // Execute a simple SQL request
+                    try (ResultSet rs = statement.executeQuery("select 1 from DUAL")) {
+                    }
                 }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
             }
-        }
+            isConnected = true;
+        } catch (
 
+        SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
         return isConnected;
     }
 
@@ -161,6 +149,11 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     @Override
     public String buildUrl() {
         return "jdbc:oracle:thin:@//" + dbHost + ":" + dbPort + "/" + dbName;
+    }
+
+    @Override
+    protected IDBConnectionPlugin getDBConnectionPlugin() {
+        return this;
     }
 
 }

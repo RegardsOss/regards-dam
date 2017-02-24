@@ -31,14 +31,14 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  * Class PostgreDataSourceFromSingleTablePlugin
  *
- * A {@link Plugin} to discover the tables, colums and index of a SQL Database.<br>
+ * A {@link Plugin} to discover the tables, columns and indexes to a PostgreSQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
 @Plugin(id = "postgresql-datasource-single-table", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Allows introspection to a PostgreSql database")
+        description = "Allows introspection and  data extraction to a PostgreSql database")
 public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin
         implements IDataSourceFromSingleTablePlugin {
 
@@ -52,9 +52,15 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
      */
     @PluginParameter(name = CONNECTION_PARAM)
     private IDBConnectionPlugin dbConnection;
+    
+    /**
+     * The table name used to request the database
+     */
+    @PluginParameter(name = TABLE_PARAM)
+    private String tableName;
 
     /**
-     * The {@link Model} to used by the {@link Plugin} in JSon format.
+     * The {@link Model} to used by the {@link Plugin} in JSon format
      */
     @PluginParameter(name = MODEL_PARAM)
     private String modelJSon;
@@ -73,14 +79,16 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
                 + "model=" + this.modelJSon);
 
         // Converts the modelJson to a list of DataSourceAttributeMapping
-        loadModel();
+        initDataSourceMapping();
+        
+        setMapping("table to be defined", this.getDataSourceModelMapping());
     }
 
     /**
      * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
      * representation to a {@link List} of {@link DataSourceAttributeMapping}.
      */
-    private void loadModel() {
+    private void initDataSourceMapping() {
         ModelMappingAdapter adapter = new ModelMappingAdapter();
         try {
             dataSourceMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
@@ -89,45 +97,23 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator()
-     */
     @Override
     protected SqlGenerator buildSqlGenerator() {
         return new PostgreSqlGenerator();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.
-     * String, java.lang.String)
-     */
     @Override
     protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
         return new PostgreSqlGenerator(pAllColumnsClause, pOrderBy);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#getDBConnectionPlugin()
-     */
     @Override
     protected IDBConnectionPlugin getDBConnectionPlugin() {
         return dbConnection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
-     */
     @Override
-    protected DataSourceModelMapping getModelMapping() {
+    protected DataSourceModelMapping getDataSourceModelMapping() {
         return dataSourceMapping;
     }
 

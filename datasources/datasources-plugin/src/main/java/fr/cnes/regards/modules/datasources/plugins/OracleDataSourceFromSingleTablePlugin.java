@@ -127,7 +127,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
      * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
      */
     @Override
-    protected DataSourceModelMapping getModelMapping() {
+    protected DataSourceModelMapping getDataSourceModelMapping() {
         return dataSourceMapping;
     }
 

@@ -25,7 +25,6 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataObjectMapping;
@@ -34,10 +33,10 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class DefaultESConnectionPlugin
+ * Class PostgreDataSourcePlugin
  *
- * A default {@link Plugin} of type {@link IConnectionPlugin}.<br>
- * Allows to search in a {@link DataSource}.
+ * A {@link Plugin} to extract data from a PostgreSQL Database.<br>
+ * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
@@ -138,7 +137,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     }
 
     @Override
-    protected DataSourceModelMapping getModelMapping() {
+    protected DataSourceModelMapping getDataSourceModelMapping() {
         return dataSourceMapping;
     }
 
