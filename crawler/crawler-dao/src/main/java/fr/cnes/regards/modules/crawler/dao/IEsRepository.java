@@ -35,7 +35,7 @@ public interface IEsRepository {
 
     /**
      * Find all indices
-     * @return all indices
+     * @return all indices <b>lowercase</b>
      */
     String[] findIndices();
 
