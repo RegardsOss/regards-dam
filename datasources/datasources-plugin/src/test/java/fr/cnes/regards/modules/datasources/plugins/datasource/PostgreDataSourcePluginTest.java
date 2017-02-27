@@ -57,7 +57,7 @@ public class PostgreDataSourcePluginTest {
 
     private static final String TENANT = "PG_TENANT";
 
-    private static final String HELLO = "Hello Toulouse";
+    private static final String HELLO = "Hello ";
 
     /**
      * JPA Repository
@@ -102,7 +102,7 @@ public class PostgreDataSourcePluginTest {
          * Add data to the data source
          */
         repository.deleteAll();
-        repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
+        repository.save(new DataSourceEntity("Bordeaux", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
                 LocalDateTime.now(), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
                 LocalDateTime.now().minusDays(5), false));
@@ -124,9 +124,7 @@ public class PostgreDataSourcePluginTest {
                     .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
                                                      getPostGreSqlConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
-                    // TODO CMZ non il doit y avoir qu'à partir du from
-                    .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE,
-                                  "select id,altitude,date,latitude,longitude,update,'Hello Toulouse-'||label as label from T_TEST_PLUGIN_DATA_SOURCE")
+                    .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -187,7 +185,7 @@ public class PostgreDataSourcePluginTest {
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
         attributes
-                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "-'||label as label"));
+                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "- '||label as label"));
         attributes
                 .add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));

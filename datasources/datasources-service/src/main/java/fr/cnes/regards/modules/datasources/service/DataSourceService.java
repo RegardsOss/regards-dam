@@ -146,21 +146,36 @@ public class DataSourceService implements IDataSourceService {
     }
 
     /**
+     * Crate a {@link PluginParametersFactory} with the parameters connection et model.
+     * 
+     * @param pDataSource
+     *            the {@link DataSource} to used
+     * @return the {@link PluginParametersFactory} created
+     * @throws ModuleException
+     *             an error occurred when converts the mapping to a JSON String
+     */
+    private PluginParametersFactory buildParametersCommon(DataSource pDataSource) throws ModuleException {
+        PluginParametersFactory factory = PluginParametersFactory.build();
+        factory.addParameterPluginConfiguration(IDataSourcePlugin.CONNECTION_PARAM,
+                                                dbConnectionService.getDBConnection(pDataSource
+                                                        .getPluginConfigurationConnectionId()))
+                .addParameter(IDataSourcePlugin.MODEL_PARAM, adapter.toJson(pDataSource.getMapping()));
+    
+        return factory;
+    }
+
+    /**
      * Create a {@link List} of {@link PluginParameter} for a pluin's type type {@link IDataSourceFromSingleTablePlugin}
      * 
      * @param pDataSource
      *            the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
      * @throws ModuleException
+     *             an error occurred when converts the mapping to a JSON String
      */
     private List<PluginParameter> buildParametersSingleTable(DataSource pDataSource) throws ModuleException {
-        PluginParametersFactory factory = PluginParametersFactory.build();
-        factory.addParameterPluginConfiguration(IDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                dbConnectionService.getDBConnection(pDataSource
-                                                        .getPluginConfigurationConnectionId()))
-                .addParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM, pDataSource.getTableName())
-                .addParameter(IDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(pDataSource.getMapping()));
-        return factory.getParameters();
+        return buildParametersCommon(pDataSource)
+                .addParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM, pDataSource.getTableName()).getParameters();
     }
 
     /**
@@ -170,28 +185,22 @@ public class DataSourceService implements IDataSourceService {
      *            the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
      * @throws ModuleException
+     *             an error occurred when converts the mapping to a JSON String
      */
     private List<PluginParameter> buildParametersFromComplexRequest(DataSource pDataSource) throws ModuleException {
-        PluginParametersFactory factory = PluginParametersFactory.build();
-        factory.addParameterPluginConfiguration(IDataSourcePlugin.CONNECTION_PARAM,
-                                                dbConnectionService.getDBConnection(pDataSource
-                                                        .getPluginConfigurationConnectionId()))
-                .addParameter(IDataSourcePlugin.FROM_CLAUSE, pDataSource.getFromClause())
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, adapter.toJson(pDataSource.getMapping()));
-
-        return factory.getParameters();
+        return buildParametersCommon(pDataSource)
+                .addParameter(IDataSourcePlugin.FROM_CLAUSE, pDataSource.getFromClause()).getParameters();
     }
 
     @Override
     public DataSource getDataSource(Long pId) throws EntityNotFoundException {
-
         try {
             return getDataSourceFromPluginConfiguration(service.getPluginConfiguration(pId));
         } catch (ModuleException e) {
             LOGGER.error("No plugin configuration found for id:" + pId, e);
             throw new EntityNotFoundException(e.getMessage(), PluginConfiguration.class);
         } catch (IOException e) {
-            throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasourceobject",
+            throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasource object",
                     PluginConfiguration.class);
         }
     }
@@ -210,7 +219,7 @@ public class DataSourceService implements IDataSourceService {
         try {
             return getDataSourceFromPluginConfiguration(service.updatePluginConfiguration(plgConf));
         } catch (IOException e) {
-            LOGGER.error("Unable to converts a PluginConfiguration to a Datasourceobject");
+            LOGGER.error("Unable to converts a PluginConfiguration to a Datasource object");
             throw new ModuleException(e);
         }
     }

@@ -84,7 +84,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
-    private DataSourceModelMapping dataSourceModelMapping;
+    private DataSourceModelMapping modelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
@@ -140,7 +140,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getPostgreConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -159,8 +160,6 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     @Test
     public void getDataSourceIntrospection() {
         Assert.assertEquals(nbElements, repository.count());
-
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
@@ -222,7 +221,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
+        modelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

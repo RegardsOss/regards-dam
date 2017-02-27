@@ -4,6 +4,8 @@
 
 package fr.cnes.regards.modules.datasources.utils;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,9 +28,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
+import com.google.gson.stream.JsonReader;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
@@ -53,12 +58,16 @@ public abstract class AbstractDataObjectMapping {
     /**
      * The string used to add the pagination information in PostGreSql
      */
-    private static final String LIMIT_CLAUSE = " LIMIT %d OFFSET %d";
+    private static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
     /**
      * The PL/SQL key word AS
      */
     private static final String AS = "as";
+
+    private static final String COMMA = ",";
+
+    private static final String SELECT = "SELECT ";
 
     /**
      * A pattern used to set a date in the statement
@@ -81,11 +90,26 @@ public abstract class AbstractDataObjectMapping {
     private int nbItems = RESET_COUNT;
 
     /**
-     * The mapping between the attributes in the {@link Model} and the data source
-     *
-     * @return the mapping
+     * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
+     * {@link Table}.
      */
-    protected abstract DataSourceModelMapping getDataSourceModelMapping();
+    protected List<String> columns;
+
+    /**
+     * The column name used in the ORDER BY clause
+     */
+    protected String orderByColumn = "";
+
+    /**
+     * The mapping between the attributes in the {@link Model} and the data source
+     */
+    protected DataSourceModelMapping dataSourceMapping;
+
+    // protected SqlGenerator sqlGenerator;
+    //
+    // protected abstract SqlGenerator buildSqlGenerator();
+    //
+    // protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy);
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
@@ -112,8 +136,17 @@ public abstract class AbstractDataObjectMapping {
 
         try (Statement statement = pConn.createStatement()) {
 
+            String requestWithDate = applyDateStatement(pRequestSql, pDate);
+
+            String requestWithLimit = buildLimitPart(requestWithDate, pPageable);
+
+            String sqlRequestWithPagedInformation = SELECT + buildColumnClause(columns.toArray(new String[0]))
+                    + requestWithLimit;
+
             // Execute SQL request
-            String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(pRequestSql, pDate), pPageable);
+            // String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(SELECT
+            // +buildColumnClause(columns
+            // .toArray(new String[0])) + " " + pRequestSql, pDate), pPageable);
 
             try (ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation)) {
                 while (rs.next()) {
@@ -214,7 +247,7 @@ public abstract class AbstractDataObjectMapping {
         /**
          * Loop the attributes in the mapping
          */
-        for (DataSourceAttributeMapping attrMapping : getDataSourceModelMapping().getAttributesMapping()) {
+        for (DataSourceAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
             final boolean asNameSpace = attrMapping.getNameSpace() != null;
             try {
@@ -360,6 +393,14 @@ public abstract class AbstractDataObjectMapping {
                 UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
     }
 
+    protected String buildColumnClause(String... pColumns) {
+        StringBuilder clauseStr = new StringBuilder();
+        for (String col : pColumns) {
+            clauseStr.append(col + COMMA);
+        }
+        return clauseStr.substring(0, clauseStr.length() - 1) + " ";
+    }
+
     /**
      * Get {@link DateAttribute}.
      *
@@ -388,7 +429,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Add to the SQL request the part to fetch only a portion of the results.
-     *  
+     * 
      *
      * @param pRequest
      *            the SQL request
@@ -403,7 +444,7 @@ public abstract class AbstractDataObjectMapping {
         }
         StringBuilder str = new StringBuilder(pRequest);
         final int offset = pPage.getPageNumber() * pPage.getPageSize();
-        final String limit = String.format(LIMIT_CLAUSE, pPage.getPageSize(), offset);
+        final String limit = String.format(LIMIT_CLAUSE, orderByColumn, pPage.getPageSize(), offset);
         str.append(limit);
 
         return str.toString();
@@ -423,4 +464,35 @@ public abstract class AbstractDataObjectMapping {
     protected void reset() {
         nbItems = RESET_COUNT;
     }
+
+    private void extractColumnsFromMapping() {
+        if (columns == null) {
+            columns = new ArrayList<>();
+        }
+
+        dataSourceMapping.getAttributesMapping().forEach(d -> {
+            columns.add(d.getNameDS());
+            if (d.isPrimaryKey()) {
+                orderByColumn = d.getNameDS();
+            }
+        });
+    }
+
+    /**
+     * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
+     * representation to a {@link List} of {@link DataSourceAttributeMapping}.
+     * 
+     * @param pModelJson
+     */
+    protected void initDataSourceMapping(String pModelJson) {
+        ModelMappingAdapter adapter = new ModelMappingAdapter();
+        try {
+            dataSourceMapping = adapter.read(new JsonReader(new StringReader(pModelJson)));
+        } catch (IOException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
+        extractColumnsFromMapping();
+    }
+
 }

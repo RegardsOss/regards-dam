@@ -4,12 +4,9 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -18,17 +15,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.google.gson.stream.JsonReader;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataObjectMapping;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -69,11 +61,6 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     private String modelJSon;
 
     /**
-     * The mapping between the attributes in the {@link Model} and the data source
-     */
-    private DataSourceModelMapping dataSourceMapping;
-
-    /**
      * Init method
      */
     @PluginInit
@@ -85,20 +72,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
                 + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
 
         // Converts the modelJson to a list of DataSourceAttributeMapping
-        loadModel();
-    }
-
-    /**
-     * Converts the mapping between the attribute of the datasource and the attributes of the model from a JSon
-     * representation to a {@link List} of {@link DataSourceAttributeMapping}.
-     */
-    private void loadModel() {
-        ModelMappingAdapter adapter = new ModelMappingAdapter();
-        try {
-            dataSourceMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
-        } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
-        }
+        initDataSourceMapping(this.modelJSon);
     }
 
     @Override
@@ -134,11 +108,6 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
         return findAll(pTenant, pPageable, null);
-    }
-
-    @Override
-    protected DataSourceModelMapping getDataSourceModelMapping() {
-        return dataSourceMapping;
     }
 
 }
