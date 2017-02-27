@@ -34,8 +34,6 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
@@ -72,12 +70,6 @@ public class DatasetServiceTest {
 
     private Dataset dataSet2;
 
-    private Dataset dataSet22;
-
-    private Dataset dataSet3;
-
-    private Dataset dataSet4;
-
     private UniformResourceName dataSet2URN;
 
     private IDatasetRepository dataSetRepositoryMocked;
@@ -91,6 +83,8 @@ public class DatasetServiceTest {
     private IModelAttributeService pModelAttributeService;
 
     private IAttributeModelService pAttributeModelService;
+
+    private ArrayList<Long> pluginConfigurationIds;
 
     /**
      * initialize the repo before each test
@@ -124,18 +118,7 @@ public class DatasetServiceTest {
         dataSet2.setModelOfData(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
-        dataSet22 = new Dataset(pModel2, "PROJECT", "dataSet22");
-        dataSet22.setLicence("licence");
-        setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet22.setModelOfData(modelOfObjects);
-        dataSet22.setSubsettingClause(getInvalidClause());
-        dataSet22.setId(22L);
-        dataSet3 = new Dataset(pModel2, "PROJECT", "dataSet3");
-        dataSet3.setLicence("licence");
-        dataSet3.setId(3L);
-        dataSet4 = new Dataset(pModel2, "PROJECT", "dataSet4");
-        dataSet4.setLicence("licence");
-        dataSet4.setId(4L);
+
         dataSet2URN = dataSet2.getIpId();
         Set<String> dataSet1Tags = dataSet1.getTags();
         dataSet1Tags.add(dataSet2URN.toString());
@@ -146,8 +129,6 @@ public class DatasetServiceTest {
         // create a mock repository
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
         Mockito.when(dataSetRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet22.getId())).thenReturn(dataSet22);
-        Mockito.when(dataSetRepositoryMocked.findOne(dataSet3.getId())).thenReturn(dataSet3);
 
         final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(dataSet1);
@@ -155,8 +136,6 @@ public class DatasetServiceTest {
                 .thenReturn(findByTagsValueCol2IpId);
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet1.getId())).thenReturn(dataSet1);
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet22.getId())).thenReturn(dataSet22);
-        Mockito.when(entitiesRepositoryMocked.findOne(dataSet3.getId())).thenReturn(dataSet3);
 
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
@@ -244,33 +223,6 @@ public class DatasetServiceTest {
 
         // All theses criterions (AND)
         ICriterion rootCrit = ICriterion.and(containsCrit, endsWithCrit, equalsCrit, booleanCrit);
-        return rootCrit;
-    }
-
-    private ICriterion getInvalidClause() throws ModuleException {
-        // textAtt contains "testContains"
-        ICriterion containsCrit = ICriterion.contains("attributes." + attString.getName(), "testContains");
-        // textAtt ends with "testEndsWith"
-        ICriterion endsWithCrit = ICriterion
-                .endsWith("attributes." + GEO_CRS.getFragment().getName() + "." + GEO_CRS.getName(), "testEndsWith");
-        // textAtt strictly equals "testEquals"
-        ICriterion equalsCrit = ICriterion
-                .equals("attributes." + Contact_Phone.getFragment().getName() + "." + Contact_Phone.getName(),
-                        "testEquals");
-
-        ICriterion booleanCrit = new BooleanMatchCriterion("attributes." + attBoolean.getName(), true);
-
-        AttributeModel attModel = AttributeModelBuilder.build("invalid", AttributeType.BOOLEAN).get();
-        attModel.setId(22L);
-        Mockito.when(pAttributeModelService.findByNameAndFragmentName(attModel.getName(), null)).thenReturn(attModel);
-        ModelAttribute modelAtt = new ModelAttribute(attModel, pModel2);
-        modelAtt.setId(22L);
-        // attribute exists but not of the right model
-        Mockito.when(pModelAttributeService.getModelAttribute(modelOfObjects.getId(), attModel.getId()))
-                .thenReturn(null);
-        ICriterion invalidBoolCrit = new BooleanMatchCriterion("attributes." + attModel.getName(), false);
-        // All theses criterions (AND)
-        ICriterion rootCrit = ICriterion.and(containsCrit, endsWithCrit, equalsCrit, booleanCrit, invalidBoolCrit);
         return rootCrit;
     }
 
