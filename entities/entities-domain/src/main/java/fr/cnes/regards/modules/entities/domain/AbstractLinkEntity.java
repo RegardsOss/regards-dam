@@ -18,6 +18,9 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractLinkEntity extends AbstractEntity {
 
+    /**
+     * Description file
+     */
     @Embedded
     private DescriptionFile descriptionFile;
 

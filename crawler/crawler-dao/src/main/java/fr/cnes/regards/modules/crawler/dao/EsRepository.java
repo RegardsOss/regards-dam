@@ -45,7 +45,6 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -73,7 +72,7 @@ import fr.cnes.regards.modules.crawler.domain.facet.StringFacet;
  * Elasticsearch repository implementation
  */
 @Repository
-@PropertySource("classpath:es.properties")
+//@PropertySource("classpath:es.properties")
 public class EsRepository implements IEsRepository {
 
     /**
@@ -172,7 +171,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean delete(String pIndex, String pType, String pId) {
         final DeleteResponse response = client.prepareDelete(pIndex.toLowerCase(), pType, pId).get();
-        return (response.getResult() == Result.DELETED);
+        return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
     }
 
     @Override

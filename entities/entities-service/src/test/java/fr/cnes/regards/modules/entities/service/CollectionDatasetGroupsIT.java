@@ -154,7 +154,6 @@ public class CollectionDatasetGroupsIT {
 
     @Requirement("REGARDS_DSL_DAM_COL_310")
     @Test
-    // @Commit FIXME
     public void testCollectionsFirst() throws ModuleException, IOException {
         buildData1();
 
