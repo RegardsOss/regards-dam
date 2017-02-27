@@ -141,8 +141,8 @@ public class EsRepositoryTest {
         // Delete
         Assert.assertTrue(repository.delete("items", "item", "1"));
         Assert.assertTrue(repository.delete("items", "item", "2"));
-        Assert.assertFalse(repository.delete("items", "item", "4"));
-        Assert.assertFalse(repository.delete("items", "item", "1"));
+        Assert.assertTrue(repository.delete("items", "item", "4"));
+        Assert.assertTrue(repository.delete("items", "item", "1"));
 
     }
 
@@ -380,10 +380,9 @@ public class EsRepositoryTest {
                 if (other.id != null) {
                     return false;
                 }
-            } else
-                if (!id.equals(other.id)) {
-                    return false;
-                }
+            } else if (!id.equals(other.id)) {
+                return false;
+            }
             return true;
         }
 

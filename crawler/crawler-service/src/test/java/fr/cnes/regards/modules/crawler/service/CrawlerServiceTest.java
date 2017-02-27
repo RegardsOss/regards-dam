@@ -118,12 +118,6 @@ public class CrawlerServiceTest {
     public void tearDown() throws Exception {
     }
 
-    @Test
-    public void testCrawl() throws InterruptedException {
-        System.out.println("Test crawl");
-        Thread.sleep(30000);
-    }
-
     @Ignore
     @Test
     public void testSuckUp() {
