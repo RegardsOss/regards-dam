@@ -222,7 +222,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
@@ -27,15 +28,17 @@ public interface IDataSourceService {
 
     /**
      *
-     * Get all the {@link PluginConfiguration} for the plugin types {@link IDataSourceFromSingleTablePlugin}.
+     * Get all the {@link DataSource}.</br>
+     * The {@link DataSource} is converts from a {@link PluginConfiguration} for the plugin types
+     * {@link IDataSourceFromSingleTablePlugin}.
      *
-     * @return all the {@link PluginConfiguration}.
+     * @return all the {@link DataSource}.
      */
-    List<PluginConfiguration> getAllDataSources();
+    List<DataSource> getAllDataSources();
 
     /**
      *
-     * Create a {@link PluginConfiguration} for the plugin types {@link IDataSourceFromSingleTablePlugin}.
+     * Create a {@link PluginConfiguration} for the plugin types {@link IDataSourceFromSingleTablePlugin}.</br>
      *
      * @param pDataSource
      *            the {@link DataSource} to the database
@@ -43,10 +46,10 @@ public interface IDataSourceService {
      * @throws ModuleException
      *             throw if an error occurs
      */
-    PluginConfiguration createDataSource(DataSource pDataSource) throws ModuleException;
+    DataSource createDataSource(DataSource pDataSource) throws ModuleException;
 
     /**
-     * Get the {@link PluginConfiguration}.
+     * Get the {@link DataSource}.
      *
      * @param pId
      *            a {@link PluginConfiguration} identifier
@@ -54,18 +57,18 @@ public interface IDataSourceService {
      * @throws EntityNotFoundException
      *             throw if an error occurs
      */
-    PluginConfiguration getDataSource(Long pId) throws EntityNotFoundException;
+    DataSource getDataSource(Long pId) throws EntityNotFoundException;
 
     /**
      * Update the {@link PluginConfiguration} linked to the {@link DataSource}
      *
      * @param pDataSource
      *            the {@link DataSource} to update
-     * @return the updated {@link PluginConfiguration}
+     * @return the updated {@link DataSource}
      * @throws ModuleException
      *             throw if an error occurs
      */
-    PluginConfiguration updateDataSource(DataSource pDataSource) throws ModuleException;
+    DataSource updateDataSource(DataSource pDataSource) throws ModuleException;
 
     /**
      * Delete a {@link DataSource}.

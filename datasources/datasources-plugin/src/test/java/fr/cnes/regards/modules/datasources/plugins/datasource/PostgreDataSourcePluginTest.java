@@ -195,7 +195,7 @@ public class PostgreDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        modelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        modelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

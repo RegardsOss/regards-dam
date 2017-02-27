@@ -212,7 +212,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

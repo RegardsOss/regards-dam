@@ -16,9 +16,9 @@ import fr.cnes.regards.modules.models.domain.Model;
 public class DataSourceModelMapping {
 
     /**
-     * The name of the model @see {@link Model}
+     * The {@link Model} identifier
      */
-    private String modelName;
+    private Long model;
 
     /**
      * The mapping between the attribute of the {@link Model} of the attributes of th data source
@@ -29,18 +29,18 @@ public class DataSourceModelMapping {
         super();
     }
 
-    public DataSourceModelMapping(String pModelName, List<DataSourceAttributeMapping> pAttributesMapping) {
+    public DataSourceModelMapping(Long pModelId, List<DataSourceAttributeMapping> pAttributesMapping) {
         super();
-        this.modelName = pModelName;
+        this.model = pModelId;
         this.attributesMapping = pAttributesMapping;
     }
 
-    public String getModelName() {
-        return modelName;
+    public Long getModel() {
+        return model;
     }
 
-    public void setModelName(String pModelName) {
-        this.modelName = pModelName;
+    public void setModel(Long pModel) {
+        this.model = pModel;
     }
 
     public List<DataSourceAttributeMapping> getAttributesMapping() {

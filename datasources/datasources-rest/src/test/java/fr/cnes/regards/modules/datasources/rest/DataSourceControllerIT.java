@@ -32,7 +32,9 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -56,6 +58,16 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
+
+    private static final String LABEL_DATA_SOURCE = "the label of the data source";
+
+    private final static String JSON_PATH_LABEL = "$.content.label";
+
+    private final static String JSON_PATH_MAPPING = "$.content.mapping";
+
+    private final static String JSON_PATH_FROM_CLAUSE = "$.content.fromClause";
+
+    private final static String JSON_PATH_TABLE_NAME = "$.content.tableName";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -81,6 +93,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping dataSourceModelMapping;
+
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
     protected Logger getLogger() {
@@ -109,7 +123,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE,
+                                                        Matchers.equalTo(dataSource.getFromClause())));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -126,7 +142,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath(JSON_PATH_TABLE_NAME, Matchers.equalTo(dataSource.getTableName())));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
@@ -143,18 +161,14 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
-        List<PluginConfiguration> pluginConfs = dataSourceService.getAllDataSources();
-        Assert.assertEquals(1, pluginConfs.size());
-
-        final Long pluginConfId = pluginConfs.get(0).getId();
-        dataSource.setPluginConfigurationId(pluginConfId);
+        List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
+        dataSource.setPluginConfigurationId(pls.get(0).getId());
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
         performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", dataSource, expectations,
-                          "DataSource shouldn't be created.", pluginConfId);
+                          "DataSource shouldn't be created.", dataSource.getPluginConfigurationId());
     }
 
     private DataSource createDataSourceWithFromClause() {
@@ -163,6 +177,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(dataSourceModelMapping);
+        dataSource.setLabel(LABEL_DATA_SOURCE);
 
         return dataSource;
     }
@@ -173,6 +188,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(dataSourceModelMapping);
+        dataSource.setLabel(LABEL_DATA_SOURCE);
 
         return dataSource;
     }
@@ -189,7 +205,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
