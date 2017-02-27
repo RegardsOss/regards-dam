@@ -209,7 +209,11 @@ public class DatasetService extends EntityService implements IDatasetService {
      * @param pConfigurationId
      * @return the PluginConfiguration if it exist or null
      */
-    private PluginConfiguration getPluginConfiguration(Long pConfigurationId) {
+    private PluginConfiguration getPluginConfiguration(Long pConfigurationId) {// NOSONAR: sonar does not detect that
+                                                                               // the method is used by
+                                                                               // DataSetServive#checkPluginConfigurations
+                                                                               // with the
+                                                                               // "this::getPluginConfiguration"
         final ResponseEntity<Resource<PluginConfiguration>> response = catalogPluginClient
                 .getPluginConfigurationDirectAccess(pConfigurationId);
         final HttpStatus responseStatus = response.getStatusCode();
