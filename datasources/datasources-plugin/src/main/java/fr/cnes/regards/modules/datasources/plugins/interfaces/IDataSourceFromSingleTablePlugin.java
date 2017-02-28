@@ -4,14 +4,8 @@
 
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
-import java.util.List;
-import java.util.Map;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.Index;
-import fr.cnes.regards.modules.datasources.domain.Table;
 
 /**
  * Class IDataSourceFromSingleTablePlugin

@@ -5,8 +5,6 @@
 package fr.cnes.regards.modules.datasources.utils;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
@@ -53,26 +51,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
 
     private static final String DATABASE_ACCESS_ERROR = "Unable to obtain a database connection";
 
-    // private static final String METADATA_TABLE = "TABLE";
-    //
-    // private static final String TABLE_CAT = "TABLE_CAT";
-    //
-    // private static final String TABLE_SCHEM = "TABLE_SCHEM";
-    //
-    // private static final String TABLE_NAME = "TABLE_NAME";
-    //
-    // private static final String TABLE_TYPE = "TABLE_TYPE";
-
-    // private static final String TYPE_NAME = "TYPE_NAME";
-    //
-    // private static final String INDEX_NAME = "INDEX_NAME";
-    //
-    // private static final String REMARKS = "REMARKS";
-    //
-    // private static final String ASC_OR_DESC = "asc_or_desc";
-    //
-    // private static final String NON_UNIQUE = "non_unique";
-
     /**
      * The description of the {@link Table} used by this {@link Plugin} to requests the database.
      */
@@ -104,8 +82,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         this.reset();
 
         tableDescription = new TableDescription(pTable, null, columns.toArray(new String[0]));
-        
-        
+
         if (columns.isEmpty()) {
             sqlGenerator = buildSqlGenerator();
         } else {
@@ -168,37 +145,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
         return findAll(pTenant, pPageable, null);
-    }
-
-    private String getPrimaryKey(DatabaseMetaData pMetaData, String pCatalog, String pSchema, String pTable)
-            throws SQLException {
-        String column = "";
-        ResultSet rs = pMetaData.getPrimaryKeys(pCatalog, pSchema, pTable);
-        if (rs.next()) {
-            column = rs.getString(COLUMN_NAME);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("[PKEY] --> " + column + ", " + rs.getString("PK_NAME"));
-            }
-        }
-        return column;
-    }
-
-    private String logBoolean(ResultSet pRs, String pParamName) throws SQLException {
-        if (pRs.getBoolean(pParamName)) {
-            return pParamName + "=" + pRs.getBoolean(pParamName) + ",";
-        }
-        return "";
-    }
-
-    private String logString(ResultSet pRs, String pParamName) throws SQLException {
-        if (pRs.getString(pParamName) != null) {
-            return pParamName + "=" + pRs.getString(pParamName) + ",";
-        }
-        return "";
-    }
-
-    private String logInt(ResultSet pRs, String pParamName) throws SQLException {
-        return pParamName + "=" + pRs.getInt(pParamName) + ",";
     }
 
 }

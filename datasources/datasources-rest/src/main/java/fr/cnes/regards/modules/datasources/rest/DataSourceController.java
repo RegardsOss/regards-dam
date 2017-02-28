@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
+import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -100,10 +102,10 @@ public class DataSourceController implements IResourceController<DataSource> {
      * @throws ModuleException
      *             if plugin configuration cannot be retrieved
      */
-    @ResourceAccess(description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
+    @ResourceAccess(
+            description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<DataSource>> getDataSource(@PathVariable Long pPluginConfId)
-            throws ModuleException {
+    public ResponseEntity<Resource<DataSource>> getDataSource(@PathVariable Long pPluginConfId) throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pPluginConfId)));
     }
 
@@ -120,7 +122,7 @@ public class DataSourceController implements IResourceController<DataSource> {
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<DataSource>> updateDBConnection(@PathVariable Long pPluginConfId,
+    public ResponseEntity<Resource<DataSource>> updateDataSource(@PathVariable Long pPluginConfId,
             @Valid @RequestBody DataSource pDataSource) throws ModuleException {
         if (!pPluginConfId.equals(pDataSource.getPluginConfigurationId())) {
             throw new EntityInconsistentIdentifierException(pPluginConfId, pDataSource.getPluginConfigurationId(),
@@ -136,11 +138,11 @@ public class DataSourceController implements IResourceController<DataSource> {
      *            {@link PluginConfiguration} identifier
      * @return nothing
      * @throws ModuleException
-     *             if plugin configuration cannot be deleted
+     *             if {@link PluginConfiguration} cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pPluginConfId}")
-    public ResponseEntity<Void> deleteDBConnection(@PathVariable Long pPluginConfId) throws ModuleException {
+    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pPluginConfId) throws ModuleException {
         dataSourceService.deleteDataSouce(pPluginConfId);
         return ResponseEntity.noContent().build();
     }
@@ -148,6 +150,14 @@ public class DataSourceController implements IResourceController<DataSource> {
     @Override
     public Resource<DataSource> toResource(DataSource pElement, Object... pExtras) {
         final Resource<DataSource> resource = resourceService.toResource(pElement);
+        resourceService.addLink(resource, this.getClass(), "getDataSource", LinkRels.SELF,
+                                MethodParamFactory.build(Long.class, pElement.getPluginConfigurationId()));
+        resourceService.addLink(resource, this.getClass(), "deleteDataSource", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, pElement.getPluginConfigurationId()));
+        resourceService.addLink(resource, this.getClass(), "updateDataSource", LinkRels.UPDATE,
+                                MethodParamFactory.build(Long.class, pElement.getPluginConfigurationId()),
+                                MethodParamFactory.build(DataSource.class));
+        resourceService.addLink(resource, this.getClass(), "getAllDataSources", LinkRels.LIST);
         return resource;
     }
 

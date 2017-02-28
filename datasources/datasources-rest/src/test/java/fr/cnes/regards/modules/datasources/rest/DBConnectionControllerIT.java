@@ -182,6 +182,16 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    public void deleteUnknownDBConnection() throws ModuleException {
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNotFound());
+
+        performDefaultDelete(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", expectations,
+                             "Could not delete a DBConnection.", 123L);
+    }
+
+    @Test
     public void updateDBConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
         dbConnection.setMinPoolSize(3);
@@ -196,11 +206,37 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", dbConnection, expectations,
                           "Could not update a DBConnection.", dbConnection.getPluginConfigurationId());
-
     }
 
     @Test
-    public void tesConnection() throws ModuleException {
+    public void updateBadDBConnection() throws ModuleException {
+        DBConnection dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
+        PluginConfiguration plgConf = service.createDBConnection(dbConnection);
+        dbConnection.setPluginConfigurationId(plgConf.getId());
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isBadRequest());
+
+        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", dbConnection, expectations,
+                          "Could not update a DBConnection.", 456789L);
+    }
+
+    @Test
+    public void updateUnknownDBConnection() throws ModuleException {
+        DBConnection dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
+        dbConnection.setPluginConfigurationId(234568L);
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNotFound());
+
+        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", dbConnection, expectations,
+                          "Could not update a DBConnection.", dbConnection.getPluginConfigurationId());
+    }
+
+    @Test
+    public void testConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setPluginConfigurationId(plgConf.getId());

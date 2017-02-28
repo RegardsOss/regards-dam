@@ -105,12 +105,6 @@ public abstract class AbstractDataObjectMapping {
      */
     protected DataSourceModelMapping dataSourceMapping;
 
-    // protected SqlGenerator sqlGenerator;
-    //
-    // protected abstract SqlGenerator buildSqlGenerator();
-    //
-    // protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy);
-
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
@@ -142,11 +136,6 @@ public abstract class AbstractDataObjectMapping {
 
             String sqlRequestWithPagedInformation = SELECT + buildColumnClause(columns.toArray(new String[0]))
                     + requestWithLimit;
-
-            // Execute SQL request
-            // String sqlRequestWithPagedInformation = buildLimitPart(applyDateStatement(SELECT
-            // +buildColumnClause(columns
-            // .toArray(new String[0])) + " " + pRequestSql, pDate), pPageable);
 
             try (ResultSet rs = statement.executeQuery(sqlRequestWithPagedInformation)) {
                 while (rs.next()) {
@@ -430,7 +419,6 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Add to the SQL request the part to fetch only a portion of the results.
      * 
-     *
      * @param pRequest
      *            the SQL request
      * @param pPage
@@ -483,6 +471,7 @@ public abstract class AbstractDataObjectMapping {
      * representation to a {@link List} of {@link DataSourceAttributeMapping}.
      * 
      * @param pModelJson
+     *            the mapping in JSon format
      */
     protected void initDataSourceMapping(String pModelJson) {
         ModelMappingAdapter adapter = new ModelMappingAdapter();

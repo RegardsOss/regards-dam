@@ -108,6 +108,7 @@ public class DataSourceService implements IDataSourceService {
                 return getDataSourceFromPluginConfiguration(createDataSourceFromComplexRequest(pDataSource));
             }
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new ModuleException("Unable to converts a PluginConfiguration to a Datasourceobject");
         }
 
@@ -160,7 +161,7 @@ public class DataSourceService implements IDataSourceService {
                                                 dbConnectionService.getDBConnection(pDataSource
                                                         .getPluginConfigurationConnectionId()))
                 .addParameter(IDataSourcePlugin.MODEL_PARAM, adapter.toJson(pDataSource.getMapping()));
-    
+
         return factory;
     }
 
@@ -200,6 +201,7 @@ public class DataSourceService implements IDataSourceService {
             LOGGER.error("No plugin configuration found for id:" + pId, e);
             throw new EntityNotFoundException(e.getMessage(), PluginConfiguration.class);
         } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
             throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasource object",
                     PluginConfiguration.class);
         }
@@ -270,10 +272,10 @@ public class DataSourceService implements IDataSourceService {
     private DataSource getDataSourceFromPluginConfiguration(PluginConfiguration pPluginConf) throws IOException {
         DataSource dataSource = new DataSource();
 
+        dataSource.setPluginConfigurationId(pPluginConf.getId());
         dataSource.setLabel(pPluginConf.getLabel());
         dataSource.setFromClause(pPluginConf.getParameterValue(IDataSourcePlugin.FROM_CLAUSE));
         dataSource.setTableName(pPluginConf.getParameterValue(IDataSourceFromSingleTablePlugin.TABLE_PARAM));
-
         dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM)));
 
         PluginConfiguration plgConfig = pPluginConf.getParameterConfiguration(IDataSourcePlugin.CONNECTION_PARAM);

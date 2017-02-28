@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
+import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -198,6 +200,14 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     @Override
     public Resource<PluginConfiguration> toResource(PluginConfiguration pElement, Object... pExtras) {
         final Resource<PluginConfiguration> resource = resourceService.toResource(pElement);
+        resourceService.addLink(resource, this.getClass(), "getDBConnection", LinkRels.SELF,
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "deleteDBConnection", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "updateDBConnection", LinkRels.UPDATE,
+                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(DBConnection.class));
+        resourceService.addLink(resource, this.getClass(), "getAllDBConnections", LinkRels.LIST);
         return resource;
     }
 

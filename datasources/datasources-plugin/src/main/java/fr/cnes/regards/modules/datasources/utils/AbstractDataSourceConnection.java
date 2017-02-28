@@ -125,9 +125,9 @@ public abstract class AbstractDataSourceConnection {
             try (Statement statement = conn.createStatement()) {
                 // Execute a simple SQL request
                 try (ResultSet rs = statement.executeQuery(getSqlRequestTestConnection())) {
+                    isConnected = true;
                 }
             }
-            isConnected = true;
         } catch (SQLException e) {
             LOG.error("Unable to connect to the database", e);
         }
