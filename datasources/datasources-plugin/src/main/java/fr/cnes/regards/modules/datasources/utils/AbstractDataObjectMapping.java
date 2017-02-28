@@ -184,7 +184,7 @@ public abstract class AbstractDataObjectMapping {
             Pageable pPageable, LocalDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
-        try (Statement statement = pConn.createStatement();) {
+        try (Statement statement = pConn.createStatement()) {
 
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(pRequestSql)) {

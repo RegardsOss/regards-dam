@@ -154,9 +154,9 @@ public class DBConnectionService implements IDBConnectionService {
     }
 
     @Override
-    public Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException {
+    public Map<String, Column> getColumns(Long pId, String pTableName) throws ModuleException {
         IDBConnectionPlugin plg = service.getPlugin(pId);
-        return plg.getColumns(pTable);
+        return plg.getColumns(pTableName);
     }
 
 }

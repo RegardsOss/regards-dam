@@ -25,8 +25,6 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class PostgreDataSourcePlugin
- *
  * A {@link Plugin} to extract data from a PostgreSQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *

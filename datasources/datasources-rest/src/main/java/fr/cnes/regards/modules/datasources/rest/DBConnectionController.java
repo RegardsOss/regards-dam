@@ -161,6 +161,15 @@ public class DBConnectionController implements IResourceController<PluginConfigu
         return ResponseEntity.ok(dbConnectionService.testDBConnection(pConnectionId));
     }
 
+    /**
+     * Get the database's tables
+     * 
+     * @param pConnectionId
+     *            {@link PluginConfiguration} identifier
+     * @return a {@link Map} that contains the database's tables
+     * @throws ModuleException
+     *             if problem occurs during retrieve the database's tables
+     */
     @ResourceAccess(description = "Get the tables of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables")
     public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long pConnectionId) throws ModuleException {
@@ -168,19 +177,22 @@ public class DBConnectionController implements IResourceController<PluginConfigu
         return ResponseEntity.ok(tables);
     }
 
+    /**
+     * Get the column of a table
+     * 
+     * @param pConnectionId
+     *            {@link PluginConfiguration} identifier
+     * @param pTableName
+     *            a database table name
+     * @return a {@link Map} that contains the columns of a table
+     * @throws ModuleException
+     *             if problem occurs during retrieve the columns of a table
+     */
     @ResourceAccess(description = "Get the columns of a specific table of the database")
-    @RequestMapping(method = RequestMethod.POST, value = "/{pConnectionId}/tables/{pTableName}/columns")
+    @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables/{pTableName}/columns")
     public ResponseEntity<Map<String, Column>> getColumns(@PathVariable Long pConnectionId,
-            @PathVariable String pTableName, @RequestBody final Table pTable) throws ModuleException {
-        // Check the Table name
-        if (!pTableName.equals(pTable.getName())) {
-            throw new ModuleException(
-                    "The table name <" + pTableName + "> is incompatible with the name of the Table in the request.");
-        }
-
-        Map<String, Column> columns = dbConnectionService.getColumns(pConnectionId, pTable);
-
-        return ResponseEntity.ok(columns);
+            @PathVariable String pTableName) throws ModuleException {
+        return ResponseEntity.ok(dbConnectionService.getColumns(pConnectionId, pTableName));
     }
 
     @Override
