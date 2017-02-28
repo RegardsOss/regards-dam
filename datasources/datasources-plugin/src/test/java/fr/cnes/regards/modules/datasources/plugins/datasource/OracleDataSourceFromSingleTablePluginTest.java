@@ -109,7 +109,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -146,8 +147,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     @Test
     public void getDataSourceIntrospection() {
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
-
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
@@ -212,7 +211,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

@@ -14,8 +14,6 @@ import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 
 /**
- * Class IDBConnectionPlugin
- *
  * Allows to manage a connection pool to a {@link DataSource}.
  *
  * @author Christophe Mertz
@@ -24,8 +22,14 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 @PluginInterface(description = "Plugin to manager a connection pool to a datasource")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
+    /**
+     * The max size of the pool  
+     */
     static final String MAX_POOLSIZE_PARAM = "maxPoolSize";
 
+    /**
+     * The min size of the pool
+     */
     static final String MIN_POOLSIZE_PARAM = "minPoolSize";
 
     /**
@@ -45,19 +49,11 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
     /**
      * Requests the database to get the columns of a specific table.
      * 
-     * @param pTable
-     *            the database's table
+     * @param pTableName
+     *            the database's table name
      * @return a {@link Map} of the columns
      * 
      */
-    public Map<String, Column> getColumns(Table pTable);
-
-    /**
-     * The URL used to connect to the database.</br>
-     * Generally this URL look likes : jdbc:xxxxx//host:port/databaseName
-     * 
-     * @return the database's URL
-     */
-    String buildUrl();
+    public Map<String, Column> getColumns(String pTableName);
 
 }

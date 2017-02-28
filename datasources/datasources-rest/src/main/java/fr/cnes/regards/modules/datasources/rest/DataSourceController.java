@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.models.domain.Model;
         documentation = "http://test")
 // CHECKSTYLE:ON
 @RequestMapping(DataSourceController.TYPE_MAPPING)
-public class DataSourceController implements IResourceController<PluginConfiguration> {
+public class DataSourceController implements IResourceController<DataSource> {
 
     /**
      * Type mapping
@@ -64,34 +64,35 @@ public class DataSourceController implements IResourceController<PluginConfigura
     }
 
     /**
-     * Retrieve all {@link PluginConfiguration} used by the plugin type {@link IDataSourcePlugin}
+     * Retrieve all {@link DataSource}.
      *
      * @return a list of {@link PluginConfiguration}
      */
-    @ResourceAccess(description = "List all plugin's configurations defined for the plugin type IDataSourcePlugin")
+    @ResourceAccess(description = "List all the datasources defined for the plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<PluginConfiguration>>> getAllDataSources() {
+    public ResponseEntity<List<Resource<DataSource>>> getAllDataSources() {
         return ResponseEntity.ok(toResources(dataSourceService.getAllDataSources()));
     }
 
     /**
-     * Create a {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
+     * Create a {@link DataSource}.</br>
+     * A {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin} is created.
      *
      * @param pDatasource
      *            the DataSource used to create the {@link PluginConfiguration}
-     * @return the created {@link PluginConfiguration}
+     * @return the created {@link DataSource}
      * @throws ModuleException
      *             if problem occurs during plugin configuration creation
      */
-    @ResourceAccess(description = "Create a plugin configuration for the plugin type IDataSourcePlugin")
+    @ResourceAccess(description = "Create a DataSource")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<PluginConfiguration>> createDataSource(@Valid @RequestBody DataSource pDatasource)
+    public ResponseEntity<Resource<DataSource>> createDataSource(@Valid @RequestBody DataSource pDatasource)
             throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.createDataSource(pDatasource)));
     }
 
     /**
-     * Get a {@link PluginConfiguration}
+     * Get a {@link DataSource}
      *
      * @param pPluginConfId
      *            {@link PluginConfiguration} identifier
@@ -99,9 +100,9 @@ public class DataSourceController implements IResourceController<PluginConfigura
      * @throws ModuleException
      *             if plugin configuration cannot be retrieved
      */
-    @ResourceAccess(description = "Get a plugin configuration for a plugin type IDataSourcePlugin")
+    @ResourceAccess(description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<PluginConfiguration>> getDataSource(@PathVariable Long pPluginConfId)
+    public ResponseEntity<Resource<DataSource>> getDataSource(@PathVariable Long pPluginConfId)
             throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pPluginConfId)));
     }
@@ -119,7 +120,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<PluginConfiguration>> updateDBConnection(@PathVariable Long pPluginConfId,
+    public ResponseEntity<Resource<DataSource>> updateDBConnection(@PathVariable Long pPluginConfId,
             @Valid @RequestBody DataSource pDataSource) throws ModuleException {
         if (!pPluginConfId.equals(pDataSource.getPluginConfigurationId())) {
             throw new EntityInconsistentIdentifierException(pPluginConfId, pDataSource.getPluginConfigurationId(),
@@ -145,8 +146,8 @@ public class DataSourceController implements IResourceController<PluginConfigura
     }
 
     @Override
-    public Resource<PluginConfiguration> toResource(PluginConfiguration pElement, Object... pExtras) {
-        final Resource<PluginConfiguration> resource = resourceService.toResource(pElement);
+    public Resource<DataSource> toResource(DataSource pElement, Object... pExtras) {
+        final Resource<DataSource> resource = resourceService.toResource(pElement);
         return resource;
     }
 

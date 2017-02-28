@@ -4,35 +4,38 @@
 
 package fr.cnes.regards.modules.datasources.utils;
 
+import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
- * Class AbstractDataSourceIntrospection
- *
- * A {@link Plugin} to discover the tables and columnsof a SQL Database.<br>
+ * A class to discover the tables and columns of a SQL Database.</br>
+ * This class manage a connection pool to the database.</br>
+ * This class used @see http://www.mchange.com/projects/c3p0/index.html.</br>
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceIntrospection {
+public abstract class AbstractDataSourceConnection {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceIntrospection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceConnection.class);
 
     /**
      * The SQL request parameter name
@@ -55,7 +58,95 @@ public abstract class AbstractDataSourceIntrospection {
 
     private static final String REMARKS = "REMARKS";
 
+    /**
+     * A {@link ComboPooledDataSource} to used to connect to a data source
+     */
+    protected ComboPooledDataSource cpds;
+
     protected abstract IDBConnectionPlugin getDBConnectionPlugin();
+
+    /**
+     * The driver used to connect to the database
+     * 
+     * @return the JDBC driver
+     */
+    protected abstract String getJdbcDriver();
+
+    /**
+     * The SQL request used to test the connection to the database
+     * 
+     * @return the SQL request
+     */
+    protected abstract String getSqlRequestTestConnection();
+
+    /**
+     * The URL used to connect to the database.</br>
+     * Generally this URL look likes : jdbc:xxxxx//host:port/databaseName
+     * 
+     * @return the database's URL
+     */
+    protected abstract String buildUrl();
+
+    /**
+     * Initialize the {@link ComboPooledDataSource}
+     * 
+     * @param pUser
+     *            The user to used for the database connection
+     * @param pPassword
+     *            The user's password to used for the database connection
+     * @param pMaxPoolSize
+     *            Maximum number of Connections a pool will maintain at any given time.
+     * @param pMinPoolSize
+     *            Minimum number of Connections a pool will maintain at any given time.
+     */
+    protected void createPoolConnection(String pUser, String pPassword, Integer pMaxPoolSize, Integer pMinPoolSize) {
+        cpds = new ComboPooledDataSource();
+        cpds.setJdbcUrl(buildUrl());
+        cpds.setUser(pUser);
+        cpds.setPassword(pPassword);
+        cpds.setMaxPoolSize(pMaxPoolSize);
+        cpds.setMinPoolSize(pMinPoolSize);
+
+        try {
+            cpds.setDriverClass(getJdbcDriver());
+        } catch (PropertyVetoException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Test the connection to the database
+     * 
+     * @return true if the connection is active
+     */
+    public boolean testConnection() {
+        boolean isConnected = false;
+        try (Connection conn = cpds.getConnection()) {
+            try (Statement statement = conn.createStatement()) {
+                // Execute a simple SQL request
+                try (ResultSet rs = statement.executeQuery(getSqlRequestTestConnection())) {
+                }
+            }
+            isConnected = true;
+        } catch (SQLException e) {
+            LOG.error("Unable to connect to the database", e);
+        }
+        return isConnected;
+    }
+
+    /**
+     * The {@link Connection} to the database
+     * 
+     * @return the {@link Connection}
+     */
+    public Connection getConnection() {
+        try {
+            return cpds.getConnection();
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(), e);
+        }
+        return null;
+    }
 
     /**
      * Returns all the table from the database.
@@ -99,6 +190,21 @@ public abstract class AbstractDataSourceIntrospection {
         return tables;
     }
 
+    /**
+     * Get the primary key name of a database's table
+     * 
+     * @param pMetaData
+     *            The {@link DatabaseMetaData} of the database
+     * @param pCatalog
+     *            The catalog name
+     * @param pSchema
+     *            The database's schema
+     * @param pTable
+     *            The table name
+     * @return the primary key name
+     * @throws SQLException
+     *             an SQL error occurred
+     */
     private String getPrimaryKey(DatabaseMetaData pMetaData, String pCatalog, String pSchema, String pTable)
             throws SQLException {
         String column = "";
@@ -113,13 +219,13 @@ public abstract class AbstractDataSourceIntrospection {
     }
 
     /**
-     * Get the columns of a {@link Table} from the database.
+     * Get the columns of a {@link Table} from the database
      * 
-     * @param pTable
+     * @param pTableName
      *            a table of the database
      * @return a {@link Map} of {@link Column}
      */
-    public Map<String, Column> getColumns(Table pTable) {
+    public Map<String, Column> getColumns(String pTableName) {
         Map<String, Column> cols = new HashMap<>();
         ResultSet rs = null;
 
@@ -134,7 +240,7 @@ public abstract class AbstractDataSourceIntrospection {
         try {
             DatabaseMetaData metaData = conn.getMetaData();
 
-            rs = metaData.getColumns(null, null, pTable.getName(), null);
+            rs = metaData.getColumns(null, null, pTableName, null);
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
@@ -143,8 +249,6 @@ public abstract class AbstractDataSourceIntrospection {
                 }
 
                 Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
-                column.setPrimaryKey((pTable.getPKey() != null) && !"".equals(pTable.getPKey())
-                        && pTable.getPKey().equals(column.getName()));
                 cols.put(column.getName(), column);
             }
         } catch (SQLException e) {

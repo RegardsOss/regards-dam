@@ -91,8 +91,21 @@ public interface IDBConnectionService {
      */
     Boolean testDBConnection(Long pId) throws ModuleException;
 
+    /**
+     * 
+     * @param pId
+     * @return
+     * @throws ModuleException
+     */
     Map<String, Table> getTables(Long pId) throws ModuleException;
 
-    Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException;
+    /**
+     * 
+     * @param pId
+     * @param pTableName
+     * @return
+     * @throws ModuleException
+     */
+    Map<String, Column> getColumns(Long pId, String pTableName) throws ModuleException;
 
 }

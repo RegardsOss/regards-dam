@@ -104,7 +104,8 @@ public class CrawlerServiceTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                     .getParameters();
             dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -129,7 +130,6 @@ public class CrawlerServiceTest {
         indexerService.createIndex(TENANT);
 
         // Retrieve first 1000 objects
-        dsPlugin.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
 
         Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
 
@@ -195,7 +195,7 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
     private void registerJSonModelAttributes() {

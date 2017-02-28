@@ -26,7 +26,7 @@ public class DataSource {
      */
     private String pluginClassName;
 
-    private Long modelId;
+    private String label;
 
     // une table
     private String tableName;
@@ -59,14 +59,6 @@ public class DataSource {
         this.pluginClassName = pluginClassName;
     }
 
-    public Long getModelId() {
-        return modelId;
-    }
-
-    public void setModelId(Long modelId) {
-        this.modelId = modelId;
-    }
-
     public String getTableName() {
         return tableName;
     }
@@ -89,6 +81,14 @@ public class DataSource {
 
     public void setMapping(DataSourceModelMapping mapping) {
         this.mapping = mapping;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String pLabel) {
+        this.label = pLabel;
     }
 
 }

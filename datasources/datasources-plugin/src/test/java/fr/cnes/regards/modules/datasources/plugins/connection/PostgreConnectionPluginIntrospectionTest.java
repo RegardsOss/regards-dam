@@ -75,7 +75,7 @@ public class PostgreConnectionPluginIntrospectionTest {
     @Test
     public void getTables() {
         Assert.assertTrue(postgreDBConn.testConnection());
-        
+
         Map<String, Table> tables = postgreDBConn.getTables();
         Assert.assertNotNull(tables);
         Assert.assertTrue(!tables.isEmpty());
@@ -89,7 +89,7 @@ public class PostgreConnectionPluginIntrospectionTest {
         Assert.assertNotNull(tables);
         Assert.assertTrue(!tables.isEmpty());
 
-        Map<String, Column> columns = postgreDBConn.getColumns(tables.get(TABLE_NAME_TEST));
+        Map<String, Column> columns = postgreDBConn.getColumns(TABLE_NAME_TEST);
         Assert.assertNotNull(columns);
         Assert.assertEquals(7, columns.size());
     }
