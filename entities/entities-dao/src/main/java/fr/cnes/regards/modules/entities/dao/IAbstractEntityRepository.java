@@ -13,39 +13,48 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- *
+ * Common requests on entities
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
 public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
 
     /**
-     * Load entity with tags (eager) and groups
+     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
      * @param pId id of entity
      * @return entity
      */
-    @EntityGraph(attributePaths = { "tags", "groups" })
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
     T findById(Long pId);
 
     /**
-     * Find all entities of which ipId belongs to given set
+     * Find all entities of which ipId belongs to given set (eagerly loading all relations)
      * @param pIpIds set of ipId
      * @return found entities
      */
-    List<AbstractEntity> findByIpIdIn(Set<UniformResourceName> pIpIds);
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    List<T> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
-     * Find entity of which given ipId
+     * Find entity of given ipId
      * @param pIpId ipId of which entity
      * @return found entity
      */
-    AbstractEntity findOneByIpId(UniformResourceName pIpId);
+    T findOneByIpId(UniformResourceName pIpId);
+
+    /**
+     * Find entity of given IpId eagerly loading all common relations
+     * @param pIpId ipId of which entity
+     * @return found entity
+     */
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    T findByIpId(UniformResourceName pIpId);
 
     /**
      * Find all entities containing given tag
      * @param pTagToSearch tag to search entities for
      * @return entities which contain given tag
      */
-    List<AbstractEntity> findByTags(String pTagToSearch);
+    List<T> findByTags(String pTagToSearch);
 
 }

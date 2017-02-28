@@ -88,8 +88,6 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchCriterion(StringMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
         return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
                 || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
@@ -97,8 +95,6 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
         return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
                 || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
@@ -106,32 +102,31 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitIntMatchCriterion(IntMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
-        return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER)
-                || attribute.getType().equals(AttributeType.INTEGER_ARRAY)
-                || attribute.getType().equals(AttributeType.INTEGER_INTERVAL));
+        return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER));
     }
 
     @Override
     public <U> Boolean visitRangeCriterion(RangeCriterion<U> pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        return null;
+        switch (attribute.getType()) {
+            case DOUBLE:
+            case INTEGER:
+            case LONG:
+                return attribute != null;
+            default:
+                return false;
+        }
     }
 
     @Override
     public Boolean visitDateRangeCriterion(DateRangeCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ARRAY)
-                || attribute.getType().equals(AttributeType.DATE_INTERVAL)
-                || attribute.getType().equals(AttributeType.DATE_ISO8601));
+        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ISO8601));
     }
 
     @Override
     public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
         return (attribute != null) && attribute.getType().equals(AttributeType.BOOLEAN);
     }
 

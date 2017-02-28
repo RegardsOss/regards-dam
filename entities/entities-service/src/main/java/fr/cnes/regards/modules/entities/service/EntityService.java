@@ -17,7 +17,9 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -26,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Throwables;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
@@ -47,11 +50,13 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
+import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -62,13 +67,15 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
- * Entity service implementation
+ * Entity service implementation. This class isn't abstract in order to permit to be used directly.
+ * But it is also used as a base for specific services (CollectionService, ...).
  *
  * @author Marc Sordi
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
-public abstract class AbstractEntityService implements IEntityService {
+@Service(value = "entityService")
+public class EntityService implements IEntityService {
 
     /**
      * Class logger
@@ -79,6 +86,11 @@ public abstract class AbstractEntityService implements IEntityService {
      * Namespace separator
      */
     private static final String NAMESPACE_SEPARATOR = ".";
+
+    /**
+     * Max description file acceptable byte size
+     */
+    private static final int MAX_DESC_FILE_SIZE = 10_000_000;
 
     /**
      * Attribute model service
@@ -97,17 +109,50 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private final EntityManager em;
 
-    public AbstractEntityService(IModelAttributeService pModelAttributeService,
+    private IPublisher publisher;
+
+    public EntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDatasetRepository pDatasetRepository, EntityManager pEm) {
+            IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
         deletedEntityRepository = pDeletedEntityRepository;
         collectionRepository = pCollectionRepository;
         datasetRepository = pDatasetRepository;
-        this.em = pEm;
+        em = pEm;
+        publisher = pPublisher;
+    }
+
+    @Override
+    public AbstractEntity load(UniformResourceName pIpId) {
+        return entityRepository.findOneByIpId(pIpId);
+    }
+
+    @Override
+    public AbstractEntity loadWithRelations(UniformResourceName pIpId) {
+        // Particular case on datasets which contains more relations
+        if (pIpId.getEntityType() == EntityType.DATASET) {
+            return datasetRepository.findByIpId(pIpId);
+        }
+        return entityRepository.findByIpId(pIpId);
+    }
+
+    @Override
+    public List<AbstractEntity> loadAllWithRelations(UniformResourceName... pIpIds) {
+        List<AbstractEntity> entities = new ArrayList<>(pIpIds.length);
+        Set<UniformResourceName> dsUrns = Arrays.stream(pIpIds)
+                .filter(ipId -> ipId.getEntityType() == EntityType.DATASET).collect(Collectors.toSet());
+        if (!dsUrns.isEmpty()) {
+            entities.addAll(datasetRepository.findByIpIdIn(dsUrns));
+        }
+        Set<UniformResourceName> otherUrns = Arrays.stream(pIpIds)
+                .filter(ipId -> ipId.getEntityType() != EntityType.DATASET).collect(Collectors.toSet());
+        if (!otherUrns.isEmpty()) {
+            entities.addAll(entityRepository.findByIpIdIn(otherUrns));
+        }
+        return entities;
     }
 
     @Override
@@ -153,14 +198,10 @@ public abstract class AbstractEntityService implements IEntityService {
     /**
      * Validate an attribute with its corresponding model attribute
      *
-     * @param pAttMap
-     *            attribue map
-     * @param pModelAttribute
-     *            model attribute
-     * @param pErrors
-     *            validation errors
-     * @param pManageAlterable
-     *            manage update or not
+     * @param pAttMap attribue map
+     * @param pModelAttribute model attribute
+     * @param pErrors validation errors
+     * @param pManageAlterable manage update or not
      */
     protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttribute pModelAttribute,
             Errors pErrors, boolean pManageAlterable) {
@@ -257,21 +298,19 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     /**
-     * @param pEntityId a {@link AbstractEntity}
-     * @param pToAssociate {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate
-     * to pCollection
+     * @param pEntityId an AbstractEntity identifier
+     * @param pToAssociate UniformResourceName Set representing AbstractEntity to be associated to pCollection
      * @throws EntityNotFoundException
      */
     @Override
-    public AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pToAssociate)
-            throws EntityNotFoundException {
+    public AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
         final AbstractEntity entity = entityRepository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
         // Adding new tags to detached entity
         em.detach(entity);
-        entity.getTags().addAll(pToAssociate.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        entity.getTags().addAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
         final AbstractEntity entityInDb = entityRepository.findById(pEntityId);
         // And detach it too because it is the over one that will be persisted
         em.detach(entityInDb);
@@ -280,16 +319,14 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     @Override
-    public AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated)
-            throws EntityNotFoundException {
+    public AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
         final AbstractEntity entity = entityRepository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
         // Removing tags to detached entity
         em.detach(entity);
-        entity.getTags()
-                .removeAll(pToBeDissociated.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        entity.getTags().removeAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
         final AbstractEntity entityInDb = entityRepository.findById(pEntityId);
         // And detach it too because it is the over one that will be persisted
         em.detach(entityInDb);
@@ -300,13 +337,26 @@ public abstract class AbstractEntityService implements IEntityService {
     @Override
     public <T extends AbstractEntity> T create(T pEntity, MultipartFile file) throws ModuleException, IOException {
         T entity = check(pEntity);
-        entity = setDescription(entity, file);
-        this.manageGroups(entity);
-        entity = beforeCreate(entity);
+        this.setDescription(entity, file);
+        // IpIds of entities that will need an AMQP event publishing
+        Set<UniformResourceName> updatedIpIds = new HashSet<>();
+        this.manageGroups(entity, updatedIpIds);
         entity.setCreationDate(LocalDateTime.now());
         entity = entityRepository.save(entity);
+        updatedIpIds.add(entity.getIpId());
         entity = getStorageService().storeAIP(entity);
+        // AMQP event publishing
+        this.publishEvents(updatedIpIds);
         return entity;
+    }
+
+    /**
+     * Publish events to AMQP, one event by IpId
+     * @param pIpIds ipId URNs of entities that need an Event publication onto AMQP
+     */
+    private void publishEvents(Set<UniformResourceName> pIpIds) {
+        //pIpIds.forEach(ipId -> publisher.publish(new EntityEvent(ipId)));
+        publisher.publish(new EntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
     }
 
     /**
@@ -314,14 +364,13 @@ public abstract class AbstractEntityService implements IEntityService {
      * Then find all collections tagging this entity and recursively propagate entity group to them.
      * @param entity entity to manage the add of groups
      */
-    private <T extends AbstractEntity> void manageGroups(T entity) {
+    private <T extends AbstractEntity> void manageGroups(T entity, Set<UniformResourceName> pUpdatedIpIds) {
         // If entity tags entities => retrieve all groups of tagged entities (only for collection)
-        if (entity instanceof Collection) {
-            if (!entity.getTags().isEmpty()) {
-                List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
-                final T finalEntity = entity;
-                taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
-            }
+        if ((entity instanceof Collection) && !entity.getTags().isEmpty()) {
+            List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
+            final T finalEntity = entity;
+            taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
+            pUpdatedIpIds.add(finalEntity.getIpId());
         }
         UniformResourceName urn = entity.getIpId();
         // If entity contains groups => update all entities tagging this entity (recursively)
@@ -329,12 +378,12 @@ public abstract class AbstractEntityService implements IEntityService {
         for (String group : entity.getGroups()) {
             Set<Collection> collectionsToUpdate = new HashSet<>();
             // Find all collections tagging this entity and try adding group
-            manageGroup(group, collectionsToUpdate, urn);
+            manageGroup(group, collectionsToUpdate, urn, entity, pUpdatedIpIds);
             // Recursively continue to collections tagging updated collections and so on until no more collections
             // has to be updated
             while (!collectionsToUpdate.isEmpty()) {
                 Collection firstColl = collectionsToUpdate.iterator().next();
-                manageGroup(group, collectionsToUpdate, firstColl.getIpId());
+                manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, pUpdatedIpIds);
                 collectionsToUpdate.remove(firstColl);
             }
         }
@@ -357,40 +406,34 @@ public abstract class AbstractEntityService implements IEntityService {
     }
 
     /**
-     * @param pNewEntity
-     *            entity being created
-     * @param pFile
-     *            the description of the entity
+     * @param pEntity entity being created
+     * @param pFile the description of the entity
      * @return modified entity with the description properly set
      * @throws IOException
-     * @throws EntityDescriptionUnacceptableCharsetException
-     *             thrown if charset is not utf-8
-     * @throws EntityDescriptionTooLargeException
-     *             thrown if file is bigger than 10MB
-     * @throws EntityDescriptionUnacceptableType
-     *             thrown if file is not a PDF or markdown
+     * @throws EntityDescriptionUnacceptableCharsetException thrown if charset is not utf-8
+     * @throws EntityDescriptionTooLargeException thrown if file is bigger than 10MB
+     * @throws EntityDescriptionUnacceptableType thrown if file is not a PDF or markdown
      */
-    private <T extends AbstractEntity> T setDescription(T newEntity, MultipartFile file)
+    private <T extends AbstractEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
-        if ((newEntity instanceof AbstractLinkEntity) && (file != null) && !file.isEmpty()) {
-            // collections and dataset only has a description which is a url or a file
-            if (!acceptacleContentType(file)) {
-                throw new EntityDescriptionUnacceptableType(file.getContentType());
+        if ((pEntity instanceof AbstractLinkEntity) && (pFile != null) && !pFile.isEmpty()) {
+            // collections and dataset only have a description which is a url or a file
+            if (!isContentTypeAcceptable(pFile)) {
+                throw new EntityDescriptionUnacceptableType(pFile.getContentType());
             }
-            // 10 000 000B=10MB
-            if (file.getSize() > 10000000) {
-                throw new EntityDescriptionTooLargeException(file.getOriginalFilename());
+            // 10MB
+            if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
+                throw new EntityDescriptionTooLargeException(pFile.getOriginalFilename());
             }
-            String charsetOfFile = this.getCharset(file);
-            if ((charsetOfFile != null) && (charsetOfFile != "utf-8")) {
-                throw new EntityDescriptionUnacceptableCharsetException(charsetOfFile);
+            String fileCharset = getCharset(pFile);
+            if ((fileCharset != null) && !fileCharset.equals("utf-8")) {
+                throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
             }
             // description or description file
-            newEntity.setDescription(null);
-            ((AbstractLinkEntity) newEntity)
-                    .setDescriptionFile(new DescriptionFile(file.getBytes(), MediaType.valueOf(file.getContentType())));
+            pEntity.setDescription(null);
+            ((AbstractLinkEntity) pEntity).setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+                    MediaType.valueOf(pFile.getContentType())));
         }
-        return newEntity;
     }
 
     /**
@@ -401,14 +444,21 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param collectionsToUpdate
      * @param urn
      */
-    private void manageGroup(String group, Set<Collection> collectionsToUpdate, UniformResourceName urn) {
-        List<AbstractEntity> taggingCollections = entityRepository.findByTags(urn.toString());
-        for (AbstractEntity e : taggingCollections) {
+    private void manageGroup(String group, Set<Collection> collectionsToUpdate, UniformResourceName urn,
+            AbstractEntity rootEntity, Set<UniformResourceName> pUpdatedIpIds) {
+        for (AbstractEntity e : entityRepository.findByTags(urn.toString())) {
             if (e instanceof Collection) {
                 Collection coll = (Collection) e;
+                // To be sure the root entity object is updated instead of a copy from Hb9n
+                if (coll.getIpId().equals(rootEntity.getIpId())) {
+                    em.detach(e);
+                    e = rootEntity;
+                }
                 // if adding a new group
                 if (e.getGroups().add(group)) {
-                    entityRepository.save(coll);
+                    coll = entityRepository.save(coll);
+                    // add entity IpId to AMQP publishing events
+                    pUpdatedIpIds.add(coll.getIpId());
                     collectionsToUpdate.add(coll);
                 } else { // Group has been already added, nothing more to do => remove collection from map
                     collectionsToUpdate.remove(coll);
@@ -417,39 +467,32 @@ public abstract class AbstractEntityService implements IEntityService {
         }
     }
 
-    private boolean acceptacleContentType(MultipartFile pFile) {
-        String fileContentTypeWithCharset = pFile.getContentType();
-        int indexOfCharset = fileContentTypeWithCharset.indexOf(";charset");
-        String contentType = (indexOfCharset == -1) ? fileContentTypeWithCharset
-                : fileContentTypeWithCharset.substring(0, indexOfCharset);
+    /**
+     * Return true if file content type is acceptable (PDF or MARKDOWN)
+     * @param pFile file
+     * @return true or false
+     */
+    private static boolean isContentTypeAcceptable(MultipartFile pFile) {
+        String fileContentType = pFile.getContentType();
+        int charsetIdx = fileContentType.indexOf(";charset");
+        String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
         return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
     }
 
     /**
-     * check if the file has a charset compliant with the application
-     *
-     * @param pFile
-     *            description file from the user
-     * @return true is charset is utf8 or not set(considered us-ascii) or if the file is a pdf, false otherwise
+     * Retrieve file charset
+     * @param pFile description file from the user
+     * @return file charset
      */
-    private String getCharset(MultipartFile pFile) {
+    private static String getCharset(MultipartFile pFile) {
         String contentType = pFile.getContentType();
-        int charsetIndex = contentType.indexOf("charset=");
-        return (charsetIndex == -1) ? null
-                : contentType.substring(charsetIndex + 8, contentType.length() - 1).toLowerCase();
+        int charsetIdx = contentType.indexOf("charset=");
+        return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toLowerCase();
     }
-
-    /**
-     * Specific operations before creating entity
-     * @param pNewEntity
-     * @return
-     */
-    protected abstract <T extends AbstractEntity> T beforeCreate(T pNewEntity) throws ModuleException;
 
     private <T extends AbstractEntity> T check(T pEntity) throws ModuleException {
         checkModelExists(pEntity);
-        pEntity = doCheck(pEntity);
-        return pEntity;
+        return doCheck(pEntity);
     }
 
     /**
@@ -457,7 +500,10 @@ public abstract class AbstractEntityService implements IEntityService {
      * @param pEntity
      * @return
      */
-    protected abstract <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException;
+    protected <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException {
+        // nothing by default
+        return pEntity;
+    }
 
     /**
      * checks if the entity requested exists and that it is modified according to one of it's former version( pEntity's
@@ -476,8 +522,7 @@ public abstract class AbstractEntityService implements IEntityService {
         if (!pEntityId.equals(pEntity.getId())) {
             throw new EntityInconsistentIdentifierException(pEntityId, pEntity.getId(), pEntity.getClass());
         }
-        T toBeUpdated = doCheck(pEntity);
-        return toBeUpdated;
+        return doCheck(pEntity);
     }
 
     @Override
@@ -503,10 +548,12 @@ public abstract class AbstractEntityService implements IEntityService {
     private <T extends AbstractEntity> T updateWithoutCheck(T pEntity, T entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
+        // IpId URNs of updated entities (those which need an AMQP event publish)
+        Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity
-        T updated = beforeUpdate(pEntity);
-        updated.setLastUpdate(LocalDateTime.now());
-        updated = entityRepository.save(pEntity);
+        pEntity.setLastUpdate(LocalDateTime.now());
+        T updated = entityRepository.save(pEntity);
+        updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks)) {
             Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
@@ -519,19 +566,27 @@ public abstract class AbstractEntityService implements IEntityService {
                 List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
                 collectionsWithGroup.forEach(c -> c.getGroups().remove(group));
                 collectionsWithGroup.forEach(collectionRepository::save);
-                // ... then manage concerned groups on all datasets containing therm
+                // Add collections to IpIds to be published on AMQP
+                collectionsWithGroup.forEach(c -> updatedIpIds.add(c.getIpId()));
+                // ... then manage concerned groups on all datasets containing them
                 List<Dataset> datasetsWithGroup = datasetRepository.findByGroups(group);
-                datasetsWithGroup.forEach(this::manageGroups);
+                datasetsWithGroup.forEach(ds -> this.manageGroups(ds, updatedIpIds));
+                datasetsWithGroup.forEach(datasetRepository::save);
+                // Add datasets to IpIds to be published on AMQP
+                datasetsWithGroup.forEach(ds -> updatedIpIds.add(ds.getIpId()));
             }
             // Don't forget to manage groups for current entity too
-            this.manageGroups(updated);
+            this.manageGroups(updated, updatedIpIds);
         }
         updated = getStorageService().updateAIP(updated);
+        // AMQP event publishing
+        this.publishEvents(updatedIpIds);
         return updated;
     }
 
     @Override
     public AbstractEntity delete(Long pEntityId) throws EntityNotFoundException {
+        Assert.notNull(pEntityId);
         final AbstractEntity toDelete = entityRepository.findById(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId);
@@ -542,10 +597,11 @@ public abstract class AbstractEntityService implements IEntityService {
 
     private AbstractEntity delete(AbstractEntity pToDelete) {
         UniformResourceName urn = pToDelete.getIpId();
-
+        // IpId URNs that will need an AMQP event publishing
+        Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Manage tags (must be done before group managing to avoid bad propagation)
         // Retrieve all entities tagging the one to delete
-        final List<AbstractEntity> taggingEntities = entityRepository.findByTags(pToDelete.getIpId().toString());
+        final List<AbstractEntity> taggingEntities = entityRepository.findByTags(urn.toString());
         // Manage tags
         for (AbstractEntity taggingEntity : taggingEntities) {
             // remove tag to ipId
@@ -553,6 +609,7 @@ public abstract class AbstractEntityService implements IEntityService {
         }
         // Save all these tagging entities
         entityRepository.save(taggingEntities);
+        taggingEntities.forEach(e -> updatedIpIds.add(e.getIpId()));
 
         // datasets that contain one of the entity groups
         Set<Dataset> datasets = new HashSet<>();
@@ -568,28 +625,22 @@ public abstract class AbstractEntityService implements IEntityService {
         }
         // Delete the entity
         entityRepository.delete(pToDelete);
+        updatedIpIds.add(pToDelete.getIpId());
         // Manage all impacted datasets groups from scratch
-        datasets.forEach(this::manageGroups);
+        datasets.forEach(ds -> this.manageGroups(ds, updatedIpIds));
 
         deletedEntityRepository.save(createDeletedEntity(pToDelete));
         getStorageService().deleteAIP(pToDelete);
+        // Publish events to AMQP
+        this.publishEvents(updatedIpIds);
         return pToDelete;
     }
 
     /**
-     * handles specific updates to perform according to the instanciation type of the entity
-     *
-     * @param pEntity
-     * @return updated entity
-     */
-    protected abstract <T extends AbstractEntity> T beforeUpdate(T pEntity);
-
-    /**
-     * @param pSource {@link Set} of {@link UniformResourceName}
-     * @param pOther {@link Set} of {@link UniformResourceName} to remove from pSource
-     * @return a new {@link Set} of {@link UniformResourceName} containing only the elements present into pSource and
-     *         not in pOther
-     */
+    * @param pSource Set of UniformResourceName
+    * @param pOther Set of UniformResourceName to remove from pSource
+    * @return a new Set of UniformResourceName containing only the elements present into pSource and not in pOther
+    */
     private Set<UniformResourceName> getDiff(Set<UniformResourceName> pSource, Set<UniformResourceName> pOther) {
         final Set<UniformResourceName> result = new HashSet<>();
         result.addAll(pSource);
@@ -607,7 +658,9 @@ public abstract class AbstractEntityService implements IEntityService {
                 .collect(Collectors.toSet());
     }
 
-    protected abstract Logger getLogger();
+    protected static Logger getLogger() {
+        return LoggerFactory.getLogger(EntityService.class);
+    }
 
     private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
         DeletedEntity delEntity = new DeletedEntity();

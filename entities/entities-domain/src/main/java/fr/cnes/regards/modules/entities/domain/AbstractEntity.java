@@ -106,7 +106,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @ElementCollection
     @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"))
     @Column(name = "value", length = 200)
-    protected Set<String> tags;
+    protected Set<String> tags = new HashSet<>();
 
     /**
      * Computed indirect access groups.<br/>
@@ -117,7 +117,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @ElementCollection
     @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"))
     @Column(name = "name", length = 200)
-    protected Set<String> groups;
+    protected Set<String> groups = new HashSet<>();
 
     /**
      * list of attributes associated to this entity
@@ -140,8 +140,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         model = pModel;
         ipId = pIpId;
         label = pLabel;
-        tags = new HashSet<>();
-        groups = new HashSet<>();
     }
 
     protected AbstractEntity() { // NOSONAR
@@ -268,17 +266,16 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", tags=" + tags
-                + ", groups=" + groups + ", attributes=" + attributes + ", model=" + model + "]";
+                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", attributes="
+                + attributes + ", model=" + model + "]";
     }
 }

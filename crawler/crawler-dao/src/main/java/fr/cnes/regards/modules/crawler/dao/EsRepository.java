@@ -45,7 +45,6 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -73,7 +72,7 @@ import fr.cnes.regards.modules.crawler.domain.facet.StringFacet;
  * Elasticsearch repository implementation
  */
 @Repository
-@PropertySource("classpath:es.properties")
+//@PropertySource("classpath:es.properties")
 public class EsRepository implements IEsRepository {
 
     /**
@@ -166,18 +165,18 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public boolean createIndex(String pIndex) {
-        return client.admin().indices().prepareCreate(pIndex).get().isAcknowledged();
+        return client.admin().indices().prepareCreate(pIndex.toLowerCase()).get().isAcknowledged();
     }
 
     @Override
     public boolean delete(String pIndex, String pType, String pId) {
-        final DeleteResponse response = client.prepareDelete(pIndex, pType, pId).get();
-        return (response.getResult() == Result.DELETED);
+        final DeleteResponse response = client.prepareDelete(pIndex.toLowerCase(), pType, pId).get();
+        return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
     }
 
     @Override
     public boolean deleteIndex(String pIndex) {
-        return client.admin().indices().prepareDelete(pIndex).get().isAcknowledged();
+        return client.admin().indices().prepareDelete(pIndex.toLowerCase()).get().isAcknowledged();
 
     }
 
@@ -192,12 +191,11 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T> T get(String pIndex, String pType, String pId, Class<T> pClass) {
         try {
-            final GetResponse response = client.prepareGet(pIndex, pType, pId).get();
+            final GetResponse response = client.prepareGet(pIndex.toLowerCase(), pType, pId).get();
             if (!response.isExists()) {
                 return null;
             }
             return gson.fromJson(response.getSourceAsString(), pClass);
-            // return jsonMapper.readValue(response.getSourceAsBytes(), pClass);
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
@@ -205,7 +203,7 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public boolean indexExists(String pName) {
-        return client.admin().indices().prepareExists(pName).get().isExists();
+        return client.admin().indices().prepareExists(pName.toLowerCase()).get().isExists();
     }
 
     @Override
@@ -232,8 +230,8 @@ public class EsRepository implements IEsRepository {
                         builder.field(entry.getKey(), entry.getValue());
                     }
                 }
-                final UpdateResponse response = client.prepareUpdate(pIndex, pType, pId).setDoc(builder.endObject())
-                        .get();
+                final UpdateResponse response = client.prepareUpdate(pIndex.toLowerCase(), pType, pId)
+                        .setDoc(builder.endObject()).get();
                 return (response.getResult() == Result.UPDATED);
             }
         } catch (final IOException jpe) {
@@ -250,7 +248,8 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean save(String pIndex, IIndexable pDocument) {
         checkDocument(pDocument);
-        final IndexResponse response = client.prepareIndex(pIndex, pDocument.getType(), pDocument.getDocId())
+        final IndexResponse response = client
+                .prepareIndex(pIndex.toLowerCase(), pDocument.getType(), pDocument.getDocId())
                 .setSource(gson.toJson(pDocument)).get();
         return (response.getResult() == Result.CREATED);
     }
@@ -258,18 +257,19 @@ public class EsRepository implements IEsRepository {
     @Override
     public void refresh(String pIndex) {
         // To make just saved documents searchable, the associated index must be refreshed
-        client.admin().indices().prepareRefresh(pIndex).get();
+        client.admin().indices().prepareRefresh(pIndex.toLowerCase()).get();
     }
 
     @Override
     public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
             @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException {
+        String index = pIndex.toLowerCase();
         for (T doc : pDocuments) {
             checkDocument(doc);
         }
         final BulkRequestBuilder bulkRequest = client.prepareBulk();
         for (T doc : pDocuments) {
-            bulkRequest.add(client.prepareIndex(pIndex, doc.getType(), doc.getDocId()).setSource(gson.toJson(doc)));
+            bulkRequest.add(client.prepareIndex(index, doc.getType(), doc.getDocId()).setSource(gson.toJson(doc)));
         }
         final BulkResponse response = bulkRequest.get();
         Map<String, Throwable> errorMap = null;
@@ -282,7 +282,7 @@ public class EsRepository implements IEsRepository {
             }
         }
         // To make just saved documents searchable, the associated index must be refreshed
-        client.admin().indices().prepareRefresh(pIndex).get();
+        client.admin().indices().prepareRefresh(index).get();
         return errorMap;
     }
 
@@ -290,8 +290,9 @@ public class EsRepository implements IEsRepository {
     public void searchAll(String pIndex, Consumer<SearchHit> pAction) {
         final QueryBuilder qb = QueryBuilders.matchAllQuery();
 
-        SearchResponse scrollResp = client.prepareSearch(pIndex).setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
-                .setQuery(qb).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
+        SearchResponse scrollResp = client.prepareSearch(pIndex.toLowerCase())
+                .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).setQuery(qb)
+                .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
         // Scroll until no hits are returned
         do {
             for (final SearchHit hit : scrollResp.getHits().getHits()) {
@@ -313,7 +314,7 @@ public class EsRepository implements IEsRepository {
     public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
         try {
             final List<T> results = new ArrayList<>();
-            SearchRequestBuilder request = client.prepareSearch(pIndex).setFrom(pPageRequest.getOffset())
+            SearchRequestBuilder request = client.prepareSearch(pIndex.toLowerCase()).setFrom(pPageRequest.getOffset())
                     .setSize(pPageRequest.getPageSize());
             SearchResponse response = getWithTimeouts(request);
             SearchHits hits = response.getHits();
@@ -335,16 +336,17 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
+        String index = pIndex.toLowerCase();
         try {
             final List<T> results = new ArrayList<>();
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
             QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(criterion.accept(CRITERION_VISITOR));
             // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
-            SearchRequestBuilder request = client.prepareSearch(pIndex).setQuery(critBuilder)
+            SearchRequestBuilder request = client.prepareSearch(index).setQuery(critBuilder)
                     .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
             if (pAscSortMap != null) {
-                manageSortRequest(pIndex, request, pAscSortMap);
+                manageSortRequest(index, request, pAscSortMap);
             }
             // Managing aggregations if some facets are asked
             boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
@@ -354,7 +356,7 @@ public class EsRepository implements IEsRepository {
             // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
             if (twoPassRequestNeeded) {
                 // Rebuild request
-                request = client.prepareSearch(pIndex).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
+                request = client.prepareSearch(index).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                         .setSize(pPageRequest.getPageSize());
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
@@ -587,7 +589,7 @@ public class EsRepository implements IEsRepository {
             Object value = (pValue instanceof LocalDateTime) ? LocalDateTimeAdapter.format((LocalDateTime) pValue)
                     : pValue;
             QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
-            SearchRequestBuilder request = client.prepareSearch(pIndex).setQuery(queryBuilder)
+            SearchRequestBuilder request = client.prepareSearch(pIndex.toLowerCase()).setQuery(queryBuilder)
                     .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
             SearchResponse response = getWithTimeouts(request);
             SearchHits hits = response.getHits();

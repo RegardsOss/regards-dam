@@ -1,31 +1,27 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import org.mockito.Mockito;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.gson.autoconfigure.GsonAutoConfiguration;
-import fr.cnes.regards.framework.multitenant.autoconfigure.MultitenantAutoConfiguration;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 
 @Configuration
-@ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler" }, basePackageClasses = {
-        MultitenantFlattenedAttributeAdapterFactory.class, GsonAutoConfiguration.class,
-        MultitenantAutoConfiguration.class })
-@PropertySource("classpath:datasource-test.properties")
+@ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler", "fr.cnes.regards.modules.entities",
+        "fr.cnes.regards.modules.models", "fr.cnes.regards.modules.datasources" })
+@EnableAutoConfiguration
+@PropertySource("classpath:test.properties")
 public class CrawlerConfiguration {
 
     @Bean
-    public IAttributeModelService modelService() {
-        return Mockito.mock(IAttributeModelService.class);
+    public IPluginService pluginService() {
+        return Mockito.mock(IPluginService.class);
     }
 
-    @Bean
-    public ISubscriber subscriber() {
-        return Mockito.mock(ISubscriber.class);
-    }
 }

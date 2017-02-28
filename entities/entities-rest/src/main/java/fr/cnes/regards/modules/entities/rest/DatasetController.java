@@ -37,7 +37,6 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -134,15 +133,6 @@ public class DatasetController implements IResourceController<Dataset> {
             throws EntityNotFoundException {
         List<Long> services = service.retrieveDatasetServices(pDatasetId);
         return new ResponseEntity<>(services, HttpStatus.OK);
-    }
-
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_DESCRIPTION_PATH)
-    @ResponseBody
-    @ResourceAccess(description = "Retrieve the description file of the specified Dataset")
-    public HttpEntity<byte[]> retrieveDescription(@PathVariable("dataset_id") Long pDatasetId)
-            throws EntityNotFoundException {
-        DescriptionFile descriptionToSend = service.retrieveDatasetDescription(pDatasetId);
-        return null;
     }
 
     /**
