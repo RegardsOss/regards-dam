@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matchers;
+import org.hsqldb.Types;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,7 +97,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     IDataSourceService dataSourceService;
 
-    PluginConfiguration pluginPostgreDbConnection;
+    private PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping dataSourceModelMapping;
 
@@ -249,7 +250,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                            "DataSource shouldn't be created.");
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setPluginConfigurationId(pls.get(0).getId());
-        
+
         // Update the DataSource
         dataSource.setFromClause(null);
         dataSource.setTableName(TABLE_NAME_TEST);
@@ -349,7 +350,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
-        attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new DataSourceAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithoutTimeZone", Types.TIMESTAMP));
+        attributes.add(new DataSourceAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithoutTimeZone"));
+        attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
+        attributes.add(new DataSourceAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);

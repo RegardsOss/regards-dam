@@ -5,8 +5,12 @@
 package fr.cnes.regards.modules.datasources.plugins;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import javax.sql.DataSource;
 
@@ -18,10 +22,13 @@ import org.springframework.data.domain.Pageable;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataObjectMapping;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -106,6 +113,37 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
         return findAll(pTenant, pPageable, null);
+    }
+
+    @Override
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException {
+        LocalDateTime ldt;
+
+        if (pAttrMapping.getTypeDS() == null) {
+            ldt = buildLocatDateTime(pRs, pAttrMapping);
+        } else {
+            long n;
+            Instant instant;
+
+            switch (pAttrMapping.getTypeDS()) {
+                case Types.TIME:
+                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
+                    instant = Instant.ofEpochMilli(n);
+                    ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    break;
+                case Types.DATE:
+                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
+                    instant = Instant.ofEpochMilli(n);
+                    ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    break;
+                default:
+                    ldt = buildLocatDateTime(pRs, pAttrMapping);
+                    break;
+            }
+        }
+
+        return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
     }
 
 }

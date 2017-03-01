@@ -106,6 +106,26 @@ public abstract class AbstractDataObjectMapping {
     protected DataSourceModelMapping dataSourceMapping;
 
     /**
+     * Get {@link DateAttribute}.
+     *
+     * @param pRs
+     *            the {@link ResultSet}
+     * @param pAttrMapping
+     *            the {@link DataSourceAttributeMapping}
+     * @return a new {@link DateAttribute}
+     * @throws SQLException
+     *             if an error occurs in the {@link ResultSet}
+     */
+    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException;
+
+    protected LocalDateTime buildLocatDateTime(ResultSet pRs, DataSourceAttributeMapping pAttrMapping) throws SQLException {
+        long n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
+        Instant instant = Instant.ofEpochMilli(n);
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+    
+    /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
      * page limit clause in the request.</br>
@@ -305,7 +325,8 @@ public abstract class AbstractDataObjectMapping {
         AbstractAttribute<?> attr = null;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("get value for <" + pAttrMapping.getNameDS() + "> of type <" + pAttrMapping.getType() + ">");
+            LOG.debug("get value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
+                    + pAttrMapping.getType() + ">");
         }
 
         String label = extractCollumnName(pAttrMapping.getNameDS());
@@ -390,31 +411,7 @@ public abstract class AbstractDataObjectMapping {
         return clauseStr.substring(0, clauseStr.length() - 1) + " ";
     }
 
-    /**
-     * Get {@link DateAttribute}.
-     *
-     * @param pRs
-     *            the {@link ResultSet}
-     * @param pAttrMapping
-     *            the {@link DataSourceAttributeMapping}
-     * @return a new {@link DateAttribute}
-     * @throws SQLException
-     *             if an error occurs in the {@link ResultSet}
-     */
-    private AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
-            throws SQLException {
-        long n = 0;
-        if (pAttrMapping.getTypeDS() == null) {
-            n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
-        } else {
-            if ((pAttrMapping.getTypeDS() == Types.DECIMAL) || (pAttrMapping.getTypeDS() == Types.NUMERIC)) {
-                n = pRs.getLong(pAttrMapping.getNameDS());
-            }
-        }
-        Instant instant = Instant.ofEpochMilli(n);
-        return AttributeBuilder.buildDate(pAttrMapping.getName(),
-                                          LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
-    }
+
 
     /**
      * Add to the SQL request the part to fetch only a portion of the results.

@@ -3,7 +3,13 @@
  */
 package fr.cnes.regards.modules.datasources.utils;
 
+
+import java.sql.Types;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -41,16 +47,16 @@ public class DataSourceEntity implements IIdentifiable<Long> {
     public DataSourceEntity() {
     }
 
-    public DataSourceEntity(String pLabel, Integer pAltitude, Double pLatitude, Double pLongitude, LocalDateTime pDate,
-            Boolean pUpdate) {
-        super();
-        this.label = pLabel;
-        this.altitude = pAltitude;
-        this.latitude = pLatitude;
-        this.longitude = pLongitude;
-        this.date = pDate;
-        this.update = pUpdate;
-    }
+//    public DataSourceEntity(String pLabel, Integer pAltitude, Double pLatitude, Double pLongitude, LocalDateTime pDate,
+//            Boolean pUpdate) {
+//        super();
+//        this.label = pLabel;
+//        this.altitude = pAltitude;
+//        this.latitude = pLatitude;
+//        this.longitude = pLongitude;
+//        this.timeStampWithoutTimeZone = pDate;
+//        this.update = pUpdate;
+//    }
 
     /**
      * DataSourceEntity label
@@ -59,13 +65,35 @@ public class DataSourceEntity implements IIdentifiable<Long> {
     @Column(unique = true)
     private String label;
 
+    public DataSourceEntity(String pLabel, int pAltitude, double pLatitude, double pLongitude, LocalDate pDate,
+            LocalTime pTimeWithoutTimeZone, LocalDateTime pTimeStampWithoutTimeZone, OffsetDateTime pTimeStampWithTimeZone,
+            Boolean pUpdate) {
+        super();
+        this.label = pLabel;
+        this.altitude = pAltitude;
+        this.latitude = pLatitude;
+        this.longitude = pLongitude;
+        this.date = pDate;
+        this.timeWithoutTimeZone = pTimeWithoutTimeZone;
+        this.timeStampWithoutTimeZone = pTimeStampWithoutTimeZone;
+        this.timeStampWithTimeZone = pTimeStampWithTimeZone;
+        this.update = pUpdate;
+    }
+
+
     private Integer altitude;
 
     private Double latitude;
 
     private Double longitude;
 
-    private LocalDateTime date;
+    private LocalDate date;  // Types.DATE
+    
+    private LocalTime timeWithoutTimeZone; // Types.TIME
+    
+    private LocalDateTime timeStampWithoutTimeZone; // Types.TIMESTAMP
+    
+    private OffsetDateTime timeStampWithTimeZone; // Types.TIMESTAMP or Types.TIMESTAMP_WITH_TIMEZONE > JDBC 4.2
 
     private Boolean update;
 
@@ -109,14 +137,6 @@ public class DataSourceEntity implements IIdentifiable<Long> {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
-    }
-
-    public LocalDateTime getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDateTime date) {
-        this.date = date;
     }
 
     public Boolean getUpdate() {

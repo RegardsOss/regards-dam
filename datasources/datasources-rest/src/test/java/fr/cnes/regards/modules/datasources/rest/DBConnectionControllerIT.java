@@ -45,6 +45,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private static final String POSTGRESQL_PLUGIN_CONNECTION = "fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin";
 
+    private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
+
     @Value("${postgresql.datasource.host}")
     private String dbHost;
 
@@ -283,14 +285,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void getColumns() throws ModuleException {
         PluginConfiguration plgConf = initPluginConfDbConnections().get(0);
-        final String columnName = "t_test_plugin_data_source";
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_STAR, Matchers.hasSize(7)));
 
         performDefaultGet(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}/tables/{pTableName}/columns",
-                          expectations, "Could not get the columns.", plgConf.getId(), columnName);
+                          expectations, "Could not get the columns.", plgConf.getId(), TABLE_NAME_TEST);
     }
 
     private DBConnection createADbConnection(String pLabel, String pPluginClassName) {

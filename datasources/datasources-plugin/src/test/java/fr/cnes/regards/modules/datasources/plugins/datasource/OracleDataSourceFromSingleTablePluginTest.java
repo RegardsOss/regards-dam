@@ -7,6 +7,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -27,8 +28,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
@@ -46,7 +49,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-@Ignore
 public class OracleDataSourceFromSingleTablePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleDataSourceFromSingleTablePluginTest.class);
@@ -117,26 +119,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
         }
 
     }
-
-//    @Test
-//    public void getTables() {
-//        Map<String, Table> tables = plgDBDataSource.getTables();
-//        Assert.assertNotNull(tables);
-//        Assert.assertTrue(!tables.isEmpty());
-//    }
-//
-//    @Test
-//    public void getColumnsAndIndices() {
-//        Map<String, Table> tables = plgDBDataSource.getTables();
-//        Assert.assertNotNull(tables);
-//        Assert.assertTrue(!tables.isEmpty());
-//
-//        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
-//        Assert.assertNotNull(columns);
-//
-//        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-//        Assert.assertNotNull(indices);
-//    }
 
     @Test
     public void getDataSourceIntrospection() {

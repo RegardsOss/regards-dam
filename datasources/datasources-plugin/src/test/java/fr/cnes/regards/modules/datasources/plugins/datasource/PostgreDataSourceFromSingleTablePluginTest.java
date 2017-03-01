@@ -3,7 +3,11 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import java.sql.Types;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,7 +59,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
     private static final String TENANT = "PGDB_TENANT";
-    
+
     private static final String HELLO = "Hello Toulouse";
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
@@ -115,11 +119,14 @@ public class PostgreDataSourceFromSingleTablePluginTest {
          */
         repository.deleteAll();
         repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
-                LocalDateTime.now(), true));
+                LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
+                OffsetDateTime.now().minusMinutes(33), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
-                LocalDateTime.now().minusDays(5), false));
+                LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(35), LocalDateTime.now().plusHours(33),
+                OffsetDateTime.now().minusSeconds(22), true));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
-                25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
+                25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
+                LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7), false));
         nbElements = 3;
 
         /*
@@ -151,7 +158,6 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     }
 
-
     @Test
     public void getDataSourceIntrospection() {
         Assert.assertEquals(nbElements, repository.count());
@@ -159,7 +165,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
-        
+
         ll.getContent().get(0).getAttributes().forEach(attr -> {
             if (attr.getName().equals("name")) {
                 Assert.assertTrue(attr.getValue().toString().contains(HELLO));
@@ -169,13 +175,12 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
-        
+
         ll.getContent().get(0).getAttributes().forEach(attr -> {
             if (attr.getName().equals("name")) {
-                Assert.assertTrue(attr.getValue().toString().contains(HELLO+""));
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO + ""));
             }
         });
-
     }
 
     @After
@@ -213,7 +218,13 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
-        attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new DataSourceAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithoutTimeZone", Types.TIMESTAMP));
+        attributes.add(new DataSourceAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithoutTimeZone"));
+        attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
+        attributes.add(new DataSourceAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

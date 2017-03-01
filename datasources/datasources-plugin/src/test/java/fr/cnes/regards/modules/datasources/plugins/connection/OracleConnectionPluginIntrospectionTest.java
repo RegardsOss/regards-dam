@@ -31,7 +31,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
-@Ignore
 public class OracleConnectionPluginIntrospectionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleConnectionPluginIntrospectionTest.class);

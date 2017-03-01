@@ -4,6 +4,13 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
@@ -14,10 +21,14 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -30,7 +41,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @since 1.0-SNAPSHOT
  */
 @Plugin(id = "postgresql-datasource-single-table", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Allows introspection and  data extraction to a PostgreSql database")
+        description = "Allows introspection and data extraction to a PostgreSql database")
 public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin
         implements IDataSourceFromSingleTablePlugin {
 
@@ -85,5 +96,38 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     protected IDBConnectionPlugin getDBConnectionPlugin() {
         return dbConnection;
     }
+
+    
+    @Override
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException {
+        LocalDateTime ldt;
+
+        if (pAttrMapping.getTypeDS() == null) {
+            ldt = buildLocatDateTime(pRs, pAttrMapping);
+        } else {
+            long n;
+            Instant instant;
+
+            switch (pAttrMapping.getTypeDS()) {
+                case Types.TIME:
+                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
+                    instant = Instant.ofEpochMilli(n);
+                    ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    break;
+                case Types.DATE:
+                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
+                    instant = Instant.ofEpochMilli(n);
+                    ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    break;
+                default:
+                    ldt = buildLocatDateTime(pRs, pAttrMapping);
+                    break;
+            }
+        }
+
+        return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
+    }
+
 
 }
