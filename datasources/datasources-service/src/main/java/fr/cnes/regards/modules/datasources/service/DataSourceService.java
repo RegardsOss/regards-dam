@@ -212,11 +212,25 @@ public class DataSourceService implements IDataSourceService {
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDataSource.getPluginConfigurationId());
 
+        // Manage the change between a DataSource from a single table and a from clause
+        PluginParameter paramTableName = plgConf.getParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM);
+        if (paramTableName != null && pDataSource.getFromClause() != null && !"".equals(pDataSource.getFromClause())) {
+            plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters()).removeParameter(paramTableName)
+                    .addParameterPluginConfiguration(IDataSourcePlugin.FROM_CLAUSE, null).getParameters());
+        } else {
+            PluginParameter paramFromClause = plgConf.getParameter(IDataSourcePlugin.FROM_CLAUSE);
+            if (paramFromClause != null && pDataSource.getTableName() != null
+                    && !"".equals(pDataSource.getTableName())) {
+                plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters())
+                        .removeParameter(paramFromClause)
+                        .addParameterPluginConfiguration(IDataSourceFromSingleTablePlugin.TABLE_PARAM, null)
+                        .getParameters());
+            }
+        }
+
         // Update the PluginParamater of the PluginConfiguration
         UnaryOperator<PluginParameter> unaryOpt = pn -> mergeParameters(pn, pDataSource);
         plgConf.getParameters().replaceAll(unaryOpt);
-
-        // TODO CMZ gérer le changement de type de plugin
 
         try {
             return getDataSourceFromPluginConfiguration(service.updatePluginConfiguration(plgConf));
@@ -235,29 +249,55 @@ public class DataSourceService implements IDataSourceService {
      * Update the {@link PluginParameter} with the appropriate {@link DataSource} attribute
      * 
      * @param pPlgParam
-     *            a {@link PluginParameter}
+     *            a {@link PluginParameter} to update
      * @param pDataSource
-     *            A {@link DataSource}
+     *            a {@link DataSource}
      * @return a {{@link PluginParameter}
+     * @throws ModuleException
      */
     private PluginParameter mergeParameters(PluginParameter pPlgParam, DataSource pDataSource) {
         // Update the parameter's value, because all parameters are not required for each DataSource
         pPlgParam.setValue("");
+
         switch (pPlgParam.getName()) {
-            case IDataSourceFromSingleTablePlugin.CONNECTION_PARAM:
-                pPlgParam.setValue(pDataSource.getPluginConfigurationConnectionId().toString());
+            case IDataSourcePlugin.CONNECTION_PARAM:
+                mergePluginConfigurationParameter(pPlgParam, pDataSource);
                 break;
-            case IDataSourceFromSingleTablePlugin.MODEL_PARAM:
+            case IDataSourcePlugin.MODEL_PARAM:
                 pPlgParam.setValue(adapter.toJson(pDataSource.getMapping()));
                 break;
-            case IDataSourceFromSingleTablePlugin.FROM_CLAUSE:
+            case IDataSourcePlugin.FROM_CLAUSE:
                 pPlgParam.setValue(pDataSource.getFromClause());
                 break;
-            // TODO CMZ manque IDataSourceFromSingleTablePlugin.TABLE_PARAM
+            case IDataSourceFromSingleTablePlugin.TABLE_PARAM:
+                pPlgParam.setValue(pDataSource.getTableName());
+                break;
             default:
                 break;
         }
         return pPlgParam;
+    }
+
+    /**
+     * Update a {@link PluginParameter} of type connection
+     * 
+     * @param pPlgParam
+     *            a {@link PluginParameter} to update
+     * @param pDataSource
+     *            a {@link DataSource}
+     */
+    private void mergePluginConfigurationParameter(PluginParameter pPlgParam, DataSource pDataSource) {
+        if (pPlgParam.getPluginConfiguration() == null || !pPlgParam.getPluginConfiguration().getId()
+                .equals(pDataSource.getPluginConfigurationConnectionId())) {
+            pPlgParam.setPluginConfiguration(null);
+
+            try {
+                pPlgParam.setPluginConfiguration(service
+                        .getPluginConfiguration(pDataSource.getPluginConfigurationConnectionId()));
+            } catch (ModuleException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
     }
 
     /**

@@ -128,6 +128,7 @@ public abstract class AbstractDataSourceConnection {
                     isConnected = true;
                 }
             }
+            conn.close();
         } catch (SQLException e) {
             LOG.error("Unable to connect to the database", e);
         }
@@ -158,8 +159,7 @@ public abstract class AbstractDataSourceConnection {
         ResultSet rs = null;
 
         // Get a connection
-        Connection conn = getDBConnectionPlugin().getConnection();
-        try {
+        try (Connection conn = getDBConnectionPlugin().getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
 
             rs = metaData.getTables(conn.getCatalog(), null, null, new String[] { METADATA_TABLE });
@@ -174,17 +174,9 @@ public abstract class AbstractDataSourceConnection {
                                             rs.getString(TABLE_NAME)));
                 tables.put(table.getName(), table);
             }
+            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                conn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
         }
 
         return tables;
@@ -227,41 +219,28 @@ public abstract class AbstractDataSourceConnection {
      */
     public Map<String, Column> getColumns(String pTableName) {
         Map<String, Column> cols = new HashMap<>();
-        ResultSet rs = null;
 
         // Get a connection
-        Connection conn = getDBConnectionPlugin().getConnection();
+        try (Connection conn = getDBConnectionPlugin().getConnection()) {
 
-        if (conn == null) {
-            LOG.error("Unable to obtain a database connection");
-            return null;
-        }
-
-        try {
             DatabaseMetaData metaData = conn.getMetaData();
 
-            rs = metaData.getColumns(null, null, pTableName, null);
+            try (ResultSet rs = metaData.getColumns(null, null, pTableName, null)) {
 
-            while (rs.next()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
-                            + logInt(rs, "DATA_TYPE"));
+                while (rs.next()) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
+                                + logInt(rs, "DATA_TYPE"));
+                    }
+
+                    Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
+                    cols.put(column.getName(), column);
                 }
-
-                Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
-                cols.put(column.getName(), column);
             }
+
+            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                conn.close();
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
         }
         return cols;
     }

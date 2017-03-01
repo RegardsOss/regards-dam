@@ -61,11 +61,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
+    private final static String FROM_CLAUSE_TEST = "from T_TEST_PLUGIN_DATA_SOURCE";
+
     private static final String LABEL_DATA_SOURCE = "the label of the data source";
 
     private final static String JSON_PATH_LABEL = "$.content.label";
 
-    private final static String JSON_PATH_MAPPING = "$.content.mapping";
+    // private final static String JSON_PATH_MAPPING = "$.content.mapping";
 
     private final static String JSON_PATH_FROM_CLAUSE = "$.content.fromClause";
 
@@ -97,8 +99,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping dataSourceModelMapping;
-
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
     protected Logger getLogger() {
@@ -159,17 +159,16 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void getDataSource() {
         final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
         final DataSource dataSource = createDataSourceWithFromClause();
-        expectations.add(MockMvcResultMatchers.status().isOk());
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setPluginConfigurationId(pls.get(0).getId());
 
         // Define expectations
-        expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath(JSON_PATH_PLUGIN_CONNECTION,
@@ -182,18 +181,113 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void updateDataSource() {
+    public void dataSourceUpdateFromClause() {
         final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Create a DataSource
         final DataSource dataSource = createDataSourceWithFromClause();
-        expectations.add(MockMvcResultMatchers.status().isOk());
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
                            "DataSource shouldn't be created.");
         List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
         dataSource.setPluginConfigurationId(pls.get(0).getId());
 
+        // Update the DataSource
+        dataSource.setFromClause("from table where table.id>1000");
+
         // Define expectations
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
+        expectations.add(MockMvcResultMatchers
+                .jsonPath(JSON_PATH_PLUGIN_CONNECTION,
+                          Matchers.hasToString(dataSource.getPluginConfigurationConnectionId().toString())));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE,
+                                                        Matchers.equalTo(dataSource.getFromClause())));
+
+        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", dataSource, expectations,
+                          "DataSource shouldn't be created.", dataSource.getPluginConfigurationId());
+    }
+
+    @Test
+    public void dataSourceUpdateDBConnection() throws ModuleException, PluginUtilsException {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        // Create a DataSource
+        final DataSource dataSource = createDataSourceWithFromClause();
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+                           "DataSource shouldn't be created.");
+        List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
+        dataSource.setPluginConfigurationId(pls.get(0).getId());
+
+        // Update the DataSource
+        PluginConfiguration otherDbConnection = pluginService
+                .savePluginConfiguration(getPostGreSqlConnectionConfiguration());
+        dataSource.setPluginConfigurationConnectionId(otherDbConnection.getId());
+
+        // Define expectations
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
+        expectations.add(MockMvcResultMatchers
+                .jsonPath(JSON_PATH_PLUGIN_CONNECTION,
+                          Matchers.hasToString(dataSource.getPluginConfigurationConnectionId().toString())));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE,
+                                                        Matchers.equalTo(dataSource.getFromClause())));
+
+        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", dataSource, expectations,
+                          "DataSource shouldn't be created.", dataSource.getPluginConfigurationId());
+    }
+
+    @Test
+    public void dataSourceChangeFromClauseToSimpleTable() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+
+        // Create a DataSource
+        final DataSource dataSource = createDataSourceWithFromClause();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_FROM_CLAUSE,
+                                                        Matchers.equalTo(dataSource.getFromClause())));
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+                           "DataSource shouldn't be created.");
+        List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
+        dataSource.setPluginConfigurationId(pls.get(0).getId());
+        
+        // Update the DataSource
+        dataSource.setFromClause(null);
+        dataSource.setTableName(TABLE_NAME_TEST);
+
+        // Define expectations
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
+        expectations.add(MockMvcResultMatchers
+                .jsonPath(JSON_PATH_PLUGIN_CONNECTION,
+                          Matchers.hasToString(dataSource.getPluginConfigurationConnectionId().toString())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath(JSON_PATH_TABLE_NAME, Matchers.equalTo(dataSource.getTableName())));
+
+        performDefaultPut(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", dataSource, expectations,
+                          "DataSource shouldn't be created.", dataSource.getPluginConfigurationId());
+    }
+
+    @Test
+    public void dataSourceChangeSimpleTableToFromClause() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+
+        // Create a DataSource
+        final DataSource dataSource = createDataSourceSingleTable();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations
+                .add(MockMvcResultMatchers.jsonPath(JSON_PATH_TABLE_NAME, Matchers.equalTo(dataSource.getTableName())));
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
+                           "DataSource shouldn't be created.");
+        List<PluginConfiguration> pls = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class);
+        dataSource.setPluginConfigurationId(pls.get(0).getId());
+
+        // Update the DataSource
+        dataSource.setFromClause(FROM_CLAUSE_TEST);
+        dataSource.setTableName(null);
+
+        // Define expectations
+        expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
@@ -220,13 +314,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         expectations.add(status().isNoContent());
 
-        performDefaultDelete(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", expectations, "DataSource shouldn't be deleted.",
-                             dataSource.getPluginConfigurationId());
+        performDefaultDelete(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", expectations,
+                             "DataSource shouldn't be deleted.", dataSource.getPluginConfigurationId());
     }
 
     private DataSource createDataSourceWithFromClause() {
         final DataSource dataSource = new DataSource();
-        dataSource.setFromClause("from T_TEST_PLUGIN_DATA_SOURCE");
+        dataSource.setFromClause(FROM_CLAUSE_TEST);
         dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(dataSourceModelMapping);
