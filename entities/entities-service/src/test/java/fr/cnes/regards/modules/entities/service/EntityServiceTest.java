@@ -12,7 +12,6 @@ import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -35,7 +34,6 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Ignore
 public class EntityServiceTest {
 
     private EntityService entityServiceMocked;
@@ -120,7 +118,7 @@ public class EntityServiceTest {
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(dataURNList)).thenReturn(dataList);
         Mockito.when(entitiesRepositoryMocked.findOneByIpId(collection2.getIpId())).thenReturn(collection2);
         Mockito.when(entitiesRepositoryMocked.findById(collection2.getId())).thenReturn(collection2);
-
+        Mockito.when(entitiesRepositoryMocked.save(collection2)).thenReturn(collection2);
         entityServiceMocked.associate(collection2.getId(), dataURNList);
         Assert.assertTrue(collection2.getTags().contains(data.getIpId().toString()));
     }
@@ -146,7 +144,7 @@ public class EntityServiceTest {
         final Set<UniformResourceName> col3URNList = new HashSet<>();
         col3URNList.add(collection3.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-    
+
         // TODO
         //        entityServiceMocked.associate(collection2, col3URNList);
         Assert.assertTrue(collection3.getTags().contains(collection2.getIpId().toString()));
@@ -162,7 +160,7 @@ public class EntityServiceTest {
         col3URNList.add(collection3.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
         Mockito.when(entitiesRepositoryMocked.findOneByIpId(data.getIpId())).thenReturn(data);
-        // TODO
+        Mockito.when(entitiesRepositoryMocked.save(data)).thenReturn(data);
         entityServiceMocked.associate(data.getId(), col3URNList);
         Assert.assertTrue(data.getTags().contains(collection3.getIpId().toString()));
     }
@@ -177,6 +175,7 @@ public class EntityServiceTest {
         datasetURNList.add(dataset.getIpId());
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(datasetURNList)).thenReturn(datasetList);
         Mockito.when(entitiesRepositoryMocked.findOneByIpId(data.getIpId())).thenReturn(data);
+        Mockito.when(entitiesRepositoryMocked.save(data)).thenReturn(data);
         entityServiceMocked.associate(data.getId(), datasetURNList);
         Assert.assertTrue(data.getTags().contains(dataset.getIpId().toString()));
     }
@@ -192,7 +191,7 @@ public class EntityServiceTest {
         Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
         Mockito.when(entitiesRepositoryMocked.findById(data.getId())).thenReturn(data);
         Mockito.when(entitiesRepositoryMocked.findOneByIpId(data.getIpId())).thenReturn(data);
-
+        Mockito.when(entitiesRepositoryMocked.save(data)).thenReturn(data);
         entityServiceMocked.associate(data.getId(), col3URNList);
         Assert.assertTrue(data.getTags().contains(collection3.getIpId().toString()));
     }

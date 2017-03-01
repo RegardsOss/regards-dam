@@ -71,7 +71,7 @@ public class Dataset extends AbstractLinkEntity {
     private Model modelOfData;
 
     /**
-     * request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
+     * Request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
      * DataSource has been given to the catalog
      */
     @Type(type = "jsonb")
