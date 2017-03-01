@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -29,14 +28,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
-import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.Index;
-import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
@@ -60,6 +55,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
     private static final String TENANT = "PGDB_TENANT";
+    
+    private static final String HELLO = "Hello Toulouse";
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -82,9 +79,11 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
-    private DataSourceModelMapping dataSourceModelMapping;
+    private DataSourceModelMapping modelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+
+    private static int nbElements;
 
     /**
      * JPA Repository
@@ -121,11 +120,12 @@ public class PostgreDataSourceFromSingleTablePluginTest {
                 LocalDateTime.now().minusDays(5), false));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
+        nbElements = 3;
 
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         /*
          * Instantiate the SQL DataSource plugin
@@ -135,7 +135,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getPostgreConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -150,43 +151,31 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     }
 
-    @Test
-    public void getTables() {
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-    }
-
-    @Test
-    public void getColumnsAndIndices() {
-        Assert.assertEquals(3, repository.count());
-
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-
-        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(columns);
-        Assert.assertEquals(7, columns.size());
-
-        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(indices);
-        Assert.assertEquals(3, indices.size());
-    }
 
     @Test
     public void getDataSourceIntrospection() {
-        Assert.assertEquals(3, repository.count());
-
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
+        Assert.assertEquals(nbElements, repository.count());
 
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
+        
+        ll.getContent().get(0).getAttributes().forEach(attr -> {
+            if (attr.getName().equals("name")) {
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO));
+            }
+        });
 
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
+        
+        ll.getContent().get(0).getAttributes().forEach(attr -> {
+            if (attr.getName().equals("name")) {
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO+""));
+            }
+        });
+
     }
 
     @After
@@ -219,14 +208,15 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
-        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "label"));
+        attributes
+                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "-'||label as label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        modelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

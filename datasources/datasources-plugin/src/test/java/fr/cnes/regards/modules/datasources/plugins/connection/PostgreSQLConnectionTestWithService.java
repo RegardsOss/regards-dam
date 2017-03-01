@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -38,7 +39,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  *
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
 public class PostgreSQLConnectionTestWithService {
 
@@ -86,9 +87,10 @@ public class PostgreSQLConnectionTestWithService {
         pluginConfs.add(aPluginConfiguration);
 
         Mockito.when(pluginConfRepositoryMocked
-                .findByPluginIdOrderByPriorityOrderDesc(DefaultPostgreConnectionPlugin.class.getCanonicalName()))
+                .findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
+        Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
 
         // Get the first Plugin
         final DefaultPostgreConnectionPlugin aa = pluginServiceMocked.getFirstPluginByType(IDBConnectionPlugin.class);
@@ -117,9 +119,10 @@ public class PostgreSQLConnectionTestWithService {
         pluginConfs.add(aPluginConfiguration);
 
         Mockito.when(pluginConfRepositoryMocked
-                .findByPluginIdOrderByPriorityOrderDesc(DefaultPostgreConnectionPlugin.class.getCanonicalName()))
+                .findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
+        Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
 
         // Get a Plugin for a specific configuration
         final DefaultPostgreConnectionPlugin aa = pluginServiceMocked.getPlugin(anId);

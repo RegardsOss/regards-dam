@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.rest;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -17,12 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
+import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -158,25 +163,51 @@ public class DBConnectionController implements IResourceController<PluginConfigu
         return ResponseEntity.ok(dbConnectionService.testDBConnection(pConnectionId));
     }
 
+    /**
+     * Get the database's tables
+     * 
+     * @param pConnectionId
+     *            {@link PluginConfiguration} identifier
+     * @return a {@link Map} that contains the database's tables
+     * @throws ModuleException
+     *             if problem occurs during retrieve the database's tables
+     */
+    @ResourceAccess(description = "Get the tables of the database")
+    @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables")
+    public ResponseEntity<Map<String, Table>> getTables(@PathVariable Long pConnectionId) throws ModuleException {
+        Map<String, Table> tables = dbConnectionService.getTables(pConnectionId);
+        return ResponseEntity.ok(tables);
+    }
+
+    /**
+     * Get the column of a table
+     * 
+     * @param pConnectionId
+     *            {@link PluginConfiguration} identifier
+     * @param pTableName
+     *            a database table name
+     * @return a {@link Map} that contains the columns of a table
+     * @throws ModuleException
+     *             if problem occurs during retrieve the columns of a table
+     */
+    @ResourceAccess(description = "Get the columns of a specific table of the database")
+    @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables/{pTableName}/columns")
+    public ResponseEntity<Map<String, Column>> getColumns(@PathVariable Long pConnectionId,
+            @PathVariable String pTableName) throws ModuleException {
+        return ResponseEntity.ok(dbConnectionService.getColumns(pConnectionId, pTableName));
+    }
+
     @Override
     public Resource<PluginConfiguration> toResource(PluginConfiguration pElement, Object... pExtras) {
         final Resource<PluginConfiguration> resource = resourceService.toResource(pElement);
-        // resourceService.addLink(resource, this.getClass(), "getModel", LinkRels.SELF,
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
-        // MethodParamFactory.build(Long.class, pElement.getId()),
-        // MethodParamFactory.build(Model.class));
-        // resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
-        // MethodParamFactory.build(EntityType.class));
-        // // Import / Export
-        // resourceService.addLink(resource, this.getClass(), "exportModel", "export",
-        // MethodParamFactory.build(HttpServletRequest.class),
-        // MethodParamFactory.build(HttpServletResponse.class),
-        // MethodParamFactory.build(Long.class, pElement.getId()));
-        // resourceService.addLink(resource, this.getClass(), "importModel", "import",
-        // MethodParamFactory.build(MultipartFile.class));
+        resourceService.addLink(resource, this.getClass(), "getDBConnection", LinkRels.SELF,
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "deleteDBConnection", LinkRels.DELETE,
+                                MethodParamFactory.build(Long.class, pElement.getId()));
+        resourceService.addLink(resource, this.getClass(), "updateDBConnection", LinkRels.UPDATE,
+                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(DBConnection.class));
+        resourceService.addLink(resource, this.getClass(), "getAllDBConnections", LinkRels.LIST);
         return resource;
     }
 

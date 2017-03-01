@@ -4,14 +4,8 @@
 
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
-import java.util.List;
-import java.util.Map;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.Index;
-import fr.cnes.regards.modules.datasources.domain.Table;
 
 /**
  * Class IDataSourceFromSingleTablePlugin
@@ -25,30 +19,9 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
 
     /**
-     * Requests the database to get the tables of a data source.
-     * 
-     * @return a {@link Map} of the database's table
+     * The table parameter name
      */
-    public Map<String, Table> getTables();
-
-    /**
-     * Requests the database to get the columns of a specific table.
-     * 
-     * @param pTable
-     *            the database's table
-     * @return a {@link Map} of the columns
-     * 
-     */
-    public Map<String, Column> getColumns(Table pTable);
-
-    /**
-     * Requests the database to get the indexes of a specific table.
-     * 
-     * @param pTable
-     *            the database's table
-     * @return a {@link Map} of the indexes
-     */
-    public Map<String, Index> getIndexes(Table pTable);
+    public static final String TABLE_PARAM = "table";
 
     /**
      * Allows to define the database table used, and the columns of this table.</br>
@@ -59,20 +32,6 @@ public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
      * @param pMapping
      *            the mapping between the model and the datasource
      */
-    public void setMapping(String pTable, DataSourceModelMapping pMapping);
-
-    /**
-     * The table of the database
-     * 
-     * @return the table name
-     */
-    public String getConfiguredTable();
-
-    /**
-     * Get the {@link List} of columns used
-     * 
-     * @return the {@link List} of columns name
-     */
-    public List<String> getConfiguredColumns();
+    public void initializePluginMapping(String pTable, DataSourceModelMapping pMapping);
 
 }

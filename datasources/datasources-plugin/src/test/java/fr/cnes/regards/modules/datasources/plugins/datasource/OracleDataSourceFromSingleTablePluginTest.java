@@ -7,7 +7,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -21,24 +20,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
-import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.Index;
-import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -50,7 +44,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  *
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
 @Ignore
 public class OracleDataSourceFromSingleTablePluginTest {
@@ -108,7 +102,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -123,30 +118,28 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     }
 
-    @Test
-    public void getTables() {
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-    }
-
-    @Test
-    public void getColumnsAndIndices() {
-        Map<String, Table> tables = plgDBDataSource.getTables();
-        Assert.assertNotNull(tables);
-        Assert.assertTrue(!tables.isEmpty());
-
-        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(columns);
-
-        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-        Assert.assertNotNull(indices);
-    }
+//    @Test
+//    public void getTables() {
+//        Map<String, Table> tables = plgDBDataSource.getTables();
+//        Assert.assertNotNull(tables);
+//        Assert.assertTrue(!tables.isEmpty());
+//    }
+//
+//    @Test
+//    public void getColumnsAndIndices() {
+//        Map<String, Table> tables = plgDBDataSource.getTables();
+//        Assert.assertNotNull(tables);
+//        Assert.assertTrue(!tables.isEmpty());
+//
+//        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
+//        Assert.assertNotNull(columns);
+//
+//        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
+//        Assert.assertNotNull(indices);
+//    }
 
     @Test
     public void getDataSourceIntrospection() {
-        plgDBDataSource.setMapping(TABLE_NAME_TEST, dataSourceModelMapping);
-
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
@@ -211,7 +204,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping("ModelDeTest", attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
 }

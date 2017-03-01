@@ -5,8 +5,9 @@
  */
 package fr.cnes.regards.modules.datasources.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import org.slf4j.Logger;
@@ -21,11 +22,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.Index;
-import fr.cnes.regards.modules.datasources.domain.Table;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
@@ -82,22 +81,38 @@ public class DataSourceService implements IDataSourceService {
     }
 
     @Override
-    public List<PluginConfiguration> getAllDataSources() {
-        return service.getPluginConfigurationsByType(IDataSourcePlugin.class);
+    public List<DataSource> getAllDataSources() {
+        List<DataSource> dataSources = new ArrayList<>();
+
+        service.getPluginConfigurationsByType(IDataSourcePlugin.class).forEach(c -> {
+            try {
+                dataSources.add(getDataSourceFromPluginConfiguration(c));
+            } catch (IOException e) {
+                LOGGER.error("Unable to converts the PluginConfiguration <" + c.getId() + "> to a DataSource object",
+                             e);
+            }
+        });
+        return dataSources;
     }
 
     @Override
-    public PluginConfiguration createDataSource(DataSource pDataSource) throws ModuleException {
+    public DataSource createDataSource(DataSource pDataSource) throws ModuleException {
 
-        if (pDataSource.getTableName() != null && pDataSource.getFromClause() == null) {
-            return createDataSourceFromSingleTable(pDataSource);
+        try {
+
+            if (pDataSource.getTableName() != null && pDataSource.getFromClause() == null) {
+                return getDataSourceFromPluginConfiguration(createDataSourceFromSingleTable(pDataSource));
+            }
+
+            if (pDataSource.getTableName() == null && pDataSource.getFromClause() != null) {
+                return getDataSourceFromPluginConfiguration(createDataSourceFromComplexRequest(pDataSource));
+            }
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new ModuleException("Unable to converts a PluginConfiguration to a Datasourceobject");
         }
 
-        if (pDataSource.getTableName() == null && pDataSource.getFromClause() != null) {
-            return createDataSourceFromComplexRequest(pDataSource);
-        }
-
-        throw new ModuleException("The datasource is inconsistent.");
+        throw new ModuleException("The incoming datasource is inconsistent");
     }
 
     /**
@@ -112,7 +127,7 @@ public class DataSourceService implements IDataSourceService {
     private PluginConfiguration createDataSourceFromSingleTable(DataSource pDataSource) throws ModuleException {
         PluginMetaData metaData = service.checkPluginClassName(IDataSourceFromSingleTablePlugin.class,
                                                                pDataSource.getPluginClassName());
-        return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getPluginClassName(),
+        return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getLabel(),
                 buildParametersSingleTable(pDataSource)));
     }
 
@@ -127,8 +142,27 @@ public class DataSourceService implements IDataSourceService {
     private PluginConfiguration createDataSourceFromComplexRequest(DataSource pDataSource) throws ModuleException {
         PluginMetaData metaData = service.checkPluginClassName(IDataSourcePlugin.class,
                                                                pDataSource.getPluginClassName());
-        return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getPluginClassName(),
+        return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getLabel(),
                 buildParametersFromComplexRequest(pDataSource)));
+    }
+
+    /**
+     * Crate a {@link PluginParametersFactory} with the parameters connection et model.
+     * 
+     * @param pDataSource
+     *            the {@link DataSource} to used
+     * @return the {@link PluginParametersFactory} created
+     * @throws ModuleException
+     *             an error occurred when converts the mapping to a JSON String
+     */
+    private PluginParametersFactory buildParametersCommon(DataSource pDataSource) throws ModuleException {
+        PluginParametersFactory factory = PluginParametersFactory.build();
+        factory.addParameterPluginConfiguration(IDataSourcePlugin.CONNECTION_PARAM,
+                                                dbConnectionService.getDBConnection(pDataSource
+                                                        .getPluginConfigurationConnectionId()))
+                .addParameter(IDataSourcePlugin.MODEL_PARAM, adapter.toJson(pDataSource.getMapping()));
+
+        return factory;
     }
 
     /**
@@ -138,16 +172,11 @@ public class DataSourceService implements IDataSourceService {
      *            the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
      * @throws ModuleException
+     *             an error occurred when converts the mapping to a JSON String
      */
     private List<PluginParameter> buildParametersSingleTable(DataSource pDataSource) throws ModuleException {
-        PluginParametersFactory factory = PluginParametersFactory.build();
-        factory.addParameterPluginConfiguration(IDataSourceFromSingleTablePlugin.CONNECTION_PARAM, dbConnectionService
-                .getDBConnection(pDataSource.getPluginConfigurationConnectionId()));
-        if (pDataSource.getMapping() != null) {
-            factory.addParameter(IDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                                 adapter.toJson(pDataSource.getMapping()));
-        }
-        return factory.getParameters();
+        return buildParametersCommon(pDataSource)
+                .addParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM, pDataSource.getTableName()).getParameters();
     }
 
     /**
@@ -157,41 +186,58 @@ public class DataSourceService implements IDataSourceService {
      *            the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
      * @throws ModuleException
+     *             an error occurred when converts the mapping to a JSON String
      */
     private List<PluginParameter> buildParametersFromComplexRequest(DataSource pDataSource) throws ModuleException {
-        PluginParametersFactory factory = PluginParametersFactory.build();
-        factory.addParameterPluginConfiguration(IDataSourcePlugin.CONNECTION_PARAM,
-                                                dbConnectionService.getDBConnection(pDataSource
-                                                        .getPluginConfigurationConnectionId()))
-                .addParameter(IDataSourcePlugin.FROM_CLAUSE, pDataSource.getFromClause())
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, adapter.toJson(pDataSource.getMapping()));
-
-        return factory.getParameters();
+        return buildParametersCommon(pDataSource)
+                .addParameter(IDataSourcePlugin.FROM_CLAUSE, pDataSource.getFromClause()).getParameters();
     }
 
     @Override
-    public PluginConfiguration getDataSource(Long pId) throws EntityNotFoundException {
-
+    public DataSource getDataSource(Long pId) throws EntityNotFoundException {
         try {
-            return service.getPluginConfiguration(pId);
+            return getDataSourceFromPluginConfiguration(service.getPluginConfiguration(pId));
         } catch (ModuleException e) {
             LOGGER.error("No plugin configuration found for id:" + pId, e);
             throw new EntityNotFoundException(e.getMessage(), PluginConfiguration.class);
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+            throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasource object",
+                    PluginConfiguration.class);
         }
     }
 
     @Override
-    public PluginConfiguration updateDataSource(DataSource pDataSource) throws ModuleException {
+    public DataSource updateDataSource(DataSource pDataSource) throws ModuleException {
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDataSource.getPluginConfigurationId());
+
+        // Manage the change between a DataSource from a single table and a from clause
+        PluginParameter paramTableName = plgConf.getParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM);
+        if (paramTableName != null && pDataSource.getFromClause() != null && !"".equals(pDataSource.getFromClause())) {
+            plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters()).removeParameter(paramTableName)
+                    .addParameterPluginConfiguration(IDataSourcePlugin.FROM_CLAUSE, null).getParameters());
+        } else {
+            PluginParameter paramFromClause = plgConf.getParameter(IDataSourcePlugin.FROM_CLAUSE);
+            if (paramFromClause != null && pDataSource.getTableName() != null
+                    && !"".equals(pDataSource.getTableName())) {
+                plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters())
+                        .removeParameter(paramFromClause)
+                        .addParameterPluginConfiguration(IDataSourceFromSingleTablePlugin.TABLE_PARAM, null)
+                        .getParameters());
+            }
+        }
 
         // Update the PluginParamater of the PluginConfiguration
         UnaryOperator<PluginParameter> unaryOpt = pn -> mergeParameters(pn, pDataSource);
         plgConf.getParameters().replaceAll(unaryOpt);
 
-        // TODO CMZ gérer le changement de type de plugin
-
-        return service.updatePluginConfiguration(plgConf);
+        try {
+            return getDataSourceFromPluginConfiguration(service.updatePluginConfiguration(plgConf));
+        } catch (IOException e) {
+            LOGGER.error("Unable to converts a PluginConfiguration to a Datasource object");
+            throw new ModuleException(e);
+        }
     }
 
     @Override
@@ -199,49 +245,84 @@ public class DataSourceService implements IDataSourceService {
         service.deletePluginConfiguration(pId);
     }
 
-    @Override
-    public Map<String, Table> getTables(Long pId) throws ModuleException {
-        IDataSourceFromSingleTablePlugin plg = service.getPlugin(pId);
-        return plg.getTables();
-    }
-
-    @Override
-    public Map<String, Column> getColumns(Long pId, Table pTable) throws ModuleException {
-        IDataSourceFromSingleTablePlugin plg = service.getPlugin(pId);
-        return plg.getColumns(pTable);
-    }
-
-    @Override
-    public Map<String, Index> getIndexes(Long pId, Table pTable) throws ModuleException {
-        IDataSourceFromSingleTablePlugin plg = service.getPlugin(pId);
-        return plg.getIndexes(pTable);
-    }
-
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DataSource} attribute
      * 
      * @param pPlgParam
-     *            a {@link PluginParameter}
+     *            a {@link PluginParameter} to update
      * @param pDataSource
-     *            A {@link DataSource}
+     *            a {@link DataSource}
      * @return a {{@link PluginParameter}
+     * @throws ModuleException
      */
     private PluginParameter mergeParameters(PluginParameter pPlgParam, DataSource pDataSource) {
         // Update the parameter's value, because all parameters are not required for each DataSource
         pPlgParam.setValue("");
+
         switch (pPlgParam.getName()) {
-            case IDataSourceFromSingleTablePlugin.CONNECTION_PARAM:
-                pPlgParam.setValue(pDataSource.getPluginConfigurationConnectionId().toString());
+            case IDataSourcePlugin.CONNECTION_PARAM:
+                mergePluginConfigurationParameter(pPlgParam, pDataSource);
                 break;
-            case IDataSourceFromSingleTablePlugin.MODEL_PARAM:
+            case IDataSourcePlugin.MODEL_PARAM:
                 pPlgParam.setValue(adapter.toJson(pDataSource.getMapping()));
                 break;
-            case IDataSourceFromSingleTablePlugin.FROM_CLAUSE:
+            case IDataSourcePlugin.FROM_CLAUSE:
                 pPlgParam.setValue(pDataSource.getFromClause());
+                break;
+            case IDataSourceFromSingleTablePlugin.TABLE_PARAM:
+                pPlgParam.setValue(pDataSource.getTableName());
                 break;
             default:
                 break;
         }
         return pPlgParam;
+    }
+
+    /**
+     * Update a {@link PluginParameter} of type connection
+     * 
+     * @param pPlgParam
+     *            a {@link PluginParameter} to update
+     * @param pDataSource
+     *            a {@link DataSource}
+     */
+    private void mergePluginConfigurationParameter(PluginParameter pPlgParam, DataSource pDataSource) {
+        if (pPlgParam.getPluginConfiguration() == null || !pPlgParam.getPluginConfiguration().getId()
+                .equals(pDataSource.getPluginConfigurationConnectionId())) {
+            pPlgParam.setPluginConfiguration(null);
+
+            try {
+                pPlgParam.setPluginConfiguration(service
+                        .getPluginConfiguration(pDataSource.getPluginConfigurationConnectionId()));
+            } catch (ModuleException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Converts a {@link PluginConfiguration} to a {@link DataSource}.</br>
+     * 
+     * @param pPluginConf
+     *            the {@link PluginConfiguration} to converts
+     * @return the {@link DataSource} created
+     * @throws IOException
+     *             an error occurred when converts the JSon mapping to a {@link DataSourceModelMapping}.
+     */
+    private DataSource getDataSourceFromPluginConfiguration(PluginConfiguration pPluginConf) throws IOException {
+        DataSource dataSource = new DataSource();
+
+        dataSource.setPluginConfigurationId(pPluginConf.getId());
+        dataSource.setLabel(pPluginConf.getLabel());
+        dataSource.setFromClause(pPluginConf.getParameterValue(IDataSourcePlugin.FROM_CLAUSE));
+        dataSource.setTableName(pPluginConf.getParameterValue(IDataSourceFromSingleTablePlugin.TABLE_PARAM));
+        dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM)));
+
+        PluginConfiguration plgConfig = pPluginConf.getParameterConfiguration(IDataSourcePlugin.CONNECTION_PARAM);
+        if (plgConfig != null) {
+            dataSource.setPluginConfigurationConnectionId(plgConfig.getId());
+        }
+
+        return dataSource;
     }
 }

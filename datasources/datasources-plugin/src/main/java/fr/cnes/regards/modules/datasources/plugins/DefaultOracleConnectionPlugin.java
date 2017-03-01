@@ -4,26 +4,14 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import java.beans.PropertyVetoException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 
 /**
- * Class DefaultESConnectionPlugin
- *
- * A default {@link Plugin} of type {@link IDBConnectionPlugin}.
+ * A default {@link Plugin} of type {@link IDBConnectionPlugin}.</br>
  * 
  * For the test of the connection :
  * 
@@ -34,12 +22,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  */
 @Plugin(id = "oracle-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
         description = "Connection to a Sql database")
-public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
-
-    /**
-     * Class logger
-     */
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultOracleConnectionPlugin.class);
+public class DefaultOracleConnectionPlugin extends AbstractDataSourceConnection implements IDBConnectionPlugin {
 
     /**
      * The JDBC Oracle driver
@@ -89,78 +72,31 @@ public class DefaultOracleConnectionPlugin implements IDBConnectionPlugin {
     private Integer minPoolSize;
 
     /**
-     * A {@link ComboPooledDataSource} to used to connect to a data source
-     */
-    private ComboPooledDataSource cpds;
-
-    /**
      * This class is used to initialize the {@link Plugin}
      */
     @PluginInit
     private void createPoolConnection() {
-        cpds = new ComboPooledDataSource();
-        cpds.setJdbcUrl(buildUrl());
-        cpds.setUser(dbUser);
-        cpds.setPassword(dbPassword);
-        cpds.setMaxPoolSize(maxPoolSize);
-        cpds.setMinPoolSize(minPoolSize);
-        cpds.setAcquireRetryAttempts(5);
-        cpds.setAcquireRetryDelay(5000);
-        cpds.setIdleConnectionTestPeriod(20);
-
-        try {
-            cpds.setDriverClass(ORACLE_JDBC_DRIVER);
-        } catch (PropertyVetoException e) {
-            LOG.error(e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public boolean testConnection() {
-        boolean isConnected = false;
-        Statement statement = null;
-        ResultSet rs = null;
-        Connection conn = null;
-        try {
-            conn = cpds.getConnection();
-            statement = conn.createStatement();
-
-            // Execute a simple SQL request
-            rs = statement.executeQuery("select 1 from DUAL");
-
-            rs.close();
-            isConnected = true;
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        }
-
-        return isConnected;
-    }
-
-    @Override
-    public Connection getConnection() {
-        try {
-            return cpds.getConnection();
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        }
-        return null;
+        createPoolConnection(dbUser, dbPassword, maxPoolSize, minPoolSize);
     }
 
     @Override
     public String buildUrl() {
         return "jdbc:oracle:thin:@//" + dbHost + ":" + dbPort + "/" + dbName;
+    }
+
+    @Override
+    protected IDBConnectionPlugin getDBConnectionPlugin() {
+        return this;
+    }
+
+    @Override
+    protected String getJdbcDriver() {
+        return ORACLE_JDBC_DRIVER;
+    }
+
+    @Override
+    protected String getSqlRequestTestConnection() {
+        return "select 1 from DUAL";
     }
 
 }

@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -30,7 +31,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  *
  */
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @Ignore
 public class OracleConnectionPluginTest {
 

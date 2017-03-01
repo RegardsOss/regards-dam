@@ -70,7 +70,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     public void write(final JsonWriter pOut, final DataSourceModelMapping pValue) throws IOException {
 
         pOut.beginObject();
-        pOut.name(MODEL_LABEL).value(pValue.getModelName());
+        pOut.name(MODEL_LABEL).value(pValue.getModel());
         pOut.name(MAPPINGS_LABEL);
 
         pOut.beginArray();
@@ -105,7 +105,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             throw new IOException(MODEL_LABEL + " is expected");
         }
 
-        dataSourceModelMapping.setModelName(pIn.nextString());
+        dataSourceModelMapping.setModel(Long.parseLong(pIn.nextString()));
 
         if (!pIn.nextName().equals(MAPPINGS_LABEL)) {
             throw new IOException(MAPPINGS_LABEL + " is expected");

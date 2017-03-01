@@ -4,28 +4,20 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
-
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.stream.JsonReader;
 import com.nurkiewicz.jdbcrepository.sql.OracleSqlGenerator;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -60,11 +52,6 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     private String modelJSon;
 
     /**
-     * The mapping between the attributes in the {@link Model} and the data source
-     */
-    private DataSourceModelMapping dataSourceMapping;
-
-    /**
      * Init method
      */
     @PluginInit
@@ -73,62 +60,22 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
                 + "model=" + this.modelJSon);
 
         // Converts the modelJson to a list of DataSourceAttributeMapping
-        loadModel();
+        initDataSourceMapping(this.modelJSon);
     }
 
-    /**
-     * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
-     * representation to a {@link List} of {@link DataSourceAttributeMapping}.
-     */
-    private void loadModel() {
-        ModelMappingAdapter adapter = new ModelMappingAdapter();
-        try {
-            dataSourceMapping = adapter.read(new JsonReader(new StringReader(this.modelJSon)));
-        } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#buildSqlGenerator()
-     */
     @Override
     protected SqlGenerator buildSqlGenerator() {
         return new OracleSqlGenerator();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin#buildSqlGenerator(java.lang.
-     * String, java.lang.String)
-     */
     @Override
     protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
         return new OracleSqlGenerator(pAllColumnsClause);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDBDataSourcePlugin#getDBConnectionPlugin()
-     */
     @Override
     protected IDBConnectionPlugin getDBConnectionPlugin() {
         return dbConnection;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.modules.datasources.plugins.AbstractDataObjectMapping#getModelMapping()
-     */
-    @Override
-    protected DataSourceModelMapping getModelMapping() {
-        return dataSourceMapping;
     }
 
 }
