@@ -29,7 +29,10 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 
 /**
- * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}
+ * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}.
+ * <b>The aim is not to execute the filter but to check if the filter is coherent.</b>
+ * For example, the visit of NotCriterion(subCriterion) leads to the visit of subcriterion (because the NotCriterion
+ * is coherent)
  *
  * @author Sylvain Vissiere-Guerinet
  *
@@ -38,7 +41,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SubsettingCoherenceVisitor.class);
 
-    private static final String ATTRIBUTE_DOES_NOT_EXISTS = "Attribute of name : %s could not be found in the database";
+    private static final String ATTRIBUTE_DOES_NOT_EXIST = "Attribute of name : %s could not be found in the database";
 
     private static final String ATTRIBUTE_IS_NOT_COHERENT = "Attribute of name : %s is not an attribute of the model : %s";
 
@@ -82,7 +85,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     @Override
     public Boolean visitNotCriterion(NotCriterion pCriterion) {
-        return pCriterion.accept(this);
+        return pCriterion.getCriterion().accept(this);
     }
 
     @Override
@@ -157,7 +160,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
         }
         if (attribute == null) {
             // attributeName is unknown
-            LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXISTS, attributeFullName));
+            LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXIST, attributeFullName));
             return null;
         }
         if (!attribute.isQueryable()) {

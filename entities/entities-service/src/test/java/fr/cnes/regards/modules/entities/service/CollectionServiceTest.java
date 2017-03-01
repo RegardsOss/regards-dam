@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -33,7 +32,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  * @author lmieulet
  * @author Sylvain Vissiere-Guerinet
  */
-@Ignore
 public class CollectionServiceTest {
 
     private Model pModel1;
