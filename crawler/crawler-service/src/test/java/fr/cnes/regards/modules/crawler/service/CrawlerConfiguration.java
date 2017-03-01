@@ -17,7 +17,8 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler", "fr.cnes.regards.modules.entities",
         "fr.cnes.regards.modules.models", "fr.cnes.regards.modules.datasources" })
 @EnableAutoConfiguration
-@PropertySource({ "classpath:test.properties", "classpath:test_${user.name}.properties" })
+@PropertySource(value = { "classpath:test.properties", "classpath:test_${user.name}.properties" },
+        ignoreResourceNotFound = true)
 @EnableAsync
 public class CrawlerConfiguration {
 
