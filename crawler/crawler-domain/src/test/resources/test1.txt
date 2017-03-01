@@ -60,11 +60,17 @@
 }
 },
 {
+"bool": {
+  "must_not": [
+{
 "range": {
 "attributes.number4": {
 "lte": 1001.0,
 "gte": 999.0
 }
+}
+}
+  ]
 }
 },
 {

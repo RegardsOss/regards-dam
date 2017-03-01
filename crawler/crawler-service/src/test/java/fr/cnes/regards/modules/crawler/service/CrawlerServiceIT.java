@@ -154,7 +154,7 @@ public class CrawlerServiceIT {
         LOGGER.info("create dataset3 (" + dataset3.getIpId() + ")");
 
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(4000);
+        Thread.sleep(10000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entityService.loadWithRelations(coll1.getIpId());
