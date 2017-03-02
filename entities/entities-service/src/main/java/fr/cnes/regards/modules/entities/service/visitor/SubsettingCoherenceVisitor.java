@@ -109,7 +109,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
-    public <U> Boolean visitRangeCriterion(RangeCriterion<U> pCriterion) {
+    public <U extends Comparable<? super U>> Boolean visitRangeCriterion(RangeCriterion<U> pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
         switch (attribute.getType()) {
             case DOUBLE:

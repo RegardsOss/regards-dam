@@ -1,11 +1,13 @@
 package fr.cnes.regards.modules.crawler.domain.criterion;
 
+import org.springframework.util.Assert;
+
 /**
  * Pair of comparison operator and value
  * @param <T> value type
  * @author oroussel
  */
-public class ValueComparison<T> {
+public class ValueComparison<T extends Comparable<? super T>> implements Comparable<ValueComparison<T>> {
 
     /**
      * Operator
@@ -72,6 +74,12 @@ public class ValueComparison<T> {
     @Override
     public String toString() {
         return "ValueComparison [operator=" + operator + ", value=" + value + "]";
+    }
+
+    @Override
+    public int compareTo(ValueComparison<T> pO) {
+        Assert.notNull(pO);
+        return value.compareTo(pO.value);
     }
 
 }

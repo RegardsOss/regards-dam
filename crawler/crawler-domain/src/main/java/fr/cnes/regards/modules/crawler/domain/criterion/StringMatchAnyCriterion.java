@@ -1,7 +1,8 @@
 package fr.cnes.regards.modules.crawler.domain.criterion;
 
 /**
- * String[] specialized AbstractMatchCriterion.<br/>
+ * String[] specialized AbstractMatchCriterion ie a criterion to test if an attribute belongs to an array of
+ * values.<br/>
  * <b>NB : This class is only used if none of provided string from given ones contains a blank character</b>
  */
 public class StringMatchAnyCriterion extends AbstractMatchCriterion<String[]> {
