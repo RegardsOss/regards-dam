@@ -87,7 +87,7 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     }
 
     @Override
-    public <U> QueryBuilder visitRangeCriterion(RangeCriterion<U> pCriterion) {
+    public <U extends Comparable<? super U>> QueryBuilder visitRangeCriterion(RangeCriterion<U> pCriterion) {
         RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(pCriterion.getName());
 
         for (ValueComparison<U> valueComp : pCriterion.getValueComparisons()) {

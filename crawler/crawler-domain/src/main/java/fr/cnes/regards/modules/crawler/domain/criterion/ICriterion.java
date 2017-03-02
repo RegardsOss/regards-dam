@@ -33,30 +33,38 @@ public interface ICriterion {
         return new AndCriterion(pCrits);
     }
 
+    static ICriterion or(ICriterion... pCrits) {
+        return new OrCriterion(pCrits);
+    }
+
+    static ICriterion or(Iterable<ICriterion> pCrits) {
+        return new OrCriterion(pCrits);
+    }
+
     static ICriterion not(ICriterion pCrit) {
         return new NotCriterion(pCrit);
     }
 
-    static ICriterion gt(String pAttName, Number pValue) {
-        RangeCriterion<Number> crit = new RangeCriterion<>(pAttName);
+    static <T extends Number & Comparable<T>> ICriterion gt(String pAttName, T pValue) {
+        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER, pValue));
         return crit;
     }
 
-    static ICriterion ge(String pAttName, Number pValue) {
-        RangeCriterion<Number> crit = new RangeCriterion<>(pAttName);
+    static <T extends Number & Comparable<T>> ICriterion ge(String pAttName, T pValue) {
+        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pValue));
         return crit;
     }
 
-    static ICriterion lt(String pAttName, Number pValue) {
-        RangeCriterion<Number> crit = new RangeCriterion<>(pAttName);
+    static <T extends Number & Comparable<T>> ICriterion lt(String pAttName, T pValue) {
+        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS, pValue));
         return crit;
     }
 
-    static ICriterion le(String pAttName, Number pValue) {
-        RangeCriterion<Number> crit = new RangeCriterion<>(pAttName);
+    static <T extends Number & Comparable<T>> ICriterion le(String pAttName, T pValue) {
+        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pValue));
         return crit;
     }
@@ -206,7 +214,7 @@ public interface ICriterion {
      * @return criterion
      */
     // CHECKSTYLE:OFF
-    static ICriterion into(String pAttName, Number pValue) {
+    static <T extends Number & Comparable<T>> ICriterion into(String pAttName, T pValue) {
         return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pValue),
                               ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pValue));
     }

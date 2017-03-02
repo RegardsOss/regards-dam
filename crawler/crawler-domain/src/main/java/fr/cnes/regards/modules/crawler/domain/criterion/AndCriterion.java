@@ -6,16 +6,13 @@ import com.google.common.collect.Lists;
  * Defines a list of mandatory criterions (logicaly AND)
  * @author oroussel
  */
-public class AndCriterion extends AbstractMultiCriterion implements ICriterion {
+public final class AndCriterion extends AbstractMultiCriterion implements ICriterion {
 
-    protected AndCriterion() {
-    }
-
-    protected AndCriterion(ICriterion... pCriterions) {
+    AndCriterion(ICriterion... pCriterions) {
         this.criterions = Lists.newArrayList(pCriterions);
     }
 
-    protected AndCriterion(Iterable<ICriterion> pCriterions) {
+    AndCriterion(Iterable<ICriterion> pCriterions) {
         this.criterions = Lists.newArrayList(pCriterions);
     }
 
