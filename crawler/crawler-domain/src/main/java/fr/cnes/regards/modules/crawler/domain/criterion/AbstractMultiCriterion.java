@@ -3,14 +3,17 @@ package fr.cnes.regards.modules.crawler.domain.criterion;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AbstractMultiCriterion {
+/**
+ * ICriterion aggregator
+ */
+public abstract class AbstractMultiCriterion {
 
     /**
      * Criterions
      */
     protected List<ICriterion> criterions = new ArrayList<>();
 
-    public AbstractMultiCriterion() {
+    protected AbstractMultiCriterion() {
         super();
     }
 

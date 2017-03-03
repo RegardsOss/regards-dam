@@ -6,34 +6,55 @@ package fr.cnes.regards.modules.entities.dao;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- *
+ * Common requests on entities
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
 public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
 
     /**
-     * @param pIpIds
-     * @return
+     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
+     * @param pId id of entity
+     * @return entity
      */
-    List<AbstractEntity> findByIpIdIn(Set<UniformResourceName> pIpIds);
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    T findById(Long pId);
 
     /**
-     * @param pIpId
-     * @return
+     * Find all entities of which ipId belongs to given set (eagerly loading all relations)
+     * @param pIpIds set of ipId
+     * @return found entities
      */
-    AbstractEntity findOneByIpId(UniformResourceName pIpId);
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    List<T> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
-     * @param pTagToSearch
-     * @return
+     * Find entity of given ipId
+     * @param pIpId ipId of which entity
+     * @return found entity
      */
-    List<AbstractEntity> findByTags(String pTagToSearch);
+    T findOneByIpId(UniformResourceName pIpId);
+
+    /**
+     * Find entity of given IpId eagerly loading all common relations
+     * @param pIpId ipId of which entity
+     * @return found entity
+     */
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    T findByIpId(UniformResourceName pIpId);
+
+    /**
+     * Find all entities containing given tag
+     * @param pTagToSearch tag to search entities for
+     * @return entities which contain given tag
+     */
+    List<T> findByTags(String pTagToSearch);
 
 }

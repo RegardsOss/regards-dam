@@ -12,7 +12,7 @@ import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * Group access right
@@ -29,7 +29,7 @@ public class GroupAccessRight extends AbstractAccessRight {
             updatable = false)
     private AccessGroup accessGroup;
 
-    public GroupAccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, DataSet pDataset,
+    public GroupAccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, Dataset pDataset,
             AccessGroup pAccessGroup) {
         super(pQualityFilter, pAccessLevel, pDataset);
         accessGroup = pAccessGroup;

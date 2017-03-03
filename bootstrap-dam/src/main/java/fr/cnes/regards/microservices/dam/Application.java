@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
 import fr.cnes.regards.framework.security.utils.endpoint.IInstanceAdminAccessVoter;
@@ -22,6 +23,7 @@ import fr.cnes.regards.framework.security.utils.endpoint.IRoleSysAccessVoter;
 // CHECKSTYLE:OFF
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
 @MicroserviceInfo(name = "Data management", version = "1.0-SNAPSHOT")
+@EnableAsync
 public class Application { // NOSONAR
 
     /**

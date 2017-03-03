@@ -3,68 +3,125 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.validation.Errors;
+import org.springframework.web.multipart.MultipartFile;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
+@MultitenantTransactional
 public interface IEntityService {
+
+    /**
+     * Load entity by IpId without relations
+     * @param ipId business id
+     * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     */
+    AbstractEntity load(UniformResourceName ipId);
+
+    /**
+     * Load entity by IpId with all its relations
+     * @param ipId business id
+     * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     */
+    AbstractEntity loadWithRelations(UniformResourceName ipId);
+
+    /**
+     * Load entities by IpId with all their relations
+     * @param ipIds business ids
+     * @return entities with all its relations (ie. groups, tags, ...) or empty list
+     */
+    List<AbstractEntity> loadAllWithRelations(UniformResourceName... ipIds);
 
     void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 
     /**
-     * dissociates specified entity from all associated entities
-     *
-     * @param pToDelete
-     */
-    void dissociate(AbstractEntity pToDelete);
-
-    <T extends AbstractEntity> T dissociate(T pSource, Set<UniformResourceName> pTargetsUrn);
-
-    <T extends AbstractEntity> T dissociate(T pSource, List<AbstractEntity> pEntityToDissociate);
-
-    <T extends AbstractEntity> T associate(T pSource, Set<UniformResourceName> pTargetsUrn);
-
-    /**
-     * @param pEntityId
-     *            a {@link AbstractEntity}
-     * @param pToAssociate
-     *            {@link Set} of {@link UniformResourceName}s representing {@link AbstractEntity} to associate to
-     *            pCollection
+     * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
+     * @param pEntityId entity source id
+     * @param pToAssociates URNs of entities to be associated by source entity
      * @throws EntityNotFoundException
      */
-    AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pToAssociate) throws EntityNotFoundException;
-
-    <T extends AbstractEntity> T associate(T pEntity);
-
-    AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
-
-    <T extends AbstractEntity> T create(T pEntity) throws ModuleException;
+    AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
 
     /**
-     * updates entity of id pEntityId according to pEntity
-     *
-     * @param pEntityId
-     * @param pEntity
-     * @return updated entity
+     * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
+     * @param pEntityId entity source id
+     * @param pToAssociates URNs of entities to be dissociated from source entity
+     * @throws EntityNotFoundException
+     */
+    AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
+
+    /**
+     * Create entity
+     * @param pEntity entity to create
+     * @param pFile description file (or null)
+     * @return updated entity from database
      * @throws ModuleException
      */
-    // FIXME: should i use a clone of the parameter instead of modifying it?
+    <T extends AbstractEntity> T create(T pEntity, MultipartFile pFile) throws ModuleException, IOException;
+
+    /**
+     * Create entity without description file
+     * @param pEntity entioty to create
+     * @return updated entity from database
+     * @throws ModuleException
+     */
+    default <T extends AbstractEntity> T create(T pEntity) throws ModuleException, IOException {
+        return this.create(pEntity, null);
+    }
+
+    /**
+     * Update entity of id pEntityId according to pEntity
+     * @param pEntityId id of entity to update
+     * @param pEntity "content" of entity to update
+     * @return updated entity from database
+     * @throws ModuleException
+     * @throws PluginUtilsException
+     */
     <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException;
 
+    /**
+     * Update entity of ipId pEntityUrn according to pEntity
+     * @param pEntityUrn ipId of entity to update
+     * @param pEntity "content" of entity to update
+     * @return updated entity from database
+     * @throws ModuleException
+     */
+    <T extends AbstractEntity> T update(UniformResourceName pEntityUrn, T pEntity) throws ModuleException;
+
+    /**
+     * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property
+     * if id is null
+     * @param pEntity entity to update
+     * @return updated entity from database
+     * @throws ModuleException
+     */
+    default <T extends AbstractEntity> T update(T pEntity) throws ModuleException {
+        if (pEntity.getId() != null) {
+            return this.update(pEntity.getId(), pEntity);
+        } else {
+            return this.update(pEntity.getIpId(), pEntity);
+        }
+    }
+
+    /**
+     * Delete entity identified by its id.
+     * A deleted entity is "logged" into "deleted_entity" table
+     * @param pEntityId id of entity to delete
+     * @return the deleted entity
+     * @throws EntityNotFoundException
+     */
     AbstractEntity delete(Long pEntityId) throws EntityNotFoundException;
-
-    AbstractEntity delete(String pEntityIpId) throws EntityNotFoundException;
-
-    void checkLinkedEntity(AbstractEntity pEntity) throws ModuleException;
-
 }

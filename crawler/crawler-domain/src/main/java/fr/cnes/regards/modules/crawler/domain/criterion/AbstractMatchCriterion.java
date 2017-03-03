@@ -17,7 +17,7 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
      */
     private T value;
 
-    protected AbstractMatchCriterion(String pName) {
+    private AbstractMatchCriterion(String pName) {
         super(pName);
     }
 
@@ -73,10 +73,9 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
             if (other.value != null) {
                 return false;
             }
-        } else
-            if (!value.equals(other.value)) {
-                return false;
-            }
+        } else if (!value.equals(other.value)) {
+            return false;
+        }
         return true;
     }
 

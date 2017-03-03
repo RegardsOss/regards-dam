@@ -5,8 +5,8 @@ package fr.cnes.regards.modules.crawler.domain.facet;
  * All enumerated values can be visited (providing a String argument)
  * @author oroussel
  */
+// CHECKSTYLE:OFF
 public enum FacetType {
-    // CHECKSTYLE:OFF
     DATE {
 
         @Override
@@ -35,7 +35,7 @@ public enum FacetType {
             return pVisitor.visitStringFacet(pArgs);
         }
     };
-    // CHECKSTYLE:OFF
 
     abstract public <T> T accept(IFacetTypeVisitor<T> visitor, Object... pArgs);
 }
+// CHECKSTYLE:OFF

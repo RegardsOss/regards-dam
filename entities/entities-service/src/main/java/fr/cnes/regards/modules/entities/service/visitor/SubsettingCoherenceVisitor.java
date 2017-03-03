@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.crawler.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchCriterion;
-import fr.cnes.regards.modules.entities.domain.DataSet;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -29,7 +29,10 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 
 /**
- * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link DataSet}
+ * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}.
+ * <b>The aim is not to execute the filter but to check if the filter is coherent.</b>
+ * For example, the visit of NotCriterion(subCriterion) leads to the visit of subcriterion (because the NotCriterion
+ * is coherent)
  *
  * @author Sylvain Vissiere-Guerinet
  *
@@ -38,7 +41,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SubsettingCoherenceVisitor.class);
 
-    private static final String ATTRIBUTE_DOES_NOT_EXISTS = "Attribute of name : %s could not be found in the database";
+    private static final String ATTRIBUTE_DOES_NOT_EXIST = "Attribute of name : %s could not be found in the database";
 
     private static final String ATTRIBUTE_IS_NOT_COHERENT = "Attribute of name : %s is not an attribute of the model : %s";
 
@@ -82,14 +85,12 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     @Override
     public Boolean visitNotCriterion(NotCriterion pCriterion) {
-        return pCriterion.accept(this);
+        return pCriterion.getCriterion().accept(this);
     }
 
     @Override
     public Boolean visitStringMatchCriterion(StringMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
         return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
                 || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
@@ -97,8 +98,6 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
         return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
                 || attribute.getType().equals(AttributeType.STRING_ARRAY));
     }
@@ -106,32 +105,31 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     @Override
     public Boolean visitIntMatchCriterion(IntMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
-        return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER)
-                || attribute.getType().equals(AttributeType.INTEGER_ARRAY)
-                || attribute.getType().equals(AttributeType.INTEGER_INTERVAL));
+        return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER));
     }
 
     @Override
-    public <U> Boolean visitRangeCriterion(RangeCriterion<U> pCriterion) {
+    public <U extends Comparable<? super U>> Boolean visitRangeCriterion(RangeCriterion<U> pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        return null;
+        switch (attribute.getType()) {
+            case DOUBLE:
+            case INTEGER:
+            case LONG:
+                return attribute != null;
+            default:
+                return false;
+        }
     }
 
     @Override
     public Boolean visitDateRangeCriterion(DateRangeCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ARRAY)
-                || attribute.getType().equals(AttributeType.DATE_INTERVAL)
-                || attribute.getType().equals(AttributeType.DATE_ISO8601));
+        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ISO8601));
     }
 
     @Override
     public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
-        // FIXME: log at this level?
-        // LOG.info(String.format(CRITERION_IS_COHERENT, result));
         return (attribute != null) && attribute.getType().equals(AttributeType.BOOLEAN);
     }
 
@@ -162,7 +160,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
         }
         if (attribute == null) {
             // attributeName is unknown
-            LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXISTS, attributeFullName));
+            LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXIST, attributeFullName));
             return null;
         }
         if (!attribute.isQueryable()) {

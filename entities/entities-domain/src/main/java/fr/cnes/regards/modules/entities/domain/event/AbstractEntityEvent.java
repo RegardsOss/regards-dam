@@ -3,13 +3,14 @@
  */
 package fr.cnes.regards.modules.entities.domain.event;
 
+import fr.cnes.regards.framework.amqp.event.IPollable;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public abstract class AbstractEntityEvent {
+public abstract class AbstractEntityEvent implements IPollable {
 
     /**
      * URN

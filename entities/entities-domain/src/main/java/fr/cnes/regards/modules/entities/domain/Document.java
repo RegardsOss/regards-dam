@@ -3,8 +3,11 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.UUID;
+
 import javax.persistence.Entity;
 
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -18,8 +21,9 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Entity
 public class Document extends AbstractDataEntity {
 
-    public Document(Model pModel, UniformResourceName pIpId, String pLabel) {
-        super(pModel, pIpId, pLabel);
+    public Document(Model pModel, String pTenant, String pLabel) {
+        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, pTenant, UUID.randomUUID(), 1),
+              pLabel);
     }
 
     public Document() {

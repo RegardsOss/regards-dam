@@ -15,13 +15,14 @@ import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
 
 /**
  * Elasticsearch DAO interface
+ * @author oroussel
  */
 public interface IEsRepository {
 
     /**
      * Create specified index
      * @param pIndex index
-     * @return true if acknowledged by Elasticsearch, false overwise.
+     * @return true if acknowledged by Elasticsearch, false otherwise.
      * returns
      */
     boolean createIndex(String pIndex);
@@ -29,13 +30,13 @@ public interface IEsRepository {
     /**
      * Delete specified index
      * @param pIndex index
-     * @return true if acknowledged by Elasticsearch, false overwise.
+     * @return true if acknowledged by Elasticsearch, false otherwise.
      */
     boolean deleteIndex(String pIndex);
 
     /**
      * Find all indices
-     * @return all indices
+     * @return all indices <b>lowercase</b>
      */
     String[] findIndices();
 
@@ -50,7 +51,7 @@ public interface IEsRepository {
      * Create or update a document index specifying index.
      * @param pIndex index
      * @param pDocument object implementing IIndexable thus needs to provide id and type
-     * @return true if created, false overwise
+     * @return true if created, false otherwise
      */
     boolean save(String pIndex, IIndexable pDocument);
 
@@ -71,8 +72,9 @@ public interface IEsRepository {
      * @exception IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and
      * type).
      */
-    <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
-            @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException;
+    @SuppressWarnings("unchecked")
+    <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex, T... pDocuments)
+            throws IllegalArgumentException;
 
     /**
      * {@link #saveBulk(String, IIndexable...)}
@@ -107,7 +109,7 @@ public interface IEsRepository {
      */
     @SuppressWarnings("unchecked")
     default <T extends IIndexable> T get(String pIndex, T pDocument) {
-        return (T) get(pIndex, pDocument.getDocId(), pDocument.getType(), pDocument.getClass());
+        return (T) get(pIndex, pDocument.getType(), pDocument.getDocId(), pDocument.getClass());
     }
 
     /**
@@ -115,7 +117,7 @@ public interface IEsRepository {
      * @param pIndex index
      * @param pType document type
      * @param pId document id
-     * @return true if document has been deleted, false overwise
+     * @return true if document no more exists, false otherwise
      */
     boolean delete(String pIndex, String pType, String pId);
 
@@ -123,7 +125,7 @@ public interface IEsRepository {
      * Same as {@link #delete(String, String, String)} using docId and type of provided document
      * @param pIndex index
      * @param pDocument IIndexable object specifying docId and type
-     * @return true if document has been deleted, false overwise
+     * @return true if document no more exists, false otherwise
      */
     default boolean delete(String pIndex, IIndexable pDocument) {
         return delete(pIndex, pDocument.getType(), pDocument.getDocId());
@@ -136,7 +138,7 @@ public interface IEsRepository {
      * @param pId document id
      * @param pMergedPropertiesMap map { name -> value } of properties to merge. Name can be one level sub-property dot
      * identifier (ie. "toto.tata")
-     * @return true if document has been updated, false overwise
+     * @return true if document has been updated, false otherwise
      */
     boolean merge(String pIndex, String pType, String pId, Map<String, Object> pMergedPropertiesMap);
 
@@ -146,7 +148,7 @@ public interface IEsRepository {
      * @param pDocument IIndexable object specifying docId and type
      * @param pMergedPropertiesMap map { name -> value } of properties to merge. Name can be one level sub-property dot
      * identifier (ie. "toto.tata")
-     * @return true if document has been updated, false overwise
+     * @return true if document has been updated, false otherwise
      */
     default boolean merge(String pIndex, IIndexable pDocument, Map<String, Object> pMergedPropertiesMap) {
         return merge(pIndex, pDocument.getType(), pDocument.getDocId(), pMergedPropertiesMap);
@@ -317,7 +319,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return specified result page
      */
-    <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageReques, Object pValue,
+    <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageRequest, Object pValue,
             String... pFields);
 
     /**

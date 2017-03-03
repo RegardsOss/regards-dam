@@ -31,6 +31,10 @@
 			<artifactId>module-plugins-service</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.microservices.catalog</groupId>
+			<artifactId>plugin-client</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
 			<artifactId>datasources-service</artifactId>
 		</dependency>
@@ -42,10 +46,25 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards</artifactId>
 		</dependency>
+		<dependency>
+			<!-- FIXME: for now it's in service, to see if will be moved into another module -->
+			<groupId>fr.cnes.regards.modules.search</groupId>
+			<artifactId>search-service</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>multitenant-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

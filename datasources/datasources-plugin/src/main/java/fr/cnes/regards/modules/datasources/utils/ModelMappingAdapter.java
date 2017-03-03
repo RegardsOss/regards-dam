@@ -11,6 +11,8 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -68,7 +70,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     public void write(final JsonWriter pOut, final DataSourceModelMapping pValue) throws IOException {
 
         pOut.beginObject();
-        pOut.name(MODEL_LABEL).value(pValue.getModelName());
+        pOut.name(MODEL_LABEL).value(pValue.getModel());
         pOut.name(MAPPINGS_LABEL);
 
         pOut.beginArray();
@@ -103,7 +105,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             throw new IOException(MODEL_LABEL + " is expected");
         }
 
-        dataSourceModelMapping.setModelName(pIn.nextString());
+        dataSourceModelMapping.setModel(Long.parseLong(pIn.nextString()));
 
         if (!pIn.nextName().equals(MAPPINGS_LABEL)) {
             throw new IOException(MAPPINGS_LABEL + " is expected");
@@ -155,7 +157,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     attr.setType(AttributeType.valueOf(pIn.nextString()));
                     break;
                 case PRIMARY_KEY_LABEL:
-                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()) ? true : false);
+                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()));
                     break;
                 default:
                     break;

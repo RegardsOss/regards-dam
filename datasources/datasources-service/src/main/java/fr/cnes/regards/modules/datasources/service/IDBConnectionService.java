@@ -5,10 +5,13 @@
 package fr.cnes.regards.modules.datasources.service;
 
 import java.util.List;
+import java.util.Map;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
+import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
@@ -55,13 +58,13 @@ public interface IDBConnectionService {
 
     /**
      *
-     * Update a {@link PluginConfiguration}.
+     * Update the {@link PluginConfiguration} linked to the {@link DBConnection}
      *
-     * @param pPlugin
-     *            the {@link PluginConfiguration} to update
+     * @param pDbConnection
+     *            the {@link DBConnection} to update
      * @return the updated {@link PluginConfiguration}
      * @throws ModuleException
-     *             plugin to update does not exists
+     *             throw if an error occurs
      */
     PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException;
 
@@ -69,8 +72,9 @@ public interface IDBConnectionService {
      * Delete a {@link DBConnection}.
      * 
      * @param pId
-     *            a {@link DBConnection} identifier
+     *            a {@link PluginConfiguration} identifier
      * @throws ModuleException
+     *             throw if an error occurs
      */
     void deleteDBConnection(Long pId) throws ModuleException;
 
@@ -78,13 +82,29 @@ public interface IDBConnectionService {
      * Querying the status of a database connection pools.
      * 
      * @param pId
-     *            a {@link DBConnection} identifier
+     *            a {@link PluginConfiguration} identifier
      * @return true success to the connection to the database.</br>
      *         false unable to connect to the database
-     * 
-     * 
      * @throws ModuleException
+     *             throw if an error occurs
      */
     Boolean testDBConnection(Long pId) throws ModuleException;
+
+    /**
+     * 
+     * @param pId
+     * @return
+     * @throws ModuleException
+     */
+    Map<String, Table> getTables(Long pId) throws ModuleException;
+
+    /**
+     * 
+     * @param pId
+     * @param pTableName
+     * @return
+     * @throws ModuleException
+     */
+    Map<String, Column> getColumns(Long pId, String pTableName) throws ModuleException;
 
 }

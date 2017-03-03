@@ -27,7 +27,8 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(author = "CSSI", version = "1.0-SNAPSHOT", description = "Connection to a Elasticsearch engine")
+@Plugin(id = "elasticsearch-connection", author = "CSSI", version = "1.0-SNAPSHOT",
+        description = "Connection to a Elasticsearch engine")
 public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     /**
@@ -40,7 +41,6 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
     private static final String PORT_PARAM = "port";
 
     private static final String CLUSTER_PARAM = "cluster";
-    
 
     /**
      * The host

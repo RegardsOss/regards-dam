@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Value;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -25,7 +26,6 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
@@ -37,24 +37,24 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 public class DBConnectionServiceTest {
 
     /**
-     * A constant for a user name for a database connection test
+     * The JDBC PostgreSQL driver
      */
-    private static final String JOHN_DOE = "john.doe";
+    private static final String POSTGRESQL_JDBC_DRIVER = "org.postgresql.Driver";
 
-    /**
-     * A constant for a password for a database connection test
-     */
-    private static final String PWD_JOHN = "azertyuiop";
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
 
-    /**
-     * A constant for a driver for a database connection test
-     */
-    private static final String DRIVER = "oracle.jdbc.OracleDriver";
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
 
-    /**
-     * A constant for an URL for a database connection test
-     */
-    private static final String URL = "jdbc:oracle:thin:@//localhost:1521/BDD";
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
+
+    @Value("${postgresql.datasource.username}")
+    private String dbUser;
+
+    @Value("${postgresql.datasource.password}")
+    private String dbPassword;
 
     /**
      *
@@ -82,10 +82,9 @@ public class DBConnectionServiceTest {
 
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameter();
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters,
-                0));
+        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters));
         plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre(), "second configuration", parameters,
-                0));
+                5));
     }
 
     @Test
@@ -97,35 +96,40 @@ public class DBConnectionServiceTest {
     }
 
     @Test
-    public void createdConnection() throws ModuleException {
+    public void createConnection() throws ModuleException {
         DBConnection dbConnection = new DBConnection();
-        dbConnection.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin");
-        dbConnection.setUser(JOHN_DOE);
-        dbConnection.setPassword(PWD_JOHN);
-        dbConnection.setDriver(DRIVER);
-        dbConnection.setUrl(URL);
+        String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
+        dbConnection.setPluginClassName(className);
+        dbConnection.setUser(dbUser);
+        dbConnection.setPassword(dbPassword);
+        dbConnection.setDbHost(dbHost);
+        dbConnection.setDbPort(dbPort);
+        dbConnection.setDbName(dbName);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
-        Mockito.when(pluginServiceMock.getPluginsByType(IDBConnectionPlugin.class))
-                .thenReturn(Arrays.asList(initializePluginMetaDataOracle(), initializePluginMetaDataPostGre()));
+        Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
+                .thenReturn(initializePluginMetaDataPostGre());
         dbConnectionServiceMock.createDBConnection(dbConnection);
         Assert.assertTrue(true);
     }
 
+    @SuppressWarnings("unchecked")
     @Test(expected = EntityInvalidException.class)
-    public void createdConnectionUnknownPluginClassName() throws ModuleException {
+    public void createConnectionUnknownPluginClassName() throws ModuleException {
         DBConnection dbConnection = new DBConnection();
-        dbConnection.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultOrConnectionPlugin");
-        dbConnection.setUser(JOHN_DOE);
-        dbConnection.setPassword(PWD_JOHN);
-        dbConnection.setDriver(DRIVER);
-        dbConnection.setUrl(URL);
+        String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
+        dbConnection.setPluginClassName(className);
+        dbConnection.setUser(dbUser);
+        dbConnection.setPassword(dbPassword);
+        dbConnection.setDbHost(dbHost);
+        dbConnection.setDbPort(dbPort);
+        dbConnection.setDbName(dbName);
         dbConnection.setMinPoolSize(1);
         dbConnection.setMaxPoolSize(10);
-        dbConnection.setLabel("the label of the new connection");
-        Mockito.when(pluginServiceMock.getPluginsByType(IDBConnectionPlugin.class))
-                .thenReturn(Arrays.asList(initializePluginMetaDataOracle(), initializePluginMetaDataPostGre()));
+        dbConnection.setLabel("the label of the new connection failed");
+        Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
+                .thenThrow(EntityInvalidException.class);
         dbConnectionServiceMock.createDBConnection(dbConnection);
         Assert.fail();
     }
@@ -143,25 +147,27 @@ public class DBConnectionServiceTest {
     private PluginMetaData initializePluginMetaDataPostGre() {
         final PluginMetaData pluginMetaData = new PluginMetaData();
         pluginMetaData.setPluginClassName(DefaultPostgreConnectionPlugin.class.getCanonicalName());
-        pluginMetaData.setPluginId("plugin-id");
+        pluginMetaData.setPluginId("plugin-id-01");
         pluginMetaData.setAuthor("CS-SI");
-        pluginMetaData.setVersion("1.0");
+        pluginMetaData.setVersion("1.1");
         pluginMetaData.setParameters(initializePluginParameterType());
         return pluginMetaData;
     }
 
     private List<PluginParameter> initializePluginParameter() {
-        return PluginParametersFactory.build().addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, JOHN_DOE)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, PWD_JOHN)
-                .addParameter(DefaultPostgreConnectionPlugin.URL_PARAM, URL)
-                .addParameter(DefaultPostgreConnectionPlugin.DRIVER_PARAM, DRIVER)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+        return PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
+                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER)
+                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
         return Arrays.asList(new PluginParameterType("model", String.class.getName(), ParamType.PRIMITIVE),
-                             new PluginParameterType("connection", IConnectionPlugin.class.getCanonicalName(),
+                             new PluginParameterType("connection", IDBConnectionPlugin.class.getCanonicalName(),
                                      ParamType.PLUGIN));
     }
 
