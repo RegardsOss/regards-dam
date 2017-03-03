@@ -116,6 +116,9 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     }
 
     @Override
+    /**
+     * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html 
+     */
     protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException {
         LocalDateTime ldt;

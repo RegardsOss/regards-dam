@@ -29,6 +29,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -68,8 +70,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private final static String JSON_PATH_LABEL = "$.content.label";
 
-    // private final static String JSON_PATH_MAPPING = "$.content.mapping";
-
     private final static String JSON_PATH_FROM_CLAUSE = "$.content.fromClause";
 
     private final static String JSON_PATH_TABLE_NAME = "$.content.tableName";
@@ -99,7 +99,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration pluginPostgreDbConnection;
 
-    private DataSourceModelMapping dataSourceModelMapping;
+    private DataSourceModelMapping modelMapping;
+
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
     protected Logger getLogger() {
@@ -120,6 +122,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_110")
+    @Purpose("The system allows to define a datasource by the setting a SQL request")
     public void createDataSourceWithFromClauseTest() {
         final DataSource dataSource = createDataSourceWithFromClause();
 
@@ -139,6 +143,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_100")
+    @Purpose("The system allows to define a datasource by the configuration a plugin's type IDataSourcePlugin")
     public void createDataSourceWithSingleTableTest() {
         final DataSource dataSource = createDataSourceSingleTable();
 
@@ -158,6 +164,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_140")
+    @Purpose("The system allows to get a datasource")
     public void getDataSource() {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -182,6 +190,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_120")
+    @Purpose("The system allows to update a datasource by updating the SQL request")
     public void dataSourceUpdateFromClause() {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -209,6 +219,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_120")
+    @Purpose("The system allows to update a datasource by updating the connection")
     public void dataSourceUpdateDBConnection() throws ModuleException, PluginUtilsException {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -238,6 +250,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_120")
+    @Purpose("The system allows to update a datasource by updating the table and the mapping")
     public void dataSourceChangeFromClauseToSimpleTable() {
         final List<ResultMatcher> expectations = new ArrayList<>();
 
@@ -270,6 +284,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_120")
+    @Purpose("The system allows to update a datasource by switching from a table configuration to a SQL request configuration")
     public void dataSourceChangeSimpleTableToFromClause() {
         final List<ResultMatcher> expectations = new ArrayList<>();
 
@@ -302,6 +318,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_130")
+    @Purpose("The system allows to delete a datasource")
     public void deleteDataSource() {
         final List<ResultMatcher> expectations = new ArrayList<>();
 
@@ -319,13 +337,51 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                              "DataSource shouldn't be deleted.", dataSource.getPluginConfigurationId());
     }
 
+    @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_150")
+    @Purpose("The system allows to get all datasources")
+    public void getAllDataSources() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        // Create a DataSource
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(), expectations,
+                           "DataSource shouldn't be created.");
+
+        // Create a DataSource
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(), expectations,
+                           "DataSource shouldn't be created.");
+
+        // Create a DataSource
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(), expectations,
+                           "DataSource shouldn't be created.");
+
+        // Create a DataSource
+        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(), expectations,
+                           "DataSource shouldn't be created.");
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[0].content.pluginConfigurationConnectionId",
+                                                    Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[1].content.pluginConfigurationConnectionId",
+                                                    Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[2].content.pluginConfigurationConnectionId",
+                                                    Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
+        expectations
+                .add(MockMvcResultMatchers.jsonPath("$.[3].content.pluginConfigurationConnectionId",
+                                                    Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
+
+        performDefaultGet(DataSourceController.TYPE_MAPPING, expectations, "DataSources shouldn't be retrieve.");
+    }
+
     private DataSource createDataSourceWithFromClause() {
         final DataSource dataSource = new DataSource();
         dataSource.setFromClause(FROM_CLAUSE_TEST);
         dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
-        dataSource.setMapping(dataSourceModelMapping);
-        dataSource.setLabel(LABEL_DATA_SOURCE);
+        dataSource.setMapping(modelMapping);
+        dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
 
         return dataSource;
     }
@@ -335,8 +391,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setTableName(TABLE_NAME_TEST);
         dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
-        dataSource.setMapping(dataSourceModelMapping);
-        dataSource.setLabel(LABEL_DATA_SOURCE);
+        dataSource.setMapping(modelMapping);
+        dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
 
         return dataSource;
     }
@@ -359,7 +415,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
+        modelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {

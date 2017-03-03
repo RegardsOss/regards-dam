@@ -32,6 +32,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -159,6 +161,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_PLG_210")
+    @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by introspection")
     public void getDataSourceIntrospection() {
         Assert.assertEquals(nbElements, repository.count());
 

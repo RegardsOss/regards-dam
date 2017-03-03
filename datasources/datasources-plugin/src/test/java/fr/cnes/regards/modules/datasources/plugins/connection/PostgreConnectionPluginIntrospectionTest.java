@@ -19,6 +19,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -73,6 +75,8 @@ public class PostgreConnectionPluginIntrospectionTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_PLG_100")
+    @Purpose("The system has a plugin that enables to connect to a PostreSql database")
     public void getTables() {
         Assert.assertTrue(postgreDBConn.testConnection());
 
@@ -82,6 +86,8 @@ public class PostgreConnectionPluginIntrospectionTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_PLG_100")
+    @Purpose("The system has a plugin that enables to connect to a PostreSql database")
     public void getColumns() {
         Assert.assertTrue(postgreDBConn.testConnection());
 

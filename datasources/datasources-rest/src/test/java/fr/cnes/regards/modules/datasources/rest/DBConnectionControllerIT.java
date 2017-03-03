@@ -21,6 +21,8 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
@@ -109,6 +111,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_010")
+    @Purpose("The system allows to create a connection by the configuration of a plugin's type IDBConnectionPlugin")
     public void createDBConnection() {
         final DBConnection dbConnection = createADbConnection("hello world!",
                                                               DefaultPostgreConnectionPlugin.class.getCanonicalName());
@@ -126,8 +130,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_060")
+    @Purpose("The system allows to get all existing connections")
     public void getAllDBConnection() throws ModuleException {
         initPluginConfDbConnections();
+
+        Assert.assertTrue(0 < service.getAllDBConnections().size());
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
@@ -137,6 +145,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_050")
+    @Purpose("The system allows to get an existing connection")
     public void getDBConnection() throws ModuleException {
         PluginConfiguration plgConf = initPluginConfDbConnections().get(0);
 
@@ -163,6 +173,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_030")
+    @Purpose("The system allows to delete an existing connection")
     public void deleteDBConnection() throws ModuleException {
         PluginConfiguration plgConf = initPluginConfDbConnections().get(0);
 
@@ -194,6 +206,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_020")
+    @Purpose("The system allows to modify an existing connection")
     public void updateDBConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
         dbConnection.setMinPoolSize(3);
@@ -238,6 +252,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_040")
+    @Purpose("The system allows to test the parameters of an existing connection")
     public void testConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
@@ -272,6 +288,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_070")
+    @Purpose("The system allows to get the structure of the databse defined by a connection")
     public void getTables() throws ModuleException {
         PluginConfiguration plgConf = initPluginConfDbConnections().get(0);
 
@@ -283,6 +301,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_070")
+    @Purpose("The system allows to get the structure of the databse defined by a connection")
     public void getColumns() throws ModuleException {
         PluginConfiguration plgConf = initPluginConfDbConnections().get(0);
 
