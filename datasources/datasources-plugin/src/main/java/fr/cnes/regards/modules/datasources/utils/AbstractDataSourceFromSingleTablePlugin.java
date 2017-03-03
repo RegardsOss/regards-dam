@@ -26,8 +26,6 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSin
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
- * Class AbstractDataSourceFromSingleTablePlugin
- *
  * A {@link Plugin} to discover the tables, columns and indexes of a SQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
@@ -41,15 +39,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      * Class logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceFromSingleTablePlugin.class);
-
-    /**
-     * The SQL request parameter name
-     */
-    public static final String REQUEST_PARAM = "requestSQL";
-
-    private static final String COLUMN_NAME = "COLUMN_NAME";
-
-    private static final String DATABASE_ACCESS_ERROR = "Unable to obtain a database connection";
 
     /**
      * The description of the {@link Table} used by this {@link Plugin} to requests the database.
@@ -127,7 +116,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         Connection conn = getDBConnectionPlugin().getConnection();
 
         if (conn == null) {
-            LOG.error(DATABASE_ACCESS_ERROR);
+            LOG.error("Unable to obtain a database connection");
             return null;
         }
 

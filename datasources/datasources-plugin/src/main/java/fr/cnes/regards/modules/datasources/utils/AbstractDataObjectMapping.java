@@ -10,7 +10,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -65,8 +64,14 @@ public abstract class AbstractDataObjectMapping {
      */
     private static final String AS = "as";
 
+    /**
+     * A comma used to build the select clause
+     */
     private static final String COMMA = ",";
 
+    /**
+     * The PL/SQL key word SELECT
+     */
     private static final String SELECT = "SELECT ";
 
     /**
@@ -85,11 +90,6 @@ public abstract class AbstractDataObjectMapping {
     private static final int RESET_COUNT = -1;
 
     /**
-     * The result of the count request
-     */
-    private int nbItems = RESET_COUNT;
-
-    /**
      * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
      * {@link Table}.
      */
@@ -106,6 +106,11 @@ public abstract class AbstractDataObjectMapping {
     protected DataSourceModelMapping dataSourceMapping;
 
     /**
+     * The result of the count request
+     */
+    private int nbItems = RESET_COUNT;
+
+    /**
      * Get {@link DateAttribute}.
      *
      * @param pRs
@@ -119,12 +124,24 @@ public abstract class AbstractDataObjectMapping {
     protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException;
 
-    protected LocalDateTime buildLocatDateTime(ResultSet pRs, DataSourceAttributeMapping pAttrMapping) throws SQLException {
+    /**
+     * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link DataSourceAttributeMapping}.
+     * 
+     * @param pRs
+     *            The {@link ResultSet} to read
+     * @param pAttrMapping
+     *            The {@link DataSourceAttributeMapping}
+     * @return the {@link LocalDateTime}
+     * @throws SQLException
+     *             An error occurred when try to read the {@link ResultSet}
+     */
+    protected LocalDateTime buildLocatDateTime(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException {
         long n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
         Instant instant = Instant.ofEpochMilli(n);
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
-    
+
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}. And add the
@@ -410,8 +427,6 @@ public abstract class AbstractDataObjectMapping {
         }
         return clauseStr.substring(0, clauseStr.length() - 1) + " ";
     }
-
-
 
     /**
      * Add to the SQL request the part to fetch only a portion of the results.
