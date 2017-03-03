@@ -15,6 +15,7 @@ import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
 
 /**
  * Elasticsearch DAO interface
+ * @author oroussel
  */
 public interface IEsRepository {
 
@@ -71,8 +72,9 @@ public interface IEsRepository {
      * @exception IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and
      * type).
      */
-    <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
-            @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException;
+    @SuppressWarnings("unchecked")
+    <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex, T... pDocuments)
+            throws IllegalArgumentException;
 
     /**
      * {@link #saveBulk(String, IIndexable...)}

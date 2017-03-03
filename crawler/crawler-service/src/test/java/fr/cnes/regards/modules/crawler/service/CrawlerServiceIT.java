@@ -19,6 +19,8 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.util.Beans;
 import fr.cnes.regards.modules.crawler.dao.IEsRepository;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IEntityService;
@@ -26,6 +28,9 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 
+/**
+ * Crawler service integration tests
+ */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 public class CrawlerServiceIT {
@@ -59,6 +64,9 @@ public class CrawlerServiceIT {
     private IEntityService entityService;
 
     @Autowired
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+
+    @Autowired
     private IEsRepository esRepos;
 
     private static interface ConsumerWithException<T> {
@@ -76,12 +84,13 @@ public class CrawlerServiceIT {
 
     @After
     public void clean() {
-        execute(entityService::delete, dataset1.getId());
-        execute(entityService::delete, dataset2.getId());
-        execute(entityService::delete, dataset3.getId());
-        execute(entityService::delete, coll1.getId());
-        execute(entityService::delete, coll2.getId());
-        execute(entityService::delete, coll3.getId());
+        // Don't use entity service to clean because events are published on RabbitMQ
+        execute(entityRepos::delete, dataset1.getId());
+        execute(entityRepos::delete, dataset2.getId());
+        execute(entityRepos::delete, dataset3.getId());
+        execute(entityRepos::delete, coll1.getId());
+        execute(entityRepos::delete, coll2.getId());
+        execute(entityRepos::delete, coll3.getId());
 
         execute(modelService::deleteModel, modelColl.getId());
         execute(modelService::deleteModel, modelDataset.getId());
@@ -145,7 +154,7 @@ public class CrawlerServiceIT {
         LOGGER.info("create dataset3 (" + dataset3.getIpId() + ")");
 
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(30000);
+        Thread.sleep(10000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entityService.loadWithRelations(coll1.getIpId());
@@ -179,7 +188,7 @@ public class CrawlerServiceIT {
         entityService.delete(dataset1.getId());
 
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(10000);
+        Thread.sleep(2000);
 
         esRepos.refresh(tenant);
         coll1Bis = esRepos.get(tenant, coll1);

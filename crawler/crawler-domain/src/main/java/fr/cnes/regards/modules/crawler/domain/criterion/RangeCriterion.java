@@ -9,7 +9,7 @@ import java.util.Set;
  * This class is also to be used for only one comparison.
  * @param <T> value type
  */
-public class RangeCriterion<T> extends AbstractPropertyCriterion implements ICriterion {
+public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPropertyCriterion implements ICriterion {
 
     /**
      * Set of comparisons (att > 0, att <= 25.34, etc...)

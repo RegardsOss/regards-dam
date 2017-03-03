@@ -3,8 +3,6 @@ package fr.cnes.regards.modules.crawler.service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -14,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Sets;
@@ -28,10 +28,30 @@ import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
+/**
+ * Crawler service.
+ * <b>This service need @EnableAsync at Configuration and is used in conjunction with CrawlerInitializer</b>
+ */
 @Service
 public class CrawlerService implements ICrawlerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
+
+    /**
+     * To avoid CPU overload, a delay is set between each loop of tenants event inspection.
+     * This delay is doubled each time no event has been pulled (limited to MAX_DELAY_MS).
+     * When an event is pulled (during a tenants event inspection), no wait is done and
+     * delay is reset to INITIAL_DELAY_MS
+     */
+    private static final int INITIAL_DELAY_MS = 1;
+
+    /**
+     * To avoid CPU overload, a delay is set between each loop of tenants event inspection.
+     * This delay is doubled each time no event has been pulled (limited to MAX_DELAY_MS).
+     * When an event is pulled (during a tenants event inspection), no wait is done and
+     * delay is reset to INITIAL_DELAY_MS
+     */
+    private static final int MAX_DELAY_MS = 1000;
 
     @Autowired
     private ITenantResolver tenantResolver;
@@ -49,92 +69,148 @@ public class CrawlerService implements ICrawlerService {
     @Autowired
     private IEsRepository esRepos;
 
-    private ExecutorService executor;
+    /**
+     * To retrieve ICrawlerService (self) proxy
+     */
+    @Autowired
+    private ApplicationContext applicationContext;
 
+    /**
+     * Self proxy
+     */
+    private ICrawlerService self;
+
+    /**
+     * Indicate that daemon stop has been asked
+     */
     private boolean stopAsked = false;
 
-    public CrawlerService() {
-        executor = Executors.newSingleThreadExecutor();
-    }
-
+    /**
+     * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
+     */
     @PostConstruct
-    private void launchCrawl() {
-        executor.execute(this::crawl);
+    private void init() {
+        this.self = applicationContext.getBean(ICrawlerService.class);
     }
 
+    /**
+     * Ask for termination of daemon process
+     */
     @PreDestroy
     private void endCrawl() {
-        System.out.println("end called");
-        executor.shutdown();
         this.stopAsked = true;
     }
 
+    /**
+     * Daemon process.
+     * Poll entity events on all tenants and update Elasticsearch to reflect Postgres database
+     */
+    @Async
+    @Override
     public void crawl() {
+        int delay = INITIAL_DELAY_MS;
+        // Infinite loop
         while (true) {
+            // Manage termination
             if (this.stopAsked) {
                 break;
             }
+            boolean atLeastOnPoll = false;
             // For all tenants
             for (String tenant : tenantResolver.getAllTenants()) {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
-                    this.doPoll();
+                    // Try to poll an entity event on this tenant
+                    atLeastOnPoll |= self.doPoll();
                 } catch (Throwable t) {
                     LOGGER.error("Cannot manage entity event message", t);
                 }
             }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            // If a poll has been done, don't wait and reset delay to initial value
+            if (atLeastOnPoll) {
+                delay = INITIAL_DELAY_MS;
+            } else { // else, wait and double delay for next time (limited to MAX_DELAY)
+                try {
+                    Thread.sleep(delay);
+                    delay = Math.min(delay * 2, MAX_DELAY_MS);
+                } catch (InterruptedException e) {
+                    LOGGER.error("Thread sleep interrupted.");
+                }
             }
         }
     }
 
-    @Transactional(rollbackOn = Exception.class)
-    private void doPoll() {
+    /**
+     * Try to do a transactional poll.
+     * If a poll is done but an exception occurs, the transaction is rolbacked and the event is still present
+     * into AMQP
+     * @return true if a poll has been done, false otherwise
+     */
+    @Override
+    @Transactional
+    public boolean doPoll() {
+        boolean atLeastOnePoll = false;
         // Try to poll an EntityEvent
         TenantWrapper<EntityEvent> wrapper = poller.poll(EntityEvent.class);
         if (wrapper != null) {
+            String tenant = wrapper.getTenant();
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
+                atLeastOnePoll = true;
                 // Only one entity
                 if (ipIds.length == 1) {
-                    UniformResourceName ipId = ipIds[0];
-                    LOGGER.info("received msg for " + ipId.toString());
-                    AbstractEntity entity = entityService.loadWithRelations(ipId);
-                    // If entity does no more exist in database, it must be deleted from ES
-                    if (entity == null) {
-                        esRepos.delete(wrapper.getTenant(), ipId.getEntityType().toString(), ipId.toString());
-                    } else { // entity has been created or updated, it must be saved into ES
-                        // First, check if index exists
-                        if (!esRepos.indexExists(wrapper.getTenant())) {
-                            esRepos.createIndex(wrapper.getTenant());
-                        }
-                        // Then save entity
-                        esRepos.save(wrapper.getTenant(), entity);
-                    }
-                    LOGGER.info(ipId.toString() + " managed into Elasticsearch");
+                    updateEntityIntoEs(tenant, ipIds[0]);
                 } else if (ipIds.length > 1) { // serveral entities at once
-                    LOGGER.info("received msg for " + Arrays.toString(ipIds));
-                    Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
-                    List<AbstractEntity> entities = entityService.loadAllWithRelations(ipIds);
-                    entities.forEach(e -> toDeleteIpIds.remove(e.getIpId()));
-                    // Entities to save
-                    if (!entities.isEmpty()) {
-                        if (!esRepos.indexExists(wrapper.getTenant())) {
-                            esRepos.createIndex(wrapper.getTenant());
-                        }
-                        esRepos.saveBulk(wrapper.getTenant(), entities);
-                    }
-                    // Entities to remove
-                    if (!toDeleteIpIds.isEmpty()) {
-                        toDeleteIpIds.forEach(ipId -> esRepos.delete(wrapper.getTenant(),
-                                                                     ipId.getEntityType().toString(), ipId.toString()));
-                    }
-                    LOGGER.info(Arrays.toString(ipIds) + " managed into Elasticsearch");
+                    updateEntitiesIntoEs(tenant, ipIds);
                 }
             }
         }
+        return atLeastOnePoll;
+    }
+
+    /**
+     * Load given entity from database and update Elasticsearch
+     * @param tenant concerned tenant (also index intoES)
+     * @param ipId concerned entity IpId
+     */
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
+        LOGGER.debug("received msg for " + ipId.toString());
+        AbstractEntity entity = entityService.loadWithRelations(ipId);
+        // If entity does no more exist in database, it must be deleted from ES
+        if (entity == null) {
+            esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
+        } else { // entity has been created or updated, it must be saved into ES
+            // First, check if index exists
+            if (!esRepos.indexExists(tenant)) {
+                esRepos.createIndex(tenant);
+            }
+            // Then save entity
+            esRepos.save(tenant, entity);
+        }
+        LOGGER.debug(ipId.toString() + " managed into Elasticsearch");
+    }
+
+    /**
+     * Load given entities from database and update Elasticsearch
+     * @param tenant concerned tenant (also index intoES)
+     * @param ipIds concerned entity IpIds
+     */
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
+        LOGGER.debug("received msg for " + Arrays.toString(ipIds));
+        Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
+        List<AbstractEntity> entities = entityService.loadAllWithRelations(ipIds);
+        entities.forEach(e -> toDeleteIpIds.remove(e.getIpId()));
+        // Entities to save
+        if (!entities.isEmpty()) {
+            if (!esRepos.indexExists(tenant)) {
+                esRepos.createIndex(tenant);
+            }
+            esRepos.saveBulk(tenant, entities);
+        }
+        // Entities to remove
+        if (!toDeleteIpIds.isEmpty()) {
+            toDeleteIpIds.forEach(ipId -> esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString()));
+        }
+        LOGGER.debug(Arrays.toString(ipIds) + " managed into Elasticsearch");
     }
 }
