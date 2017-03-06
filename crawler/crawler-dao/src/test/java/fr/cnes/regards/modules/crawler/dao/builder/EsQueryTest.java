@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -374,16 +375,21 @@ public class EsQueryTest {
         sortMap.put("properties.size", false);
         List<Item> items = repository.search(INDEX, Item.class, 10, sortMap, ICriterion.all()).getContent();
         List<Item> itemsSorted = Lists.newArrayList(items);
-        Comparator<Item> comparator = Comparator.comparing(item -> item.getAttributes().getText());
+        Comparator<Item> comparator = Comparator.comparing(item -> item.getProperties().getText());
         comparator = comparator
-                .thenComparing(Comparator.<Item, Integer> comparing(item -> item.getAttributes().getSize()).reversed());
+                .thenComparing(Comparator.<Item, Integer> comparing(item -> item.getProperties().getSize()).reversed());
         itemsSorted.sort(comparator);
         Assert.assertEquals(items, itemsSorted);
     }
 
+    /**
+     * This test creates 1_000_000 entities so it is to be used only once to test perf.
+     * Some search queries are done then
+     */
     @Ignore
     @Test
     public void testLoad() {
+        // Remove this comment to create 1_000_000 entities into ES if not already present
         // this.createData2();
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
@@ -398,7 +404,7 @@ public class EsQueryTest {
         long start = System.currentTimeMillis();
         Page<Item> page = repository.search(INDEX2, Item.class, 100, ICriterion.all(), facetMapBuilder.build(),
                                             sortMap);
-        System.out.println("recherche : " + (System.currentTimeMillis() - start) + " ms");
+        System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
         // while (page.hasNext()) {
         // start = System.currentTimeMillis();
         // page = repository.search(INDEX2, Item.class, page.nextPageable(), ICriterion.all(), facetMapBuilder.build(),
@@ -414,6 +420,60 @@ public class EsQueryTest {
         // long start = System.currentTimeMillis();
         // repository.get(INDEX2, TYPE1, "229009", Item.class);
         // System.out.println("get : " + (System.currentTimeMillis() - start) + " ms");
+    }
+
+    /**
+     * Test updating large entity data update (1_000_000 here)
+     */
+    @Test
+    @Ignore
+    public void testUpdatePerf() {
+        // Remove this comment to create 1_000_000 entities into ES if not already present
+        // this.createData2();
+        // Search all items and set tags for all of them
+
+        String[] tags = new String[] { "URN:AIP:CRITERIONS2:etc..." };
+
+        List<Item> items = new ArrayList<>();
+        Consumer<Item> updater = item -> {
+            // Updating item
+            item.getProperties().setTags(tags);
+            items.add(item);
+            if (items.size() == 10000) {
+                long start = System.currentTimeMillis();
+                repository.saveBulk(INDEX2, items);
+                System.out.println("Update 10000 : " + (System.currentTimeMillis() - start) + " ms");
+                items.clear();
+            }
+        };
+
+        long start = System.currentTimeMillis();
+        repository.searchAll(INDEX2, Item.class, updater, ICriterion.all());
+        if (!items.isEmpty()) {
+            long startS = System.currentTimeMillis();
+            repository.saveBulk(INDEX, items);
+            System.out.println("Update " + items.size() + " : " + (System.currentTimeMillis() - startS) + " ms");
+        }
+        System.out.println("Update : " + (System.currentTimeMillis() - start) + " ms");
+    }
+
+    private void nothing(Item i) {
+
+    }
+
+    /**
+     * Test crossing 1_000_000 entities
+     */
+    @Test
+    @Ignore
+    public void testCrossingPerf() {
+        // Remove this comment to create 1_000_000 entities into ES if not already present
+        // this.createData2();
+        // Search all items and set tags for all of them
+
+        long start = System.currentTimeMillis();
+        repository.searchAll(INDEX2, Item.class, this::nothing, ICriterion.all());
+        System.out.println("Crossing 1 000 000 entities : " + (System.currentTimeMillis() - start) + " ms");
     }
 
     private static class Item implements IIndexable, Serializable {
@@ -448,7 +508,7 @@ public class EsQueryTest {
             docId = pId;
         }
 
-        public Properties getAttributes() {
+        public Properties getProperties() {
             return properties;
         }
 

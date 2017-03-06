@@ -167,4 +167,13 @@ public class Dataset extends AbstractLinkEntity {
         licence = pLicence;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        return super.equals(pObj);
+    }
 }

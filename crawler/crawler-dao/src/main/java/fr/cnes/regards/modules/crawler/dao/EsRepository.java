@@ -239,7 +239,7 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    private void checkDocument(IIndexable pDoc) throws IllegalArgumentException {
+    private void checkDocument(IIndexable pDoc) {
         if (Strings.isNullOrEmpty(pDoc.getDocId()) || Strings.isNullOrEmpty(pDoc.getType())) {
             throw new IllegalArgumentException("docId and type are mandatory on an IIndexable object");
         }
@@ -262,7 +262,7 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
-            @SuppressWarnings("unchecked") T... pDocuments) throws IllegalArgumentException {
+            @SuppressWarnings("unchecked") T... pDocuments) {
         String index = pIndex.toLowerCase();
         for (T doc : pDocuments) {
             checkDocument(doc);
@@ -287,16 +287,14 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public void searchAll(String pIndex, Consumer<SearchHit> pAction) {
-        final QueryBuilder qb = QueryBuilders.matchAllQuery();
-
+    public <T> void searchAll(String pIndex, Class<T> pClass, Consumer<T> pAction, ICriterion pCrit) {
         SearchResponse scrollResp = client.prepareSearch(pIndex.toLowerCase())
-                .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).setQuery(qb)
+                .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).setQuery(pCrit.accept(CRITERION_VISITOR))
                 .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
         // Scroll until no hits are returned
         do {
             for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                pAction.accept(hit);
+                pAction.accept(gson.fromJson(hit.getSourceAsString(), pClass));
             }
 
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
