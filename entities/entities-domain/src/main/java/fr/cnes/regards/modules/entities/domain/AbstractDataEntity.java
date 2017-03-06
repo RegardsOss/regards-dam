@@ -37,4 +37,14 @@ public abstract class AbstractDataEntity extends AbstractEntity {
     public void setFiles(List<Data> pFiles) {
         files = pFiles;
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        return super.equals(pObj);
+    }
 }

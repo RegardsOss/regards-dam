@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -355,7 +356,6 @@ public class EntityService implements IEntityService {
      * @param pIpIds ipId URNs of entities that need an Event publication onto AMQP
      */
     private void publishEvents(Set<UniformResourceName> pIpIds) {
-        //pIpIds.forEach(ipId -> publisher.publish(new EntityEvent(ipId)));
         publisher.publish(new EntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
     }
 
@@ -426,7 +426,7 @@ public class EntityService implements IEntityService {
                 throw new EntityDescriptionTooLargeException(pFile.getOriginalFilename());
             }
             String fileCharset = getCharset(pFile);
-            if ((fileCharset != null) && !fileCharset.equals("utf-8")) {
+            if ((fileCharset != null) && !fileCharset.equals(StandardCharsets.UTF_8.toString())) {
                 throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
             }
             // description or description file
@@ -487,7 +487,7 @@ public class EntityService implements IEntityService {
     private static String getCharset(MultipartFile pFile) {
         String contentType = pFile.getContentType();
         int charsetIdx = contentType.indexOf("charset=");
-        return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toLowerCase();
+        return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toUpperCase();
     }
 
     private <T extends AbstractEntity> T check(T pEntity) throws ModuleException {

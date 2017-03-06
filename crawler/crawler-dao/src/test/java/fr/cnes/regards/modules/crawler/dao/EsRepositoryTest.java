@@ -28,6 +28,7 @@ import com.google.gson.GsonBuilder;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 
 /**
  * EsRepository test
@@ -258,13 +259,9 @@ public class EsRepositoryTest {
         }
         final AtomicInteger i = new AtomicInteger(0);
         long start = System.currentTimeMillis();
-        repository.searchAll("loading", h -> i.getAndIncrement());
+        repository.searchAll("loading", Item.class, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
-
-        start = System.currentTimeMillis();
-        repository.searchAll("loading", h -> gson.fromJson(h.getSourceAsString(), Item.class));
-        System.out.println((System.currentTimeMillis() - start) + " ms");
     }
 
     /**
