@@ -27,15 +27,17 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -90,11 +92,25 @@ public class CrawlerServiceTest {
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Before
-    public void tearUp() throws DataSourcesPluginException {
+    public void tearUp() throws DataSourcesPluginException, PluginUtilsException {
         /*
          * Initialize the DataSourceAttributeMapping
          */
         this.buildModelAttributes();
+
+        // PlujginConf de connexion
+        PluginConfiguration pluginConf = getOracleConnectionConfiguration();
+        PluginService pluginService;
+        pluginService.savePluginConfiguration(pluginConf);
+
+        // PluginConf de datasource
+        // Cette datasource doit être positionnée sur la dataset
+        PluginConfiguration dataSourcePluginConf = getOracleDataSource(pluginConf);
+        pluginService.savePluginConfiguration(dataSourcePluginConf);
+
+        // Find all des objets de la datasource
+        IDataSourcePlugin dsPlugin = pluginService.getPlugin(dataSourcePluginConf.getId());
+        dsPlugin.findAll(TENANT, null)
 
         /*
          * Instantiate the SQL DataSource plugin
@@ -102,10 +118,10 @@ public class CrawlerServiceTest {
         List<PluginParameter> parameters;
         try {
             parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                     getOracleConnectionConfiguration())
+                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, getOracleConnectionConfiguration())
                     .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM,
+                                  adapter.toJson(dataSourceModelMapping))
                     .getParameters();
             dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
                                              Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -117,6 +133,17 @@ public class CrawlerServiceTest {
 
     @After
     public void tearDown() throws Exception {
+    }
+
+    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf.getId().toString())
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, "TABLE_MACHIN...")
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     @Ignore
