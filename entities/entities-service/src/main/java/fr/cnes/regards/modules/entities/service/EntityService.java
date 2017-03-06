@@ -44,7 +44,7 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.AbstractLinkEntity;
+import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
@@ -416,7 +416,7 @@ public class EntityService implements IEntityService {
      */
     private <T extends AbstractEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
-        if ((pEntity instanceof AbstractLinkEntity) && (pFile != null) && !pFile.isEmpty()) {
+        if ((pEntity instanceof AbstractDescEntity) && (pFile != null) && !pFile.isEmpty()) {
             // collections and dataset only have a description which is a url or a file
             if (!isContentTypeAcceptable(pFile)) {
                 throw new EntityDescriptionUnacceptableType(pFile.getContentType());
@@ -431,7 +431,7 @@ public class EntityService implements IEntityService {
             }
             // description or description file
             pEntity.setDescription(null);
-            ((AbstractLinkEntity) pEntity).setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+            ((AbstractDescEntity) pEntity).setDescriptionFile(new DescriptionFile(pFile.getBytes(),
                     MediaType.valueOf(pFile.getContentType())));
         }
     }

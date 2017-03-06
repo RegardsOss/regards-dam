@@ -19,7 +19,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author oroussel
  */
 @Entity
-public class Collection extends AbstractLinkEntity { // NOSONAR
+public class Collection extends AbstractDescEntity { // NOSONAR
 
     public Collection(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, pTenant, UUID.randomUUID(), 1),
