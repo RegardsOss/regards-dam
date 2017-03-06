@@ -12,11 +12,11 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class identifying a linkable entity (i.e. Collection or Dataset)
+ * Class identifying a descriptable entity
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-public abstract class AbstractLinkEntity extends AbstractEntity {
+public abstract class AbstractDescEntity extends AbstractEntity {
 
     /**
      * Description file
@@ -24,11 +24,11 @@ public abstract class AbstractLinkEntity extends AbstractEntity {
     @Embedded
     private DescriptionFile descriptionFile;
 
-    protected AbstractLinkEntity() {
+    protected AbstractDescEntity() {
         this(null, null, null);
     }
 
-    protected AbstractLinkEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
+    protected AbstractDescEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
         super(pModel, pIpId, pLabel);
     }
 
@@ -38,6 +38,16 @@ public abstract class AbstractLinkEntity extends AbstractEntity {
 
     public void setDescriptionFile(DescriptionFile pDescriptionFile) {
         descriptionFile = pDescriptionFile;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 
 }

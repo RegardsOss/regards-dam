@@ -23,10 +23,13 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType.ParamType;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  *
@@ -88,6 +91,8 @@ public class DBConnectionServiceTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_060")
+    @Purpose("The system allows to list all the connections")    
     public void getAllDBConnection() {
         Mockito.when(pluginServiceMock.getPluginConfigurationsByType(IDBConnectionPlugin.class)).thenReturn(plgConfs);
         List<PluginConfiguration> connections = dbConnectionServiceMock.getAllDBConnections();
@@ -96,6 +101,8 @@ public class DBConnectionServiceTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_080")
+    @Purpose("Test the creation of a connection by setting the connection's parameters including the pool size")
     public void createConnection() throws ModuleException {
         DBConnection dbConnection = new DBConnection();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";

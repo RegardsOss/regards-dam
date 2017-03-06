@@ -3,7 +3,10 @@
  */
 package fr.cnes.regards.modules.datasources.utils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -38,20 +41,6 @@ public class DataSourceEntity implements IIdentifiable<Long> {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "testPlgDataSOurceSequence")
     private Long id;
 
-    public DataSourceEntity() {
-    }
-
-    public DataSourceEntity(String pLabel, Integer pAltitude, Double pLatitude, Double pLongitude, LocalDateTime pDate,
-            Boolean pUpdate) {
-        super();
-        this.label = pLabel;
-        this.altitude = pAltitude;
-        this.latitude = pLatitude;
-        this.longitude = pLongitude;
-        this.date = pDate;
-        this.update = pUpdate;
-    }
-
     /**
      * DataSourceEntity label
      */
@@ -65,70 +54,37 @@ public class DataSourceEntity implements IIdentifiable<Long> {
 
     private Double longitude;
 
-    private LocalDateTime date;
+    private LocalDate date; // Types.DATE
+
+    private LocalTime timeWithoutTimeZone; // Types.TIME
+
+    private LocalDateTime timeStampWithoutTimeZone; // Types.TIMESTAMP
+
+    private OffsetDateTime timeStampWithTimeZone; // Types.TIMESTAMP or Types.TIMESTAMP_WITH_TIMEZONE > JDBC 4.2
 
     private Boolean update;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.cnes.regards.framework.jpa.IIdentifiable#getId()
-     */
+    public DataSourceEntity() {
+    }
+
+    public DataSourceEntity(String pLabel, int pAltitude, double pLatitude, double pLongitude, LocalDate pDate,
+            LocalTime pTimeWithoutTimeZone, LocalDateTime pTimeStampWithoutTimeZone,
+            OffsetDateTime pTimeStampWithTimeZone, Boolean pUpdate) {
+        super();
+        this.label = pLabel;
+        this.altitude = pAltitude;
+        this.latitude = pLatitude;
+        this.longitude = pLongitude;
+        this.date = pDate;
+        this.timeWithoutTimeZone = pTimeWithoutTimeZone;
+        this.timeStampWithoutTimeZone = pTimeStampWithoutTimeZone;
+        this.timeStampWithTimeZone = pTimeStampWithTimeZone;
+        this.update = pUpdate;
+    }
+
     @Override
     public Long getId() {
         return id;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public Integer getAltitude() {
-        return altitude;
-    }
-
-    public void setAltitude(Integer altitude) {
-        this.altitude = altitude;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public LocalDateTime getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDateTime date) {
-        this.date = date;
-    }
-
-    public Boolean getUpdate() {
-        return update;
-    }
-
-    public void setUpdate(Boolean update) {
-        this.update = update;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
 }

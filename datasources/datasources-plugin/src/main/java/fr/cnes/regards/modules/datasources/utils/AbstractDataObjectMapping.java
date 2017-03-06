@@ -10,7 +10,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -65,8 +64,14 @@ public abstract class AbstractDataObjectMapping {
      */
     private static final String AS = "as";
 
+    /**
+     * A comma used to build the select clause
+     */
     private static final String COMMA = ",";
 
+    /**
+     * The PL/SQL key word SELECT
+     */
     private static final String SELECT = "SELECT ";
 
     /**
@@ -85,11 +90,6 @@ public abstract class AbstractDataObjectMapping {
     private static final int RESET_COUNT = -1;
 
     /**
-     * The result of the count request
-     */
-    private int nbItems = RESET_COUNT;
-
-    /**
      * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
      * {@link Table}.
      */
@@ -104,6 +104,43 @@ public abstract class AbstractDataObjectMapping {
      * The mapping between the attributes in the {@link Model} and the data source
      */
     protected DataSourceModelMapping dataSourceMapping;
+
+    /**
+     * The result of the count request
+     */
+    private int nbItems = RESET_COUNT;
+
+    /**
+     * Get {@link DateAttribute}.
+     *
+     * @param pRs
+     *            the {@link ResultSet}
+     * @param pAttrMapping
+     *            the {@link DataSourceAttributeMapping}
+     * @return a new {@link DateAttribute}
+     * @throws SQLException
+     *             if an error occurs in the {@link ResultSet}
+     */
+    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException;
+
+    /**
+     * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link DataSourceAttributeMapping}.
+     * 
+     * @param pRs
+     *            The {@link ResultSet} to read
+     * @param pAttrMapping
+     *            The {@link DataSourceAttributeMapping}
+     * @return the {@link LocalDateTime}
+     * @throws SQLException
+     *             An error occurred when try to read the {@link ResultSet}
+     */
+    protected LocalDateTime buildLocatDateTime(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+            throws SQLException {
+        long n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
+        Instant instant = Instant.ofEpochMilli(n);
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
 
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
@@ -305,7 +342,8 @@ public abstract class AbstractDataObjectMapping {
         AbstractAttribute<?> attr = null;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("get value for <" + pAttrMapping.getNameDS() + "> of type <" + pAttrMapping.getType() + ">");
+            LOG.debug("get value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
+                    + pAttrMapping.getType() + ">");
         }
 
         String label = extractCollumnName(pAttrMapping.getNameDS());
@@ -388,32 +426,6 @@ public abstract class AbstractDataObjectMapping {
             clauseStr.append(col + COMMA);
         }
         return clauseStr.substring(0, clauseStr.length() - 1) + " ";
-    }
-
-    /**
-     * Get {@link DateAttribute}.
-     *
-     * @param pRs
-     *            the {@link ResultSet}
-     * @param pAttrMapping
-     *            the {@link DataSourceAttributeMapping}
-     * @return a new {@link DateAttribute}
-     * @throws SQLException
-     *             if an error occurs in the {@link ResultSet}
-     */
-    private AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
-            throws SQLException {
-        long n = 0;
-        if (pAttrMapping.getTypeDS() == null) {
-            n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
-        } else {
-            if ((pAttrMapping.getTypeDS() == Types.DECIMAL) || (pAttrMapping.getTypeDS() == Types.NUMERIC)) {
-                n = pRs.getLong(pAttrMapping.getNameDS());
-            }
-        }
-        Instant instant = Instant.ofEpochMilli(n);
-        return AttributeBuilder.buildDate(pAttrMapping.getName(),
-                                          LocalDateTime.ofInstant(instant, ZoneId.systemDefault()));
     }
 
     /**
