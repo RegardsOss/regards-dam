@@ -6,10 +6,18 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.modules.crawler.dao.IEsRepository;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
+/**
+ * Indexer interface
+ * @author oroussel
+ */
 public interface IIndexerService {
+
+    int BULK_SIZE = IEsRepository.BULK_SIZE;
 
     /**
      * Create index if not already exists
@@ -24,6 +32,10 @@ public interface IIndexerService {
      * @return true if index doesn't exist after method returns
      */
     boolean deleteIndex(String pIndex);
+
+    boolean indexExists(String pIndex);
+
+    <T extends IIndexable> T get(UniformResourceName urn);
 
     boolean saveEntity(String pIndex, IIndexable pEntity);
 

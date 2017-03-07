@@ -4,52 +4,51 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import javax.transaction.Transactional;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.google.common.collect.Sets;
-
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
-import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { CrawlerConfiguration.class })
+@ContextConfiguration(classes = { CrawlerConfiguration4DataSource.class })
+@Transactional
 @DirtiesContext // because there are 2 Configuration classes in package
-public class CrawlerServiceTest {
+public class IndexerServiceDataSourceIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
@@ -57,8 +56,6 @@ public class CrawlerServiceTest {
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
-
-    private static final String TENANT = "default";
 
     @Value("${oracle.datasource.host}")
     private String dbHost;
@@ -79,10 +76,16 @@ public class CrawlerServiceTest {
     private String driver;
 
     @Autowired
-    private ICrawlerService service;
+    private IModelService modelService;
 
     @Autowired
     private IIndexerService indexerService;
+
+    @Autowired
+    private ICrawlerService crawlerService;
+
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
 
     private IDataSourceFromSingleTablePlugin dsPlugin;
 
@@ -90,67 +93,56 @@ public class CrawlerServiceTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
+    @Autowired
+    private IPluginService pluginService;
+
+    private Model dataModel;
+
+    private PluginConfiguration dataSourcePluginConf;
+
     @Before
-    public void tearUp() throws DataSourcesPluginException, PluginUtilsException {
-        /*
-         * Initialize the DataSourceAttributeMapping
-         */
+    public void setUp() throws Exception {
+        pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+
+        // Register model attributes
+        registerJSonModelAttributes();
+        dataModel = new Model();
+        dataModel.setName("model_1");
+        dataModel.setType(EntityType.DATA);
+        dataModel.setVersion("1");
+        dataModel.setDescription("Test data object model");
+        modelService.createModel(dataModel);
+
+        // Initialize the DataSourceAttributeMapping
         this.buildModelAttributes();
 
-        /*
-         * Instantiate the SQL DataSource plugin
-         */
-        List<PluginParameter> parameters;
-        try {
-            parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                     getOracleConnectionConfiguration())
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                                  adapter.toJson(dataSourceModelMapping))
-                    .getParameters();
-            dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                             Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+        // Connection PluginConf
+        PluginConfiguration pluginConf = getOracleConnectionConfiguration();
+        pluginService.savePluginConfiguration(pluginConf);
 
+        // DataSource PluginConf
+        dataSourcePluginConf = getOracleDataSource(pluginConf);
+        pluginService.savePluginConfiguration(dataSourcePluginConf);
+
+        // Find all des objets de la datasource
+        dsPlugin = pluginService.getPlugin(dataSourcePluginConf.getId(),
+                                           // TODO remove parameters
+                                           dataSourcePluginConf.getParameters().toArray(new PluginParameter[0]));
     }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    @Ignore
-    @Test
-    public void testSuckUp() {
-        // register JSon data types (for ES)
-        registerJSonModelAttributes();
+    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .getParameters();
 
-        // Creating index if it doesn't already exist
-        indexerService.deleteIndex(TENANT);
-        indexerService.createIndex(TENANT);
-
-        // Retrieve first 1000 objects
-
-        Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
-
-        LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-        Set<DataObject> set = Sets.newHashSet(page.getContent());
-        Assert.assertEquals(page.getContent().size(), set.size());
-        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
-        LOGGER.info(String.format("...%d entities saved",
-                                  page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
-        while (page.hasNext()) {
-            page = dsPlugin.findAll(TENANT, page.nextPageable());
-            set = Sets.newHashSet(page.getContent());
-            Assert.assertEquals(page.getContent().size(), set.size());
-            LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-            errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
-            LOGGER.info(String.format("...%d entities saved",
-                                      page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
-        }
-        Assert.assertTrue(true);
+        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
@@ -197,27 +189,40 @@ public class CrawlerServiceTest {
         attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 
     private void registerJSonModelAttributes() {
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "DATA_OBJECTS_ID");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "FILE_SIZE");
-        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "FILE_TYPE");
-        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "FILE_NAME_ORIGINE");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "DATA_SET_ID");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "DATA_TITLE");
-        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "DATA_AUTHOR");
-        gsonAttributeFactory.registerSubtype(TENANT, StringAttribute.class, "DATA_AUTHOR_COMPANY");
-        gsonAttributeFactory.registerSubtype(TENANT, DateAttribute.class, "START_DATE");
-        gsonAttributeFactory.registerSubtype(TENANT, DateAttribute.class, "STOP_DATE");
-        gsonAttributeFactory.registerSubtype(TENANT, DateAttribute.class, "DATA_CREATION_DATE");
+        String tenant = tenantResolver.getTenant();
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "DATA_OBJECTS_ID");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "FILE_SIZE");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "FILE_TYPE");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "FILE_NAME_ORIGINE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "DATA_SET_ID");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "DATA_TITLE");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "DATA_AUTHOR");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "DATA_AUTHOR_COMPANY");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "START_DATE");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "STOP_DATE");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "DATA_CREATION_DATE");
 
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MIN_LONGITUDE");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MAX_LONGITUDE");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MIN_LATITUDE");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MAX_LATITUDE");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MIN_ALTITUDE");
-        gsonAttributeFactory.registerSubtype(TENANT, IntegerAttribute.class, "MAX_ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN_LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX_LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN_LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX_LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN_ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX_ALTITUDE");
     }
+
+    @Test
+    public void test() throws ModuleException {
+        String tenant = tenantResolver.getTenant();
+        // First delete index if it already exists
+        indexerService.deleteIndex(tenant);
+
+        long now = System.currentTimeMillis();
+        crawlerService.ingest(dataSourcePluginConf);
+        System.out.println(System.currentTimeMillis() - now);
+    }
+
 }
