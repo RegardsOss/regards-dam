@@ -13,6 +13,10 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.modules.crawler.dao.IEsRepository;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 @Service
 public class IndexerService implements IIndexerService {
@@ -37,6 +41,32 @@ public class IndexerService implements IIndexerService {
             return repository.deleteIndex(pIndex);
         }
         return true;
+    }
+
+    @Override
+    public boolean indexExists(String pIndex) {
+        return repository.indexExists(pIndex);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends IIndexable> T get(UniformResourceName urn) {
+        Class<? extends IIndexable> clazz;
+        switch (urn.getEntityType()) {
+            case COLLECTION:
+                clazz = fr.cnes.regards.modules.entities.domain.Collection.class;
+                break;
+            case DATA:
+                clazz = DataObject.class;
+                break;
+            case DATASET:
+                clazz = Dataset.class;
+            case DOCUMENT:
+                clazz = Document.class;
+            default:
+                throw new IllegalArgumentException();
+        }
+        return (T) repository.get(urn.getTenant(), urn.getEntityType().toString(), urn.toString(), clazz);
     }
 
     @Override
