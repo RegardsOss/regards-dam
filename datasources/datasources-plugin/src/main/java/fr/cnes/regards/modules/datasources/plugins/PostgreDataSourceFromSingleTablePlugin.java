@@ -68,6 +68,12 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     private String modelJSon;
 
     /**
+     * Is this data source is a REGARDS internal data source
+     */
+    @PluginParameter(name = IS_INTERNAL_PARAM)
+    private String internalDataSource;
+
+    /**
      * Init method
      */
     @PluginInit
@@ -96,7 +102,6 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         return dbConnection;
     }
 
-    
     @Override
     /**
      * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
@@ -131,5 +136,9 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
     }
 
+    @Override
+    public boolean isInternalDataSource() {
+        return !internalDataSource.isEmpty() && TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(internalDataSource);
+    }
 
 }
