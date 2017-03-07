@@ -16,7 +16,7 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 public class PostgreSqlGenerator extends SqlGenerator {
 
     /**
-     * The table name used in a "ORDER BY" clause 
+     * The table name used in a "ORDER BY" clause
      */
     private String orderByTable;
 
@@ -33,6 +33,12 @@ public class PostgreSqlGenerator extends SqlGenerator {
     protected String limitClause(Pageable pPage) {
         int offset = pPage.getPageNumber() * pPage.getPageSize();
 
-        return String.format(" ORDER BY %s LIMIT %d OFFSET %d", orderByTable, pPage.getPageSize(), offset);
+        if (orderByTable != null && !orderByTable.isEmpty()) {
+            return String.format(" ORDER BY %s LIMIT %d OFFSET %d", orderByTable, pPage.getPageSize(), offset);
+
+        } else {
+            return String.format(" LIMIT %d OFFSET %d", pPage.getPageSize(), offset);
+        }
+
     }
 }

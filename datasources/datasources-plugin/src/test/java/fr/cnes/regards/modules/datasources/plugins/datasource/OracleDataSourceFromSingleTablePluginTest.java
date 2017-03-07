@@ -130,11 +130,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
         Assert.assertEquals(1000, ll.getContent().size());
     }
 
-    @After
-    public void erase() {
-        // repository.deleteAll();
-    }
-
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultOracleConnectionPlugin} to connect to the Oracle
      * database.

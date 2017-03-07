@@ -77,7 +77,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
 
         // Converts the modelJson to a list of DataSourceAttributeMapping
         initDataSourceMapping(this.modelJSon);
-        
+
         initializePluginMapping(this.tableName, dataSourceMapping);
     }
 
@@ -123,5 +123,9 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
         return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
     }
 
+    @Override
+    public boolean isInternalDataSource() {
+        return false;
+    }
 
 }

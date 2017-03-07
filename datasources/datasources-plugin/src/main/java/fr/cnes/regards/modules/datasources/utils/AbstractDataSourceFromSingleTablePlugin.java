@@ -22,7 +22,6 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -32,13 +31,17 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping
-        implements IDataSourceFromSingleTablePlugin {
+public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping {
 
     /**
      * Class logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceFromSingleTablePlugin.class);
+
+    /**
+     * A comma used to build the select clause
+     */
+    protected static final String COMMA = ",";
 
     /**
      * The description of the {@link Table} used by this {@link Plugin} to requests the database.
@@ -64,7 +67,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      * @param pMapping
      *            the mapping between the attributes's model and the attributes of the database
      */
-    @Override
+    // @Override
     public void initializePluginMapping(String pTable, DataSourceModelMapping pMapping) {
 
         // reset the number of data element hosted by the datasource
@@ -82,58 +85,62 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         }
     }
 
-    @Override
+    // @Override
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
     }
 
-    @Override
+    // @Override
     public boolean isOutOfDate() {
         boolean outDated = true;
 
         // TODO compute the out dated value
 
-        if (isOutOfDate()) {
+        if (outDated) {
             this.reset();
         }
 
         return outDated;
     }
 
-    @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
-        if (sqlGenerator == null) {
-            return null;
-        }
-
-        String requestSql = sqlGenerator.selectAll(tableDescription, pPageable);
-        String countRequestSql = sqlGenerator.count(tableDescription);
-
-        LOG.debug("request :" + requestSql);
-
-        // Get a connection
-        Connection conn = getDBConnectionPlugin().getConnection();
-
-        if (conn == null) {
-            LOG.error("Unable to obtain a database connection");
-            return null;
-        }
-
-        Page<DataObject> pages = findAll(pTenant, conn, requestSql, countRequestSql, pPageable, pDate);
-
-        try {
-            conn.close();
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        }
-
-        return pages;
+    protected String getSelectRequest(Pageable pPageable) {
+        return sqlGenerator.selectAll(tableDescription, pPageable);
     }
 
-    @Override
+    protected String getCountRequest() {
+        return sqlGenerator.count(tableDescription);
+    }
+
+    // @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
         return findAll(pTenant, pPageable, null);
+    }
+
+    // @Override
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
+        if (sqlGenerator == null) {
+            LOG.error("the sqlGenerator is null");
+            return null;
+        }
+        final String selectRequest = getSelectRequest(pPageable);
+        final String countRequest = getCountRequest();
+
+        LOG.debug("select request :" + selectRequest);
+        LOG.debug("count request :" + countRequest);
+
+        try (Connection conn = getDBConnectionPlugin().getConnection()) {
+
+            Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
+
+            conn.close();
+
+            return pages;
+        } catch (SQLException e) {
+            LOG.error("Unable to obtain a database connection.", e);
+            return null;
+        }
+
     }
 
 }

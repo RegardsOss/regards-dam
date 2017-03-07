@@ -4,7 +4,6 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -16,8 +15,6 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
@@ -25,8 +22,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDataObjectMapping;
-import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.datasources.utils.AbstractDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -40,7 +36,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Plugin(id = "postgresql-datasource", author = "CSSI", version = "1.0-SNAPSHOT",
         description = "Allows data extraction to a PostgreSql database")
-public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implements IDataSourcePlugin {
+public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin implements IDataSourcePlugin {
 
     /**
      * Class logger
@@ -57,7 +53,7 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
      * The SQL request
      */
     @PluginParameter(name = FROM_CLAUSE)
-    private String requestSql;
+    private String sqlFromClause;
 
     /**
      * The {@link Model} to used by the {@link Plugin} in JSon format.
@@ -66,12 +62,18 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     private String modelJSon;
 
     /**
+     * Is this data source is a REGARDS internal data source
+     */
+    @PluginParameter(name = IS_INTERNAL_PARAM)
+    private String internalDataSource;
+
+    /**
      * Init method
      */
     @PluginInit
     private void initPlugin() {
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + this.dbConnection.toString()
-                + "model=" + this.modelJSon + "requete=" + this.requestSql);
+                + "model=" + this.modelJSon + "requete=" + this.sqlFromClause);
 
         LOG.info("Init method call : "
                 + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
@@ -81,43 +83,8 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
     }
 
     @Override
-    public int getRefreshRate() {
-        // in seconds, 30 minutes
-        return 1800;
-    }
-
-    @Override
-    public boolean isOutOfDate() {
-        return true;
-    }
-
-    @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
-        Connection conn = dbConnection.getConnection();
-        if (conn == null) {
-            LOG.error("Unable to obtain a database connection.");
-            return null;
-        }
-
-        Page<DataObject> pages = findAllApplyPageAndDate(pTenant, conn, requestSql, pPageable, pDate);
-
-        try {
-            conn.close();
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        }
-
-        return pages;
-    }
-
-    @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
-        return findAll(pTenant, pPageable, null);
-    }
-
-    @Override
     /**
-     * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html 
+     * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
      */
     protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException {
@@ -147,6 +114,32 @@ public class PostgreDataSourcePlugin extends AbstractDataObjectMapping implement
         }
 
         return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
+    }
+
+    @Override
+    public boolean isInternalDataSource() {
+        return !internalDataSource.isEmpty() && TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(internalDataSource);
+    }
+
+    @Override
+    protected IDBConnectionPlugin getDBConnectionPlugin() {
+        return dbConnection;
+    }
+
+    @Override
+    protected String getFromClause() {
+        return sqlFromClause;
+    }
+
+    @Override
+    public int getRefreshRate() {
+        // in seconds, 30 minutes
+        return 1800;
+    }
+
+    @Override
+    public boolean isOutOfDate() {
+        return true;
     }
 
 }
