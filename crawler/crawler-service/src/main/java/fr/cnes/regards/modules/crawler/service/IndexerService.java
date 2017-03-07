@@ -61,8 +61,10 @@ public class IndexerService implements IIndexerService {
                 break;
             case DATASET:
                 clazz = Dataset.class;
+                break;
             case DOCUMENT:
                 clazz = Document.class;
+                break;
             default:
                 throw new IllegalArgumentException();
         }
