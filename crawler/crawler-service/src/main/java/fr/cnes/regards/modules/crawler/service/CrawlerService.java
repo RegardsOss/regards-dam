@@ -122,7 +122,7 @@ public class CrawlerService implements ICrawlerService {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
                     atLeastOnPoll |= self.doPoll();
-                } catch (Throwable t) {
+                } catch (RuntimeException t) {
                     LOGGER.error("Cannot manage entity event message", t);
                 }
             }
@@ -135,6 +135,7 @@ public class CrawlerService implements ICrawlerService {
                     delay = Math.min(delay * 2, MAX_DELAY_MS);
                 } catch (InterruptedException e) {
                     LOGGER.error("Thread sleep interrupted.");
+                    Thread.currentThread().interrupt();
                 }
             }
         }

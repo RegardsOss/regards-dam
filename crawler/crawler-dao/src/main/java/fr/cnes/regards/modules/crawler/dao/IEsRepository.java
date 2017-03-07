@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.elasticsearch.search.SearchHit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -328,7 +327,7 @@ public interface IEsRepository {
      * @param pIndex index
      * @param pAction action to be executed for each search result element
      */
-    void searchAll(String pIndex, Consumer<SearchHit> pAction);
+    <T> void searchAll(String pIndex, Class<T> pClass, Consumer<T> pAction, ICriterion pCriterion);
 
     /**
      * Close Client

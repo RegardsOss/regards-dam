@@ -101,7 +101,7 @@ public class DatasetService extends EntityService implements IDatasetService {
      */
     @Override
     public Dataset retrieveDataset(UniformResourceName pDatasetIpId) throws EntityNotFoundException {
-        Dataset result = (Dataset) datasetRepository.findOneByIpId(pDatasetIpId);
+        Dataset result = datasetRepository.findOneByIpId(pDatasetIpId);
         if (result == null) {
             throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
         }
@@ -210,7 +210,7 @@ public class DatasetService extends EntityService implements IDatasetService {
      * @return the PluginConfiguration if it exist or null
      */
     private PluginConfiguration getPluginConfiguration(Long pConfigurationId) {// NOSONAR: sonar does not detect that
-                                                                               // the method is used by
+                                                                                   // the method is used by
                                                                                // DataSetServive#checkPluginConfigurations
                                                                                // with the
                                                                                // "this::getPluginConfiguration"
@@ -262,8 +262,7 @@ public class DatasetService extends EntityService implements IDatasetService {
         PluginConfiguration pluginConf = JwtTokenUtils
                 .asSafeCallableOnRole(this::getPluginConfiguration, pConfigId, jwtService, null)
                 .apply(RoleAuthority.getSysRole(microserviceName));
-        // pluginConf cannot be null here because it is called after the DataSet has been created and creation assured
-        // that
+        // Dataset creation assured that pluginConf cannot be null here because it is called after the DataSet has been created
         return pluginConf.getInterfaceName().equals(IService.class.getName());
     }
 

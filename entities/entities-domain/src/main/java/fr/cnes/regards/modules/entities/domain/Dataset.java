@@ -37,7 +37,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  */
 @Entity
-public class Dataset extends AbstractLinkEntity {
+public class Dataset extends AbstractDescEntity {
 
     /**
      * Quality mark
@@ -167,4 +167,13 @@ public class Dataset extends AbstractLinkEntity {
         licence = pLicence;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        return super.equals(pObj);
+    }
 }
