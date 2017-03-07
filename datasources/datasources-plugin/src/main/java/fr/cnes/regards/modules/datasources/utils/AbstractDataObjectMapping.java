@@ -65,11 +65,6 @@ public abstract class AbstractDataObjectMapping {
     private static final String COMMA = ",";
 
     /**
-     * The PL/SQL key word SELECT
-     */
-    private static final String SELECT = "SELECT ";
-
-    /**
      * A pattern used to set a date in the statement
      */
     private static final String DATE_STATEMENT = "%last_modification_date%";
