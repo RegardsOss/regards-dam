@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -33,6 +34,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
+@DirtiesContext // because there are 2 Configuration classes in package
 public class CrawlerServiceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceIT.class);
@@ -154,7 +156,7 @@ public class CrawlerServiceIT {
         LOGGER.info("create dataset3 (" + dataset3.getIpId() + ")");
 
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(10000);
+        Thread.sleep(15000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entityService.loadWithRelations(coll1.getIpId());

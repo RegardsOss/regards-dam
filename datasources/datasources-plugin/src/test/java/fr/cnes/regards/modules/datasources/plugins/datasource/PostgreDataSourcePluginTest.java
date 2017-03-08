@@ -151,7 +151,7 @@ public class PostgreDataSourcePluginTest {
     @Test
     @Requirement("REGARDS_DSL_DAM_PLG_200")
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by setting a SQL request")
-    public void firstTest() {
+    public void getDataSourceIntrospection() {
         Assert.assertEquals(nbElements, repository.count());
 
         Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10));

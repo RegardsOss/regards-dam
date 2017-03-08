@@ -18,6 +18,8 @@ import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
  */
 public interface IEsRepository {
 
+    int BULK_SIZE = 10_000;
+
     /**
      * Create specified index
      * @param pIndex index
@@ -97,7 +99,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return found document or null
      */
-    <T> T get(String pIndex, String pDocType, String pDocId, Class<T> pClass);
+    <T extends IIndexable> T get(String pIndex, String pDocType, String pDocId, Class<T> pClass);
 
     /**
      * Utility method to avoid using Class<T> and passing directly id and type

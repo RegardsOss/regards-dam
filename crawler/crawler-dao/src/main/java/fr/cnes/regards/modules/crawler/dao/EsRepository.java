@@ -189,7 +189,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> T get(String pIndex, String pType, String pId, Class<T> pClass) {
+    public <T extends IIndexable> T get(String pIndex, String pType, String pId, Class<T> pClass) {
         try {
             final GetResponse response = client.prepareGet(pIndex.toLowerCase(), pType, pId).get();
             if (!response.isExists()) {
