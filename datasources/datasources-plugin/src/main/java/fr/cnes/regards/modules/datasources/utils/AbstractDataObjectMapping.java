@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.datasources.utils;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,9 +35,12 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.Table;
+import fr.cnes.regards.modules.entities.domain.Data;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.DataType;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -43,7 +48,14 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class AbstractDataObjectMapping
+ * This class allows to process a SQL request to a SQL Database.</br>
+ * For each data reads in the Database, a {@link DataObject} is created. This {@link DataObject} are compliant with a
+ * {@link Model}.</br>
+ * Some attributes extracts from the Database are specials. For each one, a {@link DataObject} property is set :
+ * <li>the primary key of the data
+ * <li>the data file of the data
+ * <li>the thumbnail of the data
+ * <li>the update date of the data
  *
  * @author Christophe Mertz
  */
@@ -210,6 +222,7 @@ public abstract class AbstractDataObjectMapping {
      */
     protected DataObject processResultSet(String pTenant, ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
+
         final List<AbstractAttribute<?>> attributes = new ArrayList<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
 
@@ -218,28 +231,21 @@ public abstract class AbstractDataObjectMapping {
          */
         for (DataSourceAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
-            final boolean asNameSpace = attrMapping.getNameSpace() != null;
             try {
                 AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
 
                 if (attr != null) {
-                    if (asNameSpace) {
-                        /**
-                         * The attribute has a name space
-                         */
-                        if (spaceNames.containsKey(attrMapping.getNameSpace())) {
-                            /**
-                             * The name space already exists
-                             */
-                            spaceNames.get(attrMapping.getNameSpace()).add(attr);
-                        } else {
+                    if (attrMapping.getNameSpace() != null) {
+                        if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
                             /**
                              * It is a new name space
                              */
-                            final List<AbstractAttribute<?>> nameSpaceAttributes = new ArrayList<>();
-                            nameSpaceAttributes.add(attr);
-                            spaceNames.put(attrMapping.getNameSpace(), nameSpaceAttributes);
+                            spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
                         }
+
+                        // Add the attribute to the namespace
+                        spaceNames.get(attrMapping.getNameSpace()).add(attr);
+
                     } else {
                         attributes.add(attr);
                     }
@@ -249,6 +255,8 @@ public abstract class AbstractDataObjectMapping {
                         data.setIpId(buildUrn(pTenant, val));
                         data.setSipId(val);
                     }
+
+                    processInternalAttributes(data, attr, attrMapping.getNameSpace());
 
                 }
             } catch (SQLException e) {
@@ -282,14 +290,13 @@ public abstract class AbstractDataObjectMapping {
      */
     private AbstractAttribute<?> buildAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException {
-        AbstractAttribute<?> attr = null;
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("get value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
                     + pAttrMapping.getType() + ">");
         }
 
-        String label = extractCollumnName(pAttrMapping.getNameDS());
+        AbstractAttribute<?> attr = null;
+        final String label = extractColumnName(pAttrMapping.getNameDS());
 
         switch (pAttrMapping.getType()) {
             case STRING:
@@ -334,7 +341,7 @@ public abstract class AbstractDataObjectMapping {
      *            The PL/SQL expression to analyze
      * @return the column label extracted from the PL/SQL
      */
-    private String extractCollumnName(String pAttrMapping) {
+    private String extractColumnName(String pAttrMapping) {
         int pos = pAttrMapping.toLowerCase().lastIndexOf(AS);
 
         if (pos > 0) {
@@ -361,6 +368,78 @@ public abstract class AbstractDataObjectMapping {
     private UniformResourceName buildUrn(String pTenant, String pVal) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant,
                 UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
+    }
+
+    private void processInternalAttributes(DataObject pData, AbstractAttribute<?> pAttr, String pNameSpace) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("process the internal attribute : <" + pAttr.getName() + "> with namespace <" + pNameSpace + ">");
+        }
+
+        if (isRawData(pNameSpace) || isThumbnail(pNameSpace)) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            if (pData.getFiles() == null) {
+                pData.setFiles(new ArrayList<>());
+            }
+            try {
+                DataType type = isRawData(pNameSpace) ? DataType.RAWDATA : DataType.THUMBNAIL;
+                pData.getFiles().add(new Data(type, new URI(str.getValue())));
+            } catch (URISyntaxException e) {
+                LOG.error(e.getMessage(), e);
+            }
+        } else
+            if (isLastDateUpdate(pNameSpace)) {
+                DateAttribute date = (DateAttribute) pAttr.getValue();
+                pData.setLastUpdate(date.getValue());
+            } else
+                if (isLabel(pNameSpace)) {
+                    StringAttribute str = (StringAttribute) pAttr.getValue();
+                    pData.setLabel(str.getValue());
+                } else
+                    if (isDescription(pNameSpace)) {
+                        StringAttribute str = (StringAttribute) pAttr.getValue();
+                        pData.setDescription(str.getValue());
+                    }
+    }
+
+    // TODO CMZ à compléter
+    private boolean isDescription(String pNamespace) {
+        boolean isDescr = false;
+        if (isDescr) {
+            LOG.debug("a description");
+        }
+        return isDescr;
+    }
+
+    private boolean isLabel(String pNamespace) {
+        boolean isLabel = false;
+        if (isLabel) {
+            LOG.debug("a label");
+        }
+        return isLabel;
+    }
+
+    private boolean isRawData(String pNamespace) {
+        boolean isRawData = false;
+        if (isRawData) {
+            LOG.debug("a raw data");
+        }
+        return isRawData;
+    }
+
+    private boolean isThumbnail(String pNamespace) {
+        boolean isThumbnail = false;
+        if (isThumbnail) {
+            LOG.debug("a thumbnail");
+        }
+        return isThumbnail;
+    }
+
+    private boolean isLastDateUpdate(String pNamespace) {
+        boolean isLastUpdate = false;
+        if (isLastUpdate) {
+            LOG.debug("a last update");
+        }
+        return isLastUpdate;
     }
 
     /**

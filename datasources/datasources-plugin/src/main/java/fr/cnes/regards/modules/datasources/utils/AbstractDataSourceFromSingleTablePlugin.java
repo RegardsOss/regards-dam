@@ -8,8 +8,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -19,14 +17,14 @@ import com.nurkiewicz.jdbcrepository.TableDescription;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
- * A {@link Plugin} to discover the tables, columns and indexes of a SQL Database.<br>
- * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
+ * A {@link Plugin} to discover the tables and columns of a SQL Database and to retrieve the data elements of a specific
+ * table.<br>
+ * This {@link Plugin} used a {@link IDBConnectionPlugin} to define the connection to the Database.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
@@ -64,11 +62,8 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      *
      * @param pTable
      *            the table used to requests the database
-     * @param pMapping
-     *            the mapping between the attributes's model and the attributes of the database
      */
-    // @Override
-    public void initializePluginMapping(String pTable, DataSourceModelMapping pMapping) {
+    public void initializePluginMapping(String pTable) {
 
         // reset the number of data element hosted by the datasource
         this.reset();
@@ -85,13 +80,11 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         }
     }
 
-    // @Override
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
     }
 
-    // @Override
     public boolean isOutOfDate() {
         boolean outDated = true;
 

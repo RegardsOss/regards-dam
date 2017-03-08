@@ -85,11 +85,13 @@ public interface IDataSourceService {
     PluginConfiguration getInternalDataSource();
 
     /**
-     * Set a {@link PluginConfiguration} as the plugin that is marked as the internal REGARDS data source.
+     * Set a {@link PluginConfiguration} as the plugin that is marked as the internal REGARDS data source
      * 
      * @param pPluginConfiguration
-     * @return
+     *            the {@link PluginConfiguration} to set
+     * @return the {@link PluginConfiguration} that is marked as the internal REGARDS data source
      * @throws ModuleException
+     *             throw if an error occurs
      */
     PluginConfiguration setInternalDataSource(PluginConfiguration pPluginConfiguration) throws ModuleException;
 
