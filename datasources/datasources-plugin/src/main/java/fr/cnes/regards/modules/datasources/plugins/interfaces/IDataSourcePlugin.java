@@ -39,6 +39,13 @@ public interface IDataSourcePlugin {
     public static final String CONNECTION_PARAM = "connection";
 
     /**
+     * The connection parameter name
+     */
+    public static final String IS_INTERNAL_PARAM = "internalDataSource";
+
+    public static final String TRUE_INTERNAL_DATASOURCE = " true";
+
+    /**
      * The refresh rate of the data source
      *
      * @return the refresh rate value
@@ -46,11 +53,18 @@ public interface IDataSourcePlugin {
     int getRefreshRate();
 
     /**
-     * Returns true if the content of the data source has been modified.
+     * Returns <code>true</code> if the content of the data source has been modified.
      *
      * @return boolean
      */
     boolean isOutOfDate();
+
+    /**
+     * Returns <code>true</code> if the data source is connected to internal database.
+     * 
+     * @return boolean
+     */
+    boolean isInternalDataSource();
 
     /**
      * Returns a {@link Page} of new entities meeting the paging restriction provided in the {@code Pageable} object.

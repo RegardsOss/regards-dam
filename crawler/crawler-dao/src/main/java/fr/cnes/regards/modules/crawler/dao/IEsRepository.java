@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.elasticsearch.search.SearchHit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,6 +17,8 @@ import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
  * @author oroussel
  */
 public interface IEsRepository {
+
+    int BULK_SIZE = 10_000;
 
     /**
      * Create specified index
@@ -98,7 +99,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return found document or null
      */
-    <T> T get(String pIndex, String pDocType, String pDocId, Class<T> pClass);
+    <T extends IIndexable> T get(String pIndex, String pDocType, String pDocId, Class<T> pClass);
 
     /**
      * Utility method to avoid using Class<T> and passing directly id and type
@@ -328,7 +329,7 @@ public interface IEsRepository {
      * @param pIndex index
      * @param pAction action to be executed for each search result element
      */
-    void searchAll(String pIndex, Consumer<SearchHit> pAction);
+    <T> void searchAll(String pIndex, Class<T> pClass, Consumer<T> pAction, ICriterion pCriterion);
 
     /**
      * Close Client

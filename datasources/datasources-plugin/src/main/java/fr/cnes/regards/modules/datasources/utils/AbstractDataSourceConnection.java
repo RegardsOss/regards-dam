@@ -37,11 +37,6 @@ public abstract class AbstractDataSourceConnection {
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceConnection.class);
 
-    /**
-     * The SQL request parameter name
-     */
-    public static final String REQUEST_PARAM = "requestSQL";
-
     private static final String METADATA_TABLE = "TABLE";
 
     private static final String TABLE_CAT = "TABLE_CAT";

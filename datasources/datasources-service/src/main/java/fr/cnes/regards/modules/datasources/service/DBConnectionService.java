@@ -134,7 +134,6 @@ public class DBConnectionService implements IDBConnectionService {
             case IDBConnectionPlugin.DB_NAME_PARAM:
                 pPlgParam.setValue(pDbConn.getDbName());
                 break;
-
             case IDBConnectionPlugin.MIN_POOLSIZE_PARAM:
                 pPlgParam.setValue(pDbConn.getMinPoolSize().toString());
                 break;

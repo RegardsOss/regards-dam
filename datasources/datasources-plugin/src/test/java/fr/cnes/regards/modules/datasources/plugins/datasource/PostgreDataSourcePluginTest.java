@@ -3,11 +3,15 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hsqldb.Types;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,6 +31,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -102,12 +108,15 @@ public class PostgreDataSourcePluginTest {
          * Add data to the data source
          */
         repository.deleteAll();
-        repository.save(new DataSourceEntity("Bordeaux", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
-                LocalDateTime.now(), true));
+        repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
+                LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
+                OffsetDateTime.now().minusMinutes(33), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
-                LocalDateTime.now().minusDays(5), false));
+                LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(35), LocalDateTime.now().plusHours(33),
+                OffsetDateTime.now().minusSeconds(22), true));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
-                25.565465465454564654654654, LocalDateTime.now().plusHours(10), false));
+                25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
+                LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7), false));
         nbElements = 3;
 
         /*
@@ -140,7 +149,9 @@ public class PostgreDataSourcePluginTest {
     }
 
     @Test
-    public void firstTest() {
+    @Requirement("REGARDS_DSL_DAM_PLG_200")
+    @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by setting a SQL request")
+    public void getDataSourceIntrospection() {
         Assert.assertEquals(nbElements, repository.count());
 
         Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10));
@@ -190,7 +201,13 @@ public class PostgreDataSourcePluginTest {
                 .add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
-        attributes.add(new DataSourceAttributeMapping("creationDate", "hello", AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new DataSourceAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithoutTimeZone", Types.TIMESTAMP));
+        attributes.add(new DataSourceAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithoutTimeZone"));
+        attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
+        attributes.add(new DataSourceAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

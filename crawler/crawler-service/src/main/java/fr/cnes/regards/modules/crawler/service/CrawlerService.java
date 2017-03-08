@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -13,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +23,15 @@ import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.crawler.dao.IEsRepository;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -53,18 +61,30 @@ public class CrawlerService implements ICrawlerService {
      */
     private static final int MAX_DELAY_MS = 1000;
 
+    /**
+     * All tenants resolver
+     */
     @Autowired
     private ITenantResolver tenantResolver;
 
+    /**
+     * Current tenant resolver
+     */
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
 
+    /**
+     * AMQP poller
+     */
     @Autowired
     private IPoller poller;
 
     @Autowired
     @Qualifier(value = "entityService")
     private IEntityService entityService;
+
+    @Autowired
+    private IPluginService pluginService;
 
     @Autowired
     private IEsRepository esRepos;
@@ -122,7 +142,7 @@ public class CrawlerService implements ICrawlerService {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
                     atLeastOnPoll |= self.doPoll();
-                } catch (Throwable t) {
+                } catch (RuntimeException t) {
                     LOGGER.error("Cannot manage entity event message", t);
                 }
             }
@@ -135,6 +155,7 @@ public class CrawlerService implements ICrawlerService {
                     delay = Math.min(delay * 2, MAX_DELAY_MS);
                 } catch (InterruptedException e) {
                     LOGGER.error("Thread sleep interrupted.");
+                    Thread.currentThread().interrupt();
                 }
             }
         }
@@ -212,5 +233,64 @@ public class CrawlerService implements ICrawlerService {
             toDeleteIpIds.forEach(ipId -> esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString()));
         }
         LOGGER.debug(Arrays.toString(ipIds) + " managed into Elasticsearch");
+    }
+
+    @Override
+    public void ingest(PluginConfiguration pPluginConf) throws ModuleException {
+        String tenant = runtimeTenantResolver.getTenant();
+
+        // The datasource id is built from datasource plugin configuration id and datasource plugin id
+        String datasourceId = pPluginConf.getId() + ":" + pPluginConf.getPluginId();
+        IDataSourcePlugin dsPlugin = pluginService.getPlugin(pPluginConf);
+
+        // If index doesn't exist, just create all data objects
+        if (!esRepos.indexExists(tenant)) {
+            esRepos.createIndex(tenant);
+            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
+            this.createDataObjects(tenant, datasourceId, page.getContent());
+
+            while (page.hasNext()) {
+                page = dsPlugin.findAll(tenant, page.nextPageable());
+                this.createDataObjects(tenant, datasourceId, page.getContent());
+            }
+        } else { // index exists, data objects may also exist
+            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
+            this.mergeDataObjects(tenant, datasourceId, page.getContent());
+
+            while (page.hasNext()) {
+                page = dsPlugin.findAll(tenant, page.nextPageable());
+                this.mergeDataObjects(tenant, datasourceId, page.getContent());
+            }
+        }
+    }
+
+    private void createDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+        // On all objects, it is necessary to set datasourceId
+        objects.forEach(dataObject -> dataObject.setDataSourceId(datasourceId));
+        if (!objects.isEmpty()) {
+            esRepos.saveBulk(tenant, objects);
+        }
+    }
+
+    private void mergeDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+        // Set of data objects to be saved (depends on existence of data objects into ES)
+        Set<DataObject> toSaveObjects = new HashSet<>();
+
+        for (DataObject dataObject : objects) {
+            DataObject curObject = esRepos.get(tenant, dataObject);
+            // if current object does already exist into ES, nothing has to be done
+            // else it must be created
+            if (curObject == null) {
+                // Don't forget to set datasourceId
+                dataObject.setDataSourceId(datasourceId);
+                toSaveObjects.add(dataObject);
+            }
+        }
+        // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
+        // has same size as page.getContent() or is empty
+        if (!toSaveObjects.isEmpty()) {
+            esRepos.saveBulk(tenant, toSaveObjects);
+            toSaveObjects.clear();
+        }
     }
 }

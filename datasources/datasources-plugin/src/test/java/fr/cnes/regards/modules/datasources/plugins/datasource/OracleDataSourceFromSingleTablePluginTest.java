@@ -62,7 +62,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     @Value("${oracle.datasource.port}")
     private String dbPort;
-    
+
     @Value("${oracle.datasource.name}")
     private String dbName;
 
@@ -103,7 +103,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
                     .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getOracleConnectionConfiguration())
                     .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM,
+                                  adapter.toJson(dataSourceModelMapping))
                     .getParameters();
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
@@ -118,26 +119,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     }
 
-//    @Test
-//    public void getTables() {
-//        Map<String, Table> tables = plgDBDataSource.getTables();
-//        Assert.assertNotNull(tables);
-//        Assert.assertTrue(!tables.isEmpty());
-//    }
-//
-//    @Test
-//    public void getColumnsAndIndices() {
-//        Map<String, Table> tables = plgDBDataSource.getTables();
-//        Assert.assertNotNull(tables);
-//        Assert.assertTrue(!tables.isEmpty());
-//
-//        Map<String, Column> columns = plgDBDataSource.getColumns(tables.get(TABLE_NAME_TEST));
-//        Assert.assertNotNull(columns);
-//
-//        Map<String, Index> indices = plgDBDataSource.getIndexes(tables.get(TABLE_NAME_TEST));
-//        Assert.assertNotNull(indices);
-//    }
-
     @Test
     public void getDataSourceIntrospection() {
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
@@ -147,11 +128,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
-    }
-
-    @After
-    public void erase() {
-        // repository.deleteAll();
     }
 
     /**
