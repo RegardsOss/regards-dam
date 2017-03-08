@@ -15,10 +15,9 @@
 	</parent>
 
 	<dependencies>
-		<!-- Regards client core -->
 		<dependency>
-			<groupId>fr.cnes.regards.client</groupId>
-			<artifactId>client-core</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>feign-regards-starter</artifactId>
 		</dependency>
 		<!-- Module domain -->
 		<dependency>

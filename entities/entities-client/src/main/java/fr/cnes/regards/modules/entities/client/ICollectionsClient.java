@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import fr.cnes.regards.framework.feign.autoconfigure.annotation.RestClient;
+import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -24,8 +24,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Léo Mieulet
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = "/collections", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = "/collections", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface ICollectionsClient {
 
     /**
@@ -42,8 +41,7 @@ public interface ICollectionsClient {
      *            identifier of the model the collections should respect
      * @return list of {@link Collection} respecting the {@link Model} associated to modelId
      */
-    @RequestMapping(value = "/model/{model_id}", method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/model/{model_id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public HttpEntity<List<Resource<Collection>>> retrieveCollectionListByModelId(
             @PathVariable("model_id") Long pModelId);

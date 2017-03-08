@@ -12,7 +12,6 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Resource;
@@ -55,7 +54,6 @@ import fr.cnes.regards.modules.search.service.IService;
  * @author oroussel
  */
 @Service
-@EnableFeignClients(clients = ICatalogPluginClient.class)
 public class DatasetService extends EntityService implements IDatasetService {
 
     /**
@@ -210,7 +208,7 @@ public class DatasetService extends EntityService implements IDatasetService {
      * @return the PluginConfiguration if it exist or null
      */
     private PluginConfiguration getPluginConfiguration(Long pConfigurationId) {// NOSONAR: sonar does not detect that
-                                                                                   // the method is used by
+                                                                               // the method is used by
                                                                                // DataSetServive#checkPluginConfigurations
                                                                                // with the
                                                                                // "this::getPluginConfiguration"
@@ -262,7 +260,8 @@ public class DatasetService extends EntityService implements IDatasetService {
         PluginConfiguration pluginConf = JwtTokenUtils
                 .asSafeCallableOnRole(this::getPluginConfiguration, pConfigId, jwtService, null)
                 .apply(RoleAuthority.getSysRole(microserviceName));
-        // Dataset creation assured that pluginConf cannot be null here because it is called after the DataSet has been created
+        // Dataset creation assured that pluginConf cannot be null here because it is called after the DataSet has been
+        // created
         return pluginConf.getInterfaceName().equals(IService.class.getName());
     }
 
