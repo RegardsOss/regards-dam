@@ -52,7 +52,7 @@ public class IUserClientIT extends AbstractRegardsWebIT {
 
     @Before
     public void init() throws JwtException {
-        authService.setAuthorities(DEFAULT_TENANT, IUserClient.BASE_PATH, RequestMethod.GET,
+        authService.setAuthorities(DEFAULT_TENANT, IUserClient.BASE_PATH, "Controller", RequestMethod.GET,
                                    DefaultRole.INSTANCE_ADMIN.toString());
         jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString(), "");
         userClient = HystrixFeign.builder().contract(new SpringMvcContract()).encoder(new GsonEncoder())

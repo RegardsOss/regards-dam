@@ -52,8 +52,8 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
     @Test
     public void testRetrieveAccessRightsList() {
         try {
-            authService.setAuthorities(DEFAULT_TENANT, IAccessRightClient.PATH_ACCESS_RIGHTS, RequestMethod.GET,
-                                       DefaultRole.INSTANCE_ADMIN.toString());
+            authService.setAuthorities(DEFAULT_TENANT, IAccessRightClient.PATH_ACCESS_RIGHTS, "Controller",
+                                       RequestMethod.GET, DefaultRole.INSTANCE_ADMIN.toString());
             jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString(), "");
             final IAccessRightClient accessRightClient = HystrixFeign.builder().contract(new SpringMvcContract())
                     .encoder(new GsonEncoder()).decoder(new ResponseEntityDecoder(new GsonDecoder()))
