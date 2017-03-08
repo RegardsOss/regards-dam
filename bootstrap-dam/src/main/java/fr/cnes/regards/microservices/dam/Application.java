@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
 import fr.cnes.regards.framework.security.utils.endpoint.IInstanceAdminAccessVoter;
+import fr.cnes.regards.framework.security.utils.endpoint.IProjectAdminAccessVoter;
 import fr.cnes.regards.framework.security.utils.endpoint.IRoleSysAccessVoter;
 
 /**
@@ -59,6 +60,11 @@ public class Application { // NOSONAR
     public IInstanceAdminAccessVoter instanceAdminVoter(
             @Value("${regards.accounts.root.user.login}") final String pInstanceUser) {
         return new AcceptInstanceAdminVoter(pInstanceUser);
+    }
+
+    @Bean
+    public IProjectAdminAccessVoter projectAdminVoter() {
+        return new AcceptProjectAdminVoter();
     }
 }
 // CHECKSTYLE:ON
