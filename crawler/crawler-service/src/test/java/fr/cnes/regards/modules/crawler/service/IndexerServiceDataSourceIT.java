@@ -116,6 +116,8 @@ public class IndexerServiceDataSourceIT {
 
     private Dataset dataset1;
 
+    private PluginConfiguration dBConnectionConf;
+
     @Before
     public void setUp() throws Exception {
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
@@ -140,11 +142,11 @@ public class IndexerServiceDataSourceIT {
         buildModelAttributes();
 
         // Connection PluginConf
-        PluginConfiguration pluginConf = getOracleConnectionConfiguration();
-        pluginService.savePluginConfiguration(pluginConf);
+        dBConnectionConf = getOracleConnectionConfiguration();
+        pluginService.savePluginConfiguration(dBConnectionConf);
 
         // DataSource PluginConf
-        dataSourcePluginConf = getOracleDataSource(pluginConf);
+        dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
 
     }
@@ -156,6 +158,8 @@ public class IndexerServiceDataSourceIT {
 
         Utils.execute(modelService::deleteModel, datasetModel.getId());
         Utils.execute(modelService::deleteModel, dataModel.getId());
+        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
+        Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
