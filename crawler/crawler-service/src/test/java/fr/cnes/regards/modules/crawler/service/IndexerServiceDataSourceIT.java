@@ -31,7 +31,6 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -49,7 +48,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { CrawlerConfiguration4DataSource.class })
+@ContextConfiguration(classes = { CrawlerConfiguration.class })
 @DirtiesContext // because there are 2 Configuration classes in package
 public class IndexerServiceDataSourceIT {
 
@@ -99,8 +98,6 @@ public class IndexerServiceDataSourceIT {
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
-    private IDataSourceFromSingleTablePlugin dsPlugin;
-
     private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
@@ -147,10 +144,6 @@ public class IndexerServiceDataSourceIT {
         dataSourcePluginConf = getOracleDataSource(pluginConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
 
-        // Find all des objets de la datasource
-        /*        dsPlugin = pluginService.getPlugin(dataSourcePluginConf.getId(),
-                                           // TODO remove parameters
-                                           dataSourcePluginConf.getParameters().toArray(new PluginParameter[0]));*/
     }
 
     @After

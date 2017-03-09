@@ -71,6 +71,10 @@ public class CrawlerServiceIT {
 
     private PluginConfiguration pluginConf;
 
+    @SuppressWarnings("unused")
+    @Autowired
+    private ICrawlerService crawlerService;
+
     @Autowired
     private IModelService modelService;
 
@@ -119,6 +123,10 @@ public class CrawlerServiceIT {
     }
 
     public void buildData1() throws ModuleException, PluginUtilsException {
+        if (!esRepos.indexExists(tenant)) {
+            esRepos.createIndex(tenant);
+        }
+
         modelColl = Model.build("modelColl", "model desc", EntityType.COLLECTION);
         modelColl = modelService.createModel(modelColl);
 
@@ -190,6 +198,7 @@ public class CrawlerServiceIT {
         dataset2 = (Dataset) entityService.loadWithRelations(dataset2.getIpId());
         dataset3 = (Dataset) entityService.loadWithRelations(dataset3.getIpId());
 
+        esRepos.refresh(tenant);
         Collection coll1Bis = esRepos.get(tenant, coll1);
         Assert.assertNotNull(coll1Bis);
         Assert.assertTrue(Beans.equals(coll1, coll1Bis));
