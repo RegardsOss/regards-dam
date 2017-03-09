@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -134,7 +137,7 @@ public class IndexerServiceDataSourceIT {
         modelService.createModel(datasetModel);
 
         // Initialize the DataSourceAttributeMapping
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         // Connection PluginConf
         PluginConfiguration pluginConf = getOracleConnectionConfiguration();
@@ -248,7 +251,7 @@ public class IndexerServiceDataSourceIT {
         crawlerService.ingest(dataSourcePluginConf);
 
         dataset1 = new Dataset(datasetModel, tenant, "dataset label");
-        dataset1.setDataModel(dataModel);
+        dataset1.setDataModel(dataModel.getId());
         dataset1.setSubsettingClause(ICriterion.all());
         dataset1.setLicence("licence");
         dataset1.setDataSource(dataSourcePluginConf);
