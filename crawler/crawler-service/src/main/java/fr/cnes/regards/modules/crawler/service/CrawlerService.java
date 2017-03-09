@@ -280,8 +280,7 @@ public class CrawlerService implements ICrawlerService {
     public void ingest(PluginConfiguration pluginConf) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
-        // The datasource id is built from datasource plugin configuration id and datasource plugin id
-        String datasourceId = pluginConf.getId() + ":" + pluginConf.getPluginId();
+        String datasourceId = pluginConf.getId().toString();
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
         // If index doesn't exist, just create all data objects

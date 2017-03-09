@@ -248,9 +248,11 @@ public class IndexerServiceDataSourceIT {
         // First delete index if it already exists
         indexerService.deleteIndex(tenant);
 
-        long now = System.currentTimeMillis();
+        // Creation
         crawlerService.ingest(dataSourcePluginConf);
-        System.out.println(System.currentTimeMillis() - now);
+
+        // Update
+        crawlerService.ingest(dataSourcePluginConf);
 
         dataset1 = new Dataset(datasetModel, tenant, "dataset label");
         dataset1.setDataModel(dataModel);
