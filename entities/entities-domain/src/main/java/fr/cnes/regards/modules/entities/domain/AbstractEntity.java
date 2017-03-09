@@ -17,6 +17,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
@@ -48,7 +49,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity
-@Table(name = "t_entity")
+@Table(name = "t_entity", indexes = { @Index(name = "idx_entity_ipId", columnList = "ipId") })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 

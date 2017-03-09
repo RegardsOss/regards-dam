@@ -115,7 +115,7 @@ public class DatasetServiceTest {
         dataSet2 = new Dataset(pModel2, "PROJECT", "dataSet2");
         dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet2.setModelOfData(modelOfObjects);
+        dataSet2.setDataModel(modelOfObjects);
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
 

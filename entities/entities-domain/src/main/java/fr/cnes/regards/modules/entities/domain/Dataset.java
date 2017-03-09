@@ -48,27 +48,34 @@ public class Dataset extends AbstractDescEntity {
     private int score;
 
     /**
-     * this list contains plugin configurations for any plugin associated to this Dataset, for example: configurations
+     * This list contains plugin configurations for any plugin associated to this Dataset, for example: configurations
      * for Converters, Services, Filters
+     * Except datasource (see below)
      */
     // TODO handler for deletion events
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "t_dataset_plugin_configuration", joinColumns = @JoinColumn(name = "dataset_id"))
+    @CollectionTable(name = "t_dataset_plugin_conf", joinColumns = @JoinColumn(name = "dataset_id"))
+    @Column(name = "plugin_conf_id")
     private List<Long> pluginConfigurationIds = new ArrayList<>();
 
     /**
      * A PluginConfiguration for a plugin type IDataSourcePlugin.</br>
      * This PluginConfiguration defined the DataSource from which this Dataset presents data.
+     * <b>nullable = true</b> is necessary because of single-table entity mapping (same table is used for all
+     * types of entities and other haven't plugin configuration).
      */
     @ManyToOne
-    @JoinColumn(name = "plgconf_id", foreignKey = @ForeignKey(name = "fk_pluginconf_id"), nullable = true,
+    @JoinColumn(name = "ds_plugin_conf_id", foreignKey = @ForeignKey(name = "fk_ds_plugin_conf_id"), nullable = true,
             updatable = true)
     private PluginConfiguration plgConfDataSource;
 
+    /**
+     * Data object model
+     */
     @ManyToOne
-    @JoinColumn(name = "model_data_id", foreignKey = @ForeignKey(name = "fk_model_id"), nullable = true,
+    @JoinColumn(name = "data_model_id", foreignKey = @ForeignKey(name = "fk_model_id"), nullable = true,
             updatable = true)
-    private Model modelOfData;
+    private Model dataModel;
 
     /**
      * Request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
@@ -131,20 +138,20 @@ public class Dataset extends AbstractDescEntity {
         return plgConfDataSource;
     }
 
-    public void setDataSource(PluginConfiguration plgConfDataSource) {
-        this.plgConfDataSource = plgConfDataSource;
+    public void setDataSource(PluginConfiguration pPlgConfDataSource) {
+        this.plgConfDataSource = pPlgConfDataSource;
     }
 
     public void setSubsettingClause(ICriterion pSubsettingClause) {
         subsettingClause = pSubsettingClause;
     }
 
-    public Model getModelOfData() {
-        return modelOfData;
+    public Model getDataModel() {
+        return dataModel;
     }
 
-    public void setModelOfData(Model modelOfData) {
-        this.modelOfData = modelOfData;
+    public void setDataModel(Model pDataModel) {
+        this.dataModel = pDataModel;
     }
 
     public Set<String> getQuotations() {
