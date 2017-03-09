@@ -11,7 +11,7 @@ package fr.cnes.regards.modules.entities.domain;
  */
 public enum DataType {
 
-    RAWDATA, QUICKLOOK, DOCUMENT, OTHER;
+    RAWDATA, QUICKLOOK, DOCUMENT, THUMBNAIL, OTHER;
 
     @Override
     public String toString() {

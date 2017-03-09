@@ -72,12 +72,42 @@ public class DataSourceService implements IDataSourceService {
         this.service.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
     }
 
-    /**
-     * @return
-     */
-    public PluginConfiguration getDefaultDataSource() {
-        // TODO Auto-generated method stub
-        return null;
+    @Override
+    public PluginConfiguration getInternalDataSource() {
+        PluginConfiguration defautDataSourceConfiguration = null;
+
+        for (PluginConfiguration pg : service.getPluginConfigurationsByType(IDataSourcePlugin.class)) {
+            String val = pg.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM);
+            if (!val.isEmpty() && IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(val)) {
+                defautDataSourceConfiguration = pg;
+            }
+        }
+
+        return defautDataSourceConfiguration;
+    }
+
+    @Override
+    public PluginConfiguration setInternalDataSource(PluginConfiguration pPluginConfiguration) throws ModuleException {
+
+        // Get the PluginConfiguration
+        PluginConfiguration newDefaultDataSourceConfiguration = service
+                .getPluginConfiguration(pPluginConfiguration.getId());
+
+        // Reset the current PluginConfiguration that is set as the internal REGARDS data source
+        PluginConfiguration currentDefault = getInternalDataSource();
+        currentDefault.setParameters(PluginParametersFactory.build(currentDefault.getParameters())
+                .removeParameter(currentDefault.getParameter(IDataSourcePlugin.IS_INTERNAL_PARAM))
+                .addParameter(IDataSourcePlugin.IS_INTERNAL_PARAM, "false").getParameters());
+
+        // Set the PluginConfiguration as the internal REGARDS data source
+        PluginParameter isInternalPlgParam = newDefaultDataSourceConfiguration
+                .getParameter(IDataSourcePlugin.IS_INTERNAL_PARAM);
+        newDefaultDataSourceConfiguration.setParameters(PluginParametersFactory
+                .build(newDefaultDataSourceConfiguration.getParameters()).removeParameter(isInternalPlgParam)
+                .addParameter(IDataSourcePlugin.IS_INTERNAL_PARAM, IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE)
+                .getParameters());
+
+        return service.savePluginConfiguration(newDefaultDataSourceConfiguration);
     }
 
     @Override

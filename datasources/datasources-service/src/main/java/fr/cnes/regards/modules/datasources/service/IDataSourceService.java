@@ -11,6 +11,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
 /**
  *
@@ -74,5 +75,24 @@ public interface IDataSourceService {
      *             throw if an error occurs
      */
     void deleteDataSouce(Long pId) throws ModuleException;
+
+    /**
+     * Get the {@link PluginConfiguration} of the plugin's type {@link IDataSourcePlugin} that is marked as the internal
+     * REGARDS data source
+     * 
+     * @return the {@link PluginConfiguration} of the plugin that is marked as the internal REGARDS data source
+     */
+    PluginConfiguration getInternalDataSource();
+
+    /**
+     * Set a {@link PluginConfiguration} as the plugin that is marked as the internal REGARDS data source
+     * 
+     * @param pPluginConfiguration
+     *            the {@link PluginConfiguration} to set
+     * @return the {@link PluginConfiguration} that is marked as the internal REGARDS data source
+     * @throws ModuleException
+     *             throw if an error occurs
+     */
+    PluginConfiguration setInternalDataSource(PluginConfiguration pPluginConfiguration) throws ModuleException;
 
 }

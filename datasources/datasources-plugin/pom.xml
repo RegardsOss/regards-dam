@@ -53,11 +53,6 @@
 			<version>11.2.0.3</version>
 		</dependency>
 		<!-- Oracle driver -->
-<!-- TODO: check dependencies needed -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>fr.cnes.regards.modules.entities</groupId> -->
-<!-- 			<artifactId>entities-service</artifactId> -->
-<!-- 		</dependency> -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
