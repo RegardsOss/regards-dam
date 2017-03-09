@@ -7,7 +7,6 @@ import java.net.URI;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.util.MimeType;
@@ -25,14 +24,11 @@ public class Data implements IIdentifiable<Long> {
     @NotNull
     private final Long id;
 
-    @NotNull
-    private final String checksum;
+    private String checksum;
 
-    @Min(0)
-    private final int fileSize;
+    private int fileSize;
 
-    @NotNull
-    private final MimeType mimeType;
+    private MimeType mimeType;
 
     @Valid
     private final DataType dataType;
@@ -46,6 +42,13 @@ public class Data implements IIdentifiable<Long> {
         checksum = pChecksum;
         fileSize = pFileSize;
         mimeType = pMimeType;
+        dataType = pDataType;
+        fileRef = pFileRef;
+    }
+
+    public Data(DataType pDataType, URI pFileRef) {
+        super();
+        id = (long) ThreadLocalRandom.current().nextInt(1, 1000000);
         dataType = pDataType;
         fileRef = pFileRef;
     }

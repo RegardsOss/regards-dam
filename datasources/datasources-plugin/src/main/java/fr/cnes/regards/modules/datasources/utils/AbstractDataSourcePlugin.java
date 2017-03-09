@@ -8,8 +8,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,8 +18,8 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
- * A {@link Plugin} to discover the tables, columns and indexes of a SQL Database.<br>
- * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
+ * A {@link Plugin} to retrieve the data elements from a SQL Database.</br>
+ * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the Database.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT

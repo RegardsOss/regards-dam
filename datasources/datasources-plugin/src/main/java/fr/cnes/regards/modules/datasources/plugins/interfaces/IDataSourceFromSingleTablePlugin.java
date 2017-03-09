@@ -29,9 +29,7 @@ public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
      * 
      * @param pTable
      *            the name of the table
-     * @param pMapping
-     *            the mapping between the model and the datasource
      */
-    public void initializePluginMapping(String pTable, DataSourceModelMapping pMapping);
+    public void initializePluginMapping(String pTable);
 
 }

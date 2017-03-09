@@ -84,7 +84,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         // Converts the modelJson to a list of DataSourceAttributeMapping
         initDataSourceMapping(this.modelJSon);
 
-        initializePluginMapping(this.tableName, dataSourceMapping);
+        initializePluginMapping(this.tableName);
     }
 
     @Override

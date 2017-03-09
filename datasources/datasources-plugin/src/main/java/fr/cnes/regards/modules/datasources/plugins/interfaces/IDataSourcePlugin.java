@@ -43,7 +43,7 @@ public interface IDataSourcePlugin {
      */
     public static final String IS_INTERNAL_PARAM = "internalDataSource";
 
-    public static final String TRUE_INTERNAL_DATASOURCE = " true";
+    public static final String TRUE_INTERNAL_DATASOURCE = "true";
 
     /**
      * The refresh rate of the data source

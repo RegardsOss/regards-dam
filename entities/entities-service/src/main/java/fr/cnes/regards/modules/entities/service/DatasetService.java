@@ -134,7 +134,7 @@ public class DatasetService extends EntityService implements IDatasetService {
     private Dataset checkDataSource(Dataset pDataset) throws EntityNotFoundException {
         if (pDataset.getDataSource() == null) {
             // If any DataSource, set the default DataSource
-            pDataset.setDataSource(dataSourceService.getDefaultDataSource());
+            pDataset.setDataSource(dataSourceService.getInternalDataSource());
         } else {
             // Verify the existence of the DataSource associated to the Dataset
             dataSourceService.getDataSource(pDataset.getDataSource().getId());
