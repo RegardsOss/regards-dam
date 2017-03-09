@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -263,6 +264,9 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
             @SuppressWarnings("unchecked") T... pDocuments) {
+        if (pDocuments.length == 0) {
+            return Collections.emptyMap();
+        }
         String index = pIndex.toLowerCase();
         for (T doc : pDocuments) {
             checkDocument(doc);

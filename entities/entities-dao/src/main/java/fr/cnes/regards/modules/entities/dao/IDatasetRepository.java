@@ -35,12 +35,13 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     List<Dataset> findByGroups(String group);
 
     /**
-     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
+     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
      * @param pId id of entity
      * @return entity
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "pluginConfigurationIds", "model" })
+    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+            "plgConfDataSource.parameters.dynamicsValues" })
     Dataset findById(Long pId);
 
     /**
@@ -49,16 +50,18 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      * @return found entities
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "pluginConfigurationIds", "model" })
+    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+            "plgConfDataSource.parameters.dynamicsValues" })
     List<Dataset> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
-     * Find entity of given IpId eagerly loading all common relations
+     * Find entity of given IpId eagerly loading all common relations (except pluginConfigurationIds)
      * @param pIpId ipId of which entity
      * @return found entity
      */
     @Override
-    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "pluginConfigurationIds", "model" })
+    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+            "plgConfDataSource.parameters.dynamicsValues" })
     Dataset findByIpId(UniformResourceName pIpId);
 
 }
