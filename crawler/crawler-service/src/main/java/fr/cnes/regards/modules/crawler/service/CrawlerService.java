@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -203,6 +204,9 @@ public class CrawlerService implements ICrawlerService {
         AbstractEntity entity = entityService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
+            if (entity instanceof Dataset) {
+                this.manageDatasetDelete(tenant, ipId.toString());
+            }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
         } else { // entity has been created or updated, it must be saved into ES
             // First, check if index exists
@@ -212,7 +216,7 @@ public class CrawlerService implements ICrawlerService {
             // Then save entity
             esRepos.save(tenant, entity);
             if (entity instanceof Dataset) {
-                this.manageDataset((Dataset) entity);
+                this.manageDatasetUpdate((Dataset) entity);
             }
         }
         LOGGER.debug(ipId.toString() + " managed into Elasticsearch");
@@ -234,7 +238,7 @@ public class CrawlerService implements ICrawlerService {
                 esRepos.createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
-            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> this.manageDataset((Dataset) e));
+            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> this.manageDatasetUpdate((Dataset) e));
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -244,10 +248,35 @@ public class CrawlerService implements ICrawlerService {
     }
 
     /**
-     * Search and update associated dataset data objects
+     * Search and update associated dataset data objects (ie remove dataset IpId from tags)
      * @param dataset concerned dataset
      */
-    private void manageDataset(Dataset dataset) {
+    private void manageDatasetDelete(String tenant, String ipId) {
+        // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
+        // with th systeme Postgres/RabbitMQ
+        ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId.toString());
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        Consumer<DataObject> updateTag = object -> {
+            object.getTags().remove(ipId);
+            toSaveObjects.add(object);
+            if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
+                esRepos.saveBulk(tenant, toSaveObjects);
+                toSaveObjects.clear();
+            }
+        };
+        // Apply updateTag function to all tagging objects
+        esRepos.searchAll(tenant, DataObject.class, updateTag, taggingObjectsCrit);
+        // Bulk save remaining objects to save
+        if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
+            esRepos.saveBulk(tenant, toSaveObjects);
+        }
+    }
+
+    /**
+     * Search and update associated dataset data objects (ie add dataset IpId into tags)
+     * @param dataset concerned dataset
+     */
+    private void manageDatasetUpdate(Dataset dataset) {
         PluginConfiguration datasource = dataset.getDataSource();
         String datasourceId = datasource.getId() + ":" + datasource.getPluginId();
         ICriterion subsettingCrit = dataset.getSubsettingClause();

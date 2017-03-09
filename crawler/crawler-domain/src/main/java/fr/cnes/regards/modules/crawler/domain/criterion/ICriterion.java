@@ -129,6 +129,13 @@ public interface ICriterion {
         return ICriterion.not(ICriterion.eq(pAttName, pValue, pPrecision));
     }
 
+    /**
+     * Criterion to test if a parameter equals exactly to a text or if a String array parameter contains an element
+     * which equals exactly the text
+     * @param pAttName String or String array attribute
+     * @param pText text to exactly test
+     * @return criterion
+     */
     static ICriterion equals(String pAttName, String pText) {
         return new StringMatchCriterion(pAttName, MatchType.EQUALS, pText);
     }
