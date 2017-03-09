@@ -156,7 +156,7 @@ public class DatasetService extends EntityService implements IDatasetService {
         ICriterion subsettingCriterion = pDataset.getSubsettingClause();
         if (subsettingCriterion != null) {
 
-            SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(pDataset.getModelOfData(),
+            SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(pDataset.getDataModel(),
                     attributeService, modelAttributeService);
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(

@@ -29,9 +29,11 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.crawler.dao.IEsRepository;
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -42,6 +44,8 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 @Service
 public class CrawlerService implements ICrawlerService {
+
+    private static final String DATA_SOURCE_ID = "dataSourceId";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
 
@@ -207,6 +211,9 @@ public class CrawlerService implements ICrawlerService {
             }
             // Then save entity
             esRepos.save(tenant, entity);
+            if (entity instanceof Dataset) {
+                this.manageDataset((Dataset) entity);
+            }
         }
         LOGGER.debug(ipId.toString() + " managed into Elasticsearch");
     }
@@ -227,6 +234,7 @@ public class CrawlerService implements ICrawlerService {
                 esRepos.createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
+            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> this.manageDataset((Dataset) e));
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -235,13 +243,45 @@ public class CrawlerService implements ICrawlerService {
         LOGGER.debug(Arrays.toString(ipIds) + " managed into Elasticsearch");
     }
 
+    /**
+     * Search and update associated dataset data objects
+     * @param dataset concerned dataset
+     */
+    private void manageDataset(Dataset dataset) {
+        PluginConfiguration datasource = dataset.getDataSource();
+        String datasourceId = datasource.getId() + ":" + datasource.getPluginId();
+        ICriterion subsettingCrit = dataset.getSubsettingClause();
+        if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
+            subsettingCrit = ICriterion.equals(DATA_SOURCE_ID, datasourceId);
+        } else {
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.equals(DATA_SOURCE_ID, datasourceId));
+        }
+        String tenant = runtimeTenantResolver.getTenant();
+        String dsIpId = dataset.getIpId().toString();
+        Page<DataObject> page = esRepos.search(tenant, DataObject.class, IEsRepository.BULK_SIZE, subsettingCrit);
+        this.addTagToDataObjects(tenant, dsIpId, page.getContent());
+
+        while (page.hasNext()) {
+            page = esRepos.search(tenant, DataObject.class, page.nextPageable(), subsettingCrit);
+            this.addTagToDataObjects(tenant, dsIpId, page.getContent());
+        }
+    }
+
+    private void addTagToDataObjects(String tenant, String dsIpId, List<DataObject> objects) {
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        objects.forEach(o -> {
+            o.getTags().add(dsIpId);
+            toSaveObjects.add(o);
+        });
+        esRepos.saveBulk(tenant, toSaveObjects);
+    }
+
     @Override
-    public void ingest(PluginConfiguration pPluginConf) throws ModuleException {
+    public void ingest(PluginConfiguration pluginConf) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
-        // The datasource id is built from datasource plugin configuration id and datasource plugin id
-        String datasourceId = pPluginConf.getId() + ":" + pPluginConf.getPluginId();
-        IDataSourcePlugin dsPlugin = pluginService.getPlugin(pPluginConf);
+        String datasourceId = pluginConf.getId().toString();
+        IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
@@ -267,9 +307,7 @@ public class CrawlerService implements ICrawlerService {
     private void createDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
         // On all objects, it is necessary to set datasourceId
         objects.forEach(dataObject -> dataObject.setDataSourceId(datasourceId));
-        if (!objects.isEmpty()) {
-            esRepos.saveBulk(tenant, objects);
-        }
+        esRepos.saveBulk(tenant, objects);
     }
 
     private void mergeDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
@@ -288,9 +326,6 @@ public class CrawlerService implements ICrawlerService {
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
-        if (!toSaveObjects.isEmpty()) {
-            esRepos.saveBulk(tenant, toSaveObjects);
-            toSaveObjects.clear();
-        }
+        esRepos.saveBulk(tenant, toSaveObjects);
     }
 }

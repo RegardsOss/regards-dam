@@ -79,9 +79,6 @@ public class CrawlerServiceTest {
     private String driver;
 
     @Autowired
-    private ICrawlerService service;
-
-    @Autowired
     private IIndexerService indexerService;
 
     private IDataSourceFromSingleTablePlugin dsPlugin;

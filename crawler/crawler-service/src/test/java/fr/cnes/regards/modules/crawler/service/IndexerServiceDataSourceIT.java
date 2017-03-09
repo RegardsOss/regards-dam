@@ -1,19 +1,20 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import java.io.IOException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.transaction.Transactional;
-
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,15 +26,19 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -43,8 +48,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = { CrawlerConfiguration4DataSource.class })
-@Transactional
+@ContextConfiguration(classes = { CrawlerConfiguration.class })
 @DirtiesContext // because there are 2 Configuration classes in package
 public class IndexerServiceDataSourceIT {
 
@@ -79,15 +83,20 @@ public class IndexerServiceDataSourceIT {
     private IModelService modelService;
 
     @Autowired
+    @Qualifier("entityService")
+    private IEntityService entityService;
+
+    @Autowired
     private IIndexerService indexerService;
 
     @Autowired
     private ICrawlerService crawlerService;
 
     @Autowired
-    private IRuntimeTenantResolver tenantResolver;
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
-    private IDataSourceFromSingleTablePlugin dsPlugin;
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
 
     private DataSourceModelMapping dataSourceModelMapping;
 
@@ -98,7 +107,11 @@ public class IndexerServiceDataSourceIT {
 
     private Model dataModel;
 
+    private Model datasetModel;
+
     private PluginConfiguration dataSourcePluginConf;
+
+    private Dataset dataset1;
 
     @Before
     public void setUp() throws Exception {
@@ -113,6 +126,13 @@ public class IndexerServiceDataSourceIT {
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
 
+        datasetModel = new Model();
+        datasetModel.setName("model_ds_1");
+        datasetModel.setType(EntityType.DATASET);
+        datasetModel.setVersion("1");
+        datasetModel.setDescription("Test dataset model");
+        modelService.createModel(datasetModel);
+
         // Initialize the DataSourceAttributeMapping
         this.buildModelAttributes();
 
@@ -124,14 +144,15 @@ public class IndexerServiceDataSourceIT {
         dataSourcePluginConf = getOracleDataSource(pluginConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
 
-        // Find all des objets de la datasource
-        dsPlugin = pluginService.getPlugin(dataSourcePluginConf.getId(),
-                                           // TODO remove parameters
-                                           dataSourcePluginConf.getParameters().toArray(new PluginParameter[0]));
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void clean() {
+        // Don't use entity service to clean because events are published on RabbitMQ
+        Utils.execute(entityRepos::delete, dataset1.getId());
+
+        Utils.execute(modelService::deleteModel, datasetModel.getId());
+        Utils.execute(modelService::deleteModel, dataModel.getId());
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
@@ -215,14 +236,36 @@ public class IndexerServiceDataSourceIT {
     }
 
     @Test
-    public void test() throws ModuleException {
+    public void test() throws ModuleException, IOException, InterruptedException {
         String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
         indexerService.deleteIndex(tenant);
 
-        long now = System.currentTimeMillis();
+        // Creation
         crawlerService.ingest(dataSourcePluginConf);
-        System.out.println(System.currentTimeMillis() - now);
+
+        // Update
+        crawlerService.ingest(dataSourcePluginConf);
+
+        dataset1 = new Dataset(datasetModel, tenant, "dataset label");
+        dataset1.setDataModel(dataModel);
+        dataset1.setSubsettingClause(ICriterion.all());
+        dataset1.setLicence("licence");
+        dataset1.setDataSource(dataSourcePluginConf);
+        entityService.create(dataset1);
+
+        Thread.sleep(10_000);
+
+        dataset1 = (Dataset) indexerService.get(dataset1.getIpId());
+        int i = 0;
+        while (dataset1 == null) {
+            Thread.sleep(1000);
+            i++;
+            if (i == 3) {
+                break;
+            }
+        }
+        Assert.assertNotNull(dataset1);
     }
 
 }

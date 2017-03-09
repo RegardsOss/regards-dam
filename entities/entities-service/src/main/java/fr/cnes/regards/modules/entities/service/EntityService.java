@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -43,8 +44,8 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
@@ -135,7 +136,11 @@ public class EntityService implements IEntityService {
     public AbstractEntity loadWithRelations(UniformResourceName pIpId) {
         // Particular case on datasets which contains more relations
         if (pIpId.getEntityType() == EntityType.DATASET) {
-            return datasetRepository.findByIpId(pIpId);
+            Dataset dataset = datasetRepository.findByIpId(pIpId);
+            if (dataset != null) {
+                Hibernate.initialize(dataset.getPluginConfigurationIds());
+            }
+            return dataset;
         }
         return entityRepository.findByIpId(pIpId);
     }
@@ -146,7 +151,9 @@ public class EntityService implements IEntityService {
         Set<UniformResourceName> dsUrns = Arrays.stream(pIpIds)
                 .filter(ipId -> ipId.getEntityType() == EntityType.DATASET).collect(Collectors.toSet());
         if (!dsUrns.isEmpty()) {
-            entities.addAll(datasetRepository.findByIpIdIn(dsUrns));
+            List<Dataset> datasets = datasetRepository.findByIpIdIn(dsUrns);
+            datasets.forEach(ds -> Hibernate.initialize(ds.getPluginConfigurationIds()));
+            entities.addAll(datasets);
         }
         Set<UniformResourceName> otherUrns = Arrays.stream(pIpIds)
                 .filter(ipId -> ipId.getEntityType() != EntityType.DATASET).collect(Collectors.toSet());

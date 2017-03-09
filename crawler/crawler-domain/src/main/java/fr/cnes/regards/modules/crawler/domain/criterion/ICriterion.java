@@ -22,7 +22,7 @@ public interface ICriterion {
     <U> U accept(ICriterionVisitor<U> pVisitor);
 
     static ICriterion all() {
-        return new EmptyCriterion();
+        return EmptyCriterion.INSTANCE;
     }
 
     static ICriterion and(ICriterion... pCrits) {

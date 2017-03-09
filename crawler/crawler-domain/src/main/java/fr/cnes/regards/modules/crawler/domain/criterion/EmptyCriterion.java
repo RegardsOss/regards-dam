@@ -1,12 +1,14 @@
 package fr.cnes.regards.modules.crawler.domain.criterion;
 
 /**
- * Criterion that constraint nothing
+ * Criterion that constraints nothing
  * @author oroussel
  */
-public class EmptyCriterion implements ICriterion {
+public final class EmptyCriterion implements ICriterion {
 
-    protected EmptyCriterion() {
+    protected static final EmptyCriterion INSTANCE = new EmptyCriterion();
+
+    private EmptyCriterion() {
     }
 
     @Override
