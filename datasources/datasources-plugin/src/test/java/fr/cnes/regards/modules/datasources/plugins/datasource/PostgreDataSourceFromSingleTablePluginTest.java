@@ -170,7 +170,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
 
-        ll.getContent().get(0).getAttributes().forEach(attr -> {
+        ll.getContent().get(0).getProperties().forEach(attr -> {
             if (attr.getName().equals("name")) {
                 Assert.assertTrue(attr.getValue().toString().contains(HELLO));
             }
@@ -180,7 +180,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
 
-        ll.getContent().get(0).getAttributes().forEach(attr -> {
+        ll.getContent().get(0).getProperties().forEach(attr -> {
             if (attr.getName().equals("name")) {
                 Assert.assertTrue(attr.getValue().toString().contains(HELLO + ""));
             }

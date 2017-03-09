@@ -176,16 +176,16 @@ public class EntityService implements IEntityService {
         List<ModelAttribute> modAtts = modelAttributeService.getModelAttributes(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty()) && (pAbstractEntity.getAttributes() != null)) {
-            pErrors.rejectValue("attributes", "error.no.attribute.defined.but.set",
-                                "No attribute defined in corresponding model but trying to create.");
+        if (((modAtts == null) || modAtts.isEmpty()) && (pAbstractEntity.getProperties() != null)) {
+            pErrors.rejectValue("properties", "error.no.properties.defined.but.set",
+                                "No properties defined in corresponding model but trying to create.");
         }
 
         // Prepare attributes for validation check
         Map<String, AbstractAttribute<?>> attMap = new HashMap<>();
 
         // Build attribute map
-        buildAttributeMap(attMap, Fragment.getDefaultName(), pAbstractEntity.getAttributes());
+        buildAttributeMap(attMap, Fragment.getDefaultName(), pAbstractEntity.getProperties());
 
         // Loop over model attributes ... to validate each attribute
         for (ModelAttribute modelAtt : modAtts) {

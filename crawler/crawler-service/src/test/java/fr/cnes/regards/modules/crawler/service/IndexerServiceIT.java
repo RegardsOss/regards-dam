@@ -162,7 +162,7 @@ public class IndexerServiceIT {
                                                                "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
-        collection.setAttributes(attributes);
+        collection.setProperties(attributes);
         collection.setTags(new ImmutableSet.Builder<String>().add("TAG1").add("TAG2").add("TAG3").build());
 
         indexerService.createIndex(tenant);
@@ -220,7 +220,7 @@ public class IndexerServiceIT {
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
         attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
-        collection.setAttributes(attributes);
+        collection.setProperties(attributes);
         return collection;
     }
 

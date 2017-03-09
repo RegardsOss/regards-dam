@@ -21,6 +21,8 @@ public interface ICriterionVisitor<T> {
 
     T visitIntMatchCriterion(IntMatchCriterion pCriterion);
 
+    T visitLongMatchCriterion(LongMatchCriterion pCriterion);
+
     <U extends Comparable<? super U>> T visitRangeCriterion(RangeCriterion<U> pCriterion);
 
     T visitDateRangeCriterion(DateRangeCriterion pCriterion);

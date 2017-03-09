@@ -16,6 +16,7 @@ import fr.cnes.regards.modules.crawler.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.LongMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchAnyCriterion;
@@ -106,6 +107,12 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     public Boolean visitIntMatchCriterion(IntMatchCriterion pCriterion) {
         AttributeModel attribute = extractAttribute(pCriterion);
         return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER));
+    }
+
+    @Override
+    public Boolean visitLongMatchCriterion(LongMatchCriterion pCriterion) {
+        AttributeModel attribute = extractAttribute(pCriterion);
+        return (attribute != null) && (attribute.getType().equals(AttributeType.LONG));
     }
 
     @Override
