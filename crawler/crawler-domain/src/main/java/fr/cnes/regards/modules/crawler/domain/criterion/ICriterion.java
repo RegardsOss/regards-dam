@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.crawler.domain.criterion;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import fr.cnes.regards.framework.gson.annotation.Gsonable;
@@ -118,6 +119,11 @@ public interface ICriterion {
                 .collect(Collectors.toList()));
     }
 
+    static ICriterion in(String pAttName, long... pValues) {
+        return new OrCriterion(LongStream.of(pValues).mapToObj(val -> new LongMatchCriterion(pAttName, val))
+                .collect(Collectors.toList()));
+    }
+
     static ICriterion eq(String pAttName, double pValue, double pPrecision) {
         RangeCriterion<Double> crit = new RangeCriterion<>(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pValue - pPrecision));
@@ -126,6 +132,10 @@ public interface ICriterion {
     }
 
     static ICriterion ne(String pAttName, int pValue) {
+        return new NotCriterion(ICriterion.eq(pAttName, pValue));
+    }
+
+    static ICriterion ne(String pAttName, long pValue) {
         return new NotCriterion(ICriterion.eq(pAttName, pValue));
     }
 
