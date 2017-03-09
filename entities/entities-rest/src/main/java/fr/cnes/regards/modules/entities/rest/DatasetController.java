@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.entities.rest;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import javax.validation.Valid;
@@ -58,8 +57,6 @@ public class DatasetController implements IResourceController<Dataset> {
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
     public static final String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
-
-    public static final String DATASET_ID_SERVICES_PATH = DATASET_ID_PATH + "/services";
 
     @Autowired
     private IResourceService resourceService;
@@ -124,15 +121,6 @@ public class DatasetController implements IResourceController<Dataset> {
         Dataset dataSet = service.update(pDatasetId, pDataset);
         final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
-    }
-
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_SERVICES_PATH)
-    @ResponseBody
-    @ResourceAccess(description = "Retrieves the list of service configurations of a Dataset")
-    public HttpEntity<List<Long>> retrieveDatasetServices(@PathVariable("dataset_id") Long pDatasetId)
-            throws EntityNotFoundException {
-        List<Long> services = service.retrieveDatasetServices(pDatasetId);
-        return new ResponseEntity<>(services, HttpStatus.OK);
     }
 
     /**

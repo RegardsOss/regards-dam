@@ -3,9 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,12 +11,9 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
@@ -40,42 +35,27 @@ import fr.cnes.regards.modules.models.domain.Model;
 public class Dataset extends AbstractDescEntity {
 
     /**
-     * Quality mark
+     * value allowing the system to order a set of result
      */
     @Column
-    @Min(0)
-    @Max(10)
     private int score;
 
     /**
-     * This list contains plugin configurations for any plugin associated to this Dataset, for example: configurations
-     * for Converters, Services, Filters
-     * Except datasource (see below)
-     */
-    // TODO handler for deletion events
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "t_dataset_plugin_conf", joinColumns = @JoinColumn(name = "dataset_id"))
-    @Column(name = "plugin_conf_id")
-    private List<Long> pluginConfigurationIds = new ArrayList<>();
-
-    /**
      * A PluginConfiguration for a plugin type IDataSourcePlugin.</br>
-     * This PluginConfiguration defined the DataSource from which this Dataset presents data.
-     * <b>nullable = true</b> is necessary because of single-table entity mapping (same table is used for all
-     * types of entities and other haven't plugin configuration).
+     * This PluginConfiguration defined the DataSource from which this Dataset presents data. <b>nullable = true</b> is
+     * necessary because of single-table entity mapping (same table is used for all types of entities and other haven't
+     * plugin configuration).
      */
     @ManyToOne
     @JoinColumn(name = "ds_plugin_conf_id", foreignKey = @ForeignKey(name = "fk_ds_plugin_conf_id"), nullable = true,
-            updatable = true)
+            updatable = false)
     private PluginConfiguration plgConfDataSource;
 
     /**
-     * Data object model
+     * Data object model. nullable=true because fo single table
      */
-    @ManyToOne
-    @JoinColumn(name = "data_model_id", foreignKey = @ForeignKey(name = "fk_model_id"), nullable = true,
-            updatable = true)
-    private Model dataModel;
+    @Column(name = "data_model_id", updatable = false, nullable = true)
+    private Long dataModel;
 
     /**
      * Request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
@@ -122,14 +102,6 @@ public class Dataset extends AbstractDescEntity {
         return EntityType.DATASET.toString();
     }
 
-    public List<Long> getPluginConfigurationIds() {
-        return pluginConfigurationIds;
-    }
-
-    public void setPluginConfigurationIds(List<Long> pPluginConfigurationIds) {
-        pluginConfigurationIds = pPluginConfigurationIds;
-    }
-
     public ICriterion getSubsettingClause() {
         return subsettingClause;
     }
@@ -139,19 +111,19 @@ public class Dataset extends AbstractDescEntity {
     }
 
     public void setDataSource(PluginConfiguration pPlgConfDataSource) {
-        this.plgConfDataSource = pPlgConfDataSource;
+        plgConfDataSource = pPlgConfDataSource;
     }
 
     public void setSubsettingClause(ICriterion pSubsettingClause) {
         subsettingClause = pSubsettingClause;
     }
 
-    public Model getDataModel() {
+    public Long getDataModel() {
         return dataModel;
     }
 
-    public void setDataModel(Model pDataModel) {
-        this.dataModel = pDataModel;
+    public void setDataModel(Long pDataModel) {
+        dataModel = pDataModel;
     }
 
     public Set<String> getQuotations() {

@@ -86,6 +86,8 @@ public class DatasetServiceTest {
 
     private ArrayList<Long> pluginConfigurationIds;
 
+    private IModelService modelService;
+
     /**
      * initialize the repo before each test
      *
@@ -100,7 +102,7 @@ public class DatasetServiceTest {
         dataSetRepositoryMocked = Mockito.mock(IDatasetRepository.class);
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
         pModelAttributeService = Mockito.mock(IModelAttributeService.class);
-        IModelService pModelService = Mockito.mock(IModelService.class);
+        modelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
         dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
         // populate the repository
@@ -115,7 +117,8 @@ public class DatasetServiceTest {
         dataSet2 = new Dataset(pModel2, "PROJECT", "dataSet2");
         dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
-        dataSet2.setDataModel(modelOfObjects);
+        Mockito.when(modelService.getModel(modelOfObjects.getId())).thenReturn(modelOfObjects);
+        dataSet2.setDataModel(modelOfObjects.getId());
         dataSet2.setSubsettingClause(getValidClause());
         dataSet2.setId(2L);
 
@@ -141,8 +144,8 @@ public class DatasetServiceTest {
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, null, null, null, null, publisherMocked);
+                pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
+                deletedEntityRepositoryMocked, null, null, null, publisherMocked);
 
     }
 
