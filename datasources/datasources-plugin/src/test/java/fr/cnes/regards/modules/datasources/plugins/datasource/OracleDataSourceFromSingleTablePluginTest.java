@@ -81,7 +81,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
      * Initialize the plugin's parameter
      *
      * @throws DataSourcesPluginException
-     * @throws SQLException 
+     * @throws SQLException
      *
      * @throws JwtException
      * @throws PluginUtilsException
@@ -116,7 +116,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
-        
+
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
     }
@@ -129,7 +129,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
 
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 1000));
         Assert.assertNotNull(ll);
@@ -137,7 +137,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
     }
 
     /**

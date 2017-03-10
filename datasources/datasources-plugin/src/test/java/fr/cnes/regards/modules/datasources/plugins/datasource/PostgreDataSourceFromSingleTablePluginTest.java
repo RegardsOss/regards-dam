@@ -109,7 +109,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      * Initialize the plugin's parameter
      *
      * @throws DataSourcesPluginException
-     * @throws SQLException 
+     * @throws SQLException
      *
      * @throws JwtException
      * @throws PluginUtilsException
@@ -160,7 +160,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
-        
+
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
     }
@@ -170,7 +170,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by introspection")
     public void getDataSourceIntrospection() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
-        
+
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
@@ -183,7 +183,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
 
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
@@ -197,7 +197,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
     }
 
     @After
