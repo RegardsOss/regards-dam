@@ -42,6 +42,11 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     protected static final String SELECT = "SELECT ";
 
     /**
+     * The PL/SQL key word WHERE
+     */
+    protected static final String WHERE = " WHERE ";
+
+    /**
      * The PL/SQL expression SELECT COUNt(*)
      */
     protected static final String SELECT_COUNT = "SELECT COUNT(*) ";
@@ -56,7 +61,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      */
     protected static final String COMMA = ",";
 
-    protected abstract IDBConnectionPlugin getDBConnectionPlugin();
+    public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
 
     public int getRefreshRate() {
         // in seconds, 30 minutes
@@ -77,12 +82,24 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     protected abstract String getFromClause();
 
-    protected String getSelectRequest(Pageable pPageable) {
-        return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + buildLimitPart(pPageable);
+    protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
+        if (pDate != null) {
+            return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + WHERE
+                    + this.keywordLastModificationDate + buildLimitPart(pPageable);
+        } else {
+            return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause()
+                    + buildLimitPart(pPageable);
+        }
     }
 
-    protected String getCountRequest() {
-        return SELECT_COUNT + getFromClause();
+    protected String getCountRequest(LocalDateTime pDate) {
+        if (pDate != null) {
+            return SELECT_COUNT + getFromClause() + WHERE + this.keywordLastModificationDate;
+
+        } else {
+            return SELECT_COUNT + getFromClause();
+        }
+
     }
 
     /**
@@ -103,13 +120,14 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      * @return
      */
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
-        final String selectRequest = getSelectRequest(pPageable);
-        final String countRequest = getCountRequest();
+
+        final String selectRequest = getSelectRequest(pPageable, pDate);
+        final String countRequest = getCountRequest(pDate);
 
         LOG.debug("select request :" + selectRequest);
         LOG.debug("count request :" + countRequest);
 
-        try (Connection conn = getDBConnectionPlugin().getConnection()) {
+        try (Connection conn = getDBConnection().getConnection()) {
 
             Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
 

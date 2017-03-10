@@ -131,17 +131,19 @@ public abstract class AbstractDataSourceConnection {
     }
 
     /**
-     * The {@link Connection} to the database
+     * Get a {@link Connection} to the database
      * 
      * @return the {@link Connection}
+     * @throws SQLException 
+     * 
      */
-    public Connection getConnection() {
+    public Connection getConnection() throws SQLException {
         try {
             return cpds.getConnection();
         } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
+            LOG.error(e.getMessage());
+            throw e;
         }
-        return null;
     }
 
     /**
