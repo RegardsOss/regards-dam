@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -72,6 +73,9 @@ public class PostgreConnectionPluginIntrospectionTest {
 
         postgreDBConn = PluginUtils.getPlugin(parameters, DefaultPostgreConnectionPlugin.class,
                                               Arrays.asList(PLUGIN_PACKAGE));
+        
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(postgreDBConn.testConnection());
     }
 
     @Test
