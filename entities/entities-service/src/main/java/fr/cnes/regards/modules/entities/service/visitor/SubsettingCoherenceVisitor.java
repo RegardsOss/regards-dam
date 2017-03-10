@@ -30,10 +30,9 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttributeService;
 
 /**
- * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}.
- * <b>The aim is not to execute the filter but to check if the filter is coherent.</b>
- * For example, the visit of NotCriterion(subCriterion) leads to the visit of subcriterion (because the NotCriterion
- * is coherent)
+ * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}. <b>The aim is not
+ * to execute the filter but to check if the filter is coherent.</b> For example, the visit of
+ * NotCriterion(subCriterion) leads to the visit of subcriterion (because the NotCriterion is coherent)
  *
  * @author Sylvain Vissiere-Guerinet
  *

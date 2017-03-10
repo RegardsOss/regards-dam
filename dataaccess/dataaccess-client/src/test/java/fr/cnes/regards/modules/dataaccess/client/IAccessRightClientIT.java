@@ -4,12 +4,12 @@
 package fr.cnes.regards.modules.dataaccess.client;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
-import org.springframework.cloud.netflix.feign.support.SpringMvcContract;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
@@ -17,13 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.bind.annotation.RequestMethod;
 
-import feign.gson.GsonDecoder;
-import feign.gson.GsonEncoder;
-import feign.hystrix.HystrixFeign;
-import fr.cnes.regards.client.core.TokenClientProvider;
-import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.feign.FeignClientBuilder;
+import fr.cnes.regards.framework.feign.TokenClientProvider;
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 
@@ -44,6 +41,24 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
     private String serverAddress;
 
     /**
+     * Client to test
+     */
+    private IAccessRightClient client;
+
+    /**
+     * Feign security manager
+     */
+    @Autowired
+    private FeignSecurityManager feignSecurityManager;
+
+    @Before
+    public void init() {
+        client = FeignClientBuilder.build(new TokenClientProvider<>(IAccessRightClient.class,
+                "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
+        FeignSecurityManager.asSystem();
+    }
+
+    /**
      *
      * Check that the access right Feign Client handle the pagination parameters.
      *
@@ -51,21 +66,9 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
      */
     @Test
     public void testRetrieveAccessRightsList() {
-        try {
-            authService.setAuthorities(DEFAULT_TENANT, IAccessRightClient.PATH_ACCESS_RIGHTS, "Controller",
-                                       RequestMethod.GET, DefaultRole.INSTANCE_ADMIN.toString());
-            jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString(), "");
-            final IAccessRightClient accessRightClient = HystrixFeign.builder().contract(new SpringMvcContract())
-                    .encoder(new GsonEncoder()).decoder(new ResponseEntityDecoder(new GsonDecoder()))
-                    .target(new TokenClientProvider<>(IAccessRightClient.class,
-                            "http://" + serverAddress + ":" + getPort()));
-            final ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> accessRights = accessRightClient
-                    .retrieveAccessRightsList(null, null, null, 0, 10);
-            Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));
-        } catch (final Exception e) {
-            LOG.error(e.getMessage(), e);
-            Assert.fail(e.getMessage());
-        }
+        ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> accessRights = client
+                .retrieveAccessRightsList(null, null, null, 0, 10);
+        Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));
     }
 
     @Override

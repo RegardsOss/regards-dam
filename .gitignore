@@ -12,6 +12,7 @@ node_modules/
 .settings/
 .pmd
 .factorypath
+.springBeans
 bin/
 
 ######################

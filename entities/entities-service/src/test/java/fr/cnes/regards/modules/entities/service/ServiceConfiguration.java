@@ -9,9 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.microservices.catalog.plugin.client.ICatalogPluginClient;
 
 @Configuration
 @EnableAutoConfiguration
@@ -33,13 +31,4 @@ public class ServiceConfiguration {
         return Mockito.mock(IPluginService.class);
     }
 
-    @Bean
-    public ICatalogPluginClient catalogPluginClient() {
-        return Mockito.mock(ICatalogPluginClient.class);
-    }
-
-    @Bean
-    public IResourceService resourceService() {
-        return Mockito.mock(IResourceService.class);
-    }
 }

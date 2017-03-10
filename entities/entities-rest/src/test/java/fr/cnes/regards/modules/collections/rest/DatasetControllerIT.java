@@ -187,14 +187,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
                              "Failed to delete a specific dataset using its id", dataSet1.getId());
     }
 
-    @Test
-    public void testGetServices() {
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_SERVICES_PATH, expectations,
-                          "Failed to fetch services list", dataSet1.getId());
-    }
-
     @Override
     protected Logger getLogger() {
         return LOG;

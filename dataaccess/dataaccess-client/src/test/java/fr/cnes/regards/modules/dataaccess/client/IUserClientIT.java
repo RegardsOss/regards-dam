@@ -8,9 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder;
-import org.springframework.cloud.netflix.feign.support.SpringMvcContract;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
@@ -18,14 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.bind.annotation.RequestMethod;
 
-import feign.gson.GsonDecoder;
-import feign.gson.GsonEncoder;
-import feign.hystrix.HystrixFeign;
-import fr.cnes.regards.client.core.TokenClientProvider;
-import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.framework.feign.FeignClientBuilder;
+import fr.cnes.regards.framework.feign.TokenClientProvider;
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 
@@ -45,19 +40,22 @@ public class IUserClientIT extends AbstractRegardsWebIT {
     @Value("${server.address}")
     private String serverAddress;
 
-    @Value("${hystrix.command.default.execution.isolation.strategy}")
-    private String strategy;
+    /**
+     * Client to test
+     */
+    private IUserClient client;
 
-    private IUserClient userClient;
+    /**
+     * Feign security manager
+     */
+    @Autowired
+    private FeignSecurityManager feignSecurityManager;
 
     @Before
-    public void init() throws JwtException {
-        authService.setAuthorities(DEFAULT_TENANT, IUserClient.BASE_PATH, "Controller", RequestMethod.GET,
-                                   DefaultRole.INSTANCE_ADMIN.toString());
-        jwtService.injectToken(DEFAULT_TENANT, DefaultRole.INSTANCE_ADMIN.toString(), "");
-        userClient = HystrixFeign.builder().contract(new SpringMvcContract()).encoder(new GsonEncoder())
-                .decoder(new ResponseEntityDecoder(new GsonDecoder()))
-                .target(new TokenClientProvider<>(IUserClient.class, "http://" + serverAddress + ":" + getPort()));
+    public void init() {
+        client = FeignClientBuilder.build(new TokenClientProvider<>(IUserClient.class,
+                "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
+        FeignSecurityManager.asSystem();
     }
 
     /**
@@ -69,7 +67,7 @@ public class IUserClientIT extends AbstractRegardsWebIT {
     @Test
     public void testRetrieveAccessGroupsOfUser() {
         try {
-            final ResponseEntity<PagedResources<Resource<AccessGroup>>> accessGroupOfUser = userClient
+            final ResponseEntity<PagedResources<Resource<AccessGroup>>> accessGroupOfUser = client
                     .retrieveAccessGroupsOfUser("user1@user1.user1", 0, 10);
             Assert.assertTrue(accessGroupOfUser.getStatusCode().equals(HttpStatus.OK));
         } catch (final Exception e) {

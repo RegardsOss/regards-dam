@@ -90,11 +90,10 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
         confs.add(2L);
-        dataset.setPluginConfigurationIds(confs);
 
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataset.setSubsettingClause(getValidClause());
-        dataset.setDataModel(srcModel);
+        dataset.setDataModel(srcModel.getId());
 
         String stringCLause = gson.toJson(dataset.getSubsettingClause());
 
@@ -105,18 +104,6 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = datasetRepo.save(dsDescription);
-    }
-
-    @Test
-    public void testFindOneWithPluginConfigurations() {
-        LOG.info("START OF find one with plugin Configurations");
-
-        Dataset result = datasetRepo.findOneWithPluginConfigurations(dataset.getId());
-        LOG.info("END OF find one with plugin Configurations");
-        Assert.assertTrue(result.getPluginConfigurationIds() != null);
-        Assert.assertTrue(result.getPluginConfigurationIds().size() == 2);
-        Assert.assertTrue(result.getPluginConfigurationIds().contains(1L));
-        Assert.assertTrue(result.getPluginConfigurationIds().contains(2L));
     }
 
     @Test

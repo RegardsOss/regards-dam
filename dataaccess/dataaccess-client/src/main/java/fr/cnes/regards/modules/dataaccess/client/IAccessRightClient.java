@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import fr.cnes.regards.client.core.annotation.RestClient;
+import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -25,8 +25,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  *
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessRightClient { // NOSONAR
 
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";

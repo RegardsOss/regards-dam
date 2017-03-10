@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -114,6 +117,8 @@ public class IndexerServiceDataSourceIT {
 
     private Dataset dataset1;
 
+    private PluginConfiguration dBConnectionConf;
+
     @Before
     public void setUp() throws Exception {
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
@@ -135,14 +140,14 @@ public class IndexerServiceDataSourceIT {
         modelService.createModel(datasetModel);
 
         // Initialize the DataSourceAttributeMapping
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         // Connection PluginConf
-        PluginConfiguration pluginConf = getOracleConnectionConfiguration();
-        pluginService.savePluginConfiguration(pluginConf);
+        dBConnectionConf = getOracleConnectionConfiguration();
+        pluginService.savePluginConfiguration(dBConnectionConf);
 
         // DataSource PluginConf
-        dataSourcePluginConf = getOracleDataSource(pluginConf);
+        dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
 
     }
@@ -154,6 +159,8 @@ public class IndexerServiceDataSourceIT {
 
         Utils.execute(modelService::deleteModel, datasetModel.getId());
         Utils.execute(modelService::deleteModel, dataModel.getId());
+        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
+        Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
@@ -249,7 +256,7 @@ public class IndexerServiceDataSourceIT {
         crawlerService.ingest(dataSourcePluginConf);
 
         dataset1 = new Dataset(datasetModel, tenant, "dataset label");
-        dataset1.setDataModel(dataModel);
+        dataset1.setDataModel(dataModel.getId());
         dataset1.setSubsettingClause(ICriterion.all());
         dataset1.setLicence("licence");
         dataset1.setDataSource(dataSourcePluginConf);
