@@ -423,6 +423,29 @@ public class EsQueryTest {
     }
 
     /**
+     * This test creates 1_000_000 entities so it is to be used only once to test perf.
+     * Some search queries are done then
+     */
+    @Test
+    public void testTransformSearch() {
+        // Remove this comment to create 1_000_000 entities into ES if not already present
+        // this.createData2();
+        // Search with aggregations
+        ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
+        facetMapBuilder.put("properties.size", FacetType.NUMERIC).put("properties.weight", FacetType.NUMERIC)
+                .put("properties.text", FacetType.STRING)
+                // .put("properties.date", FacetType.DATE);
+                .put("properties.tags", FacetType.STRING);
+        // .put("properties.ints", FacetType.NUMERIC);
+        // .put("properties.doubles", FacetType.NUMERIC).put("properties.dates", FacetType.DATE);
+        // sortMap.put("docId", false);
+        long start = System.currentTimeMillis();
+        Page<Item> page = repository.search(INDEX2, Item.class, 100, ICriterion.all(), facetMapBuilder.build(),
+                                            "properties");
+        System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
+    }
+
+    /**
      * Test updating large entity data update (1_000_000 here)
      */
     @Test

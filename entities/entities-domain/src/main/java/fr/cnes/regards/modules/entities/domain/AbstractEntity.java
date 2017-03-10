@@ -126,7 +126,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @Valid
-    protected List<AbstractAttribute<?>> attributes;
+    protected List<AbstractAttribute<?>> properties;
 
     /**
      * model that this entity is respecting
@@ -193,12 +193,12 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         tags = pTags;
     }
 
-    public List<AbstractAttribute<?>> getAttributes() { // NOSONAR
-        return attributes;
+    public List<AbstractAttribute<?>> getProperties() { // NOSONAR
+        return properties;
     }
 
-    public void setAttributes(List<AbstractAttribute<?>> pAttributes) {
-        attributes = pAttributes;
+    public void setProperties(List<AbstractAttribute<?>> pAttributes) {
+        properties = pAttributes;
     }
 
     public Model getModel() {
@@ -277,6 +277,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
                 + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", attributes="
-                + attributes + ", model=" + model + "]";
+                + properties + ", model=" + model + "]";
     }
 }

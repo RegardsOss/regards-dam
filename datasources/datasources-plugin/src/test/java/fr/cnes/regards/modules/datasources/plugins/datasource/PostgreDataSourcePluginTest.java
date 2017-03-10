@@ -163,7 +163,7 @@ public class PostgreDataSourcePluginTest {
         Assert.assertNotNull(ll);
         Assert.assertEquals(nbElements, ll.getContent().size());
 
-        ll.getContent().get(0).getAttributes().forEach(attr -> {
+        ll.getContent().get(0).getProperties().forEach(attr -> {
             if (attr.getName().equals("name")) {
                 Assert.assertTrue(attr.getValue().toString().contains(HELLO));
             }

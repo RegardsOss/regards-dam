@@ -32,4 +32,35 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     public <U> U accept(ICriterionVisitor<U> pVisitor) {
         return pVisitor.visitRangeCriterion(this);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = (prime * result) + ((valueComparisons == null) ? 0 : valueComparisons.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        RangeCriterion<?> other = (RangeCriterion<?>) obj;
+        if (valueComparisons == null) {
+            if (other.valueComparisons != null) {
+                return false;
+            }
+        } else if (!valueComparisons.equals(other.valueComparisons)) {
+            return false;
+        }
+        return true;
+    }
+
 }

@@ -15,17 +15,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
-import fr.cnes.regards.modules.crawler.domain.criterion.AbstractMultiCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.DateRangeCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.EmptyCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
-import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.NotCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.RangeCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchAnyCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchCriterion;
 
 // CHECKSTYLE:OFF
 public class CriterionTest {
@@ -181,6 +170,11 @@ public class CriterionTest {
 
         @Override
         public String visitStringMatchCriterion(StringMatchCriterion pCriterion) {
+            return pCriterion.getName() + " " + pCriterion.getType().toString() + " \"" + pCriterion.getValue() + "\"";
+        }
+
+        @Override
+        public String visitLongMatchCriterion(LongMatchCriterion pCriterion) {
             return pCriterion.getName() + " " + pCriterion.getType().toString() + " \"" + pCriterion.getValue() + "\"";
         }
 

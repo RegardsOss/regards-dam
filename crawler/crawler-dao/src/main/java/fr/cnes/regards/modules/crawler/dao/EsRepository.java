@@ -48,7 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -308,11 +307,6 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, int pPageSize) {
-        return this.searchAllLimited(pIndex, pClass, new PageRequest(0, pPageSize));
-    }
-
-    @Override
     public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
         try {
             final List<T> results = new ArrayList<>();
@@ -330,12 +324,6 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion,
-            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
-        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), criterion, pFacetsMap, pAscSortMap);
-    }
-
-    @Override
     public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         String index = pIndex.toLowerCase();
@@ -350,6 +338,73 @@ public class EsRepository implements IEsRepository {
             if (pAscSortMap != null) {
                 manageSortRequest(index, request, pAscSortMap);
             }
+            // Managing aggregations if some facets are asked
+            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
+            // Launch the request
+            SearchResponse response = getWithTimeouts(request);
+
+            // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
+            if (twoPassRequestNeeded) {
+                // Rebuild request
+                request = client.prepareSearch(index).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
+                        .setSize(pPageRequest.getPageSize());
+                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
+                // Relaunch the request with replaced facets
+                response = getWithTimeouts(request);
+            }
+
+            Map<String, IFacet<?>> facetResultsMap = null;
+            if (pFacetsMap != null) {
+                // Get the new aggregations result map
+                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                // Create the facet map
+                facetResultsMap = new HashMap<>();
+                for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+                    FacetType facetType = entry.getValue();
+                    String attributeName = entry.getKey();
+                    fillFacetMap(aggsMap, facetResultsMap, facetType, attributeName);
+                }
+            }
+
+            SearchHits hits = response.getHits();
+            for (SearchHit hit : hits) {
+                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+            }
+            // If no facet, juste returns a "simple" Page
+            if (facetResultsMap == null) {
+                return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+            } else { // else returns a FacetPage
+                return new FacetPage<>(results, facetResultsMap, pPageRequest, response.getHits().getTotalHits());
+            }
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    //    private LoadingCache<Object[], FacetPage<?>> cache = CacheBuilder.newBuilder()
+    //            .expireAfterAccess(10, TimeUnit.MINUTES).build(new CacheLoader<Object[], FacetPage<?>>() {
+    //
+    //                @Override
+    //                public FacetPage<?> load(Object[] key) throws Exception {
+    //                    Set<Object> results = new HashSet<>();
+    //                    searchAll((String) key[0], (Class<?>) key[1], results::add, (ICriterion) key[2]);
+    //                };
+    //            });
+
+    @Override
+    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
+            Map<String, FacetType> pFacetsMap, String pSourceAttribute) {
+        String index = pIndex.toLowerCase();
+        try {
+            final List<T> results = new ArrayList<>();
+            // Use filter instead of "direct" query (in theory, quickest because no score is computed)
+            QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                    .filter(criterion.accept(CRITERION_VISITOR));
+            // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
+            SearchRequestBuilder request = client.prepareSearch(index).setQuery(critBuilder)
+                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize())
+                    .setFetchSource(pSourceAttribute, null);
             // Managing aggregations if some facets are asked
             boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
             // Launch the request
@@ -574,12 +629,6 @@ public class EsRepository implements IEsRepository {
             default:
                 break;
         }
-    }
-
-    @Override
-    public <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, int pPageSize, Object pValue,
-            String... pFields) {
-        return multiFieldsSearch(pIndex, pClass, new PageRequest(0, pPageSize), pValue, pFields);
     }
 
     @Override

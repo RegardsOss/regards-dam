@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -51,7 +50,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@DirtiesContext // because there are 2 Configuration classes in package
 public class IndexerServiceIT {
 
     @SuppressWarnings("unused")
@@ -164,7 +162,7 @@ public class IndexerServiceIT {
                                                                "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
-        collection.setAttributes(attributes);
+        collection.setProperties(attributes);
         collection.setTags(new ImmutableSet.Builder<String>().add("TAG1").add("TAG2").add("TAG3").build());
 
         indexerService.createIndex(tenant);
@@ -173,7 +171,7 @@ public class IndexerServiceIT {
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         List<Collection> singleCollColl = indexerService
-                .search(tenant, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();
+                .search(tenant, Collection.class, 10, ICriterion.eq("properties.int", 42)).getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
@@ -222,7 +220,7 @@ public class IndexerServiceIT {
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
         attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
-        collection.setAttributes(attributes);
+        collection.setProperties(attributes);
         return collection;
     }
 

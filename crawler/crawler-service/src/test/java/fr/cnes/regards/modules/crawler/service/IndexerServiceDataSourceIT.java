@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -29,6 +29,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.dao.IEsRepository;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -37,6 +38,7 @@ import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTab
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -52,7 +54,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@DirtiesContext // because there are 2 Configuration classes in package
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
@@ -273,6 +274,21 @@ public class IndexerServiceDataSourceIT {
             }
         }
         Assert.assertNotNull(dataset1);
+
+        // Search for DataObjects tagging this dataset
+        Page<DataObject> page = indexerService.search(tenant, DataObject.class, IEsRepository.BULK_SIZE,
+                                                      ICriterion.equals("tags", dataset1.getIpId().toString()));
+        Assert.assertTrue(page.getContent().size() > 0);
+
+        // Delete dataset1
+        entityService.delete(dataset1.getId());
+        // Wait a while to permit RabbitMq sending a message to crawler service which update ES
+        Thread.sleep(10_000);
+
+        // Search again for DataObjects tagging this dataset
+        page = indexerService.search(tenant, DataObject.class, IEsRepository.BULK_SIZE,
+                                     ICriterion.equals("tags", dataset1.getIpId().toString()));
+        Assert.assertTrue(page.getContent().isEmpty());
     }
 
 }

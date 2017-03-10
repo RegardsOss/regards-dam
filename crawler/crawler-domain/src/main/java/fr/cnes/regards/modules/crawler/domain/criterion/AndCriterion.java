@@ -20,4 +20,26 @@ public final class AndCriterion extends AbstractMultiCriterion implements ICrite
     public <U> U accept(ICriterionVisitor<U> pVisitor) {
         return pVisitor.visitAndCriterion(this);
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = (prime * result) + "AND".hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        if (this == pObj) {
+            return true;
+        }
+        if (pObj == null) {
+            return false;
+        }
+        if (getClass() != pObj.getClass()) {
+            return false;
+        }
+        return super.equals(pObj);
+    }
 }

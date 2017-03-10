@@ -17,6 +17,7 @@ import fr.cnes.regards.modules.crawler.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.criterion.IntMatchCriterion;
+import fr.cnes.regards.modules.crawler.domain.criterion.LongMatchCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.crawler.domain.criterion.StringMatchAnyCriterion;
@@ -83,6 +84,11 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitIntMatchCriterion(IntMatchCriterion pCriterion) {
+        return QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue());
+    }
+
+    @Override
+    public QueryBuilder visitLongMatchCriterion(LongMatchCriterion pCriterion) {
         return QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue());
     }
 

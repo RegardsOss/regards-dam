@@ -280,7 +280,7 @@ public abstract class AbstractDataObjectMapping {
                     .add(AttributeBuilder.buildObject(pName, pAttrs.toArray(new AbstractAttribute<?>[pAttrs.size()])));
         });
 
-        data.setAttributes(attributes);
+        data.setProperties(attributes);
 
         return data;
     }
