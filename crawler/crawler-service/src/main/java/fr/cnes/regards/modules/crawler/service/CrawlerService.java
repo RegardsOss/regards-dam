@@ -38,6 +38,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * Crawler service.
@@ -204,7 +205,7 @@ public class CrawlerService implements ICrawlerService {
         AbstractEntity entity = entityService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
-            if (entity instanceof Dataset) {
+            if (ipId.getEntityType() == EntityType.DATASET) {
                 this.manageDatasetDelete(tenant, ipId.toString());
             }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
@@ -254,7 +255,7 @@ public class CrawlerService implements ICrawlerService {
     private void manageDatasetDelete(String tenant, String ipId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with th systeme Postgres/RabbitMQ
-        ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId.toString());
+        ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId);
         Set<DataObject> toSaveObjects = new HashSet<>();
         Consumer<DataObject> updateTag = object -> {
             object.getTags().remove(ipId);
@@ -267,7 +268,7 @@ public class CrawlerService implements ICrawlerService {
         // Apply updateTag function to all tagging objects
         esRepos.searchAll(tenant, DataObject.class, updateTag, taggingObjectsCrit);
         // Bulk save remaining objects to save
-        if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
+        if (!toSaveObjects.isEmpty()) {
             esRepos.saveBulk(tenant, toSaveObjects);
         }
     }
@@ -278,7 +279,7 @@ public class CrawlerService implements ICrawlerService {
      */
     private void manageDatasetUpdate(Dataset dataset) {
         PluginConfiguration datasource = dataset.getDataSource();
-        String datasourceId = datasource.getId() + ":" + datasource.getPluginId();
+        String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
             subsettingCrit = ICriterion.equals(DATA_SOURCE_ID, datasourceId);

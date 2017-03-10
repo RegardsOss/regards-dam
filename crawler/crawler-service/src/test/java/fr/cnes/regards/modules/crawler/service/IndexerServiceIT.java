@@ -171,7 +171,7 @@ public class IndexerServiceIT {
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         List<Collection> singleCollColl = indexerService
-                .search(tenant, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();
+                .search(tenant, Collection.class, 10, ICriterion.eq("properties.int", 42)).getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
