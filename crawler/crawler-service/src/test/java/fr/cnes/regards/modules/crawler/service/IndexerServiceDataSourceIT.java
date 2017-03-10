@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,6 +145,9 @@ public class IndexerServiceDataSourceIT {
 
         // Connection PluginConf
         dBConnectionConf = getOracleConnectionConfiguration();
+        DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        Assume.assumeTrue(dbCtx.testConnection());
+
         pluginService.savePluginConfiguration(dBConnectionConf);
 
         // DataSource PluginConf
