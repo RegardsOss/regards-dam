@@ -98,7 +98,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     }
 
     @Override
-    protected IDBConnectionPlugin getDBConnectionPlugin() {
+    public IDBConnectionPlugin getDBConnection() throws SQLException {
         return dbConnection;
     }
 

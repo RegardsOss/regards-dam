@@ -55,7 +55,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
 
     protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy);
 
-    protected abstract IDBConnectionPlugin getDBConnectionPlugin();
+    public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
 
     /**
      * This method initialize the {@link SqlGenerator} used to request the database.<br>
@@ -105,12 +105,10 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return sqlGenerator.count(tableDescription);
     }
 
-    // @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
         return findAll(pTenant, pPageable, null);
     }
 
-    // @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
         if (sqlGenerator == null) {
             LOG.error("the sqlGenerator is null");
@@ -120,9 +118,9 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         final String countRequest = getCountRequest();
 
         LOG.debug("select request :" + selectRequest);
-        LOG.debug("count request :" + countRequest);
+        LOG.debug("count  request :" + countRequest);
 
-        try (Connection conn = getDBConnectionPlugin().getConnection()) {
+        try (Connection conn = getDBConnection().getConnection()) {
 
             Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
 

@@ -55,6 +55,52 @@ public class DataSourceAttributeMapping {
     }
 
     /**
+     * Constructor for a {@link DataSourceAttributeMapping} with a namespace
+     * 
+     * @param pName
+     *            the attribute name in the model
+     * @param pNameSpace
+     *            the attribute name space in the model
+     * @param pType
+     *            the attribute type in the model @see {@link AttributeType}
+     * @param pMappingDS
+     *            The attribute name in the data source
+     * @param pTypeDS
+     *            The attribute type in the data source @see {@link Types}
+     * @param pIsPrimaryKey
+     *            true if the attribute is a primary key in the data source
+     */
+    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, int pTypeDS,
+            boolean pIsPrimaryKey) {
+        super();
+        this.name = pName;
+        this.type = pType;
+        this.nameDS = pMappingDS;
+        this.typeDS = pTypeDS;
+        this.isPrimaryKey = pIsPrimaryKey;
+    }
+
+    /**
+     * 
+     * @param pName
+     *            the attribute name in the model
+     * @param pType
+     *            the attribute type in the model @see {@link AttributeType}
+     * @param pMappingDS
+     *            The attribute name in the data source
+     * @param pTypeDS
+     *            The attribute type in the data source @see {@link Types}
+     */
+    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, int pTypeDS) {
+        super();
+        this.name = pName;
+        this.type = pType;
+        this.nameDS = pMappingDS;
+        this.typeDS = pTypeDS;
+        this.isPrimaryKey = false;
+    }
+
+    /**
      * Constructor with all attributes
      * 
      * @param pName
@@ -79,27 +125,8 @@ public class DataSourceAttributeMapping {
         this.isPrimaryKey = false;
     }
 
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, int pTypeDS) {
-        super();
-        this.name = pName;
-        this.type = pType;
-        this.nameDS = pMappingDS;
-        this.typeDS = pTypeDS;
-        this.isPrimaryKey = false;
-    }
-
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, int pTypeDS,
-            boolean pIsPrimaryKey) {
-        super();
-        this.name = pName;
-        this.type = pType;
-        this.nameDS = pMappingDS;
-        this.typeDS = pTypeDS;
-        this.isPrimaryKey = pIsPrimaryKey;
-    }
-
     /**
-     * Constructor with all attributes
+     * Constructor for a {@link DataSourceAttributeMapping} with a namespace
      * 
      * @param pName
      *            the attribute name in the model
@@ -119,6 +146,16 @@ public class DataSourceAttributeMapping {
         this.isPrimaryKey = false;
     }
 
+    /**
+     * Constructor for a {@link DataSourceAttributeMapping} without namespace
+     * 
+     * @param pName
+     *            the attribute name in the model
+     * @param pType
+     *            the attribute type in the model @see {@link AttributeType}
+     * @param pMappingDS
+     *            The attribute name in the data source
+     */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS) {
         super();
         this.name = pName;
@@ -127,6 +164,18 @@ public class DataSourceAttributeMapping {
         this.isPrimaryKey = false;
     }
 
+    /**
+     * Constructor for a {@link DataSourceAttributeMapping} without namespace
+     * 
+     * @param pName
+     *            the attribute name in the model
+     * @param pType
+     *            the attribute type in the model @see {@link AttributeType}
+     * @param pMappingDS
+     *            The attribute name in the data source
+     * @param pIsPrimaryKey
+     *            true if the attribute is a primary key in the data source
+     */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, boolean pIsPrimaryKey) {
         super();
         this.name = pName;

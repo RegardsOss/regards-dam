@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -107,12 +109,13 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      * Initialize the plugin's parameter
      *
      * @throws DataSourcesPluginException
+     * @throws SQLException 
      *
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourcesPluginException {
+    public void setUp() throws DataSourcesPluginException, SQLException {
 
         runtimeTenantResolver.forceTenant("DEFAULT");
 
@@ -157,15 +160,17 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
-
+        
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_PLG_210")
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by introspection")
-    public void getDataSourceIntrospection() {
+    public void getDataSourceIntrospection() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
-
+        
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
@@ -176,6 +181,10 @@ public class PostgreDataSourceFromSingleTablePluginTest {
             }
         });
 
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
+
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
@@ -185,6 +194,10 @@ public class PostgreDataSourceFromSingleTablePluginTest {
                 Assert.assertTrue(attr.getValue().toString().contains(HELLO + ""));
             }
         });
+
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
     }
 
     @After

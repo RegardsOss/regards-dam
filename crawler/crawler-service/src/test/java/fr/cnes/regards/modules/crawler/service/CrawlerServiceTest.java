@@ -1,5 +1,6 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,8 +10,8 @@ import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -88,7 +89,7 @@ public class CrawlerServiceTest {
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Before
-    public void tearUp() throws DataSourcesPluginException, PluginUtilsException {
+    public void tearUp() throws DataSourcesPluginException, PluginUtilsException, SQLException {
         /*
          * Initialize the DataSourceAttributeMapping
          */
@@ -112,13 +113,14 @@ public class CrawlerServiceTest {
             throw new DataSourcesPluginException(e.getMessage());
         }
 
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(dsPlugin.getDBConnection().testConnection());
     }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    @Ignore
     @Test
     public void testSuckUp() {
         // register JSon data types (for ES)

@@ -3,15 +3,15 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -46,7 +46,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-@Ignore
 public class OracleDataSourceFromSingleTablePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleDataSourceFromSingleTablePluginTest.class);
@@ -82,12 +81,13 @@ public class OracleDataSourceFromSingleTablePluginTest {
      * Initialize the plugin's parameter
      *
      * @throws DataSourcesPluginException
+     * @throws SQLException 
      *
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourcesPluginException {
+    public void setUp() throws DataSourcesPluginException, SQLException {
 
         /*
          * Initialize the DataSourceAttributeMapping
@@ -116,18 +116,28 @@ public class OracleDataSourceFromSingleTablePluginTest {
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
-
+        
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
     }
 
     @Test
-    public void getDataSourceIntrospection() {
+    public void getDataSourceIntrospection() throws SQLException {
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
 
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
+
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
+
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getAttributes().size()));
     }
 
     /**
@@ -154,7 +164,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
+        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID", true));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
