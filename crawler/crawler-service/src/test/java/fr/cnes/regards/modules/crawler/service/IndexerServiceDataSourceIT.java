@@ -145,10 +145,10 @@ public class IndexerServiceDataSourceIT {
 
         // Connection PluginConf
         dBConnectionConf = getOracleConnectionConfiguration();
+        pluginService.savePluginConfiguration(dBConnectionConf);
+
         DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
         Assume.assumeTrue(dbCtx.testConnection());
-
-        pluginService.savePluginConfiguration(dBConnectionConf);
 
         // DataSource PluginConf
         dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
