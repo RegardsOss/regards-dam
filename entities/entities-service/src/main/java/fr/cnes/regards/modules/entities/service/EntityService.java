@@ -350,7 +350,12 @@ public class EntityService implements IEntityService {
     @Override
     public <T extends AbstractEntity> T create(T pEntity, MultipartFile file) throws ModuleException, IOException {
         T entity = check(pEntity);
-        this.setDescription(entity, file);
+
+        // Set description
+        if (entity instanceof AbstractDescEntity) {
+            this.setDescription((AbstractDescEntity) entity, file);
+        }
+
         // IpIds of entities that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         this.manageGroups(entity, updatedIpIds);
@@ -423,22 +428,20 @@ public class EntityService implements IEntityService {
     }
 
     /**
+     * @param <T>
+     *            one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
      * @param pEntity
      *            entity being created
      * @param pFile
      *            the description of the entity
-     * @return modified entity with the description properly set
      * @throws IOException
-     * @throws EntityDescriptionUnacceptableCharsetException
-     *             thrown if charset is not utf-8
-     * @throws EntityDescriptionTooLargeException
-     *             thrown if file is bigger than 10MB
-     * @throws EntityDescriptionUnacceptableType
-     *             thrown if file is not a PDF or markdown
+     *             if description cannot be read
+     * @throws ModuleException
+     *             if description not conform to REGARDS requirements
      */
-    private <T extends AbstractEntity> void setDescription(T pEntity, MultipartFile pFile)
+    private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
-        if ((pEntity instanceof AbstractDescEntity) && (pFile != null) && !pFile.isEmpty()) {
+        if ((pFile != null) && !pFile.isEmpty()) {
             // collections and dataset only have a description which is a url or a file
             if (!isContentTypeAcceptable(pFile)) {
                 throw new EntityDescriptionUnacceptableType(pFile.getContentType());
@@ -452,8 +455,7 @@ public class EntityService implements IEntityService {
                 throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
             }
             // description or description file
-            pEntity.setDescription(null);
-            ((AbstractDescEntity) pEntity).setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+            pEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
                     MediaType.valueOf(pFile.getContentType())));
         }
     }

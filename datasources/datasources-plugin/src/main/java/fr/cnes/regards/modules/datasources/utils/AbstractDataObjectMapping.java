@@ -36,7 +36,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.Table;
-import fr.cnes.regards.modules.entities.domain.Data;
+import fr.cnes.regards.modules.entities.domain.DataFile;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.DataType;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -118,7 +118,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * For each attributes of the data source, this map contains an optional internal attribute type
      */
-    private Map<String, InternalAtributes> mappingInternalAttributes = new HashMap<>();
+    private final Map<String, InternalAttributes> mappingInternalAttributes = new HashMap<>();
 
     /**
      * Get {@link DateAttribute}.
@@ -136,7 +136,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link DataSourceAttributeMapping}.
-     * 
+     *
      * @param pRs
      *            The {@link ResultSet} to read
      * @param pAttrMapping
@@ -204,7 +204,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Execute a SQL request to count the number of items
-     * 
+     *
      * @param pStatement
      *            a {@link Statement} used to execute the SQL request
      * @param pCountRequest
@@ -213,7 +213,7 @@ public abstract class AbstractDataObjectMapping {
      *             an SQL error occurred
      */
     private void countItems(Statement pStatement, String pCountRequest) throws SQLException {
-        if (pCountRequest != null && !pCountRequest.isEmpty() && (nbItems == RESET_COUNT)) {
+        if ((pCountRequest != null) && !pCountRequest.isEmpty() && (nbItems == RESET_COUNT)) {
             // Execute the request to count the elements
             try (ResultSet rsCount = pStatement.executeQuery(pCountRequest)) {
                 if (rsCount.next()) {
@@ -329,7 +329,7 @@ public abstract class AbstractDataObjectMapping {
             return null;
         }
 
-        if (LOG.isDebugEnabled() && attr != null) {
+        if (LOG.isDebugEnabled() && (attr != null)) {
             if (pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "> of type <" + pAttrMapping.getType() + "> is :"
                         + attr.getValue());
@@ -346,7 +346,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Extracts a column label from a PL/SQL expression.</br>
      * The column label is placed after the word 'AS'.
-     * 
+     *
      * @param pAttrMapping
      *            The PL/SQL expression to analyze
      * @return the column label extracted from the PL/SQL
@@ -368,7 +368,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
      * {@link UUID#nameUUIDFromBytes(byte[]).
-     * 
+     *
      * @param pTenant
      *            the tenant name
      * @param pVal
@@ -389,7 +389,7 @@ public abstract class AbstractDataObjectMapping {
      * <li>thumbnail
      * <li>label
      * <li>description
-     * 
+     *
      * @param pTenant
      *            the tenant name
      * @param pData
@@ -412,42 +412,39 @@ public abstract class AbstractDataObjectMapping {
             }
         }
 
+        InternalAttributes internalAt = mappingInternalAttributes.get(pAttrMapping.getName());
+
         if (pAttrMapping.isPrimaryKey()) {
             String val = pAttr.getValue().toString();
             pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
-        } else
-            if (InternalAtributes.RAWDATA.equals(mappingInternalAttributes.get(pAttrMapping.getName()))
-                    || InternalAtributes.THUMBNAIL.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                StringAttribute str = (StringAttribute) pAttr.getValue();
-                if (pData.getFiles() == null) {
-                    pData.setFiles(new ArrayList<>());
-                }
-                try {
-                    DataType type = mappingInternalAttributes.get(pAttrMapping.getName())
-                            .equals(InternalAtributes.RAWDATA) ? DataType.RAWDATA : DataType.THUMBNAIL;
-                    pData.getFiles().add(new Data(type, new URI(str.getValue())));
-                } catch (URISyntaxException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            } else
-                if (InternalAtributes.DATEUPDATE.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                    pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-                } else
-                    if (InternalAtributes.LABEL.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                        StringAttribute str = (StringAttribute) pAttr.getValue();
-                        pData.setLabel(str.getValue());
-                    } else
-                        if (InternalAtributes.DESCRIPTION
-                                .equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                            StringAttribute str = (StringAttribute) pAttr.getValue();
-                            pData.setDescription(str.getValue());
-                        }
+        } else if (InternalAttributes.RAWDATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            if (pData.getFiles() == null) {
+                pData.setFiles(new ArrayList<>());
+            }
+            try {
+                DataType type = InternalAttributes.RAWDATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
+                DataFile dataFile = new DataFile();
+                dataFile.setDataType(type);
+                dataFile.setFileRef(new URI(str.getValue()));
+                pData.getFiles().add(dataFile);
+            } catch (URISyntaxException e) {
+                LOG.error(e.getMessage(), e);
+            }
+        } else if (InternalAttributes.DATEUPDATE.equals(internalAt)) {
+            pData.setLastUpdate((LocalDateTime) pAttr.getValue());
+        } else if (InternalAttributes.LABEL.equals(internalAt)) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            pData.setLabel(str.getValue());
+        } else {
+            LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
+        }
     }
 
     /**
      * Build the select clause with the {@link List} of columns used for the mapping.
-     * 
+     *
      * @param pColumns
      *            the comulns used for the mapping
      * @return a {@link String} withe the columns separated by a comma
@@ -462,7 +459,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Replace a the key word '%last_modification_date%' in the request to get the data from a date
-     * 
+     *
      * @param pRequest
      *            the SQL request
      * @param pDate
@@ -482,12 +479,13 @@ public abstract class AbstractDataObjectMapping {
 
         // Search the attribute used to get the new data
         mappingInternalAttributes.forEach((name, intAttr) -> {
-            if (intAttr.equals(InternalAtributes.DATEUPDATE))
+            if (intAttr.equals(InternalAttributes.DATEUPDATE)) {
                 dateAttribute = name;
+            }
             LOG.debug("find the attribute for date comparaison :" + name);
         });
 
-        // Any attribute is defined in the mapping for compare the date, return 
+        // Any attribute is defined in the mapping for compare the date, return
         if (dateAttribute.isEmpty()) {
             return pRequest;
         }
@@ -513,7 +511,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
      * representation to a {@link List} of {@link DataSourceAttributeMapping}.
-     * 
+     *
      * @param pModelJson
      *            the mapping in JSon format
      */
@@ -552,20 +550,16 @@ public abstract class AbstractDataObjectMapping {
         for (DataSourceAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
             if (isLabel(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.LABEL);
-            } else
-                if (isRawData(attrMapping.getNameSpace())) {
-                    mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.RAWDATA);
-                } else
-                    if (isThumbnail(attrMapping.getNameSpace())) {
-                        mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.THUMBNAIL);
-                    } else
-                        if (isLastDateUpdate(attrMapping.getNameSpace())) {
-                            mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.DATEUPDATE);
-                        } else
-                            if (isDescription(attrMapping.getNameSpace())) {
-                                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.DESCRIPTION);
-                            }
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
+            } else if (isRawData(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
+            } else if (isThumbnail(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
+            } else if (isLastDateUpdate(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
+            } else if (isDescription(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);
+            }
         }
     }
 
@@ -604,8 +598,9 @@ public abstract class AbstractDataObjectMapping {
 
     private boolean isLastDateUpdate(String pNamespace) {
         boolean isLastUpdate = false;
-        if (pNamespace == null)
+        if (pNamespace == null) {
             return false;
+        }
 
         // TODO CMZ à revoir c'est temporaire
         isLastUpdate = pNamespace.contains("LAST_UPDATE_DATE");
@@ -616,7 +611,7 @@ public abstract class AbstractDataObjectMapping {
         return isLastUpdate;
     }
 
-    private enum InternalAtributes {
+    private enum InternalAttributes {
         /**
          * Identify attribute for the last update attribute
          */
