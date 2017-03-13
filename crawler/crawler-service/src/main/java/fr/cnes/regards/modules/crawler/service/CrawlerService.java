@@ -146,6 +146,7 @@ public class CrawlerService implements ICrawlerService {
             for (String tenant : tenantResolver.getAllTenants()) {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
+                    LOGGER.info("-------- Forcing tenant : " + tenant + " -------------");
                     // Try to poll an entity event on this tenant
                     atLeastOnPoll |= self.doPoll();
                 } catch (RuntimeException t) {
