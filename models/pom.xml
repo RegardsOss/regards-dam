@@ -17,15 +17,20 @@
 	</parent>
 
 	<modules>
+		<module>models-client</module>
 		<module>models-dao</module>
 		<module>models-domain</module>
 		<module>models-rest</module>
 		<module>models-service</module>
-		<module>models-signature</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-dao</artifactId>
@@ -44,11 +49,6 @@
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-service</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.models</groupId>
-				<artifactId>models-signature</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
