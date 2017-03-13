@@ -145,10 +145,10 @@ public class IndexerServiceDataSourceIT {
 
         // Connection PluginConf
         dBConnectionConf = getOracleConnectionConfiguration();
+        pluginService.savePluginConfiguration(dBConnectionConf);
+
         DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
         Assume.assumeTrue(dbCtx.testConnection());
-
-        pluginService.savePluginConfiguration(dBConnectionConf);
 
         // DataSource PluginConf
         dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
@@ -159,12 +159,21 @@ public class IndexerServiceDataSourceIT {
     @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
-        Utils.execute(entityRepos::delete, dataset1.getId());
-
-        Utils.execute(modelService::deleteModel, datasetModel.getId());
-        Utils.execute(modelService::deleteModel, dataModel.getId());
-        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
-        Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
+        if (dataset1 != null) {
+            Utils.execute(entityRepos::delete, dataset1.getId());
+        }
+        if (datasetModel != null) {
+            Utils.execute(modelService::deleteModel, datasetModel.getId());
+        }
+        if (dataModel != null) {
+            Utils.execute(modelService::deleteModel, dataModel.getId());
+        }
+        if (dataSourcePluginConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
+        }
+        if (dBConnectionConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
+        }
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {

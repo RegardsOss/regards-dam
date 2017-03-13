@@ -92,6 +92,7 @@ public class CrawlerServiceTest {
 
     @Before
     public void tearUp() throws DataSourcesPluginException, PluginUtilsException, SQLException {
+        // This Tenant (default) isn't in "regards.tenants" so crawlerService will never poll associated events
         tenantResolver.forceTenant(TENANT);
         /*
          * Initialize the DataSourceAttributeMapping
