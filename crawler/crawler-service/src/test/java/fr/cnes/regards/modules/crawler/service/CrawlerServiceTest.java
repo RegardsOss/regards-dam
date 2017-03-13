@@ -28,6 +28,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -86,8 +87,13 @@ public class CrawlerServiceTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
     @Before
     public void tearUp() throws DataSourcesPluginException, PluginUtilsException, SQLException {
+        // This Tenant (default) isn't in "regards.tenants" so crawlerService will never poll associated events
+        tenantResolver.forceTenant(TENANT);
         /*
          * Initialize the DataSourceAttributeMapping
          */
