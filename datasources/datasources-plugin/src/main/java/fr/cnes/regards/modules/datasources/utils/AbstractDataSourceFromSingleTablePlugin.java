@@ -36,10 +36,8 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceFromSingleTablePlugin.class);
 
-    /**
-     * A comma used to build the select clause
-     */
-    protected static final String COMMA = ",";
+    protected static final String AND = " AND ", COMMA = ", ", LIMIT = "LIMIT", ORDER_BY = "ORDER", SPACE = " ",
+            WHERE = " WHERE ";
 
     /**
      * The description of the {@link Table} used by this {@link Plugin} to requests the database.
@@ -97,12 +95,51 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return outDated;
     }
 
-    protected String getSelectRequest(Pageable pPageable) {
-        return sqlGenerator.selectAll(tableDescription, pPageable);
+    /**
+     * Build the SELECT request.</br>
+     * Add the key word "%last_modification_date%" in the WHERE clause.
+     * 
+     * @param pPageable
+     * 
+     * @param pDate
+     * 
+     * @return the SELECT request
+     */
+    protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
+        String selectRequest = sqlGenerator.selectAll(tableDescription, pPageable);
+
+        if (pDate != null) {
+
+            if (selectRequest.contains(WHERE)) {
+                // Add at the beginning of the where clause
+                int pos = selectRequest.indexOf(WHERE);
+                selectRequest = selectRequest.substring(0, pos) + WHERE + this.keywordLastModificationDate + AND
+                        + selectRequest.substring(pos + WHERE.length(), selectRequest.length());
+            } else if (selectRequest.contains(ORDER_BY)) {
+                // Add before the order by clause
+                int pos = selectRequest.indexOf(ORDER_BY);
+                selectRequest = selectRequest.substring(0, pos) + WHERE + this.keywordLastModificationDate + SPACE
+                        + selectRequest.substring(pos, selectRequest.length());
+            } else if (selectRequest.contains(LIMIT)) {
+                // Add before the limit clause
+                int pos = selectRequest.indexOf(LIMIT);
+                selectRequest = selectRequest.substring(0, pos) + WHERE + this.keywordLastModificationDate + SPACE
+                        + selectRequest.substring(pos, selectRequest.length());
+            } else {
+                // Add at the end of the request
+                selectRequest += WHERE + this.keywordLastModificationDate;
+            }
+        }
+
+        return selectRequest;
     }
 
-    protected String getCountRequest() {
-        return sqlGenerator.count(tableDescription);
+    protected String getCountRequest(LocalDateTime pDate) {
+        if (pDate == null) {
+            return sqlGenerator.count(tableDescription);
+        } else {
+            return sqlGenerator.count(tableDescription) + WHERE + this.keywordLastModificationDate;
+        }
     }
 
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
@@ -114,8 +151,8 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
             LOG.error("the sqlGenerator is null");
             return null;
         }
-        final String selectRequest = getSelectRequest(pPageable);
-        final String countRequest = getCountRequest();
+        final String selectRequest = getSelectRequest(pPageable, pDate);
+        final String countRequest = getCountRequest(pDate);
 
         LOG.debug("select request :" + selectRequest);
         LOG.debug("count  request :" + countRequest);
