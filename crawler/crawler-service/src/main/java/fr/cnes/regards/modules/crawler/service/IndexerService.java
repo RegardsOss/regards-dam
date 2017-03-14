@@ -4,15 +4,20 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.crawler.dao.IEsRepository;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.SearchKey;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
@@ -82,23 +87,31 @@ public class IndexerService implements IIndexerService {
     }
 
     @Override
-    public Map<String, Throwable> saveBulkEntities(String pIndex, IIndexable... pEntities) {
+    public int saveBulkEntities(String pIndex, IIndexable... pEntities) {
         return repository.saveBulk(pIndex, pEntities);
     }
 
     @Override
-    public Map<String, Throwable> saveBulkEntities(String pIndex, Collection<? extends IIndexable> pEntities) {
+    public int saveBulkEntities(String pIndex, Collection<? extends IIndexable> pEntities) {
         return repository.saveBulk(pIndex, pEntities);
     }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion criterion) {
-        return repository.search(pIndex, pClass, pPageSize, criterion);
+    public <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
+            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
+        return repository.search(searchKey, pPageRequest, pCriterion, pFacetsMap, pAscSortMap);
     }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion) {
-        return repository.search(pIndex, pClass, pPageRequest, criterion);
+    public <T> Page<T> search(SearchKey<T> searchKey, Pageable pageRequest, ICriterion pCriterion,
+            String pSourceAttribute) {
+        List<T> objects = repository.search(searchKey, pCriterion, pSourceAttribute);
+        int total = objects.size();
+        if (!objects.isEmpty()) {
+            objects = objects.subList(pageRequest.getOffset(),
+                                      Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
+        }
+        return new PageImpl<>(objects, pageRequest, total);
     }
 
     @Override
