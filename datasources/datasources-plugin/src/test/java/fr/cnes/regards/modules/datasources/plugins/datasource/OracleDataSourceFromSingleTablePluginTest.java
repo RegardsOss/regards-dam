@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -123,6 +124,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     @Test
     public void getDataSourceIntrospection() throws SQLException {
+        LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
@@ -176,8 +178,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING,
                 "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new DataSourceAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
-                Types.DECIMAL));
+        attributes.add(new DataSourceAttributeMapping("START_DATE", "LAST_UPDATE_DATE:date début",
+                AttributeType.DATE_ISO8601, "START_DATE", Types.DECIMAL));
         attributes.add(new DataSourceAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE",
                 Types.DECIMAL));
         attributes.add(new DataSourceAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,

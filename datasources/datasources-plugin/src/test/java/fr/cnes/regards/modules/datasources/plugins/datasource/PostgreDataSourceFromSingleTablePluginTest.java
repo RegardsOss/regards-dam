@@ -32,7 +32,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -62,11 +61,11 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
+    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+
     private static final String TENANT = "PGDB_TENANT";
 
     private static final String HELLO = "Hello Toulouse";
-
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
@@ -100,13 +99,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     IDataSourceRepositoryTest repository;
 
     /**
-     * Resolve tenant at runtime
-     */
-    @Autowired
-    private IRuntimeTenantResolver runtimeTenantResolver;
-
-    /**
-     * Initialize the plugin's parameter
+     * Populate the datasource as a legacy catalog
      *
      * @throws DataSourcesPluginException
      * @throws SQLException
@@ -116,9 +109,6 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      */
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException {
-
-        runtimeTenantResolver.forceTenant("DEFAULT");
-
         /*
          * Add data to the data source
          */
@@ -127,7 +117,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
                 LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
                 OffsetDateTime.now().minusMinutes(33), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
-                LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(35), LocalDateTime.now().plusHours(33),
+                LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10), LocalDateTime.now().plusHours(33),
                 OffsetDateTime.now().minusSeconds(22), true));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
@@ -137,10 +127,10 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        buildModelAttributes();
+        this.buildModelAttributes();
 
         /*
-         * Instantiate the SQL DataSource plugin
+         * Instantiate the data source plugin
          */
         List<PluginParameter> parameters;
         try {
@@ -171,6 +161,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     public void getDataSourceIntrospection() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 
+        // Get first page
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(2, ll.getContent().size());
@@ -185,6 +176,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
         ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
 
+        // Get second page
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
@@ -200,6 +192,36 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
     }
 
+    @Test
+    public void getDataSourceIntrospectionFromPastDate() throws SQLException {
+        Assert.assertEquals(nbElements, repository.count());
+
+        LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(1, ll.getContent().size());
+
+        ll.getContent().get(0).getProperties().forEach(attr -> {
+            if (attr.getName().equals("name")) {
+                Assert.assertTrue(attr.getValue().toString().contains(HELLO));
+            }
+        });
+
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
+    }
+
+    @Test
+    public void getDataSourceIntrospectionFromFutureDate() throws SQLException {
+        Assert.assertEquals(nbElements, repository.count());
+
+        LocalDateTime ldt = LocalDateTime.now().plusSeconds(10);
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
+        Assert.assertNotNull(ll);
+        Assert.assertEquals(0, ll.getContent().size());
+    }
+
     @After
     public void erase() {
         // repository.deleteAll();
@@ -207,7 +229,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
-     * database.
+     * database
      *
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
@@ -231,8 +253,9 @@ public class PostgreDataSourceFromSingleTablePluginTest {
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
         attributes
-                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "-'||label as label"));
-        attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
+                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "- '||label as label"));
+        attributes
+                .add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DataSourceAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
@@ -240,8 +263,9 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
         attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
-        attributes.add(new DataSourceAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone", Types.TIMESTAMP));
+        // TODO CMZ à revoir namespace ci-dessous
+        attributes.add(new DataSourceAttributeMapping("dateUpdate", "LAST_UPDATE_DATE:hello",
+                AttributeType.DATE_ISO8601, "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

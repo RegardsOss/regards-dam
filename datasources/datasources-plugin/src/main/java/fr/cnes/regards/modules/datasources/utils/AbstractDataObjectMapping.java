@@ -113,7 +113,10 @@ public abstract class AbstractDataObjectMapping {
      */
     private int nbItems = RESET_COUNT;
 
-    String dateAttribute = "";
+    /**
+     * The attribute name used for the date comparison
+     */
+    private String dateAttributeName = "";
 
     /**
      * For each attributes of the data source, this map contains an optional internal attribute type
@@ -176,23 +179,25 @@ public abstract class AbstractDataObjectMapping {
 
         try (Statement statement = pConn.createStatement()) {
 
+            String selectRequest = pSelectRequest;
+            String countRequest = pCountRequest;
+
             // for each attributes to read, defines the REGARDS internal attributes corresponding
             initMappingInternalAttributes();
 
             if (pDate != null) {
-                pSelectRequest = buildDateStatement(pSelectRequest, pDate);
-                pCountRequest = buildDateStatement(pCountRequest, pDate);
+                selectRequest = buildDateStatement(selectRequest, pDate);
+                countRequest = buildDateStatement(countRequest, pDate);
             }
 
             // Execute the request to get the elements
-            try (ResultSet rs = statement.executeQuery(pSelectRequest)) {
-
+            try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
                     dataObjects.add(processResultSet(pTenant, rs));
                 }
             }
 
-            countItems(statement, pCountRequest);
+            countItems(statement, countRequest);
 
             statement.close();
         } catch (SQLException e) {
@@ -416,33 +421,28 @@ public abstract class AbstractDataObjectMapping {
             String val = pAttr.getValue().toString();
             pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
-        } else
-            if (InternalAtributes.RAWDATA.equals(mappingInternalAttributes.get(pAttrMapping.getName()))
-                    || InternalAtributes.THUMBNAIL.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                StringAttribute str = (StringAttribute) pAttr.getValue();
-                if (pData.getFiles() == null) {
-                    pData.setFiles(new ArrayList<>());
-                }
-                try {
-                    DataType type = mappingInternalAttributes.get(pAttrMapping.getName())
-                            .equals(InternalAtributes.RAWDATA) ? DataType.RAWDATA : DataType.THUMBNAIL;
-                    pData.getFiles().add(new Data(type, new URI(str.getValue())));
-                } catch (URISyntaxException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            } else
-                if (InternalAtributes.DATEUPDATE.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                    pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-                } else
-                    if (InternalAtributes.LABEL.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                        StringAttribute str = (StringAttribute) pAttr.getValue();
-                        pData.setLabel(str.getValue());
-                    } else
-                        if (InternalAtributes.DESCRIPTION
-                                .equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
-                            StringAttribute str = (StringAttribute) pAttr.getValue();
-                            pData.setDescription(str.getValue());
-                        }
+        } else if (InternalAtributes.RAWDATA.equals(mappingInternalAttributes.get(pAttrMapping.getName()))
+                || InternalAtributes.THUMBNAIL.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            if (pData.getFiles() == null) {
+                pData.setFiles(new ArrayList<>());
+            }
+            try {
+                DataType type = mappingInternalAttributes.get(pAttrMapping.getName()).equals(InternalAtributes.RAWDATA)
+                        ? DataType.RAWDATA : DataType.THUMBNAIL;
+                pData.getFiles().add(new Data(type, new URI(str.getValue())));
+            } catch (URISyntaxException e) {
+                LOG.error(e.getMessage(), e);
+            }
+        } else if (InternalAtributes.DATEUPDATE.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
+            pData.setLastUpdate((LocalDateTime) pAttr.getValue());
+        } else if (InternalAtributes.LABEL.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            pData.setLabel(str.getValue());
+        } else if (InternalAtributes.DESCRIPTION.equals(mappingInternalAttributes.get(pAttrMapping.getName()))) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            pData.setDescription(str.getValue());
+        }
     }
 
     /**
@@ -461,7 +461,7 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Replace a the key word '%last_modification_date%' in the request to get the data from a date
+     * Replace the key word '%last_modification_date%' in the request to get the data from a date
      * 
      * @param pRequest
      *            the SQL request
@@ -482,13 +482,14 @@ public abstract class AbstractDataObjectMapping {
 
         // Search the attribute used to get the new data
         mappingInternalAttributes.forEach((name, intAttr) -> {
-            if (intAttr.equals(InternalAtributes.DATEUPDATE))
-                dateAttribute = name;
+            if (intAttr.equals(InternalAtributes.DATEUPDATE)) {
+                dateAttributeName = name;
+            }
             LOG.debug("find the attribute for date comparaison :" + name);
         });
 
-        // Any attribute is defined in the mapping for compare the date, return 
-        if (dateAttribute.isEmpty()) {
+        // Any attribute is defined in the mapping for compare the date, return
+        if (dateAttributeName.isEmpty()) {
             return pRequest;
         }
 
@@ -499,7 +500,7 @@ public abstract class AbstractDataObjectMapping {
         } else {
             return pRequest
                     .replaceAll(keywordLastModificationDate,
-                                dateAttribute + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "'");
+                                dateAttributeName + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "'");
         }
     }
 
@@ -553,19 +554,15 @@ public abstract class AbstractDataObjectMapping {
 
             if (isLabel(attrMapping.getNameSpace())) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.LABEL);
-            } else
-                if (isRawData(attrMapping.getNameSpace())) {
-                    mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.RAWDATA);
-                } else
-                    if (isThumbnail(attrMapping.getNameSpace())) {
-                        mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.THUMBNAIL);
-                    } else
-                        if (isLastDateUpdate(attrMapping.getNameSpace())) {
-                            mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.DATEUPDATE);
-                        } else
-                            if (isDescription(attrMapping.getNameSpace())) {
-                                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.DESCRIPTION);
-                            }
+            } else if (isRawData(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.RAWDATA);
+            } else if (isThumbnail(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.THUMBNAIL);
+            } else if (isLastDateUpdate(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.DATEUPDATE);
+            } else if (isDescription(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAtributes.DESCRIPTION);
+            }
         }
     }
 
@@ -573,7 +570,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isDescription(String pNamespace) {
         boolean isDescr = false;
         if (isDescr) {
-            LOG.debug("a description");
+            LOG.debug("found a description");
         }
         return isDescr;
     }
@@ -581,7 +578,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isLabel(String pNamespace) {
         boolean isLabel = false;
         if (isLabel) {
-            LOG.debug("a label");
+            LOG.debug("found a label");
         }
         return isLabel;
     }
@@ -589,7 +586,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isRawData(String pNamespace) {
         boolean isRawData = false;
         if (isRawData) {
-            LOG.debug("a raw data");
+            LOG.debug("found a raw data");
         }
         return isRawData;
     }
@@ -597,7 +594,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isThumbnail(String pNamespace) {
         boolean isThumbnail = false;
         if (isThumbnail) {
-            LOG.debug("a thumbnail");
+            LOG.debug("found a thumbnail");
         }
         return isThumbnail;
     }
@@ -610,7 +607,7 @@ public abstract class AbstractDataObjectMapping {
         // TODO CMZ à revoir c'est temporaire
         isLastUpdate = pNamespace.contains("LAST_UPDATE_DATE");
         if (isLastUpdate) {
-            LOG.debug("a last update");
+            LOG.debug("found a last update");
         }
 
         return isLastUpdate;
