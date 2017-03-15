@@ -158,7 +158,6 @@ public class IndexerServiceDataSourceIT {
         // DataSource PluginConf
         dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
-
     }
 
     @After
