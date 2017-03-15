@@ -11,7 +11,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -76,7 +75,9 @@ public class OracleConnectionPluginTest {
                 .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
         Assert.assertNotNull(sqlConn);
-        Assert.assertTrue(sqlConn.testConnection());
+
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(sqlConn.testConnection());
     }
 
     @Test
@@ -185,7 +186,6 @@ public class OracleConnectionPluginTest {
         conn4.close();
         conn5.close();
         conn6.close();
-
     }
 
     private List<PluginParameter> getOracleParameters() throws PluginUtilsException {

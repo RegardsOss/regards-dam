@@ -28,6 +28,7 @@ import com.google.gson.GsonBuilder;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.SearchKey;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 
 /**
@@ -207,8 +208,8 @@ public class EsRepositoryTest {
 
         // remove failed item
         list.remove(2);
-        final Map<String, Throwable> errorMap = repository.saveBulk("bulktest", list);
-        Assert.assertNull(errorMap);
+        int savedItemsCount = repository.saveBulk("bulktest", list);
+        Assert.assertEquals(list.size(), savedItemsCount);
 
         // If someone could find a case when a document save failed...Don't hesitate to talk it to me
     }
@@ -259,7 +260,8 @@ public class EsRepositoryTest {
         }
         final AtomicInteger i = new AtomicInteger(0);
         long start = System.currentTimeMillis();
-        repository.searchAll("loading", Item.class, h -> i.getAndIncrement(), ICriterion.all());
+        SearchKey<Item> searchKey = new SearchKey<>("loading", null, Item.class);
+        repository.searchAll(searchKey, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
     }

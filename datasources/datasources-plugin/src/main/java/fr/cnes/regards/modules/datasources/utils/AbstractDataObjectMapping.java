@@ -113,7 +113,10 @@ public abstract class AbstractDataObjectMapping {
      */
     private int nbItems = RESET_COUNT;
 
-    String dateAttribute = "";
+    /**
+     * The attribute name used for the date comparison
+     */
+    private String dateAttributeName = "";
 
     /**
      * For each attributes of the data source, this map contains an optional internal attribute type
@@ -176,23 +179,25 @@ public abstract class AbstractDataObjectMapping {
 
         try (Statement statement = pConn.createStatement()) {
 
+            String selectRequest = pSelectRequest;
+            String countRequest = pCountRequest;
+
             // for each attributes to read, defines the REGARDS internal attributes corresponding
             initMappingInternalAttributes();
 
             if (pDate != null) {
-                pSelectRequest = buildDateStatement(pSelectRequest, pDate);
-                pCountRequest = buildDateStatement(pCountRequest, pDate);
+                selectRequest = buildDateStatement(selectRequest, pDate);
+                countRequest = buildDateStatement(countRequest, pDate);
             }
 
             // Execute the request to get the elements
-            try (ResultSet rs = statement.executeQuery(pSelectRequest)) {
-
+            try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
                     dataObjects.add(processResultSet(pTenant, rs));
                 }
             }
 
-            countItems(statement, pCountRequest);
+            countItems(statement, countRequest);
 
             statement.close();
         } catch (SQLException e) {
@@ -458,7 +463,7 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Replace a the key word '%last_modification_date%' in the request to get the data from a date
+     * Replace the key word '%last_modification_date%' in the request to get the data from a date
      *
      * @param pRequest
      *            the SQL request
@@ -480,13 +485,13 @@ public abstract class AbstractDataObjectMapping {
         // Search the attribute used to get the new data
         mappingInternalAttributes.forEach((name, intAttr) -> {
             if (intAttr.equals(InternalAttributes.DATEUPDATE)) {
-                dateAttribute = name;
+                dateAttributeName = name;
             }
             LOG.debug("find the attribute for date comparaison :" + name);
         });
 
         // Any attribute is defined in the mapping for compare the date, return
-        if (dateAttribute.isEmpty()) {
+        if (dateAttributeName.isEmpty()) {
             return pRequest;
         }
 
@@ -497,7 +502,7 @@ public abstract class AbstractDataObjectMapping {
         } else {
             return pRequest
                     .replaceAll(keywordLastModificationDate,
-                                dateAttribute + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "'");
+                                dateAttributeName + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "'");
         }
     }
 
@@ -567,7 +572,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isDescription(String pNamespace) {
         boolean isDescr = false;
         if (isDescr) {
-            LOG.debug("a description");
+            LOG.debug("found a description");
         }
         return isDescr;
     }
@@ -575,7 +580,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isLabel(String pNamespace) {
         boolean isLabel = false;
         if (isLabel) {
-            LOG.debug("a label");
+            LOG.debug("found a label");
         }
         return isLabel;
     }
@@ -583,7 +588,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isRawData(String pNamespace) {
         boolean isRawData = false;
         if (isRawData) {
-            LOG.debug("a raw data");
+            LOG.debug("found a raw data");
         }
         return isRawData;
     }
@@ -591,7 +596,7 @@ public abstract class AbstractDataObjectMapping {
     private boolean isThumbnail(String pNamespace) {
         boolean isThumbnail = false;
         if (isThumbnail) {
-            LOG.debug("a thumbnail");
+            LOG.debug("found a thumbnail");
         }
         return isThumbnail;
     }
@@ -605,7 +610,7 @@ public abstract class AbstractDataObjectMapping {
         // TODO CMZ à revoir c'est temporaire
         isLastUpdate = pNamespace.contains("LAST_UPDATE_DATE");
         if (isLastUpdate) {
-            LOG.debug("a last update");
+            LOG.debug("found a last update");
         }
 
         return isLastUpdate;

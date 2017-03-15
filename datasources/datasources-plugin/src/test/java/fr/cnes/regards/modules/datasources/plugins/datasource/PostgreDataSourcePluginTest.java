@@ -65,13 +65,7 @@ public class PostgreDataSourcePluginTest {
 
     private static final String TENANT = "PG_TENANT";
 
-    private static final String HELLO = "Hello ";
-
-    /**
-     * JPA Repository
-     */
-    @Autowired
-    IDataSourceRepositoryTest repository;
+    private static final String HELLO = "Hello Toulouse";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -88,13 +82,19 @@ public class PostgreDataSourcePluginTest {
     @Value("${postgresql.datasource.password}")
     private String dbPassword;
 
-    private IDataSourcePlugin plgDataSource;
+    private IDataSourcePlugin plgDBDataSource;
 
     private DataSourceModelMapping modelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     private static int nbElements;
+
+    /**
+     * JPA Repository
+     */
+    @Autowired
+    IDataSourceRepositoryTest repository;
 
     /**
      * Populate the datasource as a legacy catalog
@@ -134,7 +134,7 @@ public class PostgreDataSourcePluginTest {
         try {
             parameters = PluginParametersFactory.build()
                     .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
-                                                     getPostGreSqlConnectionConfiguration())
+                                                     getPostgreConnectionConfiguration())
                     .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from T_TEST_PLUGIN_DATA_SOURCE")
                     .getParameters();
@@ -143,14 +143,14 @@ public class PostgreDataSourcePluginTest {
         }
 
         try {
-            plgDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+            plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
+                                                    Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         } catch (PluginUtilsException e) {
             throw new DataSourcesPluginException(e.getMessage());
         }
 
         // Do not launch tests is Database is not available
-        Assume.assumeTrue(plgDataSource.getDBConnection().testConnection());
+        Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
     }
 
     @Test
@@ -159,7 +159,7 @@ public class PostgreDataSourcePluginTest {
     public void getDataSourceIntrospection() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 
-        Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10));
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10));
         Assert.assertNotNull(ll);
         Assert.assertEquals(nbElements, ll.getContent().size());
 
@@ -179,7 +179,7 @@ public class PostgreDataSourcePluginTest {
         Assert.assertEquals(nbElements, repository.count());
 
         LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
-        Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
 
@@ -199,7 +199,7 @@ public class PostgreDataSourcePluginTest {
         Assert.assertEquals(nbElements, repository.count());
 
         LocalDateTime ldt = LocalDateTime.now().plusSeconds(10);
-        Page<DataObject> ll = plgDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
         Assert.assertNotNull(ll);
         Assert.assertEquals(0, ll.getContent().size());
     }
@@ -216,7 +216,7 @@ public class PostgreDataSourcePluginTest {
      * @return the {@link PluginConfiguration}
      * @throws PluginUtilsException
      */
-    private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostgreConnectionConfiguration() throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
