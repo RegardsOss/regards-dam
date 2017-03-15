@@ -31,38 +31,18 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourcePlugin.class);
 
-    /**
-     * The string used to add the pagination information in PostGreSql
-     */
-    protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
+    protected static final String SELECT = "SELECT ", WHERE = " WHERE ", COMMA = ", ",
+            SELECT_COUNT = "SELECT COUNT(*) ", AS = "as", LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
-    /**
-     * The PL/SQL key word SELECT
-     */
-    protected static final String SELECT = "SELECT ";
+    public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
 
-    /**
-     * The PL/SQL expression SELECT COUNt(*)
-     */
-    protected static final String SELECT_COUNT = "SELECT COUNT(*) ";
-
-    /**
-     * The PL/SQL key word AS
-     */
-    protected static final String AS = "as";
-
-    /**
-     * A comma used to build the select clause
-     */
-    protected static final String COMMA = ",";
-
-    protected abstract IDBConnectionPlugin getDBConnectionPlugin();
-
+    // TODO CMZ à voir si utile, sinon à virer
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
     }
 
+    // TODO CMZ à voir si utile, sinon à virer
     public boolean isOutOfDate() {
         boolean outDated = true;
 
@@ -77,12 +57,24 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     protected abstract String getFromClause();
 
-    protected String getSelectRequest(Pageable pPageable) {
-        return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + buildLimitPart(pPageable);
+    protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
+        if (pDate != null) {
+            return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + WHERE
+                    + this.keywordLastModificationDate + buildLimitPart(pPageable);
+        } else {
+            return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause()
+                    + buildLimitPart(pPageable);
+        }
     }
 
-    protected String getCountRequest() {
-        return SELECT_COUNT + getFromClause();
+    protected String getCountRequest(LocalDateTime pDate) {
+        if (pDate != null) {
+            return SELECT_COUNT + getFromClause() + WHERE + this.keywordLastModificationDate;
+
+        } else {
+            return SELECT_COUNT + getFromClause();
+        }
+
     }
 
     /**
@@ -103,19 +95,17 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      * @return
      */
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
-        final String selectRequest = getSelectRequest(pPageable);
-        final String countRequest = getCountRequest();
+
+        final String selectRequest = getSelectRequest(pPageable, pDate);
+        final String countRequest = getCountRequest(pDate);
 
         LOG.debug("select request :" + selectRequest);
         LOG.debug("count request :" + countRequest);
 
-        try (Connection conn = getDBConnectionPlugin().getConnection()) {
+        try (Connection conn = getDBConnection().getConnection()) {
 
-            Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
+            return findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
 
-            conn.close();
-
-            return pages;
         } catch (SQLException e) {
             LOG.error("Unable to obtain a database connection.", e);
             return null;

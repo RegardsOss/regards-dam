@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -31,7 +32,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
-@Ignore
 public class OracleConnectionPluginIntrospectionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleConnectionPluginIntrospectionTest.class);
@@ -51,23 +51,17 @@ public class OracleConnectionPluginIntrospectionTest {
     private String dbUser;
 
     @Value("${oracle.datasource.password}")
-    private String dbPpassword;
+    private String dbPassword;
 
     private DefaultOracleConnectionPlugin oracleDBConn;
 
     @Before
     public void setUp() throws PluginUtilsException {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        oracleDBConn = PluginUtils.getPlugin(parameters, DefaultOracleConnectionPlugin.class,
+        oracleDBConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
                                              Arrays.asList(PLUGIN_PACKAGE));
+
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(oracleDBConn.testConnection());
     }
 
     @Test
@@ -87,9 +81,21 @@ public class OracleConnectionPluginIntrospectionTest {
         Assert.assertNotNull(tables);
         Assert.assertTrue(!tables.isEmpty());
 
-        // Map<String, Column> columns = oracleDBConn.getColumns(tables.get(TABLE_NAME_TEST));
-        // Assert.assertNotNull(columns);
-        // Assert.assertEquals(7, columns.size());
+        Map<String, Column> columns = oracleDBConn.getColumns(tables.get("T_ENTITY").getName());
+        Assert.assertNotNull(columns);
+        Assert.assertEquals(6, columns.size());
+    }
+
+    private List<PluginParameter> getOracleParameters() throws PluginUtilsException {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
+                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+        return parameters;
     }
 
 }

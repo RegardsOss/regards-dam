@@ -5,6 +5,7 @@
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -23,7 +24,7 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     /**
-     * The max size of the pool  
+     * The max size of the pool
      */
     static final String MAX_POOLSIZE_PARAM = "maxPoolSize";
 
@@ -36,8 +37,11 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
      * Retrieve a {@link Connection} to a database
      * 
      * @return the {@link Connection}
+     * 
+     * @throws SQLException
+     *             the {@link Connection} is not available
      */
-    Connection getConnection();
+    Connection getConnection() throws SQLException;
 
     /**
      * Requests the database to get the tables of a data source.

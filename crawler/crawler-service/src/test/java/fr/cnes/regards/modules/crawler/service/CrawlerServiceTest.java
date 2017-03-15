@@ -1,16 +1,16 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -28,6 +27,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -46,7 +46,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@DirtiesContext // because there are 2 Configuration classes in package
 public class CrawlerServiceTest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceTest.class);
@@ -87,8 +86,13 @@ public class CrawlerServiceTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
     @Before
-    public void tearUp() throws DataSourcesPluginException, PluginUtilsException {
+    public void tearUp() throws DataSourcesPluginException, PluginUtilsException, SQLException {
+        // This Tenant (default) isn't in "regards.tenants" so crawlerService will never poll associated events
+        tenantResolver.forceTenant(TENANT);
         /*
          * Initialize the DataSourceAttributeMapping
          */
@@ -112,13 +116,14 @@ public class CrawlerServiceTest {
             throw new DataSourcesPluginException(e.getMessage());
         }
 
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(dsPlugin.getDBConnection().testConnection());
     }
 
     @After
     public void tearDown() throws Exception {
     }
 
-    @Ignore
     @Test
     public void testSuckUp() {
         // register JSon data types (for ES)
@@ -132,20 +137,18 @@ public class CrawlerServiceTest {
 
         Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
 
-        LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
+        LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
         Set<DataObject> set = Sets.newHashSet(page.getContent());
         Assert.assertEquals(page.getContent().size(), set.size());
-        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
-        LOGGER.info(String.format("...%d entities saved",
-                                  page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
+        int savedItemsCount = indexerService.saveBulkEntities(TENANT, page.getContent());
+        LOGGER.info("...{} entities saved", savedItemsCount);
         while (page.hasNext()) {
             page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
-            LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-            errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
-            LOGGER.info(String.format("...%d entities saved",
-                                      page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
+            LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
+            savedItemsCount = indexerService.saveBulkEntities(TENANT, page.getContent());
+            LOGGER.info("...{} entities saved", savedItemsCount);
         }
         Assert.assertTrue(true);
     }

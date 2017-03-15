@@ -190,7 +190,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
                                               AttributeBuilder.buildString(crsAtt, crsValue)));
 
-        collection.setAttributes(atts);
+        collection.setProperties(atts);
 
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
@@ -229,7 +229,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
                                               AttributeBuilder.buildString(crsAtt, crsValue)));
 
-        collection.setAttributes(atts);
+        collection.setProperties(atts);
 
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
@@ -265,7 +265,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildObject("notGeo", AttributeBuilder.buildGeometry(coorAtt, coorValue),
                                               AttributeBuilder.buildString(crsAtt, crsValue)));
 
-        collection.setAttributes(atts);
+        collection.setProperties(atts);
 
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
@@ -301,7 +301,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
                                               AttributeBuilder.buildString(crsAtt, "notEarth")));
 
-        collection.setAttributes(atts);
+        collection.setProperties(atts);
 
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 

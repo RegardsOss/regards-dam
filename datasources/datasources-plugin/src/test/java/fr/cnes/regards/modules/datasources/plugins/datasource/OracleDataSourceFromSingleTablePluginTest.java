@@ -3,15 +3,16 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -46,7 +47,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-@Ignore
 public class OracleDataSourceFromSingleTablePluginTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleDataSourceFromSingleTablePluginTest.class);
@@ -82,12 +82,13 @@ public class OracleDataSourceFromSingleTablePluginTest {
      * Initialize the plugin's parameter
      *
      * @throws DataSourcesPluginException
+     * @throws SQLException
      *
      * @throws JwtException
      * @throws PluginUtilsException
      */
     @Before
-    public void setUp() throws DataSourcesPluginException {
+    public void setUp() throws DataSourcesPluginException, SQLException {
 
         /*
          * Initialize the DataSourceAttributeMapping
@@ -117,17 +118,28 @@ public class OracleDataSourceFromSingleTablePluginTest {
             throw new DataSourcesPluginException(e.getMessage());
         }
 
+        // Do not launch tests is Database is not available
+        Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
     }
 
     @Test
-    public void getDataSourceIntrospection() {
+    public void getDataSourceIntrospection() throws SQLException {
+        LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
 
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
+
         ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
+
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
     }
 
     /**
@@ -154,7 +166,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID"));
+        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID", true));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -166,8 +178,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING,
                 "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new DataSourceAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
-                Types.DECIMAL));
+        attributes.add(new DataSourceAttributeMapping("START_DATE", "LAST_UPDATE_DATE:date début",
+                AttributeType.DATE_ISO8601, "START_DATE", Types.DECIMAL));
         attributes.add(new DataSourceAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE",
                 Types.DECIMAL));
         attributes.add(new DataSourceAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,

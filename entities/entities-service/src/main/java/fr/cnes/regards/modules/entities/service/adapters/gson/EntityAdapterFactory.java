@@ -40,7 +40,7 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
     /**
      * attributes
      */
-    private static final String ATTRIBUTE_FIELD_NAME = "attributes";
+    private static final String PROPERTIES_FIELD_NAME = "properties";
 
     public EntityAdapterFactory() {
         super(AbstractEntity.class, "type", true);
@@ -63,10 +63,10 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
         }
 
         JsonObject entity = clone.getAsJsonObject();
-        JsonElement attEl = entity.get(ATTRIBUTE_FIELD_NAME);
+        JsonElement attEl = entity.get(PROPERTIES_FIELD_NAME);
         if ((attEl != null) && !attEl.isJsonNull()) {
             if (attEl.isJsonArray()) {
-                entity.add(ATTRIBUTE_FIELD_NAME, mergeArray(attEl.getAsJsonArray()));
+                entity.add(PROPERTIES_FIELD_NAME, mergeArray(attEl.getAsJsonArray()));
             } else {
                 String errorMessage = String.format("Unexpected JSON element %s. Array required.", clone.toString());
                 LOGGER.error(errorMessage);
@@ -85,10 +85,10 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
         }
 
         JsonObject entity = pJsonElement.getAsJsonObject();
-        JsonElement attEl = entity.get(ATTRIBUTE_FIELD_NAME);
+        JsonElement attEl = entity.get(PROPERTIES_FIELD_NAME);
         if (attEl != null) {
             if (attEl.isJsonObject()) {
-                entity.add(ATTRIBUTE_FIELD_NAME, restoreArray(attEl.getAsJsonObject()));
+                entity.add(PROPERTIES_FIELD_NAME, restoreArray(attEl.getAsJsonObject()));
             } else {
                 throw objectRequiredException(attEl);
             }

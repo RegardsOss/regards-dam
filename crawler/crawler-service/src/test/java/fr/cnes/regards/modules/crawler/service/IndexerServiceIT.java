@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -27,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.domain.SearchKey;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -51,10 +50,8 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@DirtiesContext // because there are 2 Configuration classes in package
 public class IndexerServiceIT {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexerServiceIT.class);
 
     private static final String SEARCH = "project_search";
@@ -164,7 +161,7 @@ public class IndexerServiceIT {
                                                                "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
-        collection.setAttributes(attributes);
+        collection.setProperties(attributes);
         collection.setTags(new ImmutableSet.Builder<String>().add("TAG1").add("TAG2").add("TAG3").build());
 
         indexerService.createIndex(tenant);
@@ -173,7 +170,9 @@ public class IndexerServiceIT {
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         List<Collection> singleCollColl = indexerService
-                .search(tenant, Collection.class, 10, ICriterion.eq("attributes.int", 42)).getContent();
+                .search(new SearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
+                        ICriterion.eq("properties.int", 42))
+                .getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
@@ -200,7 +199,7 @@ public class IndexerServiceIT {
             totalCount += count;
             bulkSave(count, collModel);
         }
-        System.out.println(String.format("Index %s should contain %d documents", SEARCH, totalCount));
+        LOGGER.info("Index {} should contain {} documents", SEARCH, totalCount);
 
     }
 
@@ -210,10 +209,9 @@ public class IndexerServiceIT {
             collections.add(createCollection(collModel, i + 1));
         }
         long start = System.currentTimeMillis();
-        Map<String, Throwable> errors = indexerService.saveBulkEntities(SEARCH, collections);
-        System.out.println(String.format("Bulk save (%d collections) : %d ms", collections.size(),
-                                         System.currentTimeMillis() - start));
-        Assert.assertNull(errors);
+        int savedCollCount = indexerService.saveBulkEntities(SEARCH, collections);
+        LOGGER.info("Bulk save ({} collections) : {} ms", collections.size(), System.currentTimeMillis() - start);
+        Assert.assertEquals(collections.size(), savedCollCount);
     }
 
     private Collection createCollection(Model collModel, int i) {
@@ -222,7 +220,7 @@ public class IndexerServiceIT {
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
         attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
-        collection.setAttributes(attributes);
+        collection.setProperties(attributes);
         return collection;
     }
 
@@ -234,18 +232,18 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
         ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
-        Page<? extends AbstractEntity> collPage = indexerService.search(SEARCH, AbstractEntity.class, 10, criterion);
+        SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
+        Page<? extends AbstractEntity> collPage = indexerService.search(searchKey, 10, criterion);
         int count = 0;
         while (true) {
             for (AbstractEntity coll : collPage.getContent()) {
-                System.out.println(coll.toString());
                 count++;
             }
             if (collPage.isLast()) {
                 break;
 
             }
-            collPage = indexerService.search(SEARCH, AbstractEntity.class, collPage.nextPageable(), criterion);
+            collPage = indexerService.search(searchKey, collPage.nextPageable(), criterion);
         }
         Assert.assertEquals(26, count);
     }

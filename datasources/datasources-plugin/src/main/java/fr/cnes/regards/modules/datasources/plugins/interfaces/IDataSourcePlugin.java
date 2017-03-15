@@ -4,12 +4,16 @@
 
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
+import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -44,6 +48,16 @@ public interface IDataSourcePlugin {
     public static final String IS_INTERNAL_PARAM = "internalDataSource";
 
     public static final String TRUE_INTERNAL_DATASOURCE = "true";
+
+    /**
+     * Retrieve the {@link DBConnection} used by the {@link Plugin}
+     * 
+     * @return Retrieve a {@link DBConnection}
+     * 
+     * @throws SQLException
+     *             the {@link Connection} is not available
+     */
+    IDBConnectionPlugin getDBConnection() throws SQLException;
 
     /**
      * The refresh rate of the data source

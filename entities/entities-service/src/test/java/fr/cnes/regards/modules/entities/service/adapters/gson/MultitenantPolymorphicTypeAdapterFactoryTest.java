@@ -154,7 +154,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        Assert.assertEquals(1, parsedCar.getAttributes().size());
+        Assert.assertEquals(1, parsedCar.getProperties().size());
     }
 
     /**
@@ -168,7 +168,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        Assert.assertEquals(1, parsedCar.getAttributes().size());
+        Assert.assertEquals(1, parsedCar.getProperties().size());
 
         // Add new attribute
         addRuntimeRootAttribute(car);
@@ -186,7 +186,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        Assert.assertEquals(2, parsedCar.getAttributes().size());
+        Assert.assertEquals(2, parsedCar.getProperties().size());
     }
 
     /**
@@ -201,7 +201,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        List<AbstractAttribute<?>> attributes = parsedCar.getAttributes();
+        List<AbstractAttribute<?>> attributes = parsedCar.getProperties();
         Assert.assertEquals(2, attributes.size());
 
         List<String> expectedRootAttributes = new ArrayList<>();
@@ -241,7 +241,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        List<AbstractAttribute<?>> attributes = parsedCar.getAttributes();
+        List<AbstractAttribute<?>> attributes = parsedCar.getProperties();
 
         final int expectedSize = 3;
         Assert.assertThat(attributes, Matchers.hasSize(expectedSize));
@@ -286,7 +286,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         description.setValue("test description");
         attributes.add(description);
 
-        car.setAttributes(attributes);
+        car.setProperties(attributes);
         return car;
     }
 
@@ -300,7 +300,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         BooleanAttribute runnable = new BooleanAttribute();
         runnable.setName(DISCRIMINATOR_RUNNABLE);
         runnable.setValue(true);
-        pCar.getAttributes().add(runnable);
+        pCar.getProperties().add(runnable);
     }
 
     /**
@@ -327,7 +327,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         atts.add(coordinate);
         geo.setValue(atts);
 
-        pCar.getAttributes().add(geo);
+        pCar.getProperties().add(geo);
     }
 
     /**
@@ -348,7 +348,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         atts.add(description);
         org.setValue(atts);
 
-        pCar.getAttributes().add(org);
+        pCar.getProperties().add(org);
     }
 
 }

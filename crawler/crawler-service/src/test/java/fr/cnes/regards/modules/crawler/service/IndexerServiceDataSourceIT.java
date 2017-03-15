@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -29,6 +30,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.dao.IEsRepository;
+import fr.cnes.regards.modules.crawler.domain.SearchKey;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -37,6 +40,7 @@ import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTab
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -52,7 +56,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
-@DirtiesContext // because there are 2 Configuration classes in package
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
@@ -116,6 +119,10 @@ public class IndexerServiceDataSourceIT {
 
     private Dataset dataset1;
 
+    private Dataset dataset2;
+
+    private Dataset dataset3;
+
     private PluginConfiguration dBConnectionConf;
 
     @Before
@@ -145,21 +152,41 @@ public class IndexerServiceDataSourceIT {
         dBConnectionConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(dBConnectionConf);
 
+        DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        Assume.assumeTrue(dbCtx.testConnection());
+
         // DataSource PluginConf
         dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
-
     }
 
     @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
-        Utils.execute(entityRepos::delete, dataset1.getId());
+        if (dataset1 != null) {
+            Utils.execute(entityRepos::delete, dataset1.getId());
+        }
+        // Don't use entity service to clean because events are published on RabbitMQ
+        if (dataset2 != null) {
+            Utils.execute(entityRepos::delete, dataset2.getId());
+        }
+        // Don't use entity service to clean because events are published on RabbitMQ
+        if (dataset3 != null) {
+            Utils.execute(entityRepos::delete, dataset3.getId());
+        }
 
-        Utils.execute(modelService::deleteModel, datasetModel.getId());
-        Utils.execute(modelService::deleteModel, dataModel.getId());
-        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
-        Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
+        if (datasetModel != null) {
+            Utils.execute(modelService::deleteModel, datasetModel.getId());
+        }
+        if (dataModel != null) {
+            Utils.execute(modelService::deleteModel, dataModel.getId());
+        }
+        if (dataSourcePluginConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
+        }
+        if (dBConnectionConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
+        }
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
@@ -249,20 +276,37 @@ public class IndexerServiceDataSourceIT {
         indexerService.deleteIndex(tenant);
 
         // Creation
-        crawlerService.ingest(dataSourcePluginConf);
+        int objectsCreationCount = crawlerService.ingest(dataSourcePluginConf);
 
         // Update
-        crawlerService.ingest(dataSourcePluginConf);
+        int objectsMergeCount = crawlerService.ingest(dataSourcePluginConf);
+        Assert.assertEquals(objectsCreationCount, objectsMergeCount);
 
-        dataset1 = new Dataset(datasetModel, tenant, "dataset label");
+        // Create 3 Datasets on all objects
+        dataset1 = new Dataset(datasetModel, tenant, "dataset label 1");
         dataset1.setDataModel(dataModel.getId());
         dataset1.setSubsettingClause(ICriterion.all());
         dataset1.setLicence("licence");
         dataset1.setDataSource(dataSourcePluginConf);
         entityService.create(dataset1);
 
+        dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
+        dataset2.setDataModel(dataModel.getId());
+        dataset2.setSubsettingClause(ICriterion.all());
+        dataset2.setLicence("licence");
+        dataset2.setDataSource(dataSourcePluginConf);
+        entityService.create(dataset2);
+
+        dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
+        dataset3.setDataModel(dataModel.getId());
+        dataset3.setSubsettingClause(ICriterion.all());
+        dataset3.setLicence("licence");
+        dataset3.setDataSource(dataSourcePluginConf);
+        entityService.create(dataset3);
+
         Thread.sleep(10_000);
 
+        // Retrieve dataset1 from ES
         dataset1 = (Dataset) indexerService.get(dataset1.getIpId());
         int i = 0;
         while (dataset1 == null) {
@@ -273,6 +317,36 @@ public class IndexerServiceDataSourceIT {
             }
         }
         Assert.assertNotNull(dataset1);
+
+        SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        // Search for DataObjects tagging dataset1
+        Page<DataObject> objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                                             ICriterion.equals("tags", dataset1.getIpId().toString()));
+        Assert.assertTrue(objectsPage.getContent().size() > 0);
+        Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
+
+        // Delete dataset1
+        entityService.delete(dataset1.getId());
+        // Wait a while to permit RabbitMq sending a message to crawler service which update ES
+        Thread.sleep(10_000);
+
+        // Search again for DataObjects tagging this dataset
+        objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                            ICriterion.equals("tags", dataset1.getIpId().toString()));
+        Assert.assertTrue(objectsPage.getContent().isEmpty());
+
+        // Search for DataObjects tagging dataset2
+        objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                            ICriterion.equals("tags", dataset2.getIpId().toString()));
+        Assert.assertTrue(objectsPage.getContent().size() > 0);
+        Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
+
+        // Search for tags but with criterion on DataObject
+        SearchKey<String[]> tagsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), String[].class);
+        Page<String[]> tagsPage = indexerService.search(tagsSearchKey, IEsRepository.BULK_SIZE, ICriterion.all(),
+                                                        "tags");
+        Assert.assertNotNull(tagsPage);
+        Assert.assertFalse(tagsPage.getContent().isEmpty());
     }
 
 }

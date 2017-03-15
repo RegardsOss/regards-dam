@@ -92,7 +92,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     }
 
     @Override
-    protected IDBConnectionPlugin getDBConnectionPlugin() {
+    public IDBConnectionPlugin getDBConnection() throws SQLException {
         return dbConnection;
     }
 

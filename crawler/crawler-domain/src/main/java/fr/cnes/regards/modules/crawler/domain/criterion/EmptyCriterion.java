@@ -16,4 +16,8 @@ public final class EmptyCriterion implements ICriterion {
         return pVisitor.visitEmptyCriterion(this);
     }
 
+    @Override
+    public boolean equals(Object pObj) {
+        return (this == pObj);
+    }
 }
