@@ -71,20 +71,21 @@ public interface IIndexerService {
             Map<String, FacetType> facetsMap, LinkedHashMap<String, Boolean> ascSortMap);
 
     /**
-     * Search documents part (ie a property of documents) into index following criterion (on documents, not on asked
-     * property document).
+     * Search documents as usual ({@link #search(SearchKey, int, ICriterion)} BUT return joined entity whom type is
+     * specified into searchKey
      * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result
-     * class is class for sourceAttribute</b>
+     * class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
-     * @param sourceAttribute the property of the document to retrieve (can be an inner chained property :
-     * toto.titi.tutu for example)
-     * @return a page of asked property documents
+     * @param <T> Joined entity class
+     * @return a page of joined entities
      */
-    <T> Page<T> search(SearchKey<T> searchKey, Pageable pageRequest, ICriterion criterion, String sourceAttribute);
+    <T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<T> searchKey, Pageable pageRequest,
+            ICriterion pCriterion);
 
-    default <T> Page<T> search(SearchKey<T> searchKey, int pageSize, ICriterion criterion, String sourceAttribute) {
-        return search(searchKey, new PageRequest(0, pageSize), criterion, sourceAttribute);
+    default <T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<T> searchKey, int pageSize,
+            ICriterion pCriterion) {
+        return this.searchAndReturnJoinedEntities(searchKey, new PageRequest(0, pageSize), pCriterion);
     }
 
     default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion criterion) {
