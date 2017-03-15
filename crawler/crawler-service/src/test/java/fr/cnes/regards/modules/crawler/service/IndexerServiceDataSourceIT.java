@@ -341,12 +341,17 @@ public class IndexerServiceDataSourceIT {
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
 
-        // Search for tags but with criterion on DataObject
-        SearchKey<String[]> tagsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), String[].class);
-        Page<String[]> tagsPage = indexerService.search(tagsSearchKey, IEsRepository.BULK_SIZE, ICriterion.all(),
-                                                        "tags");
-        Assert.assertNotNull(tagsPage);
-        Assert.assertFalse(tagsPage.getContent().isEmpty());
+        // Search for Dataset but with criterion on DataObjects
+        SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        Page<Dataset> dsPage = indexerService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        Assert.assertNotNull(dsPage);
+        Assert.assertFalse(dsPage.getContent().isEmpty());
+        Assert.assertEquals(1, dsPage.getContent().size());
+
+        dsPage = indexerService.searchAndReturnJoinedEntities(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
+        Assert.assertNotNull(dsPage);
+        Assert.assertFalse(dsPage.getContent().isEmpty());
+        Assert.assertEquals(1, dsPage.getContent().size());
     }
 
 }
