@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -331,6 +333,12 @@ public interface IEsRepository {
      * @return all results (ordered is garanteed to be always the same)
      */
     <T> List<T> search(SearchKey<T> searchKey, ICriterion pCriterion, String pSourceAttribute);
+
+    <T, U> List<U> search(SearchKey<T> searchKey, ICriterion pCriterion, String pSourceAttribute,
+            Function<T, U> transformFct);
+
+    <T, U> List<U> search(SearchKey<T[]> searchKey, ICriterion criterion, String sourceAttribute,
+            Predicate<T> filterPredicate, Function<T, U> transformFct);
 
     /**
      * Searching first page of elements from index giving page size

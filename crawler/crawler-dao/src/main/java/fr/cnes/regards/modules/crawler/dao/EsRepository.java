@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -15,6 +16,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -508,6 +511,33 @@ public class EsRepository implements IEsRepository {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (T) o).collect(Collectors.toList());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T, U> List<U> search(SearchKey<T> searchKey, ICriterion criterion, String sourceAttribute,
+            Function<T, U> transformFct) {
+        try {
+            SortedSet<Object> objects = searchAllCache
+                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            return objects.stream().map(o -> (T) o).map(transformFct).collect(Collectors.toList());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T, U> List<U> search(SearchKey<T[]> searchKey, ICriterion criterion, String sourceAttribute,
+            Predicate<T> filterPredicate, Function<T, U> transformFct) {
+        try {
+            SortedSet<Object> objects = searchAllCache
+                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            return objects.stream().flatMap(o -> Arrays.stream((T[]) o)).distinct().filter(filterPredicate)
+                    .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
