@@ -5,7 +5,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
@@ -138,20 +137,18 @@ public class CrawlerServiceTest {
 
         Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 1000));
 
-        LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
+        LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
         Set<DataObject> set = Sets.newHashSet(page.getContent());
         Assert.assertEquals(page.getContent().size(), set.size());
-        Map<String, Throwable> errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
-        LOGGER.info(String.format("...%d entities saved",
-                                  page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
+        int savedItemsCount = indexerService.saveBulkEntities(TENANT, page.getContent());
+        LOGGER.info("...{} entities saved", savedItemsCount);
         while (page.hasNext()) {
             page = dsPlugin.findAll(TENANT, page.nextPageable());
             set = Sets.newHashSet(page.getContent());
             Assert.assertEquals(page.getContent().size(), set.size());
-            LOGGER.info(String.format("saving %d/%d entities...", page.getNumberOfElements(), page.getTotalElements()));
-            errorMap = indexerService.saveBulkEntities(TENANT, page.getContent());
-            LOGGER.info(String.format("...%d entities saved",
-                                      page.getNumberOfElements() - ((errorMap == null) ? 0 : errorMap.size())));
+            LOGGER.info("saving {}/{} entities...", page.getNumberOfElements(), page.getTotalElements());
+            savedItemsCount = indexerService.saveBulkEntities(TENANT, page.getContent());
+            LOGGER.info("...{} entities saved", savedItemsCount);
         }
         Assert.assertTrue(true);
     }

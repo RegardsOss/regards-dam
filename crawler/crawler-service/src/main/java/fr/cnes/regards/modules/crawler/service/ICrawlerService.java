@@ -27,7 +27,8 @@ public interface ICrawlerService {
 
     /**
      * Ingest provided datasource (from plugin configuration) data objects into Elasticsearch
-     * @param pPluginConfiguration datasource plugin configuration
+     * @param pluginConfiguration datasource plugin configuration
+     * @return the count of DataObjects ingested from given datasource
      */
-    void ingest(PluginConfiguration pPluginConfiguration) throws ModuleException;
+    int ingest(PluginConfiguration pluginConfiguration) throws ModuleException;
 }

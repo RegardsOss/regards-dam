@@ -5,12 +5,20 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
@@ -28,6 +36,7 @@ import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
@@ -44,6 +53,8 @@ import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -51,7 +62,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
@@ -61,6 +76,7 @@ import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.crawler.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.crawler.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.SearchKey;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.facet.DateFacet;
 import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
@@ -74,6 +90,8 @@ import fr.cnes.regards.modules.crawler.domain.facet.StringFacet;
 @Repository
 //@PropertySource("classpath:es.properties")
 public class EsRepository implements IEsRepository {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EsRepository.class);
 
     /**
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
@@ -91,6 +109,13 @@ public class EsRepository implements IEsRepository {
     private static final int MAX_TIMEOUT_RETRIES = 3;
 
     /**
+     * Target forwarding search {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} need to
+     * put in cache search because of pagination restrictions.
+     * This constant specifies duration cache time in minutes (from last access)
+     */
+    private static final int TARGET_FORWARDING_CACHE_MN = 3;
+
+    /**
      * QueryBuilder visitor used for Elasticsearch search requests
      */
     private static final QueryBuilderCriterionVisitor CRITERION_VISITOR = new QueryBuilderCriterionVisitor();
@@ -99,6 +124,11 @@ public class EsRepository implements IEsRepository {
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
      */
     private static final AggregationBuilderFacetTypeVisitor FACET_VISITOR = new AggregationBuilderFacetTypeVisitor();
+
+    /**
+     * Empty JSon object
+     */
+    private static final String EMPTY_JSON = "{}";
 
     /**
      * Elasticsearch port
@@ -261,43 +291,85 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex,
-            @SuppressWarnings("unchecked") T... pDocuments) {
-        if (pDocuments.length == 0) {
-            return Collections.emptyMap();
+    public <T extends IIndexable> int saveBulk(String pIndex, @SuppressWarnings("unchecked") T... documents) {
+        if (documents.length == 0) {
+            return 0;
         }
         String index = pIndex.toLowerCase();
-        for (T doc : pDocuments) {
+        for (T doc : documents) {
             checkDocument(doc);
         }
+        int savedDocCount = 0;
         final BulkRequestBuilder bulkRequest = client.prepareBulk();
-        for (T doc : pDocuments) {
+        for (T doc : documents) {
             bulkRequest.add(client.prepareIndex(index, doc.getType(), doc.getDocId()).setSource(gson.toJson(doc)));
         }
         final BulkResponse response = bulkRequest.get();
-        Map<String, Throwable> errorMap = null;
         for (final BulkItemResponse itemResponse : response.getItems()) {
             if (itemResponse.isFailed()) {
-                if (errorMap == null) {
-                    errorMap = new HashMap<>();
-                }
-                errorMap.put(itemResponse.getId(), itemResponse.getFailure().getCause());
+                LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
+                                          itemResponse.getId()),
+                            itemResponse.getFailure().getCause());
+            } else {
+                savedDocCount++;
             }
         }
         // To make just saved documents searchable, the associated index must be refreshed
         client.admin().indices().prepareRefresh(index).get();
-        return errorMap;
+        return savedDocCount;
     }
 
     @Override
-    public <T> void searchAll(String pIndex, Class<T> pClass, Consumer<T> pAction, ICriterion pCrit) {
-        SearchResponse scrollResp = client.prepareSearch(pIndex.toLowerCase())
-                .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).setQuery(pCrit.accept(CRITERION_VISITOR))
-                .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
+    public <T> void searchAll(SearchKey<T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
+        SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
+        if (searchKey.getSearchType() != null) {
+            requestBuilder = requestBuilder.setTypes(searchKey.getSearchType());
+        }
+        SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
+                .setQuery(pCrit.accept(CRITERION_VISITOR)).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
         // Scroll until no hits are returned
         do {
             for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                pAction.accept(gson.fromJson(hit.getSourceAsString(), pClass));
+                pAction.accept(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
+            }
+
+            scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
+                    .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
+        } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
+                                                              // loop.
+    }
+
+    @Override
+    public <T> void searchAll(SearchKey<T> searchKey, Consumer<T> action, ICriterion crit, String attributeSource) {
+        // If attribute source is 'toto.titi.tutu', result from ES is '{"toto":{"titi":{"tutu":{...}}}}'
+        // We just want "{...}"
+        String startJsonResultStr = attributeSource;
+        // BY default, if attributeSource does not contain '.', only one closing brace exists
+        int closingBracesCount = 1;
+        if (startJsonResultStr.contains(".")) {
+            String[] terms = startJsonResultStr.split("\\.");
+            startJsonResultStr = Joiner.on("\":{\"").join(terms);
+            closingBracesCount = terms.length;
+        }
+        startJsonResultStr = "{\"" + startJsonResultStr + "\":";
+
+        SearchRequestBuilder searchRequest = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
+
+        if (searchKey.getSearchType() != null) {
+            searchRequest = searchRequest.setTypes(searchKey.getSearchType());
+        }
+        SearchResponse scrollResp = searchRequest.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
+                .setQuery(crit.accept(CRITERION_VISITOR)).setFetchSource(attributeSource, null)
+                .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
+        int startIdx = startJsonResultStr.length();
+        // Scroll until no hits are returned
+        do {
+            for (final SearchHit hit : scrollResp.getHits().getHits()) {
+                String source = hit.getSourceAsString();
+                if (!source.equals(EMPTY_JSON)) {
+                    action.accept(gson.fromJson(source.substring(startIdx, source.length() - closingBracesCount),
+                                                searchKey.getResultClass()));
+                }
             }
 
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
@@ -324,17 +396,21 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
+    public <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
-        String index = pIndex.toLowerCase();
+        String index = searchKey.getSearchIndex().toLowerCase();
         try {
             final List<T> results = new ArrayList<>();
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
             QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(criterion.accept(CRITERION_VISITOR));
             // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
-            SearchRequestBuilder request = client.prepareSearch(index).setQuery(critBuilder)
-                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
+            SearchRequestBuilder request = client.prepareSearch(index);
+            if (searchKey.getSearchType() != null) {
+                request = request.setTypes(searchKey.getSearchType());
+            }
+            request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
+                    .setSize(pPageRequest.getPageSize());
             if (pAscSortMap != null) {
                 manageSortRequest(index, request, pAscSortMap);
             }
@@ -346,7 +422,11 @@ public class EsRepository implements IEsRepository {
             // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
             if (twoPassRequestNeeded) {
                 // Rebuild request
-                request = client.prepareSearch(index).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
+                request = client.prepareSearch(index);
+                if (searchKey.getSearchType() != null) {
+                    request = request.setTypes(searchKey.getSearchType());
+                }
+                request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                         .setSize(pPageRequest.getPageSize());
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
@@ -369,7 +449,7 @@ public class EsRepository implements IEsRepository {
 
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
             }
             // If no facet, juste returns a "simple" Page
             if (facetResultsMap == null) {
@@ -382,68 +462,82 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    //    private LoadingCache<Object[], FacetPage<?>> cache = CacheBuilder.newBuilder()
-    //            .expireAfterAccess(10, TimeUnit.MINUTES).build(new CacheLoader<Object[], FacetPage<?>>() {
-    //
-    //                @Override
-    //                public FacetPage<?> load(Object[] key) throws Exception {
-    //                    Set<Object> results = new HashSet<>();
-    //                    searchAll((String) key[0], (Class<?>) key[1], results::add, (ICriterion) key[2]);
-    //                };
-    //            });
+    /**
+     * Utility class to create a quadruple key (a pair of pairs) used by loading cache mechanism
+     */
+    private static class CacheKey extends Tuple<SearchKey<?>, Tuple<ICriterion, String>> {
+
+        public CacheKey(SearchKey<?> searchKey, ICriterion v2, String v3) {
+            super(searchKey, new Tuple<>(v2, v3));
+        }
+
+        public SearchKey<?> getV1() {
+            return v1();
+        }
+
+        public ICriterion getV2() {
+            return v2().v1();
+        }
+
+        public String getV3() {
+            return v2().v2();
+        }
+    }
+
+    /**
+     * SearchAll cache used by {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} to
+     * avoid redo same ES request while changing page. SortedSet is necessary to be sure several consecutive
+     * calls return same ordered set
+     */
+    private LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
+            .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)
+            .build(new CacheLoader<CacheKey, SortedSet<Object>>() {
+
+                @Override
+                public SortedSet<Object> load(CacheKey key) throws Exception {
+                    // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
+                    // with same order
+                    SortedSet<Object> results = new TreeSet<>(Comparator.comparing(Objects::hashCode));
+                    searchAll(key.getV1(), results::add, key.getV2(), key.getV3());
+                    return results;
+                };
+
+            });
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> List<T> search(SearchKey<T> searchKey, ICriterion criterion, String sourceAttribute) {
+        try {
+            SortedSet<Object> objects = searchAllCache
+                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            return objects.stream().map(o -> (T) o).collect(Collectors.toList());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T, U> List<U> search(SearchKey<T> searchKey, ICriterion criterion, String sourceAttribute,
+            Function<T, U> transformFct) {
+        try {
+            SortedSet<Object> objects = searchAllCache
+                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            return objects.stream().map(o -> (T) o).map(transformFct).collect(Collectors.toList());
+        } catch (final JsonSyntaxException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
     @Override
-    public <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion criterion,
-            Map<String, FacetType> pFacetsMap, String pSourceAttribute) {
-        String index = pIndex.toLowerCase();
+    @SuppressWarnings("unchecked")
+    public <T, U> List<U> search(SearchKey<T[]> searchKey, ICriterion criterion, String sourceAttribute,
+            Predicate<T> filterPredicate, Function<T, U> transformFct) {
         try {
-            final List<T> results = new ArrayList<>();
-            // Use filter instead of "direct" query (in theory, quickest because no score is computed)
-            QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
-                    .filter(criterion.accept(CRITERION_VISITOR));
-            // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
-            SearchRequestBuilder request = client.prepareSearch(index).setQuery(critBuilder)
-                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize())
-                    .setFetchSource(pSourceAttribute, null);
-            // Managing aggregations if some facets are asked
-            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
-            // Launch the request
-            SearchResponse response = getWithTimeouts(request);
-
-            // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
-            if (twoPassRequestNeeded) {
-                // Rebuild request
-                request = client.prepareSearch(index).setQuery(critBuilder).setFrom(pPageRequest.getOffset())
-                        .setSize(pPageRequest.getPageSize());
-                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
-                // Relaunch the request with replaced facets
-                response = getWithTimeouts(request);
-            }
-
-            Map<String, IFacet<?>> facetResultsMap = null;
-            if (pFacetsMap != null) {
-                // Get the new aggregations result map
-                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                // Create the facet map
-                facetResultsMap = new HashMap<>();
-                for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
-                    FacetType facetType = entry.getValue();
-                    String attributeName = entry.getKey();
-                    fillFacetMap(aggsMap, facetResultsMap, facetType, attributeName);
-                }
-            }
-
-            SearchHits hits = response.getHits();
-            for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
-            }
-            // If no facet, juste returns a "simple" Page
-            if (facetResultsMap == null) {
-                return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
-            } else { // else returns a FacetPage
-                return new FacetPage<>(results, facetResultsMap, pPageRequest, response.getHits().getTotalHits());
-            }
+            SortedSet<Object> objects = searchAllCache
+                    .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
+            return objects.stream().flatMap(o -> Arrays.stream((T[]) o)).distinct().filter(filterPredicate)
+                    .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
@@ -632,7 +726,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageRequest, Object pValue,
+    public <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, Pageable pPageRequest, Object pValue,
             String... pFields) {
         try {
             final List<T> results = new ArrayList<>();
@@ -640,12 +734,16 @@ public class EsRepository implements IEsRepository {
             Object value = (pValue instanceof LocalDateTime) ? LocalDateTimeAdapter.format((LocalDateTime) pValue)
                     : pValue;
             QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
-            SearchRequestBuilder request = client.prepareSearch(pIndex.toLowerCase()).setQuery(queryBuilder)
-                    .setFrom(pPageRequest.getOffset()).setSize(pPageRequest.getPageSize());
+            SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
+            if (searchKey.getSearchType() != null) {
+                request = request.setTypes(searchKey.getSearchType());
+            }
+            request = request.setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
+                    .setSize(pPageRequest.getPageSize());
             SearchResponse response = getWithTimeouts(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {

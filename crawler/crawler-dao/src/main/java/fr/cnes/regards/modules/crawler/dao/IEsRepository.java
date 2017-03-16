@@ -2,14 +2,18 @@ package fr.cnes.regards.modules.crawler.dao;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.crawler.domain.SearchKey;
 import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.crawler.domain.facet.FacetType;
 
@@ -67,27 +71,26 @@ public interface IEsRepository {
 
     /**
      * Create or update several documents into same index.
+     * Errors are logged.
      * @param pIndex index
      * @param pDocuments documents to save (docId and type are mandatory for all of them)
      * @param <T> parameterized type to avoid array inheritance restriction type definition
-     * @return null if no error, a map { document id -> Throwable } for all documents for which save has failed
+     * @return the number of effectively saved documents
      * @exception IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and
      * type).
      */
     @SuppressWarnings("unchecked")
-    <T extends IIndexable> Map<String, Throwable> saveBulk(String pIndex, T... pDocuments)
-            throws IllegalArgumentException;
+    <T extends IIndexable> int saveBulk(String pIndex, T... pDocuments) throws IllegalArgumentException;
 
     /**
      * {@link #saveBulk(String, IIndexable...)}
      * @param pIndex index
      * @param pDocuments documents to save (docId and type are mandatory for all of them)
-     * @return null if no error, a map { document id -> Throwable } for all documents for which save has failed
+     * @return the number of effectively saved documents
      * @exception IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and
      * type).
      */
-    default Map<String, Throwable> saveBulk(String pIndex, Collection<? extends IIndexable> pDocuments)
-            throws IllegalArgumentException {
+    default int saveBulk(String pIndex, Collection<? extends IIndexable> pDocuments) throws IllegalArgumentException {
         return this.saveBulk(pIndex, pDocuments.toArray(new IIndexable[pDocuments.size()]));
     }
 
@@ -191,17 +194,16 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion,
+    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
-        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), pCriterion, pFacetsMap, pAscSortMap);
+        return this.search(searchKey, new PageRequest(0, pPageSize), pCriterion, pFacetsMap, pAscSortMap);
     }
 
     /**
      * Searching specified page of elements from index (for first call use
      * {@link #searchAllLimited(String, Class, int)} method) with facets.
      * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param search key the search key
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
@@ -209,7 +211,7 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion,
+    <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap);
 
     /**
@@ -221,9 +223,9 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize,
-            LinkedHashMap<String, Boolean> pAscSortMap, ICriterion pCriterion) {
-        return this.search(pIndex, pClass, pPageSize, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
+    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, LinkedHashMap<String, Boolean> pAscSortMap,
+            ICriterion pCriterion) {
+        return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
     }
 
     /**
@@ -237,9 +239,9 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest,
+    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest,
             LinkedHashMap<String, Boolean> pAscSortMap, ICriterion pCriterion) {
-        return this.search(pIndex, pClass, pPageRequest, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
+        return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
     }
 
     /**
@@ -251,9 +253,9 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion,
+    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap) {
-        return this.search(pIndex, pClass, pPageSize, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
+        return this.search(searchKey, pPageSize, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
     }
 
     /**
@@ -267,9 +269,9 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion,
+    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap) {
-        return this.search(pIndex, pClass, pPageRequest, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
+        return this.search(searchKey, pPageRequest, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
     }
 
     /**
@@ -281,8 +283,8 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion) {
-        return this.search(pIndex, pClass, pPageSize, pCriterion, (Map<String, FacetType>) null,
+    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion) {
+        return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null,
                            (LinkedHashMap<String, Boolean>) null);
     }
 
@@ -297,50 +299,16 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion) {
-        return this.search(pIndex, pClass, pPageRequest, pCriterion, (Map<String, FacetType>) null,
+    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion) {
+        return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null,
                            (LinkedHashMap<String, Boolean>) null);
     }
 
     /**
-     * Searching first page of elements from index giving page size and facet map.
-     * The results are reduced to given inner property that's why no sorting can be done.
-     * @param pIndex index
-     * @param pClass class of document type
-     * @param pPageSize page size
-     * @param pCriterion search criterion
-     * @param pFacetsMap facet map
-     * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the
-     * results documents
-     * @param <T> inner result property type
-     * @return first result page containing max page size documents
-     */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion,
-            Map<String, FacetType> pFacetsMap, String pSourceAttribute) {
-        return this.search(pIndex, pClass, new PageRequest(0, pPageSize), pCriterion, pFacetsMap, pSourceAttribute);
-    }
-
-    /**
-     * Searching first page of elements from index giving page size and facet map.
-     * The results are reduced to given inner property that's why no sorting can be done.
-     * @param pIndex index
-     * @param pClass class of document type
-     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
-     * @param pCriterion search criterion
-     * @param pFacetsMap facet map
-     * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the
-     * results documents
-     * @param <T> class of document type
-     * @return specified result page
-     */
-    <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion,
-            Map<String, FacetType> pFacetsMap, String pSourceAttribute);
-
-    /**
      * Searching first page of elements from index giving page size.
      * The results are reduced to given inner property that's why no sorting can be done.
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of
+     * return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
      * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the
@@ -348,32 +316,33 @@ public interface IEsRepository {
      * @param <T> inner result property type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, int pPageSize, ICriterion pCriterion,
-            String pSourceAttribute) {
-        return this.search(pIndex, pClass, pPageSize, pCriterion, null, pSourceAttribute);
+    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion, String pSourceAttribute) {
+        return this.search(searchKey, pPageSize, pCriterion, pSourceAttribute);
     }
 
     /**
      * Searching first page of elements from index giving page size and facet map.
      * The results are reduced to given inner property that's why no sorting can be done.
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of
+     * return objects type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the
      * results documents
      * @param <T> class of document type
-     * @return specified result page
+     * @return all results (ordered is garanteed to be always the same)
      */
-    default <T> Page<T> search(String pIndex, Class<T> pClass, Pageable pPageRequest, ICriterion pCriterion,
-            String pSourceAttribute) {
-        return this.search(pIndex, pClass, pPageRequest, pCriterion, null, pSourceAttribute);
-    }
+    <T> List<T> search(SearchKey<T> searchKey, ICriterion pCriterion, String pSourceAttribute);
+
+    <T, U> List<U> search(SearchKey<T> searchKey, ICriterion pCriterion, String pSourceAttribute,
+            Function<T, U> transformFct);
+
+    <T, U> List<U> search(SearchKey<T[]> searchKey, ICriterion criterion, String sourceAttribute,
+            Predicate<T> filterPredicate, Function<T, U> transformFct);
 
     /**
      * Searching first page of elements from index giving page size
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key
      * @param pPageSize page size
      * @param pValue value to search
      * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags").
@@ -381,15 +350,14 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, int pPageSize, Object pValue,
-            String... pFields) {
-        return this.multiFieldsSearch(pIndex, pClass, new PageRequest(0, pPageSize), pValue, pFields);
+    default <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, int pPageSize, Object pValue, String... pFields) {
+        return this.multiFieldsSearch(searchKey, new PageRequest(0, pPageSize), pValue, pFields);
     }
 
     /**
      * Searching specified page of elements from index giving page size (for first call us
      * {@link #multiFieldsSearch(String, Class, int, Object, String...)} method
-     * @param pIndex index
+     * @param searchKey the search key
      * @param pClass class of document type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
@@ -398,16 +366,26 @@ public interface IEsRepository {
      * @param <T> document type
      * @return specified result page
      */
-    <T> Page<T> multiFieldsSearch(String pIndex, Class<T> pClass, Pageable pPageRequest, Object pValue,
-            String... pFields);
+    <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
+
+    /**
+     * Execute specified action for all search results<br/>
+     * <b>No 10000 offset Elasticsearch limitation</b>
+     * @param searchKey the search key specifying the index and type to search and the result class used
+     * @param pAction action to be executed for each search result element
+     * @param pCriterion search criterion
+     */
+    <T> void searchAll(SearchKey<T> searchKey, Consumer<T> pAction, ICriterion pCriterion);
 
     /**
      * Execute specified action for all search results<br/>
      * <b>No 10000 offset Elasticsearch limitation</b>
      * @param pIndex index
+     * @param pClass class of inner document source to be returned
      * @param pAction action to be executed for each search result element
+     * @param pAttributeSource inner attribute to be used as ES "_source" results
      */
-    <T> void searchAll(String pIndex, Class<T> pClass, Consumer<T> pAction, ICriterion pCriterion);
+    <T> void searchAll(SearchKey<T> searchKey, Consumer<T> pAction, ICriterion pCriterion, String pAttributeSource);
 
     /**
      * Close Client
