@@ -83,6 +83,24 @@ public interface IIndexerService {
     <T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<T> searchKey, Pageable pageRequest,
             ICriterion pCriterion);
 
+    /**
+     * Searching specified page of elements from index giving page size (for first call us
+     * {@link #multiFieldsSearch(String, Class, int, Object, String...)} method
+     * @param searchKey the search key
+     * @param pClass class of document type
+     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param pValue value to search
+     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be
+     * used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
+     * @param <T> document type
+     * @return specified result page
+     */
+    <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
+
+    default <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, int pageSize, Object pValue, String... pFields) {
+        return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), pValue, pFields);
+    }
+
     default <T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<T> searchKey, int pageSize,
             ICriterion pCriterion) {
         return this.searchAndReturnJoinedEntities(searchKey, new PageRequest(0, pageSize), pCriterion);

@@ -144,4 +144,10 @@ public class IndexerService implements IIndexerService {
     public boolean deleteEntity(String pIndex, IIndexable pEntity) {
         return repository.delete(pIndex, pEntity);
     }
+
+    @Override
+    public <T> Page<T> multiFieldsSearch(SearchKey<T> pSearchKey, Pageable pPageRequest, Object pValue,
+            String... pFields) {
+        return repository.multiFieldsSearch(pSearchKey, pPageRequest, pValue, pFields);
+    }
 }
