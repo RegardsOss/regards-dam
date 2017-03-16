@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.client;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
@@ -17,14 +18,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  * @author Léo Mieulet
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = "/collections", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = "/collections", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface ICollectionsClient {
 
     /**
@@ -33,18 +35,7 @@ public interface ICollectionsClient {
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public HttpEntity<List<Resource<Collection>>> retrieveCollectionList();
-
-    /**
-     *
-     * @param pModelId
-     *            identifier of the model the collections should respect
-     * @return list of {@link Collection} respecting the {@link Model} associated to modelId
-     */
-    @RequestMapping(value = "/model/{model_id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public HttpEntity<List<Resource<Collection>>> retrieveCollectionListByModelId(
-            @PathVariable("model_id") Long pModelId);
+    public HttpEntity<List<Resource<Collection>>> retrieveCollections();
 
     /**
      * @summary Entry point to retrieve a {@link Collection} using its id
@@ -92,4 +83,32 @@ public interface ICollectionsClient {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public HttpEntity<Resource<Collection>> createCollection(@RequestBody Collection pCollection);
+
+    /**
+     * Entry point to handle dissociation of {@link Collection} specified by its id to other entities
+     *
+     * @param pCollectionId
+     *            {@link Collection} id
+     * @param pToBeDissociated
+     *            entity to dissociate
+     * @return {@link Collection} as a {@link Resource}
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
+    @ResponseBody
+    public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
+            @RequestBody Set<UniformResourceName> pToBeDissociated);
+
+    /**
+     * Entry point to handle association of {@link Collection} specified by its id to other entities
+     *
+     * @param pCollectionId
+     *            {@link Collection} id
+     * @param pToBeAssociatedWith
+     *            entities to be associated
+     * @return {@link Collection} as a {@link Resource}
+     */
+    @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
+    @ResponseBody
+    public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
+            @RequestBody Set<UniformResourceName> pToBeAssociatedWith);
 }
