@@ -102,6 +102,9 @@ public class IndexerServiceDataSourceIT {
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
+    private IEsRepository esRepos;
+
+    @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
     private DataSourceModelMapping dataSourceModelMapping;
@@ -334,6 +337,11 @@ public class IndexerServiceDataSourceIT {
         objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                             ICriterion.equals("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
+        // Adding some free tag
+        objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
+        esRepos.saveBulk(tenant, objectsPage.getContent());
+
+        esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
         objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
@@ -352,6 +360,12 @@ public class IndexerServiceDataSourceIT {
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
+
+        objectsPage = indexerService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
+                                                       "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
+                                                       "properties.MAX_LONGITUDE", "properties.MAX_LATITUDE");
+        Assert.assertFalse(objectsPage.getContent().isEmpty());
+        Assert.assertEquals(3092, objectsPage.getContent().size());
     }
 
 }

@@ -404,7 +404,6 @@ public class EsRepository implements IEsRepository {
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
             QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(criterion.accept(CRITERION_VISITOR));
-            // QueryBuilder critBuilder = criterion.accept(CRITERION_VISITOR);
             SearchRequestBuilder request = client.prepareSearch(index);
             if (searchKey.getSearchType() != null) {
                 request = request.setTypes(searchKey.getSearchType());
@@ -733,7 +732,8 @@ public class EsRepository implements IEsRepository {
             // LocalDateTime must be formatted to be correctly used following Gson mapping
             Object value = (pValue instanceof LocalDateTime) ? LocalDateTimeAdapter.format((LocalDateTime) pValue)
                     : pValue;
-            QueryBuilder queryBuilder = QueryBuilders.multiMatchQuery(value, pFields);
+            QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                    .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
             if (searchKey.getSearchType() != null) {
                 request = request.setTypes(searchKey.getSearchType());
