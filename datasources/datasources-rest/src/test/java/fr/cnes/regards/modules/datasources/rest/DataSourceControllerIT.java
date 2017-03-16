@@ -39,7 +39,6 @@ import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTa
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
@@ -100,8 +99,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping modelMapping;
-
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
     protected Logger getLogger() {

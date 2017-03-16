@@ -36,8 +36,17 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceFromSingleTablePlugin.class);
 
-    protected static final String AND = " AND ", COMMA = ", ", LIMIT = "LIMIT", ORDER_BY = "ORDER", SPACE = " ",
-            WHERE = " WHERE ";
+    protected static final String AND = " AND ";
+
+    protected static final String COMMA = ", ";
+
+    protected static final String LIMIT = "LIMIT";
+
+    protected static final String ORDER_BY = "ORDER";
+
+    protected static final String SPACE = " ";
+
+    protected static final String WHERE = " WHERE ";
 
     /**
      * The description of the {@link Table} used by this {@link Plugin} to requests the database.
