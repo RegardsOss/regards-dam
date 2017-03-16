@@ -12,6 +12,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * A DataObject is created by a DataSource when an external database is ingested.
+ * 
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
@@ -51,8 +52,7 @@ public class DataObject extends AbstractDataEntity {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
+    public boolean equals(Object pObject) {
+        return super.equals(pObject);
     }
-
 }

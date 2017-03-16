@@ -11,6 +11,9 @@ package fr.cnes.regards.modules.entities.domain;
  */
 public enum DataType {
 
+    /**
+     * Available data types
+     */
     RAWDATA, QUICKLOOK, DOCUMENT, THUMBNAIL, OTHER;
 
     @Override
