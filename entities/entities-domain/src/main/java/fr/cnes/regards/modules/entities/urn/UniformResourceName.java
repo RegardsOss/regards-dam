@@ -71,6 +71,9 @@ public class UniformResourceName {
     @Max(MAX_VERSION_VALUE)
     private int version;
 
+    /**
+     * numeric value ordering the differents AIP from a same SIP
+     */
     private Long order;
 
     private String revision;
