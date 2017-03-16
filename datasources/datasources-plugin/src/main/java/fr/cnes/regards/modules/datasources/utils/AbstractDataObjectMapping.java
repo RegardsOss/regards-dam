@@ -90,7 +90,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * A pattern used to set a date in the statement
      */
-    protected final String keywordLastModificationDate = "%last_modification_date%";
+    protected static final String keywordLastModificationDate = "%last_modification_date%";
 
     /**
      * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the

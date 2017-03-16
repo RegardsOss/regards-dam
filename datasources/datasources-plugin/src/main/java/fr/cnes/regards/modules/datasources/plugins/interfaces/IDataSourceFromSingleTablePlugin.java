@@ -5,7 +5,6 @@
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 
 /**
  * Class IDataSourceFromSingleTablePlugin

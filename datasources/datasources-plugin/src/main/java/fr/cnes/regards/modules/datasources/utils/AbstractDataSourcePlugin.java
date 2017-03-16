@@ -31,8 +31,17 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourcePlugin.class);
 
-    protected static final String SELECT = "SELECT ", WHERE = " WHERE ", COMMA = ", ",
-            SELECT_COUNT = "SELECT COUNT(*) ", AS = "as", LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
+    protected static final String SELECT = "SELECT ";
+
+    protected static final String WHERE = " WHERE ";
+
+    protected static final String COMMA = ", ";
+
+    protected static final String SELECT_COUNT = "SELECT COUNT(*) ";
+
+    protected static final String AS = "as";
+
+    protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
     public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
 
