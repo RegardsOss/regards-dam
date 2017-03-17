@@ -2,8 +2,8 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Collection;
 
-import fr.cnes.regards.modules.crawler.dao.IEsRepository;
-import fr.cnes.regards.modules.crawler.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
 /**
  * Indexer interface
