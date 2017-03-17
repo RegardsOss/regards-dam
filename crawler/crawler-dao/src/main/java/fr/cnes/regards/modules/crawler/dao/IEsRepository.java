@@ -95,7 +95,7 @@ public interface IEsRepository {
     }
 
     /**
-     * Not necessary but....
+     * Retrieve a Document from its id
      * @param pIndex index
      * @param pDocType document type
      * @param pDocId document id

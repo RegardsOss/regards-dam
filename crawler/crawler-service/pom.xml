@@ -89,5 +89,10 @@
 			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.search</groupId>
+			<artifactId>search-service</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
