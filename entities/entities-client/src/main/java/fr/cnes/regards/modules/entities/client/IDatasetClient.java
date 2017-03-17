@@ -9,15 +9,12 @@ import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -42,10 +39,11 @@ public interface IDatasetClient {
 
     public static final String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
 
-    @RequestMapping(method = RequestMethod.POST)
+    // FIXME
+    /*    @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<Resource<Dataset>> createDataset(@RequestPart("dataset") Dataset pDataset,
-            @RequestPart("file") MultipartFile descriptionFile, BindingResult pResult);
+            @RequestPart("file") MultipartFile descriptionFile);*/
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
@@ -63,7 +61,7 @@ public interface IDatasetClient {
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResponseBody
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
-            @RequestBody Dataset pDataset, BindingResult pResult);
+            @RequestBody Dataset pDataset);
 
     /**
      * Entry point to handle dissociation of {@link Dataset} specified by its id to other entities

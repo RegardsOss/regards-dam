@@ -51,6 +51,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.search.service.ISearchService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -94,6 +95,9 @@ public class IndexerServiceDataSourceIT {
 
     @Autowired
     private IIndexerService indexerService;
+
+    @Autowired
+    private ISearchService searchService;
 
     @Autowired
     private ICrawlerService crawlerService;
@@ -310,7 +314,7 @@ public class IndexerServiceDataSourceIT {
         Thread.sleep(10_000);
 
         // Retrieve dataset1 from ES
-        dataset1 = (Dataset) indexerService.get(dataset1.getIpId());
+        dataset1 = (Dataset) searchService.get(dataset1.getIpId());
         int i = 0;
         while (dataset1 == null) {
             Thread.sleep(1000);
@@ -323,8 +327,8 @@ public class IndexerServiceDataSourceIT {
 
         SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                             ICriterion.equals("tags", dataset1.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                                            ICriterion.equals("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
 
@@ -334,8 +338,8 @@ public class IndexerServiceDataSourceIT {
         Thread.sleep(10_000);
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                            ICriterion.equals("tags", dataset1.getIpId().toString()));
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.equals("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
         objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
@@ -344,26 +348,26 @@ public class IndexerServiceDataSourceIT {
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = indexerService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                            ICriterion.equals("tags", dataset2.getIpId().toString()));
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.equals("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
 
         // Search for Dataset but with criterion on DataObjects
         SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
-        Page<Dataset> dsPage = indexerService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = indexerService.searchAndReturnJoinedEntities(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        objectsPage = indexerService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
-                                                       "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
-                                                       "properties.MAX_LONGITUDE", "properties.MAX_LATITUDE");
+        objectsPage = searchService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
+                                                      "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
+                                                      "properties.MAX_LONGITUDE", "properties.MAX_LATITUDE");
         Assert.assertFalse(objectsPage.getContent().isEmpty());
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }
