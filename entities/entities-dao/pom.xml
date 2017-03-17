@@ -53,7 +53,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-domain</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
