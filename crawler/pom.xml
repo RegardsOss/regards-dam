@@ -18,8 +18,6 @@
 	
 	<modules>
 		<module>crawler-service</module>
-		<module>crawler-dao</module>
-		<module>crawler-domain</module>
 	</modules>
 
 	<dependencyManagement>
