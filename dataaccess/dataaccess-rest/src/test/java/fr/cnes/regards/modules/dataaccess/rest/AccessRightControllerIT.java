@@ -40,6 +40,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -127,7 +128,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         model = modelRepo.save(model);
         ds1 = new Dataset(model, "PROJECT", ds1Name);
         ds1.setLicence("licence");
-        ds1.setDescription(dsDesc);
+        ds1.setDescriptionFile(new DescriptionFile(dsDesc));
         ds1 = dsRepo.save(ds1);
         ds2 = new Dataset(model, "PROJECT", ds2Name);
         ds2.setLicence("licence");
