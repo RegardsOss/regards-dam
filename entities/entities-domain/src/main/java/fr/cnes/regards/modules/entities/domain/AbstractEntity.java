@@ -34,10 +34,10 @@ import org.hibernate.annotations.TypeDefs;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
-import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -128,7 +128,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false, updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
+            updatable = false)
     protected Model model;
 
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
@@ -253,10 +254,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 
