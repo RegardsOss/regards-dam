@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.crawler.service;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -21,6 +22,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPoller;
@@ -30,9 +33,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.modules.crawler.dao.IEsRepository;
-import fr.cnes.regards.modules.crawler.domain.SearchKey;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -40,6 +40,9 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
@@ -256,11 +259,25 @@ public class CrawlerService implements ICrawlerService {
      */
     private void manageDatasetDelete(String tenant, String ipId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
-        // with th systeme Postgres/RabbitMQ
+        // with the system Postgres/RabbitMQ)
         ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId);
+        // Groups must also be managed so for all objects they have to be completely recomputed (a group can be
+        // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
+        // datasets associated to an object
+        Multimap<String, String> groupsMultimap = HashMultimap.create();
+        // A set containing already known not dataset ipId (to avoid creating UniformResourceName object for all tags
+        // each time an object is encountered)
+        Set<String> notDatasetIpIds = new HashSet<>();
+
         Set<DataObject> toSaveObjects = new HashSet<>();
-        Consumer<DataObject> updateTag = object -> {
+        LocalDateTime updateDate = LocalDateTime.now();
+        // Function to update an object (tags, groups, lastUpdate, ...)
+        Consumer<DataObject> updateDataObject = object -> {
             object.getTags().remove(ipId);
+            // reset groups
+            object.getGroups().clear();
+            computeGroupsFromTags(tenant, groupsMultimap, notDatasetIpIds, object);
+            object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
                 esRepos.saveBulk(tenant, toSaveObjects);
@@ -269,10 +286,51 @@ public class CrawlerService implements ICrawlerService {
         };
         // Apply updateTag function to all tagging objects
         SearchKey<DataObject> searchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
-        esRepos.searchAll(searchKey, updateTag, taggingObjectsCrit);
+        esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
             esRepos.saveBulk(tenant, toSaveObjects);
+        }
+    }
+
+    /**
+     * Compute groups from tags
+     * @param tenant tenant
+     * @param groupsMultimap a multimap of { dataset IpId, groups }
+     * @param notDatasetIpIds a set containing already known not dataset ipIds
+     * @param object DataObject to update
+     */
+    private void computeGroupsFromTags(String tenant, Multimap<String, String> groupsMultimap,
+            Set<String> notDatasetIpIds, DataObject object) {
+        // Compute groups from tags
+        for (Iterator<String> i = object.getTags().iterator(); i.hasNext();) {
+            String tag = i.next();
+            // already known free tag or other entity than Dataset ipId
+            if (notDatasetIpIds.contains(tag)) {
+                continue;
+            }
+            // new tag encountered
+            if (!groupsMultimap.containsKey(tag)) {
+                // Managing Dataset IpId tag
+                if (UniformResourceName.isValidUrn(tag)
+                        && (UniformResourceName.fromString(tag).getEntityType() == EntityType.DATASET)) {
+                    Dataset ds = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
+                    // Must not occurs, this means a Dataset has been deleted from ES but not cleaned on all
+                    // objects associated to it
+                    if (ds == null) {
+                        LOGGER.warn("Dataset {} no more exists, it will be removed from DataObject {} tags", tag,
+                                    object.getDocId());
+                        i.remove();
+                        // In this case, this tag must be managed on all objects so it is not added nor on
+                        // notDatasetIpIds nor on groupsMultimap
+                    } else { // dataset found, retrieving its groups and add them on groupsMultimap
+                        groupsMultimap.putAll(tag, ds.getGroups());
+                    }
+                } else { // free tag or not dataset tag
+                    notDatasetIpIds.add(tag);
+                }
+            }
+            object.getGroups().addAll(groupsMultimap.get(tag));
         }
     }
 
@@ -290,21 +348,36 @@ public class CrawlerService implements ICrawlerService {
             subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.equals(DATA_SOURCE_ID, datasourceId));
         }
         String tenant = runtimeTenantResolver.getTenant();
+        // To avoid losing time doing same stuf on all objects
         String dsIpId = dataset.getIpId().toString();
+        Set<String> groups = dataset.getGroups();
+        LocalDateTime updateDate = LocalDateTime.now();
+
         SearchKey<DataObject> searchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
-        this.addTagToDataObjects(tenant, dsIpId, page.getContent());
+        this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
-            this.addTagToDataObjects(tenant, dsIpId, page.getContent());
+            this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, page.getContent());
         }
     }
 
-    private void addTagToDataObjects(String tenant, String dsIpId, List<DataObject> objects) {
+    /**
+     * Update data objects following a Dataset update
+     * @param tenant tenant
+     * @param dsIpId Dataset IpId (String)
+     * @param groups Dataset groups (to add or update on all objects)
+     * @param updateDate lastUpdate date to put on all objects
+     * @param objects objects to update
+     */
+    private void updateDataObjectsFromDatasetUpdate(String tenant, String dsIpId, Set<String> groups,
+            LocalDateTime updateDate, List<DataObject> objects) {
         Set<DataObject> toSaveObjects = new HashSet<>();
         objects.forEach(o -> {
             o.getTags().add(dsIpId);
+            o.getGroups().addAll(groups);
+            o.setLastUpdate(updateDate);
             toSaveObjects.add(o);
         });
         esRepos.saveBulk(tenant, toSaveObjects);

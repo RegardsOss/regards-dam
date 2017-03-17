@@ -23,10 +23,10 @@ import org.springframework.test.context.TestPropertySource;
 import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
-import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;

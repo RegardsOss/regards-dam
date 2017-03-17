@@ -20,6 +20,7 @@
     		<module>dataaccess</module>
 		<module>datasources</module>
 		<module>entities</module>
+                <module>indexer</module>
 		<module>models</module>		
 	</modules>
 

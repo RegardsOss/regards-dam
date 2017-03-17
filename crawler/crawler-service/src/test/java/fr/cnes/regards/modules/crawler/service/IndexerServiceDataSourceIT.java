@@ -24,15 +24,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.crawler.dao.IEsRepository;
-import fr.cnes.regards.modules.crawler.domain.SearchKey;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -47,11 +46,14 @@ import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.modules.search.service.ISearchService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -295,13 +297,17 @@ public class IndexerServiceDataSourceIT {
         dataset1.setSubsettingClause(ICriterion.all());
         dataset1.setLicence("licence");
         dataset1.setDataSource(dataSourcePluginConf);
+        dataset1.setTags(Sets.newHashSet("BULLSHIT"));
+        dataset1.setGroups(Sets.newHashSet("group0", "group11"));
         entityService.create(dataset1);
 
         dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
         dataset2.setDataModel(dataModel.getId());
         dataset2.setSubsettingClause(ICriterion.all());
+        dataset2.setTags(Sets.newHashSet("BULLSHIT"));
         dataset2.setLicence("licence");
         dataset2.setDataSource(dataSourcePluginConf);
+        dataset2.setGroups(Sets.newHashSet("group12", "group11"));
         entityService.create(dataset2);
 
         dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
@@ -309,6 +315,7 @@ public class IndexerServiceDataSourceIT {
         dataset3.setSubsettingClause(ICriterion.all());
         dataset3.setLicence("licence");
         dataset3.setDataSource(dataSourcePluginConf);
+        dataset3.setGroups(Sets.newHashSet("group2"));
         entityService.create(dataset3);
 
         Thread.sleep(10_000);
@@ -331,6 +338,13 @@ public class IndexerServiceDataSourceIT {
                                                             ICriterion.equals("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
+        // All data are associated with the 3 datasets so they must all have the 4 groups
+        for (DataObject object : objectsPage.getContent()) {
+            Assert.assertTrue(object.getGroups().contains("group0"));
+            Assert.assertTrue(object.getGroups().contains("group11"));
+            Assert.assertTrue(object.getGroups().contains("group12"));
+            Assert.assertTrue(object.getGroups().contains("group2"));
+        }
 
         // Delete dataset1
         entityService.delete(dataset1.getId());
@@ -352,6 +366,14 @@ public class IndexerServiceDataSourceIT {
                                            ICriterion.equals("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
+        // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)
+        // but not "group0" (only on dataset1)
+        for (DataObject object : objectsPage.getContent()) {
+            Assert.assertFalse(object.getGroups().contains("group0"));
+            Assert.assertTrue(object.getGroups().contains("group11"));
+            Assert.assertTrue(object.getGroups().contains("group12"));
+            Assert.assertTrue(object.getGroups().contains("group2"));
+        }
 
         // Search for Dataset but with criterion on DataObjects
         SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
