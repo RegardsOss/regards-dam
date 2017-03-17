@@ -30,16 +30,6 @@
 				<artifactId>crawler-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.crawler</groupId>
-				<artifactId>crawler-dao</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.crawler</groupId>
-				<artifactId>crawler-domain</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	
