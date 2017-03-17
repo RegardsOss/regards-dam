@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.Module;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -127,14 +129,16 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource createDataSource(DataSource pDataSource) throws ModuleException {
-
+        LOGGER.info("createDataSource with label = "+ pDataSource.getLabel());
         try {
 
             if (pDataSource.getTableName() != null && pDataSource.getFromClause() == null) {
+                LOGGER.info("table name : "+ pDataSource.getTableName());
                 return getDataSourceFromPluginConfiguration(createDataSourceFromSingleTable(pDataSource));
             }
 
             if (pDataSource.getTableName() == null && pDataSource.getFromClause() != null) {
+                LOGGER.info("from clause : "+ pDataSource.getFromClause());
                 return getDataSourceFromPluginConfiguration(createDataSourceFromComplexRequest(pDataSource));
             }
         } catch (IOException e) {
@@ -142,7 +146,9 @@ public class DataSourceService implements IDataSourceService {
             throw new ModuleException("Unable to converts a PluginConfiguration to a Datasourceobject");
         }
 
-        throw new ModuleException("The incoming datasource is inconsistent");
+        ModuleException ex= new ModuleException("The incoming datasource is inconsistent");
+        LOGGER.error(ex.getMessage());
+        throw ex;
     }
 
     /**
