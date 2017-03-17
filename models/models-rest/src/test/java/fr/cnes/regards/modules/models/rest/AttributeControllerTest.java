@@ -15,9 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 
-import fr.cnes.regards.framework.hateoas.DefaultResourceService;
 import fr.cnes.regards.framework.hateoas.IResourceService;
-import fr.cnes.regards.framework.security.endpoint.MethodAuthorizationService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -59,8 +57,7 @@ public class AttributeControllerTest {
         // Service
         attributeServiceMocked = Mockito.mock(IAttributeModelService.class);
         // Hateoas authorization
-        final MethodAuthorizationService authService = Mockito.mock(MethodAuthorizationService.class);
-        resourceServiceMocked = new DefaultResourceService(authService);
+        resourceServiceMocked = Mockito.mock(IResourceService.class);
         final RestrictionService restrictionService = Mockito.mock(RestrictionService.class);
         // Init controller
         attributeController = new AttributeModelController(attributeServiceMocked, resourceServiceMocked,

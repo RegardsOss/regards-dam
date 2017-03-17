@@ -47,6 +47,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilde
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.search.service.ISearchService;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -61,6 +62,9 @@ public class IndexerServiceIT {
 
     @Autowired
     private IIndexerService indexerService;
+
+    @Autowired
+    private ISearchService searchService;
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
@@ -169,7 +173,7 @@ public class IndexerServiceIT {
         indexerService.refresh(tenant);
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
-        List<Collection> singleCollColl = indexerService
+        List<Collection> singleCollColl = searchService
                 .search(new SearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
                         ICriterion.eq("properties.int", 42))
                 .getContent();
@@ -233,7 +237,7 @@ public class IndexerServiceIT {
 
         ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
         SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
-        Page<? extends AbstractEntity> collPage = indexerService.search(searchKey, 10, criterion);
+        Page<? extends AbstractEntity> collPage = searchService.search(searchKey, 10, criterion);
         int count = 0;
         while (true) {
             for (AbstractEntity coll : collPage.getContent()) {
@@ -243,7 +247,7 @@ public class IndexerServiceIT {
                 break;
 
             }
-            collPage = indexerService.search(searchKey, collPage.nextPageable(), criterion);
+            collPage = searchService.search(searchKey, collPage.nextPageable(), criterion);
         }
         Assert.assertEquals(26, count);
     }

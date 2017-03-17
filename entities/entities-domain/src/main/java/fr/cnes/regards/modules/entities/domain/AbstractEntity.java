@@ -96,10 +96,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Column(length = 128, nullable = false)
     protected String label;
 
-    @Column
-    @Type(type = "text")
-    protected String description;
-
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
      * meaning<br/>
@@ -111,9 +107,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Computed indirect access groups.<br/>
-     * This is a set of group names that the entity can reach (access groups are positionned on datasets and then
-     * added to collections that tag the dataset and then added to collections that tag collections containing
-     * groups)
+     * This is a set of group names that the entity can reach (access groups are positionned on datasets and then added
+     * to collections that tag the dataset and then added to collections that tag collections containing groups)
      */
     @ElementCollection
     @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"))
@@ -133,8 +128,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
-            updatable = false)
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false, updatable = false)
     protected Model model;
 
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
@@ -225,14 +219,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         label = pLabel;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String pDescription) {
-        description = pDescription;
-    }
-
     public Set<String> getGroups() {
         return groups;
     }
@@ -267,16 +253,17 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else if (!ipId.equals(other.getIpId())) {
-            return false;
-        }
+        } else
+            if (!ipId.equals(other.getIpId())) {
+                return false;
+            }
         return true;
     }
 
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", attributes="
-                + properties + ", model=" + model + "]";
+                + ipId + ", sipId=" + sipId + ", label=" + label + ", attributes=" + properties + ", model=" + model
+                + "]";
     }
 }
