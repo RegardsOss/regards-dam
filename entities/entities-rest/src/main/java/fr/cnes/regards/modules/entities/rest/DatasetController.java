@@ -35,7 +35,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.service.DatasetService;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -61,7 +61,7 @@ public class DatasetController implements IResourceController<Dataset> {
     private IResourceService resourceService;
 
     @Autowired
-    private DatasetService service;
+    private IDatasetService service;
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
@@ -83,7 +83,7 @@ public class DatasetController implements IResourceController<Dataset> {
     public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(final Pageable pPageable,
             final PagedResourcesAssembler<Dataset> pAssembler) {
 
-        final Page<Dataset> datasets = service.retrieveDatasets(pPageable);
+        final Page<Dataset> datasets = service.findAll(pPageable);
         final PagedResources<Resource<Dataset>> resources = toPagedResources(datasets, pAssembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 
@@ -94,8 +94,11 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException {
-        Dataset dataSet = service.retrieveDataset(pDatasetId);
-        final Resource<Dataset> resource = toResource(dataSet);
+        Dataset dataset = service.load(pDatasetId);
+        if (dataset == null) {
+            throw new EntityNotFoundException(pDatasetId);
+        }
+        final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
@@ -138,7 +141,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Dissociate a list of entities from a dataset")
     public ResponseEntity<Resource<Dataset>> dissociateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Set<UniformResourceName> pToBeDissociated) throws ModuleException {
-        final Dataset dataSet = (Dataset) service.dissociate(pDatasetId, pToBeDissociated);
+        final Dataset dataSet = service.dissociate(pDatasetId, pToBeDissociated);
         final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -159,7 +162,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "associate the list of entities to the dataset")
     public ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
-        final Dataset dataset = (Dataset) service.associate(pDatasetId, pToBeAssociatedWith);
+        final Dataset dataset = service.associate(pDatasetId, pToBeAssociatedWith);
         final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }

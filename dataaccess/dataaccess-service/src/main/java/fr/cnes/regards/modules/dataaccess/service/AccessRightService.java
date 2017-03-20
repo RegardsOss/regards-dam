@@ -15,6 +15,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.dao.IGroupAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.dao.IUserAccessRightRepository;
@@ -93,7 +94,11 @@ public class AccessRightService {
     private Page<AbstractAccessRight> retrieveAccessRightsByDataset(UniformResourceName pDatasetIpId,
             Pageable pPageable) throws EntityNotFoundException {
         if (pDatasetIpId != null) {
-            Dataset ds = datasetService.retrieveDataset(pDatasetIpId);
+            Dataset ds = datasetService.load(pDatasetIpId);
+            if (ds == null) {
+                throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
+            }
+
             return repository.findAllByDataset(ds, pPageable);
         }
         return repository.findAll(pPageable);
@@ -113,7 +118,11 @@ public class AccessRightService {
         }
         User user = new User(pUserEmail);
         if (pDatasetIpId != null) {
-            Dataset ds = datasetService.retrieveDataset(pDatasetIpId);
+            Dataset ds = datasetService.load(pDatasetIpId);
+            if (ds == null) {
+                throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
+            }
+
             return userRepository.findAllByUserAndDataset(user, ds, pPageable);
         } else {
             return userRepository.findAllByUser(user, pPageable);
@@ -134,7 +143,11 @@ public class AccessRightService {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
         if (pDatasetIpId != null) {
-            Dataset ds = datasetService.retrieveDataset(pDatasetIpId);
+            Dataset ds = datasetService.load(pDatasetIpId);
+            if (ds == null) {
+                throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
+            }
+
             return groupRepository.findAllByAccessGroupAndDataset(ag, ds, pPageable);
         } else {
             return groupRepository.findAllByAccessGroup(ag, pPageable);
@@ -144,16 +157,23 @@ public class AccessRightService {
     /**
      * @param pAccessRight
      * @return
-     * @throws EntityNotFoundException
+     * @throws ModuleException
      * @throws RabbitMQVhostException
      */
-    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws EntityNotFoundException {
-        datasetService.retrieveDataset(pAccessRight.getDataset().getId());
+    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws ModuleException {
+        Dataset dataset = datasetService.load(pAccessRight.getDataset().getId());
+        if (dataset == null) {
+            throw new EntityNotFoundException(pAccessRight.getDataset().getId(), Dataset.class);
+        }
+
         if (pAccessRight instanceof GroupAccessRight) {
-            Long accessGroupId = ((GroupAccessRight) pAccessRight).getAccessGroup().getId();
-            if (!accessGroupService.existGroup(accessGroupId)) {
-                throw new EntityNotFoundException(accessGroupId, AccessGroup.class);
+            AccessGroup accessGroup = ((GroupAccessRight) pAccessRight).getAccessGroup();
+            if (!accessGroupService.existGroup(accessGroup.getId())) {
+                throw new EntityNotFoundException(accessGroup.getId(), AccessGroup.class);
             }
+            // Adding group to Dataset
+            dataset.getGroups().add(accessGroup.getName());
+            datasetService.update(dataset);
         } else {
             if (pAccessRight instanceof UserAccessRight) {
                 User user = ((UserAccessRight) pAccessRight).getUser();

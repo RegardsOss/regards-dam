@@ -104,36 +104,13 @@ public class EntityServiceTest {
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
         entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
-                null, null, emMocked, publisherMocked);
+                null, null, entitiesRepositoryMocked, emMocked, publisherMocked);
+
+        //        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
+        //                null, null, emMocked, publisherMocked);
         Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);
         Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(doc);
         Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(dataset);
-    }
-
-    @Test
-    public void testAssociateCollectionToListData() throws EntityNotFoundException {
-        final List<AbstractEntity> dataList = new ArrayList<>();
-        dataList.add(data);
-        final Set<UniformResourceName> dataURNList = new HashSet<>();
-        dataURNList.add(data.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(dataURNList)).thenReturn(dataList);
-        Mockito.when(entitiesRepositoryMocked.findOneByIpId(collection2.getIpId())).thenReturn(collection2);
-        Mockito.when(entitiesRepositoryMocked.findById(collection2.getId())).thenReturn(collection2);
-        Mockito.when(entitiesRepositoryMocked.save(collection2)).thenReturn(collection2);
-        entityServiceMocked.associate(collection2.getId(), dataURNList);
-        Assert.assertTrue(collection2.getTags().contains(data.getIpId().toString()));
-    }
-
-    @Test
-    public void testAssociateCollectionToListDocument() {
-        final List<AbstractEntity> docList = new ArrayList<>();
-        docList.add(doc);
-        final Set<UniformResourceName> docURNList = new HashSet<>();
-        docURNList.add(doc.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(docURNList)).thenReturn(docList);
-        // TODO
-        // entityServiceMocked.associate(collection2, docURNList);
-        Assert.assertFalse(collection2.getTags().contains(doc.getIpId().toString()));
     }
 
     /*

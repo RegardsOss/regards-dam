@@ -15,7 +15,6 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +37,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
-import fr.cnes.regards.modules.entities.service.IEntityService;
+import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -91,8 +90,7 @@ public class CrawlerService implements ICrawlerService {
     private IPoller poller;
 
     @Autowired
-    @Qualifier(value = "entityService")
-    private IEntityService entityService;
+    private IEntitiesService entitiesService;
 
     @Autowired
     private IPluginService pluginService;
@@ -207,7 +205,7 @@ public class CrawlerService implements ICrawlerService {
      */
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
         LOGGER.debug("received msg for " + ipId.toString());
-        AbstractEntity entity = entityService.loadWithRelations(ipId);
+        AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
             if (ipId.getEntityType() == EntityType.DATASET) {
@@ -236,7 +234,7 @@ public class CrawlerService implements ICrawlerService {
     private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
         LOGGER.debug("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
-        List<AbstractEntity> entities = entityService.loadAllWithRelations(ipIds);
+        List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
         entities.forEach(e -> toDeleteIpIds.remove(e.getIpId()));
         // Entities to save
         if (!entities.isEmpty()) {

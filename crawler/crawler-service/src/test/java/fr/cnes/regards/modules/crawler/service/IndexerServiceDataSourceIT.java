@@ -18,7 +18,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
@@ -44,7 +43,8 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.service.IEntityService;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -93,8 +93,10 @@ public class IndexerServiceDataSourceIT {
     private IModelService modelService;
 
     @Autowired
-    @Qualifier("entityService")
-    private IEntityService entityService;
+    private IDatasetService dsService;
+
+    @Autowired
+    private ICollectionService collService;
 
     @Autowired
     private IIndexerService indexerService;
@@ -300,7 +302,7 @@ public class IndexerServiceDataSourceIT {
         dataset1.setDataSource(dataSourcePluginConf);
         dataset1.setTags(Sets.newHashSet("BULLSHIT"));
         dataset1.setGroups(Sets.newHashSet("group0", "group11"));
-        entityService.create(dataset1);
+        dsService.create(dataset1);
 
         dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
         dataset2.setDataModel(dataModel.getId());
@@ -309,7 +311,7 @@ public class IndexerServiceDataSourceIT {
         dataset2.setLicence("licence");
         dataset2.setDataSource(dataSourcePluginConf);
         dataset2.setGroups(Sets.newHashSet("group12", "group11"));
-        entityService.create(dataset2);
+        dsService.create(dataset2);
 
         dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
         dataset3.setDataModel(dataModel.getId());
@@ -317,7 +319,7 @@ public class IndexerServiceDataSourceIT {
         dataset3.setLicence("licence");
         dataset3.setDataSource(dataSourcePluginConf);
         dataset3.setGroups(Sets.newHashSet("group2"));
-        entityService.create(dataset3);
+        dsService.create(dataset3);
 
         Thread.sleep(10_000);
 
@@ -348,7 +350,7 @@ public class IndexerServiceDataSourceIT {
         }
 
         // Delete dataset1
-        entityService.delete(dataset1.getId());
+        dsService.delete(dataset1.getId());
         // Wait a while to permit RabbitMq sending a message to crawler service which update ES
         Thread.sleep(10_000);
 

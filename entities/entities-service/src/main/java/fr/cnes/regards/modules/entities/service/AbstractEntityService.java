@@ -1,6 +1,3 @@
-/*
- * LICENSE_PLACEHOLDER
- */
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
@@ -19,8 +16,9 @@ import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -28,6 +26,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
@@ -57,7 +56,6 @@ import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidat
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -68,20 +66,13 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
- * Entity service implementation. This class isn't abstract in order to permit to be used directly. But it is also used
- * as a base for specific services (CollectionService, ...).
- *
- * @author Marc Sordi
- * @author Sylvain Vissiere-Guerinet
+ * Abstract entity service
+ * @param <U> Parameter
  * @author oroussel
  */
-@Service(value = "entityService")
-public class EntityService implements IEntityService {
+public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
 
-    /**
-     * Class logger
-     */
-    private final Logger logger = getLogger();
+    private final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
     /**
      * Namespace separator
@@ -100,7 +91,9 @@ public class EntityService implements IEntityService {
 
     protected final IModelService modelService;
 
-    private final IAbstractEntityRepository<AbstractEntity> entityRepository;
+    protected final IAbstractEntityRepository<U> repository;
+
+    protected final IAbstractEntityRepository<AbstractEntity> entityRepository;
 
     protected final ICollectionRepository collectionRepository;
 
@@ -112,53 +105,54 @@ public class EntityService implements IEntityService {
 
     private final IPublisher publisher;
 
-    public EntityService(IModelAttributeService pModelAttributeService,
+    public AbstractEntityService(IModelAttributeService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher) {
+            IDatasetRepository pDatasetRepository, IAbstractEntityRepository<U> pRepository, EntityManager pEm,
+            IPublisher pPublisher) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
         deletedEntityRepository = pDeletedEntityRepository;
         collectionRepository = pCollectionRepository;
         datasetRepository = pDatasetRepository;
+        repository = pRepository;
         em = pEm;
         publisher = pPublisher;
     }
 
     @Override
-    public AbstractEntity load(UniformResourceName pIpId) {
-        return entityRepository.findOneByIpId(pIpId);
+    public U load(UniformResourceName pIpId) {
+        return repository.findOneByIpId(pIpId);
     }
 
     @Override
-    public AbstractEntity loadWithRelations(UniformResourceName pIpId) {
-        // Particular case on datasets which contains more relations
-        if (pIpId.getEntityType() == EntityType.DATASET) {
-            return datasetRepository.findByIpId(pIpId);
-        }
-        return entityRepository.findByIpId(pIpId);
+    public U load(Long id) {
+        return repository.findById(id);
     }
 
     @Override
-    public List<AbstractEntity> loadAllWithRelations(UniformResourceName... pIpIds) {
-        List<AbstractEntity> entities = new ArrayList<>(pIpIds.length);
-        Set<UniformResourceName> dsUrns = Arrays.stream(pIpIds)
-                .filter(ipId -> ipId.getEntityType() == EntityType.DATASET).collect(Collectors.toSet());
-        if (!dsUrns.isEmpty()) {
-            entities.addAll(datasetRepository.findByIpIdIn(dsUrns));
-        }
-        Set<UniformResourceName> otherUrns = Arrays.stream(pIpIds)
-                .filter(ipId -> ipId.getEntityType() != EntityType.DATASET).collect(Collectors.toSet());
-        if (!otherUrns.isEmpty()) {
-            entities.addAll(entityRepository.findByIpIdIn(otherUrns));
-        }
-        return entities;
+    public U loadWithRelations(UniformResourceName pIpId) {
+        return repository.findByIpId(pIpId);
     }
 
     @Override
-    public void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable)
-            throws ModuleException {
+    public List<U> loadAllWithRelations(UniformResourceName... pIpIds) {
+        return repository.findByIpIdIn(ImmutableSet.copyOf(pIpIds));
+    }
+
+    @Override
+    public Page<U> findAll(Pageable pPageRequest) {
+        return repository.findAll(pPageRequest);
+    }
+
+    @Override
+    public List<U> findAll() {
+        return repository.findAll();
+    }
+
+    @Override
+    public void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException {
         Assert.notNull(pAbstractEntity, "Entity must not be null.");
 
         Model model = pAbstractEntity.getModel();
@@ -189,7 +183,7 @@ public class EntityService implements IEntityService {
             List<String> errors = new ArrayList<>();
             for (ObjectError error : pErrors.getAllErrors()) {
                 String errorMessage = error.getDefaultMessage();
-                logger.error(errorMessage);
+                LOGGER.error(errorMessage);
                 errors.add(errorMessage);
             }
             throw new EntityInvalidException(errors);
@@ -198,22 +192,17 @@ public class EntityService implements IEntityService {
 
     /**
      * Validate an attribute with its corresponding model attribute
-     *
-     * @param pAttMap
-     *            attribue map
-     * @param pModelAttribute
-     *            model attribute
-     * @param pErrors
-     *            validation errors
-     * @param pManageAlterable
-     *            manage update or not
+     * @param pAttMap attribue map
+     * @param pModelAttribute model attribute
+     * @param pErrors validation errors
+     * @param pManageAlterable manage update or not
      */
     protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttribute pModelAttribute,
             Errors pErrors, boolean pManageAlterable) {
 
         AttributeModel attModel = pModelAttribute.getAttribute();
         String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
-        logger.debug(String.format("Computed key : \"%s\"", key));
+        LOGGER.debug(String.format("Computed key : \"%s\"", key));
 
         // Retrieve attribute
         AbstractAttribute<?> att = pAttMap.get(key);
@@ -230,7 +219,7 @@ public class EntityService implements IEntityService {
                 pErrors.reject(messageKey, defaultMessage);
                 return;
             }
-            logger.debug(String.format("Attribute \"%s\" not required in current context.", key));
+            LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
             return;
         }
 
@@ -248,13 +237,9 @@ public class EntityService implements IEntityService {
 
     /**
      * Compute available validators
-     *
-     * @param pModelAttribute
-     *            {@link ModelAttribute}
-     * @param pAttributeKey
-     *            attribute key
-     * @param pManageAlterable
-     *            manage update or not
+     * @param pModelAttribute {@link ModelAttribute}
+     * @param pAttributeKey attribute key
+     * @param pManageAlterable manage update or not
      * @return {@link Validator} list
      */
     protected List<Validator> getValidators(ModelAttribute pModelAttribute, String pAttributeKey,
@@ -282,13 +267,9 @@ public class EntityService implements IEntityService {
 
     /**
      * Build real attribute map extracting namespace from {@link ObjectAttribute} (i.e. fragment name)
-     *
-     * @param pAttMap
-     *            {@link Map} to build
-     * @param pNamespace
-     *            namespace context
-     * @param pAttributes
-     *            {@link AbstractAttribute} list to analyze
+     * @param pAttMap Map to build
+     * @param pNamespace namespace context
+     * @param pAttributes {@link AbstractAttribute} list to analyze
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
             final List<AbstractAttribute<?>> pAttributes) {
@@ -301,7 +282,7 @@ public class EntityService implements IEntityService {
                 } else {
                     // Compute key
                     String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
-                    logger.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
+                    LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     pAttMap.put(key, att);
                 }
             }
@@ -309,22 +290,20 @@ public class EntityService implements IEntityService {
     }
 
     /**
-     * @param pEntityId
-     *            an AbstractEntity identifier
-     * @param pToAssociate
-     *            UniformResourceName Set representing AbstractEntity to be associated to pCollection
+     * @param pEntityId an AbstractEntity identifier
+     * @param pToAssociate UniformResourceName Set representing AbstractEntity to be associated to pCollection
      * @throws EntityNotFoundException
      */
     @Override
-    public AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
-        final AbstractEntity entity = entityRepository.findById(pEntityId);
+    public U associate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
+        final U entity = repository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
         // Adding new tags to detached entity
         em.detach(entity);
         entity.getTags().addAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
-        final AbstractEntity entityInDb = entityRepository.findById(pEntityId);
+        final U entityInDb = repository.findById(pEntityId);
         // And detach it too because it is the over one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
@@ -332,15 +311,15 @@ public class EntityService implements IEntityService {
     }
 
     @Override
-    public AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
-        final AbstractEntity entity = entityRepository.findById(pEntityId);
+    public U dissociate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
+        final U entity = repository.findById(pEntityId);
         if (entity == null) {
             throw new EntityNotFoundException(pEntityId);
         }
         // Removing tags to detached entity
         em.detach(entity);
         entity.getTags().removeAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
-        final AbstractEntity entityInDb = entityRepository.findById(pEntityId);
+        final U entityInDb = repository.findById(pEntityId);
         // And detach it too because it is the over one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
@@ -348,8 +327,8 @@ public class EntityService implements IEntityService {
     }
 
     @Override
-    public <T extends AbstractEntity> T create(T pEntity, MultipartFile file) throws ModuleException, IOException {
-        T entity = check(pEntity);
+    public U create(U pEntity, MultipartFile file) throws ModuleException, IOException {
+        U entity = check(pEntity);
 
         // Set description
         if (entity instanceof AbstractDescEntity) {
@@ -360,7 +339,7 @@ public class EntityService implements IEntityService {
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         this.manageGroups(entity, updatedIpIds);
         entity.setCreationDate(LocalDateTime.now());
-        entity = entityRepository.save(entity);
+        entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
         entity = getStorageService().storeAIP(entity);
         // AMQP event publishing
@@ -381,9 +360,7 @@ public class EntityService implements IEntityService {
     /**
      * If entity is a collection, find all tagged entities and retrieved their groups. Then find all collections tagging
      * this entity and recursively propagate entity group to them.
-     *
-     * @param entity
-     *            entity to manage the add of groups
+     * @param entity entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(T entity, Set<UniformResourceName> pUpdatedIpIds) {
         // If entity tags entities => retrieve all groups of tagged entities (only for collection)
@@ -494,9 +471,7 @@ public class EntityService implements IEntityService {
 
     /**
      * Return true if file content type is acceptable (PDF or MARKDOWN)
-     *
-     * @param pFile
-     *            file
+     * @param pFile file
      * @return true or false
      */
     private static boolean isContentTypeAcceptable(MultipartFile pFile) {
@@ -508,9 +483,7 @@ public class EntityService implements IEntityService {
 
     /**
      * Retrieve file charset
-     *
-     * @param pFile
-     *            description file from the user
+     * @param pFile description file from the user
      * @return file charset
      */
     private static String getCharset(MultipartFile pFile) {
@@ -519,7 +492,7 @@ public class EntityService implements IEntityService {
         return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toUpperCase();
     }
 
-    private <T extends AbstractEntity> T check(T pEntity) throws ModuleException {
+    private U check(U pEntity) throws ModuleException {
         checkModelExists(pEntity);
         return doCheck(pEntity);
     }
@@ -530,7 +503,7 @@ public class EntityService implements IEntityService {
      * @param pEntity
      * @return
      */
-    protected <T extends AbstractEntity> T doCheck(T pEntity) throws ModuleException {
+    protected U doCheck(U pEntity) throws ModuleException {
         // nothing by default
         return pEntity;
     }
@@ -542,11 +515,10 @@ public class EntityService implements IEntityService {
      * @param pEntityId
      * @param pEntity
      * @return current entity
-     * @throws ModuleException
-     *             thrown if the entity cannot be found or if entities' id do not match
+     * @throws ModuleException thrown if the entity cannot be found or if entities' id do not match
      */
-    private <T extends AbstractEntity> T checkUpdate(Long pEntityId, T pEntity) throws ModuleException {
-        AbstractEntity entityInDb = entityRepository.findById(pEntityId);
+    private U checkUpdate(Long pEntityId, U pEntity) throws ModuleException {
+        U entityInDb = repository.findById(pEntityId);
         if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -557,33 +529,32 @@ public class EntityService implements IEntityService {
     }
 
     @Override
-    public <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException {
+    public U update(Long pEntityId, U pEntity) throws ModuleException {
         // checks
-        T entityInDb = checkUpdate(pEntityId, pEntity);
+        U entityInDb = checkUpdate(pEntityId, pEntity);
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T extends AbstractEntity> T update(UniformResourceName pEntityUrn, T pEntity) throws ModuleException {
-        AbstractEntity entityInDb = entityRepository.findOneByIpId(pEntityUrn);
+    public U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
+        U entityInDb = repository.findOneByIpId(pEntityUrn);
         if (entityInDb == null) {
             throw new EntityNotFoundException(pEntity.getIpId().toString());
         }
         pEntity.setId(entityInDb.getId());
         // checks
         entityInDb = checkUpdate(entityInDb.getId(), pEntity);
-        return updateWithoutCheck(pEntity, (T) entityInDb);
+        return updateWithoutCheck(pEntity, entityInDb);
     }
 
-    private <T extends AbstractEntity> T updateWithoutCheck(T pEntity, T entityInDb) {
+    private U updateWithoutCheck(U pEntity, U entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity
         pEntity.setLastUpdate(LocalDateTime.now());
-        T updated = entityRepository.save(pEntity);
+        U updated = repository.save(pEntity);
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks)) {
@@ -616,9 +587,9 @@ public class EntityService implements IEntityService {
     }
 
     @Override
-    public AbstractEntity delete(Long pEntityId) throws EntityNotFoundException {
+    public U delete(Long pEntityId) throws EntityNotFoundException {
         Assert.notNull(pEntityId);
-        final AbstractEntity toDelete = entityRepository.findById(pEntityId);
+        final U toDelete = repository.findById(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -626,7 +597,7 @@ public class EntityService implements IEntityService {
         return delete(toDelete);
     }
 
-    private AbstractEntity delete(AbstractEntity pToDelete) {
+    private U delete(U pToDelete) {
         UniformResourceName urn = pToDelete.getIpId();
         // IpId URNs that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
@@ -691,10 +662,6 @@ public class EntityService implements IEntityService {
                 .collect(Collectors.toSet());
     }
 
-    protected static Logger getLogger() {
-        return LoggerFactory.getLogger(EntityService.class);
-    }
-
     private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
         DeletedEntity delEntity = new DeletedEntity();
         delEntity.setDeletionDate(LocalDateTime.now());
@@ -702,5 +669,4 @@ public class EntityService implements IEntityService {
         delEntity.setLastUpdate(entity.getLastUpdate());
         return delEntity;
     }
-
 }
