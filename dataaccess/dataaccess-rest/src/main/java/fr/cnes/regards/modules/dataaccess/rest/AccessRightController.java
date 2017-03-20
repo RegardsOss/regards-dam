@@ -32,6 +32,7 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessRightService;
@@ -72,7 +73,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
     public ResponseEntity<Resource<AbstractAccessRight>> createAccessRight(
-            @Valid @RequestBody AbstractAccessRight pAccessRight) throws EntityNotFoundException {
+            @Valid @RequestBody AbstractAccessRight pAccessRight) throws ModuleException {
         AbstractAccessRight created = accessRightService.createAccessRight(pAccessRight);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }

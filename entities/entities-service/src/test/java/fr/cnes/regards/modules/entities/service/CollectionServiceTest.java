@@ -104,8 +104,12 @@ public class CollectionServiceTest {
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
-        collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
+        collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
+                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
+                publisherMocked);
+
+        //        collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
+        //                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 
@@ -113,7 +117,7 @@ public class CollectionServiceTest {
     @Purpose("Le système doit permettre de créer une collection à partir d’un modèle préalablement défini et d’archiver cette collection sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createCollection() throws ModuleException, IOException, PluginUtilsException {
-        Mockito.when(entitiesRepositoryMocked.save(collection2)).thenReturn(collection2);
+        Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
         final Collection collection = collectionServiceMocked.create(collection2);
         Assert.assertEquals(collection2, collection);
     }

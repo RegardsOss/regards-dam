@@ -145,7 +145,7 @@ public class DatasetServiceTest {
 
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
-                deletedEntityRepositoryMocked, null, null, null, publisherMocked);
+                deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 
@@ -232,7 +232,7 @@ public class DatasetServiceTest {
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createDataset() throws ModuleException, IOException, PluginUtilsException {
-        Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
+        Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
         Assert.assertEquals(dataSet2, dataSet);
     }

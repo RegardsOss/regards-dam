@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.After;
@@ -11,7 +12,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -24,12 +24,17 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.util.Beans;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.service.IEntityService;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
+import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -48,12 +53,16 @@ public class CrawlerServiceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
+    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
+
     @Value("${regards.tenant}")
     private String tenant;
 
     private Model modelColl;
 
     private Model modelDataset;
+
+    private Model dataModel;
 
     private Dataset dataset1;
 
@@ -69,6 +78,8 @@ public class CrawlerServiceIT {
 
     private PluginConfiguration pluginConf;
 
+    private PluginConfiguration dataSourcePluginConf;
+
     @SuppressWarnings("unused")
     @Autowired
     private ICrawlerService crawlerService;
@@ -77,8 +88,13 @@ public class CrawlerServiceIT {
     private IModelService modelService;
 
     @Autowired
-    @Qualifier(value = "entityService")
-    private IEntityService entityService;
+    private IEntitiesService entitiesService;
+
+    @Autowired
+    private ICollectionService collService;
+
+    @Autowired
+    private IDatasetService dsService;
 
     @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
@@ -88,6 +104,10 @@ public class CrawlerServiceIT {
 
     @Autowired
     private IPluginService pluginService;
+
+    private DataSourceModelMapping dataSourceModelMapping;
+
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @After
     public void clean() {
@@ -101,9 +121,22 @@ public class CrawlerServiceIT {
 
         Utils.execute(modelService::deleteModel, modelColl.getId());
         Utils.execute(modelService::deleteModel, modelDataset.getId());
+        Utils.execute(modelService::deleteModel, dataModel.getId());
+        Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
         Utils.execute(pluginService::deletePluginConfiguration, pluginConf.getId());
 
         esRepos.deleteIndex(tenant);
+    }
+
+    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
@@ -131,25 +164,37 @@ public class CrawlerServiceIT {
         modelDataset = Model.build("modelDataset", "model desc", EntityType.DATASET);
         modelDataset = modelService.createModel(modelDataset);
 
+        dataModel = new Model();
+        dataModel.setName("model_1");
+        dataModel.setType(EntityType.DATA);
+        dataModel.setVersion("1");
+        dataModel.setDescription("Test data object model");
+        modelService.createModel(dataModel);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), Collections.emptyList());
+
         pluginConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(pluginConf);
+
+        // DataSource PluginConf
+        dataSourcePluginConf = getOracleDataSource(pluginConf);
+        pluginService.savePluginConfiguration(dataSourcePluginConf);
 
         dataset1 = new Dataset(modelDataset, tenant, "labelDs1");
         dataset1.setLicence("licence");
         dataset1.setSipId("SipId1");
-        dataset1.setDataSource(pluginConf);
+        dataset1.setDataSource(dataSourcePluginConf);
         // DS1 -> (G1) (group 1)
         dataset1.setGroups(Sets.newHashSet("G1"));
         dataset2 = new Dataset(modelDataset, tenant, "labelDs2");
         dataset2.setLicence("licence");
         dataset2.setSipId("SipId2");
-        dataset2.setDataSource(pluginConf);
+        dataset2.setDataSource(dataSourcePluginConf);
         // DS2 -> (G2)
         dataset2.setGroups(Sets.newHashSet("G2"));
         dataset3 = new Dataset(modelDataset, tenant, "labelDs3");
         dataset3.setLicence("licence");
         dataset3.setSipId("SipId3");
-        dataset3.setDataSource(pluginConf);
+        dataset3.setDataSource(dataSourcePluginConf);
         // DS3 -> (G3)
         dataset3.setGroups(Sets.newHashSet("G3"));
         // No tags on Datasets, it doesn't matter
@@ -171,30 +216,30 @@ public class CrawlerServiceIT {
     @Test
     public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsException {
         buildData1();
-        coll1 = entityService.create(coll1);
+        coll1 = collService.create(coll1);
         LOGGER.info("create coll1 (" + coll1.getIpId() + ")");
-        coll2 = entityService.create(coll2);
+        coll2 = collService.create(coll2);
         LOGGER.info("create coll2 (" + coll2.getIpId() + ")");
-        coll3 = entityService.create(coll3);
+        coll3 = collService.create(coll3);
         LOGGER.info("create coll3 (" + coll3.getIpId() + ")");
 
-        dataset1 = entityService.create(dataset1);
+        dataset1 = dsService.create(dataset1);
         LOGGER.info("create dataset1 (" + dataset1.getIpId() + ")");
-        dataset2 = entityService.create(dataset2);
+        dataset2 = dsService.create(dataset2);
         LOGGER.info("create dataset2 (" + dataset2.getIpId() + ")");
-        dataset3 = entityService.create(dataset3);
+        dataset3 = dsService.create(dataset3);
         LOGGER.info("create dataset3 (" + dataset3.getIpId() + ")");
 
         // To be sure that the crawlerService daemon has time to do its job
         Thread.sleep(45_000);
 
         // Don't forget managing groups update others entities
-        coll1 = (Collection) entityService.loadWithRelations(coll1.getIpId());
-        coll2 = (Collection) entityService.loadWithRelations(coll2.getIpId());
-        coll3 = (Collection) entityService.loadWithRelations(coll3.getIpId());
-        dataset1 = (Dataset) entityService.loadWithRelations(dataset1.getIpId());
-        dataset2 = (Dataset) entityService.loadWithRelations(dataset2.getIpId());
-        dataset3 = (Dataset) entityService.loadWithRelations(dataset3.getIpId());
+        coll1 = (Collection) entitiesService.loadWithRelations(coll1.getIpId());
+        coll2 = (Collection) entitiesService.loadWithRelations(coll2.getIpId());
+        coll3 = (Collection) entitiesService.loadWithRelations(coll3.getIpId());
+        dataset1 = (Dataset) entitiesService.loadWithRelations(dataset1.getIpId());
+        dataset2 = (Dataset) entitiesService.loadWithRelations(dataset2.getIpId());
+        dataset3 = (Dataset) entitiesService.loadWithRelations(dataset3.getIpId());
 
         esRepos.refresh(tenant);
         Collection coll1Bis = esRepos.get(tenant, coll1);
@@ -217,8 +262,8 @@ public class CrawlerServiceIT {
         Assert.assertNotNull(ds3Bis);
         Assert.assertTrue(Beans.equals(dataset3, ds3Bis));
 
-        entityService.delete(coll1.getId());
-        entityService.delete(dataset1.getId());
+        collService.delete(coll1.getId());
+        dsService.delete(dataset1.getId());
 
         // To be sure that the crawlerService daemon has time to do its job
         Thread.sleep(5000);

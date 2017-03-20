@@ -125,7 +125,7 @@ public class AccessRightServiceTest {
         Pageable pageable = new PageRequest(0, 10);
         Mockito.when(uarRepo.findAllByUserAndDataset(USER1, DS1, pageable)).thenReturn(pageExpected);
         Mockito.when(agService.existUser(USER1)).thenReturn(Boolean.TRUE);
-        Mockito.when(dsService.retrieveDataset(DS1.getIpId())).thenReturn(DS1);
+        Mockito.when(dsService.load(DS1.getIpId())).thenReturn(DS1);
 
         Page<AbstractAccessRight> result = service.retrieveAccessRights(AG1.getName(), DS1.getIpId(), USER1.getEmail(),
                                                                         new PageRequest(0, 10));
@@ -175,7 +175,7 @@ public class AccessRightServiceTest {
         Page<AbstractAccessRight> pageExpected = new PageImpl<>(expected);
         Pageable pageable = new PageRequest(0, 10);
         Mockito.when(arRepo.findAllByDataset(DS1, pageable)).thenReturn(pageExpected);
-        Mockito.when(dsService.retrieveDataset(DS1.getIpId())).thenReturn(DS1);
+        Mockito.when(dsService.load(DS1.getIpId())).thenReturn(DS1);
 
         Page<AbstractAccessRight> result = service.retrieveAccessRights(null, DS1.getIpId(), null,
                                                                         new PageRequest(0, 10));
@@ -241,7 +241,7 @@ public class AccessRightServiceTest {
         Pageable pageable = new PageRequest(0, 10);
         Mockito.when(garRepo.findAllByAccessGroupAndDataset(AG1, DS1, pageable)).thenReturn(pageExpected);
         Mockito.when(agService.retrieveAccessGroup(AG1.getName())).thenReturn(AG1);
-        Mockito.when(dsService.retrieveDataset(DS1.getIpId())).thenReturn(DS1);
+        Mockito.when(dsService.load(DS1.getIpId())).thenReturn(DS1);
 
         Page<AbstractAccessRight> result = service.retrieveAccessRights(AG1.getName(), DS1.getIpId(), null,
                                                                         new PageRequest(0, 10));
@@ -263,7 +263,7 @@ public class AccessRightServiceTest {
         Pageable pageable = new PageRequest(0, 10);
         Mockito.when(uarRepo.findAllByUserAndDataset(USER1, DS1, pageable)).thenReturn(pageExpected);
         Mockito.when(agService.existUser(USER1)).thenReturn(Boolean.TRUE);
-        Mockito.when(dsService.retrieveDataset(DS1.getIpId())).thenReturn(DS1);
+        Mockito.when(dsService.load(DS1.getIpId())).thenReturn(DS1);
 
         Page<AbstractAccessRight> result = service.retrieveAccessRights(null, DS1.getIpId(), USER1.getEmail(),
                                                                         new PageRequest(0, 10));

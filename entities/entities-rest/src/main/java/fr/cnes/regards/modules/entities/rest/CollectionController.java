@@ -70,7 +70,7 @@ public class CollectionController implements IResourceController<Collection> {
     @ResourceAccess(description = "endpoint to retrieve the list fo all collections")
     public HttpEntity<List<Resource<Collection>>> retrieveCollections() {
 
-        final List<Collection> collections = collectionService.retrieveCollectionList();
+        final List<Collection> collections = collectionService.findAll();
         final List<Resource<Collection>> resources = toResources(collections);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 
@@ -87,7 +87,7 @@ public class CollectionController implements IResourceController<Collection> {
     @ResponseBody
     @ResourceAccess(description = "Retrieve a collection")
     public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long pCollectionId) {
-        final Collection collection = collectionService.retrieveCollectionById(pCollectionId);
+        final Collection collection = collectionService.load(pCollectionId);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -181,8 +181,7 @@ public class CollectionController implements IResourceController<Collection> {
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
     public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
             @Valid @RequestBody Set<UniformResourceName> pToBeDissociated) throws ModuleException {
-        final Collection collection = (Collection) collectionService.dissociate(pCollectionId,
-                                                                                        pToBeDissociated);
+        final Collection collection = collectionService.dissociate(pCollectionId, pToBeDissociated);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -203,8 +202,7 @@ public class CollectionController implements IResourceController<Collection> {
     @ResourceAccess(description = "associate the collection of id collection_id to the list of entities in parameter")
     public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
             @Valid @RequestBody Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
-        final Collection collection = (Collection) collectionService.associate(pCollectionId,
-                                                                                       pToBeAssociatedWith);
+        final Collection collection = collectionService.associate(pCollectionId, pToBeAssociatedWith);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }

@@ -17,18 +17,5 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 @Repository
 public interface ICollectionRepository extends IAbstractEntityRepository<Collection> {
 
-    /**
-     * @param pCollectionIpId
-     *            ip id of the {@link Collection} to delete
-     */
-    void deleteByIpId(String pCollectionIpId);
-
-    /**
-     * @param pCollectionIpId
-     *            Ip id of the requested {@link Collection}
-     * @return requested {@link Collection}
-     */
-    Collection findOneByIpId(String pCollectionIpId);
-
     List<Collection> findByGroups(String group);
 }
