@@ -347,6 +347,7 @@ public class IndexerServiceDataSourceIT {
             Assert.assertTrue(object.getGroups().contains("group11"));
             Assert.assertTrue(object.getGroups().contains("group12"));
             Assert.assertTrue(object.getGroups().contains("group2"));
+            Assert.assertEquals(object.getDatasetModelIds().iterator().next(), datasetModel.getId());
         }
 
         // Delete dataset1

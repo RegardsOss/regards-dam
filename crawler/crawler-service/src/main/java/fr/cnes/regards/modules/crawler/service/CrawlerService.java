@@ -2,9 +2,11 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -263,6 +265,8 @@ public class CrawlerService implements ICrawlerService {
         // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
         // datasets associated to an object
         Multimap<String, String> groupsMultimap = HashMultimap.create();
+        // Same thing with dataset modelId (several datasets can have same model)
+        Map<String, Long> modelIdMap = new HashMap<>();
         // A set containing already known not dataset ipId (to avoid creating UniformResourceName object for all tags
         // each time an object is encountered)
         Set<String> notDatasetIpIds = new HashSet<>();
@@ -274,7 +278,10 @@ public class CrawlerService implements ICrawlerService {
             object.getTags().remove(ipId);
             // reset groups
             object.getGroups().clear();
-            computeGroupsFromTags(tenant, groupsMultimap, notDatasetIpIds, object);
+            // reset datasetModelIds
+            object.getDatasetModelIds().clear();
+            // Search on all tags which ones are datasets and retrieve their groups and modelIds
+            computeGroupsAndModelIdsFromTags(tenant, groupsMultimap, modelIdMap, notDatasetIpIds, object);
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
@@ -292,14 +299,15 @@ public class CrawlerService implements ICrawlerService {
     }
 
     /**
-     * Compute groups from tags
+     * Compute groups and model ids from tags
      * @param tenant tenant
      * @param groupsMultimap a multimap of { dataset IpId, groups }
+     * @param modelIdMap a map of { dataset IpId, dataset model Id }
      * @param notDatasetIpIds a set containing already known not dataset ipIds
      * @param object DataObject to update
      */
-    private void computeGroupsFromTags(String tenant, Multimap<String, String> groupsMultimap,
-            Set<String> notDatasetIpIds, DataObject object) {
+    private void computeGroupsAndModelIdsFromTags(String tenant, Multimap<String, String> groupsMultimap,
+            Map<String, Long> modelIdMap, Set<String> notDatasetIpIds, DataObject object) {
         // Compute groups from tags
         for (Iterator<String> i = object.getTags().iterator(); i.hasNext();) {
             String tag = i.next();
@@ -323,12 +331,14 @@ public class CrawlerService implements ICrawlerService {
                         // notDatasetIpIds nor on groupsMultimap
                     } else { // dataset found, retrieving its groups and add them on groupsMultimap
                         groupsMultimap.putAll(tag, ds.getGroups());
+                        modelIdMap.put(tag, ds.getModel().getId());
                     }
                 } else { // free tag or not dataset tag
                     notDatasetIpIds.add(tag);
                 }
             }
             object.getGroups().addAll(groupsMultimap.get(tag));
+            object.getDatasetModelIds().add(modelIdMap.get(tag));
         }
     }
 
@@ -350,14 +360,16 @@ public class CrawlerService implements ICrawlerService {
         String dsIpId = dataset.getIpId().toString();
         Set<String> groups = dataset.getGroups();
         LocalDateTime updateDate = LocalDateTime.now();
+        Long datasetModelId = dataset.getModel().getId();
 
         SearchKey<DataObject> searchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
-        this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, page.getContent());
+        this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
-            this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, page.getContent());
+            this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId,
+                                                    page.getContent());
         }
     }
 
@@ -370,12 +382,13 @@ public class CrawlerService implements ICrawlerService {
      * @param objects objects to update
      */
     private void updateDataObjectsFromDatasetUpdate(String tenant, String dsIpId, Set<String> groups,
-            LocalDateTime updateDate, List<DataObject> objects) {
+            LocalDateTime updateDate, Long datasetModelId, List<DataObject> objects) {
         Set<DataObject> toSaveObjects = new HashSet<>();
         objects.forEach(o -> {
             o.getTags().add(dsIpId);
             o.getGroups().addAll(groups);
             o.setLastUpdate(updateDate);
+            o.getDatasetModelIds().add(datasetModelId);
             toSaveObjects.add(o);
         });
         esRepos.saveBulk(tenant, toSaveObjects);
