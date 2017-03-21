@@ -57,17 +57,17 @@ import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeV
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
- * Abstract entity service
- * @param <U> Parameter
+ * Abstract parameterized entity service
+ * @param <U> Entity type
  * @author oroussel
  */
 public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
@@ -87,16 +87,28 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Attribute model service
      */
-    private final IModelAttributeService modelAttributeService;
+    protected final IModelAttrAssocService modelAttributeService;
 
     protected final IModelService modelService;
 
+    /**
+     * Parameterized entity repository
+     */
     protected final IAbstractEntityRepository<U> repository;
 
+    /**
+     * Unparameterized entity repository
+     */
     protected final IAbstractEntityRepository<AbstractEntity> entityRepository;
 
+    /**
+     * Collection repository
+     */
     protected final ICollectionRepository collectionRepository;
 
+    /**
+     * Dataset repository
+     */
     protected final IDatasetRepository datasetRepository;
 
     private final IDeletedEntityRepository deletedEntityRepository;
@@ -105,7 +117,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final IPublisher publisher;
 
-    public AbstractEntityService(IModelAttributeService pModelAttributeService,
+    public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<U> pRepository, EntityManager pEm,
@@ -160,7 +172,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         Assert.notNull(model.getId(), "Model identifier must be specified.");
 
         // Retrieve model attributes
-        List<ModelAttribute> modAtts = modelAttributeService.getModelAttributes(model.getId());
+        List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
         if (((modAtts == null) || modAtts.isEmpty()) && (pAbstractEntity.getProperties() != null)) {
@@ -175,7 +187,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         buildAttributeMap(attMap, Fragment.getDefaultName(), pAbstractEntity.getProperties());
 
         // Loop over model attributes ... to validate each attribute
-        for (ModelAttribute modelAtt : modAtts) {
+        for (ModelAttrAssoc modelAtt : modAtts) {
             checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
         }
 
@@ -197,7 +209,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param pErrors validation errors
      * @param pManageAlterable manage update or not
      */
-    protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttribute pModelAttribute,
+    protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttrAssoc pModelAttribute,
             Errors pErrors, boolean pManageAlterable) {
 
         AttributeModel attModel = pModelAttribute.getAttribute();
@@ -237,12 +249,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Compute available validators
-     * @param pModelAttribute {@link ModelAttribute}
+     * @param pModelAttribute {@link ModelAttrAssoc}
      * @param pAttributeKey attribute key
      * @param pManageAlterable manage update or not
      * @return {@link Validator} list
      */
-    protected List<Validator> getValidators(ModelAttribute pModelAttribute, String pAttributeKey,
+    protected List<Validator> getValidators(ModelAttrAssoc pModelAttribute, String pAttributeKey,
             boolean pManageAlterable) {
 
         AttributeModel attModel = pModelAttribute.getAttribute();

@@ -13,7 +13,7 @@ import com.google.common.collect.Iterables;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
@@ -45,11 +45,11 @@ public class ModelTest extends AbstractModelTest {
         attModel = saveAttribute(attModel);
 
         // Create model attribute
-        final ModelAttribute modelAtt = new ModelAttribute(attModel, model);
+        final ModelAttrAssoc modelAtt = new ModelAttrAssoc(attModel, model);
         modelAttributeRepository.save(modelAtt);
 
         // Retrieve all model attributes
-        final Iterable<ModelAttribute> directAtts = modelAttributeRepository.findByModelId(model.getId());
+        final Iterable<ModelAttrAssoc> directAtts = modelAttributeRepository.findByModelId(model.getId());
         Assert.assertEquals(1, Iterables.size(directAtts));
     }
 

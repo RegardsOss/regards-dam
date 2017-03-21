@@ -6,7 +6,8 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- * Not parameterized entity service
+ * Unparameterized entity service description.
+ * This is to be used when the entity type is unknown (ex. CrawlerService)
  * @author oroussel
  */
 public interface IEntitiesService {

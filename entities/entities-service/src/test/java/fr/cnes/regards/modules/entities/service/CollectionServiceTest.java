@@ -24,7 +24,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -98,7 +98,7 @@ public class CollectionServiceTest {
         Mockito.when(entitiesRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         Mockito.when(entitiesRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
 
-        IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
+        IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
 

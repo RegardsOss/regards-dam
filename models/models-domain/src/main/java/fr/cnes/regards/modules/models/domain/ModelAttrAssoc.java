@@ -24,8 +24,8 @@ import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
 
 /**
- *
- * A {@link ModelAttribute} is linked to a {@link Model}.<br/>
+ * Model - attribute association.</br>
+ * A ModelAttrAssoc is linked to a {@link Model}.<br/>
  * It contains the reference to a global {@link AttributeModel} and adds the capacity to define if its value is set
  * manually or calculated through a calculation plugin.<<br/>
  * Thus, a same {@link AttributeModel} may be linked to different model and can either be set manually or calculated
@@ -37,7 +37,7 @@ import fr.cnes.regards.modules.models.schema.Attribute;
 @Entity
 @Table(name = "ta_model_att_att", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
 @SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "seq_model_att")
-public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable<Long>, IXmlisable<Attribute> {
+public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable<Long>, IXmlisable<Attribute> {
 
     /**
      * Internal identifier
@@ -76,22 +76,22 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
     @Column
     private Integer pos = 0;
 
-    public ModelAttribute() { // NOSONAR
+    public ModelAttrAssoc() { // NOSONAR
         super();
     }
 
-    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
         this.model = pModel;
         this.pos = pPosition;
         this.mode = ComputationMode.GIVEN;
     }
 
-    public ModelAttribute(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {// NOSONAR
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {// NOSONAR
         this(pAttributeModel, pModel, pPosition, Boolean.FALSE);
     }
 
-    public ModelAttribute(AttributeModel pAttributeModel, Model pModel) {// NOSONAR
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel) {// NOSONAR
         this(pAttributeModel, pModel, 0, Boolean.FALSE);
     }
 
@@ -121,15 +121,15 @@ public class ModelAttribute implements Comparable<ModelAttribute>, IIdentifiable
     }
 
     @Override
-    public int compareTo(ModelAttribute pOther) {
+    public int compareTo(ModelAttrAssoc pOther) {
         return this.pos - pOther.getPos();
     }
 
     @Override
     public boolean equals(Object pObj) {
         Boolean result = Boolean.FALSE;
-        if (pObj instanceof ModelAttribute) {
-            final ModelAttribute modelAtt = (ModelAttribute) pObj;
+        if (pObj instanceof ModelAttrAssoc) {
+            final ModelAttrAssoc modelAtt = (ModelAttrAssoc) pObj;
             result = modelAtt.getAttribute().equals(this.getAttribute());
         }
         return result;

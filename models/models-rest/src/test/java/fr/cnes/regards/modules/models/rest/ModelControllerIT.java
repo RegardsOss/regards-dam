@@ -24,13 +24,13 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -69,7 +69,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
      * Model attribute service
      */
     @Autowired
-    private IModelAttributeService modelAttributeService;
+    private IModelAttrAssocService modelAttributeService;
 
     @Override
     protected Logger getLogger() {
@@ -178,7 +178,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING).withoutRestriction();
         attributeModelService.addAttribute(attMod);
 
-        ModelAttribute modAtt = new ModelAttribute();
+        ModelAttrAssoc modAtt = new ModelAttrAssoc();
         modAtt.setAttribute(attMod);
         modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
 
@@ -186,7 +186,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN).isAlterable().withoutRestriction();
         attributeModelService.addAttribute(attMod);
 
-        modAtt = new ModelAttribute();
+        modAtt = new ModelAttrAssoc();
         modAtt.setAttribute(attMod);
         modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
 
