@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.dataaccess.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -36,6 +38,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  *
  */
 @Service
+@MultitenantTransactional
 public class AccessRightService {
 
     private final IAccessRightRepository<AbstractAccessRight> repository;
@@ -173,7 +176,10 @@ public class AccessRightService {
             }
             // Adding group to Dataset
             dataset.getGroups().add(accessGroup.getName());
+            // Save dataset through DatasetService (no cascade on AbstractAccessRight.dataset)
             datasetService.update(dataset);
+            // re-set updated dataset on accessRight to make its state correct on accessRight object
+            pAccessRight.setDataset(dataset);
         } else {
             if (pAccessRight instanceof UserAccessRight) {
                 User user = ((UserAccessRight) pAccessRight).getUser();
@@ -204,12 +210,10 @@ public class AccessRightService {
      * @param pId
      * @param pToBe
      * @return
-     * @throws EntityNotFoundException
-     * @throws EntityInconsistentIdentifierException
+     * @throws ModuleException
      * @throws RabbitMQVhostException
      */
-    public AbstractAccessRight updateAccessRight(Long pId, AbstractAccessRight pToBe)
-            throws EntityNotFoundException, EntityInconsistentIdentifierException {
+    public AbstractAccessRight updateAccessRight(Long pId, AbstractAccessRight pToBe) throws ModuleException {
         AbstractAccessRight toBeUpdated = repository.findOne(pId);
         if (toBeUpdated == null) {
             throw new EntityNotFoundException(pId, AbstractAccessRight.class);
@@ -217,16 +221,41 @@ public class AccessRightService {
         if (!pToBe.getId().equals(pId)) {
             throw new EntityInconsistentIdentifierException(pId, pToBe.getId(), AbstractAccessRight.class);
         }
-        AbstractAccessRight updated = repository.save(toBeUpdated);
+        // Remove current group from dataset if accessRight is a GroupAccessRight
+        Dataset dataset = datasetService.load(toBeUpdated.getDataset().getId());
+        if (dataset != null) {
+            if (toBeUpdated instanceof GroupAccessRight) {
+                // If group has changed
+                AccessGroup currentAccessGroup = ((GroupAccessRight) toBeUpdated).getAccessGroup();
+                AccessGroup newAccessGroup = ((GroupAccessRight) pToBe).getAccessGroup();
+                if (!Objects.equals(currentAccessGroup, newAccessGroup)) {
+                    dataset.getGroups().remove(currentAccessGroup.getName());
+                    dataset.getGroups().add(newAccessGroup.getName());
+                    datasetService.update(dataset);
+                    pToBe.setDataset(dataset);
+                }
+            }
+        }
+        AbstractAccessRight updated = repository.save(pToBe);
         eventPublisher.publish(new AccessRightUpdated(pId));
         return updated;
     }
 
     /**
      * @param pId
+     * @throws ModuleException
      * @throws RabbitMQVhostException
      */
-    public void deleteAccessRight(Long pId) {
+    public void deleteAccessRight(Long pId) throws ModuleException {
+        AbstractAccessRight accessRight = repository.findOne(pId);
+        // Remove current group from dataset if accessRight is a GroupAccessRight
+        Dataset dataset = datasetService.load(accessRight.getDataset().getId());
+        if (dataset != null) {
+            if (accessRight instanceof GroupAccessRight) {
+                dataset.getGroups().remove(((GroupAccessRight) accessRight).getAccessGroup().getName());
+                datasetService.update(dataset);
+            }
+        }
         repository.delete(pId);
         eventPublisher.publish(new AccessRightDeleted(pId));
     }

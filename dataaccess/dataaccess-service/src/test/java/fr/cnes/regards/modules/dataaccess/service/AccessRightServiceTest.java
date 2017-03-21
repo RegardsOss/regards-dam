@@ -19,6 +19,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.dao.IGroupAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.dao.IUserAccessRightRepository;
@@ -300,15 +301,13 @@ public class AccessRightServiceTest {
     }
 
     @Test(expected = EntityNotFoundException.class)
-    public void testUpdateAccessRightNotFound()
-            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
+    public void testUpdateAccessRightNotFound() throws RabbitMQVhostException, ModuleException {
         Mockito.when(arRepo.findOne(3L)).thenReturn(null);
         service.updateAccessRight(3L, GAR22);
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
-    public void testUpdateAccessRightInconsistentId()
-            throws EntityNotFoundException, EntityInconsistentIdentifierException, RabbitMQVhostException {
+    public void testUpdateAccessRightInconsistentId() throws RabbitMQVhostException, ModuleException {
         Mockito.when(arRepo.findOne(3L)).thenReturn(UAR11);
         service.updateAccessRight(3L, GAR22);
     }

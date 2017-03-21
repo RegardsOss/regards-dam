@@ -25,12 +25,12 @@ public class DescriptionFile {
     /**
      * Description URL
      */
-    private static final String URL_REGEXP = "^http[s]?://.*$";
+    private static final String URL_REGEXP = "^https?://.*$";
 
     @Column
     @Type(type = "text")
-    @Pattern(regexp = URL_REGEXP, message = "Description url must conform to regular expression \"" + URL_REGEXP
-            + "\".")
+    @Pattern(regexp = URL_REGEXP,
+            message = "Description url must conform to regular expression \"" + URL_REGEXP + "\".")
     protected String description;
 
     @Column(name = "description_file_content")

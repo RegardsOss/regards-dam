@@ -54,15 +54,8 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
     protected DataAccessRight dataAccessRight;
 
     /**
-     * allow to define a subset of the dataSet, if it is empty then all the dataSet is concerned
+     * It is mandatory to have no cascade at all on Dataset (a Dataset CRUD must be done through DatasetService)
      */
-    // TODO : commenté pour l'instant, à préciser
-    /*
-     * @ManyToMany
-     *
-     * @NotNull protected Set<AttributeModel> subsettingCriteria;
-     */
-
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
     private Dataset dataset;
@@ -75,15 +68,7 @@ public abstract class AbstractAccessRight implements IIdentifiable<Long> {
         qualityFilter = pQualityFilter;
         accessLevel = pAccessLevel;
         dataset = pDataset;
-        // subsettingCriteria = new HashSet<>();
     }
-
-    /*
-     * public Set<AttributeModel> getSubsettingCriteria() { return subsettingCriteria; }
-     *
-     * public void setSubsettingCriteria(Set<AttributeModel> pSubsettingCriteria) { subsettingCriteria =
-     * pSubsettingCriteria; }
-     */
 
     public Dataset getDataset() {
         return dataset;
