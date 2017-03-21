@@ -15,6 +15,11 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 
+/**
+ * Unparameterized entity service.
+ * This service is used when the entity type is unknown (ex. CrawlerService)
+ * @author oroussel
+ */
 @Service
 public class EntitiesService implements IEntitiesService {
 

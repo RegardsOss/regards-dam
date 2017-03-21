@@ -23,11 +23,11 @@ import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
 /**
  * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}. <b>The aim is not
@@ -51,13 +51,13 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     private final IAttributeModelService attributeService;
 
-    private final IModelAttributeService modelAttributeService;
+    private final IModelAttrAssocService modelAttributeService;
 
     /**
      *
      */
     public SubsettingCoherenceVisitor(Model pModel, IAttributeModelService pAttributeService,
-            IModelAttributeService pModelAttributeService) {
+            IModelAttrAssocService pModelAttributeService) {
         referenceModel = pModel;
         attributeService = pAttributeService;
         modelAttributeService = pModelAttributeService;
@@ -176,7 +176,7 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
             LOG.error(String.format(ATTRIBUTE_IS_NOT_QUERYABLE, attributeFullName, referenceModel.getName()));
             return null;
         }
-        ModelAttribute modelAttribute = modelAttributeService.getModelAttribute(referenceModel.getId(), attribute);
+        ModelAttrAssoc modelAttribute = modelAttributeService.getModelAttrAssoc(referenceModel.getId(), attribute);
         if (modelAttribute == null) {
             // attribute is not one of the model
             LOG.info(String.format(ATTRIBUTE_IS_NOT_COHERENT, attributeFullName, referenceModel.getName()));

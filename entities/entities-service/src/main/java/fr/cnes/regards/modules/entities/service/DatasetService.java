@@ -23,7 +23,7 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -37,19 +37,16 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IAttributeModelService attributeService;
 
-    private final IModelAttributeService modelAttributeService;
-
     private final DataSourceService dataSourceService;
 
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
-            IModelAttributeService pModelAttributeService, DataSourceService pDataSourceService,
+            IModelAttrAssocService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
             EntityManager pEm, IPublisher pPublisher) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher);
         attributeService = pAttributeService;
-        modelAttributeService = pModelAttributeService;
         dataSourceService = pDataSourceService;
     }
 

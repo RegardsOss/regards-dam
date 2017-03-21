@@ -28,7 +28,7 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -90,7 +90,7 @@ public class EntityServiceTest {
         dataset2.setLicence("licence");
         dataset2.setDescriptionFile(new DescriptionFile("datasetDesc2"));
 
-        IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
+        IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
 
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);

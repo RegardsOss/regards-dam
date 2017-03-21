@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -25,7 +25,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @Service
 public class CollectionService extends AbstractEntityService<Collection> implements ICollectionService {
 
-    public CollectionService(IModelAttributeService pModelAttributeService,
+    public CollectionService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<Collection> pRepository, EntityManager pEm,

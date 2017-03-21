@@ -24,11 +24,11 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
@@ -45,7 +45,7 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  *
  */
 @Service
-public class ModelService implements IModelService, IModelAttributeService {
+public class ModelService implements IModelService, IModelAttrAssocService {
 
     /**
      * Class logger
@@ -60,7 +60,7 @@ public class ModelService implements IModelService, IModelAttributeService {
     /**
      * Model attribute repository
      */
-    private final IModelAttributeRepository modelAttributeRepository;
+    private final IModelAttrAssocRepository modelAttributeRepository;
 
     /**
      * Attribute model service
@@ -68,7 +68,7 @@ public class ModelService implements IModelService, IModelAttributeService {
     private final IAttributeModelService attributeModelService;
 
     // CHECKSTYLE:OFF
-    public ModelService(IModelRepository pModelRepository, IModelAttributeRepository pModelAttributeRepository,
+    public ModelService(IModelRepository pModelRepository, IModelAttrAssocRepository pModelAttributeRepository,
             IAttributeModelService pAttributeModelService) {
         modelRepository = pModelRepository;
         modelAttributeRepository = pModelAttributeRepository;
@@ -142,30 +142,30 @@ public class ModelService implements IModelService, IModelAttributeService {
         if (!modelRepository.exists(pModelId)) {
             throw new EntityNotFoundException(pModel.getId(), Model.class);
         }
-        return duplicateModelAttributes(pModelId, createModel(pModel));
+        return duplicateModelAttrAssocs(pModelId, createModel(pModel));
     }
 
     @Override
-    public List<ModelAttribute> getModelAttributes(Long pModelId) throws ModuleException {
+    public List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) throws ModuleException {
         getModel(pModelId);
-        Iterable<ModelAttribute> modelAttributes = modelAttributeRepository.findByModelId(pModelId);
+        Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelId(pModelId);
         return (modelAttributes != null) ? ImmutableList.copyOf(modelAttributes) : Collections.emptyList();
     }
 
     @Override
-    public ModelAttribute bindAttributeToModel(Long pModelId, ModelAttribute pModelAttribute) throws ModuleException {
+    public ModelAttrAssoc bindAttributeToModel(Long pModelId, ModelAttrAssoc pModelAttribute) throws ModuleException {
         final Model model = getModel(pModelId);
         if (pModelAttribute.isIdentifiable()) {
-            throw new EntityUnexpectedIdentifierException(pModelAttribute.getId(), ModelAttribute.class);
+            throw new EntityUnexpectedIdentifierException(pModelAttribute.getId(), ModelAttrAssoc.class);
         }
         // Do not bind attribute that is part of a fragment
         if (attributeModelService.isFragmentAttribute(pModelAttribute.getAttribute().getId())) {
             throw new FragmentAttributeException(pModelAttribute.getAttribute().getId());
         }
         // Do not rebind an attribute
-        final Iterable<ModelAttribute> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
+        final Iterable<ModelAttrAssoc> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
         if (existingModelAtts != null) {
-            for (ModelAttribute modAtt : existingModelAtts) {
+            for (ModelAttrAssoc modAtt : existingModelAtts) {
                 if (modAtt.equals(pModelAttribute)) {
                     throw new EntityAlreadyExistsException(
                             String.format("Attribute %s already exists in model %s!", modAtt.getAttribute().getName(),
@@ -179,10 +179,10 @@ public class ModelService implements IModelService, IModelAttributeService {
     }
 
     @Override
-    public ModelAttribute getModelAttribute(Long pModelId, Long pModelAttributeId) throws ModuleException {
-        final ModelAttribute modelAtt = modelAttributeRepository.findOne(pModelAttributeId);
+    public ModelAttrAssoc getModelAttrAssoc(Long pModelId, Long pModelAttributeId) throws ModuleException {
+        final ModelAttrAssoc modelAtt = modelAttributeRepository.findOne(pModelAttributeId);
         if (modelAtt == null) {
-            throw new EntityNotFoundException(pModelAttributeId, ModelAttribute.class);
+            throw new EntityNotFoundException(pModelAttributeId, ModelAttrAssoc.class);
         }
         if (!pModelId.equals(modelAtt.getModel().getId())) {
             throw new UnexpectedModelAttributeException(pModelId, pModelAttributeId);
@@ -191,12 +191,12 @@ public class ModelService implements IModelService, IModelAttributeService {
     }
 
     @Override
-    public ModelAttribute getModelAttribute(Long pModelId, AttributeModel pAttribute) {
+    public ModelAttrAssoc getModelAttrAssoc(Long pModelId, AttributeModel pAttribute) {
         return modelAttributeRepository.findByModelIdAndAttribute(pModelId, pAttribute);
     }
 
     @Override
-    public ModelAttribute updateModelAttribute(Long pModelId, Long pAttributeId, ModelAttribute pModelAttribute)
+    public ModelAttrAssoc updateModelAttribute(Long pModelId, Long pAttributeId, ModelAttrAssoc pModelAttribute)
             throws ModuleException {
         if (!pModelAttribute.isIdentifiable()) {
             throw new EntityNotIdentifiableException(
@@ -204,17 +204,17 @@ public class ModelService implements IModelService, IModelAttributeService {
         }
         if (!pModelAttribute.getId().equals(pAttributeId)) {
             throw new EntityInconsistentIdentifierException(pAttributeId, pModelAttribute.getId(),
-                    ModelAttribute.class);
+                    ModelAttrAssoc.class);
         }
         if (!modelAttributeRepository.exists(pAttributeId)) {
-            throw new EntityNotFoundException(pAttributeId, ModelAttribute.class);
+            throw new EntityNotFoundException(pAttributeId, ModelAttrAssoc.class);
         }
         return modelAttributeRepository.save(pModelAttribute);
     }
 
     @Override
     public void unbindAttributeFromModel(Long pModelId, Long pAttributeId) throws ModuleException {
-        final ModelAttribute modelAtt = getModelAttribute(pModelId, pAttributeId);
+        final ModelAttrAssoc modelAtt = getModelAttrAssoc(pModelId, pAttributeId);
         // Do not bind attribute that is part of a fragment
         if (attributeModelService.isFragmentAttribute(modelAtt.getAttribute().getId())) {
             throw new FragmentAttributeException(modelAtt.getAttribute().getId());
@@ -224,10 +224,10 @@ public class ModelService implements IModelService, IModelAttributeService {
 
     @Override
     @MultitenantTransactional
-    public List<ModelAttribute> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
-        final List<ModelAttribute> modAtts = new ArrayList<>();
+    public List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
+        final List<ModelAttrAssoc> modAtts = new ArrayList<>();
         final Model model = getModel(pModelId);
-        final Iterable<ModelAttribute> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
+        final Iterable<ModelAttrAssoc> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
 
         // Check if fragment not already bound
         if (!isBoundFragment(existingModelAtts, pFragmentId)) {
@@ -238,7 +238,7 @@ public class ModelService implements IModelService, IModelAttributeService {
             if (attModels != null) {
                 for (AttributeModel attModel : attModels) {
                     // Create model attributes to link base attributes
-                    final ModelAttribute modelAtt = new ModelAttribute();
+                    final ModelAttrAssoc modelAtt = new ModelAttrAssoc();
                     modelAtt.setAttribute(attModel);
                     modelAtt.setModel(model);
                     modelAttributeRepository.save(modelAtt);
@@ -260,9 +260,9 @@ public class ModelService implements IModelService, IModelAttributeService {
      *            fragment identifier
      * @return true if fragment is bound
      */
-    private boolean isBoundFragment(final Iterable<ModelAttribute> pModelAtts, Long pFragmentId) {
+    private boolean isBoundFragment(final Iterable<ModelAttrAssoc> pModelAtts, Long pFragmentId) {
         if (pModelAtts != null) {
-            for (ModelAttribute modelAtt : pModelAtts) {
+            for (ModelAttrAssoc modelAtt : pModelAtts) {
                 if (pFragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
                     return true;
                 }
@@ -274,9 +274,9 @@ public class ModelService implements IModelService, IModelAttributeService {
     @Override
     @MultitenantTransactional
     public void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
-        final Iterable<ModelAttribute> modelAtts = modelAttributeRepository.findByModelId(pModelId);
+        final Iterable<ModelAttrAssoc> modelAtts = modelAttributeRepository.findByModelId(pModelId);
         if (modelAtts != null) {
-            for (ModelAttribute modelAtt : modelAtts) {
+            for (ModelAttrAssoc modelAtt : modelAtts) {
                 if (pFragmentId.equals(modelAtt.getAttribute().getFragment().getId())) {
                     modelAttributeRepository.delete(modelAtt);
                 }
@@ -290,13 +290,13 @@ public class ModelService implements IModelService, IModelAttributeService {
     }
 
     @Override
-    public Model duplicateModelAttributes(Long pSourceModelId, Model pTargetModel) throws ModuleException {
+    public Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException {
         // Retrieve all reference model attributes
-        final List<ModelAttribute> modelAtts = getModelAttributes(pSourceModelId);
+        final List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(pSourceModelId);
         if (modelAtts != null) {
-            for (ModelAttribute modelAtt : modelAtts) {
+            for (ModelAttrAssoc modelAtt : modelAtts) {
                 // Create model attributes to link base attributes
-                final ModelAttribute duplicatedModelAtt = new ModelAttribute();
+                final ModelAttrAssoc duplicatedModelAtt = new ModelAttrAssoc();
                 duplicatedModelAtt.setMode(modelAtt.getMode());
                 duplicatedModelAtt.setAttribute(modelAtt.getAttribute());
                 duplicatedModelAtt.setModel(pTargetModel);
@@ -311,7 +311,7 @@ public class ModelService implements IModelService, IModelAttributeService {
         // Get model
         final Model model = getModel(pModelId);
         // Get all related attributes
-        final List<ModelAttribute> modelAtts = getModelAttributes(pModelId);
+        final List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(pModelId);
         // Export fragment to output stream
         XmlExportHelper.exportModel(pOutputStream, model, modelAtts);
     }
@@ -320,7 +320,7 @@ public class ModelService implements IModelService, IModelAttributeService {
     @Override
     public Model importModel(InputStream pInputStream) throws ModuleException {
         // Import model from input stream
-        final List<ModelAttribute> modelAtts = XmlImportHelper.importModel(pInputStream);
+        final List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(pInputStream);
         // Create model once
         Model newModel = createModel(modelAtts.get(0).getModel()); // List of model attributes cannot be empty here
         // Create or control model attributes
@@ -331,19 +331,19 @@ public class ModelService implements IModelService, IModelAttributeService {
     }
 
     /**
-     * Add all {@link ModelAttribute} related to a model
+     * Add all {@link ModelAttrAssoc} related to a model
      *
      * @param pModelAtts
-     *            list of {@link ModelAttribute}
+     *            list of {@link ModelAttrAssoc}
      * @throws ModuleException
      *             if error occurs!
      */
-    private void addAllModelAttributes(List<ModelAttribute> pModelAtts) throws ModuleException {
+    private void addAllModelAttributes(List<ModelAttrAssoc> pModelAtts) throws ModuleException {
 
         // Keep fragment content to check fragment consistence
         Map<String, List<AttributeModel>> fragmentAttMap = new HashMap<>();
 
-        for (ModelAttribute modelAtt : pModelAtts) {
+        for (ModelAttrAssoc modelAtt : pModelAtts) {
 
             AttributeModel imported = modelAtt.getAttribute();
 

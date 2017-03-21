@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.schema.Attribute;
 import fr.cnes.regards.modules.models.schema.Fragment;
@@ -80,15 +80,15 @@ public final class XmlImportHelper {
     }
 
     /**
-     * Import model {@link ModelAttribute} from input stream
+     * Import model {@link ModelAttrAssoc} from input stream
      *
      * @param pInputStream
      *            input stream
-     * @return list of {@link ModelAttribute}
+     * @return list of {@link ModelAttrAssoc}
      * @throws ImportException
      *             if error occurs!
      */
-    public static List<ModelAttribute> importModel(InputStream pInputStream) throws ImportException {
+    public static List<ModelAttrAssoc> importModel(InputStream pInputStream) throws ImportException {
         final Model xmlModel = read(pInputStream, Model.class);
 
         if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {
@@ -98,7 +98,7 @@ public final class XmlImportHelper {
             throw new ImportException(message);
         }
 
-        final List<ModelAttribute> modelAtts = new ArrayList<>();
+        final List<ModelAttrAssoc> modelAtts = new ArrayList<>();
 
         // Manage model
         final fr.cnes.regards.modules.models.domain.Model model = new fr.cnes.regards.modules.models.domain.Model();
@@ -106,7 +106,7 @@ public final class XmlImportHelper {
 
         // Manage attribute (default fragment)
         for (Attribute xmlAtt : xmlModel.getAttribute()) {
-            final ModelAttribute modelAtt = new ModelAttribute();
+            final ModelAttrAssoc modelAtt = new ModelAttrAssoc();
             modelAtt.fromXml(xmlAtt);
             modelAtt.setModel(model);
             modelAtt.getAttribute()
@@ -122,7 +122,7 @@ public final class XmlImportHelper {
             fragment.fromXml(xmlFragment);
 
             for (Attribute xmlAtt : xmlFragment.getAttribute()) {
-                final ModelAttribute modelAtt = new ModelAttribute();
+                final ModelAttrAssoc modelAtt = new ModelAttrAssoc();
                 modelAtt.fromXml(xmlAtt);
                 modelAtt.setModel(model);
                 modelAtt.getAttribute().setFragment(fragment);

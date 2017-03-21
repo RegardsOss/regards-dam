@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -27,7 +27,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @Deprecated
 public class EntityService extends AbstractEntityService<AbstractEntity> implements IEntityService<AbstractEntity> {
 
-    public EntityService(IModelAttributeService pModelAttributeService,
+    public EntityService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<AbstractEntity> pRepository,

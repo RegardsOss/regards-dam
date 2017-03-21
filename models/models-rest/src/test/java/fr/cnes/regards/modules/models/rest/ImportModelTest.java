@@ -24,13 +24,13 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
 /**
  * @author Marc Sordi
@@ -59,7 +59,7 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
      * Model attribute service
      */
     @Autowired
-    private IModelAttributeService modelAttributeService;
+    private IModelAttrAssocService modelAttributeService;
 
     @Override
     protected Logger getLogger() {
@@ -98,12 +98,12 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         Assert.assertNotNull(model);
 
         // Get model attributes
-        final List<ModelAttribute> modAtts = modelAttributeService.getModelAttributes(model.getId());
+        final List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
         Assert.assertNotNull(modAtts);
         final int expectedSize = 4;
         Assert.assertEquals(expectedSize, modAtts.size());
 
-        for (ModelAttribute modAtt : modAtts) {
+        for (ModelAttrAssoc modAtt : modAtts) {
 
             final AttributeModel attModel = modAtt.getAttribute();
 

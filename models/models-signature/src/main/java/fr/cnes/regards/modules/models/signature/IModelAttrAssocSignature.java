@@ -16,52 +16,52 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
  *
- * {@link ModelAttribute} management API
+ * {@link ModelAttrAssoc} management API
  *
  * @author Marc Sordi
  *
  */
 @RequestMapping("/models/{pModelId}/attributes")
-public interface IModelAttributeSignature {
+public interface IModelAttrAssocSignature {
 
     /**
-     * Get all {@link ModelAttribute}
+     * Get all {@link ModelAttrAssoc}
      *
      * @param pModelId
      *            {@link Model} identifier
-     * @return list of linked {@link ModelAttribute}
+     * @return list of linked {@link ModelAttrAssoc}
      * @throws ModuleException
      *             if model unknown
      */
     @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<List<Resource<ModelAttribute>>> getModelAttributes(@PathVariable Long pModelId)
+    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable Long pModelId)
             throws ModuleException;
 
     /**
-     * Link an {@link AttributeModel} to a {@link Model} with a {@link ModelAttribute}.<br/>
+     * Link an {@link AttributeModel} to a {@link Model} with a {@link ModelAttrAssoc}.<br/>
      * This method is only available for {@link AttributeModel} in <b>default</b> {@link Fragment} (i.e. without name
      * space).
      *
      * @param pModelId
      *            {@link Model} identifier
      * @param pModelAttribute
-     *            {@link ModelAttribute} to link
-     * @return the {@link ModelAttribute} representing the link between the {@link Model} and the {@link AttributeModel}
+     *            {@link ModelAttrAssoc} to link
+     * @return the {@link ModelAttrAssoc} representing the link between the {@link Model} and the {@link AttributeModel}
      * @throws ModuleException
      *             if assignation cannot be done
      */
     @RequestMapping(method = RequestMethod.POST)
-    ResponseEntity<Resource<ModelAttribute>> bindAttributeToModel(@PathVariable Long pModelId,
-            @Valid @RequestBody ModelAttribute pModelAttribute) throws ModuleException;
+    ResponseEntity<Resource<ModelAttrAssoc>> bindAttributeToModel(@PathVariable Long pModelId,
+            @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException;
 
     /**
-     * Retrieve a {@link ModelAttribute} linked to a {@link Model} id
+     * Retrieve a {@link ModelAttrAssoc} linked to a {@link Model} id
      *
      * @param pModelId
      *            model identifier
@@ -72,7 +72,7 @@ public interface IModelAttributeSignature {
      *             if attribute cannot be retrieved
      */
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
-    ResponseEntity<Resource<ModelAttribute>> getModelAttribute(@PathVariable Long pModelId,
+    ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable Long pModelId,
             @PathVariable Long pAttributeId) throws ModuleException;
 
     /**
@@ -89,11 +89,11 @@ public interface IModelAttributeSignature {
      *             if attribute cannot be updated
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{pAttributeId}")
-    ResponseEntity<Resource<ModelAttribute>> updateModelAttribute(@PathVariable Long pModelId,
-            @PathVariable Long pAttributeId, @Valid @RequestBody ModelAttribute pModelAttribute) throws ModuleException;
+    ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable Long pModelId,
+            @PathVariable Long pAttributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException;
 
     /**
-     * Unlink a {@link ModelAttribute} from a {@link Model}.<br/>
+     * Unlink a {@link ModelAttrAssoc} from a {@link Model}.<br/>
      * This method is only available for {@link AttributeModel} in <b>default</b> {@link Fragment} (i.e. without
      * namespace).
      *
@@ -110,7 +110,7 @@ public interface IModelAttributeSignature {
             throws ModuleException;
 
     /**
-     * Link all {@link AttributeModel} of a particular {@link Fragment} to a model creating {@link ModelAttribute}.<br/>
+     * Link all {@link AttributeModel} of a particular {@link Fragment} to a model creating {@link ModelAttrAssoc}.<br/>
      * This method is only available for {@link AttributeModel} in a <b>particular</b> {@link Fragment} (i.e. with name
      * space, not default one).
      *
@@ -123,12 +123,12 @@ public interface IModelAttributeSignature {
      *             if binding cannot be done
      */
     @RequestMapping(method = RequestMethod.POST, value = "/fragments/{pFragmentId}")
-    ResponseEntity<List<Resource<ModelAttribute>>> bindNSAttributeToModel(@PathVariable Long pModelId,
+    ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable Long pModelId,
             @PathVariable Long pFragmentId) throws ModuleException;
 
     /**
      * Unlink all {@link AttributeModel} of a particular {@link Fragment} from a model deleting all associated
-     * {@link ModelAttribute}.<br/>
+     * {@link ModelAttrAssoc}.<br/>
      * This method is only available for {@link AttributeModel} in a <b>particular</b> {@link Fragment} (i.e. with name
      * space, not default one).
      *

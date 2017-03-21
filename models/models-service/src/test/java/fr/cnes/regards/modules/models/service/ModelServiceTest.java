@@ -25,11 +25,11 @@ import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifie
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -65,7 +65,7 @@ public class ModelServiceTest {
     /**
      * Model attribute repository
      */
-    private IModelAttributeRepository mockModelAttR;
+    private IModelAttrAssocRepository mockModelAttR;
 
     /**
      * Attribute model service
@@ -80,7 +80,7 @@ public class ModelServiceTest {
     @Before
     public void beforeTest() {
         mockModelR = Mockito.mock(IModelRepository.class);
-        mockModelAttR = Mockito.mock(IModelAttributeRepository.class);
+        mockModelAttR = Mockito.mock(IModelAttrAssocRepository.class);
         mockAttModelS = Mockito.mock(IAttributeModelService.class);
         modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS);
     }
@@ -228,7 +228,7 @@ public class ModelServiceTest {
         final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING).fragment(frag)
                 .withId(attId).get();
 
-        final ModelAttribute modAtt = new ModelAttribute(attModel, model);
+        final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
@@ -263,7 +263,7 @@ public class ModelServiceTest {
                 .withId(attId).withPatternRestriction(".*");
 
         final Long modAttId = 10L;
-        final ModelAttribute modAtt = new ModelAttribute(attModel, model);
+        final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
         modAtt.setId(modAttId);
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
@@ -290,18 +290,18 @@ public class ModelServiceTest {
         model.setDescription("Model description");
         model.setType(EntityType.COLLECTION);
 
-        final List<ModelAttribute> modAtts = new ArrayList<>();
+        final List<ModelAttrAssoc> modAtts = new ArrayList<>();
 
         // Attribute #1 in default fragment
         AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING)
                 .fragment(Fragment.buildDefault()).withoutRestriction();
-        ModelAttribute modAtt = new ModelAttribute(attMod, model);
+        ModelAttrAssoc modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
         // Attribute #2 in default fragment
         attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN).fragment(Fragment.buildDefault())
                 .withoutRestriction();
-        modAtt = new ModelAttribute(attMod, model);
+        modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
         // Geo fragment
@@ -310,12 +310,12 @@ public class ModelServiceTest {
         // Attribute #3 in geo fragment
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
-        modAtt = new ModelAttribute(attMod, model);
+        modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
         // Attribute #4 in geo fragment
         attMod = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(geo).withoutRestriction();
-        modAtt = new ModelAttribute(attMod, model);
+        modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
         // Geo fragment
@@ -324,7 +324,7 @@ public class ModelServiceTest {
         // Attribute #5 in contact fragment
         attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING).fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
-        modAtt = new ModelAttribute(attMod, model);
+        modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
