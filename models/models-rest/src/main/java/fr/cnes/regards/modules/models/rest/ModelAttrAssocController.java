@@ -43,17 +43,17 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     public static final String TYPE_MAPPING = "/models/{pModelId}/attributes";
 
     /**
-     * Model attribute service
+     * Model attribute association service
      */
-    private final IModelAttrAssocService modelAttributeService;
+    private final IModelAttrAssocService modelAttrAssocService;
 
     /**
      * Resource service
      */
     private final IResourceService resourceService;
 
-    public ModelAttrAssocController(IModelAttrAssocService pModelAttributeService, IResourceService pResourceService) {
-        this.modelAttributeService = pModelAttributeService;
+    public ModelAttrAssocController(IModelAttrAssocService pModelAttrAssocService, IResourceService pResourceService) {
+        this.modelAttrAssocService = pModelAttrAssocService;
         this.resourceService = pResourceService;
     }
 
@@ -70,7 +70,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable Long pModelId)
             throws ModuleException {
-        return ResponseEntity.ok(toResources(modelAttributeService.getModelAttrAssocs(pModelId), pModelId));
+        return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(pModelId), pModelId));
     }
 
     /**
@@ -91,7 +91,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     public ResponseEntity<Resource<ModelAttrAssoc>> bindAttributeToModel(@PathVariable Long pModelId,
             @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
         return ResponseEntity
-                .ok(toResource(modelAttributeService.bindAttributeToModel(pModelId, pModelAttribute), pModelId));
+                .ok(toResource(modelAttrAssocService.bindAttributeToModel(pModelId, pModelAttribute), pModelId));
     }
 
     /**
@@ -109,7 +109,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
     public ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable Long pModelId,
             @PathVariable Long pAttributeId) throws ModuleException {
-        return ResponseEntity.ok(toResource(modelAttributeService.getModelAttrAssoc(pModelId, pAttributeId), pModelId));
+        return ResponseEntity.ok(toResource(modelAttrAssocService.getModelAttrAssoc(pModelId, pAttributeId), pModelId));
     }
 
     /**
@@ -131,7 +131,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
             @PathVariable Long pAttributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute)
             throws ModuleException {
         return ResponseEntity
-                .ok(toResource(modelAttributeService.updateModelAttribute(pModelId, pAttributeId, pModelAttribute),
+                .ok(toResource(modelAttrAssocService.updateModelAttribute(pModelId, pAttributeId, pModelAttribute),
                                pModelId));
     }
 
@@ -152,7 +152,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pAttributeId}")
     public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable Long pModelId, @PathVariable Long pAttributeId)
             throws ModuleException {
-        modelAttributeService.unbindAttributeFromModel(pModelId, pAttributeId);
+        modelAttrAssocService.unbindAttributeFromModel(pModelId, pAttributeId);
         return ResponseEntity.noContent().build();
     }
 
@@ -174,7 +174,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable Long pModelId,
             @PathVariable Long pFragmentId) throws ModuleException {
         return ResponseEntity
-                .ok(toResources(modelAttributeService.bindNSAttributeToModel(pModelId, pFragmentId), pModelId));
+                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFragmentId), pModelId));
     }
 
     /**
@@ -195,7 +195,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @RequestMapping(method = RequestMethod.DELETE, value = "/fragments/{pFragmentId}")
     public ResponseEntity<Void> unbindNSAttributeFromModel(@PathVariable Long pModelId, @PathVariable Long pFragmentId)
             throws ModuleException {
-        modelAttributeService.unbindNSAttributeToModel(pModelId, pFragmentId);
+        modelAttrAssocService.unbindNSAttributeToModel(pModelId, pFragmentId);
         return ResponseEntity.noContent().build();
     }
 
