@@ -268,6 +268,8 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        // Associated dataset must be updated
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag2.getName()));
         performDefaultPost(AccessRightController.PATH_ACCESS_RIGHTS, gar3, expectations, ACCESS_RIGHTS_ERROR_MSG);
     }
 
@@ -276,8 +278,37 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID, uar1,
-                          expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
+        // Change access level
+        UserAccessRight uarTmp = new UserAccessRight(qf, AccessLevel.RESTRICTED_ACCESS, ds1, user1);
+        uarTmp.setId(uar1.getId());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("RESTRICTED_ACCESS"));
+        performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
+                          uarTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
+    }
+
+    @Test
+    public void testUpdateGroupAccessRight() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        // Change access level and group (ag2 instead of ag1)
+        GroupAccessRight garTmp = new GroupAccessRight(qf, AccessLevel.RESTRICTED_ACCESS, ds1, ag2);
+        garTmp.setId(gar1.getId());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("RESTRICTED_ACCESS"));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag2.getName()));
+        performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
+                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, gar1.getId());
+
+        // Save again garTmp (with ag1 as access group and FULL_ACCESS)
+        garTmp = new GroupAccessRight(qf, AccessLevel.FULL_ACCESS, ds1, ag1);
+        garTmp.setId(gar1.getId());
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("FULL_ACCESS"));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag1.getName()));
+        performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
+                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, gar1.getId());
     }
 
     @Test

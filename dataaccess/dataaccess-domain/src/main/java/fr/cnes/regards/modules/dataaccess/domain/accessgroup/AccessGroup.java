@@ -50,7 +50,7 @@ public class AccessGroup implements IIdentifiable<Long> {
     @CollectionTable(name = "ta_access_group_users", joinColumns = @JoinColumn(name = "access_group_id"),
             foreignKey = @ForeignKey(name = "fk_access_group_users"))
     @Convert(converter = UserConverter.class)
-    private Set<User> users = new HashSet<>();;
+    private Set<User> users = new HashSet<>();
 
     @NotNull
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "accessGroup")

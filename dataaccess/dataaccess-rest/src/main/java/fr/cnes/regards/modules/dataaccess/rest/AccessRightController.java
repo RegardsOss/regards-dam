@@ -30,7 +30,6 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
@@ -92,7 +91,7 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
     public ResponseEntity<Resource<AbstractAccessRight>> updateAccessRight(
             @Valid @PathVariable("accessright_id") Long pId, @Valid @RequestBody AbstractAccessRight pToBe)
-            throws EntityNotFoundException, EntityInconsistentIdentifierException {
+            throws ModuleException {
         AbstractAccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
@@ -100,7 +99,8 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "delete the access right of id requested")
-    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId) {
+    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
+            throws ModuleException {
         accessRightService.deleteAccessRight(pId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
