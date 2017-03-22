@@ -1,7 +1,7 @@
 package fr.cnes.regards.modules.indexer.dao;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -19,21 +19,21 @@ public class FacetPage<T> extends PageImpl<T> {
      * Facet map.
      * key is attribute name and value is of type {@link IFacet}
      */
-    private Map<String, IFacet<?>> facetMap;
+    private Set<IFacet<?>> facets;
 
-    public FacetPage(List<T> pContent, Map<String, IFacet<?>> pFacetMap, Pageable pPageable, long pTotal) {
+    public FacetPage(List<T> pContent, Set<IFacet<?>> pFacets, Pageable pPageable, long pTotal) {
         super(pContent, pPageable, pTotal);
-        this.facetMap = pFacetMap;
+        this.facets = pFacets;
 
     }
 
-    public FacetPage(List<T> pContent, Map<String, IFacet<?>> pFacetMap) {
+    public FacetPage(List<T> pContent, Set<IFacet<?>> pFacets) {
         super(pContent);
-        this.facetMap = pFacetMap;
+        this.facets = pFacets;
     }
 
-    public Map<String, IFacet<?>> getFacetMap() {
-        return facetMap;
+    public Set<IFacet<?>> getFacets() {
+        return facets;
     }
 
     @Override
