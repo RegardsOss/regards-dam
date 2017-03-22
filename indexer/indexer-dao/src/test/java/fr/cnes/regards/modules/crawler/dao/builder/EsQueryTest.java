@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -315,30 +316,32 @@ public class EsQueryTest {
                                             facetMapBuilder.put("properties.tags", FacetType.STRING).build());
         Assert.assertEquals(10, page.getContent().size());
         Assert.assertTrue(page instanceof FacetPage);
-        Map<String, IFacet<?>> facetMap = ((FacetPage<Item>) page).getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("properties.tags"));
-        Assert.assertTrue(facetMap.get("properties.tags") instanceof StringFacet);
-        StringFacet strFacet = (StringFacet) facetMap.get("properties.tags");
+        Set<IFacet<?>> facets = ((FacetPage<Item>) page).getFacets();
+        Assert.assertFalse(facets.isEmpty());
+        Assert.assertTrue(facets.iterator().next() instanceof StringFacet);
+        StringFacet strFacet = (StringFacet) facets.iterator().next();
         Assert.assertNotNull(strFacet);
 
+        facetMapBuilder = new ImmutableMap.Builder<>();
         FacetPage<Item> facetPage = (FacetPage<Item>) repository
                 .search(searchKey, 10, ICriterion.all(),
                         facetMapBuilder.put("properties.ints", FacetType.NUMERIC).build());
         Assert.assertEquals(10, facetPage.getContent().size());
-        facetMap = facetPage.getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("properties.ints"));
-        Assert.assertTrue(facetMap.get("properties.ints") instanceof NumericFacet);
-        NumericFacet numFacet = (NumericFacet) facetMap.get("properties.ints");
+        facets = facetPage.getFacets();
+        Assert.assertFalse(facets.isEmpty());
+        Assert.assertTrue(facets.iterator().next() instanceof NumericFacet);
+        NumericFacet numFacet = (NumericFacet) facets.iterator().next();
         Assert.assertNotNull(numFacet);
 
+        facetMapBuilder = new ImmutableMap.Builder<>();
         facetPage = (FacetPage<Item>) repository
                 .search(searchKey, 10, ICriterion.all(),
                         facetMapBuilder.put("properties.dates", FacetType.DATE).build());
         Assert.assertEquals(10, facetPage.getContent().size());
-        facetMap = facetPage.getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("properties.dates"));
-        Assert.assertTrue(facetMap.get("properties.dates") instanceof DateFacet);
-        DateFacet dateFacet = (DateFacet) facetMap.get("properties.dates");
+        facets = facetPage.getFacets();
+        Assert.assertFalse(facets.isEmpty());
+        Assert.assertTrue(facets.iterator().next() instanceof DateFacet);
+        DateFacet dateFacet = (DateFacet) facets.iterator().next();
         Assert.assertNotNull(dateFacet);
 
         // With criterions
@@ -351,19 +354,8 @@ public class EsQueryTest {
         Assert.assertEquals(10, page.getContent().size());
         page = repository.search(searchKey, 10, interDatesCrit4, facetReqMap);
         Assert.assertTrue(page instanceof FacetPage);
-        facetMap = ((FacetPage<Item>) page).getFacetMap();
-        Assert.assertTrue(facetMap.containsKey("properties.tags"));
-        Assert.assertTrue(facetMap.get("properties.tags") instanceof StringFacet);
-        strFacet = (StringFacet) facetMap.get("properties.tags");
-        Assert.assertNotNull(strFacet);
-        Assert.assertTrue(facetMap.containsKey("properties.ints"));
-        Assert.assertTrue(facetMap.get("properties.ints") instanceof NumericFacet);
-        numFacet = (NumericFacet) facetMap.get("properties.ints");
-        Assert.assertNotNull(numFacet);
-        Assert.assertTrue(facetMap.containsKey("properties.dates"));
-        Assert.assertTrue(facetMap.get("properties.dates") instanceof DateFacet);
-        dateFacet = (DateFacet) facetMap.get("properties.dates");
-        Assert.assertNotNull(dateFacet);
+        facets = ((FacetPage<Item>) page).getFacets();
+        Assert.assertEquals(3, facets.size());
     }
 
     @Test
