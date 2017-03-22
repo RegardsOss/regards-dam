@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -433,16 +435,16 @@ public class EsRepository implements IEsRepository {
                 response = getWithTimeouts(request);
             }
 
-            Map<String, IFacet<?>> facetResultsMap = null;
+            Set<IFacet<?>> facetResults = null;
             if (pFacetsMap != null) {
                 // Get the new aggregations result map
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 // Create the facet map
-                facetResultsMap = new HashMap<>();
+                facetResults = new HashSet<>();
                 for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
                     FacetType facetType = entry.getValue();
                     String attributeName = entry.getKey();
-                    fillFacetMap(aggsMap, facetResultsMap, facetType, attributeName);
+                    fillFacets(aggsMap, facetResults, facetType, attributeName);
                 }
             }
 
@@ -451,10 +453,10 @@ public class EsRepository implements IEsRepository {
                 results.add(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
             }
             // If no facet, juste returns a "simple" Page
-            if (facetResultsMap == null) {
+            if (facetResults == null) {
                 return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
             } else { // else returns a FacetPage
-                return new FacetPage<>(results, facetResultsMap, pPageRequest, response.getHits().getTotalHits());
+                return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
             }
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
@@ -655,11 +657,11 @@ public class EsRepository implements IEsRepository {
     /**
      * Compute aggregations results to fill results facet map of an attribute
      * @param aggsMap aggregation resuls map
-     * @param facetMap map of results facets
+     * @param facets map of results facets
      * @param facetType type of facet for given attribute
      * @param attributeName given attribute
      */
-    private void fillFacetMap(Map<String, Aggregation> aggsMap, Map<String, IFacet<?>> facetMap, FacetType facetType,
+    private void fillFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, FacetType facetType,
             String attributeName) {
         switch (facetType) {
             case STRING: {
@@ -667,7 +669,7 @@ public class EsRepository implements IEsRepository {
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_POSTFIX);
                 Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
                 terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
-                facetMap.put(attributeName, new StringFacet(attributeName, valueMap));
+                facets.add(new StringFacet(attributeName, valueMap));
                 break;
             }
             case NUMERIC: {
@@ -691,7 +693,7 @@ public class EsRepository implements IEsRepository {
                     }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
-                facetMap.put(attributeName, new NumericFacet(attributeName, valueMap));
+                facets.add(new NumericFacet(attributeName, valueMap));
                 break;
             }
             case DATE: {
@@ -716,7 +718,7 @@ public class EsRepository implements IEsRepository {
                     }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
-                facetMap.put(attributeName, new DateFacet(attributeName, valueMap));
+                facets.add(new DateFacet(attributeName, valueMap));
                 break;
             }
             default:
