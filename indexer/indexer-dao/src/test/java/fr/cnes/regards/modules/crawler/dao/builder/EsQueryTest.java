@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.assertj.core.util.Maps;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.AfterClass;
@@ -170,9 +171,14 @@ public class EsQueryTest {
     public void testSearch() {
         this.createData();
 
+        // Without knowing type (ie on AbstractItem which is a subtype of Item)
+        SearchKey<AbstractItem, AbstractItem> abstractSearchKey = new SearchKey<>(INDEX,
+                Maps.newHashMap(TYPE1, Item.class));
+        Assert.assertEquals(10, repository.search(abstractSearchKey, 10, ICriterion.all()).getContent().size());
+
         // On integers
         ICriterion gt5crit = ICriterion.gt("properties.size", 5);
-        SearchKey<Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
         Assert.assertEquals(5, repository.search(searchKey, 10, gt5crit).getContent().size());
         Assert.assertEquals(5, repository.search(searchKey, 10, ICriterion.not(gt5crit)).getContent().size());
 
@@ -309,7 +315,7 @@ public class EsQueryTest {
     public void testSearchWithFacets() {
         this.createData();
 
-        SearchKey<Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
         Page<Item> page = repository.search(searchKey, 10, ICriterion.all(),
@@ -365,7 +371,7 @@ public class EsQueryTest {
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
         sortMap.put("properties.text", true);
         sortMap.put("properties.size", false);
-        SearchKey<Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX, TYPE1, Item.class);
         List<Item> items = repository.search(searchKey, 10, sortMap, ICriterion.all()).getContent();
         List<Item> itemsSorted = Lists.newArrayList(items);
         Comparator<Item> comparator = Comparator.comparing(item -> item.getProperties().getText());
@@ -395,7 +401,7 @@ public class EsQueryTest {
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
         // sortMap.put("docId", false);
         long start = System.currentTimeMillis();
-        SearchKey<Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
         Page<Item> page = repository.search(searchKey, 100, ICriterion.all(), facetMapBuilder.build(), sortMap);
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
         // while (page.hasNext()) {
@@ -425,7 +431,8 @@ public class EsQueryTest {
         // this.createData2();
         // Search with aggregations
         long start = System.currentTimeMillis();
-        SearchKey<Properties> searchKey1 = new SearchKey<>(INDEX2, TYPE1, Properties.class);
+        SearchKey<Item, Properties> searchKey1 = new SearchKey<>(INDEX2, Maps.newHashMap(TYPE1, Item.class),
+                Properties.class);
         List<Properties> propertieses = repository.search(searchKey1, ICriterion.lt("properties.size", 1000),
                                                           "properties");
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
@@ -442,7 +449,8 @@ public class EsQueryTest {
         Assert.assertArrayEquals(array1, array2);
 
         // Testing with '.' into source attribute
-        SearchKey<Integer> searchKey2 = new SearchKey<>(INDEX2, TYPE1, Integer.class);
+        SearchKey<Item, Integer> searchKey2 = new SearchKey<>(INDEX2, Maps.newHashMap(TYPE1, Item.class),
+                Integer.class);
         List<Integer> upperBounds = repository.search(searchKey2, ICriterion.lt("properties.size", 1000),
                                                       "properties.intRange.upperBound");
         Assert.assertEquals(10, upperBounds.size());
@@ -474,7 +482,7 @@ public class EsQueryTest {
         };
 
         long start = System.currentTimeMillis();
-        SearchKey<Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
         repository.searchAll(searchKey, updater, ICriterion.all());
         if (!items.isEmpty()) {
             long startS = System.currentTimeMillis();
@@ -499,27 +507,21 @@ public class EsQueryTest {
         // Search all items and set tags for all of them
 
         long start = System.currentTimeMillis();
-        SearchKey<Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
         repository.searchAll(searchKey, this::nothing, ICriterion.all());
         System.out.println("Crossing 1 000 000 entities : " + (System.currentTimeMillis() - start) + " ms");
     }
 
-    private static class Item implements IIndexable, Serializable {
+    private static abstract class AbstractItem implements IIndexable {
 
         private String docId;
 
         private String type;
 
-        private Properties properties;
-
-        private Item() {
-        }
-
-        public Item(String pId, String pType, Properties pProperties) {
+        protected AbstractItem(String pDocId, String pType) {
             super();
-            docId = pId;
+            docId = pDocId;
             type = pType;
-            properties = pProperties;
         }
 
         @Override
@@ -527,27 +529,45 @@ public class EsQueryTest {
             return docId;
         }
 
+        @SuppressWarnings("unused")
+        public void setDocId(String pDocId) {
+            docId = pDocId;
+        }
+
         @Override
         public String getType() {
             return type;
         }
 
-        public void setDocId(String pId) {
-            docId = pId;
+        @SuppressWarnings("unused")
+        public void setType(String pType) {
+            type = pType;
+        }
+
+    }
+
+    private static class Item extends AbstractItem implements IIndexable, Serializable {
+
+        private Properties properties;
+
+        @SuppressWarnings("unused")
+        private Item() {
+            this(null, null, null);
+        }
+
+        public Item(String pId, String pType, Properties pProperties) {
+            super(pId, pType);
+            properties = pProperties;
         }
 
         public Properties getProperties() {
             return properties;
         }
 
+        @SuppressWarnings("unused")
         public void setProperties(Properties pProperties) {
             properties = pProperties;
         }
-
-        public void setType(String pType) {
-            type = pType;
-        }
-
     }
 
     private static class Range<T> {
