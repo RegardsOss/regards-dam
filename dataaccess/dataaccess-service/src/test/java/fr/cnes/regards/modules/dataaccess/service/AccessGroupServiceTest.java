@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
@@ -42,14 +41,11 @@ public class AccessGroupServiceTest {
 
     private IProjectUsersClient projectUserClient;
 
-    private JWTService jwtService;
-
     @Before
     public void init() {
         dao = Mockito.mock(IAccessGroupRepository.class);
         projectUserClient = Mockito.mock(IProjectUsersClient.class);
-        jwtService = new JWTService();
-        accessGroupService = new AccessGroupService(dao, projectUserClient, jwtService);
+        accessGroupService = new AccessGroupService(dao, projectUserClient);
         accessGroupService.setMicroserviceName("test");
         accessGroup1 = new AccessGroup(AG1_NAME);
         accessGroup1.setId(AG1_ID);
@@ -77,8 +73,6 @@ public class AccessGroupServiceTest {
 
     @Test(expected = EntityNotFoundException.class)
     public void testAssociateUserToGroupWithUnknownUser() throws EntityNotFoundException {
-        jwtService.injectMockToken("test", "ADMIN");
-        jwtService.setSecret("123456789");
         final ResponseEntity<Resource<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         Mockito.when(projectUserClient.retrieveProjectUser(USER1_EMAIL)).thenReturn(mockedResponse);
 
@@ -88,8 +82,6 @@ public class AccessGroupServiceTest {
 
     @Test(expected = EntityNotFoundException.class)
     public void testDissociateUserFromGroupWithUnknownUser() throws EntityNotFoundException {
-        jwtService.injectMockToken("test", "ADMIN");
-        jwtService.setSecret("123456789");
         final ResponseEntity<Resource<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         Mockito.when(projectUserClient.retrieveProjectUser(USER1_EMAIL)).thenReturn(mockedResponse);
 
