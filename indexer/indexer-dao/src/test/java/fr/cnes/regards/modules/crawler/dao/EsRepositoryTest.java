@@ -262,7 +262,7 @@ public class EsRepositoryTest {
         }
         final AtomicInteger i = new AtomicInteger(0);
         long start = System.currentTimeMillis();
-        SearchKey<Item> searchKey = new SearchKey<>("loading", null, Item.class);
+        SearchKey<Item, Item> searchKey = new SearchKey<>("loading", "item", Item.class);
         repository.searchAll(searchKey, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
