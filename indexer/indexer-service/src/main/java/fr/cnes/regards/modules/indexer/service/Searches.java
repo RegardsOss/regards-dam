@@ -32,6 +32,10 @@ public class Searches {
     private static final Map<String, Class<? extends AbstractEntity>> SEARCH_TYPE_MAP = TYPE_MAP.keySet().stream()
             .collect(Collectors.toMap(EntityType::toString, type -> TYPE_MAP.get(type)));
 
+    public static EntityType fromClass(Class<?> clazz) {
+        return TYPE_MAP.inverse().get(clazz);
+    }
+
     /**
      * Define a search key on a single entity type returning this single entity type
      * @param index Elasticsearch index
