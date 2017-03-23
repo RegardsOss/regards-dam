@@ -194,7 +194,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         return this.search(searchKey, new PageRequest(0, pPageSize), pCriterion, pFacetsMap, pAscSortMap);
     }
@@ -211,7 +211,7 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
+    <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap);
 
     /**
@@ -223,7 +223,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, LinkedHashMap<String, Boolean> pAscSortMap,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, LinkedHashMap<String, Boolean> pAscSortMap,
             ICriterion pCriterion) {
         return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
     }
@@ -239,7 +239,7 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest,
             LinkedHashMap<String, Boolean> pAscSortMap, ICriterion pCriterion) {
         return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
     }
@@ -253,7 +253,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap) {
         return this.search(searchKey, pPageSize, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
     }
@@ -269,7 +269,7 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap) {
         return this.search(searchKey, pPageRequest, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
     }
@@ -283,7 +283,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion) {
+    default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, ICriterion pCriterion) {
         return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null,
                            (LinkedHashMap<String, Boolean>) null);
     }
@@ -299,7 +299,7 @@ public interface IEsRepository {
      * @param <T> class of document type
      * @return specified result page
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion) {
+    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion) {
         return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null,
                            (LinkedHashMap<String, Boolean>) null);
     }
@@ -316,7 +316,8 @@ public interface IEsRepository {
      * @param <T> inner result property type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion pCriterion, String pSourceAttribute) {
+    default <T> Page<T> search(SearchKey<?, T> searchKey, int pPageSize, ICriterion pCriterion,
+            String pSourceAttribute) {
         return this.search(searchKey, pPageSize, pCriterion, pSourceAttribute);
     }
 
@@ -329,15 +330,24 @@ public interface IEsRepository {
      * @param pCriterion search criterion
      * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the
      * results documents
-     * @param <T> class of document type
+     * @param <T> class of inner sourceAttribute
      * @return all results (ordered is garanteed to be always the same)
      */
-    <T> List<T> search(SearchKey<T> searchKey, ICriterion pCriterion, String pSourceAttribute);
+    <T> List<T> search(SearchKey<?, T> searchKey, ICriterion pCriterion, String pSourceAttribute);
 
-    <T, U> List<U> search(SearchKey<T> searchKey, ICriterion pCriterion, String pSourceAttribute,
+    /**
+     * Same as {@link #search(SearchKey, ICriterion, String)} providing a transform function to apply on all results
+     * @param <T> class of inner sourceAttribute
+     * @param <U> result class of transform function
+     */
+    <T, U> List<U> search(SearchKey<?, T> searchKey, ICriterion pCriterion, String pSourceAttribute,
             Function<T, U> transformFct);
 
-    <T, U> List<U> search(SearchKey<T[]> searchKey, ICriterion criterion, String sourceAttribute,
+    /**
+     * Same as {@link #search(SearchKey, ICriterion, String, Function)} with an intermediate filter predicate
+     * to be applied before the transform function
+     */
+    <T, U> List<U> search(SearchKey<?, T[]> searchKey, ICriterion criterion, String sourceAttribute,
             Predicate<T> filterPredicate, Function<T, U> transformFct);
 
     /**
@@ -350,7 +360,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return first result page containing max page size documents
      */
-    default <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, int pPageSize, Object pValue, String... pFields) {
+    default <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, int pPageSize, Object pValue, String... pFields) {
         return this.multiFieldsSearch(searchKey, new PageRequest(0, pPageSize), pValue, pFields);
     }
 
@@ -366,7 +376,7 @@ public interface IEsRepository {
      * @param <T> document type
      * @return specified result page
      */
-    <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
+    <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
 
     /**
      * Execute specified action for all search results<br/>
@@ -375,7 +385,7 @@ public interface IEsRepository {
      * @param pAction action to be executed for each search result element
      * @param pCriterion search criterion
      */
-    <T> void searchAll(SearchKey<T> searchKey, Consumer<T> pAction, ICriterion pCriterion);
+    <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCriterion);
 
     /**
      * Execute specified action for all search results<br/>
@@ -385,7 +395,7 @@ public interface IEsRepository {
      * @param pAction action to be executed for each search result element
      * @param pAttributeSource inner attribute to be used as ES "_source" results
      */
-    <T> void searchAll(SearchKey<T> searchKey, Consumer<T> pAction, ICriterion pCriterion, String pAttributeSource);
+    <T> void searchAll(SearchKey<?, T> searchKey, Consumer<T> pAction, ICriterion pCriterion, String pAttributeSource);
 
     /**
      * Close Client

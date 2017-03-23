@@ -51,6 +51,7 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
+import fr.cnes.regards.modules.indexer.service.Searches;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -335,7 +336,8 @@ public class IndexerServiceDataSourceIT {
         }
         Assert.assertNotNull(dataset1);
 
-        SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        //SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        SearchKey<DataObject, DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.equals("tags", dataset1.getIpId().toString()));
@@ -380,13 +382,30 @@ public class IndexerServiceDataSourceIT {
         }
 
         // Search for Dataset but with criterion on DataObjects
-        SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        //        SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        SearchKey<DataObject, Dataset> dsSearchKey = Searches.onSingleEntityReturningJoinEntity(tenant, EntityType.DATA,
+                                                                                                EntityType.DATASET);
+        //Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
         Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
         dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
+        Assert.assertNotNull(dsPage);
+        Assert.assertFalse(dsPage.getContent().isEmpty());
+        Assert.assertEquals(1, dsPage.getContent().size());
+
+        // Search for Dataset but with criterion on everything
+        //SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        SearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches.onAllEntitiesReturningJoinEntity(tenant,
+                                                                                                    EntityType.DATASET);
+        dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        Assert.assertNotNull(dsPage);
+        Assert.assertFalse(dsPage.getContent().isEmpty());
+        Assert.assertEquals(1, dsPage.getContent().size());
+
+        dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
