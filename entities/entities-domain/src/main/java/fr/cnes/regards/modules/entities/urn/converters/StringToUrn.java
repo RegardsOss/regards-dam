@@ -4,7 +4,7 @@
 package fr.cnes.regards.modules.entities.urn.converters;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  *
  * @author Xavier-Alexandre Brochard
  */
-@Component
+@ControllerAdvice
 public class StringToUrn implements Converter<String, UniformResourceName> {
 
     /*

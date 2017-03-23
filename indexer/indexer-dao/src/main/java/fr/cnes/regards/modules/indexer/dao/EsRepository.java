@@ -322,17 +322,15 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> void searchAll(SearchKey<T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
+    public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
         SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
-        if (searchKey.getSearchType() != null) {
-            requestBuilder = requestBuilder.setTypes(searchKey.getSearchType());
-        }
+        requestBuilder = requestBuilder.setTypes(searchKey.getSearchTypes());
         SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
                 .setQuery(pCrit.accept(CRITERION_VISITOR)).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
         // Scroll until no hits are returned
         do {
             for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                pAction.accept(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
+                pAction.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
 
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
@@ -342,7 +340,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> void searchAll(SearchKey<T> searchKey, Consumer<T> action, ICriterion crit, String attributeSource) {
+    public <R> void searchAll(SearchKey<?, R> searchKey, Consumer<R> action, ICriterion crit, String attributeSource) {
         // If attribute source is 'toto.titi.tutu', result from ES is '{"toto":{"titi":{"tutu":{...}}}}'
         // We just want "{...}"
         String startJsonResultStr = attributeSource;
@@ -356,10 +354,7 @@ public class EsRepository implements IEsRepository {
         startJsonResultStr = "{\"" + startJsonResultStr + "\":";
 
         SearchRequestBuilder searchRequest = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
-
-        if (searchKey.getSearchType() != null) {
-            searchRequest = searchRequest.setTypes(searchKey.getSearchType());
-        }
+        searchRequest = searchRequest.setTypes(searchKey.getSearchTypes());
         SearchResponse scrollResp = searchRequest.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
                 .setQuery(crit.accept(CRITERION_VISITOR)).setFetchSource(attributeSource, null)
                 .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
@@ -398,7 +393,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion,
+    public <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion criterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         String index = searchKey.getSearchIndex().toLowerCase();
         try {
@@ -406,10 +401,7 @@ public class EsRepository implements IEsRepository {
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
             QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(criterion.accept(CRITERION_VISITOR));
-            SearchRequestBuilder request = client.prepareSearch(index);
-            if (searchKey.getSearchType() != null) {
-                request = request.setTypes(searchKey.getSearchType());
-            }
+            SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
             request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                     .setSize(pPageRequest.getPageSize());
             if (pAscSortMap != null) {
@@ -423,10 +415,7 @@ public class EsRepository implements IEsRepository {
             // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
             if (twoPassRequestNeeded) {
                 // Rebuild request
-                request = client.prepareSearch(index);
-                if (searchKey.getSearchType() != null) {
-                    request = request.setTypes(searchKey.getSearchType());
-                }
+                request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
                 request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                         .setSize(pPageRequest.getPageSize());
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
@@ -450,7 +439,7 @@ public class EsRepository implements IEsRepository {
 
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
+                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
             // If no facet, juste returns a "simple" Page
             if (facetResults == null) {
@@ -466,13 +455,13 @@ public class EsRepository implements IEsRepository {
     /**
      * Utility class to create a quadruple key (a pair of pairs) used by loading cache mechanism
      */
-    private static class CacheKey extends Tuple<SearchKey<?>, Tuple<ICriterion, String>> {
+    private static class CacheKey extends Tuple<SearchKey<?, ?>, Tuple<ICriterion, String>> {
 
-        public CacheKey(SearchKey<?> searchKey, ICriterion v2, String v3) {
+        public CacheKey(SearchKey<?, ?> searchKey, ICriterion v2, String v3) {
             super(searchKey, new Tuple<>(v2, v3));
         }
 
-        public SearchKey<?> getV1() {
+        public SearchKey<?, ?> getV1() {
             return v1();
         }
 
@@ -507,11 +496,11 @@ public class EsRepository implements IEsRepository {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<T> search(SearchKey<T> searchKey, ICriterion criterion, String sourceAttribute) {
+    public <R> List<R> search(SearchKey<?, R> searchKey, ICriterion criterion, String sourceAttribute) {
         try {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
-            return objects.stream().map(o -> (T) o).collect(Collectors.toList());
+            return objects.stream().map(o -> (R) o).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
@@ -519,12 +508,12 @@ public class EsRepository implements IEsRepository {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T, U> List<U> search(SearchKey<T> searchKey, ICriterion criterion, String sourceAttribute,
-            Function<T, U> transformFct) {
+    public <R, U> List<U> search(SearchKey<?, R> searchKey, ICriterion criterion, String sourceAttribute,
+            Function<R, U> transformFct) {
         try {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
-            return objects.stream().map(o -> (T) o).map(transformFct).collect(Collectors.toList());
+            return objects.stream().map(o -> (R) o).map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
         }
@@ -532,12 +521,12 @@ public class EsRepository implements IEsRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T, U> List<U> search(SearchKey<T[]> searchKey, ICriterion criterion, String sourceAttribute,
-            Predicate<T> filterPredicate, Function<T, U> transformFct) {
+    public <R, U> List<U> search(SearchKey<?, R[]> searchKey, ICriterion criterion, String sourceAttribute,
+            Predicate<R> filterPredicate, Function<R, U> transformFct) {
         try {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
-            return objects.stream().flatMap(o -> Arrays.stream((T[]) o)).distinct().filter(filterPredicate)
+            return objects.stream().flatMap(o -> Arrays.stream((R[]) o)).distinct().filter(filterPredicate)
                     .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw Throwables.propagate(e);
@@ -727,7 +716,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, Pageable pPageRequest, Object pValue,
+    public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue,
             String... pFields) {
         try {
             final List<T> results = new ArrayList<>();
@@ -737,15 +726,13 @@ public class EsRepository implements IEsRepository {
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
-            if (searchKey.getSearchType() != null) {
-                request = request.setTypes(searchKey.getSearchType());
-            }
+            request = request.setTypes(searchKey.getSearchTypes());
             request = request.setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
                     .setSize(pPageRequest.getPageSize());
             SearchResponse response = getWithTimeouts(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.getResultClass()));
+                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {

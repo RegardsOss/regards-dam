@@ -34,7 +34,7 @@ public interface ISearchService {
      * @param ascSortMap a linked map (preserved insertion ordered) of { document property, true for ascending order }
      * @return a simple page of documents if facet are not asked for, a {@link FacetPage} else
      */
-    <T> Page<T> search(SearchKey<T> searchKey, Pageable pageRequest, ICriterion criterion,
+    <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pageRequest, ICriterion criterion,
             Map<String, FacetType> facetsMap, LinkedHashMap<String, Boolean> ascSortMap);
 
     /**
@@ -47,7 +47,7 @@ public interface ISearchService {
      * @param <T> Joined entity class
      * @return a page of joined entities
      */
-    <T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<T> searchKey, Pageable pageRequest,
+    <S, R extends IIndexable> Page<R> searchAndReturnJoinedEntities(SearchKey<S, R> searchKey, Pageable pageRequest,
             ICriterion pCriterion);
 
     /**
@@ -62,31 +62,31 @@ public interface ISearchService {
      * @param <T> document type
      * @return specified result page
      */
-    <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
+    <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
 
-    default <T> Page<T> multiFieldsSearch(SearchKey<T> searchKey, int pageSize, Object pValue, String... pFields) {
+    default <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, int pageSize, Object pValue, String... pFields) {
         return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), pValue, pFields);
     }
 
-    default <T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<T> searchKey, int pageSize,
+    default <S, R extends IIndexable> Page<R> searchAndReturnJoinedEntities(SearchKey<S, R> searchKey, int pageSize,
             ICriterion pCriterion) {
         return this.searchAndReturnJoinedEntities(searchKey, new PageRequest(0, pageSize), pCriterion);
     }
 
-    default <T> Page<T> search(SearchKey<T> searchKey, int pPageSize, ICriterion criterion) {
+    default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, ICriterion criterion) {
         return search(searchKey, new PageRequest(0, pPageSize), criterion);
     }
 
-    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion) {
+    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion criterion) {
         return search(searchKey, pPageRequest, criterion, null, null);
     }
 
-    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion criterion,
             Map<String, FacetType> facetsMap) {
         return search(searchKey, pPageRequest, criterion, facetsMap, null);
     }
 
-    default <T> Page<T> search(SearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion,
+    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion criterion,
             LinkedHashMap<String, Boolean> ascSortMap) {
         return search(searchKey, pPageRequest, criterion, null, ascSortMap);
     }
