@@ -13,13 +13,10 @@ import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -34,13 +31,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Autowired
-    private IAccessRightRepository<AbstractAccessRight> repo;
-
-    @Autowired
-    private IGroupAccessRightRepository groupRepo;
-
-    @Autowired
-    private IUserAccessRightRepository userRepo;
+    private IAccessRightRepository repo;
 
     @Autowired
     private IModelRepository modelRepo;
@@ -51,7 +42,7 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
     @Autowired
     private IAccessGroupRepository agRepo;
 
-    private User user1;
+    private AccessGroup user1;
 
     private final String user1Email = "user1@user1.user1";
 
@@ -71,19 +62,9 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     private Dataset ds2;
 
-    //    private final String ds1Name = "DS1";
-    //
-    //    private final String ds2Name = "DS2";
-    //
-    //    private final String dsDesc = "DESC";
+    private AccessRight ar1;
 
-    private UserAccessRight uar1;
-
-    private UserAccessRight uar2;
-
-    private GroupAccessRight gar1;
-
-    private GroupAccessRight gar2;
+    private AccessRight ar2;
 
     @Before
     public void init() {
@@ -99,49 +80,37 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
         ds2.setLicence("licence");
         ds2 = dsRepo.save(ds2);
 
-        user1 = new User(user1Email);
-        uar1 = new UserAccessRight(qf, al, ds1, user1);
-        uar1 = userRepo.save(uar1);
-        uar2 = new UserAccessRight(qf, al, ds2, user1);
-        uar2 = userRepo.save(uar2);
-
         ag1 = new AccessGroup(ag1Name);
         ag1 = agRepo.save(ag1);
-        gar1 = new GroupAccessRight(qf, al, ds1, ag1);
-        gar1 = groupRepo.save(gar1);
+        ar1 = new AccessRight(qf, al, ds1, ag1);
+        ar1 = repo.save(ar1);
         ag2 = new AccessGroup(ag2Name);
         ag2 = agRepo.save(ag2);
-        gar2 = new GroupAccessRight(qf, al, ds2, ag2);
-        gar2 = groupRepo.save(gar2);
+        ar2 = new AccessRight(qf, al, ds2, ag2);
+        ar2 = repo.save(ar2);
     }
 
     @Test
     public void testfindAllByAccessGroupName() {
-        Page<GroupAccessRight> response = groupRepo.findAllByAccessGroup(ag1, new PageRequest(0, 10));
-        Assert.assertTrue(response.getContent().contains(gar1));
-        Assert.assertFalse(response.getContent().contains(gar2));
-        Assert.assertFalse(response.getContent().contains(uar1));
-        Assert.assertFalse(response.getContent().contains(uar2));
+        Page<AccessRight> response = repo.findAllByAccessGroup(ag1, new PageRequest(0, 10));
+        Assert.assertTrue(response.getContent().contains(ar1));
+        Assert.assertFalse(response.getContent().contains(ar2));
     }
 
     @Test
     public void testfindAllByDataset() {
-        Page<AbstractAccessRight> response = repo.findAllByDataset(ds1, new PageRequest(0, 10));
-        Assert.assertTrue(response.getContent().contains(gar1));
-        Assert.assertTrue(response.getContent().contains(uar1));
-        Assert.assertFalse(response.getContent().contains(gar2));
-        Assert.assertFalse(response.getContent().contains(uar2));
+        Page<AccessRight> response = repo.findAllByDataset(ds1, new PageRequest(0, 10));
+        Assert.assertTrue(response.getContent().contains(ar1));
+        Assert.assertFalse(response.getContent().contains(ar2));
     }
 
     @Test
     public void testfindAllByAccessGroupNameByDataset() {
-        Page<GroupAccessRight> response = groupRepo.findAllByAccessGroupAndDataset(ag1, ds1, new PageRequest(0, 10));
-        Assert.assertTrue(response.getContent().contains(gar1));
-        Assert.assertFalse(response.getContent().contains(gar2));
-        Assert.assertFalse(response.getContent().contains(uar1));
-        Assert.assertFalse(response.getContent().contains(uar2));
+        Page<AccessRight> response = repo.findAllByAccessGroupAndDataset(ag1, ds1, new PageRequest(0, 10));
+        Assert.assertTrue(response.getContent().contains(ar1));
+        Assert.assertFalse(response.getContent().contains(ar2));
 
-        response = groupRepo.findAllByAccessGroupAndDataset(ag1, ds2, new PageRequest(0, 10));
+        response = repo.findAllByAccessGroupAndDataset(ag1, ds2, new PageRequest(0, 10));
         Assert.assertFalse(response.hasContent());
     }
 

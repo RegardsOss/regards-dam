@@ -21,31 +21,12 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
  */
 public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long> {
 
-    /**
-     * @param pName
-     * @return
-     */
     AccessGroup findOneByName(String pName);
 
-    /**
-     * @param pUserEmail
-     * @param pPageable
-     * @return
-     */
     Page<AccessGroup> findAllByUsers(User pUser, Pageable pPageable);
 
-    /**
-     * @param pUserEmail
-     * @return
-     */
     Set<AccessGroup> findAllByUsers(User pUser);
 
-    /**
-     * @param pUser
-     * @param pFalse
-     * @param pPageable
-     * @return
-     */
-    Page<AccessGroup> findAllByUsersOrIsPrivate(User pUser, Boolean pFalse, Pageable pPageable);
+    Page<AccessGroup> findAllByUsersOrIsPublic(User pUser, Boolean pTrue, Pageable pPageable);
 
 }
