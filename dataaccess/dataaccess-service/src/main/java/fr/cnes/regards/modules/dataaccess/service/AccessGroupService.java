@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Resource;
@@ -34,6 +35,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
  *
  */
 @Service
+@EnableFeignClients(clients = IProjectUsersClient.class)
 public class AccessGroupService {
 
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
