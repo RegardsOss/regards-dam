@@ -133,6 +133,16 @@ public class EsRepository implements IEsRepository {
     private static final String EMPTY_JSON = "{}";
 
     /**
+     * Geometry field name
+     */
+    private static final String GEOM_NAME = "geometry";
+
+    /**
+     * Geometry field mapping properties
+     */
+    private static final String GEOM_TYPE_PROP = "type=geo_shape";
+
+    /**
      * Elasticsearch port
      */
     private String esClusterName;
@@ -198,6 +208,13 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean createIndex(String pIndex) {
         return client.admin().indices().prepareCreate(pIndex.toLowerCase()).get().isAcknowledged();
+    }
+
+    @Override
+    public boolean setGeometryMapping(String pIndex, String... types) {
+        String index = pIndex.toLowerCase();
+        return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index).setType(type)
+                .setSource(GEOM_NAME, GEOM_TYPE_PROP).get().isAcknowledged()).allMatch(ack -> (ack == true));
     }
 
     @Override

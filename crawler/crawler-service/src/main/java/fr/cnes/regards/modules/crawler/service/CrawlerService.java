@@ -218,7 +218,7 @@ public class CrawlerService implements ICrawlerService {
         } else { // entity has been created or updated, it must be saved into ES
             // First, check if index exists
             if (!esRepos.indexExists(tenant)) {
-                esRepos.createIndex(tenant);
+                createIndex(tenant);
             }
             // Then save entity
             esRepos.save(tenant, entity);
@@ -242,7 +242,7 @@ public class CrawlerService implements ICrawlerService {
         // Entities to save
         if (!entities.isEmpty()) {
             if (!esRepos.indexExists(tenant)) {
-                esRepos.createIndex(tenant);
+                createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
             entities.stream().filter(e -> e instanceof Dataset).forEach(e -> this.manageDatasetUpdate((Dataset) e));
@@ -397,6 +397,15 @@ public class CrawlerService implements ICrawlerService {
         esRepos.saveBulk(tenant, toSaveObjects);
     }
 
+    /**
+     * Create ES index with tenant name and geometry mapping
+     */
+    private void createIndex(String tenant) {
+        esRepos.createIndex(tenant);
+        esRepos.setGeometryMapping(tenant, Arrays.stream(EntityType.values()).map(EntityType::toString)
+                .toArray(length -> new String[length]));
+    }
+
     @Override
     public int ingest(PluginConfiguration pluginConf) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
@@ -407,7 +416,7 @@ public class CrawlerService implements ICrawlerService {
         int savedObjectsCount = 0;
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
-            esRepos.createIndex(tenant);
+            createIndex(tenant);
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
             savedObjectsCount += this.createDataObjects(tenant, datasourceId, page.getContent());
 

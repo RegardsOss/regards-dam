@@ -3,18 +3,12 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.EnumHashBiMap;
-
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -25,19 +19,15 @@ public class IndexerService implements IIndexerService {
     @Autowired
     private IEsRepository repository;
 
-    private static final BiMap<EntityType, Class<? extends AbstractEntity>> TYPE_MAP = EnumHashBiMap
-            .create(EntityType.class);
-    static {
-        TYPE_MAP.put(EntityType.COLLECTION, fr.cnes.regards.modules.entities.domain.Collection.class);
-        TYPE_MAP.put(EntityType.DATASET, Dataset.class);
-        TYPE_MAP.put(EntityType.DATA, DataObject.class);
-        TYPE_MAP.put(EntityType.DOCUMENT, Document.class);
-    }
-
     @Override
     public boolean createIndex(String pIndex) {
         if (!repository.indexExists(pIndex)) {
-            return repository.createIndex(pIndex);
+            boolean created = repository.createIndex(pIndex);
+            if (created) {
+                repository.setGeometryMapping(pIndex, Arrays.stream(EntityType.values()).map(EntityType::toString)
+                        .toArray(length -> new String[length]));
+            }
+            return created;
         }
         return true;
     }
