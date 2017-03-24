@@ -13,19 +13,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
-import fr.cnes.regards.modules.dataaccess.dao.IGroupAccessRightRepository;
-import fr.cnes.regards.modules.dataaccess.dao.IUserAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightCreated;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightDeleted;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightUpdated;
@@ -41,11 +35,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @MultitenantTransactional
 public class AccessRightService {
 
-    private final IAccessRightRepository<AbstractAccessRight> repository;
-
-    private final IGroupAccessRightRepository groupRepository;
-
-    private final IUserAccessRightRepository userRepository;
+    private final IAccessRightRepository repository;
 
     private final AccessGroupService accessGroupService;
 
@@ -53,49 +43,26 @@ public class AccessRightService {
 
     private final IPublisher eventPublisher;
 
-    public AccessRightService(IAccessRightRepository<AbstractAccessRight> pAccessRightRepository,
-            IGroupAccessRightRepository pGroupRepository, IUserAccessRightRepository pUserRepository,
-            AccessGroupService pAccessGroupService, IDatasetService pDatasetService, IPublisher pEventPublisher) {
+    public AccessRightService(IAccessRightRepository pAccessRightRepository, AccessGroupService pAccessGroupService,
+            IDatasetService pDatasetService, IPublisher pEventPublisher) {
         repository = pAccessRightRepository;
-        groupRepository = pGroupRepository;
-        userRepository = pUserRepository;
         accessGroupService = pAccessGroupService;
         datasetService = pDatasetService;
         eventPublisher = pEventPublisher;
     }
 
-    /**
-     * @param pAccessGroupName
-     * @param pDatasetIpId
-     * @param pPageable
-     * @return
-     * @throws EntityNotFoundException
-     */
-    public Page<AbstractAccessRight> retrieveAccessRights(String pAccessGroupName, UniformResourceName pDatasetIpId,
-            String pUserEmail, Pageable pPageable) throws EntityNotFoundException {
-        if (pUserEmail != null) {
-            Page<UserAccessRight> page = retrieveAccessRightsByUser(pDatasetIpId, pUserEmail, pPageable);
-            List<AbstractAccessRight> content = page.getContent().stream().map(gar -> (AbstractAccessRight) gar)
-                    .collect(Collectors.toList());
-            return new PageImpl<>(content, pPageable, page.getTotalElements());
-        }
+    public Page<AccessRight> retrieveAccessRights(String pAccessGroupName, UniformResourceName pDatasetIpId,
+            Pageable pPageable) throws EntityNotFoundException {
         if (pAccessGroupName != null) {
-            Page<GroupAccessRight> page = retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
-            List<AbstractAccessRight> content = page.getContent().stream().map(uar -> (AbstractAccessRight) uar)
-                    .collect(Collectors.toList());
+            Page<AccessRight> page = retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
+            List<AccessRight> content = page.getContent().stream().map(uar -> uar).collect(Collectors.toList());
             return new PageImpl<>(content, pPageable, page.getTotalElements());
         }
         return retrieveAccessRightsByDataset(pDatasetIpId, pPageable);
     }
 
-    /**
-     * @param pDatasetIpId
-     * @param pPageable
-     * @return
-     * @throws EntityNotFoundException
-     */
-    private Page<AbstractAccessRight> retrieveAccessRightsByDataset(UniformResourceName pDatasetIpId,
-            Pageable pPageable) throws EntityNotFoundException {
+    private Page<AccessRight> retrieveAccessRightsByDataset(UniformResourceName pDatasetIpId, Pageable pPageable)
+            throws EntityNotFoundException {
         if (pDatasetIpId != null) {
             Dataset ds = datasetService.load(pDatasetIpId);
             if (ds == null) {
@@ -107,39 +74,7 @@ public class AccessRightService {
         return repository.findAll(pPageable);
     }
 
-    /**
-     * @param pDatasetIpId
-     * @param pUserEmail
-     * @param pPageable
-     * @return
-     * @throws EntityNotFoundException
-     */
-    private Page<UserAccessRight> retrieveAccessRightsByUser(UniformResourceName pDatasetIpId, String pUserEmail,
-            Pageable pPageable) throws EntityNotFoundException {
-        if (!accessGroupService.existUser(new User(pUserEmail))) {
-            throw new EntityNotFoundException(pUserEmail, User.class);
-        }
-        User user = new User(pUserEmail);
-        if (pDatasetIpId != null) {
-            Dataset ds = datasetService.load(pDatasetIpId);
-            if (ds == null) {
-                throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
-            }
-
-            return userRepository.findAllByUserAndDataset(user, ds, pPageable);
-        } else {
-            return userRepository.findAllByUser(user, pPageable);
-        }
-    }
-
-    /**
-     * @param pDatasetIpId
-     * @param pAccessGroupName
-     * @param pPageable
-     * @return
-     * @throws EntityNotFoundException
-     */
-    private Page<GroupAccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
+    private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
             String pAccessGroupName, Pageable pPageable) throws EntityNotFoundException {
         AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         if (ag == null) {
@@ -151,110 +86,77 @@ public class AccessRightService {
                 throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
             }
 
-            return groupRepository.findAllByAccessGroupAndDataset(ag, ds, pPageable);
+            return repository.findAllByAccessGroupAndDataset(ag, ds, pPageable);
         } else {
-            return groupRepository.findAllByAccessGroup(ag, pPageable);
+            return repository.findAllByAccessGroup(ag, pPageable);
         }
     }
 
-    /**
-     * @param pAccessRight
-     * @return
-     * @throws ModuleException
-     * @throws RabbitMQVhostException
-     */
-    public AbstractAccessRight createAccessRight(AbstractAccessRight pAccessRight) throws ModuleException {
+    public AccessRight createAccessRight(AccessRight pAccessRight) throws ModuleException {
         Dataset dataset = datasetService.load(pAccessRight.getDataset().getId());
         if (dataset == null) {
             throw new EntityNotFoundException(pAccessRight.getDataset().getId(), Dataset.class);
         }
 
-        if (pAccessRight instanceof GroupAccessRight) {
-            AccessGroup accessGroup = ((GroupAccessRight) pAccessRight).getAccessGroup();
-            if (!accessGroupService.existGroup(accessGroup.getId())) {
-                throw new EntityNotFoundException(accessGroup.getId(), AccessGroup.class);
-            }
-            // Adding group to Dataset
-            dataset.getGroups().add(accessGroup.getName());
-            // Save dataset through DatasetService (no cascade on AbstractAccessRight.dataset)
-            datasetService.update(dataset);
-            // re-set updated dataset on accessRight to make its state correct on accessRight object
-            pAccessRight.setDataset(dataset);
-        } else {
-            if (pAccessRight instanceof UserAccessRight) {
-                User user = ((UserAccessRight) pAccessRight).getUser();
-                if (!accessGroupService.existUser(user)) {
-                    throw new EntityNotFoundException(user.getEmail(), User.class);
-                }
-            }
+        AccessGroup accessGroup = pAccessRight.getAccessGroup();
+        if (!accessGroupService.existGroup(accessGroup.getId())) {
+            throw new EntityNotFoundException(accessGroup.getId(), AccessGroup.class);
         }
-        AbstractAccessRight created = repository.save(pAccessRight);
+        // Adding group to Dataset
+        dataset.getGroups().add(accessGroup.getName());
+        // Save dataset through DatasetService (no cascade on AbstractAccessRight.dataset)
+        datasetService.update(dataset);
+        // re-set updated dataset on accessRight to make its state correct on accessRight object
+        pAccessRight.setDataset(dataset);
+
+        AccessRight created = repository.save(pAccessRight);
         eventPublisher.publish(new AccessRightCreated(created.getId()));
         return created;
     }
 
-    /**
-     * @param pId
-     * @return
-     * @throws EntityNotFoundException
-     */
-    public AbstractAccessRight retrieveAccessRight(Long pId) throws EntityNotFoundException {
-        AbstractAccessRight result = repository.findOne(pId);
+    public AccessRight retrieveAccessRight(Long pId) throws EntityNotFoundException {
+        AccessRight result = repository.findOne(pId);
         if (result == null) {
-            throw new EntityNotFoundException(pId, AbstractAccessRight.class);
+            throw new EntityNotFoundException(pId, AccessRight.class);
         }
         return result;
     }
 
-    /**
-     * @param pId
-     * @param pToBe
-     * @return
-     * @throws ModuleException
-     * @throws RabbitMQVhostException
-     */
-    public AbstractAccessRight updateAccessRight(Long pId, AbstractAccessRight pToBe) throws ModuleException {
-        AbstractAccessRight toBeUpdated = repository.findOne(pId);
+    public AccessRight updateAccessRight(Long pId, AccessRight pToBe) throws ModuleException {
+        AccessRight toBeUpdated = repository.findOne(pId);
         if (toBeUpdated == null) {
-            throw new EntityNotFoundException(pId, AbstractAccessRight.class);
+            throw new EntityNotFoundException(pId, AccessRight.class);
         }
         if (!pToBe.getId().equals(pId)) {
-            throw new EntityInconsistentIdentifierException(pId, pToBe.getId(), AbstractAccessRight.class);
+            throw new EntityInconsistentIdentifierException(pId, pToBe.getId(), AccessRight.class);
         }
         // Remove current group from dataset if accessRight is a GroupAccessRight
         Dataset dataset = datasetService.load(toBeUpdated.getDataset().getId());
         if (dataset != null) {
-            if (toBeUpdated instanceof GroupAccessRight) {
-                // If group has changed
-                AccessGroup currentAccessGroup = ((GroupAccessRight) toBeUpdated).getAccessGroup();
-                AccessGroup newAccessGroup = ((GroupAccessRight) pToBe).getAccessGroup();
-                if (!Objects.equals(currentAccessGroup, newAccessGroup)) {
-                    dataset.getGroups().remove(currentAccessGroup.getName());
-                    dataset.getGroups().add(newAccessGroup.getName());
-                    datasetService.update(dataset);
-                    pToBe.setDataset(dataset);
-                }
+
+            // If group has changed
+            AccessGroup currentAccessGroup = toBeUpdated.getAccessGroup();
+            AccessGroup newAccessGroup = pToBe.getAccessGroup();
+            if (!Objects.equals(currentAccessGroup, newAccessGroup)) {
+                dataset.getGroups().remove(currentAccessGroup.getName());
+                dataset.getGroups().add(newAccessGroup.getName());
+                datasetService.update(dataset);
+                pToBe.setDataset(dataset);
             }
+
         }
-        AbstractAccessRight updated = repository.save(pToBe);
+        AccessRight updated = repository.save(pToBe);
         eventPublisher.publish(new AccessRightUpdated(pId));
         return updated;
     }
 
-    /**
-     * @param pId
-     * @throws ModuleException
-     * @throws RabbitMQVhostException
-     */
     public void deleteAccessRight(Long pId) throws ModuleException {
-        AbstractAccessRight accessRight = repository.findOne(pId);
+        AccessRight accessRight = repository.findOne(pId);
         // Remove current group from dataset if accessRight is a GroupAccessRight
         Dataset dataset = datasetService.load(accessRight.getDataset().getId());
         if (dataset != null) {
-            if (accessRight instanceof GroupAccessRight) {
-                dataset.getGroups().remove(((GroupAccessRight) accessRight).getAccessGroup().getName());
-                datasetService.update(dataset);
-            }
+            dataset.getGroups().remove(accessRight.getAccessGroup().getName());
+            datasetService.update(dataset);
         }
         repository.delete(pId);
         eventPublisher.publish(new AccessRightDeleted(pId));

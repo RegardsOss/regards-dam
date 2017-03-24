@@ -5,10 +5,10 @@ package fr.cnes.regards.modules.dataaccess.domain.accessright.event;
 
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 
 /**
- * Event to be sent once an {@link AbstractAccessRight} is deleted
+ * Event to be sent once an {@link AccessRight} is deleted
  *
  * @author Sylvain Vissiere-Guerinet
  *
