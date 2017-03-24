@@ -52,9 +52,6 @@ public class AccessGroup implements IIdentifiable<Long> {
     @Convert(converter = UserConverter.class)
     private Set<User> users = new HashSet<>();
 
-    // TODO: add an endpoint to get this list
-    // private Set<GroupAccessRight> accessRights = new HashSet<>();
-
     @Column(name = "public")
     private boolean isPublic = Boolean.FALSE;
 
