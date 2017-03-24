@@ -76,7 +76,7 @@ public class GeometryIT {
             esRepos.deleteIndex(TENANT);
         }
         esRepos.createIndex(TENANT);
-        esRepos.save(TENANT, collection);
+        //        esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
     }
 }

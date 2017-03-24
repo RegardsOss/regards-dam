@@ -34,6 +34,15 @@ public interface IEsRepository {
     boolean createIndex(String pIndex);
 
     /**
+     * Put geometry mapping on specified types of specified index (ie a "geo_shape" type "geometry" property)
+     * @param pIndex index
+     * @param types all types with geometry mapping
+     * @return true if acknowledged by Elasticsearch, false otherwise.
+     * returns
+     */
+    boolean setGeometryMapping(String pIndex, String... types);
+
+    /**
      * Delete specified index
      * @param pIndex index
      * @return true if acknowledged by Elasticsearch, false otherwise.
