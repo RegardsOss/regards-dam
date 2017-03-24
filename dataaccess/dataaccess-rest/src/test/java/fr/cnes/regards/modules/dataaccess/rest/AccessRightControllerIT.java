@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,6 +116,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void init() {
+        LocalDateTime now = LocalDateTime.now();
         IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
@@ -129,9 +131,11 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         ds1 = new Dataset(model, "PROJECT", ds1Name);
         ds1.setLicence("licence");
         ds1.setDescriptionFile(new DescriptionFile(dsDesc));
+        ds1.setCreationDate(now);
         ds1 = dsRepo.save(ds1);
         ds2 = new Dataset(model, "PROJECT", ds2Name);
         ds2.setLicence("licence");
+        ds2.setCreationDate(now);
         ds2 = dsRepo.save(ds2);
 
         user1 = new User(user1Email);

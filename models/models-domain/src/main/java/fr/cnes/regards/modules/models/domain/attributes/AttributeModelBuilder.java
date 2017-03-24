@@ -103,6 +103,10 @@ public final class AttributeModelBuilder {
         return withRestriction(RestrictionFactory.buildIntegerRangeRestriction(pMin, pMax, pMinExcluded, pMaxExcluded));
     }
 
+    public AttributeModel withLongRangeRestriction(Long pMin, Long pMax, boolean pMinExcluded, boolean pMaxExcluded) {
+        return withRestriction(RestrictionFactory.buildLongRangeRestriction(pMin, pMax, pMinExcluded, pMaxExcluded));
+    }
+
     public AttributeModel withoutRestriction() {
         attributeModel.setRestriction(null);
         return attributeModel;

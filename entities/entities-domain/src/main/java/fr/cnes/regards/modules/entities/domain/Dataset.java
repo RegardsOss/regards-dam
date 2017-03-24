@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -30,8 +31,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
  * @author Christophe Mertz
+ * @author oroussel
  */
 @Entity
+@DiscriminatorValue("DATASET")
 public class Dataset extends AbstractDescEntity {
 
     /**
