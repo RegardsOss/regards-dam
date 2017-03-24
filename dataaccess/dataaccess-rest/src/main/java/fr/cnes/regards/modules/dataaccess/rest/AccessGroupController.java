@@ -78,7 +78,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @ResponseBody
     @ResourceAccess(description = "send the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName) {
+            @Valid @PathVariable("name") String pAccessGroupName) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }

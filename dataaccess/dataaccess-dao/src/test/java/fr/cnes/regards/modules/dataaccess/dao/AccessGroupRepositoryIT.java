@@ -50,7 +50,7 @@ public class AccessGroupRepositoryIT extends AbstractDaoTransactionalTest {
         ag2.addUser(USER1);
         ag2 = dao.save(ag2);
         ag3 = new AccessGroup(AG3_NAME);
-        ag3.setPrivate(Boolean.FALSE);
+        ag3.setPublic(Boolean.TRUE);
         ag3 = dao.save(ag3);
     }
 
@@ -72,8 +72,8 @@ public class AccessGroupRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Test
     public void testFindAllByUsersAndIsPrivate() {
-        Page<AccessGroup> accessGroupsOfUser = dao.findAllByUsersOrIsPrivate(USER1, Boolean.FALSE,
-                                                                              new PageRequest(0, 10));
+        Page<AccessGroup> accessGroupsOfUser = dao.findAllByUsersOrIsPublic(USER1, Boolean.TRUE,
+                                                                            new PageRequest(0, 10));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag1));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag2));
         Assert.assertTrue(accessGroupsOfUser.getContent().contains(ag3));

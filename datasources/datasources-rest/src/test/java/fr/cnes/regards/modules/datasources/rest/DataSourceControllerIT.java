@@ -110,7 +110,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         /*
          * Save a PluginConfiguration for plugin's type IDBConnectionPlugin
@@ -349,24 +349,11 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(), expectations,
                            "DataSource shouldn't be created.");
 
-        // Create a DataSource
-        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceWithFromClause(), expectations,
-                           "DataSource shouldn't be created.");
-
-        // Create a DataSource
-        performDefaultPost(DataSourceController.TYPE_MAPPING, createDataSourceSingleTable(), expectations,
-                           "DataSource shouldn't be created.");
         expectations.add(MockMvcResultMatchers
                 .jsonPath("$.[0].content.pluginConfigurationConnectionId",
                           Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
         expectations.add(MockMvcResultMatchers
                 .jsonPath("$.[1].content.pluginConfigurationConnectionId",
-                          Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[2].content.pluginConfigurationConnectionId",
-                          Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
-        expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[3].content.pluginConfigurationConnectionId",
                           Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING, expectations, "DataSources shouldn't be retrieve.");

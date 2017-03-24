@@ -27,17 +27,14 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
-import fr.cnes.regards.modules.dataaccess.dao.IGroupAccessRightRepository;
-import fr.cnes.regards.modules.dataaccess.dao.IUserAccessRightRepository;
+import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.UserAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -59,12 +56,6 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
     private static final String ACCESS_RIGHTS_ERROR_MSG = "Should have been an answer";
 
     @Autowired
-    private IGroupAccessRightRepository groupRepo;
-
-    @Autowired
-    private IUserAccessRightRepository userRepo;
-
-    @Autowired
     private IModelRepository modelRepo;
 
     @Autowired
@@ -72,10 +63,6 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IAccessGroupRepository agRepo;
-
-    private User user1;
-
-    private final String user1Email = "user1@user1.user1";
 
     private AccessGroup ag1;
 
@@ -101,18 +88,17 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private final String dsDesc = "DESC";
 
-    private UserAccessRight uar1;
+    private AccessRight ar1;
 
-    private UserAccessRight uar2;
+    private AccessRight ar2;
 
-    private GroupAccessRight gar1;
-
-    private GroupAccessRight gar2;
-
-    private GroupAccessRight gar3;
+    private AccessRight ar3;
 
     @Autowired
     private AccessGroupService agService;
+
+    @Autowired
+    private IAccessRightRepository arRepo;
 
     @Before
     public void init() {
@@ -138,22 +124,16 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         ds2.setCreationDate(now);
         ds2 = dsRepo.save(ds2);
 
-        user1 = new User(user1Email);
-        uar1 = new UserAccessRight(qf, al, ds1, user1);
-        uar1 = userRepo.save(uar1);
-        uar2 = new UserAccessRight(qf, al, ds2, user1);
-        uar2 = userRepo.save(uar2);
-
         ag1 = new AccessGroup(ag1Name);
         ag1 = agRepo.save(ag1);
-        gar1 = new GroupAccessRight(qf, al, ds1, ag1);
-        gar1.setDataAccessRight(dar);
-        gar1 = groupRepo.save(gar1);
+        ar1 = new AccessRight(qf, al, ds1, ag1);
+        ar1.setDataAccessRight(dar);
+        ar1 = arRepo.save(ar1);
         ag2 = new AccessGroup(ag2Name);
         ag2 = agRepo.save(ag2);
-        gar2 = new GroupAccessRight(qf, al, ds2, ag2);
-        gar2 = groupRepo.save(gar2);
-        gar3 = new GroupAccessRight(qf, al, ds2, ag2);
+        ar2 = new AccessRight(qf, al, ds2, ag2);
+        ar2 = arRepo.save(ar2);
+        ar3 = new AccessRight(qf, al, ds2, ag2);
     }
 
     @Test
@@ -162,34 +142,6 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS, expectations, ACCESS_RIGHTS_ERROR_MSG);
-    }
-
-    @Test
-    public void testRetrieveAccessRightsFullArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("useremail=");
-        sb.append(user1Email);
-        sb.append("&accessgroup=");
-        sb.append(ag1.getName());
-        sb.append("&dataset=");
-        sb.append(ds1.getIpId());
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
-    }
-
-    @Test
-    public void testRetrieveAccessRightsUserArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("useremail=");
-        sb.append(user1Email);
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
@@ -217,35 +169,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testRetrieveAccessRightsUserAndDSArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("useremail=");
-        sb.append(user1Email);
-        sb.append("&dataset=");
-        sb.append(ds1.getIpId());
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
-    }
-
-    @Test
-    public void testRetrieveAccessRightsUserAndGroupArgs() {
-        final StringBuilder sb = new StringBuilder("?");
-        sb.append("useremail=");
-        sb.append(user1Email);
-        sb.append("&accessgroup=");
-        sb.append(ag1.getName());
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + sb.toString(), expectations,
-                          ACCESS_RIGHTS_ERROR_MSG);
-    }
-
-    @Test
-    public void testRetrieveAccessRightsGroupAndDSArgs() {
+    public void testRetrieveAccessRightsFullArgs() {
         final StringBuilder sb = new StringBuilder("?");
         sb.append("dataset=");
         sb.append(ds1.getIpId());
@@ -264,7 +188,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
 
     @Test
@@ -274,7 +198,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         // Associated dataset must be updated
         expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag2.getName()));
-        performDefaultPost(AccessRightController.PATH_ACCESS_RIGHTS, gar3, expectations, ACCESS_RIGHTS_ERROR_MSG);
+        performDefaultPost(AccessRightController.PATH_ACCESS_RIGHTS, ar3, expectations, ACCESS_RIGHTS_ERROR_MSG);
     }
 
     @Test
@@ -282,37 +206,24 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
-        // Change access level
-        UserAccessRight uarTmp = new UserAccessRight(qf, AccessLevel.RESTRICTED_ACCESS, ds1, user1);
-        uarTmp.setId(uar1.getId());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("RESTRICTED_ACCESS"));
-        performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          uarTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
-    }
-
-    @Test
-    public void testUpdateGroupAccessRight() {
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         // Change access level and group (ag2 instead of ag1)
-        GroupAccessRight garTmp = new GroupAccessRight(qf, AccessLevel.RESTRICTED_ACCESS, ds1, ag2);
-        garTmp.setId(gar1.getId());
+        AccessRight garTmp = new AccessRight(qf, AccessLevel.RESTRICTED_ACCESS, ds1, ag2);
+        garTmp.setId(ar1.getId());
         expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("RESTRICTED_ACCESS"));
         expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag2.getName()));
         performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, gar1.getId());
+                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
 
         // Save again garTmp (with ag1 as access group and FULL_ACCESS)
-        garTmp = new GroupAccessRight(qf, AccessLevel.FULL_ACCESS, ds1, ag1);
-        garTmp.setId(gar1.getId());
+        garTmp = new AccessRight(qf, AccessLevel.FULL_ACCESS, ds1, ag1);
+        garTmp.setId(ar1.getId());
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         expectations.add(MockMvcResultMatchers.jsonPath("$.content.accessLevel").value("FULL_ACCESS"));
         expectations.add(MockMvcResultMatchers.jsonPath("$.content.dataset.groups[0]").value(ag1.getName()));
         performDefaultPut(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, gar1.getId());
+                          garTmp, expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
 
     @Test
@@ -320,7 +231,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
-                             expectations, ACCESS_RIGHTS_ERROR_MSG, uar1.getId());
+                             expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
 
     @Override

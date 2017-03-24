@@ -77,9 +77,14 @@ public class AccessGroupService {
     /**
      * @param pAccessGroupName
      * @return
+     * @throws EntityNotFoundException
      */
-    public AccessGroup retrieveAccessGroup(String pAccessGroupName) {
-        return accessGroupDao.findOneByName(pAccessGroupName);
+    public AccessGroup retrieveAccessGroup(String pAccessGroupName) throws EntityNotFoundException {
+        AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
+        if (ag == null) {
+            throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
+        }
+        return ag;
     }
 
     /**
@@ -148,7 +153,7 @@ public class AccessGroupService {
      * @return
      */
     public Page<AccessGroup> retrieveAccessGroupsOfUser(String pUserEmail, Pageable pPageable) {
-        return accessGroupDao.findAllByUsersOrIsPrivate(new User(pUserEmail), Boolean.FALSE, pPageable);
+        return accessGroupDao.findAllByUsersOrIsPublic(new User(pUserEmail), Boolean.TRUE, pPageable);
     }
 
     /**
@@ -201,7 +206,7 @@ public class AccessGroupService {
         if (!group.getId().equals(pAccessGroup.getId())) {
             throw new EntityInconsistentIdentifierException(group.getId(), pAccessGroup.getId(), AccessGroup.class);
         }
-        group.setPrivate(pAccessGroup.isPrivate());
+        group.setPublic(pAccessGroup.isPublic());
         return accessGroupDao.save(group);
     }
 

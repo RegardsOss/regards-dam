@@ -22,7 +22,7 @@ import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.feign.TokenClientProvider;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -66,7 +66,7 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
      */
     @Test
     public void testRetrieveAccessRightsList() {
-        ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> accessRights = client
+        ResponseEntity<PagedResources<Resource<AccessRight>>> accessRights = client
                 .retrieveAccessRightsList(null, null, null, 0, 10);
         Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));
     }
