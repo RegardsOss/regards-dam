@@ -24,8 +24,8 @@ import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfigura
 @EnableAutoConfiguration(
         exclude = { MethodAuthorizationServiceAutoConfiguration.class, MethodSecurityAutoConfiguration.class,
                 SecurityVoterAutoConfiguration.class, WebSecurityAutoConfiguration.class })
-@PropertySource(value = { "classpath:test.properties", "classpath:test_ds.properties",
-        "classpath:test_${user.name}.properties" }, ignoreResourceNotFound = true)
+@PropertySource(value = { "classpath:test.properties", "classpath:test_${user.name}.properties" },
+        ignoreResourceNotFound = true)
 @EnableAsync
 public class CrawlerConfiguration {
 

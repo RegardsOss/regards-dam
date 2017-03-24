@@ -42,7 +42,7 @@ import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.EntityType;
 
@@ -290,7 +290,8 @@ public class CrawlerService implements ICrawlerService {
             }
         };
         // Apply updateTag function to all tagging objects
-        SearchKey<DataObject> searchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
+                DataObject.class);
         esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
@@ -362,7 +363,8 @@ public class CrawlerService implements ICrawlerService {
         LocalDateTime updateDate = LocalDateTime.now();
         Long datasetModelId = dataset.getModel().getId();
 
-        SearchKey<DataObject> searchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
+                DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
         this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
 

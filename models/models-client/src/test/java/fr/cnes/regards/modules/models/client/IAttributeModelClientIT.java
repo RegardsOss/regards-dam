@@ -22,6 +22,7 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.feign.TokenClientProvider;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
@@ -47,6 +48,9 @@ public class IAttributeModelClientIT extends AbstractRegardsWebIT {
      */
     private IAttributeModelClient client;
 
+    @Autowired
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
     /**
      * Feign security manager
      */
@@ -57,6 +61,7 @@ public class IAttributeModelClientIT extends AbstractRegardsWebIT {
     public void init() {
         client = FeignClientBuilder.build(new TokenClientProvider<>(IAttributeModelClient.class,
                 "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
+        runtimeTenantResolver.forceTenant(DEFAULT_TENANT);
         FeignSecurityManager.asSystem();
     }
 
