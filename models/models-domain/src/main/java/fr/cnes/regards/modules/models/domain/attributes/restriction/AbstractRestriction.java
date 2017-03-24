@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -29,6 +30,7 @@ import fr.cnes.regards.modules.models.schema.Restriction;
 @Entity
 @Table(name = "t_restriction")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype", length = 16)
 @SequenceGenerator(name = "restrictionSequence", initialValue = 1, sequenceName = "seq_restriction")
 @JsonAdapter(RestrictionJsonAdapterFactory.class)
 public abstract class AbstractRestriction implements IRestriction, IIdentifiable<Long> {

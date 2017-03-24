@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.collections.rest;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -182,6 +183,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         collection.setSipId(sipId);
+        collection.setCreationDate(LocalDateTime.now());
         final List<AbstractAttribute<?>> atts = new ArrayList<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));

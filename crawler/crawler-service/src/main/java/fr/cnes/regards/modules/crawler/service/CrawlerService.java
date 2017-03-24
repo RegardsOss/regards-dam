@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -432,6 +433,9 @@ public class CrawlerService implements ICrawlerService {
         objects.forEach(dataObject -> {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
         });
         return esRepos.saveBulk(tenant, objects);
     }
@@ -456,6 +460,9 @@ public class CrawlerService implements ICrawlerService {
             }
             // Don't forget to set datasourceId
             dataObject.setDataSourceId(datasourceId);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
             toSaveObjects.add(dataObject);
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects

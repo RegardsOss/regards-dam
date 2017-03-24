@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.UUID;
 
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
@@ -19,6 +20,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author oroussel
  */
 @Entity
+@DiscriminatorValue("COLLECTION")
 public class Collection extends AbstractDescEntity { // NOSONAR
 
     public Collection(Model pModel, String pTenant, String pLabel) {
