@@ -414,31 +414,32 @@ public class CrawlerService implements ICrawlerService {
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
         int savedObjectsCount = 0;
+        LocalDateTime now = LocalDateTime.now();
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
             createIndex(tenant);
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
-            savedObjectsCount += this.createDataObjects(tenant, datasourceId, page.getContent());
+            savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable());
-                savedObjectsCount += this.createDataObjects(tenant, datasourceId, page.getContent());
+                savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
-            savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, page.getContent());
+            savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable());
-                savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, page.getContent());
+                savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
         }
         return savedObjectsCount;
     }
 
-    private int createDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+    private int createDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
         // On all objects, it is necessary to set datasourceId and creation date
-        LocalDateTime creationDate = LocalDateTime.now();
+        LocalDateTime creationDate = now;
         objects.forEach(dataObject -> {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
@@ -449,11 +450,10 @@ public class CrawlerService implements ICrawlerService {
         return esRepos.saveBulk(tenant, objects);
     }
 
-    private int mergeDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+    private int mergeDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
         // Set of data objects to be saved (depends on existence of data objects into ES)
         Set<DataObject> toSaveObjects = new HashSet<>();
 
-        LocalDateTime now = LocalDateTime.now();
         for (DataObject dataObject : objects) {
             DataObject curObject = esRepos.get(tenant, dataObject);
             // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
