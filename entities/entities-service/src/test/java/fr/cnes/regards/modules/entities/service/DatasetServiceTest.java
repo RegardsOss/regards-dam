@@ -44,7 +44,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 public class DatasetServiceTest {
 
@@ -92,7 +91,6 @@ public class DatasetServiceTest {
      * initialize the repo before each test
      *
      * @throws ModuleException
-     *
      */
     @SuppressWarnings("unchecked")
     @Before
@@ -145,7 +143,7 @@ public class DatasetServiceTest {
 
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
-                deletedEntityRepositoryMocked, null, null, publisherMocked);
+                deletedEntityRepositoryMocked, null, null, publisherMocked, null);
 
     }
 

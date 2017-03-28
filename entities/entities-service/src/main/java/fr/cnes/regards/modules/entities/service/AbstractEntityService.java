@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
@@ -56,6 +59,7 @@ import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidat
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -67,7 +71,9 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Abstract parameterized entity service
- * @param <U> Entity type
+ *
+ * @param <U>
+ *            Entity type
  * @author oroussel
  */
 public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
@@ -204,54 +210,67 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Validate an attribute with its corresponding model attribute
-     * @param pAttMap attribue map
-     * @param pModelAttribute model attribute
-     * @param pErrors validation errors
-     * @param pManageAlterable manage update or not
+     *
+     * @param pAttMap
+     *            attribue map
+     * @param pModelAttribute
+     *            model attribute
+     * @param pErrors
+     *            validation errors
+     * @param pManageAlterable
+     *            manage update or not
      */
     protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttrAssoc pModelAttribute,
             Errors pErrors, boolean pManageAlterable) {
 
-        AttributeModel attModel = pModelAttribute.getAttribute();
-        String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
-        LOGGER.debug(String.format("Computed key : \"%s\"", key));
+        // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
+        // missing and is added during the crawling process
+        if (ComputationMode.GIVEN.equals(pModelAttribute.getMode())) {
+            AttributeModel attModel = pModelAttribute.getAttribute();
+            String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
+            LOGGER.debug(String.format("Computed key : \"%s\"", key));
 
-        // Retrieve attribute
-        AbstractAttribute<?> att = pAttMap.get(key);
+            // Retrieve attribute
+            AbstractAttribute<?> att = pAttMap.get(key);
 
-        // Null value check
-        if (att == null) {
-            String messageKey = "error.missing.required.attribute.message";
-            String defaultMessage = String.format("Missing required attribute \"%s\".", key);
-            if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
-                pErrors.reject(messageKey, defaultMessage);
+            // Null value check
+            if (att == null) {
+                String messageKey = "error.missing.required.attribute.message";
+                String defaultMessage = String.format("Missing required attribute \"%s\".", key);
+                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                    pErrors.reject(messageKey, defaultMessage);
+                    return;
+                }
+                if (!pManageAlterable && !attModel.isOptional()) {
+                    pErrors.reject(messageKey, defaultMessage);
+                    return;
+                }
+                LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
                 return;
             }
-            if (!pManageAlterable && !attModel.isOptional()) {
-                pErrors.reject(messageKey, defaultMessage);
-                return;
-            }
-            LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
-            return;
-        }
 
-        // Do validation
-        for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
-            if (validator.supports(att.getClass())) {
-                validator.validate(att, pErrors);
-            } else {
-                String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
-                                                      validator.getClass().getName(), key);
-                pErrors.reject("error.unsupported.validator.message", defaultMessage);
+            // Do validation
+            for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
+                if (validator.supports(att.getClass())) {
+                    validator.validate(att, pErrors);
+                } else {
+                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                          validator.getClass().getName(), key);
+                    pErrors.reject("error.unsupported.validator.message", defaultMessage);
+                }
             }
         }
     }
 
     /**
      * Compute available validators
-     * @param pModelAttribute {@link ModelAttrAssoc}
-     * @param pAttributeKey attribute key
-     * @param pManageAlterable manage update or not
+     *
+     * @param pModelAttribute
+     *            {@link ModelAttrAssoc}
+     * @param pAttributeKey
+     *            attribute key
+     * @param pManageAlterable
+     *            manage update or not
      * @return {@link Validator} list
      */
     protected List<Validator> getValidators(ModelAttrAssoc pModelAttribute, String pAttributeKey,
@@ -279,9 +298,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Build real attribute map extracting namespace from {@link ObjectAttribute} (i.e. fragment name)
-     * @param pAttMap Map to build
-     * @param pNamespace namespace context
-     * @param pAttributes {@link AbstractAttribute} list to analyze
+     *
+     * @param pAttMap
+     *            Map to build
+     * @param pNamespace
+     *            namespace context
+     * @param pAttributes
+     *            {@link AbstractAttribute} list to analyze
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
             final List<AbstractAttribute<?>> pAttributes) {
@@ -302,8 +325,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * @param pEntityId an AbstractEntity identifier
-     * @param pToAssociate UniformResourceName Set representing AbstractEntity to be associated to pCollection
+     * @param pEntityId
+     *            an AbstractEntity identifier
+     * @param pToAssociate
+     *            UniformResourceName Set representing AbstractEntity to be associated to pCollection
      * @throws EntityNotFoundException
      */
     @Override
@@ -372,7 +397,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * If entity is a collection, find all tagged entities and retrieved their groups. Then find all collections tagging
      * this entity and recursively propagate entity group to them.
-     * @param entity entity to manage the add of groups
+     *
+     * @param entity
+     *            entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(T entity, Set<UniformResourceName> pUpdatedIpIds) {
         // If entity tags entities => retrieve all groups of tagged entities (only for collection)
@@ -483,7 +510,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Return true if file content type is acceptable (PDF or MARKDOWN)
-     * @param pFile file
+     *
+     * @param pFile
+     *            file
      * @return true or false
      */
     private static boolean isContentTypeAcceptable(MultipartFile pFile) {
@@ -495,7 +524,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Retrieve file charset
-     * @param pFile description file from the user
+     *
+     * @param pFile
+     *            description file from the user
      * @return file charset
      */
     private static String getCharset(MultipartFile pFile) {
@@ -527,7 +558,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param pEntityId
      * @param pEntity
      * @return current entity
-     * @throws ModuleException thrown if the entity cannot be found or if entities' id do not match
+     * @throws ModuleException
+     *             thrown if the entity cannot be found or if entities' id do not match
      */
     private U checkUpdate(Long pEntityId, U pEntity) throws ModuleException {
         U entityInDb = repository.findById(pEntityId);

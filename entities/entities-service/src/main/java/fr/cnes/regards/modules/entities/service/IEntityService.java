@@ -21,6 +21,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Parameterized entity service interface
+ *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
@@ -29,14 +30,15 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Load entity by IpId without relations
+     *
      * @param ipId business id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
-     *
      */
     U load(UniformResourceName ipId);
 
     /**
      * Load entity by id without relations
+     *
      * @param ip Database id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
@@ -44,6 +46,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Load entity by IpId with all its relations
+     *
      * @param ipId business id
      * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
@@ -51,6 +54,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Load entities by IpId with all their relations
+     *
      * @param ipIds business ids
      * @return entities with all its relations (ie. groups, tags, ...) or empty list
      */
@@ -64,6 +68,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
+     *
      * @param pEntityId entity source id
      * @param pToAssociates URNs of entities to be associated by source entity
      * @throws EntityNotFoundException
@@ -72,6 +77,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
+     *
      * @param pEntityId entity source id
      * @param pToAssociates URNs of entities to be dissociated from source entity
      * @throws EntityNotFoundException
@@ -80,6 +86,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Create entity
+     *
      * @param pEntity entity to create
      * @param pFile description file (or null)
      * @return updated entity from database
@@ -89,6 +96,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Create entity without description file
+     *
      * @param pEntity entioty to create
      * @return updated entity from database
      * @throws ModuleException
@@ -99,6 +107,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Update entity of id pEntityId according to pEntity
+     *
      * @param pEntityId id of entity to update
      * @param pEntity "content" of entity to update
      * @return updated entity from database
@@ -109,6 +118,7 @@ public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Update entity of ipId pEntityUrn according to pEntity
+     *
      * @param pEntityUrn ipId of entity to update
      * @param pEntity "content" of entity to update
      * @return updated entity from database
@@ -117,8 +127,9 @@ public interface IEntityService<U extends AbstractEntity> {
     U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
 
     /**
-     * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property
-     * if id is null
+     * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
+     * is null
+     *
      * @param pEntity entity to update
      * @return updated entity from database
      * @throws ModuleException
@@ -132,11 +143,12 @@ public interface IEntityService<U extends AbstractEntity> {
     }
 
     /**
-     * Delete entity identified by its id.
-     * A deleted entity is "logged" into "deleted_entity" table
+     * Delete entity identified by its id. A deleted entity is "logged" into "deleted_entity" table
+     *
      * @param pEntityId id of entity to delete
      * @return the deleted entity
      * @throws EntityNotFoundException
      */
     U delete(Long pEntityId) throws EntityNotFoundException;
+
 }

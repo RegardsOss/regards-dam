@@ -26,6 +26,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>module-plugins-domain</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

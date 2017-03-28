@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifie
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -42,7 +45,6 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  * Manage model lifecycle
  *
  * @author Marc Sordi
- *
  */
 @Service
 public class ModelService implements IModelService, IModelAttrAssocService {
@@ -254,10 +256,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     /**
      * Check if fragment is bounded to the model
      *
-     * @param pModelAtts
-     *            model attributes
-     * @param pFragmentId
-     *            fragment identifier
+     * @param pModelAtts model attributes
+     * @param pFragmentId fragment identifier
      * @return true if fragment is bound
      */
     private boolean isBoundFragment(final Iterable<ModelAttrAssoc> pModelAtts, Long pFragmentId) {
@@ -333,10 +333,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     /**
      * Add all {@link ModelAttrAssoc} related to a model
      *
-     * @param pModelAtts
-     *            list of {@link ModelAttrAssoc}
-     * @throws ModuleException
-     *             if error occurs!
+     * @param pModelAtts list of {@link ModelAttrAssoc}
+     * @throws ModuleException if error occurs!
      */
     private void addAllModelAttributes(List<ModelAttrAssoc> pModelAtts) throws ModuleException {
 
@@ -387,10 +385,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     /**
      * At the moment, compatibility check only compares {@link AttributeType}
      *
-     * @param pImported
-     *            imported {@link AttributeModel}
-     * @param pExisting
-     *            existing {@link AttributeModel}
+     * @param pImported imported {@link AttributeModel}
+     * @param pExisting existing {@link AttributeModel}
      * @return true is {@link AttributeModel}s are compatible.
      */
     private boolean checkCompatibility(AttributeModel pImported, AttributeModel pExisting) {
@@ -400,10 +396,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     /**
      * Build fragment map
      *
-     * @param pFragmentAttMap
-     *            {@link Fragment} map
-     * @param pAttributeModel
-     *            {@link AttributeModel} to dispatch
+     * @param pFragmentAttMap {@link Fragment} map
+     * @param pAttributeModel {@link AttributeModel} to dispatch
      */
     private void addToFragment(Map<String, List<AttributeModel>> pFragmentAttMap, AttributeModel pAttributeModel) {
         // Nothing to do for default fragment
@@ -425,13 +419,10 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     /**
      * Check if imported fragment contains the same attributes as existing one
      *
-     * @param pFragmentName
-     *            {@link Fragment} name
-     * @param pAttModels
-     *            list of imported fragment {@link AttributeModel}
+     * @param pFragmentName {@link Fragment} name
+     * @param pAttModels list of imported fragment {@link AttributeModel}
      * @return true if existing fragment {@link AttributeModel} match with this ones.
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     private boolean containsExactly(String pFragmentName, List<AttributeModel> pAttModels) throws ModuleException {
         // Get existing fragment attributes
@@ -460,6 +451,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         }
 
         return true;
+    }
+
+    @Override
+    public Set<ModelAttrAssoc> getComputedAttributes(Long pId) {
+        List<ModelAttrAssoc> attributes = modelAttributeRepository.findByModelId(pId);
+        return attributes.stream().filter(attr -> ComputationMode.GIVEN.equals(attr.getMode()))
+                .collect(Collectors.toSet());
     }
 
 }

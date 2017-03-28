@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute.builder;
 
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
@@ -26,18 +27,110 @@ import fr.cnes.regards.modules.entities.domain.attribute.LongIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.UrlAttribute;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
- *
  * Attribute builder
  *
  * @author Marc Sordi
  * @author oroussel
- *
+ * @author Sylvain Vissiere-Guerinet
  */
 public final class AttributeBuilder {
 
     private AttributeBuilder() {
+
+    }
+
+    /**
+     * Method allowing to get an AbstractAttribute according to the AttributeType, for the given name and value. The
+     * type of pValue is expected to be coherant with the AttributeType. In particular, for intervals we are expecting
+     * {@link Range} and as dates we are expecting {@link LocalDateTime}
+     *
+     * @param <U> type of the value
+     * @param <T> type of the attribute generated
+     * @param pAttributeType Type of the attribute created
+     * @param pName name of the attribute to be created
+     * @param pValue value of the attribute to be created
+     * @return a newly created AbstractAttribute according the given AttributeType, name and value
+     */
+    @SuppressWarnings("unchecked")
+    public static <U, T extends AbstractAttribute<U>> T forType(AttributeType pAttributeType, String pName, U pValue) {
+        switch (pAttributeType) {
+            case INTEGER:
+                return (T) buildInteger(pName, (Integer) pValue);
+            case BOOLEAN:
+                return (T) buildBoolean(pName, (Boolean) pValue);
+            case DATE_ARRAY:
+                return (T) buildDateArray(pName, (LocalDateTime[]) pValue);
+            case DATE_INTERVAL:
+                return (T) buildDateInterval(pName, (Range<LocalDateTime>) pValue);
+            case DATE_ISO8601:
+                return (T) buildDate(pName, (LocalDateTime) pValue);
+            case DOUBLE:
+                return (T) buildDouble(pName, (Double) pValue);
+            case DOUBLE_ARRAY:
+                return (T) buildDoubleArray(pName, (Double[]) pValue);
+            case DOUBLE_INTERVAL:
+                return (T) buildDoubleInterval(pName, (Range<Double>) pValue);
+            case GEOMETRY:
+                return (T) buildGeometry(pName, (String) pValue);
+            case INTEGER_ARRAY:
+                return (T) buildIntegerArray(pName, (Integer[]) pValue);
+            case INTEGER_INTERVAL:
+                return (T) buildIntegerInterval(pName, (Range<Integer>) pValue);
+            case LONG:
+                return (T) buildLong(pName, (Long) pValue);
+            case LONG_ARRAY:
+                return (T) buildLongArray(pName, (Long[]) pValue);
+            case LONG_INTERVAL:
+                return (T) buildLongInterval(pName, (Range<Long>) pValue);
+            case STRING:
+                return (T) buildString(pName, (String) pValue);
+            case STRING_ARRAY:
+                return (T) buildStringArray(pName, (String[]) pValue);
+            case URL:
+                return (T) buildUrl(pName, (URL) pValue);
+            default:
+                throw new IllegalArgumentException(pAttributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+        }
+    }
+
+    private static LongIntervalAttribute buildLongInterval(String pName, Range<Long> pValue) {
+        LongIntervalAttribute att = new LongIntervalAttribute();
+        att.setName(pName);
+        att.setValue(pValue);
+        return att;
+    }
+
+    private static IntegerIntervalAttribute buildIntegerInterval(String pName, Range<Integer> pValue) {
+        IntegerIntervalAttribute att = new IntegerIntervalAttribute();
+        att.setName(pName);
+        att.setValue(pValue);
+        return att;
+    }
+
+    private static DoubleIntervalAttribute buildDoubleInterval(String pName, Range<Double> pValue) {
+        DoubleIntervalAttribute att = new DoubleIntervalAttribute();
+        att.setName(pName);
+        att.setValue(pValue);
+        return att;
+    }
+
+    private static DateIntervalAttribute buildDateInterval(String pName, Range<LocalDateTime> pValue) {
+        DateIntervalAttribute att = new DateIntervalAttribute();
+        att.setName(pName);
+        att.setValue(pValue);
+        return att;
+    }
+
+    private static UrlAttribute buildUrl(String pName, URL pValue) {
+        UrlAttribute att = new UrlAttribute();
+        att.setName(pName);
+        att.setValue(pValue);
+        return att;
     }
 
     public static BooleanAttribute buildBoolean(String pName, Boolean pValue) {

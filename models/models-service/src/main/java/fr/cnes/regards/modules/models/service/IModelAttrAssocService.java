@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.models.service;
 
 import java.util.List;
+import java.util.Set;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -11,7 +12,6 @@ import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
- *
  * Model attribute association service description
  *
  * @author Marc Sordi
@@ -36,6 +36,7 @@ public interface IModelAttrAssocService {
 
     /**
      * Propagate a fragment update
+     *
      * @param pFragmentId fragment updated
      * @throws ModuleException if error occurs!
      */
@@ -44,5 +45,7 @@ public interface IModelAttrAssocService {
     void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
 
     Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException;
+
+    Set<ModelAttrAssoc> getComputedAttributes(Long pId);
 
 }

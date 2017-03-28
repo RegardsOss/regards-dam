@@ -11,6 +11,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -39,15 +40,18 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final DataSourceService dataSourceService;
 
+    private final IPluginService pluginService;
+
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttrAssocService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher) {
+            EntityManager pEm, IPublisher pPublisher, IPluginService pPluginService) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
+        pluginService = pPluginService;
     }
 
     /**
@@ -72,6 +76,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     /**
      * Check that the sub-setting criterion setting on a Dataset are coherent with the {@link Model} associated to the
      * {@link DataSource}. Should always be closed after checkDataSource, so the dataModel is properly set.
+     *
      * @param pDataset the {@link Dataset} to check
      * @return the modified {@link Dataset}
      * @throws ModuleException
@@ -99,6 +104,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     /**
      * Retrieve the descriptionFile of a DataSet.
+     *
      * @param pDatasetId
      * @return the DescriptionFile or null
      * @throws EntityNotFoundException

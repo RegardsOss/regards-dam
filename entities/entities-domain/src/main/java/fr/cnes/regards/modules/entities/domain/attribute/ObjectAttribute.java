@@ -11,7 +11,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * Represent a model fragment containing a list of attributes
  *
  * @author Marc Sordi
- *
  */
 public class ObjectAttribute extends AbstractAttribute<List<AbstractAttribute<?>>> {
 
@@ -19,4 +18,5 @@ public class ObjectAttribute extends AbstractAttribute<List<AbstractAttribute<?>
     public boolean represents(AttributeType pAttributeType) {
         return true;
     }
+
 }
