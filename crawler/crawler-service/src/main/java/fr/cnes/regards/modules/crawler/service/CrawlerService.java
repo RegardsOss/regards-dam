@@ -381,12 +381,13 @@ public class CrawlerService implements ICrawlerService {
         // lets compute computed attributes from the dataset model
         Set<ICalculationModel<?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         computeDatasetAttribute(computationPlugins, page.getContent());
-        // FIXME: computationPlugins.forEach(plugin->plugin.compute(page.getContent());
+
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
             updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
             computeDatasetAttribute(computationPlugins, page.getContent());
         }
+        // for each computation plugin lets add the computed attribute
         for (ICalculationModel<?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectAttribute) {
@@ -398,19 +399,17 @@ public class CrawlerService implements ICrawlerService {
                         .findFirst();
                 if (candidate.isPresent()) {
                     // the fragment is already here
-                    ((ObjectAttribute) candidate.get()).getValue().addAll(attrInFragment.getValue());
+                    ((ObjectAttribute) candidate.get()).getValue().addAll(attrInFragment.getValue()); // FIXME:
+                                                                                                      // duplicate?
                 } else {
                     // the fragment is not here so lets create it by adding it
-                    dataset.getProperties().add(attrInFragment);
+                    dataset.getProperties().add(attrInFragment); // FIXME: duplicate?
                 }
             } else {
                 // the attribute is not inside a fragment so lets add it to the root
-                dataset.getProperties().add(attributeToAdd);
+                dataset.getProperties().add(attributeToAdd); // FIXME: duplicate?
             }
         }
-        // TODO: affect it to dataset attribute according to its name( if no fragment just getProperties().add(new
-        // TrucAttribute(attr.getName(), plugin.getResult())), if fragment get(or create) the corresponding
-        // ObjectAttribute)
 
         // TODO: save the dataset into ES
     }
