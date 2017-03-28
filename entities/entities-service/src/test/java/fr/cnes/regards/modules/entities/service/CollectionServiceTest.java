@@ -24,7 +24,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
@@ -98,14 +98,18 @@ public class CollectionServiceTest {
         Mockito.when(entitiesRepositoryMocked.findOne(collection2.getId())).thenReturn(collection2);
         Mockito.when(entitiesRepositoryMocked.findOne(collection3.getId())).thenReturn(collection3);
 
-        IModelAttributeService pModelAttributeService = Mockito.mock(IModelAttributeService.class);
+        IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
-        collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
+        collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
+                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
+                publisherMocked);
+
+        //        collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
+        //                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 
@@ -113,7 +117,7 @@ public class CollectionServiceTest {
     @Purpose("Le système doit permettre de créer une collection à partir d’un modèle préalablement défini et d’archiver cette collection sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createCollection() throws ModuleException, IOException, PluginUtilsException {
-        Mockito.when(entitiesRepositoryMocked.save(collection2)).thenReturn(collection2);
+        Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
         final Collection collection = collectionServiceMocked.create(collection2);
         Assert.assertEquals(collection2, collection);
     }

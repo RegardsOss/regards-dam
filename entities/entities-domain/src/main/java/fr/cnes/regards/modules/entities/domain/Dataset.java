@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -19,9 +20,9 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -30,8 +31,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
  * @author Christophe Mertz
+ * @author oroussel
  */
 @Entity
+@DiscriminatorValue("DATASET")
 public class Dataset extends AbstractDescEntity {
 
     /**

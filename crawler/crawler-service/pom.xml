@@ -20,10 +20,6 @@
 			<artifactId>multitenant-regards-starter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.crawler</groupId>
-			<artifactId>crawler-dao</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.modules.entities</groupId>
 			<artifactId>entities-service</artifactId>
 		</dependency>
@@ -87,6 +83,19 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>plugins-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-dao</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-service</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

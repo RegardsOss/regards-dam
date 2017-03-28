@@ -20,7 +20,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
-import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -72,19 +71,6 @@ public class CollectionDatasetGroupsIT {
 
     @Autowired
     private IModelRepository modelRepository;
-
-    @Autowired
-    private RegardsAmqpAdmin regardsAmqpAdmin;
-
-    // @BeforeTransaction
-    // public void beforeTx() {
-    // regardsAmqpAdmin.bind("PROJECT");
-    // }
-    //
-    // @AfterTransaction
-    // public void afterTx() {
-    // regardsAmqpAdmin.unbind();
-    // }
 
     @Before
     public void setUp() throws Exception {
@@ -167,21 +153,21 @@ public class CollectionDatasetGroupsIT {
         dataset2 = dataSetService.create(dataset2);
         dataset3 = dataSetService.create(dataset3);
 
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll1.getGroups());
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll2.getGroups());
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
 
         // Delete DS3 => C3 (), C2 (G1, G2)
         dataSetService.delete(dataset3.getId());
 
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll1.getGroups());
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll2.getGroups());
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertTrue(coll3.getGroups().isEmpty());
 
     }
@@ -213,17 +199,17 @@ public class CollectionDatasetGroupsIT {
 
         coll4 = collService.create(coll4);
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll1.getGroups());
 
         // Delete C1 => C2 (G3), C4 (G3)
         collService.delete(coll1.getId());
 
-        coll4 = collService.retrieveCollectionById(coll4.getId());
+        coll4 = collService.load(coll4.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll4.getGroups());
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll2.getGroups());
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
     }
 
@@ -254,19 +240,19 @@ public class CollectionDatasetGroupsIT {
 
         coll4 = collService.create(coll4);
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll1.getGroups());
 
         // Delete DS2 => C1 (G1), C2 (G1, G3)
         dataSetService.delete(dataset2.getId());
 
-        coll4 = collService.retrieveCollectionById(coll4.getId());
+        coll4 = collService.load(coll4.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G3"), coll4.getGroups());
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G3"), coll2.getGroups());
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G3"), coll1.getGroups());
     }
 
@@ -288,11 +274,11 @@ public class CollectionDatasetGroupsIT {
         collService.dissociate(coll2.getId(), Sets.newHashSet(dataset3.getIpId()));
         collService.dissociate(coll3.getId(), Sets.newHashSet(dataset3.getIpId()));
 
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertTrue(coll1.getGroups().isEmpty());
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertTrue(coll2.getGroups().isEmpty());
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertTrue(coll3.getGroups().isEmpty());
 
         // Re-Associate all collections and their tags to datasets
@@ -300,11 +286,11 @@ public class CollectionDatasetGroupsIT {
         collService.associate(coll2.getId(), Sets.newHashSet(dataset3.getIpId()));
         collService.associate(coll3.getId(), Sets.newHashSet(dataset3.getIpId()));
 
-        coll1 = collService.retrieveCollectionById(coll1.getId());
+        coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll1.getGroups());
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll2.getGroups());
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
 
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
@@ -313,7 +299,7 @@ public class CollectionDatasetGroupsIT {
 
         collService.associate(coll4.getId(), Sets.newHashSet(coll2.getIpId()));
 
-        coll4 = collService.retrieveCollectionById(coll4.getId());
+        coll4 = collService.load(coll4.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
     }
 
@@ -391,9 +377,9 @@ public class CollectionDatasetGroupsIT {
         // C2 -> C1 and C3 -> C1
         collService.delete(coll1.getId());
 
-        coll2 = collService.retrieveCollectionById(coll2.getId());
+        coll2 = collService.load(coll2.getId());
         Assert.assertFalse(coll2.getTags().contains(coll1.getIpId().toString()));
-        coll3 = collService.retrieveCollectionById(coll3.getId());
+        coll3 = collService.load(coll3.getId());
         Assert.assertFalse(coll3.getTags().contains(coll1.getIpId().toString()));
 
     }
@@ -409,7 +395,7 @@ public class CollectionDatasetGroupsIT {
         coll2 = collService.create(coll2); // C2 tags DS3 and C1 => (G1, G2, G3)
         coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
 
-        List<Collection> collections = collService.retrieveCollectionList();
+        List<Collection> collections = collService.findAll();
         Assert.assertEquals(3, collections.size());
         Assert.assertTrue(collections.contains(coll1));
         Assert.assertTrue(collections.contains(coll2));

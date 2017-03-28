@@ -11,19 +11,16 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.GroupAccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
 
 /**
@@ -31,6 +28,9 @@ import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
  *
  * @author Sylvain Vissiere-Guerinet
  *
+ *         FIXME: for V2 or whenever users will be granted rights: add into THIS class a way to distinguish a group
+ *         which name is an email and so is a "fake" group only linked to a user. isUserGroup maybe, to be established
+ *         with the front
  */
 @Entity
 @Table(name = "t_access_group")
@@ -50,14 +50,10 @@ public class AccessGroup implements IIdentifiable<Long> {
     @CollectionTable(name = "ta_access_group_users", joinColumns = @JoinColumn(name = "access_group_id"),
             foreignKey = @ForeignKey(name = "fk_access_group_users"))
     @Convert(converter = UserConverter.class)
-    private Set<User> users = new HashSet<>();;
+    private Set<User> users = new HashSet<>();
 
-    @NotNull
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "accessGroup")
-    private Set<GroupAccessRight> accessRights = new HashSet<>();
-
-    @Column(name = "private")
-    private boolean isPrivate = Boolean.TRUE;
+    @Column(name = "public")
+    private boolean isPublic = Boolean.FALSE;
 
     @SuppressWarnings("unused")
     private AccessGroup() { // NOSONAR
@@ -81,10 +77,6 @@ public class AccessGroup implements IIdentifiable<Long> {
         return name;
     }
 
-    public Set<GroupAccessRight> getAccessRights() {
-        return accessRights;
-    }
-
     public void setName(String pName) {
         name = pName;
     }
@@ -97,20 +89,16 @@ public class AccessGroup implements IIdentifiable<Long> {
         users.remove(pUser);
     }
 
-    public void setAccessRights(Set<GroupAccessRight> pAccessRights) {
-        accessRights = pAccessRights;
-    }
-
     public Set<User> getUsers() {
         return users;
     }
 
-    public boolean isPrivate() {
-        return isPrivate;
+    public boolean isPublic() {
+        return isPublic;
     }
 
-    public void setPrivate(boolean pIsPrivate) {
-        isPrivate = pIsPrivate;
+    public void setPublic(boolean pIsPublic) {
+        isPublic = pIsPublic;
     }
 
     public void setUsers(Set<User> pUsers) {

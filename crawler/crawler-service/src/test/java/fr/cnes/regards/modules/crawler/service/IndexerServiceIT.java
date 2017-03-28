@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -45,6 +43,12 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.service.IIndexerService;
+import fr.cnes.regards.modules.indexer.service.ISearchService;
+import fr.cnes.regards.modules.indexer.service.Searches;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -52,7 +56,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 public class IndexerServiceIT {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexerServiceIT.class);
 
     private static final String SEARCH = "project_search";
@@ -62,6 +65,9 @@ public class IndexerServiceIT {
 
     @Autowired
     private IIndexerService indexerService;
+
+    @Autowired
+    private ISearchService searchService;
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
@@ -170,8 +176,10 @@ public class IndexerServiceIT {
         indexerService.refresh(tenant);
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
-        List<Collection> singleCollColl = indexerService
-                .search(tenant, Collection.class, 10, ICriterion.eq("properties.int", 42)).getContent();
+        List<Collection> singleCollColl = searchService
+                .search(new SearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
+                        ICriterion.eq("properties.int", 42))
+                .getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 
@@ -198,7 +206,7 @@ public class IndexerServiceIT {
             totalCount += count;
             bulkSave(count, collModel);
         }
-        System.out.println(String.format("Index %s should contain %d documents", SEARCH, totalCount));
+        LOGGER.info("Index {} should contain {} documents", SEARCH, totalCount);
 
     }
 
@@ -208,10 +216,9 @@ public class IndexerServiceIT {
             collections.add(createCollection(collModel, i + 1));
         }
         long start = System.currentTimeMillis();
-        Map<String, Throwable> errors = indexerService.saveBulkEntities(SEARCH, collections);
-        System.out.println(String.format("Bulk save (%d collections) : %d ms", collections.size(),
-                                         System.currentTimeMillis() - start));
-        Assert.assertNull(errors);
+        int savedCollCount = indexerService.saveBulkEntities(SEARCH, collections);
+        LOGGER.info("Bulk save ({} collections) : {} ms", collections.size(), System.currentTimeMillis() - start);
+        Assert.assertEquals(collections.size(), savedCollCount);
     }
 
     private Collection createCollection(Model collModel, int i) {
@@ -232,18 +239,19 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
         ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
-        Page<? extends AbstractEntity> collPage = indexerService.search(SEARCH, AbstractEntity.class, 10, criterion);
+        //        SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
+        SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities(SEARCH);
+        Page<? extends AbstractEntity> collPage = searchService.search(searchKey, 10, criterion);
         int count = 0;
         while (true) {
             for (AbstractEntity coll : collPage.getContent()) {
-                System.out.println(coll.toString());
                 count++;
             }
             if (collPage.isLast()) {
                 break;
 
             }
-            collPage = indexerService.search(SEARCH, AbstractEntity.class, collPage.nextPageable(), criterion);
+            collPage = searchService.search(searchKey, collPage.nextPageable(), criterion);
         }
         Assert.assertEquals(26, count);
     }

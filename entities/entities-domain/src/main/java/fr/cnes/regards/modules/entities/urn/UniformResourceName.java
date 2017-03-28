@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 @JsonAdapter(UrnAdapter.class)
 public class UniformResourceName {
 
-    public static final String URN_PATTERN = "URN:.+:.+:.+:.+:V\\d{1,3}(,\\d+)?(:REV.+)?";
+    public static final String URN_PATTERN = "URN:[^:]+:[^:]+:[^:]+:[^:]+:V\\d{1,3}(,\\d+)?(:REV.+)?";
 
     private static final String VERSION_PREFIX = "V";
 
@@ -71,9 +71,14 @@ public class UniformResourceName {
     @Max(MAX_VERSION_VALUE)
     private int version;
 
+    /**
+     * numeric value ordering the differents AIP from a same SIP
+     */
     private Long order;
 
     private String revision;
+
+    private final static Pattern PATTERN = Pattern.compile(URN_PATTERN);
 
     public UniformResourceName(OAISIdentifier pOaisIdentifier, EntityType pEntityType, String pTenant, UUID pEntityId,
             int pVersion) {
@@ -234,8 +239,7 @@ public class UniformResourceName {
     }
 
     public static boolean isValidUrn(String pUrn) {
-        final Pattern pattern = Pattern.compile(URN_PATTERN);
-        return pattern.matcher(pUrn).matches();
+        return PATTERN.matcher(pUrn).matches();
     }
 
     @Override

@@ -8,10 +8,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
-import fr.cnes.regards.modules.crawler.domain.IMapping;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.indexer.domain.IMapping;
 
 /**
  * AbstractIntervalAttributeTypeAdapter specialization to manage DateIntervalAttribute.<br/>

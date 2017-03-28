@@ -24,7 +24,7 @@ import org.xml.sax.SAXException;
 
 import com.google.common.collect.Iterables;
 
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.schema.Fragment;
 import fr.cnes.regards.modules.models.schema.Model;
@@ -59,24 +59,24 @@ public final class XmlExportHelper {
     }
 
     public static void exportModel(OutputStream pOutputStream, fr.cnes.regards.modules.models.domain.Model pModel,
-            List<ModelAttribute> pAttributes) throws ExportException {
+            List<ModelAttrAssoc> pAttributes) throws ExportException {
         write(pOutputStream, Model.class, toXmlModel(pModel, pAttributes));
     }
 
     /**
      * Build a {@link Model} based on a {@link fr.cnes.regards.modules.models.domain.Model} and its related
-     * {@link ModelAttribute}
+     * {@link ModelAttrAssoc}
      *
      * @param pModel
      *            {@link fr.cnes.regards.modules.models.domain.Model}
      * @param pAttributes
-     *            list of {@link ModelAttribute}
+     *            list of {@link ModelAttrAssoc}
      * @return serializable {@link Model}
      * @throws ExportException
      *             if error occurs!
      */
     private static Model toXmlModel(fr.cnes.regards.modules.models.domain.Model pModel,
-            List<ModelAttribute> pAttributes) throws ExportException {
+            List<ModelAttrAssoc> pAttributes) throws ExportException {
 
         // Manage model
         final Model model = pModel.toXml();
@@ -85,7 +85,7 @@ public final class XmlExportHelper {
         final Map<String, Fragment> fragmentMap = new HashMap<>();
 
         if ((pAttributes != null) && !Iterables.isEmpty(pAttributes)) {
-            for (ModelAttribute modelAtt : pAttributes) {
+            for (ModelAttrAssoc modelAtt : pAttributes) {
                 dispatchAttribute(fragmentMap, modelAtt);
             }
         }
@@ -108,14 +108,14 @@ public final class XmlExportHelper {
     }
 
     /**
-     * Dispatch {@link ModelAttribute} in its related fragment navigating through {@link AttributeModel}
+     * Dispatch {@link ModelAttrAssoc} in its related fragment navigating through {@link AttributeModel}
      *
      * @param pFragmentMap
      *            {@link Fragment} map
      * @param pModelAtt
-     *            {@link ModelAttribute} to dispatch
+     *            {@link ModelAttrAssoc} to dispatch
      */
-    private static void dispatchAttribute(Map<String, Fragment> pFragmentMap, ModelAttribute pModelAtt) {
+    private static void dispatchAttribute(Map<String, Fragment> pFragmentMap, ModelAttrAssoc pModelAtt) {
         final AttributeModel attModel = pModelAtt.getAttribute();
         final fr.cnes.regards.modules.models.domain.attributes.Fragment fragment = attModel.getFragment();
 

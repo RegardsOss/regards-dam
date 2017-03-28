@@ -20,7 +20,7 @@ public abstract class AbstractDataEntity extends AbstractEntity {
     /**
      * Physical data file references
      */
-    private List<Data> files;
+    private List<DataFile> files;
 
     protected AbstractDataEntity() {
         this(null, null, null);
@@ -30,21 +30,11 @@ public abstract class AbstractDataEntity extends AbstractEntity {
         super(pModel, pIpId, pLabel);
     }
 
-    public List<Data> getFiles() {
+    public List<DataFile> getFiles() {
         return files;
     }
 
-    public void setFiles(List<Data> pFiles) {
+    public void setFiles(List<DataFile> pFiles) {
         files = pFiles;
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object pObj) {
-        return super.equals(pObj);
     }
 }

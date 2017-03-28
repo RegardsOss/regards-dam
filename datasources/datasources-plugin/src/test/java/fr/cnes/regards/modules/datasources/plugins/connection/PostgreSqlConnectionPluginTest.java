@@ -89,27 +89,20 @@ public class PostgreSqlConnectionPluginTest {
 
         Assert.assertNotNull(sqlConn);
 
-        final Connection conn1 = sqlConn.getConnection();
-        Assert.assertNotNull(conn1);
-        Assert.assertTrue(sqlConn.testConnection());
-
-        final Connection conn2 = sqlConn.getConnection();
-        Assert.assertNotNull(conn2);
-        Assert.assertTrue(sqlConn.testConnection());
-
-        final Connection conn3 = sqlConn.getConnection();
-        Assert.assertNotNull(conn3);
-
-        conn1.close();
-
-        Assert.assertTrue(sqlConn.testConnection());
-        final Connection conn4 = sqlConn.getConnection();
-        Assert.assertNotNull(conn4);
-
-        conn4.close();
-        Assert.assertTrue(sqlConn.testConnection());
-        conn2.close();
-        conn3.close();
+        try (Connection conn1 = sqlConn.getConnection()) {
+            Assert.assertNotNull(conn1);
+            Assert.assertTrue(sqlConn.testConnection());
+            try (Connection conn2 = sqlConn.getConnection()) {
+                Assert.assertNotNull(conn2);
+                Assert.assertTrue(sqlConn.testConnection());
+                try (Connection conn3 = sqlConn.getConnection()) {
+                    Assert.assertNotNull(conn3);
+                }
+                try (Connection conn4 = sqlConn.getConnection()) {
+                    Assert.assertNotNull(conn4);
+                }
+            }
+        }
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,16 +24,16 @@ import org.springframework.test.context.TestPropertySource;
 import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
-import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
-import fr.cnes.regards.modules.models.dao.IModelAttributeRepository;
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
@@ -54,7 +55,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
     private IDatasetRepository datasetRepo;
 
     @Autowired
-    private IModelAttributeRepository modelAttRepo;
+    private IModelAttrAssocRepository modelAttRepo;
 
     @Autowired
     private IAttributeModelRepository attModelRepo;
@@ -86,6 +87,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         pModel = modelRepo.save(pModel);
         dataset = new Dataset(pModel, "pTenant", "dataset");
         dataset.setLicence("licence");
+        dataset.setCreationDate(LocalDateTime.now());
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
@@ -101,6 +103,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
         dsDescription = new Dataset(srcModel, "pTenant", "dataSetWithDescription");
         dsDescription.setLicence("licence");
+        dsDescription.setCreationDate(LocalDateTime.now());
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = datasetRepo.save(dsDescription);
@@ -119,31 +122,31 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
     /**
      * @param pImportModel
      */
-    private void setModelInPlace(List<ModelAttribute> pImportModel) {
+    private void setModelInPlace(List<ModelAttrAssoc> pImportModel) {
         srcModel = pImportModel.get(0).getModel();
         srcModel = modelRepo.save(srcModel);
-        ModelAttribute attStringModelAtt = pImportModel.stream()
+        ModelAttrAssoc attStringModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals(Fragment.getDefaultName())
                         && ma.getAttribute().getName().equals("att_string"))
                 .findAny().get();
         attString = attStringModelAtt.getAttribute();
-        ModelAttribute attBooleanModelAtt = pImportModel.stream()
+        ModelAttrAssoc attBooleanModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals(Fragment.getDefaultName())
                         && ma.getAttribute().getName().equals("att_boolean"))
                 .findAny().get();
         attBoolean = attBooleanModelAtt.getAttribute();
-        ModelAttribute CRS_CRSModelAtt = pImportModel.stream()
+        ModelAttrAssoc CRS_CRSModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
                         && ma.getAttribute().getName().equals("CRS"))
                 .findAny().get();
         GEO_CRS = CRS_CRSModelAtt.getAttribute();
 
-        ModelAttribute CRS_GEOMETRYModelAtt = pImportModel.stream()
+        ModelAttrAssoc CRS_GEOMETRYModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
                         && ma.getAttribute().getName().equals("GEOMETRY"))
                 .findAny().get();
         GEO_GEOMETRY = CRS_GEOMETRYModelAtt.getAttribute();
-        ModelAttribute Contact_PhoneModelAtt = pImportModel.stream()
+        ModelAttrAssoc Contact_PhoneModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("Contact")
                         && ma.getAttribute().getName().equals("Phone"))
                 .findAny().get();
@@ -171,7 +174,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         return rootCrit;
     }
 
-    private List<ModelAttribute> importModel(String pFilename) {
+    private List<ModelAttrAssoc> importModel(String pFilename) {
         InputStream input;
         try {
             input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));

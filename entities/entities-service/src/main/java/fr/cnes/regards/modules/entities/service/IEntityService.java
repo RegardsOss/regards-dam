@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,34 +20,47 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
+ * Parameterized entity service interface
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
 @MultitenantTransactional
-public interface IEntityService {
+public interface IEntityService<U extends AbstractEntity> {
 
     /**
      * Load entity by IpId without relations
      * @param ipId business id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     *
      */
-    AbstractEntity load(UniformResourceName ipId);
+    U load(UniformResourceName ipId);
+
+    /**
+     * Load entity by id without relations
+     * @param ip Database id
+     * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
+     */
+    U load(Long id);
 
     /**
      * Load entity by IpId with all its relations
      * @param ipId business id
      * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    AbstractEntity loadWithRelations(UniformResourceName ipId);
+    U loadWithRelations(UniformResourceName ipId);
 
     /**
      * Load entities by IpId with all their relations
      * @param ipIds business ids
      * @return entities with all its relations (ie. groups, tags, ...) or empty list
      */
-    List<AbstractEntity> loadAllWithRelations(UniformResourceName... ipIds);
+    List<U> loadAllWithRelations(UniformResourceName... ipIds);
 
-    void validate(AbstractEntity pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
+    Page<U> findAll(Pageable pageRequest);
+
+    List<U> findAll();
+
+    void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 
     /**
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.
@@ -53,7 +68,7 @@ public interface IEntityService {
      * @param pToAssociates URNs of entities to be associated by source entity
      * @throws EntityNotFoundException
      */
-    AbstractEntity associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
+    U associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
@@ -61,7 +76,7 @@ public interface IEntityService {
      * @param pToAssociates URNs of entities to be dissociated from source entity
      * @throws EntityNotFoundException
      */
-    AbstractEntity dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
+    U dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
 
     /**
      * Create entity
@@ -70,7 +85,7 @@ public interface IEntityService {
      * @return updated entity from database
      * @throws ModuleException
      */
-    <T extends AbstractEntity> T create(T pEntity, MultipartFile pFile) throws ModuleException, IOException;
+    U create(U pEntity, MultipartFile pFile) throws ModuleException, IOException;
 
     /**
      * Create entity without description file
@@ -78,7 +93,7 @@ public interface IEntityService {
      * @return updated entity from database
      * @throws ModuleException
      */
-    default <T extends AbstractEntity> T create(T pEntity) throws ModuleException, IOException {
+    default U create(U pEntity) throws ModuleException, IOException {
         return this.create(pEntity, null);
     }
 
@@ -90,7 +105,7 @@ public interface IEntityService {
      * @throws ModuleException
      * @throws PluginUtilsException
      */
-    <T extends AbstractEntity> T update(Long pEntityId, T pEntity) throws ModuleException;
+    U update(Long pEntityId, U pEntity) throws ModuleException;
 
     /**
      * Update entity of ipId pEntityUrn according to pEntity
@@ -99,7 +114,7 @@ public interface IEntityService {
      * @return updated entity from database
      * @throws ModuleException
      */
-    <T extends AbstractEntity> T update(UniformResourceName pEntityUrn, T pEntity) throws ModuleException;
+    U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
 
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property
@@ -108,7 +123,7 @@ public interface IEntityService {
      * @return updated entity from database
      * @throws ModuleException
      */
-    default <T extends AbstractEntity> T update(T pEntity) throws ModuleException {
+    default U update(U pEntity) throws ModuleException {
         if (pEntity.getId() != null) {
             return this.update(pEntity.getId(), pEntity);
         } else {
@@ -123,5 +138,5 @@ public interface IEntityService {
      * @return the deleted entity
      * @throws EntityNotFoundException
      */
-    AbstractEntity delete(Long pEntityId) throws EntityNotFoundException;
+    U delete(Long pEntityId) throws EntityNotFoundException;
 }

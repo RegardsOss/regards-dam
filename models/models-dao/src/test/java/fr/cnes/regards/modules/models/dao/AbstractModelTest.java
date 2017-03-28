@@ -51,7 +51,7 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
      * Model attribute repository
      */
     @Autowired
-    protected IModelAttributeRepository modelAttributeRepository;
+    protected IModelAttrAssocRepository modelAttributeRepository;
 
     /**
      *

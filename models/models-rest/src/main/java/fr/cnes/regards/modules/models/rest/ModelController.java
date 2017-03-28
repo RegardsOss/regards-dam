@@ -33,7 +33,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.service.FragmentService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -149,7 +149,7 @@ public class ModelController implements IResourceController<Model> {
     }
 
     /**
-     * Delete a {@link Model} and detach all {@link ModelAttribute}
+     * Delete a {@link Model} and detach all {@link ModelAttrAssoc}
      *
      * @param pModelId
      *            {@link Model} identifier

@@ -1,8 +1,12 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -13,13 +17,15 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPoller;
@@ -29,15 +35,16 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.modules.crawler.dao.IEsRepository;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
-import fr.cnes.regards.modules.entities.service.IEntityService;
+import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
@@ -86,8 +93,7 @@ public class CrawlerService implements ICrawlerService {
     private IPoller poller;
 
     @Autowired
-    @Qualifier(value = "entityService")
-    private IEntityService entityService;
+    private IEntitiesService entitiesService;
 
     @Autowired
     private IPluginService pluginService;
@@ -146,7 +152,6 @@ public class CrawlerService implements ICrawlerService {
             for (String tenant : tenantResolver.getAllTenants()) {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
-                    LOGGER.info("-------- Forcing tenant : " + tenant + " -------------");
                     // Try to poll an entity event on this tenant
                     atLeastOnPoll |= self.doPoll();
                 } catch (RuntimeException t) {
@@ -203,7 +208,7 @@ public class CrawlerService implements ICrawlerService {
      */
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
         LOGGER.debug("received msg for " + ipId.toString());
-        AbstractEntity entity = entityService.loadWithRelations(ipId);
+        AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
             if (ipId.getEntityType() == EntityType.DATASET) {
@@ -213,7 +218,7 @@ public class CrawlerService implements ICrawlerService {
         } else { // entity has been created or updated, it must be saved into ES
             // First, check if index exists
             if (!esRepos.indexExists(tenant)) {
-                esRepos.createIndex(tenant);
+                createIndex(tenant);
             }
             // Then save entity
             esRepos.save(tenant, entity);
@@ -232,12 +237,12 @@ public class CrawlerService implements ICrawlerService {
     private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
         LOGGER.debug("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
-        List<AbstractEntity> entities = entityService.loadAllWithRelations(ipIds);
+        List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
         entities.forEach(e -> toDeleteIpIds.remove(e.getIpId()));
         // Entities to save
         if (!entities.isEmpty()) {
             if (!esRepos.indexExists(tenant)) {
-                esRepos.createIndex(tenant);
+                createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
             entities.stream().filter(e -> e instanceof Dataset).forEach(e -> this.manageDatasetUpdate((Dataset) e));
@@ -255,11 +260,30 @@ public class CrawlerService implements ICrawlerService {
      */
     private void manageDatasetDelete(String tenant, String ipId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
-        // with th systeme Postgres/RabbitMQ
+        // with the system Postgres/RabbitMQ)
         ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId);
+        // Groups must also be managed so for all objects they have to be completely recomputed (a group can be
+        // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
+        // datasets associated to an object
+        Multimap<String, String> groupsMultimap = HashMultimap.create();
+        // Same thing with dataset modelId (several datasets can have same model)
+        Map<String, Long> modelIdMap = new HashMap<>();
+        // A set containing already known not dataset ipId (to avoid creating UniformResourceName object for all tags
+        // each time an object is encountered)
+        Set<String> notDatasetIpIds = new HashSet<>();
+
         Set<DataObject> toSaveObjects = new HashSet<>();
-        Consumer<DataObject> updateTag = object -> {
+        LocalDateTime updateDate = LocalDateTime.now();
+        // Function to update an object (tags, groups, lastUpdate, ...)
+        Consumer<DataObject> updateDataObject = object -> {
             object.getTags().remove(ipId);
+            // reset groups
+            object.getGroups().clear();
+            // reset datasetModelIds
+            object.getDatasetModelIds().clear();
+            // Search on all tags which ones are datasets and retrieve their groups and modelIds
+            computeGroupsAndModelIdsFromTags(tenant, groupsMultimap, modelIdMap, notDatasetIpIds, object);
+            object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
                 esRepos.saveBulk(tenant, toSaveObjects);
@@ -267,10 +291,56 @@ public class CrawlerService implements ICrawlerService {
             }
         };
         // Apply updateTag function to all tagging objects
-        esRepos.searchAll(tenant, DataObject.class, updateTag, taggingObjectsCrit);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
+                DataObject.class);
+        esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
             esRepos.saveBulk(tenant, toSaveObjects);
+        }
+    }
+
+    /**
+     * Compute groups and model ids from tags
+     * @param tenant tenant
+     * @param groupsMultimap a multimap of { dataset IpId, groups }
+     * @param modelIdMap a map of { dataset IpId, dataset model Id }
+     * @param notDatasetIpIds a set containing already known not dataset ipIds
+     * @param object DataObject to update
+     */
+    private void computeGroupsAndModelIdsFromTags(String tenant, Multimap<String, String> groupsMultimap,
+            Map<String, Long> modelIdMap, Set<String> notDatasetIpIds, DataObject object) {
+        // Compute groups from tags
+        for (Iterator<String> i = object.getTags().iterator(); i.hasNext();) {
+            String tag = i.next();
+            // already known free tag or other entity than Dataset ipId
+            if (notDatasetIpIds.contains(tag)) {
+                continue;
+            }
+            // new tag encountered
+            if (!groupsMultimap.containsKey(tag)) {
+                // Managing Dataset IpId tag
+                if (UniformResourceName.isValidUrn(tag)
+                        && (UniformResourceName.fromString(tag).getEntityType() == EntityType.DATASET)) {
+                    Dataset ds = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
+                    // Must not occurs, this means a Dataset has been deleted from ES but not cleaned on all
+                    // objects associated to it
+                    if (ds == null) {
+                        LOGGER.warn("Dataset {} no more exists, it will be removed from DataObject {} tags", tag,
+                                    object.getDocId());
+                        i.remove();
+                        // In this case, this tag must be managed on all objects so it is not added nor on
+                        // notDatasetIpIds nor on groupsMultimap
+                    } else { // dataset found, retrieving its groups and add them on groupsMultimap
+                        groupsMultimap.putAll(tag, ds.getGroups());
+                        modelIdMap.put(tag, ds.getModel().getId());
+                    }
+                } else { // free tag or not dataset tag
+                    notDatasetIpIds.add(tag);
+                }
+            }
+            object.getGroups().addAll(groupsMultimap.get(tag));
+            object.getDatasetModelIds().add(modelIdMap.get(tag));
         }
     }
 
@@ -288,75 +358,124 @@ public class CrawlerService implements ICrawlerService {
             subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.equals(DATA_SOURCE_ID, datasourceId));
         }
         String tenant = runtimeTenantResolver.getTenant();
+        // To avoid losing time doing same stuf on all objects
         String dsIpId = dataset.getIpId().toString();
-        Page<DataObject> page = esRepos.search(tenant, DataObject.class, IEsRepository.BULK_SIZE, subsettingCrit);
-        this.addTagToDataObjects(tenant, dsIpId, page.getContent());
+        Set<String> groups = dataset.getGroups();
+        LocalDateTime updateDate = LocalDateTime.now();
+        Long datasetModelId = dataset.getModel().getId();
+
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
+                DataObject.class);
+        Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
+        this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
 
         while (page.hasNext()) {
-            page = esRepos.search(tenant, DataObject.class, page.nextPageable(), subsettingCrit);
-            this.addTagToDataObjects(tenant, dsIpId, page.getContent());
+            page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
+            this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId,
+                                                    page.getContent());
         }
     }
 
-    private void addTagToDataObjects(String tenant, String dsIpId, List<DataObject> objects) {
+    /**
+     * Update data objects following a Dataset update
+     * @param tenant tenant
+     * @param dsIpId Dataset IpId (String)
+     * @param groups Dataset groups (to add or update on all objects)
+     * @param updateDate lastUpdate date to put on all objects
+     * @param objects objects to update
+     */
+    private void updateDataObjectsFromDatasetUpdate(String tenant, String dsIpId, Set<String> groups,
+            LocalDateTime updateDate, Long datasetModelId, List<DataObject> objects) {
         Set<DataObject> toSaveObjects = new HashSet<>();
         objects.forEach(o -> {
             o.getTags().add(dsIpId);
+            o.getGroups().addAll(groups);
+            o.setLastUpdate(updateDate);
+            o.getDatasetModelIds().add(datasetModelId);
             toSaveObjects.add(o);
         });
         esRepos.saveBulk(tenant, toSaveObjects);
     }
 
+    /**
+     * Create ES index with tenant name and geometry mapping
+     */
+    private void createIndex(String tenant) {
+        esRepos.createIndex(tenant);
+        esRepos.setGeometryMapping(tenant, Arrays.stream(EntityType.values()).map(EntityType::toString)
+                .toArray(length -> new String[length]));
+    }
+
     @Override
-    public void ingest(PluginConfiguration pluginConf) throws ModuleException {
+    public int ingest(PluginConfiguration pluginConf) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
+        int savedObjectsCount = 0;
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
-            esRepos.createIndex(tenant);
+            createIndex(tenant);
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
-            this.createDataObjects(tenant, datasourceId, page.getContent());
+            savedObjectsCount += this.createDataObjects(tenant, datasourceId, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable());
-                this.createDataObjects(tenant, datasourceId, page.getContent());
+                savedObjectsCount += this.createDataObjects(tenant, datasourceId, page.getContent());
             }
         } else { // index exists, data objects may also exist
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
-            this.mergeDataObjects(tenant, datasourceId, page.getContent());
+            savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable());
-                this.mergeDataObjects(tenant, datasourceId, page.getContent());
+                savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, page.getContent());
             }
         }
+        return savedObjectsCount;
     }
 
-    private void createDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
-        // On all objects, it is necessary to set datasourceId
-        objects.forEach(dataObject -> dataObject.setDataSourceId(datasourceId));
-        esRepos.saveBulk(tenant, objects);
+    private int createDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+        // On all objects, it is necessary to set datasourceId and creation date
+        LocalDateTime creationDate = LocalDateTime.now();
+        objects.forEach(dataObject -> {
+            dataObject.setDataSourceId(datasourceId);
+            dataObject.setCreationDate(creationDate);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
+        });
+        return esRepos.saveBulk(tenant, objects);
     }
 
-    private void mergeDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+    private int mergeDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
         // Set of data objects to be saved (depends on existence of data objects into ES)
         Set<DataObject> toSaveObjects = new HashSet<>();
 
+        LocalDateTime now = LocalDateTime.now();
         for (DataObject dataObject : objects) {
             DataObject curObject = esRepos.get(tenant, dataObject);
-            // if current object does already exist into ES, nothing has to be done
-            // else it must be created
-            if (curObject == null) {
-                // Don't forget to set datasourceId
-                dataObject.setDataSourceId(datasourceId);
-                toSaveObjects.add(dataObject);
+            // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
+            // current creationDate, groups and tags.
+            if (curObject != null) {
+                dataObject.setCreationDate(curObject.getCreationDate());
+                // Don't forget to update lastUpdate
+                dataObject.setLastUpdate(now);
+                dataObject.setGroups(curObject.getGroups());
+                dataObject.setTags(curObject.getTags());
+            } else { // else it must be created
+                dataObject.setCreationDate(now);
             }
+            // Don't forget to set datasourceId
+            dataObject.setDataSourceId(datasourceId);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
+            toSaveObjects.add(dataObject);
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
-        esRepos.saveBulk(tenant, toSaveObjects);
+        return esRepos.saveBulk(tenant, toSaveObjects);
     }
 }

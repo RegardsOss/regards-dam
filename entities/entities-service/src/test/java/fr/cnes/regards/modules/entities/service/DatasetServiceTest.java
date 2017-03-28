@@ -22,8 +22,6 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
-import fr.cnes.regards.modules.crawler.domain.criterion.BooleanMatchCriterion;
-import fr.cnes.regards.modules.crawler.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -31,12 +29,14 @@ import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
-import fr.cnes.regards.modules.models.service.IModelAttributeService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
@@ -80,7 +80,7 @@ public class DatasetServiceTest {
 
     private DataSourceService dataSourceServiceMocked;
 
-    private IModelAttributeService pModelAttributeService;
+    private IModelAttrAssocService pModelAttributeService;
 
     private IAttributeModelService pAttributeModelService;
 
@@ -101,7 +101,7 @@ public class DatasetServiceTest {
         jwtService.injectMockToken("Tenant", "PUBLIC");
         dataSetRepositoryMocked = Mockito.mock(IDatasetRepository.class);
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
-        pModelAttributeService = Mockito.mock(IModelAttributeService.class);
+        pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         modelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
         dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
@@ -145,26 +145,26 @@ public class DatasetServiceTest {
 
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
-                deletedEntityRepositoryMocked, null, null, null, publisherMocked);
+                deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 
     /**
      * @param pImportModel
      */
-    private void setModelInPlace(List<ModelAttribute> pImportModel) {
+    private void setModelInPlace(List<ModelAttrAssoc> pImportModel) {
         modelOfObjects = pImportModel.get(0).getModel();
         modelOfObjects.setId(3L);
-        ModelAttribute attStringModelAtt = pImportModel.stream()
+        ModelAttrAssoc attStringModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals(Fragment.getDefaultName())
                         && ma.getAttribute().getName().equals("att_string"))
                 .findAny().get();
         attString = attStringModelAtt.getAttribute();
         attString.setId(1L);
         Mockito.when(pAttributeModelService.findByNameAndFragmentName(attString.getName(), null)).thenReturn(attString);
-        Mockito.when(pModelAttributeService.getModelAttribute(modelOfObjects.getId(), attString))
+        Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), attString))
                 .thenReturn(attStringModelAtt);
-        ModelAttribute attBooleanModelAtt = pImportModel.stream()
+        ModelAttrAssoc attBooleanModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals(Fragment.getDefaultName())
                         && ma.getAttribute().getName().equals("att_boolean"))
                 .findAny().get();
@@ -172,9 +172,9 @@ public class DatasetServiceTest {
         attBoolean.setId(2L);
         Mockito.when(pAttributeModelService.findByNameAndFragmentName(attBoolean.getName(), null))
                 .thenReturn(attBoolean);
-        Mockito.when(pModelAttributeService.getModelAttribute(modelOfObjects.getId(), attBoolean))
+        Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), attBoolean))
                 .thenReturn(attBooleanModelAtt);
-        ModelAttribute CRS_CRSModelAtt = pImportModel.stream()
+        ModelAttrAssoc CRS_CRSModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
                         && ma.getAttribute().getName().equals("CRS"))
                 .findAny().get();
@@ -182,9 +182,9 @@ public class DatasetServiceTest {
         GEO_CRS.setId(3L);
         Mockito.when(pAttributeModelService
                 .findByNameAndFragmentName(GEO_CRS.getName(), GEO_CRS.getFragment().getName())).thenReturn(GEO_CRS);
-        Mockito.when(pModelAttributeService.getModelAttribute(modelOfObjects.getId(), GEO_CRS))
+        Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), GEO_CRS))
                 .thenReturn(CRS_CRSModelAtt);
-        ModelAttribute CRS_GEOMETRYModelAtt = pImportModel.stream()
+        ModelAttrAssoc CRS_GEOMETRYModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
                         && ma.getAttribute().getName().equals("GEOMETRY"))
                 .findAny().get();
@@ -193,9 +193,9 @@ public class DatasetServiceTest {
         Mockito.when(pAttributeModelService.findByNameAndFragmentName(GEO_GEOMETRY.getName(),
                                                                       GEO_GEOMETRY.getFragment().getName()))
                 .thenReturn(GEO_GEOMETRY);
-        Mockito.when(pModelAttributeService.getModelAttribute(modelOfObjects.getId(), GEO_GEOMETRY))
+        Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), GEO_GEOMETRY))
                 .thenReturn(CRS_GEOMETRYModelAtt);
-        ModelAttribute Contact_PhoneModelAtt = pImportModel.stream()
+        ModelAttrAssoc Contact_PhoneModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("Contact")
                         && ma.getAttribute().getName().equals("Phone"))
                 .findAny().get();
@@ -204,7 +204,7 @@ public class DatasetServiceTest {
         Mockito.when(pAttributeModelService.findByNameAndFragmentName(Contact_Phone.getName(),
                                                                       Contact_Phone.getFragment().getName()))
                 .thenReturn(Contact_Phone);
-        Mockito.when(pModelAttributeService.getModelAttribute(modelOfObjects.getId(), Contact_Phone))
+        Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), Contact_Phone))
                 .thenReturn(Contact_PhoneModelAtt);
     }
 
@@ -232,12 +232,12 @@ public class DatasetServiceTest {
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
     public void createDataset() throws ModuleException, IOException, PluginUtilsException {
-        Mockito.when(entitiesRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
+        Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
         Assert.assertEquals(dataSet2, dataSet);
     }
 
-    private List<ModelAttribute> importModel(String pFilename) {
+    private List<ModelAttrAssoc> importModel(String pFilename) {
         InputStream input;
         try {
             input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));

@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -31,13 +32,15 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
+import com.google.gson.JsonElement;
+
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
-import fr.cnes.regards.modules.crawler.domain.IIndexable;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -50,8 +53,11 @@ import fr.cnes.regards.modules.models.domain.Model;
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity
 @Table(name = "t_entity", indexes = { @Index(name = "idx_entity_ipId", columnList = "ipId") })
+@DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
+
+    private static final int MAX_IPID_SIZE = 128;
 
     /**
      * last time the entity was updated
@@ -64,6 +70,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * time at which the entity was created
      */
     @PastOrNow
+    @NotNull
     @Column(name = "creation_date")
     protected LocalDateTime creationDate;
 
@@ -78,7 +85,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * Information Package ID for REST request
      */
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = MAX_IPID_SIZE)
     @Convert(converter = UrnConverter.class)
     @Valid
     protected UniformResourceName ipId;
@@ -92,13 +99,13 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Column
     protected String sipId;
 
+    /**
+     * In some cases where label isn't specified, IpId is used as it so lengths of both properties must have a
+     * coherent size
+     */
     @NotNull
-    @Column(length = 128, nullable = false)
+    @Column(length = MAX_IPID_SIZE, nullable = false)
     protected String label;
-
-    @Column
-    @Type(type = "text")
-    protected String description;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -111,9 +118,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Computed indirect access groups.<br/>
-     * This is a set of group names that the entity can reach (access groups are positionned on datasets and then
-     * added to collections that tag the dataset and then added to collections that tag collections containing
-     * groups)
+     * This is a set of group names that the entity can reach (access groups are positionned on datasets and then added
+     * to collections that tag the dataset and then added to collections that tag collections containing groups)
      */
     @ElementCollection
     @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"))
@@ -136,6 +142,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
     protected Model model;
+
+    @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb")
+    protected JsonElement geometry;
 
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;
@@ -225,14 +235,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         label = pLabel;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String pDescription) {
-        description = pDescription;
-    }
-
     public Set<String> getGroups() {
         return groups;
     }
@@ -276,7 +278,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Override
     public String toString() {
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
-                + ipId + ", sipId=" + sipId + ", label=" + label + ", description=" + description + ", attributes="
-                + properties + ", model=" + model + "]";
+                + ipId + ", sipId=" + sipId + ", label=" + label + ", attributes=" + properties + ", model=" + model
+                + "]";
     }
 }

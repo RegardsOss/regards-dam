@@ -5,9 +5,10 @@ package fr.cnes.regards.modules.models.domain.adapters.gson;
 
 import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 
@@ -26,5 +27,6 @@ public class RestrictionJsonAdapterFactory extends PolymorphicTypeAdapterFactory
         registerSubtype(PatternRestriction.class, RestrictionType.PATTERN);
         registerSubtype(DoubleRangeRestriction.class, RestrictionType.DOUBLE_RANGE);
         registerSubtype(IntegerRangeRestriction.class, RestrictionType.INTEGER_RANGE);
+        registerSubtype(LongRangeRestriction.class, RestrictionType.LONG_RANGE);
     }
 }

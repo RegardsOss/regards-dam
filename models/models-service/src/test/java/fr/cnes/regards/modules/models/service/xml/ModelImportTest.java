@@ -18,7 +18,7 @@ import com.google.common.collect.Iterables;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.models.domain.ModelAttribute;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
@@ -44,7 +44,7 @@ public class ModelImportTest {
      * @throws ModuleException
      *             if error occurs
      */
-    private Iterable<ModelAttribute> importModel(String pFilename) throws ModuleException {
+    private Iterable<ModelAttrAssoc> importModel(String pFilename) throws ModuleException {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             return XmlImportHelper.importModel(input);
@@ -57,7 +57,7 @@ public class ModelImportTest {
 
     @Test
     public void importModelTest() throws ModuleException {
-        Iterable<ModelAttribute> modelAtts = importModel("sample-model.xml");
+        Iterable<ModelAttrAssoc> modelAtts = importModel("sample-model.xml");
         checkImportedModel(modelAtts);
     }
 
@@ -69,7 +69,7 @@ public class ModelImportTest {
      */
     @Test
     public void importMinimalModelTest() throws ModuleException {
-        Iterable<ModelAttribute> modelAtts = importModel("sample-model-minimal.xml");
+        Iterable<ModelAttrAssoc> modelAtts = importModel("sample-model-minimal.xml");
         checkImportedModel(modelAtts);
     }
 
@@ -77,13 +77,13 @@ public class ModelImportTest {
      * Check imported model
      *
      * @param pModelAtts
-     *            list of {@link ModelAttribute}
+     *            list of {@link ModelAttrAssoc}
      */
-    private void checkImportedModel(Iterable<ModelAttribute> pModelAtts) {
+    private void checkImportedModel(Iterable<ModelAttrAssoc> pModelAtts) {
         final int expectedSize = 5;
         Assert.assertEquals(expectedSize, Iterables.size(pModelAtts));
 
-        for (ModelAttribute modAtt : pModelAtts) {
+        for (ModelAttrAssoc modAtt : pModelAtts) {
 
             // Check model info
             Assert.assertEquals("sample", modAtt.getModel().getName());

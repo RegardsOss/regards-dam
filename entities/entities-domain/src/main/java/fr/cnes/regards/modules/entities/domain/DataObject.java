@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
@@ -12,6 +14,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * A DataObject is created by a DataSource when an external database is ingested.
+ *
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
@@ -22,6 +25,8 @@ public class DataObject extends AbstractDataEntity {
      * This field permits to identify which datasource provides it
      */
     private String dataSourceId;
+
+    private Set<Long> datasetModelIds = new HashSet<>();
 
     public DataObject(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant, UUID.randomUUID(), 1),
@@ -40,6 +45,10 @@ public class DataObject extends AbstractDataEntity {
         this.dataSourceId = pDataSourceId;
     }
 
+    public Set<Long> getDatasetModelIds() {
+        return datasetModelIds;
+    }
+
     @Override
     public String getType() {
         return EntityType.DATA.toString();
@@ -51,8 +60,7 @@ public class DataObject extends AbstractDataEntity {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
+    public boolean equals(Object pObject) {
+        return super.equals(pObject);
     }
-
 }

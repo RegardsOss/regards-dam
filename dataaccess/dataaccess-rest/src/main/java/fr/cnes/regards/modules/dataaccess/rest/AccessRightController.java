@@ -30,10 +30,10 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AbstractAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.service.AccessRightService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 @RestController
 @RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-public class AccessRightController implements IResourceController<AbstractAccessRight> {
+public class AccessRightController implements IResourceController<AccessRight> {
 
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
@@ -58,62 +58,62 @@ public class AccessRightController implements IResourceController<AbstractAccess
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
-    public ResponseEntity<PagedResources<Resource<AbstractAccessRight>>> retrieveAccessRightsList(
+    public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName pDatasetIpId,
-            @RequestParam(name = "useremail", required = false) String pUserEmail, final Pageable pPageable,
-            final PagedResourcesAssembler<AbstractAccessRight> pAssembler) throws EntityNotFoundException {
-        Page<AbstractAccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDatasetIpId,
-                                                                                         pUserEmail, pPageable);
+            final Pageable pPageable, final PagedResourcesAssembler<AccessRight> pAssembler)
+            throws EntityNotFoundException {
+        Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDatasetIpId,
+                                                                                 pPageable);
         return new ResponseEntity<>(toPagedResources(accessRights, pAssembler), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
-    public ResponseEntity<Resource<AbstractAccessRight>> createAccessRight(
-            @Valid @RequestBody AbstractAccessRight pAccessRight) throws EntityNotFoundException {
-        AbstractAccessRight created = accessRightService.createAccessRight(pAccessRight);
+    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight pAccessRight)
+            throws ModuleException {
+        AccessRight created = accessRightService.createAccessRight(pAccessRight);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "send the access right of id requested")
-    public ResponseEntity<Resource<AbstractAccessRight>> retrieveAccessRight(
-            @Valid @PathVariable("accessright_id") Long pId) throws EntityNotFoundException {
-        AbstractAccessRight requested = accessRightService.retrieveAccessRight(pId);
+    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long pId)
+            throws EntityNotFoundException {
+        AccessRight requested = accessRightService.retrieveAccessRight(pId);
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
-    public ResponseEntity<Resource<AbstractAccessRight>> updateAccessRight(
-            @Valid @PathVariable("accessright_id") Long pId, @Valid @RequestBody AbstractAccessRight pToBe)
-            throws EntityNotFoundException, EntityInconsistentIdentifierException {
-        AbstractAccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
+    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
+            @Valid @RequestBody AccessRight pToBe) throws ModuleException {
+        AccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "delete the access right of id requested")
-    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId) {
+    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
+            throws ModuleException {
         accessRightService.deleteAccessRight(pId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Override
-    public Resource<AbstractAccessRight> toResource(AbstractAccessRight pElement, Object... pExtras) {
-        Resource<AbstractAccessRight> resource = new Resource<>(pElement);
+    public Resource<AccessRight> toResource(AccessRight pElement, Object... pExtras) {
+        Resource<AccessRight> resource = new Resource<>(pElement);
         resourceService.addLink(resource, this.getClass(), "createAccessRight", LinkRels.CREATE,
-                                MethodParamFactory.build(AbstractAccessRight.class, pElement));
+                                MethodParamFactory.build(AccessRight.class, pElement));
         resourceService.addLink(resource, this.getClass(), "deleteAccessRight", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAccessRight", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(AbstractAccessRight.class, pElement));
+                                MethodParamFactory.build(AccessRight.class, pElement));
         resourceService.addLink(resource, this.getClass(), "retrieveAccessRight", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         return resource;

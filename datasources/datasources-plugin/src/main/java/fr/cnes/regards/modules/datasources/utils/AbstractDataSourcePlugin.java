@@ -31,43 +31,27 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourcePlugin.class);
 
-    /**
-     * The string used to add the pagination information in PostGreSql
-     */
-    protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
-
-    /**
-     * The PL/SQL key word SELECT
-     */
     protected static final String SELECT = "SELECT ";
 
-    /**
-     * The PL/SQL key word WHERE
-     */
     protected static final String WHERE = " WHERE ";
 
-    /**
-     * The PL/SQL expression SELECT COUNt(*)
-     */
+    protected static final String COMMA = ", ";
+
     protected static final String SELECT_COUNT = "SELECT COUNT(*) ";
 
-    /**
-     * The PL/SQL key word AS
-     */
     protected static final String AS = "as";
 
-    /**
-     * A comma used to build the select clause
-     */
-    protected static final String COMMA = ",";
+    protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
     public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
 
+    // TODO CMZ à voir si utile, sinon à virer
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
     }
 
+    // TODO CMZ à voir si utile, sinon à virer
     public boolean isOutOfDate() {
         boolean outDated = true;
 
@@ -129,11 +113,8 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
         try (Connection conn = getDBConnection().getConnection()) {
 
-            Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
+            return findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
 
-            conn.close();
-
-            return pages;
         } catch (SQLException e) {
             LOG.error("Unable to obtain a database connection.", e);
             return null;

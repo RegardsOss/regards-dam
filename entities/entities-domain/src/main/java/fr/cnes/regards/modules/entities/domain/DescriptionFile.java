@@ -8,7 +8,9 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
+import javax.validation.constraints.Pattern;
 
+import org.hibernate.annotations.Type;
 import org.springframework.http.MediaType;
 
 import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
@@ -19,6 +21,17 @@ import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
  */
 @Embeddable
 public class DescriptionFile {
+
+    /**
+     * Description URL
+     */
+    private static final String URL_REGEXP = "^https?://.*$";
+
+    @Column
+    @Type(type = "text")
+    @Pattern(regexp = URL_REGEXP,
+            message = "Description url must conform to regular expression \"" + URL_REGEXP + "\".")
+    protected String description;
 
     @Column(name = "description_file_content")
     @Basic(fetch = FetchType.LAZY)
@@ -34,6 +47,11 @@ public class DescriptionFile {
     private MediaType type;
 
     protected DescriptionFile() {
+    }
+
+    public DescriptionFile(String pDescription) {
+        super();
+        this.description = pDescription;
     }
 
     public DescriptionFile(byte[] pContent, MediaType pType) {
@@ -56,6 +74,14 @@ public class DescriptionFile {
 
     public void setType(MediaType pType) {
         type = pType;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String pDescription) {
+        description = pDescription;
     }
 
 }
