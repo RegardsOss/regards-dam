@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.indexer.domain.facet;
 /**
  * Facet types.</br>
  * All enumerated values can be visited (providing a String argument)
+ * 
  * @author oroussel
  */
 // CHECKSTYLE:OFF
@@ -36,6 +37,6 @@ public enum FacetType {
         }
     };
 
-    abstract public <T> T accept(IFacetTypeVisitor<T> visitor, Object... pArgs);
+    public abstract <T> T accept(IFacetTypeVisitor<T> visitor, Object... pArgs);
 }
 // CHECKSTYLE:OFF
