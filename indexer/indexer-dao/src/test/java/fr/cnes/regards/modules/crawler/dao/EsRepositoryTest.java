@@ -28,10 +28,13 @@ import com.google.gson.GsonBuilder;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
+import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 
 /**
  * EsRepository test
@@ -266,6 +269,24 @@ public class EsRepositoryTest {
         repository.searchAll(searchKey, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
+    }
+
+    @Test
+    public void testEmpty() {
+        String index = "toto";
+        if (repository.indexExists(index)) {
+            repository.deleteIndex(index);
+        }
+        repository.createIndex(index);
+
+        Map<String, FacetType> facetMap = new HashMap<>();
+        facetMap.put("titi", FacetType.DATE);
+        facetMap.put("tutu", FacetType.NUMERIC);
+        facetMap.put("tata", FacetType.STRING);
+        FacetPage<IIndexable> page = (FacetPage<IIndexable>) repository
+                .search(new SimpleSearchKey<>(index, "toto", IIndexable.class), 10, ICriterion.all(), facetMap);
+        Assert.assertNotNull(page.getFacets());
+        Assert.assertTrue(page.getFacets().isEmpty());
     }
 
     /**

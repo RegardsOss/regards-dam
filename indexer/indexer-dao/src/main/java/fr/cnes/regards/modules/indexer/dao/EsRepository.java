@@ -673,6 +673,9 @@ public class EsRepository implements IEsRepository {
             case STRING: {
                 Terms terms = (Terms) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_POSTFIX);
+                if (terms.getBuckets().isEmpty()) {
+                    return;
+                }
                 Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
                 terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
                 facets.add(new StringFacet(attributeName, valueMap));
@@ -683,16 +686,21 @@ public class EsRepository implements IEsRepository {
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
                 Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
                 for (Bucket bucket : numRange.getBuckets()) {
+                    // Case with no value : every bucket has a NaN value (as from, to or both)
+                    if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
+                        // If first bucket contains NaN value, it means there are no value at all
+                        return;
+                    }
                     Range<Double> valueRange;
                     // (-∞ -> ?
-                    if (bucket.getFrom() == null) {
+                    if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
                         // (-∞ -> +∞) (completely dumb but...who knows ?)
-                        if (bucket.getTo() == null) {
+                        if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
                             valueRange = Range.all();
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost((Double) bucket.getTo());
                         }
-                    } else if (bucket.getTo() == null) { // ? -> +∞)
+                    } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
                         valueRange = Range.greaterThan((Double) bucket.getFrom());
                     } else { // [value -> value)
                         valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
@@ -708,6 +716,11 @@ public class EsRepository implements IEsRepository {
                 Map<com.google.common.collect.Range<LocalDateTime>, Long> valueMap = new LinkedHashMap<>();
                 for (Bucket bucket : dateRange.getBuckets()) {
                     Range<LocalDateTime> valueRange;
+                    // Case with no value : every bucket has a NaN value (as from, to or both)
+                    if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
+                        // If first bucket contains NaN value, it means there are no value at all
+                        return;
+                    }
                     // (-∞ -> ?
                     if (bucket.getFromAsString() == null) {
                         // (-∞ -> +∞) (completely dumb but...who knows ?)

@@ -12,8 +12,8 @@ import com.google.gson.stream.JsonWriter;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
+ * This adapter is used by Gson via @JsonAdapter(UrnAdapter.class) on UniformResourceName class
  * @author Sylvain Vissiere-Guerinet
- *
  */
 public class UrnAdapter extends TypeAdapter<UniformResourceName> {
 
