@@ -117,7 +117,7 @@ public class ModelImportTest {
                 Assert.assertFalse(attModel.isOptional());
                 Assert.assertFalse(attModel.isQueryable());
                 Assert.assertNull(attModel.getRestriction());
-                Assert.assertEquals(ComputationMode.CUSTOM, modAtt.getMode());
+                Assert.assertEquals(ComputationMode.COMPUTED, modAtt.getMode());
             }
 
             if ("CRS".equals(attModel.getName())) {

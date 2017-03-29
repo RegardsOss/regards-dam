@@ -13,7 +13,7 @@ import com.google.common.base.Throwables;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
-import fr.cnes.regards.modules.models.domain.ICalculationModel;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 
 /**
@@ -39,12 +39,12 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
             return false;
         }
         PluginConfiguration computationConf = pValue.getComputationConf();
-        if (pValue.getMode().equals(ComputationMode.CUSTOM) && (computationConf != null)
-                && computationConf.getInterfaceName().equals(ICalculationModel.class.getName())) {
+        if (pValue.getMode().equals(ComputationMode.COMPUTED) && (computationConf != null)
+                && computationConf.getInterfaceName().equals(IComputedAttribute.class.getName())) {
 
-            ICalculationModel<?> plugin;
+            IComputedAttribute<?> plugin;
             try {
-                plugin = (ICalculationModel<?>) Class.forName(computationConf.getPluginClassName()).newInstance();
+                plugin = (IComputedAttribute<?>) Class.forName(computationConf.getPluginClassName()).newInstance();
                 return plugin.getSupported().equals(pValue.getAttribute().getType());
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 LOG.error("ModelAttrAssoc of id: " + pValue.getId()

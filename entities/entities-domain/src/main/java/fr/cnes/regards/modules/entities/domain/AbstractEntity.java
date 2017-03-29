@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
@@ -45,7 +44,6 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity
@@ -85,9 +83,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
-     * REST request
-     *
-     * If no SIP ID is there it means it's not an AIP?
+     * REST request If no SIP ID is there it means it's not an AIP?
      */
     @Column
     protected String sipId;
@@ -121,7 +117,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @Valid
-    protected List<AbstractAttribute<?>> properties;
+    protected Set<AbstractAttribute<?>> properties;
 
     /**
      * model that this entity is respecting
@@ -188,11 +184,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         tags = pTags;
     }
 
-    public List<AbstractAttribute<?>> getProperties() { // NOSONAR
+    public Set<AbstractAttribute<?>> getProperties() { // NOSONAR
         return properties;
     }
 
-    public void setProperties(List<AbstractAttribute<?>> pAttributes) {
+    public void setProperties(Set<AbstractAttribute<?>> pAttributes) {
         properties = pAttributes;
     }
 
@@ -254,9 +250,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else if (!ipId.equals(other.getIpId())) {
-            return false;
-        }
+        } else
+            if (!ipId.equals(other.getIpId())) {
+                return false;
+            }
         return true;
     }
 

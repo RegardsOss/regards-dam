@@ -5,7 +5,9 @@ package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.assertj.core.util.Arrays;
 import org.junit.Assert;
@@ -27,11 +29,9 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 
 /**
- *
  * Test attribute serialization
  *
  * @author Marc Sordi
- *
  */
 public class AttributeSerializationTest {
 
@@ -159,7 +159,7 @@ public class AttributeSerializationTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        List<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
         Assert.assertEquals(2, attributes.size());
 
         List<String> expectedRootAttributes = new ArrayList<>();
@@ -199,7 +199,7 @@ public class AttributeSerializationTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        List<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
 
         final int expectedSize = 3;
         Assert.assertEquals(expectedSize, attributes.size());
@@ -231,13 +231,12 @@ public class AttributeSerializationTest {
     }
 
     /**
-     *
      * @return {@link Car}
      */
     private Car getCarWithRootAttribute() {
         Car car = new Car();
 
-        List<AbstractAttribute<?>> attributes = new ArrayList<>();
+        Set<AbstractAttribute<?>> attributes = new HashSet<>();
 
         StringAttribute description = new StringAttribute();
         description.setName(DISCRIMINATOR_DESCRIPTION);
@@ -249,9 +248,7 @@ public class AttributeSerializationTest {
     }
 
     /**
-     *
-     * @param pCar
-     *            {@link Car}
+     * @param pCar {@link Car}
      */
     private void addRuntimeRootAttribute(Car pCar) {
 
@@ -262,9 +259,7 @@ public class AttributeSerializationTest {
     }
 
     /**
-     *
-     * @param pCar
-     *            {@link Car} with nested attributes
+     * @param pCar {@link Car} with nested attributes
      */
     private void addNestedAttributes(Car pCar) {
 
@@ -280,7 +275,7 @@ public class AttributeSerializationTest {
         coordinate.setName(DISCRIMINATOR_COORDINATE);
         coordinate.setValue("POLYGON(TITI,TOTO)");
 
-        List<AbstractAttribute<?>> atts = new ArrayList<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(crs);
         atts.add(coordinate);
         geo.setValue(atts);
@@ -289,9 +284,7 @@ public class AttributeSerializationTest {
     }
 
     /**
-     *
-     * @param pCar
-     *            {@link Car} with conflicting attributes
+     * @param pCar {@link Car} with conflicting attributes
      */
     private void addConflictAttributes(Car pCar) {
         // Namespace or fragment name
@@ -302,7 +295,7 @@ public class AttributeSerializationTest {
         description.setName(DISCRIMINATOR_DESCRIPTION);
         description.setValue(Arrays.array("desc1", "desc2"));
 
-        List<AbstractAttribute<?>> atts = new ArrayList<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(description);
         org.setValue(atts);
 

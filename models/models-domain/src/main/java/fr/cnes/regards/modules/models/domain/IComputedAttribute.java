@@ -11,17 +11,17 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * Plugins of type ICalculationModel are plugins allowing to calculate the value of an {@link AttributeModel} thanks to
- * a {@link ModelAttrAssoc} We are using the design pattern "Visitor" with {@link ICalculationModelVisitor}. For memory
+ * a {@link ModelAttrAssoc} We are using the design pattern "Visitor" with {@link IComputedAttributeVisitor}. For memory
  * issue, it is most likely that the system cannot easly handle the whole data needed to compute the attribute value. We
  * strongly suggest to use an accumulator variable into implementations that is returned by
- * {@link ICalculationModel#getResult()}
+ * {@link IComputedAttribute#getResult()}
  *
  * @param <R> type of the attribute value
  * @author Sylvain Vissiere-Guerinet
  */
 @PluginInterface(
         description = "Plugins of type ICalculationModel are plugins allowing to calculate the value of an AttributeModel thanks to a ModelAttrAssoc")
-public interface ICalculationModel<R> {
+public interface IComputedAttribute<R> {
 
     /**
      * @return the value computed by the implementation.
@@ -41,7 +41,7 @@ public interface ICalculationModel<R> {
      */
     AttributeType getSupported();
 
-    <U> U accept(ICalculationModelVisitor<U> pVisitor);
+    <U> U accept(IComputedAttributeVisitor<U> pVisitor);
 
     /**
      * @return the attribute computed by this plugin

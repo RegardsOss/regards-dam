@@ -21,7 +21,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.models.domain.ICalculationModel;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
@@ -71,7 +71,7 @@ public class EntitiesService implements IEntitiesService {
     }
 
     @Override
-    public <T extends ICalculationModel<?>> Set<T> getComputationPlugins(Dataset pDataset) {
+    public <T extends IComputedAttribute<?>> Set<T> getComputationPlugins(Dataset pDataset) {
 
         Set<ModelAttrAssoc> computedAttributes = modelAttributeService
                 .getComputedAttributes(pDataset.getModel().getId());

@@ -52,7 +52,7 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.models.domain.ICalculationModel;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
 /**
  * Crawler service. <b>This service need @EnableAsync at Configuration and is used in conjunction with
@@ -379,7 +379,7 @@ public class CrawlerService implements ICrawlerService {
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
         // lets compute computed attributes from the dataset model
-        Set<ICalculationModel<?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
+        Set<IComputedAttribute<?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         computeDatasetAttribute(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
@@ -388,7 +388,7 @@ public class CrawlerService implements ICrawlerService {
             computeDatasetAttribute(computationPlugins, page.getContent());
         }
         // for each computation plugin lets add the computed attribute
-        for (ICalculationModel<?> plugin : computationPlugins) {
+        for (IComputedAttribute<?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectAttribute) {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
@@ -398,23 +398,27 @@ public class CrawlerService implements ICrawlerService {
                                 && attr.getName().equals(attrInFragment.getName()))
                         .findFirst();
                 if (candidate.isPresent()) {
-                    // the fragment is already here
-                    ((ObjectAttribute) candidate.get()).getValue().addAll(attrInFragment.getValue()); // FIXME:
-                                                                                                      // duplicate?
+                    Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
+                    // the fragment is already here, lets remove the old properties if they exist
+                    properties.removeAll(attrInFragment.getValue());
+                    // and now set the new ones
+                    properties.addAll(attrInFragment.getValue());
                 } else {
                     // the fragment is not here so lets create it by adding it
-                    dataset.getProperties().add(attrInFragment); // FIXME: duplicate?
+                    dataset.getProperties().add(attrInFragment);
                 }
             } else {
-                // the attribute is not inside a fragment so lets add it to the root
-                dataset.getProperties().add(attributeToAdd); // FIXME: duplicate?
+                // the attribute is not inside a fragment so lets remove the old one if it exist and add the new one to
+                // the root
+                dataset.getProperties().remove(attributeToAdd);
+                dataset.getProperties().add(attributeToAdd);
             }
         }
 
-        // TODO: save the dataset into ES
+        esRepos.save(tenant, dataset);
     }
 
-    private void computeDatasetAttribute(Set<ICalculationModel<?>> pComputationPlugins, List<DataObject> pContent) {
+    private void computeDatasetAttribute(Set<IComputedAttribute<?>> pComputationPlugins, List<DataObject> pContent) {
         pComputationPlugins.forEach(plugin -> plugin.compute(pContent));
     }
 

@@ -6,7 +6,9 @@ package fr.cnes.regards.modules.collections.rest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -31,12 +33,10 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.rest.ModelController;
 
 /**
- *
  * Test collection validation
  *
  * @author Marc Sordi
  * @author Maxime Bouveron
- *
  */
 @DirtiesContext
 @MultitenantTransactional
@@ -142,8 +142,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Import a model
      *
-     * @param pFilename
-     *            model to import from resources folder
+     * @param pFilename model to import from resources folder
      */
     private void importModel(String pFilename) {
 
@@ -166,8 +165,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if a good collection is created
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test
     public void postCollection() throws ModuleException {
@@ -182,7 +180,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         collection.setSipId(sipId);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
@@ -203,8 +201,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if error occurs when an attribute has a bad type
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test(expected = JsonParseException.class)
     public void postCollectionWithBadType() throws ModuleException {
@@ -218,7 +215,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         // bad values
         final int badRefValue = 5;
@@ -242,8 +239,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if an error occurs when giving an attribute a bad name
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test(expected = AssertionError.class)
     public void postCollectionWithBadAttributeName() throws ModuleException {
@@ -257,7 +253,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
@@ -278,8 +274,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if an error occurs when an enumaration restriction is violated
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test
     public void postCollectionWithWrongValue() throws ModuleException {
@@ -293,7 +288,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));

@@ -9,8 +9,8 @@ package fr.cnes.regards.modules.models.domain;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-public interface ICalculationModelVisitor<T> {
+public interface IComputedAttributeVisitor<T> {
 
-    <U> T visit(ICalculationModel<U> pPlugin);
+    <U> T visit(IComputedAttribute<U> pPlugin);
 
 }

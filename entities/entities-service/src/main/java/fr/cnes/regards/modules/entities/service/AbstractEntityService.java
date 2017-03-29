@@ -72,8 +72,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 /**
  * Abstract parameterized entity service
  *
- * @param <U>
- *            Entity type
+ * @param <U> Entity type
  * @author oroussel
  */
 public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
@@ -211,14 +210,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Validate an attribute with its corresponding model attribute
      *
-     * @param pAttMap
-     *            attribue map
-     * @param pModelAttribute
-     *            model attribute
-     * @param pErrors
-     *            validation errors
-     * @param pManageAlterable
-     *            manage update or not
+     * @param pAttMap attribue map
+     * @param pModelAttribute model attribute
+     * @param pErrors validation errors
+     * @param pManageAlterable manage update or not
      */
     protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttrAssoc pModelAttribute,
             Errors pErrors, boolean pManageAlterable) {
@@ -265,12 +260,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Compute available validators
      *
-     * @param pModelAttribute
-     *            {@link ModelAttrAssoc}
-     * @param pAttributeKey
-     *            attribute key
-     * @param pManageAlterable
-     *            manage update or not
+     * @param pModelAttribute {@link ModelAttrAssoc}
+     * @param pAttributeKey attribute key
+     * @param pManageAlterable manage update or not
      * @return {@link Validator} list
      */
     protected List<Validator> getValidators(ModelAttrAssoc pModelAttribute, String pAttributeKey,
@@ -299,15 +291,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Build real attribute map extracting namespace from {@link ObjectAttribute} (i.e. fragment name)
      *
-     * @param pAttMap
-     *            Map to build
-     * @param pNamespace
-     *            namespace context
-     * @param pAttributes
-     *            {@link AbstractAttribute} list to analyze
+     * @param pAttMap Map to build
+     * @param pNamespace namespace context
+     * @param pAttributes {@link AbstractAttribute} list to analyze
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
-            final List<AbstractAttribute<?>> pAttributes) {
+            final Set<AbstractAttribute<?>> pAttributes) {
         if (pAttributes != null) {
             for (AbstractAttribute<?> att : pAttributes) {
                 // Compute value
@@ -325,10 +314,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * @param pEntityId
-     *            an AbstractEntity identifier
-     * @param pToAssociate
-     *            UniformResourceName Set representing AbstractEntity to be associated to pCollection
+     * @param pEntityId an AbstractEntity identifier
+     * @param pToAssociate UniformResourceName Set representing AbstractEntity to be associated to pCollection
      * @throws EntityNotFoundException
      */
     @Override
@@ -387,8 +374,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Publish events to AMQP, one event by IpId
      *
-     * @param pIpIds
-     *            ipId URNs of entities that need an Event publication onto AMQP
+     * @param pIpIds ipId URNs of entities that need an Event publication onto AMQP
      */
     private void publishEvents(Set<UniformResourceName> pIpIds) {
         publisher.publish(new EntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
@@ -398,8 +384,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * If entity is a collection, find all tagged entities and retrieved their groups. Then find all collections tagging
      * this entity and recursively propagate entity group to them.
      *
-     * @param entity
-     *            entity to manage the add of groups
+     * @param entity entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(T entity, Set<UniformResourceName> pUpdatedIpIds) {
         // If entity tags entities => retrieve all groups of tagged entities (only for collection)
@@ -444,16 +429,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * @param <T>
-     *            one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
-     * @param pEntity
-     *            entity being created
-     * @param pFile
-     *            the description of the entity
-     * @throws IOException
-     *             if description cannot be read
-     * @throws ModuleException
-     *             if description not conform to REGARDS requirements
+     * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
+     * @param pEntity entity being created
+     * @param pFile the description of the entity
+     * @throws IOException if description cannot be read
+     * @throws ModuleException if description not conform to REGARDS requirements
      */
     private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
@@ -511,8 +491,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Return true if file content type is acceptable (PDF or MARKDOWN)
      *
-     * @param pFile
-     *            file
+     * @param pFile file
      * @return true or false
      */
     private static boolean isContentTypeAcceptable(MultipartFile pFile) {
@@ -525,8 +504,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Retrieve file charset
      *
-     * @param pFile
-     *            description file from the user
+     * @param pFile description file from the user
      * @return file charset
      */
     private static String getCharset(MultipartFile pFile) {
@@ -558,8 +536,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param pEntityId
      * @param pEntity
      * @return current entity
-     * @throws ModuleException
-     *             thrown if the entity cannot be found or if entities' id do not match
+     * @throws ModuleException thrown if the entity cannot be found or if entities' id do not match
      */
     private U checkUpdate(Long pEntityId, U pEntity) throws ModuleException {
         U entityInDb = repository.findById(pEntityId);
@@ -683,10 +660,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * @param pSource
-     *            Set of UniformResourceName
-     * @param pOther
-     *            Set of UniformResourceName to remove from pSource
+     * @param pSource Set of UniformResourceName
+     * @param pOther Set of UniformResourceName to remove from pSource
      * @return a new Set of UniformResourceName containing only the elements present into pSource and not in pOther
      */
     private Set<UniformResourceName> getDiff(Set<UniformResourceName> pSource, Set<UniformResourceName> pOther) {

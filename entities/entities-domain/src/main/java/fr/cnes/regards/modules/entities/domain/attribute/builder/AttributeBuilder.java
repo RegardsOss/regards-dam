@@ -5,9 +5,9 @@ package fr.cnes.regards.modules.entities.domain.attribute.builder;
 
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -237,7 +237,7 @@ public final class AttributeBuilder {
     public static ObjectAttribute buildObject(String pName, AbstractAttribute<?>... pAttributes) {
         ObjectAttribute att = new ObjectAttribute();
         att.setName(pName);
-        att.setValue(Arrays.asList(pAttributes));
+        att.setValue(Sets.newHashSet(pAttributes));
         return att;
     }
 

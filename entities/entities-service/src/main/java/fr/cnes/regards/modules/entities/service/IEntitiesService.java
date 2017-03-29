@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.ICalculationModel;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
 /**
  * Unparameterized entity service description. This is to be used when the entity type is unknown (ex. CrawlerService)
@@ -43,5 +43,5 @@ public interface IEntitiesService {
      * @param pEntity entity we are interrested to get computation plugins
      * @return instanciated plugins so computation can be executed
      */
-    <T extends ICalculationModel<?>> Set<T> getComputationPlugins(Dataset pEntity);
+    <T extends IComputedAttribute<?>> Set<T> getComputationPlugins(Dataset pEntity);
 }

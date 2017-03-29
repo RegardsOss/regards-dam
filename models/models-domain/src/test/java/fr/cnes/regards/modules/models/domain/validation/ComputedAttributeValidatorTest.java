@@ -18,7 +18,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.models.domain.ICalculationModel;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
@@ -52,10 +52,10 @@ public class ComputedAttributeValidatorTest {
         metaData.setAuthor("toto");
         metaData.setDescription("titi");
         metaData.setVersion("tutu");
-        metaData.setInterfaceName(ICalculationModel.class.getName());
+        metaData.setInterfaceName(IComputedAttribute.class.getName());
         metaData.setPluginClassName("toto");
         PluginConfiguration conf = new PluginConfiguration(metaData, "testConf");
-        invalidAssoc.setMode(ComputationMode.CUSTOM);
+        invalidAssoc.setMode(ComputationMode.COMPUTED);
         invalidAssoc.setComputationConf(conf);
         final Set<ConstraintViolation<ModelAttrAssoc>> modelAttrAssocConstraintViolation = validator
                 .validate(invalidAssoc);

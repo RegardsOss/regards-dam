@@ -13,7 +13,7 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 
 import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.models.domain.ICalculationModel;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -21,7 +21,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 /**
  * Validate whether a {@link ModelAttrAssoc} define a link to a computed {@link AttributeModel} or not. If it does,
  * validate that the associated {@link Model} is of type {@link EntityType#DATASET}, that the PluginConfiguration is not
- * null, that it is a PluginConfiguration of a {@link ICalculationModel} plugin and that the plugin return type is
+ * null, that it is a PluginConfiguration of a {@link IComputedAttribute} plugin and that the plugin return type is
  * coherant with the {@link AttributeModel#getType()}. Otherwise, doesn't do anything.
  *
  * @author Sylvain Vissiere-Guerinet
