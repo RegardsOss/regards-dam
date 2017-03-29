@@ -17,11 +17,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.adapters.gson.DateFacetValue
 public class DateFacet extends AbstractFacet<Map<Range<LocalDateTime>, Long>> {
 
     /**
-     * Serial
-     */
-    private static final long serialVersionUID = -1662820016647716929L;
-
-    /**
      * value map
      */
     @JsonAdapter(value = DateFacetValuesSerializer.class)

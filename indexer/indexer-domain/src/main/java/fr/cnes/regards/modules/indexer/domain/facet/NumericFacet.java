@@ -16,11 +16,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.adapters.gson.NumericFacetVa
 public class NumericFacet extends AbstractFacet<Map<Range<Double>, Long>> {
 
     /**
-     * Serial
-     */
-    private static final long serialVersionUID = -3961591791622134643L;
-
-    /**
      * value map
      */
     @JsonAdapter(value = NumericFacetValuesSerializer.class)
