@@ -32,12 +32,14 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import com.google.gson.JsonElement;
+import com.google.gson.annotations.JsonAdapter;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
+import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -145,7 +147,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
-    protected JsonElement geometry;
+    @JsonAdapter(value = GeometryAdapter.class)
+    protected Geometry<?> geometry;
 
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;
@@ -241,6 +244,14 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     public void setGroups(Set<String> pGroups) {
         groups = pGroups;
+    }
+
+    public Geometry<?> getGeometry() {
+        return geometry;
+    }
+
+    public void setGeometry(Geometry<?> pGeometry) {
+        geometry = pGeometry;
     }
 
     @Override

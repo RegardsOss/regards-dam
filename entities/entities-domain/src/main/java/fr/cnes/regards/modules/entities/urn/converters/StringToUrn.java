@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- * Implement the type conversion logic for a {@link String} to a {@link UrnConverter}.<br>
+ * Implement the type conversion logic for a String to a {@link UrnConverter}.<br>
  * This is automaticly used by Spring if need be.
  *
  * @author Xavier-Alexandre Brochard
