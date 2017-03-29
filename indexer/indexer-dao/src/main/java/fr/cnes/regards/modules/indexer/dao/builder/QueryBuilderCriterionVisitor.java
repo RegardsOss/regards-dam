@@ -146,4 +146,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     public QueryBuilder visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
         return QueryBuilders.boolQuery().must(QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue()));
     }
+
+    //        public void prout() {
+    //            QueryBuilders.geoIntersectionQuery(null, ShapeBuilders.newPolygon(new CoordinatesBuilder().coordinates(new Coord)))
+    //        }
 }

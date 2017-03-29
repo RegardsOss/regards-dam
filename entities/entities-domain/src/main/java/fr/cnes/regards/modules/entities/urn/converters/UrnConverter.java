@@ -9,8 +9,8 @@ import javax.persistence.Converter;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
+ * Converter used by Hibernate (see AbstractEntity)
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @Converter(autoApply = true)
 public class UrnConverter implements AttributeConverter<UniformResourceName, String> {
