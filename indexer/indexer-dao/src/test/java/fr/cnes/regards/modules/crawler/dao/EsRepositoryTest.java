@@ -78,7 +78,7 @@ public class EsRepositoryTest {
         };
         // All created indices from tests
         cleanFct.accept("test");
-        cleanFct.accept("toto");
+        cleanFct.accept("titi");
         cleanFct.accept("tutu");
         cleanFct.accept("items");
         cleanFct.accept("mergeditems");
@@ -101,7 +101,7 @@ public class EsRepositoryTest {
 
     @Test
     public void testFindIndices() {
-        Assert.assertTrue(repository.createIndex("toto"));
+        Assert.assertTrue(repository.createIndex("titi"));
         Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((pIndex) -> pIndex.equals("toto")));
     }
 
