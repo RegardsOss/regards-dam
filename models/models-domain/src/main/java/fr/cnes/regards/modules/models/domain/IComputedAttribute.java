@@ -41,7 +41,9 @@ public interface IComputedAttribute<R> {
      */
     AttributeType getSupported();
 
-    <U> U accept(IComputedAttributeVisitor<U> pVisitor);
+    default <U> U accept(IComputedAttributeVisitor<U> pVisitor) {
+        return pVisitor.visit(this);
+    };
 
     /**
      * @return the attribute computed by this plugin

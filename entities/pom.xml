@@ -24,10 +24,16 @@
 		<module>entities-service</module>
 		<module>entities-rest</module>
 		<module>entities-client</module>
+		<module>entities-plugin</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
+		<dependency>
+				<groupId>fr.cnes.regards.modules.entities</groupId>
+				<artifactId>entities-plugin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.entities</groupId>
 				<artifactId>entities-domain</artifactId>
