@@ -1,17 +1,24 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
+import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
+import org.elasticsearch.common.geo.builders.ShapeBuilders;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.vividsolutions.jts.geom.Coordinate;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -19,6 +26,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.LongMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.NotCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
@@ -147,7 +155,31 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         return QueryBuilders.boolQuery().must(QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue()));
     }
 
-    //        public void prout() {
-    //            QueryBuilders.geoIntersectionQuery(null, ShapeBuilders.newPolygon(new CoordinatesBuilder().coordinates(new Coord)))
-    //        }
+    @Override
+    public QueryBuilder visitCircleCriterion(CircleCriterion criterion) {
+        Double[] center = criterion.getCoordinates();
+        try {
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newCircleBuilder()
+                    .center(new Coordinate(center[0], center[1])).radius(criterion.getRadius()));
+        } catch (IOException ioe) {
+            throw Throwables.propagate(ioe);
+        }
+    }
+
+    @Override
+    public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
+        Double[][][] coordinates = criterion.getCoordinates();
+        // Only shell can be taken into account
+        Double[][] shell = coordinates[0];
+        CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
+        for (Double[] point : shell) {
+            coordBuilder.coordinate(new Coordinate(point[0], point[1]));
+        }
+        try {
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newPolygon(coordBuilder));
+        } catch (IOException ioe) {
+            throw Throwables.propagate(ioe);
+        }
+
+    }
 }

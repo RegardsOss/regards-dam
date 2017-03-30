@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 /**
  * Long specialized AbstractMatchCriterion.<br/>
  * <b>Only MatchType.EQUALS is allowed with Long type
+ * @author oroussel
  */
 public class LongMatchCriterion extends AbstractMatchCriterion<Long> {
 

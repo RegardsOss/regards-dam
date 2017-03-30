@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.google.gson.GsonBuilder;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -21,8 +19,6 @@ import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.domain.geometry.GeometryType;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.service.IIndexerService;
-import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -35,12 +31,6 @@ public class GeometryIT {
     private ICollectionService collService;
 
     @Autowired
-    private IIndexerService indexerService;
-
-    @Autowired
-    private ISearchService searchService;
-
-    @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
@@ -48,12 +38,6 @@ public class GeometryIT {
 
     @Autowired
     private IModelService modelService;
-
-    /**
-     * Json mapper
-     */
-    @Autowired
-    private GsonBuilder gsonBuilder;
 
     private Model collectionModel;
 
