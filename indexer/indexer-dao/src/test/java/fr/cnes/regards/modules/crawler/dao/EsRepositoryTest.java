@@ -102,7 +102,7 @@ public class EsRepositoryTest {
     @Test
     public void testFindIndices() {
         Assert.assertTrue(repository.createIndex("titi"));
-        Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((pIndex) -> pIndex.equals("toto")));
+        Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((pIndex) -> pIndex.equals("titi")));
     }
 
     @Test
