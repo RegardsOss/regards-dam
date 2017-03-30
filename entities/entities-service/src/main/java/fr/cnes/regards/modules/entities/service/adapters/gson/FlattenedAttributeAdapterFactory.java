@@ -30,7 +30,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
@@ -48,7 +47,6 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  * Manage dynamic attribute (de)serialization
  *
  * @author Marc Sordi
- *
  */
 public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
 
@@ -89,8 +87,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
 
     public FlattenedAttributeAdapterFactory(IAttributeModelService pAttributeModelService, ISubscriber pSubscriber) {
         super(AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
-        this.attributeModelService = pAttributeModelService;
-        this.subscriber = pSubscriber;
+        attributeModelService = pAttributeModelService;
+        subscriber = pSubscriber;
     }
 
     public void registerSubtype(Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
@@ -143,8 +141,7 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     }
 
     /**
-     * @param pAttributeType
-     *            {@link AttributeType}
+     * @param pAttributeType {@link AttributeType}
      * @return corresponding {@link Serializable} class
      */
     protected Class<?> getClassByType(AttributeType pAttributeType) { // NOSONAR
@@ -171,9 +168,6 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
                 break;
             case DOUBLE_INTERVAL:
                 matchingClass = DoubleIntervalAttribute.class;
-                break;
-            case GEOMETRY:
-                matchingClass = GeometryAttribute.class;
                 break;
             case INTEGER:
                 matchingClass = IntegerAttribute.class;
@@ -237,10 +231,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      * Flatten a {@link JsonElement} carrying key and value in separated fields into a single field whose key is the
      * value of the key field and value the value of the value field
      *
-     * @param pJsonElement
-     *            {@link JsonElement} to flatten
-     * @param pSubType
-     *            sub type
+     * @param pJsonElement {@link JsonElement} to flatten
+     * @param pSubType sub type
      * @return flattened {@link JsonElement}
      */
     protected JsonElement flatten(JsonElement pJsonElement, Class<?> pSubType) {
@@ -285,10 +277,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     /**
      * Restore {@link JsonElement} object structure (inverse flattening)
      *
-     * @param pJsonElement
-     *            {@link JsonElement} to restore
-     * @param pSubType
-     *            sub type
+     * @param pJsonElement {@link JsonElement} to restore
+     * @param pSubType sub type
      * @return restored {@link JsonElement}
      */
     protected JsonElement restore(JsonElement pJsonElement, Class<?> pSubType) {
@@ -330,10 +320,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     /**
      * Add namespace to {@link JsonElement} children of {@link ObjectAttribute}
      *
-     * @param pJsonElement
-     *            {@link JsonElement}
-     * @param pDiscriminator
-     *            discriminator value
+     * @param pJsonElement {@link JsonElement}
+     * @param pDiscriminator discriminator value
      */
     protected void addNamespaceToChildren(JsonElement pJsonElement, String pDiscriminator) {
 
@@ -360,10 +348,8 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     /**
      * Add namespace to {@link JsonElement} child keys
      *
-     * @param pJsonElement
-     *            {@link JsonElement}
-     * @param pDiscriminator
-     *            discriminator value
+     * @param pJsonElement {@link JsonElement}
+     * @param pDiscriminator discriminator value
      */
     protected void addNamespaceToChild(JsonElement pJsonElement, String pDiscriminator) {
 
@@ -389,8 +375,7 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
     /**
      * Remove namespace from {@link JsonElement}
      *
-     * @param pJsonElement
-     *            target {@link JsonElement}
+     * @param pJsonElement target {@link JsonElement}
      */
     protected void removeParentNamespace(JsonElement pJsonElement) {
 
@@ -441,7 +426,6 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      * Handle {@link AttributeModel} creation
      *
      * @author Marc Sordi
-     *
      */
     private class RegisterHandler implements IHandler<AttributeModelCreated> {
 
@@ -456,7 +440,6 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      * Handle {@link AttributeModel} deletion
      *
      * @author Marc Sordi
-     *
      */
     private class UnregisterHandler implements IHandler<AttributeModelDeleted> {
 

@@ -13,11 +13,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 
 /**
- *
  * Restriction service test
  *
  * @author Marc Sordi
- *
  */
 public class RestrictionServiceTest {
 
@@ -61,11 +59,6 @@ public class RestrictionServiceTest {
         testRestriction(AttributeType.DOUBLE, 1, RestrictionType.DOUBLE_RANGE);
         testRestriction(AttributeType.DOUBLE_ARRAY, 1, RestrictionType.DOUBLE_RANGE);
         testRestriction(AttributeType.DOUBLE_INTERVAL, 1, RestrictionType.DOUBLE_RANGE);
-    }
-
-    @Test
-    public void getGeoRestriction() {
-        testRestriction(AttributeType.GEOMETRY, 0);
     }
 
     @Test

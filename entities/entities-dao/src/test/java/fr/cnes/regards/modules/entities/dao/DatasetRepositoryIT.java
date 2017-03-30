@@ -27,8 +27,6 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
-import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -40,7 +38,6 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @TestPropertySource("classpath:application-test.properties")
 public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
@@ -52,12 +49,6 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Autowired
     private IDatasetRepository datasetRepo;
-
-    @Autowired
-    private IModelAttrAssocRepository modelAttRepo;
-
-    @Autowired
-    private IAttributeModelRepository attModelRepo;
 
     private Dataset dataset;
 
@@ -72,8 +63,6 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
     private AttributeModel attBoolean;
 
     private AttributeModel GEO_CRS;
-
-    private AttributeModel GEO_GEOMETRY;
 
     private AttributeModel Contact_Phone;
 
@@ -138,11 +127,6 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
                 .findAny().get();
         GEO_CRS = CRS_CRSModelAtt.getAttribute();
 
-        ModelAttrAssoc CRS_GEOMETRYModelAtt = pImportModel.stream()
-                .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
-                        && ma.getAttribute().getName().equals("GEOMETRY"))
-                .findAny().get();
-        GEO_GEOMETRY = CRS_GEOMETRYModelAtt.getAttribute();
         ModelAttrAssoc Contact_PhoneModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("Contact")
                         && ma.getAttribute().getName().equals("Phone"))

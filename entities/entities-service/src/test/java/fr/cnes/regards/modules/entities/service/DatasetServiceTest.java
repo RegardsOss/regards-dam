@@ -182,17 +182,6 @@ public class DatasetServiceTest {
                 .findByNameAndFragmentName(GEO_CRS.getName(), GEO_CRS.getFragment().getName())).thenReturn(GEO_CRS);
         Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), GEO_CRS))
                 .thenReturn(CRS_CRSModelAtt);
-        ModelAttrAssoc CRS_GEOMETRYModelAtt = pImportModel.stream()
-                .filter(ma -> ma.getAttribute().getFragment().getName().equals("GEO")
-                        && ma.getAttribute().getName().equals("GEOMETRY"))
-                .findAny().get();
-        GEO_GEOMETRY = CRS_GEOMETRYModelAtt.getAttribute();
-        GEO_GEOMETRY.setId(4L);
-        Mockito.when(pAttributeModelService.findByNameAndFragmentName(GEO_GEOMETRY.getName(),
-                                                                      GEO_GEOMETRY.getFragment().getName()))
-                .thenReturn(GEO_GEOMETRY);
-        Mockito.when(pModelAttributeService.getModelAttrAssoc(modelOfObjects.getId(), GEO_GEOMETRY))
-                .thenReturn(CRS_GEOMETRYModelAtt);
         ModelAttrAssoc Contact_PhoneModelAtt = pImportModel.stream()
                 .filter(ma -> ma.getAttribute().getFragment().getName().equals("Contact")
                         && ma.getAttribute().getName().equals("Phone"))

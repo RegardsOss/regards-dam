@@ -22,11 +22,9 @@ import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 
 /**
  * @author Marc Sordi
- *
  */
 public class ModelImportTest {
 
@@ -38,11 +36,9 @@ public class ModelImportTest {
     /**
      * Import model definition file from resources directory
      *
-     * @param pFilename
-     *            filename
+     * @param pFilename filename
      * @return list of created model attributes
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     private Iterable<ModelAttrAssoc> importModel(String pFilename) throws ModuleException {
         try {
@@ -64,8 +60,7 @@ public class ModelImportTest {
     /**
      * Same test as before but XML has no default value
      *
-     * @throws ModuleException
-     *             if problem occurs!
+     * @throws ModuleException if problem occurs!
      */
     @Test
     public void importMinimalModelTest() throws ModuleException {
@@ -76,11 +71,10 @@ public class ModelImportTest {
     /**
      * Check imported model
      *
-     * @param pModelAtts
-     *            list of {@link ModelAttrAssoc}
+     * @param pModelAtts list of {@link ModelAttrAssoc}
      */
     private void checkImportedModel(Iterable<ModelAttrAssoc> pModelAtts) {
-        final int expectedSize = 5;
+        final int expectedSize = 3;
         Assert.assertEquals(expectedSize, Iterables.size(pModelAtts));
 
         for (ModelAttrAssoc modAtt : pModelAtts) {
@@ -142,42 +136,6 @@ public class ModelImportTest {
                 Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
             }
 
-            if ("GEOMETRY".equals(attModel.getName())) {
-                Assert.assertNotNull(attModel.getFragment());
-                Assert.assertEquals("GEO", attModel.getFragment().getName());
-                Assert.assertEquals("Geographic information", attModel.getFragment().getDescription());
-
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.GEOMETRY, attModel.getType());
-                Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
-                Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
-
-                Assert.assertNull(attModel.getRestriction());
-
-                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-            }
-
-            if ("Phone".equals(attModel.getName())) {
-                Assert.assertNotNull(attModel.getFragment());
-                Assert.assertEquals("Contact", attModel.getFragment().getName());
-                Assert.assertEquals("Contact information", attModel.getFragment().getDescription());
-
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                Assert.assertTrue(attModel.isAlterable());
-                Assert.assertTrue(attModel.isFacetable());
-                Assert.assertTrue(attModel.isOptional());
-                Assert.assertTrue(attModel.isQueryable());
-
-                Assert.assertNotNull(attModel.getRestriction());
-                Assert.assertTrue(attModel.getRestriction() instanceof PatternRestriction);
-                final PatternRestriction pr = (PatternRestriction) attModel.getRestriction();
-                Assert.assertEquals("[0-9 ]{10}", pr.getPattern());
-
-                Assert.assertEquals(ComputationMode.FROM_DESCENDANTS, modAtt.getMode());
-            }
         }
     }
 }

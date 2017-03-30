@@ -23,7 +23,6 @@ import com.google.gson.JsonParseException;
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -92,7 +91,6 @@ public class AttributeSerializationTest {
         factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
         factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
         factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
-        factory.registerSubtype(GeometryAttribute.class, DISCRIMINATOR_COORDINATE, DISCRIMINATOR_GEO);
         factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
         factory.registerSubtype(StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
@@ -175,13 +173,7 @@ public class AttributeSerializationTest {
 
             if (DISCRIMINATOR_GEO.equals(att.getName())) {
                 Assert.assertTrue(att instanceof ObjectAttribute);
-                ObjectAttribute geo = (ObjectAttribute) att;
 
-                for (AbstractAttribute<?> nested : geo.getValue()) {
-                    if (DISCRIMINATOR_COORDINATE.equals(nested.getName())) {
-                        Assert.assertTrue(nested instanceof GeometryAttribute);
-                    }
-                }
             }
         }
     }
@@ -271,13 +263,8 @@ public class AttributeSerializationTest {
         crs.setName(DISCRIMINATOR_CRS);
         crs.setValue("WGS84");
 
-        GeometryAttribute coordinate = new GeometryAttribute();
-        coordinate.setName(DISCRIMINATOR_COORDINATE);
-        coordinate.setValue("POLYGON(TITI,TOTO)");
-
         Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(crs);
-        atts.add(coordinate);
         geo.setValue(atts);
 
         pCar.getProperties().add(geo);

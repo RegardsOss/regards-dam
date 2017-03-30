@@ -17,7 +17,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
@@ -74,8 +73,6 @@ public final class AttributeBuilder {
                 return (T) buildDoubleArray(pName, (Double[]) pValue);
             case DOUBLE_INTERVAL:
                 return (T) buildDoubleInterval(pName, (Range<Double>) pValue);
-            case GEOMETRY:
-                return (T) buildGeometry(pName, (String) pValue);
             case INTEGER_ARRAY:
                 return (T) buildIntegerArray(pName, (Integer[]) pValue);
             case INTEGER_INTERVAL:
@@ -181,13 +178,6 @@ public final class AttributeBuilder {
         DoubleIntervalAttribute att = new DoubleIntervalAttribute();
         att.setName(pName);
         att.setValue(Range.closed(pLowerBoundDouble, pUpperBoundDouble));
-        return att;
-    }
-
-    public static GeometryAttribute buildGeometry(String pName, String pGeometry) {
-        GeometryAttribute att = new GeometryAttribute();
-        att.setName(pName);
-        att.setValue(pGeometry);
         return att;
     }
 

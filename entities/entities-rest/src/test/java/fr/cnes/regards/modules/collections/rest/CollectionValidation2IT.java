@@ -185,8 +185,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -223,8 +222,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final String badActValue = "true";
         atts.add(AttributeBuilder.buildString(actAtt, badActValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -251,15 +249,13 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject("notGeo", AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(AttributeBuilder.buildObject("notGeo", AttributeBuilder.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -293,8 +289,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, "notEarth")));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, "notEarth")));
 
         collection.setProperties(atts);
 

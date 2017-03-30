@@ -26,12 +26,6 @@
 			</restriction>
 			<computationMode>GIVEN</computationMode>
 		</attribute>
-		<attribute alterable="false" optional="false" queryable="false"
-			facetable="false">
-			<name>GEOMETRY</name>
-			<type>GEOMETRY</type>
-			<computationMode>GIVEN</computationMode>
-		</attribute>
 	</fragment>
 	<fragment>
 		<name>Contact</name>
@@ -43,7 +37,8 @@
 			<restriction>
 				<pattern>[0-9 ]{10}</pattern>
 			</restriction>
-			<computationMode>FROM_DESCENDANTS</computationMode>
+			<computationMode>COMPUTED</computationMode>
+			<configurationLabel>ContactPluginConfTest</configurationLabel>
 		</attribute>
 	</fragment>
 </model>

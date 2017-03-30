@@ -22,10 +22,16 @@
 		<module>models-domain</module>
 		<module>models-rest</module>
 		<module>models-service</module>
+		<module>models-plugins</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.models</groupId>
+				<artifactId>models-plugin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>fr.cnes.regards.modules.models</groupId>
 				<artifactId>models-client</artifactId>

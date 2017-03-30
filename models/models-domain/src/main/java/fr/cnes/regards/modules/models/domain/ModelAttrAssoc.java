@@ -165,6 +165,9 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     public Attribute toXml() {
         final Attribute xmlAtt = attribute.toXml();
         xmlAtt.setComputationMode(mode.toString());
+        if (computationConf != null) {
+            xmlAtt.setConfigurationLabel(computationConf.getLabel());
+        }
         return xmlAtt;
     }
 
@@ -175,8 +178,13 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         attModel.fromXml(pXmlElement);
         setAttribute(attModel);
         // Manage computation mode
-        if (pXmlElement.getComputationMode() != null) {
-            setMode(ComputationMode.valueOf(pXmlElement.getComputationMode()));
+        String computationModeString = pXmlElement.getComputationMode();
+        if (computationModeString != null) {
+            setMode(ComputationMode.valueOf(computationModeString));
+            if (computationModeString.equals(ComputationMode.COMPUTED.toString())) {
+                computationConf = new PluginConfiguration();
+                computationConf.setLabel(pXmlElement.getConfigurationLabel());
+            }
         }
     }
 

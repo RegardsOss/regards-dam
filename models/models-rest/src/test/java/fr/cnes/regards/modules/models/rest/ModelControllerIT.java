@@ -34,11 +34,9 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
- *
  * Test model creation
  *
  * @author Marc Sordi
- *
  */
 @MultitenantTransactional
 public class ModelControllerIT extends AbstractRegardsTransactionalIT {
@@ -132,12 +130,9 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * Create a model
      *
-     * @param pName
-     *            name
-     * @param pDescription
-     *            description
-     * @param pType
-     *            type
+     * @param pName name
+     * @param pDescription description
+     * @param pType type
      */
     private void createModel(String pName, String pDescription, EntityType pType) {
         Assert.assertNotNull(pName);
@@ -160,8 +155,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * Export model
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_050")
@@ -196,10 +190,6 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         // Attribute #3 in geo fragment
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
-        attributeModelService.addAttribute(attMod);
-
-        // Attribute #4 in geo fragment
-        attMod = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(geo).withoutRestriction();
         attributeModelService.addAttribute(attMod);
 
         modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment().getId());

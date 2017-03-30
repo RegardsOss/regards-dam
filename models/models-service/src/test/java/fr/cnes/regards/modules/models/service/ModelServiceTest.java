@@ -23,6 +23,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
@@ -38,7 +39,6 @@ import fr.cnes.regards.modules.models.service.exception.FragmentAttributeExcepti
 
 /**
  * @author Marc Sordi
- *
  */
 public class ModelServiceTest {
 
@@ -77,12 +77,15 @@ public class ModelServiceTest {
      */
     private ModelService modelService;
 
+    private IPluginService mockPluginService;
+
     @Before
     public void beforeTest() {
         mockModelR = Mockito.mock(IModelRepository.class);
         mockModelAttR = Mockito.mock(IModelAttrAssocRepository.class);
         mockAttModelS = Mockito.mock(IAttributeModelService.class);
-        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS);
+        mockPluginService = Mockito.mock(IPluginService.class);
+        modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService);
     }
 
     @Test(expected = EntityUnexpectedIdentifierException.class)
@@ -208,8 +211,7 @@ public class ModelServiceTest {
     /**
      * Do not bind an attribute that is part of fragment
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test(expected = FragmentAttributeException.class)
     @Requirement("REGARDS_DSL_DAM_MOD_020")
@@ -242,8 +244,7 @@ public class ModelServiceTest {
     /**
      * Do not unbind an attribute that is part of fragment
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test(expected = FragmentAttributeException.class)
     @Requirement("REGARDS_DSL_DAM_MOD_020")
@@ -277,8 +278,7 @@ public class ModelServiceTest {
     /**
      * Test model export
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test
     public void exportModelTest() throws ModuleException {
@@ -310,11 +310,6 @@ public class ModelServiceTest {
         // Attribute #3 in geo fragment
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
-        modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
-
-        // Attribute #4 in geo fragment
-        attMod = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(geo).withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 

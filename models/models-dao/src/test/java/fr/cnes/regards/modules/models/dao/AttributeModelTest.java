@@ -16,11 +16,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
- *
  * Repository tests
  *
  * @author msordi
- *
  */
 public class AttributeModelTest extends AbstractModelTest {
 
@@ -65,7 +63,7 @@ public class AttributeModelTest extends AbstractModelTest {
         final String description = "All consistent geo attributes";
         final Fragment f = Fragment.buildFragment(name, description);
 
-        final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.GEOMETRY).fragment(f)
+        final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.INTEGER).fragment(f)
                 .withoutRestriction();
         saveAttribute(attModel1);
 

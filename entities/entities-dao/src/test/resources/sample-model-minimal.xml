@@ -11,7 +11,7 @@
 	<attribute alterable="true" queryable="true">
 		<name>att_boolean</name>
 		<type>BOOLEAN</type>
-		<computationMode>CUSTOM</computationMode>
+		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<fragment>
 		<name>GEO</name>
@@ -27,11 +27,6 @@
 				</enumeration>
 			</restriction>
 		</attribute>
-		<attribute>
-			<name>GEOMETRY</name>
-			<type>GEOMETRY</type>
-			<property key="utype" value="ivoa.geometry"/>
-		</attribute>
 	</fragment>
 	<fragment>
 		<name>Contact</name>
@@ -43,7 +38,7 @@
 			<restriction>
 				<pattern>[0-9 ]{10}</pattern>
 			</restriction>
-			<computationMode>FROM_DESCENDANTS</computationMode>
+			<computationMode>GIVEN</computationMode>
 		</attribute>
 	</fragment>
 </model>

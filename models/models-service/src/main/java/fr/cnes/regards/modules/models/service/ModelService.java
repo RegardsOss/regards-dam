@@ -26,6 +26,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
@@ -69,12 +70,15 @@ public class ModelService implements IModelService, IModelAttrAssocService {
      */
     private final IAttributeModelService attributeModelService;
 
+    private final IPluginService pluginService;
+
     // CHECKSTYLE:OFF
     public ModelService(IModelRepository pModelRepository, IModelAttrAssocRepository pModelAttributeRepository,
-            IAttributeModelService pAttributeModelService) {
+            IAttributeModelService pAttributeModelService, IPluginService pPluginService) {
         modelRepository = pModelRepository;
         modelAttributeRepository = pModelAttributeRepository;
         attributeModelService = pAttributeModelService;
+        pluginService = pPluginService;
     }
     // CHECKSTYLE:ON
 
@@ -364,6 +368,19 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 }
             } else {
                 // Create attribute
+                // but before lets check correctness because of PluginConfiguration
+                switch (modelAtt.getMode()) {
+                    case GIVEN:
+                        modelAtt.setComputationConf(null);
+                        break;
+                    case COMPUTED:
+                        modelAtt.setComputationConf(pluginService
+                                .getPluginConfigurationByLabel(modelAtt.getComputationConf().getLabel()));
+                        break;
+                    default:
+                        throw new IllegalArgumentException(modelAtt.getMode() + " is not a handled value of "
+                                + ComputationMode.class.getName() + " in " + getClass().getName());
+                }
                 attributeModelService.createAttribute(modelAtt.getAttribute());
             }
             // Bind attribute to model

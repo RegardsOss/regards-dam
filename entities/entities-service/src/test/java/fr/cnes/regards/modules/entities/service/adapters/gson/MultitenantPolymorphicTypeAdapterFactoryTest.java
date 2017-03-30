@@ -28,7 +28,6 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -134,7 +133,6 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
         factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
         factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
-        factory.registerSubtype(TENANT, GeometryAttribute.class, DISCRIMINATOR_COORDINATE, DISCRIMINATOR_GEO);
         factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
         factory.registerSubtype(TENANT, StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
@@ -217,13 +215,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
             if (DISCRIMINATOR_GEO.equals(att.getName())) {
                 Assert.assertThat(att, Matchers.instanceOf(ObjectAttribute.class));
-                ObjectAttribute geo = (ObjectAttribute) att;
 
-                for (AbstractAttribute<?> nested : geo.getValue()) {
-                    if (DISCRIMINATOR_COORDINATE.equals(nested.getName())) {
-                        Assert.assertThat(nested, Matchers.instanceOf(GeometryAttribute.class));
-                    }
-                }
             }
         }
     }
@@ -313,13 +305,8 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         crs.setName(DISCRIMINATOR_CRS);
         crs.setValue("WGS84");
 
-        GeometryAttribute coordinate = new GeometryAttribute();
-        coordinate.setName(DISCRIMINATOR_COORDINATE);
-        coordinate.setValue("POLYGON(TITI,TOTO)");
-
         Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(crs);
-        atts.add(coordinate);
         geo.setValue(atts);
 
         pCar.getProperties().add(geo);

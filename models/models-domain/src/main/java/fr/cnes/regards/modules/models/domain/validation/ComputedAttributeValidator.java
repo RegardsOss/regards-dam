@@ -36,6 +36,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
             return true;
         }
         if (pValue.getAttribute() == null) {
+            LOG.debug("ModelAttrAssoc to validate has no AttributeModel specified");
             return false;
         }
         PluginConfiguration computationConf = pValue.getComputationConf();
@@ -52,7 +53,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
                 Throwables.propagate(e);
             }
         }
-        return false;
+        return ComputationMode.GIVEN.equals(pValue.getMode());
     }
 
 }
