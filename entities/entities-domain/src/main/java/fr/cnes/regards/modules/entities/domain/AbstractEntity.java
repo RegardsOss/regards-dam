@@ -44,6 +44,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.adapters.gson.ModelAdapter;
 
 /**
  * Base class for all entities(on a REGARDS point of view)
@@ -137,12 +138,13 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected List<AbstractAttribute<?>> properties;
 
     /**
-     * model that this entity is respecting
+     * Model associated to the entity
      */
     @NotNull
     @ManyToOne
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
+    @JsonAdapter(value = ModelAdapter.class) // only keep id and name on Elasticsearch
     protected Model model;
 
     @Type(type = "jsonb")
