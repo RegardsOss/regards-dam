@@ -25,5 +25,10 @@ public interface IMapping {
      * Mapping value for value
      */
     static final String VALUE = "value";
+
+    /**
+     * Mapping name for geometry attribute
+     */
+    static final String GEOMETRY = "geometry";
 }
 // CHECKSTYLE:ON

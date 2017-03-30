@@ -28,4 +28,8 @@ public interface ICriterionVisitor<T> {
     T visitDateRangeCriterion(DateRangeCriterion pCriterion);
 
     T visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion);
+
+    T visitPolygonCriterion(PolygonCriterion pCriterion);
+
+    T visitCircleCriterion(CircleCriterion pCriterion);
 }

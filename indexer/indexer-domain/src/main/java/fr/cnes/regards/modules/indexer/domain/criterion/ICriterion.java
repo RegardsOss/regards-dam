@@ -325,4 +325,22 @@ public interface ICriterion {
     }
     // CHECKSTYLE:ON
 
+    /**
+     * Criterion to test the intersection with a circle giving center coordinates and radius.
+     * @param center coordinates of center
+     * @param radius radius eventually with unit (ie "100m" or "5km")
+     * @return criterion
+     */
+    static ICriterion intersectsCircle(Double[] center, String radius) {
+        return new CircleCriterion(center, radius);
+    }
+
+    /**
+     * Criterion to test the intersection with a polygon
+     * @param center coordinates of polygon
+     * @return criterion
+     */
+    static ICriterion intersectsPolygon(Double[][][] coordinates) {
+        return new PolygonCriterion(coordinates);
+    }
 }
