@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
@@ -118,6 +119,11 @@ public class CrawlerService implements ICrawlerService {
     private boolean stopAsked = false;
 
     /**
+     * Current delay between all tenants poll check
+     */
+    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+
+    /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
      */
     @PostConstruct
@@ -140,7 +146,7 @@ public class CrawlerService implements ICrawlerService {
     @Async
     @Override
     public void crawl() {
-        int delay = INITIAL_DELAY_MS;
+        delay.set(INITIAL_DELAY_MS);
         // Infinite loop
         while (true) {
             // Manage termination
@@ -160,11 +166,11 @@ public class CrawlerService implements ICrawlerService {
             }
             // If a poll has been done, don't wait and reset delay to initial value
             if (atLeastOnPoll) {
-                delay = INITIAL_DELAY_MS;
+                delay.set(INITIAL_DELAY_MS);
             } else { // else, wait and double delay for next time (limited to MAX_DELAY)
                 try {
-                    Thread.sleep(delay);
-                    delay = Math.min(delay * 2, MAX_DELAY_MS);
+                    Thread.sleep(delay.get());
+                    delay.set(Math.min(delay.get() * 2, MAX_DELAY_MS));
                 } catch (InterruptedException e) {
                     LOGGER.error("Thread sleep interrupted.");
                     Thread.currentThread().interrupt();
@@ -477,5 +483,20 @@ public class CrawlerService implements ICrawlerService {
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
         return esRepos.saveBulk(tenant, toSaveObjects);
+    }
+
+    @Override
+    public boolean working() {
+        return delay.get() < MAX_DELAY_MS;
+    }
+
+    @Override
+    public boolean workingHard() {
+        return delay.get() == INITIAL_DELAY_MS;
+    }
+
+    @Override
+    public boolean strolling() {
+        return delay.get() == MAX_DELAY_MS;
     }
 }
