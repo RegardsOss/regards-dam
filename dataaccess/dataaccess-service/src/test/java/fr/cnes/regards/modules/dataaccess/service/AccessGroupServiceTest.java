@@ -11,6 +11,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
@@ -41,11 +42,17 @@ public class AccessGroupServiceTest {
 
     private IProjectUsersClient projectUserClient;
 
+    /**
+     * Publish for model changes
+     */
+    private IPublisher mockPublisher;
+
     @Before
     public void init() {
         dao = Mockito.mock(IAccessGroupRepository.class);
         projectUserClient = Mockito.mock(IProjectUsersClient.class);
-        accessGroupService = new AccessGroupService(dao, projectUserClient);
+        mockPublisher = Mockito.mock(IPublisher.class);
+        accessGroupService = new AccessGroupService(dao, projectUserClient, mockPublisher);
         accessGroupService.setMicroserviceName("test");
         accessGroup1 = new AccessGroup(AG1_NAME);
         accessGroup1.setId(AG1_ID);

@@ -39,14 +39,14 @@ public class IntegerRangeRestriction extends AbstractRestriction {
      */
     @Column(name = "mini")
     @NotNull
-    private Integer min;
+    private Long min;
 
     /**
      * Maximun possible value (included)
      */
     @Column(name = "maxi")
     @NotNull
-    private Integer max;
+    private Long max;
 
     /**
      * Minimum possible value (excluded)
@@ -72,19 +72,27 @@ public class IntegerRangeRestriction extends AbstractRestriction {
     }
 
     public Integer getMin() {
-        return min;
+        return min.intValue();
     }
 
     public void setMin(Integer pMin) {
-        min = pMin;
+        if (pMin == null) {
+            min = null;
+        } else {
+            min = pMin.longValue();
+        }
     }
 
     public Integer getMax() {
-        return max;
+        return max.intValue();
     }
 
     public void setMax(Integer pMax) {
-        max = pMax;
+        if (pMax == null) {
+            max = null;
+        } else {
+            max = pMax.longValue();
+        }
     }
 
     public boolean isMinExcluded() {

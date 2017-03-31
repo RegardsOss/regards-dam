@@ -8,6 +8,7 @@ import java.util.Set;
  * For example : property "toto" between 0 and 1 (ie toto range = > 0 and < 1).<br/>
  * This class is also to be used for only one comparison.
  * @param <T> value type
+ * @author oroussel
  */
 public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPropertyCriterion implements ICriterion {
 

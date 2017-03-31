@@ -31,6 +31,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRestriction;
 
 /**
  * Test module API
@@ -408,6 +409,32 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         IntegerRangeRestriction irr = new IntegerRangeRestriction();
         irr.setMin(10);
         irr.setMax(100);
+        attModel.setRestriction(irr);
+
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+
+        resultActions = performDefaultPut(AttributeModelController.TYPE_MAPPING + "/{pAttributeId}", attModel,
+                                          expectations, "Update should be successful.", id);
+    }
+
+    /**
+     * Test restriction creation and update
+     */
+    @Test
+    public void createAndUpdateAttributeWithRestriction2() {
+        AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.LONG)
+                .withLongRangeRestriction(Long.MIN_VALUE, Long.MAX_VALUE, false, false);
+        ResultActions resultActions = createAttribute(attModel);
+
+        String json = payload(resultActions);
+        Integer id = JsonPath.read(json, JSON_ID);
+
+        // Set a new restriction
+        attModel.setId(Long.valueOf(id));
+        LongRangeRestriction irr = new LongRangeRestriction();
+        irr.setMin(10L);
+        irr.setMax(100L);
         attModel.setRestriction(irr);
 
         final List<ResultMatcher> expectations = new ArrayList<>();

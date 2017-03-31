@@ -129,7 +129,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
         subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
         subscriber.subscribeTo(AttributeModelDeleted.class, new UnregisterHandler());
         // Retrieve all tenants
-        for (String tenant : tenantResolver.getAllTenants()) {
+        for (String tenant : tenantResolver.getAllActiveTenants()) {
             // Set thread tenant to route database retrieval
             runtimeTenantResolver.forceTenant(tenant);
             // Register for tenant

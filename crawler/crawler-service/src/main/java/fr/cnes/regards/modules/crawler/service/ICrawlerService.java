@@ -31,4 +31,21 @@ public interface ICrawlerService {
      * @return the count of DataObjects ingested from given datasource
      */
     int ingest(PluginConfiguration pluginConfiguration) throws ModuleException;
+
+    /**
+     * Indicate that the daemon service is currently working ie delay between poll of events is strictly between its
+     * maximum
+     */
+    boolean working();
+
+    /**
+     * Indicate that the daemon service is currently working hard ie delay between poll of events is at its minimal
+     * value
+     */
+    boolean workingHard();
+
+    /**
+     * Indicate that the daemon service is waiting for events ie deley between poll of events is at its maximum
+     */
+    boolean strolling();
 }

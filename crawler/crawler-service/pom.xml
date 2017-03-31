@@ -98,5 +98,12 @@
 			<artifactId>indexer-service</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- Runtime dependencies -->
+		<dependency>
+			<groupId>org.locationtech.spatial4j</groupId>
+			<artifactId>spatial4j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 </project>

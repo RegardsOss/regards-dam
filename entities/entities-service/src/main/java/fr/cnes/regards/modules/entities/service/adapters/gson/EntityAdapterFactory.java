@@ -43,7 +43,7 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
     private static final String PROPERTIES_FIELD_NAME = "properties";
 
     public EntityAdapterFactory() {
-        super(AbstractEntity.class, "type", true);
+        super(AbstractEntity.class, "entityType", true);
         registerSubtype(Collection.class, EntityType.COLLECTION);
         registerSubtype(Dataset.class, EntityType.DATASET);
         registerSubtype(Document.class, EntityType.DOCUMENT);

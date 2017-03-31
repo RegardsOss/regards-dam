@@ -18,7 +18,9 @@ import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 
@@ -52,13 +54,13 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
+    public <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
         return repository.search(searchKey, pPageRequest, pCriterion, pFacetsMap, pAscSortMap);
     }
 
     @Override
-    public <S, T extends IIndexable> Page<T> searchAndReturnJoinedEntities(SearchKey<S, T> searchKey,
+    public <S, T extends IIndexable> Page<T> search(JoinEntitySearchKey<S, T> searchKey,
             Pageable pageRequest, ICriterion pCriterion) {
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(), searchKey.getSearchTypeMap(),

@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 
 /**
  * Property criterion. Provides a property name
- *
  * @author oroussel
  */
 public abstract class AbstractPropertyCriterion implements ICriterion {
@@ -55,10 +54,9 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
             if (other.name != null) {
                 return false;
             }
-        } else
-            if (!name.equals(other.name)) {
-                return false;
-            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
         return true;
     }
 

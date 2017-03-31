@@ -12,6 +12,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -19,6 +20,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.LongMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.NotCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
@@ -187,6 +189,16 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     @Override
     public Boolean visitEmptyCriterion(EmptyCriterion pCriterion) {
+        return true;
+    }
+
+    @Override
+    public Boolean visitPolygonCriterion(PolygonCriterion pCriterion) {
+        return true;
+    }
+
+    @Override
+    public Boolean visitCircleCriterion(CircleCriterion pCriterion) {
         return true;
     }
 }

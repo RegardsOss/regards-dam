@@ -25,6 +25,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
+import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -41,17 +43,22 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -94,6 +101,9 @@ public class IndexerServiceDataSourceIT {
     private IModelService modelService;
 
     @Autowired
+    private IModelRepository modelRepository;
+
+    @Autowired
     private IDatasetService dsService;
 
     @Autowired
@@ -124,6 +134,12 @@ public class IndexerServiceDataSourceIT {
     @Autowired
     private IPluginService pluginService;
 
+    @Autowired
+    private IRabbitVirtualHostAdmin rabbitVhostAdmin;
+
+    @Autowired
+    private RegardsAmqpAdmin amqpAdmin;
+
     private Model dataModel;
 
     private Model datasetModel;
@@ -140,6 +156,13 @@ public class IndexerServiceDataSourceIT {
 
     @Before
     public void setUp() throws Exception {
+        rabbitVhostAdmin.bind(tenantResolver.getTenant());
+        amqpAdmin.purgeQueue(EntityEvent.class, false);
+        rabbitVhostAdmin.unbind();
+
+        entityRepos.deleteAll();
+        modelRepository.deleteAll();
+
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
         // Register model attributes
@@ -250,12 +273,20 @@ public class IndexerServiceDataSourceIT {
         attributes.add(new DataSourceAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
                 "DATA_CREATION_DATE", Types.DECIMAL));
 
-        attributes.add(new DataSourceAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MIN", "LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX", "LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MIN", "ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
+        attributes.add(new DataSourceAttributeMapping("MAX", "ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
+        attributes.add(new DataSourceAttributeMapping("ANSA5_REAL", AttributeType.DOUBLE, "ANSA5_REAL"));
+        attributes.add(new DataSourceAttributeMapping("ANSR5_REAL", AttributeType.DOUBLE, "ANSR5_REAL"));
+        attributes.add(new DataSourceAttributeMapping("ANSE5_REAL", AttributeType.DOUBLE, "ANSE5_REAL"));
+        attributes.add(new DataSourceAttributeMapping("ANSE6_STRING", AttributeType.STRING, "ANSE6_STRING"));
+        attributes.add(new DataSourceAttributeMapping("ANSL6_2_STRING", AttributeType.STRING, "ANSL6_2_STRING"));
+        attributes.add(new DataSourceAttributeMapping("ANSR3_INT", "frag3", AttributeType.INTEGER, "ANSR3_INT"));
+        attributes.add(new DataSourceAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
+        attributes.add(new DataSourceAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
@@ -274,12 +305,25 @@ public class IndexerServiceDataSourceIT {
         gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "STOP_DATE");
         gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "DATA_CREATION_DATE");
 
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN_LONGITUDE");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX_LONGITUDE");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN_LATITUDE");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX_LATITUDE");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN_ALTITUDE");
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX_ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN", "LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX", "LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN", "LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX", "LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN", "ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX", "ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "ANSA5_REAL");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "ANSR5_REAL");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "ANSE5_REAL");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSE6_STRING");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSL6_2_STRING");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "frag3");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSR3_INT", "frag3");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_1_INT", "frag3");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_2_INT", "frag3");
+
     }
 
     @Test
@@ -326,18 +370,10 @@ public class IndexerServiceDataSourceIT {
 
         // Retrieve dataset1 from ES
         dataset1 = (Dataset) searchService.get(dataset1.getIpId());
-        int i = 0;
-        while (dataset1 == null) {
-            Thread.sleep(1000);
-            i++;
-            if (i == 3) {
-                break;
-            }
-        }
         Assert.assertNotNull(dataset1);
 
         //SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
-        SearchKey<DataObject, DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
+        SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.equals("tags", dataset1.getIpId().toString()));
@@ -383,36 +419,36 @@ public class IndexerServiceDataSourceIT {
 
         // Search for Dataset but with criterion on DataObjects
         //        SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
-        SearchKey<DataObject, Dataset> dsSearchKey = Searches.onSingleEntityReturningJoinEntity(tenant, EntityType.DATA,
-                                                                                                EntityType.DATASET);
+        JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
+                .onSingleEntityReturningJoinEntity(tenant, EntityType.DATA, EntityType.DATASET);
         //Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
-        Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.search(dsSearchKey, dsPage.nextPageable(), ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
         // Search for Dataset but with criterion on everything
         //SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
-        SearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches.onAllEntitiesReturningJoinEntity(tenant,
-                                                                                                    EntityType.DATASET);
-        dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
+                .onAllEntitiesReturningJoinEntity(tenant, EntityType.DATASET);
+        dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
+        dsPage = searchService.search(dsSearchKey2, dsPage.nextPageable(), ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
         objectsPage = searchService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
                                                       "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
-                                                      "properties.MAX_LONGITUDE", "properties.MAX_LATITUDE");
+                                                      "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
         Assert.assertFalse(objectsPage.getContent().isEmpty());
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }
