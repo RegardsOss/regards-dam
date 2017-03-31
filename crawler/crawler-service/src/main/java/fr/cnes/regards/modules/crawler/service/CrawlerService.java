@@ -267,7 +267,7 @@ public class CrawlerService implements ICrawlerService {
     private void manageDatasetDelete(String tenant, String ipId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
-        ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId);
+        ICriterion taggingObjectsCrit = ICriterion.eq("tags", ipId);
         // Groups must also be managed so for all objects they have to be completely recomputed (a group can be
         // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
         // datasets associated to an object
@@ -359,9 +359,9 @@ public class CrawlerService implements ICrawlerService {
         String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
-            subsettingCrit = ICriterion.equals(DATA_SOURCE_ID, datasourceId);
+            subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, datasourceId);
         } else {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.equals(DATA_SOURCE_ID, datasourceId));
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, datasourceId));
         }
         String tenant = runtimeTenantResolver.getTenant();
         // To avoid losing time doing same stuf on all objects

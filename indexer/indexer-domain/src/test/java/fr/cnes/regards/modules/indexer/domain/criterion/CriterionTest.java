@@ -44,7 +44,7 @@ public class CriterionTest {
         // textAtt startsWith "testStartsWith"
         ICriterion startsWithCrit = ICriterion.startsWith("attributes.text", "testStartsWith");
         // textAtt strictly equals "testEquals"
-        ICriterion equalsCrit = ICriterion.equals("attributes.text", "testEquals");
+        ICriterion equalsCrit = ICriterion.eq("attributes.text", "testEquals");
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
 
         List<ICriterion> numericCritList = new ArrayList<>();

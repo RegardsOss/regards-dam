@@ -202,7 +202,7 @@ public class EsQueryTest {
         Assert.assertEquals(1, repository.search(searchKey, 10, almostEqualsCrit).getContent().size());
 
         // On Strings
-        ICriterion mortCrit = ICriterion.equals("properties.text", "mort");
+        ICriterion mortCrit = ICriterion.eq("properties.text", "mort");
         Assert.assertEquals(2, repository.search(searchKey, 10, mortCrit).getContent().size());
 
         ICriterion optionaltextWithoutBlanksCrit = ICriterion.in("properties.text", "Le", "petit", "chat", "est",
