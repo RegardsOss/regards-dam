@@ -369,7 +369,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(modelMapping);
-        dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause " + LocalDateTime.now());
+        dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
 
         return dataSource;
     }
@@ -380,7 +380,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(modelMapping);
-        dataSource.setLabel(LABEL_DATA_SOURCE + " with table name" + LocalDateTime.now());
+        dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
 
         return dataSource;
     }
