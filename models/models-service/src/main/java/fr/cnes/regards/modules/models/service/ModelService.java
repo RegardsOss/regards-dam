@@ -475,7 +475,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public Set<ModelAttrAssoc> getComputedAttributes(Long pId) {
         List<ModelAttrAssoc> attributes = modelAttributeRepository.findByModelId(pId);
-        return attributes.stream().filter(attr -> ComputationMode.GIVEN.equals(attr.getMode()))
+        return attributes.stream().filter(attr -> ComputationMode.COMPUTED.equals(attr.getMode()))
                 .collect(Collectors.toSet());
     }
 

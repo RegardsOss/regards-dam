@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.reflect.Invokable;
@@ -26,6 +25,7 @@ import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.plugin.CountElementAttribute;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
@@ -40,17 +40,24 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 @Service
 public class EntitiesService implements IEntitiesService {
 
-    @Autowired
-    private IDatasetRepository datasetRepository;
+    private final IDatasetRepository datasetRepository;
 
-    @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepository;
+    private final IAbstractEntityRepository<AbstractEntity> entityRepository;
 
-    @Autowired
-    private IModelAttrAssocService modelAttributeService;
+    private final IModelAttrAssocService modelAttributeService;
 
-    @Autowired
-    private IPluginService pluginService;
+    private final IPluginService pluginService;
+
+    public EntitiesService(IDatasetRepository pDatasetRepository,
+            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelAttrAssocService pModelAttributeService,
+            IPluginService pPluginService) {
+        super();
+        datasetRepository = pDatasetRepository;
+        entityRepository = pEntityRepository;
+        modelAttributeService = pModelAttributeService;
+        pluginService = pPluginService;
+        pluginService.addPluginPackage(CountElementAttribute.class.getPackage().getName());
+    }
 
     @Override
     public AbstractEntity loadWithRelations(UniformResourceName pIpId) {
