@@ -7,6 +7,11 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,11 +44,16 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @RestController
 // CHECKSTYLE:OFF
-@ModuleInfo(name = "datasource", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
-        documentation = "http://test")
+@ModuleInfo(name = "datasource", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI", documentation = "http://test")
 // CHECKSTYLE:ON
 @RequestMapping(DataSourceController.TYPE_MAPPING)
 public class DataSourceController implements IResourceController<DataSource> {
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceController.class);
+
 
     /**
      * Type mapping
@@ -102,8 +112,7 @@ public class DataSourceController implements IResourceController<DataSource> {
      * @throws ModuleException
      *             if plugin configuration cannot be retrieved
      */
-    @ResourceAccess(
-            description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
+    @ResourceAccess(description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}")
     public ResponseEntity<Resource<DataSource>> getDataSource(@PathVariable Long pPluginConfId) throws ModuleException {
         return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pPluginConfId)));
