@@ -376,7 +376,7 @@ public class IndexerServiceDataSourceIT {
         SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.equals("tags", dataset1.getIpId().toString()));
+                                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
         // All data are associated with the 3 datasets so they must all have the 4 groups
@@ -395,7 +395,7 @@ public class IndexerServiceDataSourceIT {
 
         // Search again for DataObjects tagging this dataset
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.equals("tags", dataset1.getIpId().toString()));
+                                           ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
         objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
@@ -405,7 +405,7 @@ public class IndexerServiceDataSourceIT {
 
         // Search for DataObjects tagging dataset2
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.equals("tags", dataset2.getIpId().toString()));
+                                           ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
         // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)

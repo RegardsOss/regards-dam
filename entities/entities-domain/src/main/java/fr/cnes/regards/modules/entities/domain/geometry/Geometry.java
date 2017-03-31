@@ -1,14 +1,12 @@
 package fr.cnes.regards.modules.entities.domain.geometry;
 
-import java.io.Serializable;
-
 /**
  * Geometry object.
  * Json adapter is GeometryAdapter
  *
  * @param <T> Depends on the Geometry type: for a Point T is Double, for a LineString T is Double[], ...
  */
-public abstract class Geometry<T> implements Serializable {
+public abstract class Geometry<T> {
 
     private GeometryType type;
 

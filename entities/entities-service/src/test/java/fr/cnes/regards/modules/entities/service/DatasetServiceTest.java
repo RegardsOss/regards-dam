@@ -219,7 +219,7 @@ public class DatasetServiceTest {
                 .endsWith("attributes." + GEO_CRS.getFragment().getName() + "." + GEO_CRS.getName(), "testEndsWith");
         // textAtt strictly equals "testEquals"
         ICriterion equalsCrit = ICriterion
-                .equals("attributes." + Contact_Phone.getFragment().getName() + "." + Contact_Phone.getName(),
+                .eq("attributes." + Contact_Phone.getFragment().getName() + "." + Contact_Phone.getName(),
                         "testEquals");
 
         ICriterion booleanCrit = new BooleanMatchCriterion("attributes." + attBoolean.getName(), true);
