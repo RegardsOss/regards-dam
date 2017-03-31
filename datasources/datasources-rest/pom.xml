@@ -51,5 +51,10 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-monitoring-regards-starter</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.datasources.rest;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -106,7 +108,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Before
-    public void setUp() throws ModuleException, PluginUtilsException {
+    public void setUp() throws ModuleException, PluginUtilsException, JwtException {
+        jwtService.injectToken(DEFAULT_TENANT, DEFAULT_ROLE, DEFAULT_USER_EMAIL);
+        
         /*
          * Initialize the DataSourceAttributeMapping
          */
@@ -365,7 +369,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(modelMapping);
-        dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
+        dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause " + LocalDateTime.now());
 
         return dataSource;
     }
@@ -376,7 +380,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getCanonicalName());
         dataSource.setPluginConfigurationConnectionId(pluginPostgreDbConnection.getId());
         dataSource.setMapping(modelMapping);
-        dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
+        dataSource.setLabel(LABEL_DATA_SOURCE + " with table name" + LocalDateTime.now());
 
         return dataSource;
     }

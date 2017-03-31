@@ -115,6 +115,8 @@ public class DataSourceService implements IDataSourceService {
     @Override
     public List<DataSource> getAllDataSources() {
         List<DataSource> dataSources = new ArrayList<>();
+        
+        LOGGER.info("getAllDataSources");
 
         service.getPluginConfigurationsByType(IDataSourcePlugin.class).forEach(c -> {
             try {
@@ -129,7 +131,8 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource createDataSource(DataSource pDataSource) throws ModuleException {
-        LOGGER.info("createDataSource with label = "+ pDataSource.getLabel());
+        LOGGER.info("createDataSource : "+ pDataSource.getLabel());
+        
         try {
 
             if (pDataSource.getTableName() != null && pDataSource.getFromClause() == null) {
@@ -161,6 +164,8 @@ public class DataSourceService implements IDataSourceService {
      * @throws ModuleException
      */
     private PluginConfiguration createDataSourceFromSingleTable(DataSource pDataSource) throws ModuleException {
+        LOGGER.info("createDataSource : "+ pDataSource.getLabel());
+        
         PluginMetaData metaData = service.checkPluginClassName(IDataSourceFromSingleTablePlugin.class,
                                                                pDataSource.getPluginClassName());
         return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getLabel(),
@@ -176,6 +181,8 @@ public class DataSourceService implements IDataSourceService {
      * @throws ModuleException
      */
     private PluginConfiguration createDataSourceFromComplexRequest(DataSource pDataSource) throws ModuleException {
+        LOGGER.info("createDataSource : "+ pDataSource.getLabel());
+        
         PluginMetaData metaData = service.checkPluginClassName(IDataSourcePlugin.class,
                                                                pDataSource.getPluginClassName());
         return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getLabel(),
@@ -231,6 +238,8 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource getDataSource(Long pId) throws EntityNotFoundException {
+        LOGGER.info("getDataSource : " + pId);
+        
         try {
             return getDataSourceFromPluginConfiguration(service.getPluginConfiguration(pId));
         } catch (ModuleException e) {
@@ -245,6 +254,8 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource updateDataSource(DataSource pDataSource) throws ModuleException {
+        LOGGER.info("updateDataSource : " + pDataSource.getLabel());
+        
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDataSource.getPluginConfigurationId());
 
@@ -278,6 +289,8 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public void deleteDataSouce(Long pId) throws ModuleException {
+        LOGGER.info("deleteDataSouce : "+ pId);
+        
         service.deletePluginConfiguration(pId);
     }
 

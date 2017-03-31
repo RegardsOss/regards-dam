@@ -100,8 +100,6 @@ public class DataSourceController implements IResourceController<DataSource> {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<DataSource>> createDataSource(@Valid @RequestBody DataSource pDatasource)
             throws ModuleException {
-        LOGGER.info("createDataSource with label = " + pDatasource.getLabel());
-        LOGGER.info("createDataSource : une autre trace");
         return ResponseEntity.ok(toResource(dataSourceService.createDataSource(pDatasource)));
     }
 

@@ -6,9 +6,9 @@
 
 	<springProperty scope="context" name="springAppName"
 		source="spring.application.name" />
-		
+
 	<property name="CONSOLE_LOG_PATTERN"
-		value="%d{HH:mm:ss.SSS} [%thread] ${LOG_LEVEL_PATTERN:-%5p} %logger{36} - %msg%n" />
+		value="%d{HH:mm:ss.SSS} %mdc{req.remoteHost} %mdc{req.xForwardedFor} [%thread] ${LOG_LEVEL_PATTERN:-%5p} %logger{36} - %msg%n" />
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -20,46 +20,25 @@
 		</encoder>
 	</appender>
 
-	<appender name="SYSLOG" class="ch.qos.logback.classic.net.SyslogAppender">
-		<syslogHost>172.26.40.104</syslogHost>
-		<facility>LOCAL0</facility>
-		<suffixPattern>${CONSOLE_LOG_PATTERN}</suffixPattern>
-		<port>514</port>
+	<appender name="regardsAmqpAppender"
+		class="ch.qos.logback.ext.spring.DelegatingLogbackAppender">
+		<filter
+			class="fr.cnes.regards.framework.logbackappender.RegardsAmqpAppenderFilter">
+			<level>INFO</level>
+		</filter>
 	</appender>
-
-	<appender name="AMQP"
-		class="org.springframework.amqp.rabbit.logback.AmqpAppender">
-		<layout>
-			<pattern>{ "microservice" : "${springAppName}", "time": "%date{ISO8601}", "thread": "%thread", "level":
-				"%level", "class": "%logger{36}", "message": "%message" } </pattern>
-		</layout>
-		<host>10.11.0.2</host>
-		<port>5672</port>
-		<routingKeyPattern>REGARDS-EVENTS</routingKeyPattern>
-		<username>guest</username>
-		<password>guest</password>
-		
-		<charset>UTF-8</charset>
-		<durable>true</durable>
-		
- 		<exchangeName>AmqpLogger</exchangeName>
-		<exchangeType>topic</exchangeType>
-		<declareExchange>true</declareExchange>
-		
-		<durable>true</durable>
-	</appender>
-
-	<logger name="org.springframework" level="INFO" />
-	<logger name="org.hibernate" level="INFO" />
-	<logger name="com.mchange" level="INFO" />
 
 	<logger name="fr.cnes.regards" level="INFO" additivity="true">
-        <appender-ref ref="AMQP"/>
-    </logger>
+		<appender-ref ref="regardsAmqpAppender" />
+	</logger>
+
+ 	<logger name="org.springframework" level="INFO" />
+	<logger name="org.hibernate" level="INFO" />
+	<logger name="com.mchange" level="INFO" />
+	<logger name="fr.cnes.regards.framework.logbackappender" level="DEBUG" />
 
 	<root level="info">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="SYSLOG" />
 	</root>
 
 </configuration>
