@@ -259,7 +259,7 @@ public class EsRepository implements IEsRepository {
     public boolean merge(String pIndex, String pType, String pId, Map<String, Object> pMergedPropertiesMap) {
         try {
             final Map<String, Map<String, Object>> mapMap = new HashMap<>();
-            try (XContentBuilder builder = XContentFactory.jsonBuilder().startObject()) {
+            try (XContentBuilder builder = XContentFactory.jsonBuilder().startObject()) { // NOSONAR
                 for (final Map.Entry<String, Object> entry : pMergedPropertiesMap.entrySet()) {
                     // Simple key = value
                     if (!entry.getKey().contains(".")) {
