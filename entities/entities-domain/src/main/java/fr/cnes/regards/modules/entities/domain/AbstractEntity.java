@@ -126,7 +126,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @Valid
-    protected Set<AbstractAttribute<?>> properties;
+    protected Set<AbstractAttribute<?>> properties = new HashSet<>();
 
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;

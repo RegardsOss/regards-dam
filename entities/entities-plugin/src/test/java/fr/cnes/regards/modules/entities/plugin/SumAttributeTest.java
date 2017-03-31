@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,17 +44,17 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 @MultitenantTransactional
 @TestPropertySource(locations = "classpath:tests.properties")
-public class DateAttributeTest extends AbstractRegardsTransactionalIT {
+public class SumAttributeTest extends AbstractRegardsTransactionalIT {
 
-    private static final String dataModelFileName = "dataModelDate.xml";
+    private static final String dataModelFileName = "dataModelSize.xml";
 
-    private static final String datasetModelFileName = "datasetModelDate.xml";
+    private static final String datasetModelFileName = "datasetModelSize.xml";
 
-    private static final String minDateAttName = "minDate";
+    private static final String intSizeAttName = "sizeInteger";
 
-    private static final String maxDateAttName = "maxDate";
+    private static final String longSizeAttName = "sizeLong";
 
-    private static final Logger LOG = LoggerFactory.getLogger(DateAttributeTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SumAttributeTest.class);
 
     @Autowired
     private IModelService modelService;
@@ -68,53 +67,53 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
 
     private Model dataModel;
 
-    private MinDateAttribute minDatePlugin;
+    private SumIntegerAttribute sumIntPlugin;
 
-    private MaxDateAttribute maxDatePlugin;
+    private SumLongAttribute sumLongPlugin;
 
     @Before
     public void init() throws ModuleException, NoSuchMethodException, SecurityException {
         jwtService.injectMockToken("PROJECT", "ADMIN");
         pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
-        pluginService.addPluginPackage(MaxDateAttribute.class.getPackage().getName());
+        pluginService.addPluginPackage(SumIntegerAttribute.class.getPackage().getName());
         // create a pluginConfiguration with a label for min
-        List<PluginParameter> parametersMin = PluginParametersFactory.build()
-                .addParameter("attributeToComputeName", "minDate").getParameters();
-        PluginMetaData metadataMin = new PluginMetaData();
-        metadataMin.setPluginId("MinDateAttribute");
-        metadataMin.setAuthor("toto");
-        metadataMin.setDescription("titi");
-        metadataMin.setVersion("tutu");
-        metadataMin.setInterfaceName(IComputedAttribute.class.getName());
-        metadataMin.setPluginClassName(MinDateAttribute.class.getName());
-        PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateTestConf");
-        confMin.setParameters(parametersMin);
-        confMin = pluginService.savePluginConfiguration(confMin);
+        List<PluginParameter> parametersInteger = PluginParametersFactory.build()
+                .addParameter("attributeToComputeName", "sizeInteger").getParameters();
+        PluginMetaData metadataInteger = new PluginMetaData();
+        metadataInteger.setPluginId("SumIntegerAttribute");
+        metadataInteger.setAuthor("toto");
+        metadataInteger.setDescription("titi");
+        metadataInteger.setVersion("tutu");
+        metadataInteger.setInterfaceName(IComputedAttribute.class.getName());
+        metadataInteger.setPluginClassName(SumIntegerAttribute.class.getName());
+        PluginConfiguration confInteger = new PluginConfiguration(metadataInteger, "SumIntegerTestConf");
+        confInteger.setParameters(parametersInteger);
+        confInteger = pluginService.savePluginConfiguration(confInteger);
         // create a pluginConfiguration with a label
-        List<PluginParameter> parametersMax = PluginParametersFactory.build()
-                .addParameter("attributeToComputeName", "maxDate").getParameters();
-        PluginMetaData metadataMax = new PluginMetaData();
-        metadataMax.setPluginId("MaxDateAttribute");
-        metadataMax.setAuthor("toto");
-        metadataMax.setDescription("titi");
-        metadataMax.setVersion("tutu");
-        metadataMax.setInterfaceName(IComputedAttribute.class.getName());
-        metadataMax.setPluginClassName(MaxDateAttribute.class.getName());
-        PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateTestConf");
-        confMax.setParameters(parametersMax);
-        confMax = pluginService.savePluginConfiguration(confMax);
+        List<PluginParameter> parametersLong = PluginParametersFactory.build()
+                .addParameter("attributeToComputeName", "sizeLong").getParameters();
+        PluginMetaData metadataLong = new PluginMetaData();
+        metadataLong.setPluginId("SumLongAttribute");
+        metadataLong.setAuthor("toto");
+        metadataLong.setDescription("titi");
+        metadataLong.setVersion("tutu");
+        metadataLong.setInterfaceName(IComputedAttribute.class.getName());
+        metadataLong.setPluginClassName(SumLongAttribute.class.getName());
+        PluginConfiguration confLong = new PluginConfiguration(metadataLong, "SumLongTestConf");
+        confLong.setParameters(parametersLong);
+        confLong = pluginService.savePluginConfiguration(confLong);
         // get a model for Dataset
         importModel(datasetModelFileName);
         // get a model for DataObject
         importModel(dataModelFileName);
         dataModel = modelService.getModelByName("dataModel");
         // instanciate the plugin
-        minDatePlugin = pluginService.getPlugin(confMin.getId());
-        maxDatePlugin = pluginService.getPlugin(confMax.getId());
+        sumIntPlugin = pluginService.getPlugin(confInteger.getId());
+        sumLongPlugin = pluginService.getPlugin(confLong.getId());
     }
 
     @Test
-    public void testDate() {
+    public void testSum() {
         // create the objects
         DataObject obj1 = new DataObject();
         obj1.setModel(dataModel);
@@ -132,33 +131,28 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
         obj4.setModel(dataModel);
         obj4.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, "tenant", UUID.randomUUID(), 1));
         obj4.setLabel("data for test");
-        LocalDateTime expectedMinDate = LocalDateTime.now().minusHours(200);
-        LocalDateTime expectedMaxDate = LocalDateTime.now().plusHours(200);
         // add the min date attribute
-        obj1.getProperties().add(AttributeBuilder.forType(AttributeType.DATE_ISO8601, minDateAttName,
-                                                          LocalDateTime.now().minusHours(20)));
-        obj2.getProperties().add(AttributeBuilder.forType(AttributeType.DATE_ISO8601, minDateAttName,
-                                                          LocalDateTime.now().minusHours(2)));
-        obj3.getProperties().add(AttributeBuilder.forType(AttributeType.DATE_ISO8601, minDateAttName, expectedMinDate));
+        obj1.getProperties().add(AttributeBuilder.forType(AttributeType.INTEGER, intSizeAttName, 1));
+        obj2.getProperties().add(AttributeBuilder.forType(AttributeType.INTEGER, intSizeAttName, 1));
+        obj3.getProperties().add(AttributeBuilder.forType(AttributeType.INTEGER, intSizeAttName, 1));
         // add the max date attribute
-        obj1.getProperties().add(AttributeBuilder.forType(AttributeType.DATE_ISO8601, maxDateAttName,
-                                                          LocalDateTime.now().plusHours(20)));
-        obj2.getProperties().add(AttributeBuilder.forType(AttributeType.DATE_ISO8601, maxDateAttName, expectedMaxDate));
-        obj3.getProperties().add(AttributeBuilder.forType(AttributeType.DATE_ISO8601, maxDateAttName,
-                                                          LocalDateTime.now().plusHours(2)));
+        obj1.getProperties().add(AttributeBuilder.forType(AttributeType.LONG, longSizeAttName, 1L));
+        obj2.getProperties().add(AttributeBuilder.forType(AttributeType.LONG, longSizeAttName, 1L));
+        obj3.getProperties().add(AttributeBuilder.forType(AttributeType.LONG, longSizeAttName, 1L));
         List<DataObject> objs = Lists.newArrayList(obj1, obj2, obj3, obj4);
-        minDatePlugin.compute(objs);
-        maxDatePlugin.compute(objs);
-        LocalDateTime minDate = minDatePlugin.getResult();
-        LocalDateTime maxDate = maxDatePlugin.getResult();
-        Assert.assertEquals(expectedMinDate, minDate);
-        Assert.assertEquals(expectedMaxDate, maxDate);
+        sumIntPlugin.compute(objs);
+        sumLongPlugin.compute(objs);
+        Integer intSize = sumIntPlugin.getResult();
+        Long longSize = sumLongPlugin.getResult();
+        Assert.assertEquals(new Integer(3), intSize);
+        Assert.assertEquals(new Long(3), longSize);
     }
 
     /**
      * Import model definition file from resources directory
      *
      * @param pFilename filename
+     * @return list of created model attributes
      * @throws ModuleException if error occurs
      */
     private void importModel(String pFilename) throws ModuleException {
@@ -175,5 +169,4 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
     protected Logger getLogger() {
         return LOG;
     }
-
 }

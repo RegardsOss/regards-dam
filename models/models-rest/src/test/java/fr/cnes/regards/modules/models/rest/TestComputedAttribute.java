@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Sylvain Vissiere-Guerinet
  */
 @Plugin(author = "Sylvain VISSIERE-GUERINET", description = "plugin there just for tests in model-rest")
-public class TestComputedAttribute implements IComputedAttribute<String> {
+public class TestComputedAttribute implements IComputedAttribute<Long, String> {
 
     @Override
     public String getResult() {
@@ -22,7 +22,7 @@ public class TestComputedAttribute implements IComputedAttribute<String> {
     }
 
     @Override
-    public void compute(Collection<?> pPartialData) {
+    public void compute(Collection<Long> pPartialData) {
 
     }
 

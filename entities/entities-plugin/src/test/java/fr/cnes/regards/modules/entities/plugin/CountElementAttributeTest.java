@@ -88,7 +88,7 @@ public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testCount() throws NoSuchMethodException, SecurityException {
+    public void testCount() {
         DataObject obj = new DataObject();
         obj.setModel(dataModel);
         obj.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, "tenant", UUID.randomUUID(), 1));

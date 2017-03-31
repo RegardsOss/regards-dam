@@ -31,6 +31,7 @@ import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -79,6 +80,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         modelAttributeRepository = pModelAttributeRepository;
         attributeModelService = pAttributeModelService;
         pluginService = pPluginService;
+        pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
     }
     // CHECKSTYLE:ON
 

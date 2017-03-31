@@ -44,7 +44,6 @@ import fr.cnes.regards.modules.models.schema.Type;
 
 /**
  * @author msordi
- *
  */
 @Entity
 @Table(name = "t_attribute_model", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "fragment_id" }))
@@ -62,8 +61,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute name
      */
     @NotNull
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name must conform to regular expression \""
-            + Model.NAME_REGEXP + "\".")
+    @Pattern(regexp = Model.NAME_REGEXP,
+            message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
@@ -111,7 +110,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Optional fragment
      */
     @ManyToOne
-    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "fk_fragment_id"), nullable = false, updatable = false)
+    @JoinColumn(name = "fragment_id", foreignKey = @ForeignKey(name = "fk_fragment_id"), nullable = false,
+            updatable = false)
     private Fragment fragment;
 
     /**
@@ -150,10 +150,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Optional group for displaying purpose
      */
-    @Pattern(regexp = Model.NAME_REGEXP, message = "Group name must conform to regular expression \""
-            + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Group name must be between "
-            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    @Pattern(regexp = Model.NAME_REGEXP,
+            message = "Group name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE,
+            message = "Group name must be between " + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
     @Column(name = "group_name", length = Model.NAME_MAX_SIZE)
     private String group;
 
@@ -384,7 +384,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             setPrecision(xmlType.getPrecision().intValueExact());
         }
         setUnit(xmlType.getUnit());
-        setType(AttributeType.valueOf(xmlType.getValue().toString()));
+        setType(AttributeType.valueOf(xmlType.getValue().value()));
         setGroup(pXmlElement.getGroup());
 
         if (!pXmlElement.getProperty().isEmpty()) {

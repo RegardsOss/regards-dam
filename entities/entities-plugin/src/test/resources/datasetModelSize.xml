@@ -6,7 +6,13 @@
 	<version>Version</version>
 	<type>DATASET</type>
 	<attribute>
-		<name>size</name>
+		<name>sizeInteger</name>
+		<type>INTEGER</type>
+		<computationMode>COMPUTED</computationMode>
+		<configurationLabel>SumIntegerTestConf</configurationLabel>
+	</attribute>
+	<attribute>
+		<name>sizeLong</name>
 		<type>LONG</type>
 		<computationMode>COMPUTED</computationMode>
 		<configurationLabel>SumLongTestConf</configurationLabel>

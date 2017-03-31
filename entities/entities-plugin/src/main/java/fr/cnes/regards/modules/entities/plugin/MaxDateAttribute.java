@@ -85,7 +85,11 @@ public class MaxDateAttribute implements IComputedAttribute<DataObject, LocalDat
                 .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
         if (candidate.isPresent() && (candidate.get() instanceof DateAttribute)) {
             DateAttribute attributeOfInterest = (DateAttribute) candidate.get();
-            result = attributeOfInterest.getValue().isAfter(result) ? attributeOfInterest.getValue() : result;
+            if (result != null) {
+                result = attributeOfInterest.getValue().isAfter(result) ? attributeOfInterest.getValue() : result;
+            } else {
+                result = attributeOfInterest.getValue();
+            }
         }
     }
 
