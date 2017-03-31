@@ -366,7 +366,7 @@ public class IndexerServiceDataSourceIT {
         dataset3.setGroups(Sets.newHashSet("group2"));
         dsService.create(dataset3);
 
-        Thread.sleep(10_000);
+        Thread.sleep(20_000);
 
         // Retrieve dataset1 from ES
         dataset1 = (Dataset) searchService.get(dataset1.getIpId());
