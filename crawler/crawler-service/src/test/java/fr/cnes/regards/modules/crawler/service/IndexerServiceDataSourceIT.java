@@ -25,6 +25,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
+import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -45,6 +47,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
@@ -131,6 +134,12 @@ public class IndexerServiceDataSourceIT {
     @Autowired
     private IPluginService pluginService;
 
+    @Autowired
+    private IRabbitVirtualHostAdmin rabbitVhostAdmin;
+
+    @Autowired
+    private RegardsAmqpAdmin amqpAdmin;
+
     private Model dataModel;
 
     private Model datasetModel;
@@ -147,6 +156,10 @@ public class IndexerServiceDataSourceIT {
 
     @Before
     public void setUp() throws Exception {
+        rabbitVhostAdmin.bind(tenantResolver.getTenant());
+        amqpAdmin.purgeQueue(EntityEvent.class, false);
+        rabbitVhostAdmin.unbind();
+
         entityRepos.deleteAll();
         modelRepository.deleteAll();
 
