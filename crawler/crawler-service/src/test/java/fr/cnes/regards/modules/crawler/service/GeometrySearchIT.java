@@ -7,7 +7,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,36 +76,81 @@ public class GeometrySearchIT {
     }
 
     @Test
-    @Ignore
     public void testCircleSearchOnLimits() throws ModuleException, IOException {
         Double[] northPole = new Double[] { 0., 90. };
         Double[] nearWestNorthPole = new Double[] { -5., 85. };
-        Double[] nearEastNorthPole = new Double[] { 5., 85. };
+        Double[] nearEastNorthPole = new Double[] { 175., 85. };
 
-        Collection data1 = new Collection(null, TENANT, "North Pole");
-        data1.setGeometry(new Geometry.Point(northPole));
+        Collection collNorthPole = new Collection(null, TENANT, "North Pole");
+        collNorthPole.setGeometry(new Geometry.Point(northPole));
 
-        Collection data2 = new Collection(null, TENANT, "West near North Pole");
-        data2.setGeometry(new Geometry.Point(nearWestNorthPole));
+        Collection collNearWestNorthPole = new Collection(null, TENANT, "West near North Pole");
+        collNearWestNorthPole.setGeometry(new Geometry.Point(nearWestNorthPole));
 
-        Collection data3 = new Collection(null, TENANT, "East near North Pole");
-        data3.setGeometry(new Geometry.Point(nearEastNorthPole));
+        Collection collNearEastNorthPole = new Collection(null, TENANT, "East near North Pole");
+        collNearEastNorthPole.setGeometry(new Geometry.Point(nearEastNorthPole));
 
-        this.save(data1, data2, data3);
+        this.save(collNorthPole, collNearWestNorthPole, collNearEastNorthPole);
 
-        List<Collection> results = this.search(ICriterion.intersectsCircle(northPole, "100km"));
+        List<Collection> results = this.search(ICriterion.intersectsCircle(northPole, "600km"));
         Assert.assertEquals(3, results.size());
-        results = this.search(ICriterion.intersectsCircle(nearEastNorthPole, "100km"));
+        results = this.search(ICriterion.intersectsCircle(nearEastNorthPole, "600km"));
         Assert.assertEquals(2, results.size());
-        Assert.assertTrue(results.contains(nearEastNorthPole));
-        Assert.assertTrue(results.contains(northPole));
-        Assert.assertFalse(results.contains(nearWestNorthPole));
-        results = this.search(ICriterion.intersectsCircle(nearWestNorthPole, "100km"));
+        Assert.assertTrue(results.contains(collNearEastNorthPole));
+        Assert.assertTrue(results.contains(collNorthPole));
+        Assert.assertFalse(results.contains(collNearWestNorthPole));
+        results = this.search(ICriterion.intersectsCircle(nearWestNorthPole, "600km"));
         Assert.assertEquals(2, results.size());
-        Assert.assertFalse(results.contains(nearEastNorthPole));
-        Assert.assertTrue(results.contains(northPole));
-        Assert.assertTrue(results.contains(nearWestNorthPole));
+        Assert.assertFalse(results.contains(collNearEastNorthPole));
+        Assert.assertTrue(results.contains(collNorthPole));
+        Assert.assertTrue(results.contains(collNearWestNorthPole));
 
+        Double[] eastPole = new Double[] { 180., 0. };
+        Collection collEastPole = new Collection(null, TENANT, "East Pole");
+        collEastPole.setGeometry(new Geometry.Point(eastPole));
+        Double[] honolulu = new Double[] { 201.005859375 - 360., 21.53484700204879 };
+        Collection collHonolulu = new Collection(null, TENANT, "Honolulu");
+        collHonolulu.setGeometry(new Geometry.Point(honolulu));
+
+        this.save(collEastPole, collHonolulu);
+
+        results = this.search(ICriterion.intersectsCircle(eastPole, "4000km"));
+        Assert.assertEquals(2, results.size());
+    }
+
+    @Test
+    public void testPolygonSearch() throws ModuleException, IOException {
+        Double[] b202 = new Double[] { 1.4948514103889465, 43.577530672197476 };
+        Double[][][] cs = new Double[][][] { { { 1.4946448802947996, 43.57797369862905 },
+                { 1.4946502447128296, 43.57727223860706 }, { 1.4948782324790955, 43.57727418172091 },
+                { 1.4948728680610657, 43.57797952790247 }, { 1.4946448802947996, 43.57797369862905 } } };
+        // Setting a geometry onto collection
+        Collection collectionOnB202 = new Collection(null, TENANT, "collection on b202 office room");
+        collectionOnB202.setGeometry(new Geometry.Point(b202));
+
+        this.save(collectionOnB202);
+
+        //  on B202
+        List<Collection> results = this.search(ICriterion.intersectsPolygon(cs));
+        Assert.assertEquals(1, results.size());
+        Assert.assertEquals(collectionOnB202, results.get(0));
+
+        // Concave with B202 office room on it
+        Double[][][] concaveCs = new Double[][][] { { { 1.4946475625038147, 43.57797369862905 },
+                { 1.4947816729545593, 43.577894031835676 }, { 1.4947521686553955, 43.577721096238555 },
+                { 1.4946582913398743, 43.57727418172091 }, { 1.4948809146881101, 43.57727223860706 },
+                { 1.4948675036430359, 43.57797758481139 }, { 1.4946475625038147, 43.57797369862905 } } };
+        //  on B202
+        results = this.search(ICriterion.intersectsPolygon(concaveCs));
+        Assert.assertEquals(1, results.size());
+        Assert.assertEquals(collectionOnB202, results.get(0));
+
+        Double[][][] batA = new Double[][][] {
+                { { 1.4952269196510315, 43.577484037646634 }, { 1.495237648487091, 43.57706821130483 },
+                        { 1.495336890220642, 43.57703323512646 }, { 1.4953315258026123, 43.57688944395752 },
+                        { 1.4952349662780762, 43.5767747994011 }, { 1.4954683184623718, 43.5767806287906 },
+                        { 1.495462954044342, 43.57748598075364 }, { 1.4952269196510315, 43.577484037646634 } } };
+        Assert.assertTrue(this.search(ICriterion.intersectsPolygon(batA)).isEmpty());
     }
 
     private void save(AbstractEntity... entities) {
