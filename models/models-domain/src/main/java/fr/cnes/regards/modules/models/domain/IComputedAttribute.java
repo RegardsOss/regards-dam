@@ -21,7 +21,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 @PluginInterface(
         description = "Plugins of type ICalculationModel are plugins allowing to calculate the value of an AttributeModel thanks to a ModelAttrAssoc")
-public interface IComputedAttribute<R> {
+public interface IComputedAttribute<P, R> {
 
     /**
      * @return the value computed by the implementation.
@@ -34,7 +34,7 @@ public interface IComputedAttribute<R> {
      *
      * @param pPartialData part of the total data needed to compute the value
      */
-    void compute(Collection<?> pPartialData);
+    void compute(Collection<P> pPartialData);
 
     /**
      * @return supported AttributeType.

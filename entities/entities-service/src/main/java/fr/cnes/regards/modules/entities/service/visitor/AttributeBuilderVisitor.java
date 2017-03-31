@@ -18,10 +18,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 public class AttributeBuilderVisitor implements IComputedAttributeVisitor<AbstractAttribute<?>> {
 
     @Override
-    public <U> AbstractAttribute<?> visit(IComputedAttribute<U> pPlugin) {
+    public <P, U> AbstractAttribute<?> visit(IComputedAttribute<P, U> pPlugin) {
         AttributeModel attr = pPlugin.getAttributeComputed();
         if (attr.getFragment().isDefaultFragment()) {
-
             return AttributeBuilder.forType(pPlugin.getSupported(), attr.getName(), pPlugin.getResult());
         } else {
             return AttributeBuilder

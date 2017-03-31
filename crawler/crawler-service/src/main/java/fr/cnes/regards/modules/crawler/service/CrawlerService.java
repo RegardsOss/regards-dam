@@ -379,7 +379,7 @@ public class CrawlerService implements ICrawlerService {
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
         // lets compute computed attributes from the dataset model
-        Set<IComputedAttribute<?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
+        Set<IComputedAttribute<DataObject, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         computeDatasetAttribute(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
@@ -388,7 +388,7 @@ public class CrawlerService implements ICrawlerService {
             computeDatasetAttribute(computationPlugins, page.getContent());
         }
         // for each computation plugin lets add the computed attribute
-        for (IComputedAttribute<?> plugin : computationPlugins) {
+        for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectAttribute) {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
@@ -418,7 +418,8 @@ public class CrawlerService implements ICrawlerService {
         esRepos.save(tenant, dataset);
     }
 
-    private void computeDatasetAttribute(Set<IComputedAttribute<?>> pComputationPlugins, List<DataObject> pContent) {
+    private void computeDatasetAttribute(Set<IComputedAttribute<DataObject, ?>> pComputationPlugins,
+            List<DataObject> pContent) {
         pComputationPlugins.forEach(plugin -> plugin.compute(pContent));
     }
 

@@ -43,9 +43,9 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
         if (pValue.getMode().equals(ComputationMode.COMPUTED) && (computationConf != null)
                 && computationConf.getInterfaceName().equals(IComputedAttribute.class.getName())) {
 
-            IComputedAttribute<?> plugin;
+            IComputedAttribute<?, ?> plugin;
             try {
-                plugin = (IComputedAttribute<?>) Class.forName(computationConf.getPluginClassName()).newInstance();
+                plugin = (IComputedAttribute<?, ?>) Class.forName(computationConf.getPluginClassName()).newInstance();
                 return plugin.getSupported().equals(pValue.getAttribute().getType());
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 LOG.error("ModelAttrAssoc of id: " + pValue.getId()

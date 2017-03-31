@@ -31,7 +31,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  */
 @Plugin(id = "MaxDateAttribute", author = "Sylvain VISSIERE-GUERINET",
         description = "allows to compute the maximum of a DateAttribute according to a collection of data")
-public class MaxDateAttribute implements IComputedAttribute<LocalDateTime> {
+public class MaxDateAttribute implements IComputedAttribute<DataObject, LocalDateTime> {
 
     @Autowired
     private IAttributeModelService attModelService;
@@ -62,24 +62,20 @@ public class MaxDateAttribute implements IComputedAttribute<LocalDateTime> {
      * This implementation only compute on a collection of {@link DataObject}
      */
     @Override
-    public void compute(Collection<?> pPartialData) {
-        if (pPartialData.getClass().getTypeName().contains("<" + DataObject.class.getCanonicalName() + ">")) {
-            @SuppressWarnings("unchecked")
-            Collection<DataObject> data = (Collection<DataObject>) pPartialData;
-            for (DataObject datum : data) {
-                if (attributeToCompute.getFragment().isDefaultFragment()) {
-                    // the attribute is in the default fragment so it has at the root level of properties
-                    getMaxDate(datum.getProperties());
-                } else {
-                    // the attribute is in a fragment so we have to be get the right fragment(ObjectAttribute) before we
-                    // can access the attribute
-                    Set<AbstractAttribute<?>> candidates = datum.getProperties().stream()
-                            .filter(p -> (p instanceof ObjectAttribute)
-                                    && p.getName().equals(attributeToCompute.getFragment().getName()))
-                            .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
-                            .collect(Collectors.toSet());
-                    getMaxDate(candidates);
-                }
+    public void compute(Collection<DataObject> pPartialData) {
+        for (DataObject datum : pPartialData) {
+            if (attributeToCompute.getFragment().isDefaultFragment()) {
+                // the attribute is in the default fragment so it has at the root level of properties
+                getMaxDate(datum.getProperties());
+            } else {
+                // the attribute is in a fragment so we have to be get the right fragment(ObjectAttribute) before we
+                // can access the attribute
+                Set<AbstractAttribute<?>> candidates = datum.getProperties().stream()
+                        .filter(p -> (p instanceof ObjectAttribute)
+                                && p.getName().equals(attributeToCompute.getFragment().getName()))
+                        .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
+                        .collect(Collectors.toSet());
+                getMaxDate(candidates);
             }
         }
     }

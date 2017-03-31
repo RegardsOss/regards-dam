@@ -43,5 +43,5 @@ public interface IEntitiesService {
      * @param pEntity entity we are interrested to get computation plugins
      * @return instanciated plugins so computation can be executed
      */
-    <T extends IComputedAttribute<?>> Set<T> getComputationPlugins(Dataset pEntity);
+    <T extends IComputedAttribute<DataObject, ?>> Set<T> getComputationPlugins(Dataset pEntity);
 }

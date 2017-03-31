@@ -52,6 +52,27 @@ import fr.cnes.regards.modules.models.domain.Model;
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
     /**
+     * Information Package ID for REST request
+     */
+    @Column(unique = true, nullable = false)
+    @Convert(converter = UrnConverter.class)
+    @Valid
+    protected UniformResourceName ipId;
+
+    @NotNull
+    @Column(length = 128, nullable = false)
+    protected String label;
+
+    /**
+     * model that this entity is respecting
+     */
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
+            updatable = false)
+    protected Model model;
+
+    /**
      * last time the entity was updated
      */
     @PastOrNow
@@ -74,23 +95,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Long id;
 
     /**
-     * Information Package ID for REST request
-     */
-    @Column(unique = true, nullable = false)
-    @Convert(converter = UrnConverter.class)
-    @Valid
-    protected UniformResourceName ipId;
-
-    /**
      * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
      * REST request If no SIP ID is there it means it's not an AIP?
      */
     @Column
     protected String sipId;
-
-    @NotNull
-    @Column(length = 128, nullable = false)
-    protected String label;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -118,15 +127,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Column(columnDefinition = "jsonb")
     @Valid
     protected Set<AbstractAttribute<?>> properties;
-
-    /**
-     * model that this entity is respecting
-     */
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
-            updatable = false)
-    protected Model model;
 
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;

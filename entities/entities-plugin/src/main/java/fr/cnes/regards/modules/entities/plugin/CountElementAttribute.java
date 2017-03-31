@@ -18,13 +18,13 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
- * This implementation allows to compute the number of element of a {@link Dataset}
+ * This implementation allows to compute the number of {@link DataObject} of a {@link Dataset}
  *
  * @author Sylvain Vissiere-Guerinet
  */
 @Plugin(id = "CountElementAttribute", author = "Sylvain Vissiere-Guerinet",
-        description = "allows to compute the number of element of a Dataset")
-public class CountElementAttribute implements IComputedAttribute<Long> {
+        description = "allows to compute the number of data of a Dataset")
+public class CountElementAttribute implements IComputedAttribute<DataObject, Long> {
 
     @Autowired
     private IAttributeModelService attModelService;
@@ -52,10 +52,9 @@ public class CountElementAttribute implements IComputedAttribute<Long> {
     }
 
     @Override
-    public void compute(Collection<?> pPartialData) {
-        if (pPartialData.getClass().getTypeName().contains("<" + DataObject.class.getCanonicalName() + ">")) {
-            result += pPartialData.size();
-        }
+    public void compute(Collection<DataObject> pPartialData) {
+        Collection<DataObject> data = pPartialData;
+        result += data.size();
     }
 
     @Override

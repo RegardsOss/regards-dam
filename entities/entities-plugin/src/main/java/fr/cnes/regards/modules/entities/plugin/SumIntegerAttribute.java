@@ -30,7 +30,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  */
 @Plugin(id = "SumIntegerAttribute", author = "Sylvain Vissiere-Guerinet",
         description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name")
-public class SumIntegerAttribute implements IComputedAttribute<Integer> {
+public class SumIntegerAttribute implements IComputedAttribute<DataObject, Integer> {
 
     @Autowired
     private IAttributeModelService attModelService;
@@ -58,24 +58,20 @@ public class SumIntegerAttribute implements IComputedAttribute<Integer> {
     }
 
     @Override
-    public void compute(Collection<?> pPartialData) {
-        if (pPartialData.getClass().getTypeName().contains("<" + DataObject.class.getCanonicalName() + ">")) {
-            @SuppressWarnings("unchecked")
-            Collection<DataObject> data = (Collection<DataObject>) pPartialData;
-            for (DataObject datum : data) {
-                if (attributeToCompute.getFragment().isDefaultFragment()) {
-                    // the attribute is in the default fragment so it has at the root level of properties
-                    doSum(datum.getProperties());
-                } else {
-                    // the attribute is in a fragment so we have to be get the right fragment(ObjectAttribute) before we
-                    // can access the attribute
-                    Set<AbstractAttribute<?>> candidates = datum.getProperties().stream()
-                            .filter(p -> (p instanceof ObjectAttribute)
-                                    && p.getName().equals(attributeToCompute.getFragment().getName()))
-                            .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
-                            .collect(Collectors.toSet());
-                    doSum(candidates);
-                }
+    public void compute(Collection<DataObject> pPartialData) {
+        for (DataObject datum : pPartialData) {
+            if (attributeToCompute.getFragment().isDefaultFragment()) {
+                // the attribute is in the default fragment so it has at the root level of properties
+                doSum(datum.getProperties());
+            } else {
+                // the attribute is in a fragment so we have to be get the right fragment(ObjectAttribute) before we
+                // can access the attribute
+                Set<AbstractAttribute<?>> candidates = datum.getProperties().stream()
+                        .filter(p -> (p instanceof ObjectAttribute)
+                                && p.getName().equals(attributeToCompute.getFragment().getName()))
+                        .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
+                        .collect(Collectors.toSet());
+                doSum(candidates);
             }
         }
     }
