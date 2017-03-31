@@ -39,5 +39,9 @@
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>module-plugins-domain</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-regards</artifactId>
+		</dependency>
 	</dependencies>
 </project>
