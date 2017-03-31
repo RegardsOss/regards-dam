@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * LICENSE_PLACEHOLDER
 
  */
@@ -13,8 +13,6 @@ import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.Module;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -61,7 +59,7 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * The constructor with an instance of the {@link PluginService}
-     * 
+     *
      * @param pPluginService
      *            The {@link PluginService} to used by this service
      * @param pDBConnectionService
@@ -115,7 +113,7 @@ public class DataSourceService implements IDataSourceService {
     @Override
     public List<DataSource> getAllDataSources() {
         List<DataSource> dataSources = new ArrayList<>();
-        
+
         LOGGER.info("getAllDataSources");
 
         service.getPluginConfigurationsByType(IDataSourcePlugin.class).forEach(c -> {
@@ -131,17 +129,17 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource createDataSource(DataSource pDataSource) throws ModuleException {
-        LOGGER.info("createDataSource : "+ pDataSource.getLabel());
-        
+        LOGGER.info("createDataSource : " + pDataSource.getLabel());
+
         try {
 
-            if (pDataSource.getTableName() != null && pDataSource.getFromClause() == null) {
-                LOGGER.info("table name : "+ pDataSource.getTableName());
+            if ((pDataSource.getTableName() != null) && (pDataSource.getFromClause() == null)) {
+                LOGGER.info("table name : " + pDataSource.getTableName());
                 return getDataSourceFromPluginConfiguration(createDataSourceFromSingleTable(pDataSource));
             }
 
-            if (pDataSource.getTableName() == null && pDataSource.getFromClause() != null) {
-                LOGGER.info("from clause : "+ pDataSource.getFromClause());
+            if ((pDataSource.getTableName() == null) && (pDataSource.getFromClause() != null)) {
+                LOGGER.info("from clause : " + pDataSource.getFromClause());
                 return getDataSourceFromPluginConfiguration(createDataSourceFromComplexRequest(pDataSource));
             }
         } catch (IOException e) {
@@ -149,7 +147,7 @@ public class DataSourceService implements IDataSourceService {
             throw new ModuleException("Unable to converts a PluginConfiguration to a Datasourceobject");
         }
 
-        ModuleException ex= new ModuleException("The incoming datasource is inconsistent");
+        ModuleException ex = new ModuleException("The incoming datasource is inconsistent");
         LOGGER.error(ex.getMessage());
         throw ex;
     }
@@ -157,15 +155,15 @@ public class DataSourceService implements IDataSourceService {
     /**
      * Create a {@link PluginConfiguration} for a plugin's type {@link IDataSourceFromSingleTablePlugin} with a
      * {@link DataSource}.
-     * 
+     *
      * @param pDataSource
      *            the {@link DataSource} to used to create the {@link PluginConfiguration}
      * @return the {@link PluginConfiguration} created
      * @throws ModuleException
      */
     private PluginConfiguration createDataSourceFromSingleTable(DataSource pDataSource) throws ModuleException {
-        LOGGER.info("createDataSource : "+ pDataSource.getLabel());
-        
+        LOGGER.info("createDataSource : " + pDataSource.getLabel());
+
         PluginMetaData metaData = service.checkPluginClassName(IDataSourceFromSingleTablePlugin.class,
                                                                pDataSource.getPluginClassName());
         return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getLabel(),
@@ -174,15 +172,15 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * Create a {@link PluginConfiguration} for a plugin's type {@link IDataSourcePlugin} with a {@link DataSource}
-     * 
+     *
      * @param pDataSource
      *            the {@link DataSource} to used to create the {@link PluginConfiguration}
      * @return the {@link PluginConfiguration} created
      * @throws ModuleException
      */
     private PluginConfiguration createDataSourceFromComplexRequest(DataSource pDataSource) throws ModuleException {
-        LOGGER.info("createDataSource : "+ pDataSource.getLabel());
-        
+        LOGGER.info("createDataSource : " + pDataSource.getLabel());
+
         PluginMetaData metaData = service.checkPluginClassName(IDataSourcePlugin.class,
                                                                pDataSource.getPluginClassName());
         return service.savePluginConfiguration(new PluginConfiguration(metaData, pDataSource.getLabel(),
@@ -191,7 +189,7 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * Crate a {@link PluginParametersFactory} with the parameters connection et model.
-     * 
+     *
      * @param pDataSource
      *            the {@link DataSource} to used
      * @return the {@link PluginParametersFactory} created
@@ -210,7 +208,7 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * Create a {@link List} of {@link PluginParameter} for a pluin's type type {@link IDataSourceFromSingleTablePlugin}
-     * 
+     *
      * @param pDataSource
      *            the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
@@ -224,7 +222,7 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * Create a {@link List} of {@link PluginParameter} for a pluin's type type {@link IDataSourcePlugin}
-     * 
+     *
      * @param pDataSource
      *            the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
@@ -239,7 +237,7 @@ public class DataSourceService implements IDataSourceService {
     @Override
     public DataSource getDataSource(Long pId) throws EntityNotFoundException {
         LOGGER.info("getDataSource : " + pId);
-        
+
         try {
             return getDataSourceFromPluginConfiguration(service.getPluginConfiguration(pId));
         } catch (ModuleException e) {
@@ -255,18 +253,19 @@ public class DataSourceService implements IDataSourceService {
     @Override
     public DataSource updateDataSource(DataSource pDataSource) throws ModuleException {
         LOGGER.info("updateDataSource : " + pDataSource.getLabel());
-        
+
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDataSource.getPluginConfigurationId());
 
         // Manage the change between a DataSource from a single table and a from clause
         PluginParameter paramTableName = plgConf.getParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM);
-        if (paramTableName != null && pDataSource.getFromClause() != null && !"".equals(pDataSource.getFromClause())) {
+        if ((paramTableName != null) && (pDataSource.getFromClause() != null)
+                && !"".equals(pDataSource.getFromClause())) {
             plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters()).removeParameter(paramTableName)
                     .addParameterPluginConfiguration(IDataSourcePlugin.FROM_CLAUSE, null).getParameters());
         } else {
             PluginParameter paramFromClause = plgConf.getParameter(IDataSourcePlugin.FROM_CLAUSE);
-            if (paramFromClause != null && pDataSource.getTableName() != null
+            if ((paramFromClause != null) && (pDataSource.getTableName() != null)
                     && !"".equals(pDataSource.getTableName())) {
                 plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters())
                         .removeParameter(paramFromClause)
@@ -289,14 +288,14 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public void deleteDataSouce(Long pId) throws ModuleException {
-        LOGGER.info("deleteDataSouce : "+ pId);
-        
+        LOGGER.info("deleteDataSouce : " + pId);
+
         service.deletePluginConfiguration(pId);
     }
 
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DataSource} attribute
-     * 
+     *
      * @param pPlgParam
      *            a {@link PluginParameter} to update
      * @param pDataSource
@@ -329,14 +328,14 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * Update a {@link PluginParameter} of type connection
-     * 
+     *
      * @param pPlgParam
      *            a {@link PluginParameter} to update
      * @param pDataSource
      *            a {@link DataSource}
      */
     private void mergePluginConfigurationParameter(PluginParameter pPlgParam, DataSource pDataSource) {
-        if (pPlgParam.getPluginConfiguration() == null || !pPlgParam.getPluginConfiguration().getId()
+        if ((pPlgParam.getPluginConfiguration() == null) || !pPlgParam.getPluginConfiguration().getId()
                 .equals(pDataSource.getPluginConfigurationConnectionId())) {
             pPlgParam.setPluginConfiguration(null);
 
@@ -351,7 +350,7 @@ public class DataSourceService implements IDataSourceService {
 
     /**
      * Converts a {@link PluginConfiguration} to a {@link DataSource}.</br>
-     * 
+     *
      * @param pPluginConf
      *            the {@link PluginConfiguration} to converts
      * @return the {@link DataSource} created

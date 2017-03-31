@@ -69,7 +69,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
         if (pDate != null) {
             return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + WHERE
-                    + this.keywordLastModificationDate + buildLimitPart(pPageable);
+                    + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + buildLimitPart(pPageable);
         } else {
             return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause()
                     + buildLimitPart(pPageable);
@@ -78,7 +78,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     protected String getCountRequest(LocalDateTime pDate) {
         if (pDate != null) {
-            return SELECT_COUNT + getFromClause() + WHERE + this.keywordLastModificationDate;
+            return SELECT_COUNT + getFromClause() + WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
 
         } else {
             return SELECT_COUNT + getFromClause();
@@ -87,7 +87,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     }
 
     /**
-     * 
+     *
      * @param pTenant
      * @param pPageable
      * @return
@@ -97,7 +97,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     }
 
     /**
-     * 
+     *
      * @param pTenant
      * @param pPageable
      * @param pDate
@@ -123,7 +123,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     /**
      * Add to the SQL request the part to fetch only a portion of the results.
-     * 
+     *
      * @param pPage
      *            the page of the element to fetch
      * @return the SQL request

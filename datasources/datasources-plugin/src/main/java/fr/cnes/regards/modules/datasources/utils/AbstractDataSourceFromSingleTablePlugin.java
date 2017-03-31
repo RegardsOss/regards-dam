@@ -107,11 +107,11 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     /**
      * Build the SELECT request.</br>
      * Add the key word "%last_modification_date%" in the WHERE clause.
-     * 
+     *
      * @param pPageable
-     * 
+     *
      * @param pDate
-     * 
+     *
      * @return the SELECT request
      */
     protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
@@ -122,21 +122,24 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
             if (selectRequest.contains(WHERE)) {
                 // Add at the beginning of the where clause
                 int pos = selectRequest.indexOf(WHERE);
-                selectRequest = selectRequest.substring(0, pos) + WHERE + this.keywordLastModificationDate + AND
+                selectRequest = selectRequest.substring(0, pos) + WHERE
+                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + AND
                         + selectRequest.substring(pos + WHERE.length(), selectRequest.length());
             } else if (selectRequest.contains(ORDER_BY)) {
                 // Add before the order by clause
                 int pos = selectRequest.indexOf(ORDER_BY);
-                selectRequest = selectRequest.substring(0, pos) + WHERE + this.keywordLastModificationDate + SPACE
+                selectRequest = selectRequest.substring(0, pos) + WHERE
+                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + SPACE
                         + selectRequest.substring(pos, selectRequest.length());
             } else if (selectRequest.contains(LIMIT)) {
                 // Add before the limit clause
                 int pos = selectRequest.indexOf(LIMIT);
-                selectRequest = selectRequest.substring(0, pos) + WHERE + this.keywordLastModificationDate + SPACE
+                selectRequest = selectRequest.substring(0, pos) + WHERE
+                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + SPACE
                         + selectRequest.substring(pos, selectRequest.length());
             } else {
                 // Add at the end of the request
-                selectRequest += WHERE + this.keywordLastModificationDate;
+                selectRequest += WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
             }
         }
 
@@ -147,7 +150,8 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         if (pDate == null) {
             return sqlGenerator.count(tableDescription);
         } else {
-            return sqlGenerator.count(tableDescription) + WHERE + this.keywordLastModificationDate;
+            return sqlGenerator.count(tableDescription) + WHERE
+                    + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
         }
     }
 
