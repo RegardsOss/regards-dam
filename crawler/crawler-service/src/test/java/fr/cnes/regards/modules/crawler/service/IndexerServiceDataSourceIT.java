@@ -55,6 +55,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -95,6 +96,9 @@ public class IndexerServiceDataSourceIT {
 
     @Autowired
     private IModelService modelService;
+
+    @Autowired
+    private IModelRepository modelRepository;
 
     @Autowired
     private IDatasetService dsService;
@@ -143,6 +147,9 @@ public class IndexerServiceDataSourceIT {
 
     @Before
     public void setUp() throws Exception {
+        entityRepos.deleteAll();
+        modelRepository.deleteAll();
+
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
         // Register model attributes
@@ -350,14 +357,6 @@ public class IndexerServiceDataSourceIT {
 
         // Retrieve dataset1 from ES
         dataset1 = (Dataset) searchService.get(dataset1.getIpId());
-        int i = 0;
-        while (dataset1 == null) {
-            Thread.sleep(1000);
-            i++;
-            if (i == 3) {
-                break;
-            }
-        }
         Assert.assertNotNull(dataset1);
 
         //SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
