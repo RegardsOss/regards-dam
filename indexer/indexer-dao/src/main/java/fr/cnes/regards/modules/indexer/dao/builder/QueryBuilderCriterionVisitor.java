@@ -11,7 +11,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
 import com.vividsolutions.jts.geom.Coordinate;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
@@ -161,8 +160,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         try {
             return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newCircleBuilder()
                     .center(new Coordinate(center[0], center[1])).radius(criterion.getRadius()));
-        } catch (IOException ioe) {
-            throw Throwables.propagate(ioe);
+        } catch (IOException ioe) { // Never occurs
+            throw new RuntimeException(ioe); // NOSONAR
         }
     }
 
@@ -177,8 +176,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         }
         try {
             return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newPolygon(coordBuilder));
-        } catch (IOException ioe) {
-            throw Throwables.propagate(ioe);
+        } catch (IOException ioe) { // Never occurs
+            throw new RuntimeException(ioe); // NOSONAR
         }
 
     }

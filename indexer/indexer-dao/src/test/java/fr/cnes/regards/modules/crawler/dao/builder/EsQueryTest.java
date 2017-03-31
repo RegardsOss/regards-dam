@@ -577,6 +577,7 @@ public class EsQueryTest {
         public T upperBound;
     }
 
+    @SuppressWarnings("unused")
     private static class Properties implements Serializable, Comparable<Properties> {
 
         private int size;

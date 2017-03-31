@@ -65,7 +65,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -180,19 +179,15 @@ public class EsRepository implements IEsRepository {
      */
     public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
             @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
-            @Value("${elasticsearch.cluster.name}") String pEsClusterName) {
+            @Value("${elasticsearch.cluster.name}") String pEsClusterName) throws UnknownHostException {
         this.gson = pGson;
         this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
         this.esPort = pEsPort;
         this.esClusterName = pEsClusterName;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        try {
-            client.addTransportAddress(new InetSocketTransportAddress(
-                    InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
-        } catch (final UnknownHostException e) {
-            Throwables.propagate(e);
-        }
+        client.addTransportAddress(new InetSocketTransportAddress(
+                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
@@ -246,7 +241,7 @@ public class EsRepository implements IEsRepository {
             }
             return gson.fromJson(response.getSourceAsString(), pClass);
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -284,7 +279,7 @@ public class EsRepository implements IEsRepository {
                 return (response.getResult() == Result.UPDATED);
             }
         } catch (final IOException jpe) {
-            throw Throwables.propagate(jpe);
+            throw new RuntimeException(jpe); // NOSONAR
         }
     }
 
@@ -405,7 +400,7 @@ public class EsRepository implements IEsRepository {
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -465,7 +460,7 @@ public class EsRepository implements IEsRepository {
                 return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
             }
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -519,7 +514,7 @@ public class EsRepository implements IEsRepository {
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (R) o).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -532,7 +527,7 @@ public class EsRepository implements IEsRepository {
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (R) o).map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -546,7 +541,7 @@ public class EsRepository implements IEsRepository {
             return objects.stream().flatMap(o -> Arrays.stream((R[]) o)).distinct().filter(filterPredicate)
                     .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -766,7 +761,7 @@ public class EsRepository implements IEsRepository {
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
