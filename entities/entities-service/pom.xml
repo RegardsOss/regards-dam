@@ -42,6 +42,14 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-plugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-domain</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
@@ -59,8 +67,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>plugins-regards-starter</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

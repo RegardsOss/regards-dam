@@ -37,7 +37,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRes
  * Test module API
  *
  * @author msordi
- *
  */
 @MultitenantTransactional
 public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
@@ -49,7 +48,6 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
      * Restriction method mapping
-     *
      */
     private static final String RESTRICTION_MAPPING = "/restrictions";
 
@@ -66,7 +64,6 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
      * Test get attributes
-     *
      */
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Requirement("REGARDS_DSL_DAM_MOD_020")
@@ -122,12 +119,6 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_MOD_020")
     public void createFloatIntervalAttribute() {
         createAttribute("FLOAT_INTERVAL_ATT", "float interval description", AttributeType.DOUBLE_INTERVAL);
-    }
-
-    @Test
-    @Requirement("REGARDS_DSL_DAM_MOD_020")
-    public void createGeoAttribute() {
-        createAttribute("GEO", "geo description", AttributeType.GEOMETRY);
     }
 
     @Test
@@ -193,9 +184,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * POST a new attribute
      *
-     * @param pAttributeModel
-     *            the attribute
-     *
+     * @param pAttributeModel the attribute
      * @return {@link ResultActions}
      */
     private ResultActions createAttribute(AttributeModel pAttributeModel) {
@@ -218,16 +207,11 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * POST a new attribute
      *
-     * @param pName
-     *            name
-     * @param pDescription
-     *            description
-     * @param pType
-     *            type
-     * @param pFragment
-     *            fragment
-     * @param pRestriction
-     *            restriction
+     * @param pName name
+     * @param pDescription description
+     * @param pType type
+     * @param pFragment fragment
+     * @param pRestriction restriction
      * @return {@link ResultActions}
      */
     private ResultActions createAttribute(String pName, String pDescription, AttributeType pType, Fragment pFragment,
@@ -322,9 +306,8 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     /**
-     * Test attribute update. Only description is updatable.
-     *
-     * FIXME : in same transaction, this test doesn't work even if correct data is stored in database.
+     * Test attribute update. Only description is updatable. FIXME : in same transaction, this test doesn't work even if
+     * correct data is stored in database.
      */
     @Test
     @Ignore

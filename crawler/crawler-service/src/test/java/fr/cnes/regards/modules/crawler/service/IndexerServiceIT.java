@@ -6,7 +6,9 @@ package fr.cnes.regards.modules.crawler.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -96,7 +98,7 @@ public class IndexerServiceIT {
 
         // Creating a Collection with all types of attributes
         Collection collection = new Collection(model, tenant, "coll1");
-        List<AbstractAttribute<?>> attributes = new ArrayList<>();
+        Set<AbstractAttribute<?>> attributes = new HashSet<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
         gsonAttributeFactory.registerSubtype(tenant, DateArrayAttribute.class, "dateArrayAtt");
@@ -222,7 +224,7 @@ public class IndexerServiceIT {
 
     private Collection createCollection(Model collModel, int i) {
         Collection collection = new Collection(collModel, SEARCH, "coll" + i);
-        List<AbstractAttribute<?>> attributes = new ArrayList<>();
+        Set<AbstractAttribute<?>> attributes = new HashSet<>();
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
         attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
@@ -238,7 +240,7 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
         ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
-        //        SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
+        // SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
         SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities(SEARCH);
         Page<? extends AbstractEntity> collPage = searchService.search(searchKey, 10, criterion);
         int count = 0;

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+	<name>dataModel</name>
+	<description>et une petite description parce que je le vaut bien</description>
+	<version>Version</version>
+	<type>DATA</type>
+	<attribute>
+		<name>sizeInteger</name>
+		<type>INTEGER</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>sizeLong</name>
+		<type>LONG</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+</model>

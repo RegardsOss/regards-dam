@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
@@ -55,6 +58,7 @@ import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidat
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -66,6 +70,7 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Abstract parameterized entity service
+ *
  * @param <U> Entity type
  * @author oroussel
  */
@@ -174,7 +179,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty()) && (pAbstractEntity.getProperties() != null)) {
+        if (((modAtts == null) || modAtts.isEmpty())
+                && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity.getProperties().isEmpty()))) {
             pErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                 "No properties defined in corresponding model but trying to create.");
         }
@@ -203,6 +209,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Validate an attribute with its corresponding model attribute
+     *
      * @param pAttMap attribue map
      * @param pModelAttribute model attribute
      * @param pErrors validation errors
@@ -211,43 +218,48 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttrAssoc pModelAttribute,
             Errors pErrors, boolean pManageAlterable) {
 
-        AttributeModel attModel = pModelAttribute.getAttribute();
-        String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
-        LOGGER.debug(String.format("Computed key : \"%s\"", key));
+        // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
+        // missing and is added during the crawling process
+        if (ComputationMode.GIVEN.equals(pModelAttribute.getMode())) {
+            AttributeModel attModel = pModelAttribute.getAttribute();
+            String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
+            LOGGER.debug(String.format("Computed key : \"%s\"", key));
 
-        // Retrieve attribute
-        AbstractAttribute<?> att = pAttMap.get(key);
+            // Retrieve attribute
+            AbstractAttribute<?> att = pAttMap.get(key);
 
-        // Null value check
-        if (att == null) {
-            String messageKey = "error.missing.required.attribute.message";
-            String defaultMessage = String.format("Missing required attribute \"%s\".", key);
-            if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
-                pErrors.reject(messageKey, defaultMessage);
+            // Null value check
+            if (att == null) {
+                String messageKey = "error.missing.required.attribute.message";
+                String defaultMessage = String.format("Missing required attribute \"%s\".", key);
+                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                    pErrors.reject(messageKey, defaultMessage);
+                    return;
+                }
+                if (!pManageAlterable && !attModel.isOptional()) {
+                    pErrors.reject(messageKey, defaultMessage);
+                    return;
+                }
+                LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
                 return;
             }
-            if (!pManageAlterable && !attModel.isOptional()) {
-                pErrors.reject(messageKey, defaultMessage);
-                return;
-            }
-            LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
-            return;
-        }
 
-        // Do validation
-        for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
-            if (validator.supports(att.getClass())) {
-                validator.validate(att, pErrors);
-            } else {
-                String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
-                                                      validator.getClass().getName(), key);
-                pErrors.reject("error.unsupported.validator.message", defaultMessage);
+            // Do validation
+            for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
+                if (validator.supports(att.getClass())) {
+                    validator.validate(att, pErrors);
+                } else {
+                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                          validator.getClass().getName(), key);
+                    pErrors.reject("error.unsupported.validator.message", defaultMessage);
+                }
             }
         }
     }
 
     /**
      * Compute available validators
+     *
      * @param pModelAttribute {@link ModelAttrAssoc}
      * @param pAttributeKey attribute key
      * @param pManageAlterable manage update or not
@@ -278,12 +290,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Build real attribute map extracting namespace from {@link ObjectAttribute} (i.e. fragment name)
+     *
      * @param pAttMap Map to build
      * @param pNamespace namespace context
      * @param pAttributes {@link AbstractAttribute} list to analyze
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> pAttMap, String pNamespace,
-            final List<AbstractAttribute<?>> pAttributes) {
+            final Set<AbstractAttribute<?>> pAttributes) {
         if (pAttributes != null) {
             for (AbstractAttribute<?> att : pAttributes) {
                 // Compute value
@@ -361,8 +374,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * Publish events to AMQP, one event by IpId
      *
-     * @param pIpIds
-     *            ipId URNs of entities that need an Event publication onto AMQP
+     * @param pIpIds ipId URNs of entities that need an Event publication onto AMQP
      */
     private void publishEvents(Set<UniformResourceName> pIpIds) {
         publisher.publish(new EntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
@@ -371,6 +383,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     /**
      * If entity is a collection, find all tagged entities and retrieved their groups. Then find all collections tagging
      * this entity and recursively propagate entity group to them.
+     *
      * @param entity entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(T entity, Set<UniformResourceName> pUpdatedIpIds) {
@@ -416,16 +429,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * @param <T>
-     *            one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
-     * @param pEntity
-     *            entity being created
-     * @param pFile
-     *            the description of the entity
-     * @throws IOException
-     *             if description cannot be read
-     * @throws ModuleException
-     *             if description not conform to REGARDS requirements
+     * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
+     * @param pEntity entity being created
+     * @param pFile the description of the entity
+     * @throws IOException if description cannot be read
+     * @throws ModuleException if description not conform to REGARDS requirements
      */
     private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
@@ -482,6 +490,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Return true if file content type is acceptable (PDF or MARKDOWN)
+     *
      * @param pFile file
      * @return true or false
      */
@@ -494,6 +503,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Retrieve file charset
+     *
      * @param pFile description file from the user
      * @return file charset
      */
@@ -650,10 +660,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * @param pSource
-     *            Set of UniformResourceName
-     * @param pOther
-     *            Set of UniformResourceName to remove from pSource
+     * @param pSource Set of UniformResourceName
+     * @param pOther Set of UniformResourceName to remove from pSource
      * @return a new Set of UniformResourceName containing only the elements present into pSource and not in pOther
      */
     private Set<UniformResourceName> getDiff(Set<UniformResourceName> pSource, Set<UniformResourceName> pOther) {

@@ -70,6 +70,7 @@
 				<xs:element ref="restriction" minOccurs="0" />
 				<!-- For fragment creation, this element is not used and is skipped silently. -->
 				<xs:element ref="computationMode" minOccurs="0" />
+				<xs:element ref="configurationLabel" minOccurs="0" />
 				<!-- Custom attribute properties -->
 				<xs:element ref="property" minOccurs="0" maxOccurs="unbounded" />
 			</xs:sequence>
@@ -109,7 +110,6 @@
 			<xs:enumeration value="DOUBLE" />
 			<xs:enumeration value="DOUBLE_ARRAY" />
 			<xs:enumeration value="DOUBLE_INTERVAL" />
-			<xs:enumeration value="GEOMETRY" />
 			<xs:enumeration value="INTEGER" />
 			<xs:enumeration value="INTEGER_ARRAY" />
 			<xs:enumeration value="INTEGER_INTERVAL" />
@@ -243,8 +243,16 @@
 		<xs:simpleType>
 			<xs:restriction base="xs:string">
 				<xs:enumeration value="GIVEN" />
-				<xs:enumeration value="FROM_DESCENDANTS" />
-				<xs:enumeration value="CUSTOM" />
+				<xs:enumeration value="COMPUTED" />
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	
+	<!-- Define name -->
+	<xs:element name="configurationLabel">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:minLength value="1"/>
 			</xs:restriction>
 		</xs:simpleType>
 	</xs:element>

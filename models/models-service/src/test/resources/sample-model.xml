@@ -14,7 +14,7 @@
 		facetable="false">
 		<name>att_boolean</name>
 		<type>BOOLEAN</type>
-		<computationMode>CUSTOM</computationMode>
+		<computationMode>COMPUTED</computationMode>
 	</attribute>
 	<fragment>
 		<name>GEO</name>
@@ -31,25 +31,6 @@
 				</enumeration>
 			</restriction>
 			<computationMode>GIVEN</computationMode>
-		</attribute>
-		<attribute alterable="false" optional="false" queryable="false"
-			facetable="false">
-			<name>GEOMETRY</name>
-			<type>GEOMETRY</type>
-			<computationMode>GIVEN</computationMode>
-		</attribute>
-	</fragment>
-	<fragment>
-		<name>Contact</name>
-		<description>Contact information</description>
-		<attribute alterable="true" optional="true" queryable="true"
-			facetable="true">
-			<name>Phone</name>
-			<type>STRING</type>
-			<restriction>
-				<pattern>[0-9 ]{10}</pattern>
-			</restriction>
-			<computationMode>FROM_DESCENDANTS</computationMode>
 		</attribute>
 	</fragment>
 </model>

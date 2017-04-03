@@ -18,23 +18,25 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
 /**
  * @author Marc Sordi
- *
  */
 @MultitenantTransactional
 public class ImportModelTest extends AbstractRegardsTransactionalIT {
@@ -61,6 +63,9 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelAttrAssocService modelAttributeService;
 
+    @Autowired
+    private IPluginService pluginService;
+
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -83,13 +88,24 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
     /**
      * Import model
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_050")
     @Purpose("Import model - Allows to share model or add predefined model ")
     public void importSingleModel() throws ModuleException {
+
+        PluginMetaData metaData = new PluginMetaData();
+        metaData.setPluginId("tata");
+        metaData.setAuthor("toto");
+        metaData.setDescription("titi");
+        metaData.setVersion("tutu");
+        metaData.setInterfaceName(IComputedAttribute.class.getName());
+        metaData.setPluginClassName(TestComputedAttribute.class.getName());
+        PluginConfiguration conf = new PluginConfiguration(metaData, "ContactPluginConfTest");
+        pluginService.addPluginPackage(TestComputedAttribute.class.getPackage().getName());
+        pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
+        conf = pluginService.savePluginConfiguration(conf);
 
         importModel("model_it.xml");
 
@@ -100,7 +116,7 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         // Get model attributes
         final List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
         Assert.assertNotNull(modAtts);
-        final int expectedSize = 4;
+        final int expectedSize = 3;
         Assert.assertEquals(expectedSize, modAtts.size());
 
         for (ModelAttrAssoc modAtt : modAtts) {
@@ -140,38 +156,6 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
                 Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
             }
 
-            if ("GEOMETRY".equals(attModel.getName())) {
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.GEOMETRY, attModel.getType());
-                Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
-                Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
-                Assert.assertNull(attModel.getRestriction());
-
-                Assert.assertEquals("GEO", attModel.getFragment().getName());
-
-                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
-            }
-
-            if ("Phone".equals(attModel.getName())) {
-                Assert.assertNull(attModel.getDescription());
-                Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                Assert.assertTrue(attModel.isAlterable());
-                Assert.assertTrue(attModel.isFacetable());
-                Assert.assertTrue(attModel.isOptional());
-                Assert.assertTrue(attModel.isQueryable());
-                Assert.assertNotNull(attModel.getRestriction());
-
-                Assert.assertNotNull(attModel.getRestriction());
-                Assert.assertTrue(attModel.getRestriction() instanceof PatternRestriction);
-                final PatternRestriction pr = (PatternRestriction) attModel.getRestriction();
-                Assert.assertEquals("[0-9 ]{10}", pr.getPattern());
-
-                Assert.assertEquals("Contact", attModel.getFragment().getName());
-
-                Assert.assertEquals(ComputationMode.FROM_DESCENDANTS, modAtt.getMode());
-            }
         }
     }
 

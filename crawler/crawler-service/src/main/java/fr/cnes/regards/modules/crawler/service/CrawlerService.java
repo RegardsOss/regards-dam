@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.LocalDateTime;
@@ -7,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -40,17 +44,21 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
+import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
 /**
- * Crawler service.
- * <b>This service need @EnableAsync at Configuration and is used in conjunction with CrawlerInitializer</b>
+ * Crawler service. <b>This service need @EnableAsync at Configuration and is used in conjunction with
+ * CrawlerInitializer</b>
  */
 @Service
 public class CrawlerService implements ICrawlerService {
@@ -60,18 +68,16 @@ public class CrawlerService implements ICrawlerService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
 
     /**
-     * To avoid CPU overload, a delay is set between each loop of tenants event inspection.
-     * This delay is doubled each time no event has been pulled (limited to MAX_DELAY_MS).
-     * When an event is pulled (during a tenants event inspection), no wait is done and
-     * delay is reset to INITIAL_DELAY_MS
+     * To avoid CPU overload, a delay is set between each loop of tenants event inspection. This delay is doubled each
+     * time no event has been pulled (limited to MAX_DELAY_MS). When an event is pulled (during a tenants event
+     * inspection), no wait is done and delay is reset to INITIAL_DELAY_MS
      */
     private static final int INITIAL_DELAY_MS = 1;
 
     /**
-     * To avoid CPU overload, a delay is set between each loop of tenants event inspection.
-     * This delay is doubled each time no event has been pulled (limited to MAX_DELAY_MS).
-     * When an event is pulled (during a tenants event inspection), no wait is done and
-     * delay is reset to INITIAL_DELAY_MS
+     * To avoid CPU overload, a delay is set between each loop of tenants event inspection. This delay is doubled each
+     * time no event has been pulled (limited to MAX_DELAY_MS). When an event is pulled (during a tenants event
+     * inspection), no wait is done and delay is reset to INITIAL_DELAY_MS
      */
     private static final int MAX_DELAY_MS = 1000;
 
@@ -143,7 +149,7 @@ public class CrawlerService implements ICrawlerService {
      */
     @PostConstruct
     private void init() {
-        this.self = applicationContext.getBean(ICrawlerService.class);
+        self = applicationContext.getBean(ICrawlerService.class);
     }
 
     /**
@@ -151,12 +157,11 @@ public class CrawlerService implements ICrawlerService {
      */
     @PreDestroy
     private void endCrawl() {
-        this.stopAsked = true;
+        stopAsked = true;
     }
 
     /**
-     * Daemon process.
-     * Poll entity events on all tenants and update Elasticsearch to reflect Postgres database
+     * Daemon process. Poll entity events on all tenants and update Elasticsearch to reflect Postgres database
      */
     @Async
     @Override
@@ -165,7 +170,7 @@ public class CrawlerService implements ICrawlerService {
         // Infinite loop
         while (true) {
             // Manage termination
-            if (this.stopAsked) {
+            if (stopAsked) {
                 break;
             }
             boolean atLeastOnPoll = false;
@@ -197,9 +202,9 @@ public class CrawlerService implements ICrawlerService {
     }
 
     /**
-     * Try to do a transactional poll.
-     * If a poll is done but an exception occurs, the transaction is rolbacked and the event is still present
-     * into AMQP
+     * Try to do a transactional poll. If a poll is done but an exception occurs, the transaction is rolbacked and the
+     * event is still present into AMQP
+     *
      * @return true if a poll has been done, false otherwise
      */
     @Override
@@ -229,6 +234,7 @@ public class CrawlerService implements ICrawlerService {
 
     /**
      * Load given entity from database and update Elasticsearch
+     *
      * @param tenant concerned tenant (also index intoES)
      * @param ipId concerned entity IpId
      */
@@ -238,7 +244,7 @@ public class CrawlerService implements ICrawlerService {
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
             if (ipId.getEntityType() == EntityType.DATASET) {
-                this.manageDatasetDelete(tenant, ipId.toString());
+                manageDatasetDelete(tenant, ipId.toString());
             }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
         } else { // entity has been created or updated, it must be saved into ES
@@ -249,7 +255,7 @@ public class CrawlerService implements ICrawlerService {
             // Then save entity
             esRepos.save(tenant, entity);
             if (entity instanceof Dataset) {
-                this.manageDatasetUpdate((Dataset) entity);
+                manageDatasetUpdate((Dataset) entity);
             }
         }
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
@@ -257,6 +263,7 @@ public class CrawlerService implements ICrawlerService {
 
     /**
      * Load given entities from database and update Elasticsearch
+     *
      * @param tenant concerned tenant (also index intoES)
      * @param ipIds concerned entity IpIds
      */
@@ -271,7 +278,7 @@ public class CrawlerService implements ICrawlerService {
                 createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
-            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> this.manageDatasetUpdate((Dataset) e));
+            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> manageDatasetUpdate((Dataset) e));
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -282,6 +289,7 @@ public class CrawlerService implements ICrawlerService {
 
     /**
      * Search and update associated dataset data objects (ie remove dataset IpId from tags)
+     *
      * @param dataset concerned dataset
      */
     private void manageDatasetDelete(String tenant, String ipId) {
@@ -328,6 +336,7 @@ public class CrawlerService implements ICrawlerService {
 
     /**
      * Compute groups and model ids from tags
+     *
      * @param tenant tenant
      * @param groupsMultimap a multimap of { dataset IpId, groups }
      * @param modelIdMap a map of { dataset IpId, dataset model Id }
@@ -372,6 +381,7 @@ public class CrawlerService implements ICrawlerService {
 
     /**
      * Search and update associated dataset data objects (ie add dataset IpId into tags)
+     *
      * @param dataset concerned dataset
      */
     private void manageDatasetUpdate(Dataset dataset) {
@@ -393,17 +403,55 @@ public class CrawlerService implements ICrawlerService {
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                 DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
-        this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
+        updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
+        // lets compute computed attributes from the dataset model
+        Set<IComputedAttribute<DataObject, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
+        computeDatasetAttribute(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
-            this.updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId,
-                                                    page.getContent());
+            updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
+            computeDatasetAttribute(computationPlugins, page.getContent());
         }
+        // for each computation plugin lets add the computed attribute
+        for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
+            AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
+            if (attributeToAdd instanceof ObjectAttribute) {
+                ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
+                // the attribute is inside a fragment so lets find the right one to add the attribute inside it
+                Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
+                        .filter(attr -> (attr instanceof ObjectAttribute)
+                                && attr.getName().equals(attrInFragment.getName()))
+                        .findFirst();
+                if (candidate.isPresent()) {
+                    Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
+                    // the fragment is already here, lets remove the old properties if they exist
+                    properties.removeAll(attrInFragment.getValue());
+                    // and now set the new ones
+                    properties.addAll(attrInFragment.getValue());
+                } else {
+                    // the fragment is not here so lets create it by adding it
+                    dataset.getProperties().add(attrInFragment);
+                }
+            } else {
+                // the attribute is not inside a fragment so lets remove the old one if it exist and add the new one to
+                // the root
+                dataset.getProperties().remove(attributeToAdd);
+                dataset.getProperties().add(attributeToAdd);
+            }
+        }
+
+        esRepos.save(tenant, dataset);
+    }
+
+    private void computeDatasetAttribute(Set<IComputedAttribute<DataObject, ?>> pComputationPlugins,
+            List<DataObject> pContent) {
+        pComputationPlugins.forEach(plugin -> plugin.compute(pContent));
     }
 
     /**
      * Update data objects following a Dataset update
+     *
      * @param tenant tenant
      * @param dsIpId Dataset IpId (String)
      * @param groups Dataset groups (to add or update on all objects)

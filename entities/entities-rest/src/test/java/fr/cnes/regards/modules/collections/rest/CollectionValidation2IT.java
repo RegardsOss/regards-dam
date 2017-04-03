@@ -7,7 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,12 +34,10 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.rest.ModelController;
 
 /**
- *
  * Test collection validation
  *
  * @author Marc Sordi
  * @author Maxime Bouveron
- *
  */
 @DirtiesContext
 @MultitenantTransactional
@@ -143,8 +143,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Import a model
      *
-     * @param pFilename
-     *            model to import from resources folder
+     * @param pFilename model to import from resources folder
      */
     private void importModel(String pFilename) {
 
@@ -167,8 +166,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if a good collection is created
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test
     public void postCollection() throws ModuleException {
@@ -184,13 +182,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         collection.setSipId(sipId);
         collection.setCreationDate(LocalDateTime.now());
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -205,8 +202,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if error occurs when an attribute has a bad type
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test(expected = JsonParseException.class)
     public void postCollectionWithBadType() throws ModuleException {
@@ -220,7 +216,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         // bad values
         final int badRefValue = 5;
@@ -228,8 +224,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final String badActValue = "true";
         atts.add(AttributeBuilder.buildString(actAtt, badActValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -244,8 +239,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if an error occurs when giving an attribute a bad name
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test(expected = AssertionError.class)
     public void postCollectionWithBadAttributeName() throws ModuleException {
@@ -257,15 +251,13 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final Model model1 = modelRepository.findByName(missionName);
 
         // Collection
-        // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject("notGeo", AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, crsValue)));
+        atts.add(AttributeBuilder.buildObject("notGeo", AttributeBuilder.buildString(crsAtt, crsValue)));
 
         collection.setProperties(atts);
 
@@ -280,8 +272,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if an error occurs when an enumaration restriction is violated
      *
-     * @throws ModuleException
-     *             module exception
+     * @throws ModuleException module exception
      */
     @Test
     public void postCollectionWithWrongValue() throws ModuleException {
@@ -295,13 +286,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
-        final List<AbstractAttribute<?>> atts = new ArrayList<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
 
-        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildGeometry(coorAtt, coorValue),
-                                              AttributeBuilder.buildString(crsAtt, "notEarth")));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, "notEarth")));
 
         collection.setProperties(atts);
 

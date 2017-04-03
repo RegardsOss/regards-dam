@@ -9,10 +9,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
 
 @Configuration
-@EnableAutoConfiguration
+@EnableAutoConfiguration(exclude = { SecurityVoterAutoConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules" }) // , "fr.cnes.regards.framework.amqp" })
 public class ServiceConfiguration {
 
@@ -27,8 +28,8 @@ public class ServiceConfiguration {
     // }
 
     @Bean
-    public IPluginService pluginService() {
-        return Mockito.mock(IPluginService.class);
+    public IResourceService resourceService() {
+        return Mockito.mock(IResourceService.class);
     }
 
 }

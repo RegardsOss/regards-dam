@@ -32,11 +32,9 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionF
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
- *
  * Test attribute model service
  *
  * @author Marc Sordi
- *
  */
 public class AttributeModelServiceTest {
 
@@ -117,8 +115,7 @@ public class AttributeModelServiceTest {
     /**
      * Test attribute creation
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
@@ -138,9 +135,7 @@ public class AttributeModelServiceTest {
     }
 
     /**
-     *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test
     @Requirement("REGARDS_DSL_DAM_MOD_020")
@@ -148,7 +143,7 @@ public class AttributeModelServiceTest {
     @Purpose("Manage a GEO fragment (i.e. consistent object)")
     public void addAttributeInFragmentTest() throws ModuleException {
         final String attName = "COORDINATE";
-        final AttributeType attType = AttributeType.GEOMETRY;
+        final AttributeType attType = AttributeType.STRING;
         final Fragment fragment = Fragment.buildFragment("GEO", "Coordinate + CRS");
 
         final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType).fragment(fragment)
@@ -165,9 +160,7 @@ public class AttributeModelServiceTest {
     }
 
     /**
-     *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test(expected = UnsupportedRestrictionException.class)
     public void addAttributeWithUnsupportedRestriction() throws ModuleException {
@@ -188,8 +181,7 @@ public class AttributeModelServiceTest {
     /**
      * Add an already existing attribute
      *
-     * @throws ModuleException
-     *             when conflict is detected
+     * @throws ModuleException when conflict is detected
      */
     @Test(expected = EntityAlreadyExistsException.class)
     public void addConflictAttributeTest() throws ModuleException {

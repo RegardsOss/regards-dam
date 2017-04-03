@@ -45,7 +45,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationR
  * Test fragment service
  *
  * @author Marc Sordi
- *
  */
 @RunWith(MockitoJUnitRunner.class)
 public class FragmentServiceTest {
@@ -171,7 +170,7 @@ public class FragmentServiceTest {
     public void deleteNonEmptyFragment() throws ModuleException {
         final Long fragmentId = 1L;
         final List<AttributeModel> attModels = new ArrayList<>();
-        attModels.add(AttributeModelBuilder.build("MOCK", AttributeType.GEOMETRY).withoutRestriction());
+        attModels.add(AttributeModelBuilder.build("MOCK", AttributeType.STRING).withoutRestriction());
 
         Mockito.when(mockAttModelR.findByFragmentId(fragmentId)).thenReturn(attModels);
 
@@ -181,8 +180,7 @@ public class FragmentServiceTest {
     /**
      * Test fragment export
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test
     public void exportFragmentTest() throws ModuleException {
@@ -215,8 +213,7 @@ public class FragmentServiceTest {
     /**
      * Import fragment (See sample-fragment.xml)
      *
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @Test
     public void importFragmentTest() throws ModuleException {
