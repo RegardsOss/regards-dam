@@ -13,13 +13,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.validation.ComputedAttribute;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
 
@@ -32,11 +35,11 @@ import fr.cnes.regards.modules.models.schema.Attribute;
  * depending on the model.
  *
  * @author msordi
- *
  */
 @Entity
 @Table(name = "ta_model_att_att", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
 @SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "seq_model_att")
+@ComputedAttribute
 public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable<Long>, IXmlisable<Attribute> {
 
     /**
@@ -57,11 +60,13 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     /**
      * Whether this attribute in computed or not
      */
-    // TODO link to a calculation plugin
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private ComputationMode mode = ComputationMode.GIVEN;
+
+    @OneToOne
+    private PluginConfiguration computationConf;
 
     /**
      * Related model
@@ -82,9 +87,9 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
-        this.model = pModel;
-        this.pos = pPosition;
-        this.mode = ComputationMode.GIVEN;
+        model = pModel;
+        pos = pPosition;
+        mode = ComputationMode.GIVEN;
     }
 
     public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {// NOSONAR
@@ -122,7 +127,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     @Override
     public int compareTo(ModelAttrAssoc pOther) {
-        return this.pos - pOther.getPos();
+        return pos - pOther.getPos();
     }
 
     @Override
@@ -130,14 +135,14 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         Boolean result = Boolean.FALSE;
         if (pObj instanceof ModelAttrAssoc) {
             final ModelAttrAssoc modelAtt = (ModelAttrAssoc) pObj;
-            result = modelAtt.getAttribute().equals(this.getAttribute());
+            result = modelAtt.getAttribute().equals(getAttribute());
         }
         return result;
     }
 
     @Override
     public int hashCode() {
-        return this.getAttribute().hashCode();
+        return getAttribute().hashCode();
     }
 
     public Model getModel() {
@@ -160,6 +165,9 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     public Attribute toXml() {
         final Attribute xmlAtt = attribute.toXml();
         xmlAtt.setComputationMode(mode.toString());
+        if (computationConf != null) {
+            xmlAtt.setConfigurationLabel(computationConf.getLabel());
+        }
         return xmlAtt;
     }
 
@@ -170,8 +178,22 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         attModel.fromXml(pXmlElement);
         setAttribute(attModel);
         // Manage computation mode
-        if (pXmlElement.getComputationMode() != null) {
-            setMode(ComputationMode.valueOf(pXmlElement.getComputationMode()));
+        String computationModeString = pXmlElement.getComputationMode();
+        if (computationModeString != null) {
+            setMode(ComputationMode.valueOf(computationModeString));
+            if (computationModeString.equals(ComputationMode.COMPUTED.toString())) {
+                computationConf = new PluginConfiguration();
+                computationConf.setLabel(pXmlElement.getConfigurationLabel());
+            }
         }
     }
+
+    public PluginConfiguration getComputationConf() {
+        return computationConf;
+    }
+
+    public void setComputationConf(PluginConfiguration pComputationConf) {
+        computationConf = pComputationConf;
+    }
+
 }

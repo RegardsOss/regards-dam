@@ -26,9 +26,5 @@
 				</enumeration>
 			</restriction>
 		</attribute>
-		<attribute>
-			<name>coordinate</name>
-			<type>GEOMETRY</type>
-		</attribute>
 	</fragment>
 </model>

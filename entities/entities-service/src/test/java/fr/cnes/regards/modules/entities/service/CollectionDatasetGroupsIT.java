@@ -411,4 +411,5 @@ public class CollectionDatasetGroupsIT {
 
         dataSetService.update(dataset1.getId(), dataset2);
     }
+
 }

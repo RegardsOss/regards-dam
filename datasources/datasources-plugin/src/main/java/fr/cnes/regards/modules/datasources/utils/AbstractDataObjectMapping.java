@@ -19,8 +19,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -126,13 +128,10 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Get {@link DateAttribute}.
      *
-     * @param pRs
-     *            the {@link ResultSet}
-     * @param pAttrMapping
-     *            the {@link DataSourceAttributeMapping}
+     * @param pRs the {@link ResultSet}
+     * @param pAttrMapping the {@link DataSourceAttributeMapping}
      * @return a new {@link DateAttribute}
-     * @throws SQLException
-     *             if an error occurs in the {@link ResultSet}
+     * @throws SQLException if an error occurs in the {@link ResultSet}
      */
     protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException;
@@ -140,13 +139,10 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link DataSourceAttributeMapping}.
      *
-     * @param pRs
-     *            The {@link ResultSet} to read
-     * @param pAttrMapping
-     *            The {@link DataSourceAttributeMapping}
+     * @param pRs The {@link ResultSet} to read
+     * @param pAttrMapping The {@link DataSourceAttributeMapping}
      * @return the {@link LocalDateTime}
-     * @throws SQLException
-     *             An error occurred when try to read the {@link ResultSet}
+     * @throws SQLException An error occurred when try to read the {@link ResultSet}
      */
     protected LocalDateTime buildLocatDateTime(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException {
@@ -159,18 +155,12 @@ public abstract class AbstractDataObjectMapping {
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
      *
-     * @param pTenant
-     *            the tenant name
-     * @param pConn
-     *            a {@link Connection} to a database
-     * @param pSelectRequest
-     *            the SQL request
-     * @param pCountRequest
-     *            the SQL count request
-     * @param pPageable
-     *            the page information
-     * @param pDate
-     *            a {@link Date} used to apply returns the {@link DataObject} update or create after this date
+     * @param pTenant the tenant name
+     * @param pConn a {@link Connection} to a database
+     * @param pSelectRequest the SQL request
+     * @param pCountRequest the SQL count request
+     * @param pPageable the page information
+     * @param pDate a {@link Date} used to apply returns the {@link DataObject} update or create after this date
      * @return a page of {@link DataObject}
      */
     protected Page<DataObject> findAll(String pTenant, Connection pConn, String pSelectRequest, String pCountRequest,
@@ -210,12 +200,9 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Execute a SQL request to count the number of items
      *
-     * @param pStatement
-     *            a {@link Statement} used to execute the SQL request
-     * @param pCountRequest
-     *            the SQL count request
-     * @throws SQLException
-     *             an SQL error occurred
+     * @param pStatement a {@link Statement} used to execute the SQL request
+     * @param pCountRequest the SQL count request
+     * @throws SQLException an SQL error occurred
      */
     private void countItems(Statement pStatement, String pCountRequest) throws SQLException {
         if ((pCountRequest != null) && !pCountRequest.isEmpty() && (nbItems == RESET_COUNT)) {
@@ -231,18 +218,15 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
      *
-     * @param pTenant
-     *            the tenant name
-     * @param pRs
-     *            the {@link ResultSet}
+     * @param pTenant the tenant name
+     * @param pRs the {@link ResultSet}
      * @return the {@link DataObject} created
-     * @throws SQLException
-     *             An SQL error occurred
+     * @throws SQLException An SQL error occurred
      */
     protected DataObject processResultSet(String pTenant, ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
 
-        final List<AbstractAttribute<?>> attributes = new ArrayList<>();
+        final Set<AbstractAttribute<?>> attributes = new HashSet<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
 
         /**
@@ -293,13 +277,10 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Get an attribute define in the mapping in a {@link ResultSet}
      *
-     * @param pRs
-     *            the {@link ResultSet}
-     * @param pAttrMapping
-     *            the {@link DataSourceAttributeMapping}
+     * @param pRs the {@link ResultSet}
+     * @param pAttrMapping the {@link DataSourceAttributeMapping}
      * @return a new {@link AbstractAttribute}
-     * @throws SQLException
-     *             if an error occurs in the {@link ResultSet}
+     * @throws SQLException if an error occurs in the {@link ResultSet}
      */
     private AbstractAttribute<?> buildAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
             throws SQLException {
@@ -352,8 +333,7 @@ public abstract class AbstractDataObjectMapping {
      * Extracts a column label from a PL/SQL expression.</br>
      * The column label is placed after the word 'AS'.
      *
-     * @param pAttrMapping
-     *            The PL/SQL expression to analyze
+     * @param pAttrMapping The PL/SQL expression to analyze
      * @return the column label extracted from the PL/SQL
      */
     private String extractColumnName(String pAttrMapping) {
@@ -374,10 +354,8 @@ public abstract class AbstractDataObjectMapping {
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
      * {@link UUID#nameUUIDFromBytes(byte[]).
      *
-     * @param pTenant
-     *            the tenant name
-     * @param pVal
-     *            the value used to build the UUID
+     * @param pTenant the tenant name
+     * @param pVal the value used to build the UUID
      * @return the URN
      */
     private UniformResourceName buildUrn(String pTenant, String pVal) {
@@ -395,14 +373,10 @@ public abstract class AbstractDataObjectMapping {
      * <li>label
      * <li>description
      *
-     * @param pTenant
-     *            the tenant name
-     * @param pData
-     *            the current {@link DataObject} to build
-     * @param pAttr
-     *            the current {@link AbstractAttribute} to analyze
-     * @param pAttrMapping
-     *            the {@link DataSourceAttributeMapping} for the current attribute
+     * @param pTenant the tenant name
+     * @param pData the current {@link DataObject} to build
+     * @param pAttr the current {@link AbstractAttribute} to analyze
+     * @param pAttrMapping the {@link DataSourceAttributeMapping} for the current attribute
      */
     private void processInternalAttributes(String pTenant, DataObject pData, AbstractAttribute<?> pAttr,
             DataSourceAttributeMapping pAttrMapping) {
@@ -423,35 +397,38 @@ public abstract class AbstractDataObjectMapping {
             String val = pAttr.getValue().toString();
             pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
-        } else if (InternalAttributes.RAWDATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
-            StringAttribute str = (StringAttribute) pAttr.getValue();
-            if (pData.getFiles() == null) {
-                pData.setFiles(new ArrayList<>());
-            }
-            try {
-                DataType type = InternalAttributes.RAWDATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
-                DataFile dataFile = new DataFile();
-                dataFile.setDataType(type);
-                dataFile.setFileRef(new URI(str.getValue()));
-                pData.getFiles().add(dataFile);
-            } catch (URISyntaxException e) {
-                LOG.error(e.getMessage(), e);
-            }
-        } else if (InternalAttributes.DATEUPDATE.equals(internalAt)) {
-            pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-        } else if (InternalAttributes.LABEL.equals(internalAt)) {
-            StringAttribute str = (StringAttribute) pAttr.getValue();
-            pData.setLabel(str.getValue());
-        } else {
-            LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
-        }
+        } else
+            if (InternalAttributes.RAWDATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
+                StringAttribute str = (StringAttribute) pAttr.getValue();
+                if (pData.getFiles() == null) {
+                    pData.setFiles(new ArrayList<>());
+                }
+                try {
+                    DataType type = InternalAttributes.RAWDATA.equals(internalAt) ? DataType.RAWDATA
+                            : DataType.THUMBNAIL;
+                    DataFile dataFile = new DataFile();
+                    dataFile.setDataType(type);
+                    dataFile.setFileRef(new URI(str.getValue()));
+                    pData.getFiles().add(dataFile);
+                } catch (URISyntaxException e) {
+                    LOG.error(e.getMessage(), e);
+                }
+            } else
+                if (InternalAttributes.DATEUPDATE.equals(internalAt)) {
+                    pData.setLastUpdate((LocalDateTime) pAttr.getValue());
+                } else
+                    if (InternalAttributes.LABEL.equals(internalAt)) {
+                        StringAttribute str = (StringAttribute) pAttr.getValue();
+                        pData.setLabel(str.getValue());
+                    } else {
+                        LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
+                    }
     }
 
     /**
      * Build the select clause with the {@link List} of columns used for the mapping.
      *
-     * @param pColumns
-     *            the comulns used for the mapping
+     * @param pColumns the comulns used for the mapping
      * @return a {@link String} withe the columns separated by a comma
      */
     protected String buildColumnClause(String... pColumns) {
@@ -465,10 +442,8 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Replace the key word '%last_modification_date%' in the request to get the data from a date
      *
-     * @param pRequest
-     *            the SQL request
-     * @param pDate
-     *            the date to used to build the date filter
+     * @param pRequest the SQL request
+     * @param pDate the date to used to build the date filter
      * @return the SQL request with a from clause to filter the result since a date
      */
     private String buildDateStatement(String pRequest, LocalDateTime pDate) {
@@ -517,8 +492,7 @@ public abstract class AbstractDataObjectMapping {
      * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
      * representation to a {@link List} of {@link DataSourceAttributeMapping}.
      *
-     * @param pModelJson
-     *            the mapping in JSon format
+     * @param pModelJson the mapping in JSon format
      */
     protected void initDataSourceMapping(String pModelJson) {
         ModelMappingAdapter adapter = new ModelMappingAdapter();
@@ -556,15 +530,19 @@ public abstract class AbstractDataObjectMapping {
 
             if (isLabel(attrMapping.getNameSpace())) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
-            } else if (isRawData(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
-            } else if (isThumbnail(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
-            } else if (isLastDateUpdate(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
-            } else if (isDescription(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);
-            }
+            } else
+                if (isRawData(attrMapping.getNameSpace())) {
+                    mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
+                } else
+                    if (isThumbnail(attrMapping.getNameSpace())) {
+                        mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
+                    } else
+                        if (isLastDateUpdate(attrMapping.getNameSpace())) {
+                            mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
+                        } else
+                            if (isDescription(attrMapping.getNameSpace())) {
+                                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);
+                            }
         }
     }
 

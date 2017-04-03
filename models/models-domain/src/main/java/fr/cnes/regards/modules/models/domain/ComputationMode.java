@@ -5,11 +5,10 @@ package fr.cnes.regards.modules.models.domain;
 
 /**
  * Computation mode to set in model for an attribute.<br/>
- * Default to {@link ComputationMode} This computation mode is only available for collection and dataset model
+ * Default to {@link ComputationMode#GIVEN}. {@link ComputationMode#COMPUTED} is only available for dataset model
  * attributes.
  *
  * @author Marc Sordi
- *
  */
 public enum ComputationMode {
 
@@ -19,14 +18,7 @@ public enum ComputationMode {
     GIVEN,
 
     /**
-     * Value is computed according to children data. Same attribute has to be set on children models. Default behaviour
-     * is applied according to attribute type.
+     * Value is computed according to a custom computation plugin.
      */
-    FROM_DESCENDANTS,
-
-    /**
-     * Value is computed according to a custom computation plugin.<br/>
-     * TODO : interface
-     */
-    CUSTOM;
+    COMPUTED;
 }

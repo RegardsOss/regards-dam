@@ -33,7 +33,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
@@ -51,7 +50,6 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  * Manage dynamic attribute (de)serialization
  *
  * @author Marc Sordi
- *
  */
 @SuppressWarnings("rawtypes")
 @GsonTypeAdapterFactoryBean
@@ -102,10 +100,10 @@ public class MultitenantFlattenedAttributeAdapterFactory
             IRuntimeTenantResolver pRuntimeTenantResolver, IAttributeModelService pAttributeModelService,
             ISubscriber pSubscriber) {
         super(pRuntimeTenantResolver, AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
-        this.tenantResolver = pTenantResolver;
-        this.attributeModelService = pAttributeModelService;
-        this.subscriber = pSubscriber;
-        this.runtimeTenantResolver = pRuntimeTenantResolver;
+        tenantResolver = pTenantResolver;
+        attributeModelService = pAttributeModelService;
+        subscriber = pSubscriber;
+        runtimeTenantResolver = pRuntimeTenantResolver;
     }
 
     public void registerSubtype(String pTenant, Class<?> pType, String pDiscriminatorFieldValue, String pNamespace) {
@@ -144,8 +142,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
     /**
      * Dynamically register configured {@link AttributeModel} for a particular tenant
      *
-     * @param pTenant
-     *            tenant
+     * @param pTenant tenant
      */
     protected void registerAttributes(String pTenant) {
         List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
@@ -166,8 +163,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
     }
 
     /**
-     * @param pAttributeType
-     *            {@link AttributeType}
+     * @param pAttributeType {@link AttributeType}
      * @return corresponding {@link Serializable} class
      */
     protected Class<?> getClassByType(AttributeType pAttributeType) { // NOSONAR
@@ -194,9 +190,6 @@ public class MultitenantFlattenedAttributeAdapterFactory
                 break;
             case DOUBLE_INTERVAL:
                 matchingClass = DoubleIntervalAttribute.class;
-                break;
-            case GEOMETRY:
-                matchingClass = GeometryAttribute.class;
                 break;
             case INTEGER:
                 matchingClass = IntegerAttribute.class;
@@ -260,10 +253,8 @@ public class MultitenantFlattenedAttributeAdapterFactory
      * Flatten a {@link JsonElement} carrying key and value in separated fields into a single field whose key is the
      * value of the key field and value the value of the value field
      *
-     * @param pJsonElement
-     *            {@link JsonElement} to flatten
-     * @param pSubType
-     *            sub type
+     * @param pJsonElement {@link JsonElement} to flatten
+     * @param pSubType sub type
      * @return flattened {@link JsonElement}
      */
     protected JsonElement flatten(JsonElement pJsonElement, Class<?> pSubType) {
@@ -308,10 +299,8 @@ public class MultitenantFlattenedAttributeAdapterFactory
     /**
      * Restore {@link JsonElement} object structure (inverse flattening)
      *
-     * @param pJsonElement
-     *            {@link JsonElement} to restore
-     * @param pSubType
-     *            sub type
+     * @param pJsonElement {@link JsonElement} to restore
+     * @param pSubType sub type
      * @return restored {@link JsonElement}
      */
     protected JsonElement restore(JsonElement pJsonElement, Class<?> pSubType) {
@@ -353,10 +342,8 @@ public class MultitenantFlattenedAttributeAdapterFactory
     /**
      * Add namespace to {@link JsonElement} children of {@link ObjectAttribute}
      *
-     * @param pJsonElement
-     *            {@link JsonElement}
-     * @param pDiscriminator
-     *            discriminator value
+     * @param pJsonElement {@link JsonElement}
+     * @param pDiscriminator discriminator value
      */
     protected void addNamespaceToChildren(JsonElement pJsonElement, String pDiscriminator) {
 
@@ -383,10 +370,8 @@ public class MultitenantFlattenedAttributeAdapterFactory
     /**
      * Add namespace to {@link JsonElement} child keys
      *
-     * @param pJsonElement
-     *            {@link JsonElement}
-     * @param pDiscriminator
-     *            discriminator value
+     * @param pJsonElement {@link JsonElement}
+     * @param pDiscriminator discriminator value
      */
     protected void addNamespaceToChild(JsonElement pJsonElement, String pDiscriminator) {
 
@@ -412,8 +397,7 @@ public class MultitenantFlattenedAttributeAdapterFactory
     /**
      * Remove namespace from {@link JsonElement}
      *
-     * @param pJsonElement
-     *            target {@link JsonElement}
+     * @param pJsonElement target {@link JsonElement}
      */
     protected void removeParentNamespace(JsonElement pJsonElement) {
 
@@ -464,7 +448,6 @@ public class MultitenantFlattenedAttributeAdapterFactory
      * Handle {@link AttributeModel} creation
      *
      * @author Marc Sordi
-     *
      */
     private class RegisterHandler implements IHandler<AttributeModelCreated> {
 
@@ -480,7 +463,6 @@ public class MultitenantFlattenedAttributeAdapterFactory
      * Handle {@link AttributeModel} deletion
      *
      * @author Marc Sordi
-     *
      */
     private class UnregisterHandler implements IHandler<AttributeModelDeleted> {
 

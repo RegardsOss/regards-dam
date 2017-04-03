@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+	<name>datasetModel</name>
+	<description>et une petite description parce que je le vaut bien</description>
+	<version>Version</version>
+	<type>DATASET</type>
+	<attribute>
+		<name>minDate</name>
+		<type>DATE_ISO8601</type>
+		<computationMode>COMPUTED</computationMode>
+		<configurationLabel>MinDateTestConf</configurationLabel>
+	</attribute>
+	<attribute>
+		<name>maxDate</name>
+		<type>DATE_ISO8601</type>
+		<computationMode>COMPUTED</computationMode>
+		<configurationLabel>ConfFromNonUsablePlugin</configurationLabel>
+	</attribute>
+</model>

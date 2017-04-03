@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
@@ -51,7 +50,6 @@ import fr.cnes.regards.modules.models.domain.adapters.gson.ModelAdapter;
  *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity
@@ -61,6 +59,27 @@ import fr.cnes.regards.modules.models.domain.adapters.gson.ModelAdapter;
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
     private static final int MAX_IPID_SIZE = 128;
+
+    /**
+     * Information Package ID for REST request
+     */
+    @Column(unique = true, nullable = false)
+    @Convert(converter = UrnConverter.class)
+    @Valid
+    protected UniformResourceName ipId;
+
+    @NotNull
+    @Column(length = 128, nullable = false)
+    protected String label;
+
+    /**
+     * model that this entity is respecting
+     */
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
+            updatable = false)
+    protected Model model;
 
     /**
      * last time the entity was updated
@@ -86,29 +105,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     protected Long id;
 
     /**
-     * Information Package ID for REST request
-     */
-    @Column(unique = true, nullable = false, length = MAX_IPID_SIZE)
-    @Convert(converter = UrnConverter.class)
-    @Valid
-    protected UniformResourceName ipId;
-
-    /**
      * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
-     * REST request
-     *
-     * If no SIP ID is there it means it's not an AIP?
+     * REST request If no SIP ID is there it means it's not an AIP?
      */
     @Column
     protected String sipId;
-
-    /**
-     * In some cases where label isn't specified, IpId is used as it so lengths of both properties must have a
-     * coherent size
-     */
-    @NotNull
-    @Column(length = MAX_IPID_SIZE, nullable = false)
-    protected String label;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -135,23 +136,12 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @Valid
-    protected List<AbstractAttribute<?>> properties;
-
-    /**
-     * Model associated to the entity
-     */
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
-            updatable = false)
-    @JsonAdapter(value = ModelAdapter.class) // only keep id and name on Elasticsearch
-    protected Model model;
+    protected Set<AbstractAttribute<?>> properties = new HashSet<>();
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @JsonAdapter(value = GeometryAdapter.class)
     protected Geometry<?> geometry;
-
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;
         ipId = pIpId;
@@ -208,11 +198,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         tags = pTags;
     }
 
-    public List<AbstractAttribute<?>> getProperties() { // NOSONAR
+    public Set<AbstractAttribute<?>> getProperties() { // NOSONAR
         return properties;
     }
 
-    public void setProperties(List<AbstractAttribute<?>> pAttributes) {
+    public void setProperties(Set<AbstractAttribute<?>> pAttributes) {
         properties = pAttributes;
     }
 
@@ -282,9 +272,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else if (!ipId.equals(other.getIpId())) {
-            return false;
-        }
+        } else
+            if (!ipId.equals(other.getIpId())) {
+                return false;
+            }
         return true;
     }
 

@@ -8,10 +8,8 @@ import javax.validation.constraints.NotNull;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
- * @param <T>
- *            attribute type
+ * @param <T> attribute type
  * @author Marc Sordi
- *
  */
 public abstract class AbstractAttribute<T> implements IAttribute<T> {
 
@@ -51,4 +49,36 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
     }
 
     public abstract boolean represents(AttributeType pAttributeType);
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object pObj) {
+        if (this == pObj) {
+            return true;
+        }
+        if (pObj == null) {
+            return false;
+        }
+        if (getClass() != pObj.getClass()) {
+            return false;
+        }
+        AbstractAttribute other = (AbstractAttribute) pObj;
+        if (name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else
+            if (!name.equals(other.name)) {
+                return false;
+            }
+        return true;
+    }
+
 }

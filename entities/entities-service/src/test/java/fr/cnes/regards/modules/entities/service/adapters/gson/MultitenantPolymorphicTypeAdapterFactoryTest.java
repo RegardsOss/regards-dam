@@ -5,7 +5,9 @@ package fr.cnes.regards.modules.entities.service.adapters.gson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.assertj.core.util.Arrays;
 import org.hamcrest.Matchers;
@@ -26,7 +28,6 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.GeometryAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -34,11 +35,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
- *
  * Test attribute serialization
  *
  * @author Marc Sordi
- *
  */
 public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
@@ -134,7 +133,6 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
         factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
         factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
-        factory.registerSubtype(TENANT, GeometryAttribute.class, DISCRIMINATOR_COORDINATE, DISCRIMINATOR_GEO);
         factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
         factory.registerSubtype(TENANT, StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
@@ -201,7 +199,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        List<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
         Assert.assertEquals(2, attributes.size());
 
         List<String> expectedRootAttributes = new ArrayList<>();
@@ -217,13 +215,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
             if (DISCRIMINATOR_GEO.equals(att.getName())) {
                 Assert.assertThat(att, Matchers.instanceOf(ObjectAttribute.class));
-                ObjectAttribute geo = (ObjectAttribute) att;
 
-                for (AbstractAttribute<?> nested : geo.getValue()) {
-                    if (DISCRIMINATOR_COORDINATE.equals(nested.getName())) {
-                        Assert.assertThat(nested, Matchers.instanceOf(GeometryAttribute.class));
-                    }
-                }
             }
         }
     }
@@ -241,7 +233,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        List<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
 
         final int expectedSize = 3;
         Assert.assertThat(attributes, Matchers.hasSize(expectedSize));
@@ -273,13 +265,12 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     }
 
     /**
-     *
      * @return {@link Car}
      */
     private Car getCarWithRootAttribute() {
         Car car = new Car();
 
-        List<AbstractAttribute<?>> attributes = new ArrayList<>();
+        Set<AbstractAttribute<?>> attributes = new HashSet<>();
 
         StringAttribute description = new StringAttribute();
         description.setName(DISCRIMINATOR_DESCRIPTION);
@@ -291,9 +282,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     }
 
     /**
-     *
-     * @param pCar
-     *            {@link Car}
+     * @param pCar {@link Car}
      */
     private void addRuntimeRootAttribute(Car pCar) {
 
@@ -304,9 +293,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     }
 
     /**
-     *
-     * @param pCar
-     *            {@link Car} with nested attributes
+     * @param pCar {@link Car} with nested attributes
      */
     private void addNestedAttributes(Car pCar) {
 
@@ -318,22 +305,15 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         crs.setName(DISCRIMINATOR_CRS);
         crs.setValue("WGS84");
 
-        GeometryAttribute coordinate = new GeometryAttribute();
-        coordinate.setName(DISCRIMINATOR_COORDINATE);
-        coordinate.setValue("POLYGON(TITI,TOTO)");
-
-        List<AbstractAttribute<?>> atts = new ArrayList<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(crs);
-        atts.add(coordinate);
         geo.setValue(atts);
 
         pCar.getProperties().add(geo);
     }
 
     /**
-     *
-     * @param pCar
-     *            {@link Car} with conflicting attributes
+     * @param pCar {@link Car} with conflicting attributes
      */
     private void addConflictAttributes(Car pCar) {
         // Namespace or fragment name
@@ -344,7 +324,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         description.setName(DISCRIMINATOR_DESCRIPTION);
         description.setValue(Arrays.array("desc1", "desc2"));
 
-        List<AbstractAttribute<?>> atts = new ArrayList<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(description);
         org.setValue(atts);
 
