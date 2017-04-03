@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
@@ -27,6 +28,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -123,6 +125,11 @@ public class CrawlerService implements ICrawlerService {
     private boolean stopAsked = false;
 
     /**
+     * Current delay between all tenants poll check
+     */
+    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+
+    /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
      */
     @PostConstruct
@@ -144,7 +151,7 @@ public class CrawlerService implements ICrawlerService {
     @Async
     @Override
     public void crawl() {
-        int delay = INITIAL_DELAY_MS;
+        delay.set(INITIAL_DELAY_MS);
         // Infinite loop
         while (true) {
             // Manage termination
@@ -164,11 +171,11 @@ public class CrawlerService implements ICrawlerService {
             }
             // If a poll has been done, don't wait and reset delay to initial value
             if (atLeastOnPoll) {
-                delay = INITIAL_DELAY_MS;
+                delay.set(INITIAL_DELAY_MS);
             } else { // else, wait and double delay for next time (limited to MAX_DELAY)
                 try {
-                    Thread.sleep(delay);
-                    delay = Math.min(delay * 2, MAX_DELAY_MS);
+                    Thread.sleep(delay.get());
+                    delay.set(Math.min(delay.get() * 2, MAX_DELAY_MS));
                 } catch (InterruptedException e) {
                     LOGGER.error("Thread sleep interrupted.");
                     Thread.currentThread().interrupt();
@@ -224,7 +231,7 @@ public class CrawlerService implements ICrawlerService {
         } else { // entity has been created or updated, it must be saved into ES
             // First, check if index exists
             if (!esRepos.indexExists(tenant)) {
-                esRepos.createIndex(tenant);
+                createIndex(tenant);
             }
             // Then save entity
             esRepos.save(tenant, entity);
@@ -249,7 +256,7 @@ public class CrawlerService implements ICrawlerService {
         // Entities to save
         if (!entities.isEmpty()) {
             if (!esRepos.indexExists(tenant)) {
-                esRepos.createIndex(tenant);
+                createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
             entities.stream().filter(e -> e instanceof Dataset).forEach(e -> manageDatasetUpdate((Dataset) e));
@@ -269,7 +276,7 @@ public class CrawlerService implements ICrawlerService {
     private void manageDatasetDelete(String tenant, String ipId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
-        ICriterion taggingObjectsCrit = ICriterion.equals("tags", ipId);
+        ICriterion taggingObjectsCrit = ICriterion.eq("tags", ipId);
         // Groups must also be managed so for all objects they have to be completely recomputed (a group can be
         // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
         // datasets associated to an object
@@ -363,9 +370,9 @@ public class CrawlerService implements ICrawlerService {
         String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
-            subsettingCrit = ICriterion.equals(DATA_SOURCE_ID, datasourceId);
+            subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, datasourceId);
         } else {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.equals(DATA_SOURCE_ID, datasourceId));
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, datasourceId));
         }
         String tenant = runtimeTenantResolver.getTenant();
         // To avoid losing time doing same stuf on all objects
@@ -445,6 +452,15 @@ public class CrawlerService implements ICrawlerService {
         esRepos.saveBulk(tenant, toSaveObjects);
     }
 
+    /**
+     * Create ES index with tenant name and geometry mapping
+     */
+    private void createIndex(String tenant) {
+        esRepos.createIndex(tenant);
+        esRepos.setGeometryMapping(tenant, Arrays.stream(EntityType.values()).map(EntityType::toString)
+                .toArray(length -> new String[length]));
+    }
+
     @Override
     public int ingest(PluginConfiguration pluginConf) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
@@ -453,43 +469,46 @@ public class CrawlerService implements ICrawlerService {
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
         int savedObjectsCount = 0;
+        LocalDateTime now = LocalDateTime.now();
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
-            esRepos.createIndex(tenant);
+            createIndex(tenant);
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
-            savedObjectsCount += createDataObjects(tenant, datasourceId, page.getContent());
+            savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable());
-                savedObjectsCount += createDataObjects(tenant, datasourceId, page.getContent());
+                savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
-            savedObjectsCount += mergeDataObjects(tenant, datasourceId, page.getContent());
+            savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable());
-                savedObjectsCount += mergeDataObjects(tenant, datasourceId, page.getContent());
+                savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
         }
         return savedObjectsCount;
     }
 
-    private int createDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+    private int createDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
         // On all objects, it is necessary to set datasourceId and creation date
-        LocalDateTime creationDate = LocalDateTime.now();
+        LocalDateTime creationDate = now;
         objects.forEach(dataObject -> {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
         });
         return esRepos.saveBulk(tenant, objects);
     }
 
-    private int mergeDataObjects(String tenant, String datasourceId, List<DataObject> objects) {
+    private int mergeDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
         // Set of data objects to be saved (depends on existence of data objects into ES)
         Set<DataObject> toSaveObjects = new HashSet<>();
 
-        LocalDateTime now = LocalDateTime.now();
         for (DataObject dataObject : objects) {
             DataObject curObject = esRepos.get(tenant, dataObject);
             // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
@@ -505,10 +524,28 @@ public class CrawlerService implements ICrawlerService {
             }
             // Don't forget to set datasourceId
             dataObject.setDataSourceId(datasourceId);
+            if (Strings.isNullOrEmpty(dataObject.getLabel())) {
+                dataObject.setLabel(dataObject.getIpId().toString());
+            }
             toSaveObjects.add(dataObject);
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
         return esRepos.saveBulk(tenant, toSaveObjects);
+    }
+
+    @Override
+    public boolean working() {
+        return delay.get() < MAX_DELAY_MS;
+    }
+
+    @Override
+    public boolean workingHard() {
+        return delay.get() == INITIAL_DELAY_MS;
+    }
+
+    @Override
+    public boolean strolling() {
+        return delay.get() == MAX_DELAY_MS;
     }
 }

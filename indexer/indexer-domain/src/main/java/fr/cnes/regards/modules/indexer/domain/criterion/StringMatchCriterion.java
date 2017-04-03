@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 
 /**
  * String specialized AbstractMatchCriterion
+ * @author oroussel
  */
 public class StringMatchCriterion extends AbstractMatchCriterion<String> {
 

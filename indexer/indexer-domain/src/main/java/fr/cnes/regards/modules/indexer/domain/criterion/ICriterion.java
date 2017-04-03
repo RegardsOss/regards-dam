@@ -150,7 +150,7 @@ public interface ICriterion {
      * @param pText provided text
      * @return criterion
      */
-    static ICriterion equals(String pAttName, String pText) {
+    static ICriterion eq(String pAttName, String pText) {
         return new StringMatchCriterion(pAttName, MatchType.EQUALS, pText);
     }
 
@@ -239,7 +239,7 @@ public interface ICriterion {
         // If one of the texts contains a blank character, StringMatchAnyCriterion cannot be used due to ES limitations
         if (Stream.of(pTexts).anyMatch(str -> str.contains(" "))) {
             return new OrCriterion(
-                    Stream.of(pTexts).map(str -> ICriterion.equals(pAttName, str)).collect(Collectors.toList()));
+                    Stream.of(pTexts).map(str -> ICriterion.eq(pAttName, str)).collect(Collectors.toList()));
         }
         return new StringMatchAnyCriterion(pAttName, pTexts);
     }
@@ -325,4 +325,22 @@ public interface ICriterion {
     }
     // CHECKSTYLE:ON
 
+    /**
+     * Criterion to test the intersection with a circle giving center coordinates and radius.
+     * @param center coordinates of center
+     * @param radius radius eventually with unit (ie "100m" or "5km")
+     * @return criterion
+     */
+    static ICriterion intersectsCircle(Double[] center, String radius) {
+        return new CircleCriterion(center, radius);
+    }
+
+    /**
+     * Criterion to test the intersection with a polygon
+     * @param center coordinates of polygon
+     * @return criterion
+     */
+    static ICriterion intersectsPolygon(Double[][][] coordinates) {
+        return new PolygonCriterion(coordinates);
+    }
 }

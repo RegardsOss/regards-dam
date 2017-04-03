@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -26,6 +27,9 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupCreated;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDeleted;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAssociationUpdated;
 
 /**
  *
@@ -44,12 +48,25 @@ public class AccessGroupService {
 
     private final IProjectUsersClient projectUserClient;
 
+    /**
+     * Publish for model changes
+     */
+    private final IPublisher publisher;
+
     @Value("${spring.application.name}")
     private String microserviceName;
 
-    public AccessGroupService(IAccessGroupRepository pAccessGroupDao, IProjectUsersClient pProjectUserClient) {
+    /**
+     * @param pAccessGroupDao
+     * @param pProjectUserClient
+     * @param pPublisher
+     */
+    public AccessGroupService(IAccessGroupRepository pAccessGroupDao, IProjectUsersClient pProjectUserClient,
+            IPublisher pPublisher) {
+        super();
         accessGroupDao = pAccessGroupDao;
         projectUserClient = pProjectUserClient;
+        publisher = pPublisher;
     }
 
     /**
@@ -71,7 +88,10 @@ public class AccessGroupService {
             throw new EntityAlreadyExistsException(
                     String.format(ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE, pToBeCreated.getName()));
         }
-        return accessGroupDao.save(pToBeCreated);
+        AccessGroup created = accessGroupDao.save(pToBeCreated);
+        // Publish attribute creation
+        publisher.publish(new AccessGroupCreated(created));
+        return created;
     }
 
     /**
@@ -94,6 +114,8 @@ public class AccessGroupService {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
         if (toDelete != null) {
             accessGroupDao.delete(toDelete.getId());
+            // Publish attribute deletion
+            publisher.publish(new AccessGroupDeleted(toDelete));
         }
     }
 
@@ -111,8 +133,10 @@ public class AccessGroupService {
         }
         final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
         ag.addUser(user);
-
-        return accessGroupDao.save(ag);
+        AccessGroup updated = accessGroupDao.save(ag);
+        // Publish
+        publisher.publish(new AccessGroupAssociationUpdated(updated));
+        return updated;
     }
 
     private User getUser(String pUserEmail) { // NOSONAR: method is used but by lambda so it is not recognized
@@ -143,8 +167,10 @@ public class AccessGroupService {
         }
         final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
         ag.removeUser(user);
-
-        return accessGroupDao.save(ag);
+        AccessGroup updated = accessGroupDao.save(ag);
+        // Publish
+        publisher.publish(new AccessGroupAssociationUpdated(updated));
+        return updated;
     }
 
     /**

@@ -45,6 +45,16 @@ public final class RestrictionFactory {
         return irr;
     }
 
+    public static LongRangeRestriction buildLongRangeRestriction(Long pMin, Long pMax, boolean pMinExcluded,
+            boolean pMaxExcluded) {
+        final LongRangeRestriction irr = new LongRangeRestriction();
+        irr.setMin(pMin);
+        irr.setMax(pMax);
+        irr.setMinExcluded(pMinExcluded);
+        irr.setMaxExcluded(pMaxExcluded);
+        return irr;
+    }
+
     public static PatternRestriction buildPatternRestriction(String pPattern) {
         final PatternRestriction pr = new PatternRestriction();
         pr.setPattern(pPattern);

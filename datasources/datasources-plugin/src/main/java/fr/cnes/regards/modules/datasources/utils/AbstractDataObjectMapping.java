@@ -92,7 +92,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * A pattern used to set a date in the statement
      */
-    protected static final String keywordLastModificationDate = "%last_modification_date%";
+    protected static final String LAST_MODIFICATION_DATE_KEYWORD = "%last_modification_date%";
 
     /**
      * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
@@ -472,11 +472,11 @@ public abstract class AbstractDataObjectMapping {
 
         // if any date is defined, replace the keyword and used the first existing date
         if (pDate == null) {
-            return pRequest.replaceAll(keywordLastModificationDate,
+            return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
                                        INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         } else {
             return pRequest
-                    .replaceAll(keywordLastModificationDate,
+                    .replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
                                 dateAttributeName + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "'");
         }
     }

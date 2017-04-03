@@ -45,7 +45,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
@@ -179,7 +178,7 @@ public class IndexerServiceIT {
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         List<Collection> singleCollColl = searchService
-                .search(new SearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
+                .search(new SimpleSearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
                         ICriterion.eq("properties.int", 42))
                 .getContent();
         Assert.assertEquals(1, singleCollColl.size());

@@ -15,18 +15,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
-import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
-import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.LongMatchCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.NotCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchAnyCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 
 // CHECKSTYLE:OFF
 public class CriterionTest {
@@ -56,7 +44,7 @@ public class CriterionTest {
         // textAtt startsWith "testStartsWith"
         ICriterion startsWithCrit = ICriterion.startsWith("attributes.text", "testStartsWith");
         // textAtt strictly equals "testEquals"
-        ICriterion equalsCrit = ICriterion.equals("attributes.text", "testEquals");
+        ICriterion equalsCrit = ICriterion.eq("attributes.text", "testEquals");
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
 
         List<ICriterion> numericCritList = new ArrayList<>();
@@ -258,6 +246,16 @@ public class CriterionTest {
         @Override
         public String visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
             return pCriterion.getName() + " IS " + (pCriterion.getValue() ? "TRUE" : "FALSE");
+        }
+
+        @Override
+        public String visitPolygonCriterion(PolygonCriterion pCriterion) {
+            return null;
+        }
+
+        @Override
+        public String visitCircleCriterion(CircleCriterion pCriterion) {
+            return null;
         }
     }
 }

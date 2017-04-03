@@ -28,7 +28,6 @@ import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -425,7 +424,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
                                          Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
         } catch (PluginUtilsException pue) {
-            throw Throwables.propagate(pue);
+            throw new RuntimeException(pue); // NOSONAR
         }
     }
 

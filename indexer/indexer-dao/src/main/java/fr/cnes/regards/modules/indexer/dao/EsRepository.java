@@ -65,7 +65,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -133,6 +132,16 @@ public class EsRepository implements IEsRepository {
     private static final String EMPTY_JSON = "{}";
 
     /**
+     * Geometry field name
+     */
+    private static final String GEOM_NAME = "geometry";
+
+    /**
+     * Geometry field mapping properties
+     */
+    private static final String GEOM_TYPE_PROP = "type=geo_shape";
+
+    /**
      * Elasticsearch port
      */
     private String esClusterName;
@@ -170,19 +179,15 @@ public class EsRepository implements IEsRepository {
      */
     public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
             @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
-            @Value("${elasticsearch.cluster.name}") String pEsClusterName) {
+            @Value("${elasticsearch.cluster.name}") String pEsClusterName) throws UnknownHostException {
         this.gson = pGson;
         this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
         this.esPort = pEsPort;
         this.esClusterName = pEsClusterName;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        try {
-            client.addTransportAddress(new InetSocketTransportAddress(
-                    InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
-        } catch (final UnknownHostException e) {
-            Throwables.propagate(e);
-        }
+        client.addTransportAddress(new InetSocketTransportAddress(
+                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
@@ -198,6 +203,13 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean createIndex(String pIndex) {
         return client.admin().indices().prepareCreate(pIndex.toLowerCase()).get().isAcknowledged();
+    }
+
+    @Override
+    public boolean setGeometryMapping(String pIndex, String... types) {
+        String index = pIndex.toLowerCase();
+        return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index).setType(type)
+                .setSource(GEOM_NAME, GEOM_TYPE_PROP).get().isAcknowledged()).allMatch(ack -> (ack == true));
     }
 
     @Override
@@ -229,7 +241,7 @@ public class EsRepository implements IEsRepository {
             }
             return gson.fromJson(response.getSourceAsString(), pClass);
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -242,7 +254,7 @@ public class EsRepository implements IEsRepository {
     public boolean merge(String pIndex, String pType, String pId, Map<String, Object> pMergedPropertiesMap) {
         try {
             final Map<String, Map<String, Object>> mapMap = new HashMap<>();
-            try (XContentBuilder builder = XContentFactory.jsonBuilder().startObject()) {
+            try (XContentBuilder builder = XContentFactory.jsonBuilder().startObject()) { // NOSONAR
                 for (final Map.Entry<String, Object> entry : pMergedPropertiesMap.entrySet()) {
                     // Simple key = value
                     if (!entry.getKey().contains(".")) {
@@ -267,7 +279,7 @@ public class EsRepository implements IEsRepository {
                 return (response.getResult() == Result.UPDATED);
             }
         } catch (final IOException jpe) {
-            throw Throwables.propagate(jpe);
+            throw new RuntimeException(jpe); // NOSONAR
         }
     }
 
@@ -388,7 +400,7 @@ public class EsRepository implements IEsRepository {
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -448,7 +460,7 @@ public class EsRepository implements IEsRepository {
                 return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
             }
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -502,7 +514,7 @@ public class EsRepository implements IEsRepository {
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (R) o).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -515,7 +527,7 @@ public class EsRepository implements IEsRepository {
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (R) o).map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -529,7 +541,7 @@ public class EsRepository implements IEsRepository {
             return objects.stream().flatMap(o -> Arrays.stream((R[]) o)).distinct().filter(filterPredicate)
                     .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -656,6 +668,9 @@ public class EsRepository implements IEsRepository {
             case STRING: {
                 Terms terms = (Terms) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_POSTFIX);
+                if (terms.getBuckets().isEmpty()) {
+                    return;
+                }
                 Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
                 terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
                 facets.add(new StringFacet(attributeName, valueMap));
@@ -666,16 +681,21 @@ public class EsRepository implements IEsRepository {
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
                 Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
                 for (Bucket bucket : numRange.getBuckets()) {
+                    // Case with no value : every bucket has a NaN value (as from, to or both)
+                    if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
+                        // If first bucket contains NaN value, it means there are no value at all
+                        return;
+                    }
                     Range<Double> valueRange;
                     // (-∞ -> ?
-                    if (bucket.getFrom() == null) {
+                    if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
                         // (-∞ -> +∞) (completely dumb but...who knows ?)
-                        if (bucket.getTo() == null) {
+                        if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
                             valueRange = Range.all();
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost((Double) bucket.getTo());
                         }
-                    } else if (bucket.getTo() == null) { // ? -> +∞)
+                    } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
                         valueRange = Range.greaterThan((Double) bucket.getFrom());
                     } else { // [value -> value)
                         valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
@@ -691,6 +711,11 @@ public class EsRepository implements IEsRepository {
                 Map<com.google.common.collect.Range<LocalDateTime>, Long> valueMap = new LinkedHashMap<>();
                 for (Bucket bucket : dateRange.getBuckets()) {
                     Range<LocalDateTime> valueRange;
+                    // Case with no value : every bucket has a NaN value (as from, to or both)
+                    if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
+                        // If first bucket contains NaN value, it means there are no value at all
+                        return;
+                    }
                     // (-∞ -> ?
                     if (bucket.getFromAsString() == null) {
                         // (-∞ -> +∞) (completely dumb but...who knows ?)
@@ -736,7 +761,7 @@ public class EsRepository implements IEsRepository {
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 

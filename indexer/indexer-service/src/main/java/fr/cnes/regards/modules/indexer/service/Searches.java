@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.domain.EntityType;
 
@@ -64,9 +64,9 @@ public class Searches {
      * @return a SearchKey of search type and result type, both inherited from AbstractEntity
      */
     @SuppressWarnings("unchecked")
-    public static <S extends AbstractEntity, R extends AbstractEntity> SearchKey<S, R> onSingleEntityReturningJoinEntity(
+    public static <S extends AbstractEntity, R extends AbstractEntity> JoinEntitySearchKey<S, R> onSingleEntityReturningJoinEntity(
             String index, EntityType searchType, EntityType resultJoinType) {
-        return new SearchKey<S, R>(index, searchType.toString(), (Class<S>) TYPE_MAP.get(searchType),
+        return new JoinEntitySearchKey<S, R>(index, searchType.toString(), (Class<S>) TYPE_MAP.get(searchType),
                 (Class<R>) TYPE_MAP.get(resultJoinType));
     }
 
@@ -78,8 +78,9 @@ public class Searches {
      *  AbstractEntity
      */
     @SuppressWarnings("unchecked")
-    public static <R extends AbstractEntity> SearchKey<AbstractEntity, R> onAllEntitiesReturningJoinEntity(String index,
-            EntityType resultJoinType) {
-        return new SearchKey<AbstractEntity, R>(index, SEARCH_TYPE_MAP, (Class<R>) TYPE_MAP.get(resultJoinType));
+    public static <R extends AbstractEntity> JoinEntitySearchKey<AbstractEntity, R> onAllEntitiesReturningJoinEntity(
+            String index, EntityType resultJoinType) {
+        return new JoinEntitySearchKey<AbstractEntity, R>(index, SEARCH_TYPE_MAP,
+                (Class<R>) TYPE_MAP.get(resultJoinType));
     }
 }

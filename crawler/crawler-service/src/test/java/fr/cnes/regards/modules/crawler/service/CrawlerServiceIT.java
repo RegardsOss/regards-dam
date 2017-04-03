@@ -231,7 +231,7 @@ public class CrawlerServiceIT {
         LOGGER.info("create dataset3 (" + dataset3.getIpId() + ")");
 
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(45_000);
+        Thread.sleep(10_000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entitiesService.loadWithRelations(coll1.getIpId());
@@ -244,23 +244,23 @@ public class CrawlerServiceIT {
         esRepos.refresh(tenant);
         Collection coll1Bis = esRepos.get(tenant, coll1);
         Assert.assertNotNull(coll1Bis);
-        Assert.assertTrue(Beans.equals(coll1, coll1Bis));
+        Assert.assertTrue(Beans.equals(coll1, coll1Bis, "getModel"));
         Collection coll2Bis = esRepos.get(tenant, coll2);
         Assert.assertNotNull(coll2Bis);
-        Assert.assertTrue(Beans.equals(coll2, coll2Bis));
+        Assert.assertTrue(Beans.equals(coll2, coll2Bis, "getModel"));
         Collection coll3Bis = esRepos.get(tenant, coll3);
         Assert.assertNotNull(coll3Bis);
-        Assert.assertTrue(Beans.equals(coll3, coll3Bis));
+        Assert.assertTrue(Beans.equals(coll3, coll3Bis, "getModel"));
 
         Dataset ds1Bis = esRepos.get(tenant, dataset1);
         Assert.assertNotNull(ds1Bis);
-        Assert.assertTrue(Beans.equals(dataset1, ds1Bis));
+        Assert.assertTrue(Beans.equals(dataset1, ds1Bis, "getModel"));
         Dataset ds2Bis = esRepos.get(tenant, dataset2);
         Assert.assertNotNull(ds2Bis);
-        Assert.assertTrue(Beans.equals(dataset2, ds2Bis));
+        Assert.assertTrue(Beans.equals(dataset2, ds2Bis, "getModel"));
         Dataset ds3Bis = esRepos.get(tenant, dataset3);
         Assert.assertNotNull(ds3Bis);
-        Assert.assertTrue(Beans.equals(dataset3, ds3Bis));
+        Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
 
         collService.delete(coll1.getId());
         dsService.delete(dataset1.getId());

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +76,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         pModel = modelRepo.save(pModel);
         dataset = new Dataset(pModel, "pTenant", "dataset");
         dataset.setLicence("licence");
+        dataset.setCreationDate(LocalDateTime.now());
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
@@ -90,6 +92,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
         dsDescription = new Dataset(srcModel, "pTenant", "dataSetWithDescription");
         dsDescription.setLicence("licence");
+        dsDescription.setCreationDate(LocalDateTime.now());
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = datasetRepo.save(dsDescription);
@@ -145,7 +148,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
                 .endsWith("attributes." + GEO_CRS.getFragment().getName() + "." + GEO_CRS.getName(), "testEndsWith");
         // textAtt strictly equals "testEquals"
         ICriterion equalsCrit = ICriterion
-                .equals("attributes." + Contact_Phone.getFragment().getName() + "." + Contact_Phone.getName(),
+                .eq("attributes." + Contact_Phone.getFragment().getName() + "." + Contact_Phone.getName(),
                         "testEquals");
 
         ICriterion booleanCrit = new BooleanMatchCriterion("attributes." + attBoolean.getName(), true);

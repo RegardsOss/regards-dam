@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.collections.rest;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -85,12 +86,15 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collection1 = new Collection(model1, "PROJECT", "collection1");
         collection1.setSipId("SipId1");
         collection1.setLabel("label");
+        collection1.setCreationDate(LocalDateTime.now());
         collection3 = new Collection(model1, "PROJECT", "collection3");
         collection3.setSipId("SipId3");
         collection3.setLabel("label");
+        collection3.setCreationDate(LocalDateTime.now());
         collection4 = new Collection(model1, "PROJECT", "collection4");
         collection4.setSipId("SipId4");
         collection4.setLabel("label");
+        collection4.setCreationDate(LocalDateTime.now());
         final Set<String> col1Tags = new HashSet<>();
         final Set<String> col4Tags = new HashSet<>();
         col1Tags.add(collection4.getIpId().toString());
@@ -119,6 +123,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testPostCollection() {
         final Collection collection2 = new Collection(model1, null, "collection2");
+        collection2.setCreationDate(LocalDateTime.now());
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
@@ -145,6 +150,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testUpdateCollection() {
         final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
         collectionClone.setIpId(collection1.getIpId());
+        collectionClone.setCreationDate(collection1.getCreationDate());
         collectionClone.setId(collection1.getId());
         collectionClone.setTags(collection1.getTags());
         collectionClone.setSipId(collection1.getSipId() + "new");
@@ -160,6 +166,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testFullUpdate() {
         final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
         collectionClone.setIpId(collection1.getIpId());
+        collectionClone.setCreationDate(collection1.getCreationDate());
         collectionClone.setId(collection1.getId());
         collectionClone.setSipId(collection1.getSipId() + "new");
         collectionClone.setLabel("label");
