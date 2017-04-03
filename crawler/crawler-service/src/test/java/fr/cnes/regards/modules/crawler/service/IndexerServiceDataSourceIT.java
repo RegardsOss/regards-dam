@@ -339,6 +339,7 @@ public class IndexerServiceDataSourceIT {
         int objectsMergeCount = crawlerService.ingest(dataSourcePluginConf);
         Assert.assertEquals(objectsCreationCount, objectsMergeCount);
 
+        crawlerService.startWork();
         // Create 3 Datasets on all objects
         dataset1 = new Dataset(datasetModel, tenant, "dataset label 1");
         dataset1.setDataModel(dataModel.getId());
@@ -366,7 +367,8 @@ public class IndexerServiceDataSourceIT {
         dataset3.setGroups(Sets.newHashSet("group2"));
         dsService.create(dataset3);
 
-        Thread.sleep(20_000);
+        crawlerService.waitForEndOfWork();
+        //        indexerService.refresh(tenant);
 
         // Retrieve dataset1 from ES
         dataset1 = (Dataset) searchService.get(dataset1.getIpId());
@@ -388,10 +390,12 @@ public class IndexerServiceDataSourceIT {
             Assert.assertEquals(object.getDatasetModelIds().iterator().next(), datasetModel.getId());
         }
 
+        crawlerService.startWork();
         // Delete dataset1
         dsService.delete(dataset1.getId());
+
         // Wait a while to permit RabbitMq sending a message to crawler service which update ES
-        Thread.sleep(10_000);
+        crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,

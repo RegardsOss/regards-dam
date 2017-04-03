@@ -127,7 +127,22 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Current delay between all tenants poll check
      */
-    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+    private static AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+
+    /**
+     * Boolean indicating that a work is scheduled
+     */
+    private static boolean scheduledWork = false;
+
+    /**
+     * Boolean indicating that something has been done
+     */
+    private static boolean somethingDone = false;
+
+    /**
+     * Boolean indicating that something is currently in progress
+     */
+    private static boolean inProgress = false;
 
     /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
@@ -168,6 +183,8 @@ public class CrawlerService implements ICrawlerService {
                 } catch (RuntimeException t) {
                     LOGGER.error("Cannot manage entity event message", t);
                 }
+                // Reset inProgress AFTER transaction
+                inProgress = false;
             }
             // If a poll has been done, don't wait and reset delay to initial value
             if (atLeastOnPoll) {
@@ -203,11 +220,13 @@ public class CrawlerService implements ICrawlerService {
                 atLeastOnePoll = true;
                 // Only one entity
                 if (ipIds.length == 1) {
+                    inProgress = true;
                     updateEntityIntoEs(tenant, ipIds[0]);
-                } else
-                    if (ipIds.length > 1) { // serveral entities at once
-                        updateEntitiesIntoEs(tenant, ipIds);
-                    }
+                } else if (ipIds.length > 1) { // serveral entities at once
+                    inProgress = true;
+                    updateEntitiesIntoEs(tenant, ipIds);
+                }
+                somethingDone = true;
             }
         }
         return atLeastOnePoll;
@@ -220,7 +239,7 @@ public class CrawlerService implements ICrawlerService {
      * @param ipId concerned entity IpId
      */
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
-        LOGGER.debug("received msg for " + ipId.toString());
+        LOGGER.info("received msg for " + ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
@@ -239,7 +258,7 @@ public class CrawlerService implements ICrawlerService {
                 manageDatasetUpdate((Dataset) entity);
             }
         }
-        LOGGER.debug(ipId.toString() + " managed into Elasticsearch");
+        LOGGER.info(ipId.toString() + " managed into Elasticsearch");
     }
 
     /**
@@ -249,7 +268,7 @@ public class CrawlerService implements ICrawlerService {
      * @param ipIds concerned entity IpIds
      */
     private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
-        LOGGER.debug("received msg for " + Arrays.toString(ipIds));
+        LOGGER.info("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
         List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
         entities.forEach(e -> toDeleteIpIds.remove(e.getIpId()));
@@ -265,7 +284,7 @@ public class CrawlerService implements ICrawlerService {
         if (!toDeleteIpIds.isEmpty()) {
             toDeleteIpIds.forEach(ipId -> esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString()));
         }
-        LOGGER.debug(Arrays.toString(ipIds) + " managed into Elasticsearch");
+        LOGGER.info(Arrays.toString(ipIds) + " managed into Elasticsearch");
     }
 
     /**
@@ -547,5 +566,32 @@ public class CrawlerService implements ICrawlerService {
     @Override
     public boolean strolling() {
         return delay.get() == MAX_DELAY_MS;
+    }
+
+    @Override
+    public void startWork() {
+        // If crawler is busy, wait for it
+        while (this.working()) {
+            ;
+        }
+        scheduledWork = true;
+        somethingDone = false;
+        LOGGER.info("start working...");
+    }
+
+    @Override
+    public void waitForEndOfWork() throws InterruptedException {
+        if (!scheduledWork) {
+            throw new IllegalStateException("Before waiting, startWork() must be called");
+        }
+        LOGGER.info("Waiting for work end");
+        // In case work hasn't started yet.
+        Thread.sleep(3_000);
+        // As soon as something has been done, we wait for crawler service to no more be busy
+        while (inProgress || (!somethingDone && !this.strolling())) {
+            Thread.sleep(1_000);
+        }
+        LOGGER.info("...Work ended");
+        scheduledWork = false;
     }
 }
