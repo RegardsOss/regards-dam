@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.plugin;
+package fr.cnes.regards.modules.entities.service.visitor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,10 +13,13 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Lists;
 
@@ -28,21 +31,28 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
+import fr.cnes.regards.modules.entities.plugin.CountElementAttribute;
+import fr.cnes.regards.modules.entities.service.ServiceConfiguration;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  */
-@TestPropertySource(locations = "classpath:tests.properties")
+@TestPropertySource(locations = { "classpath:test.properties" })
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = { ServiceConfiguration.class })
 @MultitenantTransactional
-public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
+public class CountElementAttributeTest {
 
     private static final String datasetModelFileName = "datasetModelCount.xml";
 
@@ -50,6 +60,9 @@ public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IModelService modelService;
+
+    @Autowired
+    private IAttributeModelService attModelService;
 
     @Autowired
     private IPluginService pluginService;
@@ -60,6 +73,8 @@ public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
     private Model dataModel;
 
     private CountElementAttribute countPlugin;
+
+    private AttributeModel attributeToCompute;
 
     @Before
     public void init() throws ModuleException, NoSuchMethodException, SecurityException {
@@ -85,10 +100,11 @@ public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
         dataModel = Model.build("dataModel", "pDescription", EntityType.DATA);
         // instanciate the plugin
         countPlugin = pluginService.getPlugin(conf.getId());
+        attributeToCompute = attModelService.findByNameAndFragmentName("count", null);
     }
 
     @Test
-    public void testCount() {
+    public void testCountBuild() {
         DataObject obj = new DataObject();
         obj.setModel(dataModel);
         obj.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, "tenant", UUID.randomUUID(), 1));
@@ -98,6 +114,11 @@ public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
         countPlugin.compute(objs);
         Long result = countPlugin.getResult();
         Assert.assertEquals(new Long(objs.size() * 2), result);
+        AttributeBuilderVisitor visitor = new AttributeBuilderVisitor();
+        AbstractAttribute<?> attribute = countPlugin.accept(visitor);
+        Assert.assertTrue(attribute instanceof LongAttribute);
+        Assert.assertEquals(attributeToCompute.getName(), attribute.getName());
+        Assert.assertEquals(result, attribute.getValue());
     }
 
     /**
@@ -117,8 +138,4 @@ public class CountElementAttributeTest extends AbstractRegardsTransactionalIT {
         }
     }
 
-    @Override
-    protected Logger getLogger() {
-        return LOG;
-    }
 }

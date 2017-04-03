@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.plugin;
+package fr.cnes.regards.modules.entities.service.visitor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,10 +13,13 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Lists;
 
@@ -28,23 +31,32 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.plugin.SumIntegerAttribute;
+import fr.cnes.regards.modules.entities.plugin.SumLongAttribute;
+import fr.cnes.regards.modules.entities.service.ServiceConfiguration;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  */
+@TestPropertySource(locations = { "classpath:test.properties" })
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = { ServiceConfiguration.class })
 @MultitenantTransactional
-@TestPropertySource(locations = "classpath:tests.properties")
-public class SumAttributeTest extends AbstractRegardsTransactionalIT {
+public class SumAttributeTest {
 
     private static final String dataModelFileName = "dataModelSize.xml";
 
@@ -65,11 +77,18 @@ public class SumAttributeTest extends AbstractRegardsTransactionalIT {
     @Autowired
     private JWTService jwtService;
 
+    @Autowired
+    private IAttributeModelService attModelService;
+
     private Model dataModel;
 
     private SumIntegerAttribute sumIntPlugin;
 
     private SumLongAttribute sumLongPlugin;
+
+    private AttributeModel intAttributeToCompute;
+
+    private AttributeModel longAttributeToCompute;
 
     @Before
     public void init() throws ModuleException, NoSuchMethodException, SecurityException {
@@ -110,6 +129,8 @@ public class SumAttributeTest extends AbstractRegardsTransactionalIT {
         // instanciate the plugin
         sumIntPlugin = pluginService.getPlugin(confInteger.getId());
         sumLongPlugin = pluginService.getPlugin(confLong.getId());
+        intAttributeToCompute = attModelService.findByNameAndFragmentName("sizeInteger", null);
+        longAttributeToCompute = attModelService.findByNameAndFragmentName("sizeLong", null);
     }
 
     @Test
@@ -148,6 +169,15 @@ public class SumAttributeTest extends AbstractRegardsTransactionalIT {
         Long longSize = sumLongPlugin.getResult();
         Assert.assertEquals(new Integer(3 * 2), intSize);
         Assert.assertEquals(new Long(3 * 2), longSize);
+        AttributeBuilderVisitor visitor = new AttributeBuilderVisitor();
+        AbstractAttribute<?> sumIntAttribute = sumIntPlugin.accept(visitor);
+        Assert.assertTrue(sumIntAttribute instanceof IntegerAttribute);
+        Assert.assertEquals(intAttributeToCompute.getName(), sumIntAttribute.getName());
+        Assert.assertEquals(intSize, sumIntAttribute.getValue());
+        AbstractAttribute<?> sumLongAttribute = sumLongPlugin.accept(visitor);
+        Assert.assertTrue(sumLongAttribute instanceof LongAttribute);
+        Assert.assertEquals(longAttributeToCompute.getName(), sumLongAttribute.getName());
+        Assert.assertEquals(longSize, sumLongAttribute.getValue());
     }
 
     /**
@@ -167,8 +197,4 @@ public class SumAttributeTest extends AbstractRegardsTransactionalIT {
         }
     }
 
-    @Override
-    protected Logger getLogger() {
-        return LOG;
-    }
 }

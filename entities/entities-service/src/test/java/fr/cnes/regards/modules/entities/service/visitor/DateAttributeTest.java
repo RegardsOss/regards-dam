@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.plugin;
+package fr.cnes.regards.modules.entities.service.visitor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,10 +14,13 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Lists;
 
@@ -29,23 +32,31 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.plugin.MaxDateAttribute;
+import fr.cnes.regards.modules.entities.plugin.MinDateAttribute;
+import fr.cnes.regards.modules.entities.service.ServiceConfiguration;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  */
+@TestPropertySource(locations = { "classpath:test.properties" })
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = { ServiceConfiguration.class })
 @MultitenantTransactional
-@TestPropertySource(locations = "classpath:tests.properties")
-public class DateAttributeTest extends AbstractRegardsTransactionalIT {
+public class DateAttributeTest {
 
     private static final String dataModelFileName = "dataModelDate.xml";
 
@@ -66,11 +77,18 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
     @Autowired
     private JWTService jwtService;
 
+    @Autowired
+    private IAttributeModelService attModelService;
+
     private Model dataModel;
 
     private MinDateAttribute minDatePlugin;
 
     private MaxDateAttribute maxDatePlugin;
+
+    private AttributeModel minAttributeToCompute;
+
+    private AttributeModel maxAttributeToCompute;
 
     @Before
     public void init() throws ModuleException, NoSuchMethodException, SecurityException {
@@ -111,6 +129,8 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
         // instanciate the plugin
         minDatePlugin = pluginService.getPlugin(confMin.getId());
         maxDatePlugin = pluginService.getPlugin(confMax.getId());
+        minAttributeToCompute = attModelService.findByNameAndFragmentName("minDate", null);
+        maxAttributeToCompute = attModelService.findByNameAndFragmentName("maxDate", null);
     }
 
     @Test
@@ -156,6 +176,15 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
         LocalDateTime maxDate = maxDatePlugin.getResult();
         Assert.assertEquals(expectedMinDate, minDate);
         Assert.assertEquals(expectedMaxDate, maxDate);
+        AttributeBuilderVisitor visitor = new AttributeBuilderVisitor();
+        AbstractAttribute<?> minAttribute = minDatePlugin.accept(visitor);
+        AbstractAttribute<?> maxAttribute = maxDatePlugin.accept(visitor);
+        Assert.assertTrue(minAttribute instanceof DateAttribute);
+        Assert.assertEquals(minAttributeToCompute.getName(), minAttribute.getName());
+        Assert.assertEquals(minDate, minAttribute.getValue());
+        Assert.assertTrue(maxAttribute instanceof DateAttribute);
+        Assert.assertEquals(maxAttributeToCompute.getName(), maxAttribute.getName());
+        Assert.assertEquals(maxDate, maxAttribute.getValue());
     }
 
     /**
@@ -172,11 +201,6 @@ public class DateAttributeTest extends AbstractRegardsTransactionalIT {
             String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);
         }
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return LOG;
     }
 
 }
