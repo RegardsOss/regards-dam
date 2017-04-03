@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.indexer.service;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -55,13 +54,13 @@ public class SearchService implements ISearchService {
 
     @Override
     public <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
-            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
-        return repository.search(searchKey, pPageRequest, pCriterion, pFacetsMap, pAscSortMap);
+            Map<String, FacetType> pFacetsMap) {
+        return repository.search(searchKey, pPageRequest, pCriterion, pFacetsMap);
     }
 
     @Override
-    public <S, T extends IIndexable> Page<T> search(JoinEntitySearchKey<S, T> searchKey,
-            Pageable pageRequest, ICriterion pCriterion) {
+    public <S, T extends IIndexable> Page<T> search(JoinEntitySearchKey<S, T> searchKey, Pageable pageRequest,
+            ICriterion pCriterion) {
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(), searchKey.getSearchTypeMap(),
                 String[].class);

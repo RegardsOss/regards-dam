@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.modules.indexer.dao.converter.LinkedHashMapToSort;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -205,23 +206,23 @@ public interface IEsRepository {
      */
     default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, ICriterion pCriterion,
             Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
-        return this.search(searchKey, new PageRequest(0, pPageSize), pCriterion, pFacetsMap, pAscSortMap);
+        return this.search(searchKey, new PageRequest(0, pPageSize, new LinkedHashMapToSort().convert(pAscSortMap)),
+                           pCriterion, pFacetsMap);
     }
 
     /**
      * Searching specified page of elements from index (for first call use
      * {@link #searchAllLimited(String, Class, int)} method) with facets.
      * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
-     * @param search key the search key
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
-     * @param pAscSortMap map of (attributes name - true if ascending). Can be null if no sort asked for.
+     * @param search key the search key
      * @param <T> class of document type
      * @return specified result page
      */
     <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
-            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap);
+            Map<String, FacetType> pFacetsMap);
 
     /**
      * Searching first page of elements from index giving page size without facets.
@@ -235,22 +236,6 @@ public interface IEsRepository {
     default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, LinkedHashMap<String, Boolean> pAscSortMap,
             ICriterion pCriterion) {
         return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
-    }
-
-    /**
-     * Searching specified page of elements from index (for first call use
-     * {@link #searchAllLimited(String, Class, int)} method) without facets.
-     * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
-     * @param pIndex index
-     * @param pClass class of document type
-     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
-     * @param pCriterion search criterion
-     * @param <T> class of document type
-     * @return specified result page
-     */
-    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest,
-            LinkedHashMap<String, Boolean> pAscSortMap, ICriterion pCriterion) {
-        return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null, pAscSortMap);
     }
 
     /**
@@ -268,22 +253,6 @@ public interface IEsRepository {
     }
 
     /**
-     * Searching specified page of elements from index (for first call use
-     * {@link #searchAllLimited(String, Class, int)} method) without sort.
-     * <b>This method fails if asked for offset greater than 10000 (Elasticsearch limitation)</b>
-     * @param pIndex index
-     * @param pClass class of document type
-     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
-     * @param pCriterion search criterion
-     * @param <T> class of document type
-     * @return specified result page
-     */
-    default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
-            Map<String, FacetType> pFacetsMap) {
-        return this.search(searchKey, pPageRequest, pCriterion, pFacetsMap, (LinkedHashMap<String, Boolean>) null);
-    }
-
-    /**
      * Searching first page of elements from index giving page size without facets nor sort
      * @param pIndex index
      * @param pClass class of document type
@@ -293,8 +262,7 @@ public interface IEsRepository {
      * @return first result page containing max page size documents
      */
     default <T> Page<T> search(SearchKey<T, T> searchKey, int pPageSize, ICriterion pCriterion) {
-        return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null,
-                           (LinkedHashMap<String, Boolean>) null);
+        return this.search(searchKey, pPageSize, pCriterion, (Map<String, FacetType>) null);
     }
 
     /**
@@ -309,8 +277,7 @@ public interface IEsRepository {
      * @return specified result page
      */
     default <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCriterion) {
-        return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null,
-                           (LinkedHashMap<String, Boolean>) null);
+        return this.search(searchKey, pPageRequest, pCriterion, (Map<String, FacetType>) null);
     }
 
     /**

@@ -62,6 +62,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.base.Joiner;
@@ -76,6 +77,7 @@ import com.google.gson.JsonSyntaxException;
 import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
+import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -144,17 +146,17 @@ public class EsRepository implements IEsRepository {
     /**
      * Elasticsearch port
      */
-    private String esClusterName;
+    private final String esClusterName;
 
     /**
      * Elasticsearch host
      */
-    private String esHost;
+    private final String esHost;
 
     /**
      * Elasticsearch address
      */
-    private String esAddress;
+    private final String esAddress;
 
     /**
      * Elasticsearch TCP port
@@ -406,7 +408,7 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion criterion,
-            Map<String, FacetType> pFacetsMap, LinkedHashMap<String, Boolean> pAscSortMap) {
+            Map<String, FacetType> pFacetsMap) {
         String index = searchKey.getSearchIndex().toLowerCase();
         try {
             final List<T> results = new ArrayList<>();
@@ -416,8 +418,8 @@ public class EsRepository implements IEsRepository {
             SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
             request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                     .setSize(pPageRequest.getPageSize());
-            if (pAscSortMap != null) {
-                manageSortRequest(index, request, pAscSortMap);
+            if (pPageRequest.getSort() != null) {
+                manageSortRequest(index, request, pPageRequest.getSort());
             }
             // Managing aggregations if some facets are asked
             boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(pFacetsMap, request);
@@ -491,7 +493,7 @@ public class EsRepository implements IEsRepository {
      * avoid redo same ES request while changing page. SortedSet is necessary to be sure several consecutive
      * calls return same ordered set
      */
-    private LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
+    private final LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
             .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)
             .build(new CacheLoader<CacheKey, SortedSet<Object>>() {
 
@@ -550,19 +552,21 @@ public class EsRepository implements IEsRepository {
      * @param request search request
      * @param pAscSortMap map(attribute name, true if ascending)
      */
-    private void manageSortRequest(String pIndex, SearchRequestBuilder request,
-            LinkedHashMap<String, Boolean> pAscSortMap) {
+    private void manageSortRequest(String pIndex, SearchRequestBuilder request, Sort pSort) {
+        // Convert Sort into linked hash map
+        LinkedHashMap<String, Boolean> ascSortMap = new SortToLinkedHashMap().convert(pSort);
+
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
         GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(pIndex)
-                .setFields(pAscSortMap.keySet().toArray(new String[pAscSortMap.size()])).get();
+                .setFields(ascSortMap.keySet().toArray(new String[ascSortMap.size()])).get();
         // map(type, map(field, metadata)) for asked index
         Map<String, Map<String, FieldMappingMetaData>> mappings = response.mappings().get(pIndex);
         // All types mappings are retrieved.
         // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
         // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
-        LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(pAscSortMap.size());
-        for (Map.Entry<String, Boolean> sortEntry : pAscSortMap.entrySet()) {
+        LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
+        for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
             String attributeName = sortEntry.getKey();
             // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
             String lastPathAttName = attributeName.contains(".")
