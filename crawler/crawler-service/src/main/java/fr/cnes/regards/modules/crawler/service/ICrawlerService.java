@@ -33,6 +33,18 @@ public interface ICrawlerService {
     int ingest(PluginConfiguration pluginConfiguration) throws ModuleException;
 
     /**
+     * To be used by tests only.
+     * Set a landmark used by method {@link #waitForEndOfWork()}
+     */
+    void startWork();
+
+    /**
+     * Once {@link #startWork()} has been called, wait for the crawler to no more be busy (it must have do something)
+     * @throws InterruptedException
+     */
+    void waitForEndOfWork() throws InterruptedException;
+
+    /**
      * Indicate that the daemon service is currently working ie delay between poll of events is strictly between its
      * maximum
      */
