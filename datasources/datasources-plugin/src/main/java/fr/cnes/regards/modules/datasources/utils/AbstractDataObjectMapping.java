@@ -397,32 +397,28 @@ public abstract class AbstractDataObjectMapping {
             String val = pAttr.getValue().toString();
             pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
-        } else
-            if (InternalAttributes.RAWDATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
-                StringAttribute str = (StringAttribute) pAttr.getValue();
-                if (pData.getFiles() == null) {
-                    pData.setFiles(new ArrayList<>());
-                }
-                try {
-                    DataType type = InternalAttributes.RAWDATA.equals(internalAt) ? DataType.RAWDATA
-                            : DataType.THUMBNAIL;
-                    DataFile dataFile = new DataFile();
-                    dataFile.setDataType(type);
-                    dataFile.setFileRef(new URI(str.getValue()));
-                    pData.getFiles().add(dataFile);
-                } catch (URISyntaxException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            } else
-                if (InternalAttributes.DATEUPDATE.equals(internalAt)) {
-                    pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-                } else
-                    if (InternalAttributes.LABEL.equals(internalAt)) {
-                        StringAttribute str = (StringAttribute) pAttr.getValue();
-                        pData.setLabel(str.getValue());
-                    } else {
-                        LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
-                    }
+        } else if (InternalAttributes.RAWDATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            if (pData.getFiles() == null) {
+                pData.setFiles(new ArrayList<>());
+            }
+            try {
+                DataType type = InternalAttributes.RAWDATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
+                DataFile dataFile = new DataFile();
+                dataFile.setDataType(type);
+                dataFile.setFileRef(new URI(str.getValue()));
+                pData.getFiles().add(dataFile);
+            } catch (URISyntaxException e) {
+                LOG.error(e.getMessage(), e);
+            }
+        } else if (InternalAttributes.DATEUPDATE.equals(internalAt)) {
+            pData.setLastUpdate((LocalDateTime) pAttr.getValue());
+        } else if (InternalAttributes.LABEL.equals(internalAt)) {
+            StringAttribute str = (StringAttribute) pAttr.getValue();
+            pData.setLabel(str.getValue());
+        } else {
+            LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
+        }
     }
 
     /**
@@ -457,13 +453,14 @@ public abstract class AbstractDataObjectMapping {
         // pas de key word avec une date et une clause where -> pas possible, il faut mettre le keyword dans la clause
         // where existante
 
-        // Search the attribute used to get the new data
-        mappingInternalAttributes.forEach((name, intAttr) -> {
-            if (intAttr.equals(InternalAttributes.DATEUPDATE)) {
-                dateAttributeName = name;
+        // Search the attribute used to get the new data (first one is used)
+        for (Map.Entry<String, InternalAttributes> entry : mappingInternalAttributes.entrySet()) {
+            if (entry.getValue() == InternalAttributes.DATEUPDATE) {
+                dateAttributeName = entry.getKey();
+                LOG.debug("Attribute for date comparison found: " + entry.getKey());
+                break;
             }
-            LOG.debug("find the attribute for date comparaison :" + name);
-        });
+        }
 
         // Any attribute is defined in the mapping for compare the date, return
         if (dateAttributeName.isEmpty()) {
@@ -530,19 +527,15 @@ public abstract class AbstractDataObjectMapping {
 
             if (isLabel(attrMapping.getNameSpace())) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
-            } else
-                if (isRawData(attrMapping.getNameSpace())) {
-                    mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
-                } else
-                    if (isThumbnail(attrMapping.getNameSpace())) {
-                        mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
-                    } else
-                        if (isLastDateUpdate(attrMapping.getNameSpace())) {
-                            mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
-                        } else
-                            if (isDescription(attrMapping.getNameSpace())) {
-                                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);
-                            }
+            } else if (isRawData(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
+            } else if (isThumbnail(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
+            } else if (attrMapping.isLastUpdateDate()) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
+            } else if (isDescription(attrMapping.getNameSpace())) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);
+            }
         }
     }
 
@@ -577,21 +570,6 @@ public abstract class AbstractDataObjectMapping {
             LOG.debug("found a thumbnail");
         }
         return isThumbnail;
-    }
-
-    private boolean isLastDateUpdate(String pNamespace) {
-        boolean isLastUpdate = false;
-        if (pNamespace == null) {
-            return false;
-        }
-
-        // TODO CMZ à revoir c'est temporaire
-        isLastUpdate = pNamespace.contains("LAST_UPDATE_DATE");
-        if (isLastUpdate) {
-            LOG.debug("found a last update");
-        }
-
-        return isLastUpdate;
     }
 
     private enum InternalAttributes {

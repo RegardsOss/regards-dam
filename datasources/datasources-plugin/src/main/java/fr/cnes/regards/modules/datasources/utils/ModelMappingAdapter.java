@@ -22,7 +22,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * GSON adapter for annotation {@link DataSourceAttributeMapping}
  *
  * @author Christophe Mertz
- * 
+ *
  */
 public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
@@ -45,6 +45,11 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
      * Label for primary key field
      */
     private static final String PRIMARY_KEY_LABEL = "pKey";
+
+    /**
+     * Label for last update field
+     */
+    private static final String LAST_UPDATE_DATE_LABEL = "last_update_date";
 
     /**
      * Label for type field
@@ -79,7 +84,10 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             pOut.name(NAME_LABEL).value(attr.getName());
             pOut.name(TYPE_LABEL).value(attr.getType().name());
             if (attr.isPrimaryKey()) {
-                pOut.name(PRIMARY_KEY_LABEL).value(attr.isPrimaryKey().toString());
+                pOut.name(PRIMARY_KEY_LABEL).value(attr.isPrimaryKey());
+            }
+            if (attr.isLastUpdateDate()) {
+                pOut.name(LAST_UPDATE_DATE_LABEL).value(attr.isLastUpdateDate());
             }
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
@@ -130,7 +138,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
     /**
      * Read one attribute mapping and create a {@link DataSourceAttributeMapping}
-     * 
+     *
      * @param pIn
      *            the {@link JsonReader} used to read a JSon and to convert in a data object
      * @return a {@link DataSourceAttributeMapping}
@@ -157,7 +165,10 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     attr.setType(AttributeType.valueOf(pIn.nextString()));
                     break;
                 case PRIMARY_KEY_LABEL:
-                    attr.setIsPrimaryKey("true".equalsIgnoreCase(pIn.nextString()));
+                    attr.setIsPrimaryKey(pIn.nextBoolean());
+                    break;
+                case LAST_UPDATE_DATE_LABEL:
+                    attr.setLastUpdateDate(pIn.nextBoolean());
                     break;
                 default:
                     break;

@@ -53,6 +53,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.service.Searches;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
@@ -406,13 +407,23 @@ public class CrawlerService implements ICrawlerService {
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<DataObject, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
-        computeDatasetAttribute(computationPlugins, page.getContent());
+        computeDatasetAttributes(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
             updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-            computeDatasetAttribute(computationPlugins, page.getContent());
+            computeDatasetAttributes(computationPlugins, page.getContent());
         }
+        // Once computations has been done, associated attributes are created or updated
+        createComputedAttributes(dataset, computationPlugins);
+
+        esRepos.save(tenant, dataset);
+    }
+
+    /**
+     * Create computed attributes from computation
+     */
+    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<DataObject, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
         for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
@@ -440,13 +451,11 @@ public class CrawlerService implements ICrawlerService {
                 dataset.getProperties().add(attributeToAdd);
             }
         }
-
-        esRepos.save(tenant, dataset);
     }
 
-    private void computeDatasetAttribute(Set<IComputedAttribute<DataObject, ?>> pComputationPlugins,
-            List<DataObject> pContent) {
-        pComputationPlugins.forEach(plugin -> plugin.compute(pContent));
+    private void computeDatasetAttributes(Set<IComputedAttribute<DataObject, ?>> computationPlugins,
+            List<DataObject> dataObjects) {
+        computationPlugins.forEach(p -> p.compute(dataObjects));
     }
 
     /**
@@ -481,7 +490,7 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public int ingest(PluginConfiguration pluginConf) throws ModuleException {
+    public int ingest(PluginConfiguration pluginConf, LocalDateTime date) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
@@ -492,23 +501,51 @@ public class CrawlerService implements ICrawlerService {
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
             createIndex(tenant);
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
+
+            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
             savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable());
+                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
                 savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
+            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
             savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable());
+                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
                 savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
+            // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
+            // been updated (to update all associated data objects, new and old one, we don't care, it will be done
+            // during night)
+            SimpleSearchKey<Dataset> searchKey = Searches.onSingleEntity(tenant, EntityType.DATASET);
+            Page<Dataset> dsDatasetsPage = esRepos.search(searchKey, IEsRepository.BULK_SIZE,
+                                                          ICriterion.eq("plgConfDataSource.id", datasourceId));
+            if (!dsDatasetsPage.getContent().isEmpty()) {
+                // transactional method => use self, not this
+                self.updateDatasets(tenant, dsDatasetsPage);
+                while (page.hasNext()) {
+                    dsDatasetsPage = esRepos.search(searchKey, dsDatasetsPage.nextPageable(),
+                                                    ICriterion.eq("plgConfDataSource.id", datasourceId));
+                    self.updateDatasets(tenant, dsDatasetsPage);
+                }
+            }
         }
+
         return savedObjectsCount;
+    }
+
+    @Override
+    @Transactional
+    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage) {
+        if (dsDatasetsPage.getContent().size() == 1) {
+            this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId());
+        } else {
+            this.updateEntitiesIntoEs(tenant, dsDatasetsPage.getContent().stream().map(Dataset::getIpId)
+                    .toArray(size -> new UniformResourceName[size]));
+        }
     }
 
     private int createDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
@@ -534,13 +571,13 @@ public class CrawlerService implements ICrawlerService {
             // current creationDate, groups and tags.
             if (curObject != null) {
                 dataObject.setCreationDate(curObject.getCreationDate());
-                // Don't forget to update lastUpdate
-                dataObject.setLastUpdate(now);
                 dataObject.setGroups(curObject.getGroups());
                 dataObject.setTags(curObject.getTags());
             } else { // else it must be created
                 dataObject.setCreationDate(now);
             }
+            // Don't forget to update lastUpdate
+            dataObject.setLastUpdate(now);
             // Don't forget to set datasourceId
             dataObject.setDataSourceId(datasourceId);
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {

@@ -51,9 +51,9 @@ public interface IDataSourcePlugin {
 
     /**
      * Retrieve the {@link DBConnection} used by the {@link Plugin}
-     * 
+     *
      * @return Retrieve a {@link DBConnection}
-     * 
+     *
      * @throws SQLException
      *             the {@link Connection} is not available
      */
@@ -75,7 +75,7 @@ public interface IDataSourcePlugin {
 
     /**
      * Returns <code>true</code> if the data source is connected to internal database.
-     * 
+     *
      * @return boolean
      */
     boolean isInternalDataSource();
@@ -88,7 +88,7 @@ public interface IDataSourcePlugin {
      * @param pPageable
      *            the pagination information
      * @param pDate
-     *            Allows to filter the new entities created after this date parameter
+     *            Allows to filter the new entities created after this date parameter (can be null)
      * @return a page of entities
      */
     Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate);
@@ -102,6 +102,8 @@ public interface IDataSourcePlugin {
      *            the pagination information
      * @return a page of entities
      */
-    Page<DataObject> findAll(String pTenant, Pageable pPageable);
+    default Page<DataObject> findAll(String pTenant, Pageable pPageable) {
+        return this.findAll(pTenant, pPageable, null);
+    }
 
 }

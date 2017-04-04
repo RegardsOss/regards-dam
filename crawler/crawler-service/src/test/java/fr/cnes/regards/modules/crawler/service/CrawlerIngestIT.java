@@ -1,0 +1,311 @@
+package fr.cnes.regards.modules.crawler.service;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import com.google.common.collect.Sets;
+
+import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
+import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
+import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
+import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
+import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.service.IIndexerService;
+import fr.cnes.regards.modules.indexer.service.ISearchService;
+import fr.cnes.regards.modules.indexer.service.Searches;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.plugins.utils.PluginUtils;
+import fr.cnes.regards.plugins.utils.PluginUtilsException;
+
+/**
+ * Perdiocal Crawler ingestion tests
+ */
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = { CrawlerConfiguration.class })
+public class CrawlerIngestIT {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
+
+    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+
+    private static final String TABLE_NAME_TEST = "T_DATA";
+
+    private static final String TENANT = "INGEST";
+
+    @Value("${postgresql.datasource.host}")
+    private String dbHost;
+
+    @Value("${postgresql.datasource.port}")
+    private String dbPort;
+
+    @Value("${postgresql.datasource.name}")
+    private String dbName;
+
+    @Value("${postgresql.datasource.username}")
+    private String dbUser;
+
+    @Value("${postgresql.datasource.password}")
+    private String dbPpassword;
+
+    @Value("${postgresql.datasource.driver}")
+    private String driver;
+
+    @Autowired
+    private IModelService modelService;
+
+    @Autowired
+    private IModelRepository modelRepository;
+
+    @Autowired
+    private IDatasetService dsService;
+
+    @Autowired
+    private IIndexerService indexerService;
+
+    @Autowired
+    private ISearchService searchService;
+
+    @Autowired
+    private ICrawlerService crawlerService;
+
+    @Autowired
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+
+    @Autowired
+    private IEsRepository esRepos;
+
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
+    private DataSourceModelMapping dataSourceModelMapping;
+
+    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+
+    @Autowired
+    private IPluginService pluginService;
+
+    @Autowired
+    private IRabbitVirtualHostAdmin rabbitVhostAdmin;
+
+    @Autowired
+    private RegardsAmqpAdmin amqpAdmin;
+
+    private Model dataModel;
+
+    private Model datasetModel;
+
+    private PluginConfiguration dataSourcePluginConf;
+
+    private Dataset dataset;
+
+    private PluginConfiguration dBConnectionConf;
+
+    @Autowired
+    private ExternalDataRepository extDataRepos;
+
+    @Before
+    public void setUp() throws Exception {
+        tenantResolver.forceTenant(TENANT);
+
+        rabbitVhostAdmin.bind(tenantResolver.getTenant());
+        amqpAdmin.purgeQueue(EntityEvent.class, false);
+        rabbitVhostAdmin.unbind();
+
+        entityRepos.deleteAll();
+        modelRepository.deleteAll();
+        extDataRepos.deleteAll();
+
+        pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+
+        // Register model attributes
+        registerJSonModelAttributes();
+        dataModel = new Model();
+        dataModel.setName("model_1");
+        dataModel.setType(EntityType.DATA);
+        dataModel.setVersion("1");
+        dataModel.setDescription("Test data object model");
+        modelService.createModel(dataModel);
+
+        datasetModel = new Model();
+        datasetModel.setName("model_ds_1");
+        datasetModel.setType(EntityType.DATASET);
+        datasetModel.setVersion("1");
+        datasetModel.setDescription("Test dataset model");
+        modelService.createModel(datasetModel);
+
+        // Initialize the DataSourceAttributeMapping
+        buildModelAttributes();
+
+        // Connection PluginConf
+        dBConnectionConf = getPostgresConnectionConfiguration();
+        pluginService.savePluginConfiguration(dBConnectionConf);
+
+        DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        Assume.assumeTrue(dbCtx.testConnection());
+
+        // DataSource PluginConf
+        dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
+        pluginService.savePluginConfiguration(dataSourcePluginConf);
+    }
+
+    @After
+    public void clean() {
+        // Don't use entity service to clean because events are published on RabbitMQ
+        if (dataset != null) {
+            Utils.execute(entityRepos::delete, dataset.getId());
+        }
+
+        if (datasetModel != null) {
+            Utils.execute(modelService::deleteModel, datasetModel.getId());
+        }
+        if (dataModel != null) {
+            Utils.execute(modelService::deleteModel, dataModel.getId());
+        }
+        if (dataSourcePluginConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
+        }
+        if (dBConnectionConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
+        }
+    }
+
+    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+    }
+
+    private PluginConfiguration getPostgresConnectionConfiguration() throws PluginUtilsException {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
+                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+    }
+
+    private void buildModelAttributes() {
+        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+
+        attributes.add(new DataSourceAttributeMapping("ext_data_id", AttributeType.LONG, "id", true));
+
+        attributes.add(new DataSourceAttributeMapping("date", AttributeType.DATE_ISO8601, true, "date"));
+
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+    }
+
+    private void registerJSonModelAttributes() {
+        String tenant = tenantResolver.getTenant();
+        gsonAttributeFactory.registerSubtype(tenant, LongAttribute.class, "ext_data_id");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "date");
+    }
+
+    @Test
+    public void test() throws ModuleException, IOException, InterruptedException {
+        String tenant = tenantResolver.getTenant();
+        // First delete index if it already exists
+        indexerService.deleteIndex(tenant);
+
+        // Fill the DB with an object from 2000/01/01
+        extDataRepos.saveAndFlush(new ExternalData(LocalDate.of(2000, Month.JANUARY, 1)));
+
+        // Ingest from scratch
+        int objectsCreationCount = crawlerService.ingest(dataSourcePluginConf);
+        Assert.assertEquals(1, objectsCreationCount);
+
+        crawlerService.startWork();
+        // Dataset on all objects
+        dataset = new Dataset(datasetModel, tenant, "dataset label 1");
+        dataset.setDataModel(dataModel.getId());
+        dataset.setSubsettingClause(ICriterion.all());
+        dataset.setLicence("licence");
+        dataset.setDataSource(dataSourcePluginConf);
+        dataset.setTags(Sets.newHashSet("BULLSHIT"));
+        dataset.setGroups(Sets.newHashSet("group0", "group11"));
+        dsService.create(dataset);
+
+        crawlerService.waitForEndOfWork();
+
+        // Retrieve dataset1 from ES
+        dataset = (Dataset) searchService.get(dataset.getIpId());
+
+        SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
+        // Search for DataObjects tagging dataset1
+        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                                            ICriterion.eq("tags", dataset.getIpId().toString()));
+        Assert.assertEquals(1L, objectsPage.getTotalElements());
+
+        // Fill the Db with an object dated 2001/01/01
+        extDataRepos.save(new ExternalData(LocalDate.of(2001, Month.JANUARY, 1)));
+
+        // Ingest from 2000/01/01 (strictly after)
+        objectsCreationCount = crawlerService.ingest(dataSourcePluginConf,
+                                                     LocalDateTime.of(2000, Month.JANUARY, 2, 0, 0));
+        Assert.assertEquals(1, objectsCreationCount);
+
+        // Search for DataObjects tagging dataset1
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.eq("tags", dataset.getIpId().toString()));
+        Assert.assertEquals(2L, objectsPage.getTotalElements());
+    }
+}

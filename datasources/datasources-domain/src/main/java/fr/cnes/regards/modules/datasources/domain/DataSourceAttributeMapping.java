@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * This class is used to map a data source attribute to an attribute of a {@link Model}
- * 
+ *
  * @author Christophe Mertz
  *
  */
@@ -44,7 +44,12 @@ public class DataSourceAttributeMapping {
     /**
      * This attribute is the primary key
      */
-    private Boolean isPrimaryKey;
+    private boolean isPrimaryKey;
+
+    /**
+     * This attribute is the last update date
+     */
+    private boolean isLastUpdateDate;
 
     /**
      * Default constructor
@@ -52,11 +57,12 @@ public class DataSourceAttributeMapping {
     public DataSourceAttributeMapping() {
         super();
         this.isPrimaryKey = false;
+        this.isLastUpdateDate = false;
     }
 
     /**
      * Constructor for a {@link DataSourceAttributeMapping} with a namespace
-     * 
+     *
      * @param pName
      *            the attribute name in the model
      * @param pNameSpace
@@ -72,7 +78,7 @@ public class DataSourceAttributeMapping {
      */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, int pTypeDS,
             boolean pIsPrimaryKey) {
-        super();
+        this();
         this.name = pName;
         this.type = pType;
         this.nameDS = pMappingDS;
@@ -81,7 +87,7 @@ public class DataSourceAttributeMapping {
     }
 
     /**
-     * 
+     *
      * @param pName
      *            the attribute name in the model
      * @param pType
@@ -92,7 +98,7 @@ public class DataSourceAttributeMapping {
      *            The attribute type in the data source @see {@link Types}
      */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, int pTypeDS) {
-        super();
+        this();
         this.name = pName;
         this.type = pType;
         this.nameDS = pMappingDS;
@@ -102,7 +108,7 @@ public class DataSourceAttributeMapping {
 
     /**
      * Constructor with all attributes
-     * 
+     *
      * @param pName
      *            the attribute name in the model
      * @param pNameSpace
@@ -116,7 +122,7 @@ public class DataSourceAttributeMapping {
      */
     public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
             int pTypeDS) {
-        super();
+        this();
         this.name = pName;
         this.type = pType;
         this.nameSpace = pNameSpace;
@@ -127,7 +133,7 @@ public class DataSourceAttributeMapping {
 
     /**
      * Constructor for a {@link DataSourceAttributeMapping} with a namespace
-     * 
+     *
      * @param pName
      *            the attribute name in the model
      * @param pNameSpace
@@ -138,7 +144,7 @@ public class DataSourceAttributeMapping {
      *            The attribute name in the data source
      */
     public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
-        super();
+        this();
         this.name = pName;
         this.type = pType;
         this.nameSpace = pNameSpace;
@@ -148,7 +154,7 @@ public class DataSourceAttributeMapping {
 
     /**
      * Constructor for a {@link DataSourceAttributeMapping} without namespace
-     * 
+     *
      * @param pName
      *            the attribute name in the model
      * @param pType
@@ -157,7 +163,7 @@ public class DataSourceAttributeMapping {
      *            The attribute name in the data source
      */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS) {
-        super();
+        this();
         this.name = pName;
         this.type = pType;
         this.nameDS = pMappingDS;
@@ -166,7 +172,7 @@ public class DataSourceAttributeMapping {
 
     /**
      * Constructor for a {@link DataSourceAttributeMapping} without namespace
-     * 
+     *
      * @param pName
      *            the attribute name in the model
      * @param pType
@@ -177,11 +183,27 @@ public class DataSourceAttributeMapping {
      *            true if the attribute is a primary key in the data source
      */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, boolean pIsPrimaryKey) {
-        super();
+        this();
         this.name = pName;
         this.type = pType;
         this.nameDS = pMappingDS;
         this.isPrimaryKey = pIsPrimaryKey;
+    }
+
+    /**
+     * Constructor for a {@link DataSourceAttributeMapping} without namespace
+     *
+     * @param pName the attribute name in the model
+     * @param pType the attribute type in the model @see {@link AttributeType}
+     * @param pIsLastUpdateDate true if the attribute is the last update date attribute
+     * @param pMappingDS The attribute name in the data source
+     */
+    public DataSourceAttributeMapping(String pName, AttributeType pType, boolean pIsLastUpdateDate, String pMappingDS) {
+        this();
+        this.name = pName;
+        this.type = pType;
+        this.nameDS = pMappingDS;
+        this.isLastUpdateDate = pIsLastUpdateDate;
     }
 
     public String getName() {
@@ -224,12 +246,20 @@ public class DataSourceAttributeMapping {
         this.typeDS = pTypeDS;
     }
 
-    public Boolean isPrimaryKey() {
+    public boolean isPrimaryKey() {
         return isPrimaryKey;
     }
 
-    public void setIsPrimaryKey(Boolean pIsPrimaryKey) {
+    public void setIsPrimaryKey(boolean pIsPrimaryKey) {
         this.isPrimaryKey = pIsPrimaryKey;
+    }
+
+    public boolean isLastUpdateDate() {
+        return isLastUpdateDate;
+    }
+
+    public void setLastUpdateDate(boolean pIsLastUpdateDate) {
+        isLastUpdateDate = pIsLastUpdateDate;
     }
 
 }
