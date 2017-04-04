@@ -91,7 +91,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
  * Elasticsearch repository implementation
  */
 @Repository
-//@PropertySource("classpath:es.properties")
 public class EsRepository implements IEsRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EsRepository.class);
@@ -126,7 +125,8 @@ public class EsRepository implements IEsRepository {
     /**
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
      */
-    private static final AggregationBuilderFacetTypeVisitor FACET_VISITOR = new AggregationBuilderFacetTypeVisitor();
+    @Autowired
+    private AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new AggregationBuilderFacetTypeVisitor();
 
     /**
      * Empty JSon object
@@ -181,12 +181,14 @@ public class EsRepository implements IEsRepository {
      */
     public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
             @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
-            @Value("${elasticsearch.cluster.name}") String pEsClusterName) throws UnknownHostException {
+            @Value("${elasticsearch.cluster.name}") String pEsClusterName,
+            AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
         this.gson = pGson;
         this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
         this.esPort = pEsPort;
         this.esClusterName = pEsClusterName;
+        this.aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
         client.addTransportAddress(new InetSocketTransportAddress(
                 InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
@@ -543,7 +545,7 @@ public class EsRepository implements IEsRepository {
             return objects.stream().flatMap(o -> Arrays.stream((R[]) o)).distinct().filter(filterPredicate)
                     .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -626,7 +628,7 @@ public class EsRepository implements IEsRepository {
                 if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
                     twoPassRequestNeeded = true;
                 }
-                request.addAggregation(facetType.accept(FACET_VISITOR, entry.getKey()));
+                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
             }
         }
         return twoPassRequestNeeded;
@@ -648,13 +650,13 @@ public class EsRepository implements IEsRepository {
             if (facetType == FacetType.NUMERIC) {
                 Percentiles percentiles = (Percentiles) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_POSTFIX);
-                request.addAggregation(FacetType.RANGE.accept(FACET_VISITOR, attributeName, percentiles));
+                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
             } else if (facetType == FacetType.DATE) {
                 Percentiles percentiles = (Percentiles) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
-                request.addAggregation(FacetType.RANGE.accept(FACET_VISITOR, attributeName, percentiles));
+                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
             } else { // Let it as upper
-                request.addAggregation(facetType.accept(FACET_VISITOR, attributeName));
+                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
             }
         }
     }

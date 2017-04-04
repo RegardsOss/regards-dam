@@ -30,6 +30,7 @@ import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -63,7 +64,8 @@ public class EsRepositoryTest {
         try {
             gson = new GsonBuilder().create();
             // FIXME valeurs en dur pour l'instant
-            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
+            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards",
+                    new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
