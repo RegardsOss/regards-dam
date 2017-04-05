@@ -141,5 +141,4 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin implements
     public boolean isOutOfDate() {
         return true;
     }
-
 }

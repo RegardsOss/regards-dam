@@ -3,6 +3,8 @@ package fr.cnes.regards.modules.crawler.service;
 import java.io.IOException;
 import java.util.Arrays;
 
+import javax.annotation.PostConstruct;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -39,6 +42,12 @@ public class GeometryIT {
     @Autowired
     private IModelService modelService;
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
+    @Autowired
+    private ICrawlerService crawlerService;
+
     private Model collectionModel;
 
     private Collection collection;
@@ -46,6 +55,20 @@ public class GeometryIT {
     private Collection collection2;
 
     private static final String TENANT = "GEOM";
+
+    @PostConstruct
+    public void initEs() {
+        tenantResolver.forceTenant(TENANT);
+
+        if (esRepos.indexExists(TENANT)) {
+            esRepos.deleteIndex(TENANT);
+        }
+        esRepos.createIndex(TENANT);
+        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
+                .toArray(length -> new String[length]));
+
+        crawlerService.setConsumeOnlyMode(true);
+    }
 
     @After
     public void clean() {
@@ -87,14 +110,6 @@ public class GeometryIT {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
         collection.setGeometry(new Geometry.Point(new Double[] { 41.12, -71.34 }));
-
-        // Index creation with geometry mapping
-        if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
-        }
-        esRepos.createIndex(TENANT);
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
 
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
@@ -142,14 +157,6 @@ public class GeometryIT {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
         collection.setGeometry(new Geometry.MultiPoint(new Double[][] { { 41.12, -71.34 }, { 42., -72. } }));
-
-        // Index creation with geometry mapping
-        if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
-        }
-        esRepos.createIndex(TENANT);
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
 
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
@@ -214,14 +221,6 @@ public class GeometryIT {
         collection.setGeometry(new Geometry.MultiLineString(
                 new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } }, { { 39.12, -70.34 }, { 38., -70. } } }));
 
-        // Index creation with geometry mapping
-        if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
-        }
-        esRepos.createIndex(TENANT);
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
-
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
@@ -285,14 +284,6 @@ public class GeometryIT {
                         { { 100.2, 0.2 }, { 100.2, 0.8 }, { 100.8, 0.8 }, { 100.8, 0.2 }, { 100.2, 0.2 } } } };
         collection.setGeometry(new Geometry.MultiPolygon(multiPolygon));
 
-        // Index creation with geometry mapping
-        if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
-        }
-        esRepos.createIndex(TENANT);
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
-
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
@@ -317,12 +308,6 @@ public class GeometryIT {
         Assert.assertNull(collFromDB.getGeometry());
 
         // Index creation with geometry mapping
-        if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
-        }
-        esRepos.createIndex(TENANT);
-        esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 

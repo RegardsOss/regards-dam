@@ -1,7 +1,12 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import java.time.LocalDateTime;
+
+import org.springframework.data.domain.Page;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * Crawler interface.
@@ -30,7 +35,23 @@ public interface ICrawlerService {
      * @param pluginConfiguration datasource plugin configuration
      * @return the count of DataObjects ingested from given datasource
      */
-    int ingest(PluginConfiguration pluginConfiguration) throws ModuleException;
+    default int ingest(PluginConfiguration pluginConfiguration) throws ModuleException {
+        return this.ingest(pluginConfiguration, null);
+    }
+
+    /**
+     * Ingest provided datasource (from plugin configuration) data objects into Elasticsearch
+     * @param pluginConfiguration datasource plugin configuration
+     * @param date date used for finding objects on datasource (strictly greatest than)
+     * @return the count of DataObjects ingested from given datasource
+     */
+    int ingest(PluginConfiguration pluginConfiguration, LocalDateTime date) throws ModuleException;
+
+    /**
+     * Transactional method updating a page of datasets
+     * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
+     */
+    void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, LocalDateTime lastUpdateDate);
 
     /**
      * To be used by tests only.
@@ -60,4 +81,10 @@ public interface ICrawlerService {
      * Indicate that the daemon service is waiting for events ie deley between poll of events is at its maximum
      */
     boolean strolling();
+
+    /**
+     * Set or unset "consume only" mode where messages are polled but nothing is done
+     * @param b true or false (it's a boolean, what do you expect ?)
+     */
+    void setConsumeOnlyMode(boolean b);
 }

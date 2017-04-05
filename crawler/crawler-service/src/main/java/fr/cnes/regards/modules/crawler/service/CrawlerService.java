@@ -65,6 +65,8 @@ public class CrawlerService implements ICrawlerService {
 
     private static final String DATA_SOURCE_ID = "dataSourceId";
 
+    private static final String LAST_UPDATE = "lastUpdate";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
 
     /**
@@ -145,6 +147,11 @@ public class CrawlerService implements ICrawlerService {
     private static boolean inProgress = false;
 
     /**
+     * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
+     */
+    private static boolean consumeOnlyMode = false;
+
+    /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
      */
     @PostConstruct
@@ -218,6 +225,10 @@ public class CrawlerService implements ICrawlerService {
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
                 atLeastOnePoll = true;
+                // Message consume only, nothing else to be done, returning...
+                if (consumeOnlyMode) {
+                    return atLeastOnePoll;
+                }
                 // Only one entity
                 if (ipIds.length == 1) {
                     inProgress = true;
@@ -232,13 +243,19 @@ public class CrawlerService implements ICrawlerService {
         return atLeastOnePoll;
     }
 
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
+        this.updateEntityIntoEs(tenant, ipId, null);
+    }
+
     /**
      * Load given entity from database and update Elasticsearch
      *
      * @param tenant concerned tenant (also index intoES)
      * @param ipId concerned entity IpId
+     * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
+     * into account
      */
-    private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime lastUpdateDate) {
         LOGGER.info("received msg for " + ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
@@ -255,10 +272,14 @@ public class CrawlerService implements ICrawlerService {
             // Then save entity
             esRepos.save(tenant, entity);
             if (entity instanceof Dataset) {
-                manageDatasetUpdate((Dataset) entity);
+                manageDatasetUpdate((Dataset) entity, lastUpdateDate);
             }
         }
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
+    }
+
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
+        this.updateEntitiesIntoEs(tenant, ipIds, null);
     }
 
     /**
@@ -267,7 +288,7 @@ public class CrawlerService implements ICrawlerService {
      * @param tenant concerned tenant (also index intoES)
      * @param ipIds concerned entity IpIds
      */
-    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime lastUpdateDate) {
         LOGGER.info("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
         List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
@@ -278,7 +299,8 @@ public class CrawlerService implements ICrawlerService {
                 createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
-            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> manageDatasetUpdate((Dataset) e));
+            entities.stream().filter(e -> e instanceof Dataset)
+                    .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate));
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -384,15 +406,21 @@ public class CrawlerService implements ICrawlerService {
      *
      * @param dataset concerned dataset
      */
-    private void manageDatasetUpdate(Dataset dataset) {
+    private void manageDatasetUpdate(Dataset dataset, LocalDateTime lastUpdateDate) {
         PluginConfiguration datasource = dataset.getDataSource();
         String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
+        // Add datasource id restriction
         if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
             subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, datasourceId);
         } else {
             subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, datasourceId));
         }
+        // Add lastUpdate restriction if a date is provided
+        if (lastUpdateDate != null) {
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.ge(LAST_UPDATE, lastUpdateDate));
+        }
+
         String tenant = runtimeTenantResolver.getTenant();
         // To avoid losing time doing same stuf on all objects
         String dsIpId = dataset.getIpId().toString();
@@ -406,13 +434,23 @@ public class CrawlerService implements ICrawlerService {
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<DataObject, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
-        computeDatasetAttribute(computationPlugins, page.getContent());
+        computeDatasetAttributes(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
             updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-            computeDatasetAttribute(computationPlugins, page.getContent());
+            computeDatasetAttributes(computationPlugins, page.getContent());
         }
+        // Once computations has been done, associated attributes are created or updated
+        createComputedAttributes(dataset, computationPlugins);
+
+        esRepos.save(tenant, dataset);
+    }
+
+    /**
+     * Create computed attributes from computation
+     */
+    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<DataObject, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
         for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
@@ -440,13 +478,11 @@ public class CrawlerService implements ICrawlerService {
                 dataset.getProperties().add(attributeToAdd);
             }
         }
-
-        esRepos.save(tenant, dataset);
     }
 
-    private void computeDatasetAttribute(Set<IComputedAttribute<DataObject, ?>> pComputationPlugins,
-            List<DataObject> pContent) {
-        pComputationPlugins.forEach(plugin -> plugin.compute(pContent));
+    private void computeDatasetAttributes(Set<IComputedAttribute<DataObject, ?>> computationPlugins,
+            List<DataObject> dataObjects) {
+        computationPlugins.forEach(p -> p.compute(dataObjects));
     }
 
     /**
@@ -481,7 +517,7 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public int ingest(PluginConfiguration pluginConf) throws ModuleException {
+    public int ingest(PluginConfiguration pluginConf, LocalDateTime date) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
@@ -492,23 +528,51 @@ public class CrawlerService implements ICrawlerService {
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
             createIndex(tenant);
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
+
+            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
             savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable());
+                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
                 savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE));
+            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
             savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable());
+                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
                 savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
+            // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
+            // been updated (to update all associated data objects which have a lastUpdate date >= now)
+            SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
+                    Dataset.class);
+            Page<Dataset> dsDatasetsPage = esRepos.search(searchKey, IEsRepository.BULK_SIZE,
+                                                          ICriterion.eq("plgConfDataSource.id", datasourceId));
+            if (!dsDatasetsPage.getContent().isEmpty()) {
+                // transactional method => use self, not this
+                self.updateDatasets(tenant, dsDatasetsPage, now);
+                while (page.hasNext()) {
+                    dsDatasetsPage = esRepos.search(searchKey, dsDatasetsPage.nextPageable(),
+                                                    ICriterion.eq("plgConfDataSource.id", datasourceId));
+                    self.updateDatasets(tenant, dsDatasetsPage, now);
+                }
+            }
         }
+
         return savedObjectsCount;
+    }
+
+    @Override
+    @Transactional
+    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, LocalDateTime lastUpdateDate) {
+        if (dsDatasetsPage.getContent().size() == 1) {
+            this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId(), lastUpdateDate);
+        } else {
+            this.updateEntitiesIntoEs(tenant, dsDatasetsPage.getContent().stream().map(Dataset::getIpId)
+                    .toArray(size -> new UniformResourceName[size]), lastUpdateDate);
+        }
     }
 
     private int createDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
@@ -534,13 +598,13 @@ public class CrawlerService implements ICrawlerService {
             // current creationDate, groups and tags.
             if (curObject != null) {
                 dataObject.setCreationDate(curObject.getCreationDate());
-                // Don't forget to update lastUpdate
-                dataObject.setLastUpdate(now);
                 dataObject.setGroups(curObject.getGroups());
                 dataObject.setTags(curObject.getTags());
             } else { // else it must be created
                 dataObject.setCreationDate(now);
             }
+            // Don't forget to update lastUpdate
+            dataObject.setLastUpdate(now);
             // Don't forget to set datasourceId
             dataObject.setDataSourceId(datasourceId);
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
@@ -593,5 +657,10 @@ public class CrawlerService implements ICrawlerService {
         }
         LOGGER.info("...Work ended");
         scheduledWork = false;
+    }
+
+    @Override
+    public void setConsumeOnlyMode(boolean b) {
+        consumeOnlyMode = b;
     }
 }

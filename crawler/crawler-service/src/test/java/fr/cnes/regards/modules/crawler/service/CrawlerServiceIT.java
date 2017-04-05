@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.util.Beans;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -80,7 +82,6 @@ public class CrawlerServiceIT {
 
     private PluginConfiguration dataSourcePluginConf;
 
-    @SuppressWarnings("unused")
     @Autowired
     private ICrawlerService crawlerService;
 
@@ -105,9 +106,17 @@ public class CrawlerServiceIT {
     @Autowired
     private IPluginService pluginService;
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
     private DataSourceModelMapping dataSourceModelMapping;
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+
+    @Before
+    public void setUp() {
+        tenantResolver.forceTenant(tenant);
+    }
 
     @After
     public void clean() {
@@ -216,6 +225,8 @@ public class CrawlerServiceIT {
     @Test
     public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsException {
         buildData1();
+
+        crawlerService.startWork();
         coll1 = collService.create(coll1);
         LOGGER.info("create coll1 (" + coll1.getIpId() + ")");
         coll2 = collService.create(coll2);
@@ -230,8 +241,9 @@ public class CrawlerServiceIT {
         dataset3 = dsService.create(dataset3);
         LOGGER.info("create dataset3 (" + dataset3.getIpId() + ")");
 
+        crawlerService.waitForEndOfWork();
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(10_000);
+        //        Thread.sleep(10_000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entitiesService.loadWithRelations(coll1.getIpId());
@@ -262,11 +274,13 @@ public class CrawlerServiceIT {
         Assert.assertNotNull(ds3Bis);
         Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
 
+        crawlerService.startWork();
         collService.delete(coll1.getId());
         dsService.delete(dataset1.getId());
 
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(5000);
+        //        Thread.sleep(5000);
+        crawlerService.waitForEndOfWork();
 
         esRepos.refresh(tenant);
         coll1Bis = esRepos.get(tenant, coll1);
