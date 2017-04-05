@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -78,7 +79,7 @@ public class DataSourceService implements IDataSourceService {
 
         for (PluginConfiguration pg : service.getPluginConfigurationsByType(IDataSourcePlugin.class)) {
             String val = pg.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM);
-            if (!val.isEmpty() && IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(val)) {
+            if (!Strings.isNullOrEmpty(val) && IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(val)) {
                 defautDataSourceConfiguration = pg;
             }
         }

@@ -49,8 +49,9 @@ public interface ICrawlerService {
 
     /**
      * Transactional method updating a page of datasets
+     * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
      */
-    void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage);
+    void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, LocalDateTime lastUpdateDate);
 
     /**
      * To be used by tests only.
@@ -80,4 +81,10 @@ public interface ICrawlerService {
      * Indicate that the daemon service is waiting for events ie deley between poll of events is at its maximum
      */
     boolean strolling();
+
+    /**
+     * Set or unset "consume only" mode where messages are polled but nothing is done
+     * @param b true or false (it's a boolean, what do you expect ?)
+     */
+    void setConsumeOnlyMode(boolean b);
 }

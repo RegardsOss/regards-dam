@@ -86,8 +86,8 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             if (attr.isPrimaryKey()) {
                 pOut.name(PRIMARY_KEY_LABEL).value(attr.isPrimaryKey());
             }
-            if (attr.isLastUpdateDate()) {
-                pOut.name(LAST_UPDATE_DATE_LABEL).value(attr.isLastUpdateDate());
+            if (attr.isLastUpdate()) {
+                pOut.name(LAST_UPDATE_DATE_LABEL).value(attr.isLastUpdate());
             }
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
@@ -168,7 +168,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     attr.setIsPrimaryKey(pIn.nextBoolean());
                     break;
                 case LAST_UPDATE_DATE_LABEL:
-                    attr.setLastUpdateDate(pIn.nextBoolean());
+                    attr.setLastUpdate(pIn.nextBoolean());
                     break;
                 default:
                     break;

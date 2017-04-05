@@ -53,7 +53,6 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.service.Searches;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
@@ -65,6 +64,8 @@ import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 public class CrawlerService implements ICrawlerService {
 
     private static final String DATA_SOURCE_ID = "dataSourceId";
+
+    private static final String LAST_UPDATE = "lastUpdate";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
 
@@ -146,6 +147,11 @@ public class CrawlerService implements ICrawlerService {
     private static boolean inProgress = false;
 
     /**
+     * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
+     */
+    private static boolean consumeOnlyMode = false;
+
+    /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
      */
     @PostConstruct
@@ -219,6 +225,10 @@ public class CrawlerService implements ICrawlerService {
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
                 atLeastOnePoll = true;
+                // Message consume only, nothing else to be done, returning...
+                if (consumeOnlyMode) {
+                    return atLeastOnePoll;
+                }
                 // Only one entity
                 if (ipIds.length == 1) {
                     inProgress = true;
@@ -233,13 +243,19 @@ public class CrawlerService implements ICrawlerService {
         return atLeastOnePoll;
     }
 
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
+        this.updateEntityIntoEs(tenant, ipId, null);
+    }
+
     /**
      * Load given entity from database and update Elasticsearch
      *
      * @param tenant concerned tenant (also index intoES)
      * @param ipId concerned entity IpId
+     * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
+     * into account
      */
-    private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime lastUpdateDate) {
         LOGGER.info("received msg for " + ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
@@ -256,10 +272,14 @@ public class CrawlerService implements ICrawlerService {
             // Then save entity
             esRepos.save(tenant, entity);
             if (entity instanceof Dataset) {
-                manageDatasetUpdate((Dataset) entity);
+                manageDatasetUpdate((Dataset) entity, lastUpdateDate);
             }
         }
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
+    }
+
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
+        this.updateEntitiesIntoEs(tenant, ipIds, null);
     }
 
     /**
@@ -268,7 +288,7 @@ public class CrawlerService implements ICrawlerService {
      * @param tenant concerned tenant (also index intoES)
      * @param ipIds concerned entity IpIds
      */
-    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime lastUpdateDate) {
         LOGGER.info("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
         List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
@@ -279,7 +299,8 @@ public class CrawlerService implements ICrawlerService {
                 createIndex(tenant);
             }
             esRepos.saveBulk(tenant, entities);
-            entities.stream().filter(e -> e instanceof Dataset).forEach(e -> manageDatasetUpdate((Dataset) e));
+            entities.stream().filter(e -> e instanceof Dataset)
+                    .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate));
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -385,15 +406,21 @@ public class CrawlerService implements ICrawlerService {
      *
      * @param dataset concerned dataset
      */
-    private void manageDatasetUpdate(Dataset dataset) {
+    private void manageDatasetUpdate(Dataset dataset, LocalDateTime lastUpdateDate) {
         PluginConfiguration datasource = dataset.getDataSource();
         String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
+        // Add datasource id restriction
         if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
             subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, datasourceId);
         } else {
             subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, datasourceId));
         }
+        // Add lastUpdate restriction if a date is provided
+        if (lastUpdateDate != null) {
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.ge(LAST_UPDATE, lastUpdateDate));
+        }
+
         String tenant = runtimeTenantResolver.getTenant();
         // To avoid losing time doing same stuf on all objects
         String dsIpId = dataset.getIpId().toString();
@@ -518,18 +545,18 @@ public class CrawlerService implements ICrawlerService {
                 savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
             // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
-            // been updated (to update all associated data objects, new and old one, we don't care, it will be done
-            // during night)
-            SimpleSearchKey<Dataset> searchKey = Searches.onSingleEntity(tenant, EntityType.DATASET);
+            // been updated (to update all associated data objects which have a lastUpdate date >= now)
+            SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
+                    Dataset.class);
             Page<Dataset> dsDatasetsPage = esRepos.search(searchKey, IEsRepository.BULK_SIZE,
                                                           ICriterion.eq("plgConfDataSource.id", datasourceId));
             if (!dsDatasetsPage.getContent().isEmpty()) {
                 // transactional method => use self, not this
-                self.updateDatasets(tenant, dsDatasetsPage);
+                self.updateDatasets(tenant, dsDatasetsPage, now);
                 while (page.hasNext()) {
                     dsDatasetsPage = esRepos.search(searchKey, dsDatasetsPage.nextPageable(),
                                                     ICriterion.eq("plgConfDataSource.id", datasourceId));
-                    self.updateDatasets(tenant, dsDatasetsPage);
+                    self.updateDatasets(tenant, dsDatasetsPage, now);
                 }
             }
         }
@@ -539,12 +566,12 @@ public class CrawlerService implements ICrawlerService {
 
     @Override
     @Transactional
-    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage) {
+    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, LocalDateTime lastUpdateDate) {
         if (dsDatasetsPage.getContent().size() == 1) {
-            this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId());
+            this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId(), lastUpdateDate);
         } else {
             this.updateEntitiesIntoEs(tenant, dsDatasetsPage.getContent().stream().map(Dataset::getIpId)
-                    .toArray(size -> new UniformResourceName[size]));
+                    .toArray(size -> new UniformResourceName[size]), lastUpdateDate);
         }
     }
 
@@ -630,5 +657,10 @@ public class CrawlerService implements ICrawlerService {
         }
         LOGGER.info("...Work ended");
         scheduledWork = false;
+    }
+
+    @Override
+    public void setConsumeOnlyMode(boolean b) {
+        consumeOnlyMode = b;
     }
 }

@@ -531,7 +531,7 @@ public abstract class AbstractDataObjectMapping {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
             } else if (isThumbnail(attrMapping.getNameSpace())) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
-            } else if (attrMapping.isLastUpdateDate()) {
+            } else if (attrMapping.isLastUpdate()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
             } else if (isDescription(attrMapping.getNameSpace())) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);

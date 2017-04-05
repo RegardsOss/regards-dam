@@ -79,6 +79,9 @@ public class IndexerServiceDataSourceIT {
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
+    @Value("${regards.tenant}")
+    private String tenant;
+
     @Value("${oracle.datasource.host}")
     private String dbHost;
 
@@ -156,6 +159,8 @@ public class IndexerServiceDataSourceIT {
 
     @Before
     public void setUp() throws Exception {
+        tenantResolver.forceTenant(tenant);
+
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
         amqpAdmin.purgeQueue(EntityEvent.class, false);
         rabbitVhostAdmin.unbind();
