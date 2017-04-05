@@ -14,8 +14,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -71,8 +69,6 @@ import fr.cnes.regards.plugins.utils.PluginUtilsException;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 public class CrawlerIngestIT {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
-
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
@@ -120,9 +116,6 @@ public class CrawlerIngestIT {
 
     @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
-
-    @Autowired
-    private IEsRepository esRepos;
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
@@ -307,5 +300,7 @@ public class CrawlerIngestIT {
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                            ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(2L, objectsPage.getTotalElements());
+        objectsPage.getContent()
+                .forEach(data -> Assert.assertTrue(data.getLastUpdate().isAfter(data.getCreationDate())));
     }
 }
