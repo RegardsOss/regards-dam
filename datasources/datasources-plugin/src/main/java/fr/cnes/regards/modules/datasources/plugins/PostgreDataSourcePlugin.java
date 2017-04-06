@@ -34,8 +34,9 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "postgresql-datasource", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Allows data extraction to a PostgreSql database")
+@Plugin(id = "postgresql-datasource", version = "1.0-SNAPSHOT",
+        description = "Allows data extraction to a PostgreSql database", author = "REGARDS Team",
+        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "http://www.c-s.fr/")
 public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin implements IDataSourcePlugin {
 
     /**
@@ -72,14 +73,14 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin implements
      */
     @PluginInit
     private void initPlugin() {
-        LOG.info("Init method call : " + this.getClass().getName() + "connection=" + this.dbConnection.toString()
-                + "model=" + this.modelJSon + "requete=" + this.sqlFromClause);
+        LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString() + "model="
+                + modelJSon + "requete=" + sqlFromClause);
 
         LOG.info("Init method call : "
-                + (this.dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
+                + (dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
 
         // Converts the modelJson to a list of DataSourceAttributeMapping
-        initDataSourceMapping(this.modelJSon);
+        initDataSourceMapping(modelJSon);
     }
 
     @Override

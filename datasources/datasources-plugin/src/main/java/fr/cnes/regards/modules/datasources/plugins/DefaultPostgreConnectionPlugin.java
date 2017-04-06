@@ -11,17 +11,15 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 
 /**
- * A default {@link Plugin} of type {@link IDBConnectionPlugin}.
- *
- * For the test of the connection :
+ * A default {@link Plugin} of type {@link IDBConnectionPlugin}. For the test of the connection :
  *
  * @see http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most
- *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "postgresql-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Connection to a PostgreSql database")
+@Plugin(id = "postgresql-db-connection", version = "1.0-SNAPSHOT", description = "Connection to a PostgreSql database",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "http://www.c-s.fr/")
 public class DefaultPostgreConnectionPlugin extends AbstractDataSourceConnection implements IDBConnectionPlugin {
 
     /**

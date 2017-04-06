@@ -28,8 +28,10 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "SumLongAttribute", author = "Sylvain Vissiere-Guerinet",
-        description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name")
+@Plugin(id = "SumLongAttribute", version = "1.0.0",
+        description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "http://www.c-s.fr/")
 public class SumLongAttribute implements IComputedAttribute<DataObject, Long> {
 
     @Autowired

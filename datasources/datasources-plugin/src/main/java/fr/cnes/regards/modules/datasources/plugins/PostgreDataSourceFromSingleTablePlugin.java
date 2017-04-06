@@ -31,16 +31,16 @@ import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilde
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class PostgreDataSourceFromSingleTablePlugin
- *
- * A {@link Plugin} to discover the tables, columns and indexes to a PostgreSQL Database.<br>
+ * Class PostgreDataSourceFromSingleTablePlugin A {@link Plugin} to discover the tables, columns and indexes to a
+ * PostgreSQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "postgresql-datasource-single-table", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Allows introspection and data extraction to a PostgreSql database")
+@Plugin(id = "postgresql-datasource-single-table", version = "1.0-SNAPSHOT",
+        description = "Allows introspection and data extraction to a PostgreSql database", author = "REGARDS Team",
+        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "http://www.c-s.fr/")
 public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin
         implements IDataSourceFromSingleTablePlugin {
 
@@ -78,13 +78,13 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
      */
     @PluginInit
     private void initPlugin() {
-        LOG.info("Init method call : " + this.getClass().getName() + "connection=" + this.dbConnection.toString()
-                + "table name=" + this.tableName + "model=" + this.modelJSon);
+        LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString()
+                + "table name=" + tableName + "model=" + modelJSon);
 
         // Converts the modelJson to a list of DataSourceAttributeMapping
-        initDataSourceMapping(this.modelJSon);
+        initDataSourceMapping(modelJSon);
 
-        initializePluginMapping(this.tableName);
+        initializePluginMapping(tableName);
     }
 
     @Override
