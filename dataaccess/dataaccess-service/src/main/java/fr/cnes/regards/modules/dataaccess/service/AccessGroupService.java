@@ -27,9 +27,9 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAssociationUpdated;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupCreated;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDeleted;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAssociationUpdated;
 
 /**
  *

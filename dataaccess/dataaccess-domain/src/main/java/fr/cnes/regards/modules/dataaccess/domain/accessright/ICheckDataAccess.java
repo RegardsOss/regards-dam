@@ -4,11 +4,11 @@
 package fr.cnes.regards.modules.dataaccess.domain.accessright;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.entities.domain.DataFile;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
  * Plugin used to check if a {@link DataFile} from a {@link Dataset} is accessible, or not, for an {@link AccessGroup} or a
