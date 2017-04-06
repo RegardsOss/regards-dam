@@ -245,7 +245,7 @@ public class CrawlerServiceIT {
 
         crawlerService.waitForEndOfWork();
         // To be sure that the crawlerService daemon has time to do its job
-        Thread.sleep(10_000);
+        Thread.sleep(20_000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entitiesService.loadWithRelations(coll1.getIpId());
