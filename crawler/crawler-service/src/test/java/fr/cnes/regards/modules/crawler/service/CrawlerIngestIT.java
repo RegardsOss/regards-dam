@@ -286,7 +286,7 @@ public class CrawlerIngestIT {
         dsService.create(dataset);
 
         crawlerService.waitForEndOfWork();
-        //        Thread.sleep(10_000);
+        Thread.sleep(10_000);
 
         // Retrieve dataset1 from ES
         UniformResourceName ipId = dataset.getIpId();
@@ -314,7 +314,9 @@ public class CrawlerIngestIT {
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                            ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(2L, objectsPage.getTotalElements());
-        objectsPage.getContent()
-                .forEach(data -> Assert.assertTrue(data.getLastUpdate().isAfter(data.getCreationDate())));
+        Assert.assertEquals(1, objectsPage.getContent().stream()
+                .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());
+        Assert.assertEquals(1, objectsPage.getContent().stream()
+                .filter(data -> data.getLastUpdate().isAfter(data.getCreationDate())).count());
     }
 }

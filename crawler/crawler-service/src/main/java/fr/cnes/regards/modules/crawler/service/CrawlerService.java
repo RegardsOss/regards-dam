@@ -232,10 +232,10 @@ public class CrawlerService implements ICrawlerService {
                 // Only one entity
                 if (ipIds.length == 1) {
                     inProgress = true;
-                    updateEntityIntoEs(tenant, ipIds[0]);
-                } else if (ipIds.length > 1) { // serveral entities at once
+                    updateEntityIntoEs(tenant, ipIds[0], LocalDateTime.now());
+                } else if (ipIds.length > 1) { // several entities at once
                     inProgress = true;
-                    updateEntitiesIntoEs(tenant, ipIds);
+                    updateEntitiesIntoEs(tenant, ipIds, LocalDateTime.now());
                 }
                 somethingDone = true;
             }
@@ -243,8 +243,8 @@ public class CrawlerService implements ICrawlerService {
         return atLeastOnePoll;
     }
 
-    private void updateEntityIntoEs(String tenant, UniformResourceName ipId) {
-        this.updateEntityIntoEs(tenant, ipId, null);
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime updateDate) {
+        this.updateEntityIntoEs(tenant, ipId, null, updateDate);
     }
 
     /**
@@ -255,7 +255,8 @@ public class CrawlerService implements ICrawlerService {
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
      * into account
      */
-    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime lastUpdateDate) {
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime lastUpdateDate,
+            LocalDateTime updateDate) {
         LOGGER.info("received msg for " + ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
@@ -272,14 +273,14 @@ public class CrawlerService implements ICrawlerService {
             // Then save entity
             esRepos.save(tenant, entity);
             if (entity instanceof Dataset) {
-                manageDatasetUpdate((Dataset) entity, lastUpdateDate);
+                manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
         }
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
     }
 
-    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds) {
-        this.updateEntitiesIntoEs(tenant, ipIds, null);
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime updateDate) {
+        this.updateEntitiesIntoEs(tenant, ipIds, null, updateDate);
     }
 
     /**
@@ -288,7 +289,8 @@ public class CrawlerService implements ICrawlerService {
      * @param tenant concerned tenant (also index intoES)
      * @param ipIds concerned entity IpIds
      */
-    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime lastUpdateDate) {
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime lastUpdateDate,
+            LocalDateTime updateDate) {
         LOGGER.info("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
         List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
@@ -300,7 +302,7 @@ public class CrawlerService implements ICrawlerService {
             }
             esRepos.saveBulk(tenant, entities);
             entities.stream().filter(e -> e instanceof Dataset)
-                    .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate));
+                    .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate, updateDate));
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -406,7 +408,7 @@ public class CrawlerService implements ICrawlerService {
      *
      * @param dataset concerned dataset
      */
-    private void manageDatasetUpdate(Dataset dataset, LocalDateTime lastUpdateDate) {
+    private void manageDatasetUpdate(Dataset dataset, LocalDateTime lastUpdateDate, LocalDateTime updateDate) {
         PluginConfiguration datasource = dataset.getDataSource();
         String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
@@ -418,14 +420,13 @@ public class CrawlerService implements ICrawlerService {
         }
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.ge(LAST_UPDATE, lastUpdateDate));
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(LAST_UPDATE, lastUpdateDate));
         }
 
         String tenant = runtimeTenantResolver.getTenant();
         // To avoid losing time doing same stuf on all objects
         String dsIpId = dataset.getIpId().toString();
         Set<String> groups = dataset.getGroups();
-        LocalDateTime updateDate = LocalDateTime.now();
         Long datasetModelId = dataset.getModel().getId();
 
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
