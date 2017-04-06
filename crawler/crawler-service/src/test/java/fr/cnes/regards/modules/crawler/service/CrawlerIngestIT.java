@@ -48,6 +48,8 @@ import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -133,6 +135,9 @@ public class CrawlerIngestIT {
     @Autowired
     private RegardsAmqpAdmin amqpAdmin;
 
+    @Autowired
+    private EsRepository esRepos;
+
     private Model dataModel;
 
     private Model datasetModel;
@@ -149,6 +154,8 @@ public class CrawlerIngestIT {
     @Before
     public void setUp() throws Exception {
         tenantResolver.forceTenant(TENANT);
+
+        crawlerService.setConsumeOnlyMode(false);
 
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
         amqpAdmin.purgeQueue(EntityEvent.class, false);
@@ -193,6 +200,13 @@ public class CrawlerIngestIT {
 
     @After
     public void clean() {
+        if (dataSourcePluginConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
+        }
+        if (dBConnectionConf != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
+        }
+
         // Don't use entity service to clean because events are published on RabbitMQ
         if (dataset != null) {
             Utils.execute(entityRepos::delete, dataset.getId());
@@ -203,12 +217,6 @@ public class CrawlerIngestIT {
         }
         if (dataModel != null) {
             Utils.execute(modelService::deleteModel, dataModel.getId());
-        }
-        if (dataSourcePluginConf != null) {
-            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
-        }
-        if (dBConnectionConf != null) {
-            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
         }
     }
 
@@ -278,9 +286,15 @@ public class CrawlerIngestIT {
         dsService.create(dataset);
 
         crawlerService.waitForEndOfWork();
+        //        Thread.sleep(10_000);
 
         // Retrieve dataset1 from ES
-        dataset = (Dataset) searchService.get(dataset.getIpId());
+        UniformResourceName ipId = dataset.getIpId();
+        dataset = (Dataset) searchService.get(ipId);
+        if (dataset == null) {
+            esRepos.refresh(tenant);
+            dataset = (Dataset) searchService.get(ipId);
+        }
 
         SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1

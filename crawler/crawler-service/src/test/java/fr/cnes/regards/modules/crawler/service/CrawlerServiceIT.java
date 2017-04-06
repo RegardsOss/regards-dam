@@ -116,6 +116,8 @@ public class CrawlerServiceIT {
     @Before
     public void setUp() {
         tenantResolver.forceTenant(tenant);
+
+        crawlerService.setConsumeOnlyMode(false);
     }
 
     @After
@@ -134,7 +136,6 @@ public class CrawlerServiceIT {
         Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
         Utils.execute(pluginService::deletePluginConfiguration, pluginConf.getId());
 
-        esRepos.deleteIndex(tenant);
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
@@ -163,6 +164,7 @@ public class CrawlerServiceIT {
     }
 
     public void buildData1() throws ModuleException, PluginUtilsException {
+        esRepos.deleteIndex(tenant);
         if (!esRepos.indexExists(tenant)) {
             esRepos.createIndex(tenant);
         }
@@ -243,7 +245,7 @@ public class CrawlerServiceIT {
 
         crawlerService.waitForEndOfWork();
         // To be sure that the crawlerService daemon has time to do its job
-        //        Thread.sleep(10_000);
+        Thread.sleep(10_000);
 
         // Don't forget managing groups update others entities
         coll1 = (Collection) entitiesService.loadWithRelations(coll1.getIpId());
