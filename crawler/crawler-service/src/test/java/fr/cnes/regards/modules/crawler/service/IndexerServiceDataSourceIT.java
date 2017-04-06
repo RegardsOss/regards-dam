@@ -161,6 +161,8 @@ public class IndexerServiceDataSourceIT {
     public void setUp() throws Exception {
         tenantResolver.forceTenant(tenant);
 
+        crawlerService.setConsumeOnlyMode(false);
+
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
         amqpAdmin.purgeQueue(EntityEvent.class, false);
         rabbitVhostAdmin.unbind();
@@ -373,6 +375,7 @@ public class IndexerServiceDataSourceIT {
         dsService.create(dataset3);
 
         crawlerService.waitForEndOfWork();
+        Thread.sleep(10_000);
         //        indexerService.refresh(tenant);
 
         // Retrieve dataset1 from ES
