@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Sylvain Vissiere-Guerinet
  */
 @Plugin(description = "plugin there just for tests in model-rest", author = "REGARDS Team", contact = "regards@c-s.fr",
-        licence = "LGPLv3.0", owner = "CSSI", url = "http://www.c-s.fr/", id = "TestComputedAttribute",
+        licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss", id = "TestComputedAttribute",
         version = "1.0.0")
 public class TestComputedAttribute implements IComputedAttribute<Long, String> {
 

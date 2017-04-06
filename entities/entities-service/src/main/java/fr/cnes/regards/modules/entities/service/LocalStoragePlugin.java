@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  */
 @Plugin(description = "Plugin responsible for the local storing of entities as AIP ", id = "LocalStoragePlugin",
         version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
-        url = "http://www.c-s.fr/")
+        url = "https://github.com/RegardsOss")
 public class LocalStoragePlugin implements IStorageService {
 
     @Override

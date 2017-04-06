@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Plugin(id = "oracle-datasource-single-table", version = "1.0-SNAPSHOT",
         description = "Allows introspection and data extraction to a Oracle database", author = "REGARDS Team",
-        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "http://www.c-s.fr/")
+        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFromSingleTablePlugin
         implements IDataSourceFromSingleTablePlugin {
 

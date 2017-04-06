@@ -27,7 +27,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
  */
 @Plugin(id = "elasticsearch-connection", version = "1.0-SNAPSHOT", description = "Connection to a Elasticsearch engine",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
-        url = "http://www.c-s.fr/")
+        url = "https://github.com/RegardsOss")
 public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     /**

@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
  */
 @Plugin(id = "oracle-db-connection", version = "1.0-SNAPSHOT", description = "Connection to a Sql database",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
-        url = "http://www.c-s.fr/")
+        url = "https://github.com/RegardsOss")
 public class DefaultOracleConnectionPlugin extends AbstractDataSourceConnection implements IDBConnectionPlugin {
 
     /**

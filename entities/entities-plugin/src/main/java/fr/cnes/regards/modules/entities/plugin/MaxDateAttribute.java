@@ -32,7 +32,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 @Plugin(id = "MaxDateAttribute",
         description = "allows to compute the maximum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
-        url = "http://www.c-s.fr/", version = "1.0.0")
+        url = "https://github.com/RegardsOss", version = "1.0.0")
 public class MaxDateAttribute implements IComputedAttribute<DataObject, LocalDateTime> {
 
     @Autowired

@@ -31,7 +31,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 @Plugin(id = "SumIntegerAttribute", version = "1.0.0",
         description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
-        url = "http://www.c-s.fr/")
+        url = "https://github.com/RegardsOss")
 public class SumIntegerAttribute implements IComputedAttribute<DataObject, Integer> {
 
     @Autowired

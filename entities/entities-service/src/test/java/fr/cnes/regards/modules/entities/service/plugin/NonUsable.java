@@ -15,7 +15,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Sylvain Vissiere-Guerinet
  */
 @Plugin(id = "NonUsable", description = "Plugin just for test", author = "REGARDS Team", contact = "regards@c-s.fr",
-        licence = "LGPLv3.0", owner = "CSSI", url = "http://www.c-s.fr/", version = "1.0.0")
+        licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss", version = "1.0.0")
 public class NonUsable implements IComputedAttribute<Long, LocalDateTime> {
 
     @Override
