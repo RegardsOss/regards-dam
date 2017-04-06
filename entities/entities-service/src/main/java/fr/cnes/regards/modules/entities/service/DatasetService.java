@@ -11,7 +11,6 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -40,18 +39,15 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final DataSourceService dataSourceService;
 
-    private final IPluginService pluginService;
-
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttrAssocService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher, IPluginService pPluginService) {
+            EntityManager pEm, IPublisher pPublisher) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
-        pluginService = pPluginService;
     }
 
     /**

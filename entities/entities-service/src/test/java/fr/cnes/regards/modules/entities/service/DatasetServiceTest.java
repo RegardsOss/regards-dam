@@ -61,8 +61,6 @@ public class DatasetServiceTest {
 
     private AttributeModel GEO_CRS;
 
-    private AttributeModel GEO_GEOMETRY;
-
     private AttributeModel Contact_Phone;
 
     private Dataset dataSet1;
@@ -82,8 +80,6 @@ public class DatasetServiceTest {
     private IModelAttrAssocService pModelAttributeService;
 
     private IAttributeModelService pAttributeModelService;
-
-    private ArrayList<Long> pluginConfigurationIds;
 
     private IModelService modelService;
 
@@ -143,7 +139,7 @@ public class DatasetServiceTest {
 
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
-                deletedEntityRepositoryMocked, null, null, publisherMocked, null);
+                deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 
@@ -207,7 +203,7 @@ public class DatasetServiceTest {
         // textAtt strictly equals "testEquals"
         ICriterion equalsCrit = ICriterion
                 .eq("attributes." + Contact_Phone.getFragment().getName() + "." + Contact_Phone.getName(),
-                        "testEquals");
+                    "testEquals");
 
         ICriterion booleanCrit = new BooleanMatchCriterion("attributes." + attBoolean.getName(), true);
 

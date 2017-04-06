@@ -43,7 +43,6 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.adapters.gson.ModelAdapter;
 
 /**
  * Base class for all entities(on a REGARDS point of view)
@@ -142,6 +141,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Column(columnDefinition = "jsonb")
     @JsonAdapter(value = GeometryAdapter.class)
     protected Geometry<?> geometry;
+
     protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
         model = pModel;
         ipId = pIpId;
@@ -272,10 +272,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 
