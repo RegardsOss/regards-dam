@@ -16,7 +16,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Specific requests on Dataset
- * 
+ *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
@@ -34,7 +34,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
-     * 
+     *
      * @param pId
      *            id of entity
      * @return entity
@@ -46,7 +46,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find all datasets of which ipId belongs to given set (eagerly loading all relations)
-     * 
+     *
      * @param pIpIds
      *            set of ipId
      * @return found entities
@@ -58,7 +58,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find entity of given IpId eagerly loading all common relations (except pluginConfigurationIds)
-     * 
+     *
      * @param pIpId
      *            ipId of which entity
      * @return found entity

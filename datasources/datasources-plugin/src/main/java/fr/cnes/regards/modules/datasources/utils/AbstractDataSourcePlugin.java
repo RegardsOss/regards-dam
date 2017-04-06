@@ -90,21 +90,10 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      *
      * @param pTenant
      * @param pPageable
-     * @return
-     */
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
-        return findAll(pTenant, pPageable, null);
-    }
-
-    /**
-     *
-     * @param pTenant
-     * @param pPageable
-     * @param pDate
+     * @param pDate can be null
      * @return
      */
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
-
         final String selectRequest = getSelectRequest(pPageable, pDate);
         final String countRequest = getCountRequest(pDate);
 

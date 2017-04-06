@@ -245,9 +245,8 @@ public class PostgreDataSourcePluginTest {
         attributes.add(new DataSourceAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
         attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
-        // TODO CMZ à revoir namespace ci-dessous
-        attributes.add(new DataSourceAttributeMapping("dateUpdate", "LAST_UPDATE_DATE:hello",
-                AttributeType.DATE_ISO8601, "timeStampWithTimeZone", Types.TIMESTAMP));
+        attributes.add(new DataSourceAttributeMapping("dateUpdate", "hello", AttributeType.DATE_ISO8601,
+                "timeStampWithTimeZone", Types.TIMESTAMP, false, true));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

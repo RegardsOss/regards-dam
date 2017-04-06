@@ -9,6 +9,8 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentile;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesAggregationBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.indexer.domain.facet.IFacetTypeVisitor;
 
@@ -16,6 +18,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacetTypeVisitor;
  * FacetType visitor implementation to generate AggregationBuilder from a search criterion with facets
  * @author oroussel
  */
+@Component
 public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<AggregationBuilder> {
 
     public static final String STRING_FACET_POSTFIX = "_terms";
@@ -26,12 +29,23 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
 
     public static final String RANGE_FACET_POSTFIX = "_range";
 
+    private int stringFacetSize;
+
+    private int stringFacetMinDocCount;
+
+    public AggregationBuilderFacetTypeVisitor(@Value("${elasticsearch.string.facet.size:10}") int stringFacetSize,
+            @Value("${elasticsearch.string.facet.size:1}") int stringFacetMinDocCount) {
+        this.stringFacetSize = stringFacetSize;
+        this.stringFacetMinDocCount = stringFacetMinDocCount;
+    }
+
     @Override
     public AggregationBuilder visitStringFacet(Object... pArgs) {
         String pAttributeName = (String) pArgs[0]; // Development error if ClassCast or null array
         TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(pAttributeName + STRING_FACET_POSTFIX);
         termsAggBuilder.field(pAttributeName + ".keyword");
-        termsAggBuilder.size(10);
+        termsAggBuilder.size(stringFacetSize);
+        termsAggBuilder.minDocCount(stringFacetMinDocCount);
         return termsAggBuilder;
     }
 

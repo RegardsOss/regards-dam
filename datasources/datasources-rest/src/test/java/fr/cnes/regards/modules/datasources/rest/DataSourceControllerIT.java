@@ -5,7 +5,6 @@ package fr.cnes.regards.modules.datasources.rest;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
@@ -93,10 +93,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private String dbPassword;
 
     @Autowired
-    IPluginService pluginService;
+    private IPluginService pluginService;
 
     @Autowired
-    IDataSourceService dataSourceService;
+    private IDataSourceService dataSourceService;
+
+    @Autowired
+    private IPluginConfigurationRepository pluginConfRepos;
 
     private PluginConfiguration pluginPostgreDbConnection;
 
@@ -110,7 +113,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Before
     public void setUp() throws ModuleException, PluginUtilsException, JwtException {
         jwtService.injectToken(DEFAULT_TENANT, DEFAULT_ROLE, DEFAULT_USER_EMAIL);
-        
+
+        pluginConfRepos.deleteAll();
+
         /*
          * Initialize the DataSourceAttributeMapping
          */

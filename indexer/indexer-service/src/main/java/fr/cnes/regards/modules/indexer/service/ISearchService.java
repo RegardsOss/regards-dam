@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.indexer.service;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
@@ -33,11 +32,10 @@ public interface ISearchService {
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion
      * @param facetsMap a map of { document property name, facet type }
-     * @param ascSortMap a linked map (preserved insertion ordered) of { document property, true for ascending order }
      * @return a simple page of documents if facet are not asked for, a {@link FacetPage} else
      */
     <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest, ICriterion criterion,
-            Map<String, FacetType> facetsMap, LinkedHashMap<String, Boolean> ascSortMap);
+            Map<String, FacetType> facetsMap);
 
     /**
      * Search documents as usual ({@link #search(SearchKey, int, ICriterion)} BUT return joined entity whom type is
@@ -49,8 +47,8 @@ public interface ISearchService {
      * @param <T> Joined entity class
      * @return a page of joined entities
      */
-    <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey,
-            Pageable pageRequest, ICriterion pCriterion);
+    <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
+            ICriterion pCriterion);
 
     /**
      * Searching specified page of elements from index giving page size (for first call us
@@ -70,8 +68,8 @@ public interface ISearchService {
         return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), pValue, pFields);
     }
 
-    default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey,
-            int pageSize, ICriterion pCriterion) {
+    default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
+            ICriterion pCriterion) {
         return this.search(searchKey, new PageRequest(0, pageSize), pCriterion);
     }
 
@@ -80,16 +78,7 @@ public interface ISearchService {
     }
 
     default <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion) {
-        return search(searchKey, pPageRequest, criterion, null, null);
+        return search(searchKey, pPageRequest, criterion, null);
     }
 
-    default <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion,
-            Map<String, FacetType> facetsMap) {
-        return search(searchKey, pPageRequest, criterion, facetsMap, null);
-    }
-
-    default <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pPageRequest, ICriterion criterion,
-            LinkedHashMap<String, Boolean> ascSortMap) {
-        return search(searchKey, pPageRequest, criterion, null, ascSortMap);
-    }
 }
