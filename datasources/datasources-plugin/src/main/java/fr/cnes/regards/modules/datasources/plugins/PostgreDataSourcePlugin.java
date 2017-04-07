@@ -136,9 +136,4 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin implements
         // in seconds, 30 minutes
         return 1800;
     }
-
-    @Override
-    public boolean isOutOfDate() {
-        return true;
-    }
 }

@@ -42,14 +42,9 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     private static final String NAME_LABEL = "name";
 
     /**
-     * Label for primary key field
+     * Label for mapping options field
      */
-    private static final String PRIMARY_KEY_LABEL = "pKey";
-
-    /**
-     * Label for last update field
-     */
-    private static final String LAST_UPDATE_DATE_LABEL = "last_update_date";
+    private static final String MAPPING_OPTIONS = "mapping_options";
 
     /**
      * Label for type field
@@ -83,12 +78,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             pOut.beginObject();
             pOut.name(NAME_LABEL).value(attr.getName());
             pOut.name(TYPE_LABEL).value(attr.getType().name());
-            if (attr.isPrimaryKey()) {
-                pOut.name(PRIMARY_KEY_LABEL).value(attr.isPrimaryKey());
-            }
-            if (attr.isLastUpdate()) {
-                pOut.name(LAST_UPDATE_DATE_LABEL).value(attr.isLastUpdate());
-            }
+            pOut.name(MAPPING_OPTIONS).value(attr.getMappingOptions());
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
@@ -164,11 +154,8 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                 case TYPE_LABEL:
                     attr.setType(AttributeType.valueOf(pIn.nextString()));
                     break;
-                case PRIMARY_KEY_LABEL:
-                    attr.setIsPrimaryKey(pIn.nextBoolean());
-                    break;
-                case LAST_UPDATE_DATE_LABEL:
-                    attr.setLastUpdate(pIn.nextBoolean());
+                case MAPPING_OPTIONS:
+                    attr.setMappingOption((short) pIn.nextInt());
                     break;
                 default:
                     break;

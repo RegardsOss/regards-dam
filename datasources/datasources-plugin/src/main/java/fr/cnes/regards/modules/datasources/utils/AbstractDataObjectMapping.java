@@ -397,13 +397,13 @@ public abstract class AbstractDataObjectMapping {
             String val = pAttr.getValue().toString();
             pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
-        } else if (InternalAttributes.RAWDATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
+        } else if (InternalAttributes.RAW_DATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
             StringAttribute str = (StringAttribute) pAttr.getValue();
             if (pData.getFiles() == null) {
                 pData.setFiles(new ArrayList<>());
             }
             try {
-                DataType type = InternalAttributes.RAWDATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
+                DataType type = InternalAttributes.RAW_DATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setDataType(type);
                 dataFile.setFileRef(new URI(str.getValue()));
@@ -411,7 +411,7 @@ public abstract class AbstractDataObjectMapping {
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }
-        } else if (InternalAttributes.DATEUPDATE.equals(internalAt)) {
+        } else if (InternalAttributes.LAST_UPDATE.equals(internalAt)) {
             pData.setLastUpdate((LocalDateTime) pAttr.getValue());
         } else if (InternalAttributes.LABEL.equals(internalAt)) {
             StringAttribute str = (StringAttribute) pAttr.getValue();
@@ -443,19 +443,9 @@ public abstract class AbstractDataObjectMapping {
      * @return the SQL request with a from clause to filter the result since a date
      */
     private String buildDateStatement(String pRequest, LocalDateTime pDate) {
-
-        // il faut un attribut sur lequel mettre la condition
-        // si pas d'attribut sur lequel mettre la confition -> on sort on ne fait rien
-
-        // le key word avec une date en paramètre -> remplacer la date au bon format
-        // le key word mais pas de date en paramètre -> mettre une date par défaut (normalement ne devrait pas arriver)
-        // pas de key word avec une date et pas de clause where -> rajouter une clause where
-        // pas de key word avec une date et une clause where -> pas possible, il faut mettre le keyword dans la clause
-        // where existante
-
         // Search the attribute used to get the new data (first one is used)
         for (Map.Entry<String, InternalAttributes> entry : mappingInternalAttributes.entrySet()) {
-            if (entry.getValue() == InternalAttributes.DATEUPDATE) {
+            if (entry.getValue() == InternalAttributes.LAST_UPDATE) {
                 dateAttributeName = entry.getKey();
                 LOG.debug("Attribute for date comparison found: " + entry.getKey());
                 break;
@@ -525,63 +515,28 @@ public abstract class AbstractDataObjectMapping {
     private void initMappingInternalAttributes() {
         for (DataSourceAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
-            if (isLabel(attrMapping.getNameSpace())) {
+            if (attrMapping.isLabel()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
-            } else if (isRawData(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAWDATA);
-            } else if (isThumbnail(attrMapping.getNameSpace())) {
+            } else if (attrMapping.isRawData()) {
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAW_DATA);
+            } else if (attrMapping.isThumbnail()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
             } else if (attrMapping.isLastUpdate()) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DATEUPDATE);
-            } else if (isDescription(attrMapping.getNameSpace())) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.DESCRIPTION);
+                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LAST_UPDATE);
             }
         }
-    }
-
-    // TODO CMZ à compléter
-    private boolean isDescription(String pNamespace) {
-        boolean isDescr = false;
-        if (isDescr) {
-            LOG.debug("found a description");
-        }
-        return isDescr;
-    }
-
-    private boolean isLabel(String pNamespace) {
-        boolean isLabel = false;
-        if (isLabel) {
-            LOG.debug("found a label");
-        }
-        return isLabel;
-    }
-
-    private boolean isRawData(String pNamespace) {
-        boolean isRawData = false;
-        if (isRawData) {
-            LOG.debug("found a raw data");
-        }
-        return isRawData;
-    }
-
-    private boolean isThumbnail(String pNamespace) {
-        boolean isThumbnail = false;
-        if (isThumbnail) {
-            LOG.debug("found a thumbnail");
-        }
-        return isThumbnail;
     }
 
     private enum InternalAttributes {
         /**
          * Identify attribute for the last update attribute
          */
-        DATEUPDATE,
+        LAST_UPDATE,
 
         /**
          * Identify an attribute for a file as {@link DataType}{@link #RAWDATA}
          */
-        RAWDATA,
+        RAW_DATA,
 
         /**
          * Identify an attribute for a file as {@link DataType}{@link #THUMBNAIL}
@@ -591,12 +546,7 @@ public abstract class AbstractDataObjectMapping {
         /**
          * Identify an attribute for a label attribute
          */
-        LABEL,
-
-        /**
-         * Identify an attribute for a label attribute
-         */
-        DESCRIPTION
+        LABEL
     };
 
 }
