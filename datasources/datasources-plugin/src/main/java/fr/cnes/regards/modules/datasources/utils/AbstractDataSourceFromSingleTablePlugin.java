@@ -92,18 +92,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return 1800;
     }
 
-    public boolean isOutOfDate() {
-        boolean outDated = true;
-
-        // TODO compute the out dated value
-
-        if (outDated) {
-            this.reset();
-        }
-
-        return outDated;
-    }
-
     /**
      * Build the SELECT request.</br>
      * Add the key word "%last_modification_date%" in the WHERE clause.

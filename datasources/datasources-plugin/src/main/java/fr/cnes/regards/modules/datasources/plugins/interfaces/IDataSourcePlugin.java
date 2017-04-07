@@ -67,13 +67,6 @@ public interface IDataSourcePlugin {
     int getRefreshRate();
 
     /**
-     * Returns <code>true</code> if the content of the data source has been modified.
-     *
-     * @return boolean
-     */
-    boolean isOutOfDate();
-
-    /**
      * Returns <code>true</code> if the data source is connected to internal database.
      *
      * @return boolean
