@@ -233,7 +233,8 @@ public class PostgreDataSourcePluginTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
+        attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id",
+                DataSourceAttributeMapping.PRIMARY_KEY));
         attributes
                 .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "- '||label as label"));
         attributes
@@ -246,7 +247,7 @@ public class PostgreDataSourcePluginTest {
                 "timeStampWithoutTimeZone"));
         attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
         attributes.add(new DataSourceAttributeMapping("dateUpdate", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone", Types.TIMESTAMP, false, true));
+                "timeStampWithTimeZone", Types.TIMESTAMP, DataSourceAttributeMapping.LAST_UPDATE));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

@@ -62,13 +62,13 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * Information Package ID for REST request
      */
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = MAX_IPID_SIZE)
     @Convert(converter = UrnConverter.class)
     @Valid
     protected UniformResourceName ipId;
 
     @NotNull
-    @Column(length = 128, nullable = false)
+    @Column(length = MAX_IPID_SIZE, nullable = false)
     protected String label;
 
     /**

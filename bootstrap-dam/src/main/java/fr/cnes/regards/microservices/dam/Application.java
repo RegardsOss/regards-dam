@@ -6,6 +6,7 @@ package fr.cnes.regards.microservices.dam;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
 
@@ -20,6 +21,7 @@ import fr.cnes.regards.framework.microservice.annotation.MicroserviceInfo;
 @SpringBootApplication(scanBasePackages = { "fr.cnes.regards.modules", "fr.cnes.regards.contrib" })
 @MicroserviceInfo(name = "Data management", version = "1.0-SNAPSHOT")
 @EnableAsync
+@EnableScheduling
 public class Application { // NOSONAR
 
     /**
