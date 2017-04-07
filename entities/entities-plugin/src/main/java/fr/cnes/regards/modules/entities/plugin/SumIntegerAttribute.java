@@ -28,8 +28,10 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "SumIntegerAttribute", author = "Sylvain Vissiere-Guerinet",
-        description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name")
+@Plugin(id = "SumIntegerAttribute", version = "1.0.0",
+        description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss")
 public class SumIntegerAttribute implements IComputedAttribute<DataObject, Integer> {
 
     @Autowired

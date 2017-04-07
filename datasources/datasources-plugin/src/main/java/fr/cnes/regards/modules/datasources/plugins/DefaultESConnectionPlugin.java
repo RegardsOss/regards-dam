@@ -20,15 +20,14 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 
 /**
- * Class DefaultESConnectionPlugin
- *
- * A default {@link Plugin} of type {@link IConnectionPlugin}. Allows to
+ * Class DefaultESConnectionPlugin A default {@link Plugin} of type {@link IConnectionPlugin}. Allows to
  *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "elasticsearch-connection", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Connection to a Elasticsearch engine")
+@Plugin(id = "elasticsearch-connection", version = "1.0-SNAPSHOT", description = "Connection to a Elasticsearch engine",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss")
 public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     /**

@@ -22,8 +22,9 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "CountElementAttribute", author = "Sylvain Vissiere-Guerinet",
-        description = "allows to compute the number of data of a Dataset")
+@Plugin(id = "CountElementAttribute", description = "allows to compute the number of data of a Dataset",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss", version = "1.0.0")
 public class CountElementAttribute implements IComputedAttribute<DataObject, Long> {
 
     @Autowired

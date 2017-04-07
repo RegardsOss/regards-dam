@@ -29,8 +29,10 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "MinDateAttribute", author = "Sylvain VISSIERE-GUERINET",
-        description = "allows to compute the minimum of a DateAttribute according to a collection of data")
+@Plugin(id = "MinDateAttribute",
+        description = "allows to compute the minimum of a DateAttribute according to a collection of data",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss", version = "1.0.0")
 public class MinDateAttribute implements IComputedAttribute<DataObject, LocalDateTime> {
 
     @Autowired

@@ -12,16 +12,15 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 
 /**
  * A default {@link Plugin} of type {@link IDBConnectionPlugin}.</br>
- * 
  * For the test of the connection :
- * 
- * @see http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most
  *
+ * @see http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "oracle-db-connection", author = "CSSI", version = "1.0-SNAPSHOT",
-        description = "Connection to a Sql database")
+@Plugin(id = "oracle-db-connection", version = "1.0-SNAPSHOT", description = "Connection to a Sql database",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss")
 public class DefaultOracleConnectionPlugin extends AbstractDataSourceConnection implements IDBConnectionPlugin {
 
     /**

@@ -29,8 +29,10 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "MaxDateAttribute", author = "Sylvain VISSIERE-GUERINET",
-        description = "allows to compute the maximum of a DateAttribute according to a collection of data")
+@Plugin(id = "MaxDateAttribute",
+        description = "allows to compute the maximum of a DateAttribute according to a collection of data",
+        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
+        url = "https://github.com/RegardsOss", version = "1.0.0")
 public class MaxDateAttribute implements IComputedAttribute<DataObject, LocalDateTime> {
 
     @Autowired
