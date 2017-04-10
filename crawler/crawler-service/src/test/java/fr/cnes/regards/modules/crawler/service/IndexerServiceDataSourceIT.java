@@ -274,8 +274,8 @@ public class IndexerServiceDataSourceIT {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes
-                .add(new DataSourceAttributeMapping("DATA_OBJECTS_ID", AttributeType.INTEGER, "DATA_OBJECTS_ID", true));
+        attributes.add(new DataSourceAttributeMapping("DATA_OBJECTS_ID", AttributeType.INTEGER, "DATA_OBJECTS_ID",
+                DataSourceAttributeMapping.PRIMARY_KEY));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));

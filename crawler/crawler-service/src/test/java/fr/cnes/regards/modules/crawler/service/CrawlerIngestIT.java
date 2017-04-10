@@ -248,9 +248,11 @@ public class CrawlerIngestIT {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("ext_data_id", AttributeType.LONG, "id", true));
+        attributes.add(new DataSourceAttributeMapping("ext_data_id", AttributeType.LONG, "id",
+                DataSourceAttributeMapping.PRIMARY_KEY));
 
-        attributes.add(new DataSourceAttributeMapping("date", AttributeType.DATE_ISO8601, true, "date"));
+        attributes.add(new DataSourceAttributeMapping("date", AttributeType.DATE_ISO8601, "date",
+                DataSourceAttributeMapping.LAST_UPDATE));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }

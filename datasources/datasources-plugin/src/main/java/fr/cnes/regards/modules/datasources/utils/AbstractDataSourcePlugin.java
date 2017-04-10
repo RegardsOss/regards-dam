@@ -45,23 +45,12 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
 
-    // TODO CMZ à voir si utile, sinon à virer
+    /**
+     * By default, the refresh rate is set to 30 minutes (in ms)
+     */
     public int getRefreshRate() {
         // in seconds, 30 minutes
         return 1800;
-    }
-
-    // TODO CMZ à voir si utile, sinon à virer
-    public boolean isOutOfDate() {
-        boolean outDated = true;
-
-        // TODO compute the out dated value
-
-        if (outDated) {
-            this.reset();
-        }
-
-        return outDated;
     }
 
     protected abstract String getFromClause();

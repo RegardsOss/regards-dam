@@ -166,7 +166,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID", true));
+        attributes.add(new DataSourceAttributeMapping("DATA_OBJECT_ID", AttributeType.INTEGER, "DATA_OBJECT_ID",
+                DataSourceAttributeMapping.PRIMARY_KEY));
 
         attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -178,8 +179,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING,
                 "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new DataSourceAttributeMapping("START_DATE", "LAST_UPDATE_DATE:date début",
-                AttributeType.DATE_ISO8601, "START_DATE", Types.DECIMAL));
+        attributes.add(new DataSourceAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
+                Types.DECIMAL, DataSourceAttributeMapping.LAST_UPDATE));
         attributes.add(new DataSourceAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE",
                 Types.DECIMAL));
         attributes.add(new DataSourceAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,

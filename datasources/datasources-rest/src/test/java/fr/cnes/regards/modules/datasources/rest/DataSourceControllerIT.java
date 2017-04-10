@@ -393,7 +393,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private void buildModelAttributes() {
         List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id", true));
+        attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id",
+                DataSourceAttributeMapping.PRIMARY_KEY));
         attributes
                 .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label"));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));

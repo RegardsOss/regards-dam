@@ -12,9 +12,39 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * This class is used to map a data source attribute to an attribute of a {@link Model}
  *
  * @author Christophe Mertz
- *
+ * @author oroussel
  */
 public class DataSourceAttributeMapping {
+
+    /**
+     * Constant to be used in mappingOptions. Indicates that the attribute has no specific mapping options
+     */
+    public static final short NO_MAPPING_OPTIONS = 0;
+
+    /**
+     * Constant to be used in mappingOptions. Indicates the attribute is a primary key
+     */
+    public static final short PRIMARY_KEY = 1;
+
+    /**
+     * Constant to be used in mappingOptions. Indicates the attribute is the last update field
+     */
+    public static final short LAST_UPDATE = 2;
+
+    /**
+     * Constant to be used in mappingOptions. Indicates the attribute is the label
+     */
+    public static final short LABEL = 4;
+
+    /**
+     * Constant to be used in mappingOptions. Indicates the attribute is raw data
+     */
+    public static final short RAW_DATA = 8;
+
+    /**
+     * Constant to be used in mappingOptions. Indicates the attribute is a thumbnail
+     */
+    public static final short THUMBNAIL = 16;
 
     /**
      * The attribute name in the model
@@ -42,14 +72,10 @@ public class DataSourceAttributeMapping {
     private Integer typeDS = null;
 
     /**
-     * This attribute is the primary key
+     * Combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
+     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
      */
-    private boolean isPrimaryKey = false;
-
-    /**
-     * This attribute is the last update
-     */
-    private boolean isLastUpdate = false;
+    private short mappingOptions = NO_MAPPING_OPTIONS;
 
     /**
      * Default constructor
@@ -65,19 +91,18 @@ public class DataSourceAttributeMapping {
      * @param pType the attribute type in the model @see {@link AttributeType}
      * @param pMappingDS The attribute name in the data source
      * @param pTypeDS The attribute type in the data source @see {@link Types}
-     * @param isPrimaryKey is this attribute the primary key ?
-     * @param isLastUpdate is this attribute the last update attribute ?
+     * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
+     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
      */
     public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
-            Integer pTypeDS, boolean isPrimaryKey, boolean isLastUpdate) {
+            Integer pTypeDS, short pMappingOptions) {
         this();
         this.name = pName;
         this.type = pType;
         this.nameSpace = pNameSpace;
         this.nameDS = pMappingDS;
         this.typeDS = pTypeDS;
-        this.isPrimaryKey = isPrimaryKey;
-        this.isLastUpdate = isLastUpdate;
+        this.mappingOptions = pMappingOptions;
     }
 
     /**
@@ -88,11 +113,12 @@ public class DataSourceAttributeMapping {
      * @param pType the attribute type in the model @see {@link AttributeType}
      * @param pMappingDS The attribute name in the data source
      * @param pTypeDS The attribute type in the data source @see {@link Types}
-     * @param pIsPrimaryKey true if the attribute is a primary key in the data source
+     * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
+     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
      */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, Integer pTypeDS,
-            boolean pIsPrimaryKey) {
-        this(pName, null, pType, pMappingDS, pTypeDS, pIsPrimaryKey, false);
+            short pMappingOptions) {
+        this(pName, null, pType, pMappingDS, pTypeDS, pMappingOptions);
     }
 
     /**
@@ -105,7 +131,7 @@ public class DataSourceAttributeMapping {
      */
     public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
             Integer pTypeDS) {
-        this(pName, pNameSpace, pType, pMappingDS, pTypeDS, false, false);
+        this(pName, pNameSpace, pType, pMappingDS, pTypeDS, NO_MAPPING_OPTIONS);
     }
 
     /**
@@ -121,15 +147,10 @@ public class DataSourceAttributeMapping {
 
     /**
      * Constructor for a {@link DataSourceAttributeMapping} with a namespace
-     *
-     * @param pName
-     *            the attribute name in the model
-     * @param pNameSpace
-     *            the attribute name space in the model
-     * @param pType
-     *            the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS
-     *            The attribute name in the data source
+     * @param pName the attribute name in the model
+     * @param pNameSpace the attribute name space in the model
+     * @param pType the attribute type in the model @see {@link AttributeType}
+     * @param pMappingDS The attribute name in the data source
      */
     public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
         this(pName, pNameSpace, pType, pMappingDS, null);
@@ -137,18 +158,14 @@ public class DataSourceAttributeMapping {
 
     /**
      * Constructor for a {@link DataSourceAttributeMapping} without namespace
-     *
-     * @param pName
-     *            the attribute name in the model
-     * @param pType
-     *            the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS
-     *            The attribute name in the data source
-     * @param pIsPrimaryKey
-     *            true if the attribute is a primary key in the data source
+     * @param pName the attribute name in the model
+     * @param pType the attribute type in the model @see {@link AttributeType}
+     * @param pMappingDS The attribute name in the data source
+     * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
+     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
      */
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, boolean pIsPrimaryKey) {
-        this(pName, pType, pMappingDS, null, pIsPrimaryKey);
+    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, short pMappingOptions) {
+        this(pName, pType, pMappingDS, null, pMappingOptions);
     }
 
     /**
@@ -156,25 +173,10 @@ public class DataSourceAttributeMapping {
      *
      * @param pName the attribute name in the model
      * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pIsLastUpdate true if the attribute is the last update attribute
      * @param pMappingDS The attribute name in the data source
      */
-    public DataSourceAttributeMapping(String pName, AttributeType pType, boolean pIsLastUpdate, String pMappingDS) {
-        this(pName, null, pType, pMappingDS, null, false, pIsLastUpdate);
-    }
-
-    /**
-     * Constructor for a {@link DataSourceAttributeMapping} without namespace
-     *
-     * @param pName
-     *            the attribute name in the model
-     * @param pType
-     *            the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS
-     *            The attribute name in the data source
-     */
     public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS) {
-        this(pName, pType, false, pMappingDS);
+        this(pName, pType, pMappingDS, NO_MAPPING_OPTIONS);
     }
 
     public String getName() {
@@ -217,20 +219,35 @@ public class DataSourceAttributeMapping {
         this.typeDS = pTypeDS;
     }
 
-    public boolean isPrimaryKey() {
-        return isPrimaryKey;
+    public void addMappingOption(short option) {
+        mappingOptions |= option;
     }
 
-    public void setIsPrimaryKey(boolean pIsPrimaryKey) {
-        this.isPrimaryKey = pIsPrimaryKey;
+    public void setMappingOption(short options) {
+        mappingOptions = options;
+    }
+
+    public short getMappingOptions() {
+        return mappingOptions;
+    }
+
+    public boolean isPrimaryKey() {
+        return ((mappingOptions & PRIMARY_KEY) == PRIMARY_KEY);
     }
 
     public boolean isLastUpdate() {
-        return isLastUpdate;
+        return ((mappingOptions & LAST_UPDATE) == LAST_UPDATE);
     }
 
-    public void setLastUpdate(boolean pIsLastUpdate) {
-        isLastUpdate = pIsLastUpdate;
+    public boolean isLabel() {
+        return ((mappingOptions & LABEL) == LABEL);
     }
 
+    public boolean isRawData() {
+        return ((mappingOptions & RAW_DATA) == RAW_DATA);
+    }
+
+    public boolean isThumbnail() {
+        return ((mappingOptions & THUMBNAIL) == THUMBNAIL);
+    }
 }
