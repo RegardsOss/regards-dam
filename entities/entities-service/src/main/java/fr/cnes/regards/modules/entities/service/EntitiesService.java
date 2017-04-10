@@ -3,10 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,16 +12,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.google.common.reflect.Invokable;
-import com.google.common.reflect.Parameter;
-import com.google.common.reflect.TypeToken;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.plugin.CountElementAttribute;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -86,27 +79,20 @@ public class EntitiesService implements IEntitiesService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends IComputedAttribute<DataObject, ?>> Set<T> getComputationPlugins(Dataset pDataset) {
+    public <T extends IComputedAttribute<Dataset, ?>> Set<T> getComputationPlugins(Dataset pDataset) {
 
         Set<ModelAttrAssoc> computedAttributes = modelAttributeService
                 .getComputedAttributes(pDataset.getModel().getId());
         Set<T> computationPlugins = new HashSet<>();
-        @SuppressWarnings("serial")
-        TypeToken<Collection<DataObject>> expectedType = new TypeToken<Collection<DataObject>>() {
-        };
         computedAttributes.forEach(attr -> {
             try {
                 IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf());
                 // here we have a plugin with no idea of the type of the generic parameter used by the "compute" method,
-                // lets check that it is a IComputedAttribute<DataObject,?>
-                Method compute = plugin.getClass().getMethod("compute", Collection.class);
-                // get an invokable so we can check the parameter type
-                Invokable<IComputedAttribute<?, ?>, Object> invokable = (Invokable<IComputedAttribute<?, ?>, Object>) TypeToken
-                        .of(plugin.getClass()).method(compute);
-                Parameter typeParameters = invokable.getParameters().get(0);
-                if (expectedType.isSupertypeOf(typeParameters.getType())) {
-                    computationPlugins.add((T) plugin);
-                }
+                // lets check that it is a IComputedAttribute<Dataset,?>
+                plugin.getClass().getMethod("compute", Dataset.class);
+                // if no exception has been thrown then the method exist and we are in presence of a
+                // IComputedAttribute<Dataset, ?>
+                computationPlugins.add((T) plugin);
             } catch (ModuleException e) {
                 // rethrow as a runtime because anyway there is nothing we can do there, if the plugin cannot be
                 // instantiate the system should set itself to maintenance mode!
@@ -115,12 +101,12 @@ public class EntitiesService implements IEntitiesService {
                 // This exception should not happen. so if it does lets put the system into maintenance mode
                 throw new RuntimeException(e); // NOSONAR
             } catch (NoSuchMethodException e) {
-                // This exception should not happen. so if it does lets put the system into maintenance mode
-                throw new RuntimeException(e); // NOSONAR
+                // this is a normal exception in the logic of the method: to know if we have an
+                // IComputedAttribute<Dataset, ?> we check if a method compute(Dataset) is defined, if not then we just
+                // don't consider this plugin
             }
         });
         return computationPlugins;
-
     }
 
 }

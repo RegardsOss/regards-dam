@@ -27,7 +27,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
-import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.plugin.MinDateAttribute;
 import fr.cnes.regards.modules.entities.service.plugin.NonUsable;
@@ -105,8 +104,8 @@ public class EntitiesServiceIT {
 
     @Test
     public void testGetComputationPlugins() throws ModuleException {
-        Set<IComputedAttribute<DataObject, ?>> results = entitiesService.getComputationPlugins(dataset);
-        for (IComputedAttribute<DataObject, ?> plugin : results) {
+        Set<IComputedAttribute<Dataset, ?>> results = entitiesService.getComputationPlugins(dataset);
+        for (IComputedAttribute<Dataset, ?> plugin : results) {
             Assert.assertEquals(MinDateAttribute.class, plugin.getClass());
         }
     }

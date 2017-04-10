@@ -34,7 +34,7 @@ public class TestComputedAttribute implements IComputedAttribute<Long, String> {
     }
 
     @Override
-    public AttributeModel getAttributeComputed() {
+    public AttributeModel getAttributeToCompute() {
         return null;
     }
 
