@@ -61,10 +61,13 @@ public class MaxDateAttribute extends AbstractFromDataObjectAttributeComputation
                 .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
         if (candidate.isPresent() && (candidate.get() instanceof DateAttribute)) {
             DateAttribute attributeOfInterest = (DateAttribute) candidate.get();
-            if (result != null) {
-                result = attributeOfInterest.getValue().isAfter(result) ? attributeOfInterest.getValue() : result;
-            } else {
-                result = attributeOfInterest.getValue();
+            LocalDateTime value = attributeOfInterest.getValue();
+            if (value != null) {
+                if (result != null) {
+                    result = value.isAfter(result) ? attributeOfInterest.getValue() : result;
+                } else {
+                    result = value;
+                }
             }
         }
     }

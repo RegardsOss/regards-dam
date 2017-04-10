@@ -60,7 +60,10 @@ public class SumLongAttribute extends AbstractFromDataObjectAttributeComputation
                 .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
         if (candidate.isPresent() && (candidate.get() instanceof LongAttribute)) {
             LongAttribute attributeOfInterest = (LongAttribute) candidate.get();
-            result += attributeOfInterest.getValue();
+            Long value = attributeOfInterest.getValue();
+            if (value != null) {
+                result += value;
+            }
         }
     }
 

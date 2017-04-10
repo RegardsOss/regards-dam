@@ -4,6 +4,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,6 +81,10 @@ public class IndexerServiceDataSourceIT {
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
+
+    private static final String DATA_MODEL_FILE_NAME = "dataModel.xml";
+
+    private static final String DATASET_MODEL_FILE_NAME = "datasetModel.xml";
 
     @Value("${regards.tenant}")
     private String tenant;
@@ -173,20 +180,27 @@ public class IndexerServiceDataSourceIT {
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
         // Register model attributes
-        registerJSonModelAttributes();
-        dataModel = new Model();
-        dataModel.setName("model_1");
-        dataModel.setType(EntityType.DATA);
-        dataModel.setVersion("1");
-        dataModel.setDescription("Test data object model");
-        modelService.createModel(dataModel);
+        // registerJSonModelAttributes(); should be done thanks to importModel
 
-        datasetModel = new Model();
-        datasetModel.setName("model_ds_1");
-        datasetModel.setType(EntityType.DATASET);
-        datasetModel.setVersion("1");
-        datasetModel.setDescription("Test dataset model");
-        modelService.createModel(datasetModel);
+        // get a model for DataObject
+        importModel(DATA_MODEL_FILE_NAME);
+        dataModel = modelService.getModelByName("model_1");
+        // dataModel = new Model();
+        // dataModel.setName("model_1");
+        // dataModel.setType(EntityType.DATA);
+        // dataModel.setVersion("1");
+        // dataModel.setDescription("Test data object model");
+        // modelService.createModel(dataModel);
+
+        // get a model for Dataset
+        importModel(DATASET_MODEL_FILE_NAME);
+        datasetModel = modelService.getModelByName("model_ds_1");
+        // datasetModel = new Model();
+        // datasetModel.setName("model_ds_1");
+        // datasetModel.setType(EntityType.DATASET);
+        // datasetModel.setVersion("1");
+        // datasetModel.setDescription("Test dataset model");
+        // modelService.createModel(datasetModel);
 
         // Initialize the DataSourceAttributeMapping
         buildModelAttributes();
@@ -376,13 +390,14 @@ public class IndexerServiceDataSourceIT {
 
         crawlerService.waitForEndOfWork();
         Thread.sleep(10_000);
-        //        indexerService.refresh(tenant);
+        // indexerService.refresh(tenant);
 
         // Retrieve dataset1 from ES
         dataset1 = (Dataset) searchService.get(dataset1.getIpId());
         Assert.assertNotNull(dataset1);
 
-        //SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        // SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(),
+        // DataObject.class);
         SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
@@ -430,10 +445,10 @@ public class IndexerServiceDataSourceIT {
         }
 
         // Search for Dataset but with criterion on DataObjects
-        //        SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        // SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
         JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
                 .onSingleEntityReturningJoinEntity(tenant, EntityType.DATA, EntityType.DATASET);
-        //Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        // Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
         Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
@@ -445,7 +460,7 @@ public class IndexerServiceDataSourceIT {
         Assert.assertEquals(1, dsPage.getContent().size());
 
         // Search for Dataset but with criterion on everything
-        //SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        // SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
         JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
                 .onAllEntitiesReturningJoinEntity(tenant, EntityType.DATASET);
         dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
@@ -465,4 +480,20 @@ public class IndexerServiceDataSourceIT {
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }
 
+    /**
+     * Import model definition file from resources directory
+     *
+     * @param pFilename filename
+     * @return list of created model attributes
+     * @throws ModuleException if error occurs
+     */
+    private void importModel(String pFilename) throws ModuleException {
+        try {
+            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
+            modelService.importModel(input);
+        } catch (IOException e) {
+            String errorMessage = "Cannot import " + pFilename;
+            throw new AssertionError(errorMessage);
+        }
+    }
 }

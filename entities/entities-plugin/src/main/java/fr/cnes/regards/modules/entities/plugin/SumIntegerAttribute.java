@@ -60,7 +60,10 @@ public class SumIntegerAttribute extends AbstractFromDataObjectAttributeComputat
                 .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
         if (candidate.isPresent() && (candidate.get() instanceof IntegerAttribute)) {
             IntegerAttribute attributeOfInterest = (IntegerAttribute) candidate.get();
-            result += attributeOfInterest.getValue();
+            Integer value = attributeOfInterest.getValue();
+            if (value != null) {
+                result += value;
+            }
         }
     }
 

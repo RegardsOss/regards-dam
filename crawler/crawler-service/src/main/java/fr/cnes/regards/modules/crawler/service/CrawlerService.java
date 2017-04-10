@@ -451,9 +451,9 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Create computed attributes from computation
      */
-    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<DataObject, ?>> computationPlugins) {
+    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<Dataset, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
-        for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
+        for (IComputedAttribute<Dataset, ?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectAttribute) {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
@@ -479,11 +479,6 @@ public class CrawlerService implements ICrawlerService {
                 dataset.getProperties().add(attributeToAdd);
             }
         }
-    }
-
-    private void computeDatasetAttributes(Set<IComputedAttribute<DataObject, ?>> computationPlugins,
-            List<DataObject> dataObjects) {
-        computationPlugins.forEach(p -> p.compute(dataObjects));
     }
 
     /**
