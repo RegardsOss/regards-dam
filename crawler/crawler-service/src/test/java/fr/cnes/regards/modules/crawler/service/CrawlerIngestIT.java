@@ -30,13 +30,13 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -65,7 +65,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
- * Perdiocal Crawler ingestion tests
+ * Crawler ingestion tests
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -223,8 +223,9 @@ public class CrawlerIngestIT {
     private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
+                              adapter.toJson(dataSourceModelMapping))
                 .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -273,8 +274,8 @@ public class CrawlerIngestIT {
         extDataRepos.saveAndFlush(new ExternalData(LocalDate.of(2000, Month.JANUARY, 1)));
 
         // Ingest from scratch
-        int objectsCreationCount = crawlerService.ingest(dataSourcePluginConf);
-        Assert.assertEquals(1, objectsCreationCount);
+        IngestionResult summary = crawlerService.ingest(dataSourcePluginConf);
+        Assert.assertEquals(1, summary.getSavedObjectsCount());
 
         crawlerService.startWork();
         // Dataset on all objects
@@ -308,9 +309,8 @@ public class CrawlerIngestIT {
         extDataRepos.save(new ExternalData(LocalDate.of(2001, Month.JANUARY, 1)));
 
         // Ingest from 2000/01/01 (strictly after)
-        objectsCreationCount = crawlerService.ingest(dataSourcePluginConf,
-                                                     LocalDateTime.of(2000, Month.JANUARY, 2, 0, 0));
-        Assert.assertEquals(1, objectsCreationCount);
+        summary = crawlerService.ingest(dataSourcePluginConf, LocalDateTime.of(2000, Month.JANUARY, 2, 0, 0));
+        Assert.assertEquals(1, summary.getSavedObjectsCount());
 
         // Search for DataObjects tagging dataset1
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,

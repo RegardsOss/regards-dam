@@ -33,6 +33,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -340,11 +341,11 @@ public class IndexerServiceDataSourceIT {
         indexerService.deleteIndex(tenant);
 
         // Creation
-        int objectsCreationCount = crawlerService.ingest(dataSourcePluginConf);
+        IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf);
 
         // Update
-        int objectsMergeCount = crawlerService.ingest(dataSourcePluginConf);
-        Assert.assertEquals(objectsCreationCount, objectsMergeCount);
+        IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf);
+        Assert.assertEquals(summary1.getSavedObjectsCount(), summary2.getSavedObjectsCount());
 
         crawlerService.startWork();
         // Create 3 Datasets on all objects
@@ -388,7 +389,7 @@ public class IndexerServiceDataSourceIT {
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
-        Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
+        Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // All data are associated with the 3 datasets so they must all have the 4 groups
         for (DataObject object : objectsPage.getContent()) {
             Assert.assertTrue(object.getGroups().contains("group0"));
@@ -419,7 +420,7 @@ public class IndexerServiceDataSourceIT {
         objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                            ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
-        Assert.assertEquals(objectsCreationCount, objectsPage.getContent().size());
+        Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)
         // but not "group0" (only on dataset1)
         for (DataObject object : objectsPage.getContent()) {

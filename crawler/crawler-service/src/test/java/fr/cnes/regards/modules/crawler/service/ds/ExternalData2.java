@@ -16,8 +16,8 @@ import javax.persistence.Table;
  * @author oroussel
  */
 @Entity
-@Table(name = "T_DATA")
-public class ExternalData {
+@Table(name = "T_DATA_2")
+public class ExternalData2 {
 
     @Id
     @Column
@@ -27,10 +27,10 @@ public class ExternalData {
     @Column
     private LocalDate date;
 
-    public ExternalData() {
+    public ExternalData2() {
     }
 
-    public ExternalData(LocalDate pDate) {
+    public ExternalData2(LocalDate pDate) {
         date = pDate;
     }
 

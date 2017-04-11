@@ -62,7 +62,7 @@ public interface IDataSourcePlugin {
     /**
      * The refresh rate of the data source
      *
-     * @return the refresh rate value
+     * @return the refresh rate value (in seconds)
      */
     int getRefreshRate();
 
