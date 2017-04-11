@@ -9,8 +9,6 @@ import javax.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
@@ -50,7 +48,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 LOG.error("ModelAttrAssoc of id: " + pValue.getId()
                         + " cannot be validated because we couldn't instanciate the associated plugin to check the coherence of its return type.");
-                Throwables.propagate(e);
+                throw new RuntimeException(e); // NOSONAR
             }
         }
         return ComputationMode.GIVEN.equals(pValue.getMode());

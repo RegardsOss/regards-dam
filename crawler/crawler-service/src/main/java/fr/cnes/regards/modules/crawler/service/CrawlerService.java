@@ -40,6 +40,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -513,7 +514,7 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public int ingest(PluginConfiguration pluginConf, LocalDateTime date) throws ModuleException {
+    public IngestionResult ingest(PluginConfiguration pluginConf, LocalDateTime date) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
@@ -557,7 +558,7 @@ public class CrawlerService implements ICrawlerService {
             }
         }
 
-        return savedObjectsCount;
+        return new IngestionResult(now, savedObjectsCount);
     }
 
     @Override

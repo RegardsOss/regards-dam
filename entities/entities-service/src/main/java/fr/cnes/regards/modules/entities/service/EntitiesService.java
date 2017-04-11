@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -33,22 +36,24 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 @Service
 public class EntitiesService implements IEntitiesService {
 
-    private final IDatasetRepository datasetRepository;
+    @Autowired
+    private IDatasetRepository datasetRepository;
 
-    private final IAbstractEntityRepository<AbstractEntity> entityRepository;
+    @Autowired
+    private IAbstractEntityRepository<AbstractEntity> entityRepository;
 
-    private final IModelAttrAssocService modelAttributeService;
+    @Autowired
+    private IModelAttrAssocService modelAttributeService;
 
-    private final IPluginService pluginService;
+    @Autowired
+    private IPluginService pluginService;
 
-    public EntitiesService(IDatasetRepository pDatasetRepository,
-            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelAttrAssocService pModelAttributeService,
-            IPluginService pPluginService) {
+    public EntitiesService() {
         super();
-        datasetRepository = pDatasetRepository;
-        entityRepository = pEntityRepository;
-        modelAttributeService = pModelAttributeService;
-        pluginService = pPluginService;
+    }
+
+    @PostConstruct
+    public void initPluginPackage() {
         pluginService.addPluginPackage(CountElementAttribute.class.getPackage().getName());
     }
 
