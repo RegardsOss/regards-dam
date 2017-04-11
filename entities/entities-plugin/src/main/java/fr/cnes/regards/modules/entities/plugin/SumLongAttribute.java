@@ -53,6 +53,7 @@ public class SumLongAttribute extends AbstractFromDataObjectAttributeComputation
         initAbstract(esRepo, attModelService, tenantResolver);
         attributeToCompute = attModelService.findByNameAndFragmentName(attributeToComputeName,
                                                                        attributeToComputeFragmentName);
+        result = 0L;
     }
 
     private void doSum(Set<AbstractAttribute<?>> pProperties) {

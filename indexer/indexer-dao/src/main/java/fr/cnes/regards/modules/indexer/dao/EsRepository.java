@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.IOException;
@@ -111,9 +114,9 @@ public class EsRepository implements IEsRepository {
     private static final int MAX_TIMEOUT_RETRIES = 3;
 
     /**
-     * Target forwarding search {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} need to
-     * put in cache search because of pagination restrictions.
-     * This constant specifies duration cache time in minutes (from last access)
+     * Target forwarding search {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} need to put
+     * in cache search because of pagination restrictions. This constant specifies duration cache time in minutes (from
+     * last access)
      */
     private static final int TARGET_FORWARDING_CACHE_MN = 3;
 
@@ -126,7 +129,8 @@ public class EsRepository implements IEsRepository {
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
      */
     @Autowired
-    private AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new AggregationBuilderFacetTypeVisitor();
+    private final AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new
+                                                                                // AggregationBuilderFacetTypeVisitor();
 
     /**
      * Empty JSon object
@@ -176,21 +180,21 @@ public class EsRepository implements IEsRepository {
     /**
      * Constructor
      *
-     * @param pGson
-     *            JSon mapper bean
+     * @param pGson JSon mapper bean
      */
     public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
             @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
             @Value("${elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        this.gson = pGson;
-        this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
-        this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
-        this.esPort = pEsPort;
-        this.esClusterName = pEsClusterName;
-        this.aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
+        gson = pGson;
+        esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
+        esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
+        esPort = pEsPort;
+        esClusterName = pEsClusterName;
+        aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
         client.addTransportAddress(new InetSocketTransportAddress(
+
                 InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
@@ -491,9 +495,9 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * SearchAll cache used by {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} to
-     * avoid redo same ES request while changing page. SortedSet is necessary to be sure several consecutive
-     * calls return same ordered set
+     * SearchAll cache used by {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} to avoid redo
+     * same ES request while changing page. SortedSet is necessary to be sure several consecutive calls return same
+     * ordered set
      */
     private final LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
             .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)
@@ -551,6 +555,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add sort to the request
+     *
      * @param request search request
      * @param pAscSortMap map(attribute name, true if ascending)
      */
@@ -610,6 +615,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add aggregations to the search request.
+     *
      * @param pFacetsMap asked facets
      * @param request search request
      * @return true if a second pass is needed (managing range facets)
@@ -635,8 +641,9 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results
-     * (from first pass request results) to create range aggregagtions.
+     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first
+     * pass request results) to create range aggregagtions.
+     *
      * @param pFacetsMap asked facets
      * @param request search request
      * @param aggsMap first pass aggregagtions results
@@ -651,18 +658,21 @@ public class EsRepository implements IEsRepository {
                 Percentiles percentiles = (Percentiles) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_POSTFIX);
                 request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
-            } else if (facetType == FacetType.DATE) {
-                Percentiles percentiles = (Percentiles) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
-                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
-            } else { // Let it as upper
-                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
-            }
+            } else
+                if (facetType == FacetType.DATE) {
+                    Percentiles percentiles = (Percentiles) aggsMap
+                            .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
+                    request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName,
+                                                                  percentiles));
+                } else { // Let it as upper
+                    request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
+                }
         }
     }
 
     /**
      * Compute aggregations results to fill results facet map of an attribute
+     *
      * @param aggsMap aggregation resuls map
      * @param facets map of results facets
      * @param facetType type of facet for given attribute
@@ -701,11 +711,12 @@ public class EsRepository implements IEsRepository {
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost((Double) bucket.getTo());
                         }
-                    } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
-                        valueRange = Range.greaterThan((Double) bucket.getFrom());
-                    } else { // [value -> value)
-                        valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
-                    }
+                    } else
+                        if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
+                            valueRange = Range.greaterThan((Double) bucket.getFrom());
+                        } else { // [value -> value)
+                            valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                        }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
                 facets.add(new NumericFacet(attributeName, valueMap));
@@ -730,12 +741,13 @@ public class EsRepository implements IEsRepository {
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost(LocalDateTimeAdapter.parse(bucket.getToAsString()));
                         }
-                    } else if (bucket.getToAsString() == null) { // ? -> +∞)
-                        valueRange = Range.greaterThan(LocalDateTimeAdapter.parse(bucket.getFromAsString()));
-                    } else { // [value -> value)
-                        valueRange = Range.closedOpen(LocalDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                      LocalDateTimeAdapter.parse(bucket.getToAsString()));
-                    }
+                    } else
+                        if (bucket.getToAsString() == null) { // ? -> +∞)
+                            valueRange = Range.greaterThan(LocalDateTimeAdapter.parse(bucket.getFromAsString()));
+                        } else { // [value -> value)
+                            valueRange = Range.closedOpen(LocalDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                          LocalDateTimeAdapter.parse(bucket.getToAsString()));
+                        }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
                 facets.add(new DateFacet(attributeName, valueMap));
@@ -773,6 +785,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Call specified request at least MAX_TIMEOUT_RETRIES
+     *
      * @param request
      * @return
      */

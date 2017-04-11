@@ -53,6 +53,7 @@ public class SumIntegerAttribute extends AbstractFromDataObjectAttributeComputat
         initAbstract(esRepo, attModelService, tenantResolver);
         attributeToCompute = attModelService.findByNameAndFragmentName(attributeToComputeName,
                                                                        attributeToComputeFragmentName);
+        result = 0;
     }
 
     private void doSum(Set<AbstractAttribute<?>> pProperties) {

@@ -84,28 +84,30 @@ public class EntitiesService implements IEntitiesService {
         Set<ModelAttrAssoc> computedAttributes = modelAttributeService
                 .getComputedAttributes(pDataset.getModel().getId());
         Set<T> computationPlugins = new HashSet<>();
-        computedAttributes.forEach(attr -> {
-            try {
-                IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf());
-                // here we have a plugin with no idea of the type of the generic parameter used by the "compute" method,
-                // lets check that it is a IComputedAttribute<Dataset,?>
-                plugin.getClass().getMethod("compute", Dataset.class);
-                // if no exception has been thrown then the method exist and we are in presence of a
-                // IComputedAttribute<Dataset, ?>
-                computationPlugins.add((T) plugin);
-            } catch (ModuleException e) {
-                // rethrow as a runtime because anyway there is nothing we can do there, if the plugin cannot be
-                // instantiate the system should set itself to maintenance mode!
-                throw new RuntimeException(e); // NOSONAR
-            } catch (SecurityException e) {
-                // This exception should not happen. so if it does lets put the system into maintenance mode
-                throw new RuntimeException(e); // NOSONAR
-            } catch (NoSuchMethodException e) {
-                // this is a normal exception in the logic of the method: to know if we have an
-                // IComputedAttribute<Dataset, ?> we check if a method compute(Dataset) is defined, if not then we just
-                // don't consider this plugin
+        try {
+            for (ModelAttrAssoc attr : computedAttributes) {
+                try {
+                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf());
+                    // here we have a plugin with no idea of the type of the generic parameter used by the "compute"
+                    // method, lets check that it is a IComputedAttribute<Dataset,?>
+                    plugin.getClass().getMethod("compute", Dataset.class);
+                    // if no exception has been thrown then the method exist and we are in presence of a
+                    // IComputedAttribute<Dataset, ?>
+                    computationPlugins.add((T) plugin);
+                } catch (NoSuchMethodException e) {
+                    // this is a normal exception in the logic of the method: to know if we have an
+                    // IComputedAttribute<Dataset, ?> we check if a method compute(Dataset) is defined, if not then we
+                    // just don't consider this plugin
+                }
             }
-        });
+        } catch (ModuleException e) {
+            // rethrow as a runtime because anyway there is nothing we can do there, if the plugin cannot be
+            // instantiate the system should set itself to maintenance mode!
+            throw new RuntimeException(e); // NOSONAR
+        } catch (SecurityException e) {
+            // This exception should not happen. so if it does lets put the system into maintenance mode
+            throw new RuntimeException(e); // NOSONAR
+        }
         return computationPlugins;
     }
 

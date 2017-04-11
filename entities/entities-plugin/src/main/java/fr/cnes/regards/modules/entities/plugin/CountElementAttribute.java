@@ -48,6 +48,7 @@ public class CountElementAttribute extends AbstractFromDataObjectAttributeComput
         initAbstract(esRepo, attModelService, tenantResolver);
         attributeToCompute = attModelService.findByNameAndFragmentName(attributeToComputeName,
                                                                        attributeToComputeFragmentName);
+        result = 0L;
     }
 
     @Override

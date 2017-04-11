@@ -36,6 +36,9 @@ import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
@@ -208,6 +211,15 @@ public class MultitenantFlattenedAttributeAdapterFactory
                 break;
             case URL:
                 matchingClass = UrlAttribute.class;
+                break;
+            case LONG:
+                matchingClass = LongAttribute.class;
+                break;
+            case LONG_ARRAY:
+                matchingClass = LongArrayAttribute.class;
+                break;
+            case LONG_INTERVAL:
+                matchingClass = LongIntervalAttribute.class;
                 break;
             default:
                 String errorMessage = String.format("Unexpected attribute type \"%s\".", pAttributeType);
