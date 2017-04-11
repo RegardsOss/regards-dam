@@ -105,5 +105,13 @@
 			<artifactId>spatial4j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.crawler</groupId>
+			<artifactId>crawler-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.crawler</groupId>
+			<artifactId>crawler-dao</artifactId>
+		</dependency>
 	</dependencies>
 </project>
