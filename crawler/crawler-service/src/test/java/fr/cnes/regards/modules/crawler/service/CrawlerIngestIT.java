@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -63,7 +66,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Crawler ingestion tests
@@ -221,7 +223,7 @@ public class CrawlerIngestIT {
         }
     }
 
-    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
@@ -234,7 +236,7 @@ public class CrawlerIngestIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getPostgresConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostgresConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)

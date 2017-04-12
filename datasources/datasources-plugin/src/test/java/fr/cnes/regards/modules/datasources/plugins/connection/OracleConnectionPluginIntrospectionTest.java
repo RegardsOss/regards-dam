@@ -24,7 +24,7 @@ import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
+import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * @author Christophe Mertz
@@ -56,7 +56,7 @@ public class OracleConnectionPluginIntrospectionTest {
     private DefaultOracleConnectionPlugin oracleDBConn;
 
     @Before
-    public void setUp() throws PluginUtilsException {
+    public void setUp()  {
         oracleDBConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
                                              Arrays.asList(PLUGIN_PACKAGE));
 
@@ -86,7 +86,7 @@ public class OracleConnectionPluginIntrospectionTest {
         Assert.assertEquals(6, columns.size());
     }
 
-    private List<PluginParameter> getOracleParameters() throws PluginUtilsException {
+    private List<PluginParameter> getOracleParameters()  {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPassword)

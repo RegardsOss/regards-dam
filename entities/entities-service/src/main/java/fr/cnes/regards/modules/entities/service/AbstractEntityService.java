@@ -66,7 +66,6 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Abstract parameterized entity service
@@ -415,17 +414,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * TODO make it possible to switch configuration dynamically between local and remote Dynamically get the storage
      * service
      *
-     * @return the storage service
-     * @throws PluginUtilsException
+     * @return the storage service @
      */
     private IStorageService getStorageService() {
-        try {
-            List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
-            return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
-                                         Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
-        } catch (PluginUtilsException pue) {
-            throw new RuntimeException(pue); // NOSONAR
-        }
+        List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+        return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
+                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
+
     }
 
     /**

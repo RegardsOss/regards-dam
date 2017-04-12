@@ -100,7 +100,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -363,7 +362,7 @@ public class IndexerServiceDataSourceIT {
         }
     }
 
-    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
@@ -375,7 +374,7 @@ public class IndexerServiceDataSourceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getOracleConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)

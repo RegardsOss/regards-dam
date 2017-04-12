@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.LocalDate;
@@ -48,7 +51,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterConfiguration.class })
@@ -128,8 +130,7 @@ public class IngesterServiceIT {
 
     @Autowired
     private IDatasourceIngestionRepository dsIngestionRepos;
-
-    private PluginConfiguration getPostgresDataSource1(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getPostgresDataSource1(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_1)
@@ -142,7 +143,7 @@ public class IngesterServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getPostgresDataSource2(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getPostgresDataSource2(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_2)
@@ -155,7 +156,7 @@ public class IngesterServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getPostgresDataSource3(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getPostgresDataSource3(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_3)
@@ -168,7 +169,7 @@ public class IngesterServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getPostgresConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostgresConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPpassword)

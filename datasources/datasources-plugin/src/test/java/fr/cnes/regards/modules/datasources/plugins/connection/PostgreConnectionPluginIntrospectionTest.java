@@ -27,7 +27,7 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
+import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * @author Christophe Mertz
@@ -61,7 +61,7 @@ public class PostgreConnectionPluginIntrospectionTest {
     private DefaultPostgreConnectionPlugin postgreDBConn;
 
     @Before
-    public void setUp() throws PluginUtilsException {
+    public void setUp()  {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)

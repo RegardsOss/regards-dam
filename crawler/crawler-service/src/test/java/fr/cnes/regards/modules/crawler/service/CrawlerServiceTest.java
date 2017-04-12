@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.sql.SQLException;
@@ -35,7 +38,6 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -44,7 +46,6 @@ import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlatten
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -92,32 +93,27 @@ public class CrawlerServiceTest {
     private IRuntimeTenantResolver tenantResolver;
 
     @Before
-    public void tearUp() throws DataSourcesPluginException, PluginUtilsException, SQLException {
+    public void tearUp() throws SQLException {
         // This Tenant (default) isn't in "regards.tenants" so crawlerService will never poll associated events
         tenantResolver.forceTenant(TENANT);
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         /*
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
-        try {
-            parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                     getOracleConnectionConfiguration())
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+        parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+                                                 getOracleConnectionConfiguration())
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                     .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                                  adapter.toJson(dataSourceModelMapping))
-                    .getParameters();
-            dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                             Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+                .getParameters();
+        dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
+                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE));
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(dsPlugin.getDBConnection().testConnection());
@@ -156,7 +152,7 @@ public class CrawlerServiceTest {
         Assert.assertTrue(true);
     }
 
-    private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getOracleConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
