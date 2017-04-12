@@ -90,8 +90,7 @@ public class IngesterService implements IIngesterService {
 
             self.updateAndCleanTenantDatasourceIngestions(tenant);
         }
-        // Then, for all tenants, pick one DatasourceIngestion associated to a "to be done" ingestion, mark it at
-        // PLANNED (in a transaction, to avoid another server to work concurrently on same DatasourceIngestion)
+        // Then ingest...
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             runtimeTenantResolver.forceTenant(tenant);
 

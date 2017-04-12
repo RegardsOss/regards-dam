@@ -1,6 +1,6 @@
 package fr.cnes.regards.modules.crawler.service.ds;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,12 +25,12 @@ public class ExternalData2 {
     private Long id;
 
     @Column
-    private LocalDate date;
+    private LocalDateTime date;
 
     public ExternalData2() {
     }
 
-    public ExternalData2(LocalDate pDate) {
+    public ExternalData2(LocalDateTime pDate) {
         date = pDate;
     }
 
@@ -42,11 +42,11 @@ public class ExternalData2 {
         id = pId;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDate pDate) {
+    public void setDate(LocalDateTime pDate) {
         date = pDate;
     }
 

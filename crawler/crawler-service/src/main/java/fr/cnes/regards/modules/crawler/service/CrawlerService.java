@@ -130,27 +130,27 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Current delay between all tenants poll check
      */
-    private static AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
 
     /**
      * Boolean indicating that a work is scheduled
      */
-    private static boolean scheduledWork = false;
+    private boolean scheduledWork = false;
 
     /**
      * Boolean indicating that something has been done
      */
-    private static boolean somethingDone = false;
+    private boolean somethingDone = false;
 
     /**
      * Boolean indicating that something is currently in progress
      */
-    private static boolean inProgress = false;
+    private boolean inProgress = false;
 
     /**
      * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
      */
-    private static boolean consumeOnlyMode = false;
+    private boolean consumeOnlyMode = false;
 
     /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
@@ -620,22 +620,22 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public boolean working() {
+    public boolean working() { // NOSONAR : test purpose
         return delay.get() < MAX_DELAY_MS;
     }
 
     @Override
-    public boolean workingHard() {
+    public boolean workingHard() { // NOSONAR : test purpose
         return delay.get() == INITIAL_DELAY_MS;
     }
 
     @Override
-    public boolean strolling() {
+    public boolean strolling() { // NOSONAR : test purpose
         return delay.get() == MAX_DELAY_MS;
     }
 
     @Override
-    public void startWork() {
+    public void startWork() { // NOSONAR : test purpose
         // If crawler is busy, wait for it
         while (this.working()) {
             ;
@@ -646,7 +646,7 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public void waitForEndOfWork() throws InterruptedException {
+    public void waitForEndOfWork() throws InterruptedException { // NOSONAR : test purpose
         if (!scheduledWork) {
             throw new IllegalStateException("Before waiting, startWork() must be called");
         }

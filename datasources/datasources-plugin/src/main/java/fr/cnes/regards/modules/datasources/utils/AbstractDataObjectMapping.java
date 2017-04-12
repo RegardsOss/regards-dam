@@ -179,6 +179,8 @@ public abstract class AbstractDataObjectMapping {
                 selectRequest = buildDateStatement(selectRequest, pDate);
                 countRequest = buildDateStatement(countRequest, pDate);
             }
+            LOG.debug("select request : " + selectRequest);
+            LOG.debug("count request : " + countRequest);
 
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {

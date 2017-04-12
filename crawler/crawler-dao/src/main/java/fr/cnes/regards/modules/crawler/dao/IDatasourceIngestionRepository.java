@@ -13,9 +13,11 @@ import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
  */
 public interface IDatasourceIngestionRepository extends JpaRepository<DatasourceIngestion, Long> {
 
-    //    @Query("from DatasourceIngestion where (nextPlannedIngestDate < :limitDate) and status <> 'STARTED' limit 1")
-    //    Optional<DatasourceIngestion> findOneReadyToIngest(@Param("limitDate") LocalDateTime limitDate);
-
+    /**
+     * Find a DatasourceIngestion (any of them) whom next planned ingest date is less than given date
+     * and with given status (usually 'STARTED')
+     * @return a DatasourceIngestion or nothing
+     */
     Optional<DatasourceIngestion> findTopByNextPlannedIngestDateLessThanAndStatusNot(LocalDateTime limitDate,
             IngestionStatus status);
 }
