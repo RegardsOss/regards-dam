@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableList;
@@ -158,6 +160,11 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         getModel(pModelId);
         Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelId(pModelId);
         return (modelAttributes != null) ? ImmutableList.copyOf(modelAttributes) : Collections.emptyList();
+    }
+
+    @Override
+    public Page<AttributeModel> getAttributeModels(List<Long> pModelIds, Pageable pPageable) {
+        return modelAttributeRepository.findAllAttributeByModelIdIn(pModelIds, pPageable);
     }
 
     @Override

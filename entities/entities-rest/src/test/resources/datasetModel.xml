@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+	<name>datasetModel</name>
+	<description>Test dataset model</description>
+	<version>1</version>
+	<type>DATASET</type>
+	<attribute>
+		<name>START_DATE</name>
+		<description>date at which the acquisition of the data has started</description>
+		<type>DATE_ISO8601</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>STOP_DATE</name>
+		<description>date at which the acquisition of the data has ended</description>
+		<type>DATE_ISO8601</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>FILE_SIZE</name>
+		<description>file size</description>
+		<type>INTEGER</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>count</name>
+		<type>LONG</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+</model>
