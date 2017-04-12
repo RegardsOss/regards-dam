@@ -30,7 +30,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceConnection {
+public abstract class AbstractDataSourceConnection implements IDBConnectionPlugin {
 
     /**
      * Class logger
