@@ -84,39 +84,46 @@ public class IngesterService implements IIngesterService {
     @Scheduled(fixedRateString = "${regards.ingester.rate.ms:900000}")
     public void manage() {
         // First, update all DatasourceIngestions of all tenants (to reflect all datasource plugin configurations
-        // states)
+        // states and to update nextPlannedIngestDate)
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             runtimeTenantResolver.forceTenant(tenant);
 
             self.updateAndCleanTenantDatasourceIngestions(tenant);
         }
         // Then ingest...
-        for (String tenant : tenantResolver.getAllActiveTenants()) {
-            runtimeTenantResolver.forceTenant(tenant);
+        boolean atLeastOnIngestionDone;
+        do {
+            atLeastOnIngestionDone = false;
+            for (String tenant : tenantResolver.getAllActiveTenants()) {
+                runtimeTenantResolver.forceTenant(tenant);
 
-            // Pick an available dsIngestion marking it as STARTED if present
-            Optional<DatasourceIngestion> dsIngestionOpt = self.pickAndStartDatasourceIngestion(tenant);
-            if (dsIngestionOpt.isPresent()) {
-                DatasourceIngestion dsIngestion = dsIngestionOpt.get();
-                try {
-                    // Launch datasource ingestion
-                    IngestionResult summary = crawlerService
-                            .ingest(pluginService.loadPluginConfiguration(dsIngestion.getId()),
-                                    dsIngestion.getLastIngestDate());
-                    dsIngestion.setStatus(IngestionStatus.FINISHED);
-                    dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
-                    dsIngestion.setLastIngestDate(summary.getDate());
-                } catch (ModuleException | RuntimeException e) {
-                    dsIngestion.setStatus(IngestionStatus.ERROR);
+                // Pick an available dsIngestion marking it as STARTED if present
+                Optional<DatasourceIngestion> dsIngestionOpt = self.pickAndStartDatasourceIngestion(tenant);
+                if (dsIngestionOpt.isPresent()) {
+                    atLeastOnIngestionDone = true;
+                    DatasourceIngestion dsIngestion = dsIngestionOpt.get();
+                    try {
+                        // Launch datasource ingestion
+                        IngestionResult summary = crawlerService
+                                .ingest(pluginService.loadPluginConfiguration(dsIngestion.getId()),
+                                        dsIngestion.getLastIngestDate());
+                        dsIngestion.setStatus(IngestionStatus.FINISHED);
+                        dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
+                        dsIngestion.setLastIngestDate(summary.getDate());
+                    } catch (ModuleException | RuntimeException e) {
+                        dsIngestion.setStatus(IngestionStatus.ERROR);
 
-                    StringWriter sw = new StringWriter();
-                    e.printStackTrace(new PrintWriter(sw));
-                    dsIngestion.setStackTrace(sw.toString());
+                        StringWriter sw = new StringWriter();
+                        e.printStackTrace(new PrintWriter(sw));
+                        dsIngestion.setStackTrace(sw.toString());
+                    }
+                    // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
+                    dsIngestion.setNextPlannedIngestDate(null);
+                    // Save ingestion status
+                    dsIngestionRepos.save(dsIngestion);
                 }
-                // Save ingestion status
-                dsIngestionRepos.save(dsIngestion);
             }
-        }
+        } while (atLeastOnIngestionDone);
     }
 
     @Override
