@@ -515,7 +515,7 @@ public class IndexerServiceDataSourceIT {
         // DataObject.class);
         SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // check that computed attribute were correclty done
-        checkDatasetComputedAttribute(dataset1, objectSearchKey, objectsCreationCount);
+        checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.eq("tags", dataset1.getIpId().toString()));
