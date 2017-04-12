@@ -14,6 +14,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Common requests on entities
+ * 
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
@@ -21,6 +22,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
+     * 
      * @param pId id of entity
      * @return entity
      */
@@ -29,6 +31,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find all entities of which ipId belongs to given set (eagerly loading all relations)
+     * 
      * @param pIpIds set of ipId
      * @return found entities
      */
@@ -37,6 +40,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find entity of given ipId
+     * 
      * @param pIpId ipId of which entity
      * @return found entity
      */
@@ -44,6 +48,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find entity of given IpId eagerly loading all common relations
+     * 
      * @param pIpId ipId of which entity
      * @return found entity
      */
@@ -51,7 +56,17 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
     T findByIpId(UniformResourceName pIpId);
 
     /**
+     * Find all entities complient with the given modelName
+     * 
+     * @param pModelName name of the model we want to be complient with
+     * @return datasets complient with the given model
+     */
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Set<T> findAllByModelName(String pModelName);
+
+    /**
      * Find all entities containing given tag
+     * 
      * @param pTagToSearch tag to search entities for
      * @return entities which contain given tag
      */

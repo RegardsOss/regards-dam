@@ -4,12 +4,33 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import org.junit.After;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
+import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
+import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -23,12 +44,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -49,18 +73,27 @@ import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
+import fr.cnes.regards.modules.entities.plugin.CountElementAttribute;
+import fr.cnes.regards.modules.entities.plugin.MaxDateAttribute;
+import fr.cnes.regards.modules.entities.plugin.MinDateAttribute;
+import fr.cnes.regards.modules.entities.plugin.SumIntegerAttribute;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.dao.IFragmentRepository;
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -79,6 +112,10 @@ public class IndexerServiceDataSourceIT {
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
+
+    private static final String DATA_MODEL_FILE_NAME = "dataModel.xml";
+
+    private static final String DATASET_MODEL_FILE_NAME = "datasetModel.xml";
 
     @Value("${regards.tenant}")
     private String tenant;
@@ -101,11 +138,32 @@ public class IndexerServiceDataSourceIT {
     @Value("${oracle.datasource.driver}")
     private String driver;
 
+    @Value("${elasticsearch.host:}")
+    private String esHost;
+
+    @Value("${elasticsearch.address:}")
+    private String esAddress;
+
+    @Value("${elasticsearch.tcp.port}")
+    private int esPort;
+
+    @Value("${elasticsearch.cluster.name}")
+    private String esClusterName;
+
     @Autowired
     private IModelService modelService;
 
     @Autowired
     private IModelRepository modelRepository;
+
+    @Autowired
+    private IAttributeModelRepository attrModelRepo;
+
+    @Autowired
+    private IModelAttrAssocRepository modelAttrAssocRepo;
+
+    @Autowired
+    private IFragmentRepository fragRepo;
 
     @Autowired
     private IDatasetService dsService;
@@ -139,6 +197,9 @@ public class IndexerServiceDataSourceIT {
     private IPluginService pluginService;
 
     @Autowired
+    private IPluginConfigurationRepository pluginConfRepo;
+
+    @Autowired
     private IRabbitVirtualHostAdmin rabbitVhostAdmin;
 
     @Autowired
@@ -169,25 +230,35 @@ public class IndexerServiceDataSourceIT {
         rabbitVhostAdmin.unbind();
 
         entityRepos.deleteAll();
+        modelAttrAssocRepo.deleteAll();
+        pluginConfRepo.deleteAll();
+        attrModelRepo.deleteAll();
         modelRepository.deleteAll();
-
+        fragRepo.deleteAll();
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
         // Register model attributes
-        registerJSonModelAttributes();
-        dataModel = new Model();
-        dataModel.setName("model_1");
-        dataModel.setType(EntityType.DATA);
-        dataModel.setVersion("1");
-        dataModel.setDescription("Test data object model");
-        modelService.createModel(dataModel);
+        // registerJSonModelAttributes(); should be done thanks to importModel
+        initPluginConfForComputedAttributes();
+        // get a model for DataObject
+        importModel(DATA_MODEL_FILE_NAME);
+        dataModel = modelService.getModelByName("model_1");
+        // dataModel = new Model();
+        // dataModel.setName("model_1");
+        // dataModel.setType(EntityType.DATA);
+        // dataModel.setVersion("1");
+        // dataModel.setDescription("Test data object model");
+        // modelService.createModel(dataModel);
 
-        datasetModel = new Model();
-        datasetModel.setName("model_ds_1");
-        datasetModel.setType(EntityType.DATASET);
-        datasetModel.setVersion("1");
-        datasetModel.setDescription("Test dataset model");
-        modelService.createModel(datasetModel);
+        // get a model for Dataset
+        importModel(DATASET_MODEL_FILE_NAME);
+        datasetModel = modelService.getModelByName("model_ds_1");
+        // datasetModel = new Model();
+        // datasetModel.setName("model_ds_1");
+        // datasetModel.setType(EntityType.DATASET);
+        // datasetModel.setVersion("1");
+        // datasetModel.setDescription("Test dataset model");
+        // modelService.createModel(datasetModel);
 
         // Initialize the DataSourceAttributeMapping
         buildModelAttributes();
@@ -204,7 +275,64 @@ public class IndexerServiceDataSourceIT {
         pluginService.savePluginConfiguration(dataSourcePluginConf);
     }
 
-    @After
+    private void initPluginConfForComputedAttributes() throws ModuleException {
+        pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
+        pluginService.addPluginPackage(CountElementAttribute.class.getPackage().getName());
+        // conf for "count"
+        List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter("attributeToComputeName", "count").getParameters();
+        PluginMetaData metadata = new PluginMetaData();
+        metadata.setPluginId("CountElementAttribute");
+        metadata.setAuthor("toto");
+        metadata.setDescription("titi");
+        metadata.setVersion("tutu");
+        metadata.setInterfaceName(IComputedAttribute.class.getName());
+        metadata.setPluginClassName(CountElementAttribute.class.getName());
+        PluginConfiguration conf = new PluginConfiguration(metadata, "CountElementTestConf");
+        conf.setParameters(parameters);
+        conf = pluginService.savePluginConfiguration(conf);
+        // create a pluginConfiguration with a label for START_DATE
+        List<PluginParameter> parametersMin = PluginParametersFactory.build()
+                .addParameter("attributeToComputeName", "START_DATE").getParameters();
+        PluginMetaData metadataMin = new PluginMetaData();
+        metadataMin.setPluginId("MinDateAttribute");
+        metadataMin.setAuthor("toto");
+        metadataMin.setDescription("titi");
+        metadataMin.setVersion("tutu");
+        metadataMin.setInterfaceName(IComputedAttribute.class.getName());
+        metadataMin.setPluginClassName(MinDateAttribute.class.getName());
+        PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateTestConf");
+        confMin.setParameters(parametersMin);
+        confMin = pluginService.savePluginConfiguration(confMin);
+        // create a pluginConfiguration with a label for STOP_DATE
+        List<PluginParameter> parametersMax = PluginParametersFactory.build()
+                .addParameter("attributeToComputeName", "STOP_DATE").getParameters();
+        PluginMetaData metadataMax = new PluginMetaData();
+        metadataMax.setPluginId("MaxDateAttribute");
+        metadataMax.setAuthor("toto");
+        metadataMax.setDescription("titi");
+        metadataMax.setVersion("tutu");
+        metadataMax.setInterfaceName(IComputedAttribute.class.getName());
+        metadataMax.setPluginClassName(MaxDateAttribute.class.getName());
+        PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateTestConf");
+        confMax.setParameters(parametersMax);
+        confMax = pluginService.savePluginConfiguration(confMax);
+        // create a pluginConfiguration with a label for FILE_SIZE
+        List<PluginParameter> parametersInteger = PluginParametersFactory.build()
+                .addParameter("attributeToComputeName", "FILE_SIZE").getParameters();
+        PluginMetaData metadataInteger = new PluginMetaData();
+        metadataInteger.setPluginId("SumIntegerAttribute");
+        metadataInteger.setAuthor("toto");
+        metadataInteger.setDescription("titi");
+        metadataInteger.setVersion("tutu");
+        metadataInteger.setInterfaceName(IComputedAttribute.class.getName());
+        metadataInteger.setPluginClassName(SumIntegerAttribute.class.getName());
+        PluginConfiguration confInteger = new PluginConfiguration(metadataInteger, "SumIntegerTestConf");
+        confInteger.setParameters(parametersInteger);
+        confInteger = pluginService.savePluginConfiguration(confInteger);
+    }
+
+    // @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
         if (dataset1 != null) {
@@ -377,14 +505,17 @@ public class IndexerServiceDataSourceIT {
 
         crawlerService.waitForEndOfWork();
         Thread.sleep(10_000);
-        //        indexerService.refresh(tenant);
+        // indexerService.refresh(tenant);
 
         // Retrieve dataset1 from ES
         dataset1 = (Dataset) searchService.get(dataset1.getIpId());
         Assert.assertNotNull(dataset1);
 
-        //SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), DataObject.class);
+        // SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(),
+        // DataObject.class);
         SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
+        // check that computed attribute were correclty done
+        checkDatasetComputedAttribute(dataset1, objectSearchKey, objectsCreationCount);
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.eq("tags", dataset1.getIpId().toString()));
@@ -431,10 +562,10 @@ public class IndexerServiceDataSourceIT {
         }
 
         // Search for Dataset but with criterion on DataObjects
-        //        SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        // SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
         JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
                 .onSingleEntityReturningJoinEntity(tenant, EntityType.DATA, EntityType.DATASET);
-        //Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
+        // Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
         Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
@@ -446,7 +577,7 @@ public class IndexerServiceDataSourceIT {
         Assert.assertEquals(1, dsPage.getContent().size());
 
         // Search for Dataset but with criterion on everything
-        //SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
+        // SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
         JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
                 .onAllEntitiesReturningJoinEntity(tenant, EntityType.DATASET);
         dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
@@ -466,4 +597,69 @@ public class IndexerServiceDataSourceIT {
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }
 
+    private void checkDatasetComputedAttribute(Dataset pDataset, SimpleSearchKey<DataObject> pObjectSearchKey,
+            long objectsCreationCount) {
+        TransportClient client = new PreBuiltTransportClient(
+                Settings.builder().put("cluster.name", esClusterName).build());
+        try {
+            client.addTransportAddress(new InetSocketTransportAddress(
+                    InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort));
+        } catch (UnknownHostException e) {
+            LOGGER.error("could not get a connection to ES in the middle of the test where we know ES is available", e);
+            Assert.fail();
+        }
+        // lets build the request so elasticsearch can calculate the few attribute we are using in test(min(START_DATE),
+        // max(STOP_DATE), sum(FILE_SIZE) via aggregation, the count of element in this context is already known:
+        // objectsCreationCount
+        QueryBuilderCriterionVisitor critVisitor = new QueryBuilderCriterionVisitor();
+        ICriterion crit = ICriterion.eq("tags", pDataset.getIpId().toString());
+        QueryBuilder qb = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                .filter(crit.accept(critVisitor));
+        // now we have a request on the right data
+        SearchRequestBuilder searchRequest = client.prepareSearch(pObjectSearchKey.getSearchIndex().toLowerCase())
+                .setTypes(pObjectSearchKey.getSearchTypes()).setQuery(qb).setSize(0);
+        // lets build the aggregations
+        // aggregation for the min
+        searchRequest.addAggregation(AggregationBuilders.min("min_start_date").field("properties.START_DATE"));
+        // aggregation for the max
+        searchRequest.addAggregation(AggregationBuilders.max("max_stop_date").field("properties.STOP_DATE"));
+        // aggregation for the sum
+        searchRequest.addAggregation(AggregationBuilders.sum("sum_file_size").field("properties.FILE_SIZE"));
+
+        // get the results computed by ElasticSearch
+        SearchResponse response = searchRequest.get();
+        Map<String, Aggregation> aggregations = response.getAggregations().asMap();
+
+        // now lets actually test things
+        Assert.assertEquals(objectsCreationCount, getDatasetProperty(pDataset, "count"));
+        Assert.assertEquals((int) ((InternalSum) aggregations.get("sum_file_size")).getValue(),
+                            getDatasetProperty(pDataset, "FILE_SIZE"));
+        // lets convert both dates to instant, it is the simpliest way to compare them
+        Assert.assertEquals(Instant.parse(((InternalMin) aggregations.get("min_start_date")).getValueAsString()),
+                            ((LocalDateTime) getDatasetProperty(pDataset, "START_DATE")).toInstant(ZoneOffset.UTC));
+        Assert.assertEquals(Instant.parse(((InternalMax) aggregations.get("max_stop_date")).getValueAsString()),
+                            ((LocalDateTime) getDatasetProperty(pDataset, "STOP_DATE")).toInstant(ZoneOffset.UTC));
+    }
+
+    private Object getDatasetProperty(Dataset pDataset, String pPropertyName) {
+        return pDataset.getProperties().stream().filter(p -> p.getName().equals(pPropertyName)).findAny().get()
+                .getValue();
+    }
+
+    /**
+     * Import model definition file from resources directory
+     *
+     * @param pFilename filename
+     * @return list of created model attributes
+     * @throws ModuleException if error occurs
+     */
+    private void importModel(String pFilename) throws ModuleException {
+        try {
+            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
+            modelService.importModel(input);
+        } catch (IOException e) {
+            String errorMessage = "Cannot import " + pFilename;
+            throw new AssertionError(errorMessage);
+        }
+    }
 }

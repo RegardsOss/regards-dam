@@ -6,6 +6,9 @@ package fr.cnes.regards.modules.models.service;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -47,5 +50,7 @@ public interface IModelAttrAssocService {
     Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException;
 
     Set<ModelAttrAssoc> getComputedAttributes(Long pId);
+
+    Page<AttributeModel> getAttributeModels(List<Long> pModelIds, Pageable pPageable) throws ModuleException;
 
 }

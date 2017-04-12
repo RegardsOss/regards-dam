@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.entities.service.plugin;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
@@ -24,7 +23,7 @@ public class NonUsable implements IComputedAttribute<Long, LocalDateTime> {
     }
 
     @Override
-    public void compute(Collection<Long> pPartialData) {
+    public void compute(Long pPartialData) {
 
     }
 
@@ -34,7 +33,7 @@ public class NonUsable implements IComputedAttribute<Long, LocalDateTime> {
     }
 
     @Override
-    public AttributeModel getAttributeComputed() {
+    public AttributeModel getAttributeToCompute() {
         return null;
     }
 

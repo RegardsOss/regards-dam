@@ -19,6 +19,10 @@
 			<artifactId>models-service</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-dao</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>module-plugins-domain</artifactId>
 		</dependency>

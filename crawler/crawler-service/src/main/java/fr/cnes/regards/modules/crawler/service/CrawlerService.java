@@ -234,10 +234,11 @@ public class CrawlerService implements ICrawlerService {
                 if (ipIds.length == 1) {
                     inProgress = true;
                     updateEntityIntoEs(tenant, ipIds[0], LocalDateTime.now());
-                } else if (ipIds.length > 1) { // several entities at once
-                    inProgress = true;
-                    updateEntitiesIntoEs(tenant, ipIds, LocalDateTime.now());
-                }
+                } else
+                    if (ipIds.length > 1) { // several entities at once
+                        inProgress = true;
+                        updateEntitiesIntoEs(tenant, ipIds, LocalDateTime.now());
+                    }
                 somethingDone = true;
             }
         }
@@ -434,15 +435,14 @@ public class CrawlerService implements ICrawlerService {
                 DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-        // lets compute computed attributes from the dataset model
-        Set<IComputedAttribute<DataObject, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
-        computeDatasetAttributes(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
             updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-            computeDatasetAttributes(computationPlugins, page.getContent());
         }
+        // lets compute computed attributes from the dataset model
+        Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
+        computationPlugins.forEach(p -> p.compute(dataset));
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
 
@@ -452,9 +452,9 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Create computed attributes from computation
      */
-    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<DataObject, ?>> computationPlugins) {
+    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<Dataset, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
-        for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
+        for (IComputedAttribute<Dataset, ?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectAttribute) {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
@@ -480,11 +480,6 @@ public class CrawlerService implements ICrawlerService {
                 dataset.getProperties().add(attributeToAdd);
             }
         }
-    }
-
-    private void computeDatasetAttributes(Set<IComputedAttribute<DataObject, ?>> computationPlugins,
-            List<DataObject> dataObjects) {
-        computationPlugins.forEach(p -> p.compute(dataObjects));
     }
 
     /**
@@ -532,19 +527,19 @@ public class CrawlerService implements ICrawlerService {
             createIndex(tenant);
 
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
-            savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
+            savedObjectsCount += createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable(), date);
-                savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
+                savedObjectsCount += createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
             Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
-            savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
+            savedObjectsCount += mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
                 page = dsPlugin.findAll(tenant, page.nextPageable(), date);
-                savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
+                savedObjectsCount += mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
             // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
             // been updated (to update all associated data objects which have a lastUpdate date >= now)
@@ -637,7 +632,7 @@ public class CrawlerService implements ICrawlerService {
     @Override
     public void startWork() {
         // If crawler is busy, wait for it
-        while (this.working()) {
+        while (working()) {
             ;
         }
         scheduledWork = true;
@@ -654,7 +649,7 @@ public class CrawlerService implements ICrawlerService {
         // In case work hasn't started yet.
         Thread.sleep(3_000);
         // As soon as something has been done, we wait for crawler service to no more be busy
-        while (inProgress || (!somethingDone && !this.strolling())) {
+        while (inProgress || (!somethingDone && !strolling())) {
             Thread.sleep(1_000);
         }
         LOGGER.info("...Work ended");

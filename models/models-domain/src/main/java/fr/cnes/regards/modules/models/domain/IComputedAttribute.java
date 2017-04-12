@@ -3,19 +3,15 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
-import java.util.Collection;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * Plugins of type ICalculationModel are plugins allowing to calculate the value of an {@link AttributeModel} thanks to
- * a {@link ModelAttrAssoc} We are using the design pattern "Visitor" with {@link IComputedAttributeVisitor}. For memory
- * issue, it is most likely that the system cannot easly handle the whole data needed to compute the attribute value. We
- * strongly suggest to use an accumulator variable into implementations that is returned by
- * {@link IComputedAttribute#getResult()}
+ * a {@link ModelAttrAssoc} We are using the design pattern "Visitor" with {@link IComputedAttributeVisitor}.
  *
+ * @param <P> Type of entity on which the attribute will be added
  * @param <R> type of the attribute value
  * @author Sylvain Vissiere-Guerinet
  */
@@ -29,12 +25,11 @@ public interface IComputedAttribute<P, R> {
     R getResult();
 
     /**
-     * Method responsible for ingremental computation of the value. It is of the responsability of the method to check
-     * the type of the element of the collection
+     * Method responsible for computation of the value.
      *
-     * @param pPartialData part of the total data needed to compute the value
+     * @param pTarget object on which the attribute should be added.
      */
-    void compute(Collection<P> pPartialData);
+    void compute(P pTarget);
 
     /**
      * @return supported AttributeType.
@@ -48,5 +43,5 @@ public interface IComputedAttribute<P, R> {
     /**
      * @return the attribute computed by this plugin
      */
-    AttributeModel getAttributeComputed();
+    AttributeModel getAttributeToCompute();
 }
