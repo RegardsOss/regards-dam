@@ -7,8 +7,6 @@ import java.util.List;
 
 import javax.validation.Valid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,11 +44,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 // CHECKSTYLE:ON
 @RequestMapping(DataSourceController.TYPE_MAPPING)
 public class DataSourceController implements IResourceController<DataSource> {
-
-    /**
-     * Class logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceController.class);
 
     /**
      * Type mapping
