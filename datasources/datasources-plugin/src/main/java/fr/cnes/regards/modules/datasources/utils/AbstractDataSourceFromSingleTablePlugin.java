@@ -19,6 +19,7 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -29,7 +30,8 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping {
+public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping
+        implements IDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger

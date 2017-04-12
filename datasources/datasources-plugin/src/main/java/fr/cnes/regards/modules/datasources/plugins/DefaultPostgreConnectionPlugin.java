@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 @Plugin(id = "postgresql-db-connection", version = "1.0-SNAPSHOT", description = "Connection to a PostgreSql database",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-public class DefaultPostgreConnectionPlugin extends AbstractDataSourceConnection implements IDBConnectionPlugin {
+public class DefaultPostgreConnectionPlugin extends AbstractDataSourceConnection {
 
     /**
      * The JDBC PostgreSQL driver

@@ -21,7 +21,6 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
@@ -37,7 +36,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Plugin(id = "postgresql-datasource", version = "1.0-SNAPSHOT",
         description = "Allows data extraction to a PostgreSql database", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
-public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin implements IDataSourcePlugin {
+public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
 
     /**
      * Class logger
