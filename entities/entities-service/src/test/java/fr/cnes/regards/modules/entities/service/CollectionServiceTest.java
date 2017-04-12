@@ -26,7 +26,6 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author lmieulet
@@ -56,7 +55,6 @@ public class CollectionServiceTest {
 
     /**
      * initialize the repo before each test
-     *
      */
     @SuppressWarnings("unchecked")
     @Before
@@ -108,15 +106,15 @@ public class CollectionServiceTest {
                 deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
                 publisherMocked);
 
-        //        collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-        //                pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
+        // collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
+        // pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
 
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_010")
     @Purpose("Le système doit permettre de créer une collection à partir d’un modèle préalablement défini et d’archiver cette collection sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createCollection() throws ModuleException, IOException, PluginUtilsException {
+    public void createCollection() throws ModuleException, IOException {
         Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
         final Collection collection = collectionServiceMocked.create(collection2);
         Assert.assertEquals(collection2, collection);

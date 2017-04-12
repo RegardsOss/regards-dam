@@ -17,7 +17,6 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Parameterized entity service interface
@@ -112,7 +111,6 @@ public interface IEntityService<U extends AbstractEntity> {
      * @param pEntity "content" of entity to update
      * @return updated entity from database
      * @throws ModuleException
-     * @throws PluginUtilsException
      */
     U update(Long pEntityId, U pEntity) throws ModuleException;
 

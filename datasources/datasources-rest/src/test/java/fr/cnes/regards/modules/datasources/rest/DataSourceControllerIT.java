@@ -43,14 +43,11 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
- *
  * Test {@link DataSource} controller
  *
  * @author Christophe Mertz
- *
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
@@ -111,7 +108,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Before
-    public void setUp() throws ModuleException, PluginUtilsException, JwtException {
+    public void setUp() throws ModuleException, JwtException {
         jwtService.injectToken(DEFAULT_TENANT, DEFAULT_ROLE, DEFAULT_USER_EMAIL);
 
         pluginConfRepos.deleteAll();
@@ -227,7 +224,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_120")
     @Purpose("The system allows to update a datasource by updating the connection")
-    public void dataSourceUpdateDBConnection() throws ModuleException, PluginUtilsException {
+    public void dataSourceUpdateDBConnection() throws ModuleException {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
@@ -412,7 +409,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         modelMapping = new DataSourceModelMapping(123L, attributes);
     }
 
-    private PluginConfiguration getPostGreSqlConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)

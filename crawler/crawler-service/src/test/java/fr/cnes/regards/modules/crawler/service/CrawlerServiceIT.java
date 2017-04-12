@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -42,7 +45,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
+import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Crawler service integration tests
@@ -138,7 +141,7 @@ public class CrawlerServiceIT {
 
     }
 
-    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf)  {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
@@ -149,7 +152,7 @@ public class CrawlerServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getOracleConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
@@ -163,7 +166,7 @@ public class CrawlerServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    public void buildData1() throws ModuleException, PluginUtilsException {
+    public void buildData1() throws ModuleException {
         esRepos.deleteIndex(tenant);
         if (!esRepos.indexExists(tenant)) {
             esRepos.createIndex(tenant);
@@ -225,7 +228,7 @@ public class CrawlerServiceIT {
     }
 
     @Test
-    public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsException {
+    public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsRuntimeException {
         buildData1();
 
         crawlerService.startWork();
@@ -281,7 +284,7 @@ public class CrawlerServiceIT {
         dsService.delete(dataset1.getId());
 
         // To be sure that the crawlerService daemon has time to do its job
-        //        Thread.sleep(5000);
+        // Thread.sleep(5000);
         crawlerService.waitForEndOfWork();
 
         esRepos.refresh(tenant);

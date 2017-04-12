@@ -39,7 +39,6 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -71,7 +70,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "create and send the dataset")
     public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") Dataset pDataset,
             @RequestPart("file") MultipartFile descriptionFile, BindingResult pResult)
-            throws ModuleException, IOException, PluginUtilsException {
+            throws ModuleException, IOException {
 
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
@@ -109,7 +108,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResponseBody
     @ResourceAccess(description = "Deletes a dataset")
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDatasetId)
-            throws EntityNotFoundException, PluginUtilsException {
+            throws EntityNotFoundException {
         service.delete(pDatasetId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -118,7 +117,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResponseBody
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
-            @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException, PluginUtilsException {
+            @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException {
 
         // Validate dynamic model
         service.validate(pDataset, pResult, false);

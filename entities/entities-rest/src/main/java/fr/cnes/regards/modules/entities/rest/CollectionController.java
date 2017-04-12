@@ -34,11 +34,9 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author lmieulet
- *
  */
 @RestController
 // CHECKSTYLE:OFF
@@ -79,8 +77,7 @@ public class CollectionController implements IResourceController<Collection> {
     /**
      * Entry point to retrieve a collection using its id
      *
-     * @param pCollectionId
-     *            {@link Collection} id
+     * @param pCollectionId {@link Collection} id
      * @return {@link Collection} as a {@link Resource}
      */
     @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -95,21 +92,16 @@ public class CollectionController implements IResourceController<Collection> {
     /**
      * Entry point to update a collection using its id
      *
-     * @param pCollectionId
-     *            {@link Collection} id
-     * @param pCollection
-     *            {@link Collection}
+     * @param pCollectionId {@link Collection} id
+     * @param pCollection {@link Collection}
      * @return update {@link Collection} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs!
-     * @throws PluginUtilsException
+     * @throws ModuleException if error occurs! @
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @Valid @RequestBody Collection pCollection, BindingResult pResult)
-            throws ModuleException, PluginUtilsException {
+            @Valid @RequestBody Collection pCollection, BindingResult pResult) throws ModuleException {
 
         // Validate dynamic model
         collectionService.validate(pCollection, pResult, false);
@@ -120,20 +112,17 @@ public class CollectionController implements IResourceController<Collection> {
     }
 
     /**
-     *
      * Entry point to delete a collection using its id
      *
-     * @param pCollectionId
-     *            {@link Collection} id
+     * @param pCollectionId {@link Collection} id
      * @return nothing
-     * @throws EntityNotFoundException
-     * @throws PluginUtilsException
+     * @throws EntityNotFoundException @
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "delete the collection of collection_id")
     public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId)
-            throws EntityNotFoundException, PluginUtilsException {
+            throws EntityNotFoundException {
         collectionService.delete(pCollectionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -141,21 +130,17 @@ public class CollectionController implements IResourceController<Collection> {
     /**
      * Entry point to create a collection
      *
-     * @param pCollection
-     *            {@link Collection} to create
-     * @param pResult
-     *            validation errors
+     * @param pCollection {@link Collection} to create
+     * @param pResult validation errors
      * @return {@link Collection} as a {@link Resource}
-     * @throws ModuleException
-     *             if validation fails
-     * @throws IOException
-     * @throws PluginUtilsException
+     * @throws ModuleException if validation fails
+     * @throws IOException @
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
     public HttpEntity<Resource<Collection>> createCollection(@Valid @RequestBody Collection pCollection,
-            BindingResult pResult) throws ModuleException, IOException, PluginUtilsException {
+            BindingResult pResult) throws ModuleException, IOException {
 
         // Validate dynamic model
         collectionService.validate(pCollection, pResult, false);
@@ -168,13 +153,10 @@ public class CollectionController implements IResourceController<Collection> {
     /**
      * Entry point to handle dissociation of {@link Collection} specified by its id to other entities
      *
-     * @param pCollectionId
-     *            {@link Collection} id
-     * @param pToBeDissociated
-     *            entity to dissociate
+     * @param pCollectionId {@link Collection} id
+     * @param pToBeDissociated entity to dissociate
      * @return {@link Collection} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
     @ResponseBody
@@ -189,13 +171,10 @@ public class CollectionController implements IResourceController<Collection> {
     /**
      * Entry point to handle association of {@link Collection} specified by its id to other entities
      *
-     * @param pCollectionId
-     *            {@link Collection} id
-     * @param pToBeAssociatedWith
-     *            entities to be associated
+     * @param pCollectionId {@link Collection} id
+     * @param pToBeAssociatedWith entities to be associated
      * @return {@link Collection} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
     @ResponseBody
