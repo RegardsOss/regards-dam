@@ -216,6 +216,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         StringJoiner sj = new StringJoiner("&", "?", "");
         sj.add("modelName=" + datasetModel.getName());
         String queryParams = sj.toString();
+
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(20)));
         performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
