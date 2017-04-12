@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+	<name>model_1</name>
+	<description>Test data object model</description>
+	<version>1</version>
+	<type>DATA</type>
+	<attribute>
+		<name>DATA_OBJECTS_ID</name>
+		<description>id from the external datasource</description>
+		<type>INTEGER</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>START_DATE</name>
+		<description>date at which the acquisition of the data has started</description>
+		<type>DATE_ISO8601</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>STOP_DATE</name>
+		<description>date at which the acquisition of the data has ended</description>
+		<type>DATE_ISO8601</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>FILE_SIZE</name>
+		<description>file size</description>
+		<type>INTEGER</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>FILE_TYPE</name>
+		<description>file type</description>
+		<type>STRING</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>FILE_NAME_ORIGINE</name>
+		<description>name of the original file</description>
+		<type>STRING</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>DATA_SET_ID</name>
+		<description>id of the dataset</description>
+		<type>INTEGER</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>DATA_TITLE</name>
+		<description>title of the data for human</description>
+		<type>STRING</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>DATA_AUTHOR</name>
+		<description>name of the author</description>
+		<type>STRING</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>DATA_AUTHOR_COMPANY</name>
+		<description>author's company name</description>
+		<type>STRING</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>DATA_CREATION_DATE</name>
+		<description>date at which the data was created into the datasource</description>
+		<type>DATE_ISO8601</type>
+		<computationMode>GIVEN</computationMode>
+	</attribute>
+	<attribute>
+		<name>ANSA5_REAL</name>
+		<type>DOUBLE</type>
+	</attribute>
+	<attribute>
+		<name>ANSR5_REAL</name>
+		<type>DOUBLE</type>
+	</attribute>
+	<attribute>
+		<name>ANSE5_REAL</name>
+		<type>DOUBLE</type>
+	</attribute>
+	<attribute>
+		<name>ANSE6_STRING</name>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<name>ANSL6_2_STRING</name>
+		<type>STRING</type>
+	</attribute>
+	<fragment>
+		<name>frag3</name>
+		<attribute>
+			<name>ANSR3_INT</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<name>ANSL3_1_INT</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<name>ANSL3_2_INT</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>LONGITUDE</name>
+		<description>Longitude fragment</description>
+		<attribute>
+			<name>MIN</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<name>MAX</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>LATITUDE</name>
+		<description>Latitude fragment</description>
+		<attribute>
+			<name>MIN</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<name>MAX</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+	<fragment>
+		<name>ALTITUDE</name>
+		<description>Altitude fragment</description>
+		<attribute>
+			<name>MIN</name>
+			<type>INTEGER</type>
+		</attribute>
+		<attribute>
+			<name>MAX</name>
+			<type>INTEGER</type>
+		</attribute>
+	</fragment>
+</model>

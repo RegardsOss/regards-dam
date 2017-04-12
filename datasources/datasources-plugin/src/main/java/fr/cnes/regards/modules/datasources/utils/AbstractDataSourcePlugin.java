@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -24,7 +25,7 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping {
+public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping implements IDataSourcePlugin {
 
     /**
      * Class logger

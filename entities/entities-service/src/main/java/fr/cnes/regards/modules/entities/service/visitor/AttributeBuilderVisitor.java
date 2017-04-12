@@ -19,7 +19,7 @@ public class AttributeBuilderVisitor implements IComputedAttributeVisitor<Abstra
 
     @Override
     public <P, U> AbstractAttribute<?> visit(IComputedAttribute<P, U> pPlugin) {
-        AttributeModel attr = pPlugin.getAttributeComputed();
+        AttributeModel attr = pPlugin.getAttributeToCompute();
         if (attr.getFragment().isDefaultFragment()) {
             return AttributeBuilder.forType(pPlugin.getSupported(), attr.getName(), pPlugin.getResult());
         } else {
