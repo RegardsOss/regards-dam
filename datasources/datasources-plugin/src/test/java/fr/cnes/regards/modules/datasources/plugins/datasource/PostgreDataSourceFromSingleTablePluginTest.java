@@ -138,6 +138,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
                     .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                      getPostgreConnectionConfiguration())
                     .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                     .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                     .getParameters();
         } catch (PluginUtilsException e) {
