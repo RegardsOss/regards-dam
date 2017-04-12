@@ -395,8 +395,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id",
                 DataSourceAttributeMapping.PRIMARY_KEY));
-        attributes
-                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label"));
+        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label",
+                DataSourceAttributeMapping.LABEL));
         attributes.add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DataSourceAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
@@ -406,7 +406,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 "timeStampWithoutTimeZone"));
         attributes.add(new DataSourceAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
         attributes.add(new DataSourceAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone", Types.TIMESTAMP));
+                "timeStampWithTimeZone", Types.TIMESTAMP, DataSourceAttributeMapping.LAST_UPDATE));
         attributes.add(new DataSourceAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

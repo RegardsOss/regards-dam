@@ -235,8 +235,8 @@ public class PostgreDataSourcePluginTest {
 
         attributes.add(new DataSourceAttributeMapping("id", AttributeType.LONG, "id",
                 DataSourceAttributeMapping.PRIMARY_KEY));
-        attributes
-                .add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "- '||label as label"));
+        attributes.add(new DataSourceAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "- '||label as label",
+                DataSourceAttributeMapping.LABEL));
         attributes
                 .add(new DataSourceAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DataSourceAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
