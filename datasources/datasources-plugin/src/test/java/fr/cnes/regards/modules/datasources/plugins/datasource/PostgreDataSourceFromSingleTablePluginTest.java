@@ -134,6 +134,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
                                                  getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                 .getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,

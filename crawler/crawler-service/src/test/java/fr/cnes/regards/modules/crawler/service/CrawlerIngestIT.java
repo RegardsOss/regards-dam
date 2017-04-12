@@ -36,6 +36,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
+import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -226,6 +227,7 @@ public class CrawlerIngestIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
                               adapter.toJson(dataSourceModelMapping))
                 .getParameters();

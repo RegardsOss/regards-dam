@@ -32,6 +32,7 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
@@ -95,6 +96,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
+                    .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
 
         parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,

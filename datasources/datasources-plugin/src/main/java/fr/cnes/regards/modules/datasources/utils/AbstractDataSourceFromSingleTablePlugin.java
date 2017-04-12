@@ -89,11 +89,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         }
     }
 
-    public int getRefreshRate() {
-        // in seconds, 30 minutes
-        return 1800;
-    }
-
     /**
      * Build the SELECT request.</br>
      * Add the key word "%last_modification_date%" in the WHERE clause.
@@ -156,9 +151,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         }
         final String selectRequest = getSelectRequest(pPageable, pDate);
         final String countRequest = getCountRequest(pDate);
-
-        LOG.debug("select request :" + selectRequest);
-        LOG.debug("count  request :" + countRequest);
 
         try (Connection conn = getDBConnection().getConnection()) {
 

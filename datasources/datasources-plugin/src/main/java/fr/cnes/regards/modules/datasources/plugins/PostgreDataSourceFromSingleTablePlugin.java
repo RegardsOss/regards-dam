@@ -72,6 +72,12 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     private String internalDataSource;
 
     /**
+     * Ingestion refresh rate
+     */
+    @PluginParameter(name = REFRESH_RATE)
+    private Integer refreshRate;
+
+    /**
      * Init method
      */
     @PluginInit
@@ -139,4 +145,8 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         return !internalDataSource.isEmpty() && TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(internalDataSource);
     }
 
+    @Override
+    public int getRefreshRate() {
+        return refreshRate;
+    }
 }

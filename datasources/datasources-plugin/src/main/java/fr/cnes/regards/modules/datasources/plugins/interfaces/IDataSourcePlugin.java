@@ -50,6 +50,11 @@ public interface IDataSourcePlugin {
     public static final String TRUE_INTERNAL_DATASOURCE = "true";
 
     /**
+     * Ingestion refresh rate parameter name
+     */
+    public static final String REFRESH_RATE = "refreshRate";
+
+    /**
      * Retrieve the {@link DBConnection} used by the {@link Plugin}
      *
      * @return Retrieve a {@link DBConnection}
