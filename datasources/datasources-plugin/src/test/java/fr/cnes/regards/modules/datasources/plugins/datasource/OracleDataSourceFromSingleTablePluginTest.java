@@ -96,11 +96,11 @@ public class OracleDataSourceFromSingleTablePluginTest {
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
-                    .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
 
         parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                  getOracleConnectionConfiguration())
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                 .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                 .getParameters();
