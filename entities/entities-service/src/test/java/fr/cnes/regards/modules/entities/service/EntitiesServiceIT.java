@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -57,6 +58,9 @@ public class EntitiesServiceIT {
     @Autowired
     private JWTService jwtService;
 
+    @Autowired
+    private IPluginConfigurationRepository pluginConfRepos;
+
     private Dataset dataset;
 
     private PluginConfiguration confNonUsable;
@@ -65,6 +69,8 @@ public class EntitiesServiceIT {
 
     @Before
     public void init() throws ModuleException {
+        pluginConfRepos.deleteAll();
+
         // first initialize the pluginConfiguration for the attributes
         jwtService.injectMockToken("PROJECT", "ADMIN");
         pluginService.addPluginPackage(NonUsable.class.getPackage().getName());
@@ -96,7 +102,7 @@ public class EntitiesServiceIT {
         confNonUsable = pluginService.savePluginConfiguration(confNonUsable);
         // then import the model of dataset
         importModel(datasetModelFileName);
-        // instanciate the dataset
+        // instantiate the dataset
         Model datasetModel = modelService.getModelByName("datasetModel");
         dataset = new Dataset(datasetModel, "PROJECT", "Test pour le fun");
         dataset.setLicence("pLicence");
