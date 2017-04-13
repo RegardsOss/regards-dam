@@ -91,16 +91,16 @@ public class IngesterService implements IIngesterService {
             self.updateAndCleanTenantDatasourceIngestions(tenant);
         }
         // Then ingest...
-        boolean atLeastOnIngestionDone;
+        boolean atLeastOneIngestionDone;
         do {
-            atLeastOnIngestionDone = false;
+            atLeastOneIngestionDone = false;
             for (String tenant : tenantResolver.getAllActiveTenants()) {
                 runtimeTenantResolver.forceTenant(tenant);
 
                 // Pick an available dsIngestion marking it as STARTED if present
                 Optional<DatasourceIngestion> dsIngestionOpt = self.pickAndStartDatasourceIngestion(tenant);
                 if (dsIngestionOpt.isPresent()) {
-                    atLeastOnIngestionDone = true;
+                    atLeastOneIngestionDone = true;
                     DatasourceIngestion dsIngestion = dsIngestionOpt.get();
                     try {
                         // Launch datasource ingestion
@@ -123,7 +123,7 @@ public class IngesterService implements IIngesterService {
                     dsIngestionRepos.save(dsIngestion);
                 }
             }
-        } while (atLeastOnIngestionDone);
+        } while (atLeastOneIngestionDone);
     }
 
     @Override

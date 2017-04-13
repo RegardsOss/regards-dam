@@ -66,6 +66,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     private ComputationMode mode = ComputationMode.GIVEN;
 
     @OneToOne
+    @JoinColumn(name = "compute_conf_id", foreignKey = @ForeignKey(name = "fk_plugin_id"))
     private PluginConfiguration computationConf;
 
     /**

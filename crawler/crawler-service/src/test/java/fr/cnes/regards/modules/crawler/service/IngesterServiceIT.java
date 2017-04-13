@@ -21,6 +21,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
@@ -29,8 +30,6 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
-import fr.cnes.regards.modules.crawler.service.ICrawlerService;
-import fr.cnes.regards.modules.crawler.service.IIngesterService;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData2;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData2Repository;
@@ -43,9 +42,14 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -126,10 +130,26 @@ public class IngesterServiceIT {
     private IModelService modelService;
 
     @Autowired
+    private IModelRepository modelRepository;
+
+    @Autowired
+    private IModelAttrAssocRepository modelAttrAssocRepos;
+
+    @Autowired
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+
+    @Autowired
     private IPluginService pluginService;
 
     @Autowired
+    private IPluginConfigurationRepository pluginConfRepos;
+
+    @Autowired
     private IDatasourceIngestionRepository dsIngestionRepos;
+
+    @Autowired
+    private IEsRepository esRepository;
+
     private PluginConfiguration getPostgresDataSource1(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
@@ -205,12 +225,19 @@ public class IngesterServiceIT {
     public void setUp() throws Exception {
         tenantResolver.forceTenant(TENANT);
 
-        crawlerService.setConsumeOnlyMode(false);
+        esRepository.deleteIndex(TENANT);
+        crawlerService.setConsumeOnlyMode(true);
 
         dsIngestionRepos.deleteAll();
         extData1Repos.deleteAll();
         extData2Repos.deleteAll();
         extData3Repos.deleteAll();
+
+        entityRepos.deleteAll();
+        modelAttrAssocRepos.deleteAll();
+        modelRepository.deleteAll();
+
+        pluginConfRepos.deleteAll();
 
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
@@ -319,5 +346,12 @@ public class IngesterServiceIT {
         // because of refresh rates, only ExternalData2 datasource must be ingested, we should wait at least 9 more
         // seconds for ExternalData3 one
         Assert.assertEquals(1, dsIngestions.stream().filter(dsIngest -> dsIngest.getSavedObjectsCount() == 1).count());
+
+        Thread.sleep(10_000);
+        ingesterService.manage();
+        dsIngestions = dsIngestionRepos.findAll();
+        Assert.assertTrue(dsIngestions.stream().allMatch(dsIngest -> dsIngest.getStatus() == IngestionStatus.FINISHED));
+        Assert.assertTrue(dsIngestions.stream().allMatch(dsIngest -> dsIngest.getSavedObjectsCount() == 0));
+        Assert.assertTrue(dsIngestions.stream().allMatch(dsIngest -> dsIngest.getLastIngestDate() != null));
     }
 }
