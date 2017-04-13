@@ -78,6 +78,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Default value
      */
+    @Column(name = "default_value", length = 255)
     private String defaultValue;
 
     /**
@@ -362,16 +363,13 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             final Restriction xmlRestriction = pXmlElement.getRestriction();
             if (xmlRestriction.getEnumeration() != null) {
                 restriction = new EnumerationRestriction();
-            } else
-                if (xmlRestriction.getDoubleRange() != null) {
-                    restriction = new DoubleRangeRestriction();
-                } else
-                    if (xmlRestriction.getIntegerRange() != null) {
-                        restriction = new IntegerRangeRestriction();
-                    } else
-                        if (xmlRestriction.getPattern() != null) {
-                            restriction = new PatternRestriction();
-                        }
+            } else if (xmlRestriction.getDoubleRange() != null) {
+                restriction = new DoubleRangeRestriction();
+            } else if (xmlRestriction.getIntegerRange() != null) {
+                restriction = new IntegerRangeRestriction();
+            } else if (xmlRestriction.getPattern() != null) {
+                restriction = new PatternRestriction();
+            }
 
             // Cause null pointer exception if implementation not consistent with XSD
             restriction.fromXml(pXmlElement.getRestriction());
