@@ -31,6 +31,7 @@ import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -315,33 +316,14 @@ public class IndexerServiceDataSourceIT {
         confInteger = pluginService.savePluginConfiguration(confInteger);
     }
 
-    // @After
+    @After
     public void clean() {
-        // Don't use entity service to clean because events are published on RabbitMQ
-        if (dataset1 != null) {
-            Utils.execute(entityRepos::delete, dataset1.getId());
-        }
-        // Don't use entity service to clean because events are published on RabbitMQ
-        if (dataset2 != null) {
-            Utils.execute(entityRepos::delete, dataset2.getId());
-        }
-        // Don't use entity service to clean because events are published on RabbitMQ
-        if (dataset3 != null) {
-            Utils.execute(entityRepos::delete, dataset3.getId());
-        }
-
-        if (datasetModel != null) {
-            Utils.execute(modelService::deleteModel, datasetModel.getId());
-        }
-        if (dataModel != null) {
-            Utils.execute(modelService::deleteModel, dataModel.getId());
-        }
-        if (dataSourcePluginConf != null) {
-            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
-        }
-        if (dBConnectionConf != null) {
-            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
-        }
+        entityRepos.deleteAll();
+        modelAttrAssocRepo.deleteAll();
+        pluginConfRepo.deleteAll();
+        attrModelRepo.deleteAll();
+        modelRepository.deleteAll();
+        fragRepo.deleteAll();
     }
 
     private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) {
