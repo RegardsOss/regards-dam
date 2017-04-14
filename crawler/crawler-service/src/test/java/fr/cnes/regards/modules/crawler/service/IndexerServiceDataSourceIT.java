@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import fr.cnes.regards.modules.entities.domain.attribute.*;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -238,6 +239,8 @@ public class IndexerServiceDataSourceIT {
         fragRepo.deleteAll();
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
+        registerJSonModelAttributes();
+
         // get the plugin configuration for computed attributes
         initPluginConfForComputedAttributes();
         // get a model for DataObject, by importing them it also register them for (de)serialization
@@ -402,11 +405,46 @@ public class IndexerServiceDataSourceIT {
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 
+    private void registerJSonModelAttributes() {
+        String tenant = tenantResolver.getTenant();
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "DATA_OBJECTS_ID");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "FILE_SIZE");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "FILE_TYPE");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "FILE_NAME_ORIGINE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "DATA_SET_ID");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "DATA_TITLE");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "DATA_AUTHOR");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "DATA_AUTHOR_COMPANY");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "START_DATE");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "STOP_DATE");
+        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "DATA_CREATION_DATE");
+
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN", "LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX", "LONGITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN", "LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX", "LATITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MIN", "ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "MAX", "ALTITUDE");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "ANSA5_REAL");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "ANSR5_REAL");
+        gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "ANSE5_REAL");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSE6_STRING");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSL6_2_STRING");
+        gsonAttributeFactory.registerSubtype(tenant, ObjectAttribute.class, "frag3");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSR3_INT", "frag3");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_1_INT", "frag3");
+        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_2_INT", "frag3");
+
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSA7_URL");
+        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSE7_URL");
+    }
+
     @Test
     public void test() throws ModuleException, IOException, InterruptedException {
         String tenant = tenantResolver.getTenant();
-        // First delete index if it already exists
-        indexerService.deleteIndex(tenant);
 
         // Creation
         IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf);

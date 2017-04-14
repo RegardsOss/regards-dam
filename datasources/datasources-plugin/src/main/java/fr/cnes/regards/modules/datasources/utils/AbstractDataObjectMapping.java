@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -79,6 +80,8 @@ public abstract class AbstractDataObjectMapping {
      * A default date
      */
     private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
+
+    private static final GeometryAdapter<?> GEOMETRY_ADAPTER = new GeometryAdapter<>();
 
     /**
      * A default value to indicates that the count request should be execute
@@ -376,18 +379,16 @@ public abstract class AbstractDataObjectMapping {
             }
         }
 
-        InternalAttributes internalAt = mappingInternalAttributes.get(pAttrMapping.getName());
-
         if (pAttrMapping.isPrimaryKey()) {
             String val = pAttr.getValue().toString();
             pData.setSipId(val);
-        } else if (InternalAttributes.RAW_DATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
+        } else if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
             String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
                 pData.setFiles(new ArrayList<>());
             }
             try {
-                DataType type = InternalAttributes.RAW_DATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
+                DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setDataType(type);
                 dataFile.setFileRef(new URI(str));
@@ -395,11 +396,17 @@ public abstract class AbstractDataObjectMapping {
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }
-        } else if (InternalAttributes.LAST_UPDATE.equals(internalAt)) {
+        } else if (pAttrMapping.isLastUpdate()) {
             pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-        } else if (InternalAttributes.LABEL.equals(internalAt)) {
-            StringAttribute str = (StringAttribute) pAttr.getValue();
-            pData.setLabel(str.getValue());
+        } else if (pAttrMapping.isLabel()) {
+            pData.setLabel(((StringAttribute) pAttr).getValue());
+        } else if (pAttrMapping.isGeometry()) {
+            String str = ((StringAttribute) pAttr).getValue();
+            try {
+                pData.setGeometry(GEOMETRY_ADAPTER.read(new JsonReader(new StringReader(str))));
+            } catch (IOException ioe) {
+                LOG.error("Unable to deserialize geometry : " + str, ioe);
+            }
         } else {
             LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
         }
@@ -518,7 +525,7 @@ public abstract class AbstractDataObjectMapping {
         LAST_UPDATE,
 
         /**
-         * Identify an attribute for a file as {@link DataType}{@link #RAWDATA}
+         * Identify an attribute for a file as {@link DataType}{@link #RAW_DATA}
          */
         RAW_DATA,
 
