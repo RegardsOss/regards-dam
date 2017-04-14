@@ -88,7 +88,7 @@ public class GeometryIT {
     @Test
     public void testOnDbPoint() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -123,7 +123,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiPointLineString() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -183,7 +183,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiLineStringPolygon() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -253,7 +253,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiPolygon() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -296,7 +296,7 @@ public class GeometryIT {
     @Test
     public void testNoGeometry() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");

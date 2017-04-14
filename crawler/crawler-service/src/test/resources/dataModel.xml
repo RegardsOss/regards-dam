@@ -91,6 +91,14 @@
 		<name>ANSL6_2_STRING</name>
 		<type>STRING</type>
 	</attribute>
+	<attribute>
+		<name>ANSA7_URL</name>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<name>ANSE7_URL</name>
+		<type>STRING</type>
+	</attribute>
 	<fragment>
 		<name>frag3</name>
 		<attribute>
