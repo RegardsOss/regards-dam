@@ -219,6 +219,10 @@ public class IndexerServiceDataSourceIT {
     @Before
     public void setUp() throws Exception {
         tenantResolver.forceTenant(tenant);
+        if (esRepos.indexExists(tenant)) {
+            esRepos.deleteIndex(tenant);
+        }
+        esRepos.createIndex(tenant);
 
         crawlerService.setConsumeOnlyMode(false);
 
