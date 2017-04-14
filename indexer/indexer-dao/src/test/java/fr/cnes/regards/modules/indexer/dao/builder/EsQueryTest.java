@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.crawler.dao.builder;
+package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -180,7 +181,7 @@ public class CrawlerServiceIT {
         modelDataset = modelService.createModel(modelDataset);
 
         dataModel = new Model();
-        dataModel.setName("model_1");
+        dataModel.setName("model_1_" + System.currentTimeMillis());
         dataModel.setType(EntityType.DATA);
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");

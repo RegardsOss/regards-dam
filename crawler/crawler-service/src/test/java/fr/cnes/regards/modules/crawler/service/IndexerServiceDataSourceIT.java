@@ -390,6 +390,11 @@ public class IndexerServiceDataSourceIT {
         attributes.add(new DataSourceAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
         attributes.add(new DataSourceAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
 
+        attributes.add(new DataSourceAttributeMapping("ANSA7_URL", AttributeType.STRING, "ANSA7_URL",
+                DataSourceAttributeMapping.THUMBNAIL));
+        attributes.add(new DataSourceAttributeMapping("ANSE7_URL", AttributeType.STRING, "ANSE7_URL",
+                DataSourceAttributeMapping.RAW_DATA));
+
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -154,8 +155,15 @@ public class CrawlerIngestIT {
     @Autowired
     private ExternalDataRepository extDataRepos;
 
+    @Autowired
+    private IModelAttrAssocRepository attrAssocRepos;
+
     @Before
     public void setUp() throws Exception {
+        if (esRepos.indexExists(TENANT)) {
+            esRepos.deleteIndex(TENANT);
+        }
+        esRepos.createIndex(TENANT);
         tenantResolver.forceTenant(TENANT);
 
         crawlerService.setConsumeOnlyMode(false);
@@ -164,6 +172,7 @@ public class CrawlerIngestIT {
         amqpAdmin.purgeQueue(EntityEvent.class, false);
         rabbitVhostAdmin.unbind();
 
+        attrAssocRepos.deleteAll();
         entityRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();

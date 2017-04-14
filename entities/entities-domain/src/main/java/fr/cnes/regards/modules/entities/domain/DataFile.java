@@ -5,12 +5,6 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.net.URI;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
 import javax.validation.Valid;
 
 import org.springframework.util.MimeType;
@@ -23,16 +17,16 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  * @author lmieulet
  *
  */
-@Entity
-@Table(name = "t_data_file")
+//@Entity
+//@Table(name = "t_data_file")
 public class DataFile implements IIdentifiable<Long> {
 
     /**
      * Entity identifier
      */
-    @Id
-    @SequenceGenerator(name = "DataFileSequence", initialValue = 1, sequenceName = "seq_data_file")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataFileSequence")
+    //    @Id
+    //    @SequenceGenerator(name = "DataFileSequence", initialValue = 1, sequenceName = "seq_data_file")
+    //    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataFileSequence")
     private Long id;
 
     /**
@@ -43,7 +37,7 @@ public class DataFile implements IIdentifiable<Long> {
     /**
      * File size
      */
-    private int fileSize;
+    private Integer fileSize;
 
     /**
      * {@link MimeType}
@@ -79,11 +73,11 @@ public class DataFile implements IIdentifiable<Long> {
         checksum = pChecksum;
     }
 
-    public int getFileSize() {
+    public Integer getFileSize() {
         return fileSize;
     }
 
-    public void setFileSize(int pFileSize) {
+    public void setFileSize(Integer pFileSize) {
         fileSize = pFileSize;
     }
 

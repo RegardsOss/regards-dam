@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +44,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -353,19 +349,6 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
-     * {@link UUID#nameUUIDFromBytes(byte[]).
-     *
-     * @param pTenant the tenant name
-     * @param pVal the value used to build the UUID
-     * @return the URN
-     */
-    private UniformResourceName buildUrn(String pTenant, String pVal) {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant,
-                UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
-    }
-
-    /**
      * This class extracts data information from an attribute and sets this informations into the
      * {@link DataObject}.</br>
      * The REGARDS internal attributes's that are analyzed :
@@ -397,10 +380,9 @@ public abstract class AbstractDataObjectMapping {
 
         if (pAttrMapping.isPrimaryKey()) {
             String val = pAttr.getValue().toString();
-            pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
         } else if (InternalAttributes.RAW_DATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
-            StringAttribute str = (StringAttribute) pAttr.getValue();
+            String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
                 pData.setFiles(new ArrayList<>());
             }
@@ -408,7 +390,7 @@ public abstract class AbstractDataObjectMapping {
                 DataType type = InternalAttributes.RAW_DATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setDataType(type);
-                dataFile.setFileRef(new URI(str.getValue()));
+                dataFile.setFileRef(new URI(str));
                 pData.getFiles().add(dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);

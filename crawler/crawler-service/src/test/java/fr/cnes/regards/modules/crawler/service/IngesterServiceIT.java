@@ -156,8 +156,7 @@ public class IngesterServiceIT {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -169,8 +168,7 @@ public class IngesterServiceIT {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_2)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -182,8 +180,7 @@ public class IngesterServiceIT {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_3)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "10")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -204,13 +201,13 @@ public class IngesterServiceIT {
     }
 
     private void buildModelAttributes() {
-        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+        List<DataSourceAttributeMapping> attributes = new ArrayList<>();
 
         attributes.add(new DataSourceAttributeMapping("ext_data_id", AttributeType.LONG, "id",
-                DataSourceAttributeMapping.PRIMARY_KEY));
+                                                      DataSourceAttributeMapping.PRIMARY_KEY));
 
         attributes.add(new DataSourceAttributeMapping("date", AttributeType.DATE_ISO8601, "date",
-                DataSourceAttributeMapping.LAST_UPDATE));
+                                                      DataSourceAttributeMapping.LAST_UPDATE));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }

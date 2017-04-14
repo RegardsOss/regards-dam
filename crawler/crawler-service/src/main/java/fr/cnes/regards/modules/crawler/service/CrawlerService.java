@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +52,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -234,11 +237,10 @@ public class CrawlerService implements ICrawlerService {
                 if (ipIds.length == 1) {
                     inProgress = true;
                     updateEntityIntoEs(tenant, ipIds[0], LocalDateTime.now());
-                } else
-                    if (ipIds.length > 1) { // several entities at once
-                        inProgress = true;
-                        updateEntitiesIntoEs(tenant, ipIds, LocalDateTime.now());
-                    }
+                } else if (ipIds.length > 1) { // several entities at once
+                    inProgress = true;
+                    updateEntitiesIntoEs(tenant, ipIds, LocalDateTime.now());
+                }
                 somethingDone = true;
             }
         }
@@ -526,19 +528,21 @@ public class CrawlerService implements ICrawlerService {
         if (!esRepos.indexExists(tenant)) {
             createIndex(tenant);
 
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
+            Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
+                                                          new PageRequest(0, IEsRepository.BULK_SIZE));
             savedObjectsCount += createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
+                page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
                 savedObjectsCount += createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
+            Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
+                                                          new PageRequest(0, IEsRepository.BULK_SIZE));
             savedObjectsCount += mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
+                page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
                 savedObjectsCount += mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
             // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
@@ -559,6 +563,26 @@ public class CrawlerService implements ICrawlerService {
         }
 
         return new IngestionResult(now, savedObjectsCount);
+    }
+
+    private Page<DataObject> findAllFromDatasource(LocalDateTime date, String tenant, IDataSourcePlugin dsPlugin,
+            String datasourceId, Pageable pageable) {
+        Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
+        page.forEach(dataObject -> dataObject.setIpId(buildIpId(tenant, dataObject.getSipId(), datasourceId)));
+        return page;
+    }
+
+    /**
+     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
+     * {@link UUID#nameUUIDFromBytes(byte[]).
+     *
+     * @param tenant the tenant name
+     * @param sipId the original primary key value
+     * @return the IpId generated from given parameters
+     */
+    private static final UniformResourceName buildIpId(String tenant, String sipId, String datasourceId) {
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+                UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
     }
 
     @Override

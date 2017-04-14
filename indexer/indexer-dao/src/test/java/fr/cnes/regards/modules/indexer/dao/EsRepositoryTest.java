@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.crawler.dao;
+package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
