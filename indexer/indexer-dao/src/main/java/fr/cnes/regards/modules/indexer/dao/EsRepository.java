@@ -130,7 +130,7 @@ public class EsRepository implements IEsRepository {
      */
     @Autowired
     private final AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new
-                                                                                // AggregationBuilderFacetTypeVisitor();
+    // AggregationBuilderFacetTypeVisitor();
 
     /**
      * Empty JSon object
@@ -193,9 +193,8 @@ public class EsRepository implements IEsRepository {
         esClusterName = pEsClusterName;
         aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        client.addTransportAddress(new InetSocketTransportAddress(
-
-                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
+        client.addTransportAddress(
+                new InetSocketTransportAddress(InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
@@ -234,10 +233,9 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public String[] findIndices() {
-        return Iterables
-                .toArray(Iterables.transform(client.admin().indices().prepareGetSettings().get().getIndexToSettings(),
-                                             (pSetting) -> pSetting.key),
-                         String.class);
+        return Iterables.toArray(Iterables.transform(
+                client.admin().indices().prepareGetSettings().get().getIndexToSettings(), (pSetting) -> pSetting.key),
+                                 String.class);
     }
 
     @Override
@@ -330,8 +328,7 @@ public class EsRepository implements IEsRepository {
         for (final BulkItemResponse itemResponse : response.getItems()) {
             if (itemResponse.isFailed()) {
                 LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                          itemResponse.getId()),
-                            itemResponse.getFailure().getCause());
+                                          itemResponse.getId()), itemResponse.getFailure().getCause());
             } else {
                 savedDocCount++;
             }
@@ -356,7 +353,7 @@ public class EsRepository implements IEsRepository {
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
                     .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
         } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
-                                                              // loop.
+        // loop.
     }
 
     @Override
@@ -392,7 +389,7 @@ public class EsRepository implements IEsRepository {
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
                     .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
         } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
-                                                              // loop.
+        // loop.
     }
 
     @Override
@@ -502,7 +499,6 @@ public class EsRepository implements IEsRepository {
     private final LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
             .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)
             .build(new CacheLoader<CacheKey, SortedSet<Object>>() {
-
                 @Override
                 public SortedSet<Object> load(CacheKey key) throws Exception {
                     // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
@@ -511,7 +507,6 @@ public class EsRepository implements IEsRepository {
                     searchAll(key.getV1(), results::add, key.getV2(), key.getV3());
                     return results;
                 };
-
             });
 
     @SuppressWarnings("unchecked")
@@ -576,8 +571,9 @@ public class EsRepository implements IEsRepository {
         for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
             String attributeName = sortEntry.getKey();
             // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
-            String lastPathAttName = attributeName.contains(".")
-                    ? attributeName.substring(attributeName.lastIndexOf('.') + 1) : attributeName;
+            String lastPathAttName = attributeName.contains(".") ?
+                    attributeName.substring(attributeName.lastIndexOf('.') + 1) :
+                    attributeName;
             // For all type mappings
             boolean typeText = false;
             for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
@@ -586,8 +582,8 @@ public class EsRepository implements IEsRepository {
                     FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
                     // If field type is String, we must add ".keyword" to attribute name
                     Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
-                    if ((metaDataMap.get(lastPathAttName) != null)
-                            && (metaDataMap.get(lastPathAttName) instanceof Map)) {
+                    if ((metaDataMap.get(lastPathAttName) != null) && (metaDataMap
+                            .get(lastPathAttName) instanceof Map)) {
                         Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
                         // Should contains "type" field but...
                         if (mappingMap.containsKey("type")) {
@@ -658,15 +654,13 @@ public class EsRepository implements IEsRepository {
                 Percentiles percentiles = (Percentiles) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_POSTFIX);
                 request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
-            } else
-                if (facetType == FacetType.DATE) {
-                    Percentiles percentiles = (Percentiles) aggsMap
-                            .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
-                    request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName,
-                                                                  percentiles));
-                } else { // Let it as upper
-                    request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
-                }
+            } else if (facetType == FacetType.DATE) {
+                Percentiles percentiles = (Percentiles) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
+                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
+            } else { // Let it as upper
+                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
+            }
         }
     }
 
@@ -711,12 +705,11 @@ public class EsRepository implements IEsRepository {
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost((Double) bucket.getTo());
                         }
-                    } else
-                        if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
-                            valueRange = Range.greaterThan((Double) bucket.getFrom());
-                        } else { // [value -> value)
-                            valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
-                        }
+                    } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
+                        valueRange = Range.greaterThan((Double) bucket.getFrom());
+                    } else { // [value -> value)
+                        valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                    }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
                 facets.add(new NumericFacet(attributeName, valueMap));
@@ -741,13 +734,12 @@ public class EsRepository implements IEsRepository {
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost(LocalDateTimeAdapter.parse(bucket.getToAsString()));
                         }
-                    } else
-                        if (bucket.getToAsString() == null) { // ? -> +∞)
-                            valueRange = Range.greaterThan(LocalDateTimeAdapter.parse(bucket.getFromAsString()));
-                        } else { // [value -> value)
-                            valueRange = Range.closedOpen(LocalDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                          LocalDateTimeAdapter.parse(bucket.getToAsString()));
-                        }
+                    } else if (bucket.getToAsString() == null) { // ? -> +∞)
+                        valueRange = Range.greaterThan(LocalDateTimeAdapter.parse(bucket.getFromAsString()));
+                    } else { // [value -> value)
+                        valueRange = Range.closedOpen(LocalDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                      LocalDateTimeAdapter.parse(bucket.getToAsString()));
+                    }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
                 facets.add(new DateFacet(attributeName, valueMap));
@@ -764,8 +756,9 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
             // LocalDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof LocalDateTime) ? LocalDateTimeAdapter.format((LocalDateTime) pValue)
-                    : pValue;
+            Object value = (pValue instanceof LocalDateTime) ?
+                    LocalDateTimeAdapter.format((LocalDateTime) pValue) :
+                    pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
