@@ -32,11 +32,7 @@ import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,7 +235,7 @@ public class IndexerServiceDataSourceIT {
         fragRepo.deleteAll();
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
-        registerJSonModelAttributes();
+//        registerJSonModelAttributes();
 
         // get the plugin configuration for computed attributes
         initPluginConfForComputedAttributes();
@@ -617,6 +613,7 @@ public class IndexerServiceDataSourceIT {
                             ((LocalDateTime) getDatasetProperty(pDataset, "START_DATE")).toInstant(ZoneOffset.UTC));
         Assert.assertEquals(Instant.parse(((InternalMax) aggregations.get("max_stop_date")).getValueAsString()),
                             ((LocalDateTime) getDatasetProperty(pDataset, "STOP_DATE")).toInstant(ZoneOffset.UTC));
+        client.close();
     }
 
     private Object getDatasetProperty(Dataset pDataset, String pPropertyName) {
@@ -635,6 +632,7 @@ public class IndexerServiceDataSourceIT {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
+            gsonAttributeFactory.refresh(tenant);
         } catch (IOException e) {
             String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);
