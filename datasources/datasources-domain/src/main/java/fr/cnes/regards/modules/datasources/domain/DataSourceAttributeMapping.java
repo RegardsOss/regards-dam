@@ -47,6 +47,11 @@ public class DataSourceAttributeMapping {
     public static final short THUMBNAIL = 16;
 
     /**
+     * Constant to be used in mappingOptions. Indicates the attribute is a geometry
+     */
+    public static final short GEOMETRY = 32;
+
+    /**
      * The attribute name in the model
      */
     private String name;
@@ -249,5 +254,9 @@ public class DataSourceAttributeMapping {
 
     public boolean isThumbnail() {
         return ((mappingOptions & THUMBNAIL) == THUMBNAIL);
+    }
+
+    public boolean isGeometry() {
+        return ((mappingOptions & GEOMETRY) == GEOMETRY);
     }
 }

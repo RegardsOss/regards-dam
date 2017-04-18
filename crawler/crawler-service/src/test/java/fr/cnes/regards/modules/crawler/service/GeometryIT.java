@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -87,7 +88,7 @@ public class GeometryIT {
     @Test
     public void testOnDbPoint() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -122,7 +123,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiPointLineString() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -182,7 +183,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiLineStringPolygon() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -252,7 +253,7 @@ public class GeometryIT {
     @Test
     public void testOnDbMultiPolygon() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");
@@ -295,7 +296,7 @@ public class GeometryIT {
     @Test
     public void testNoGeometry() throws ModuleException, IOException {
         collectionModel = new Model();
-        collectionModel.setName("model_1");
+        collectionModel.setName("model_1" + System.currentTimeMillis());
         collectionModel.setType(EntityType.COLLECTION);
         collectionModel.setVersion("1");
         collectionModel.setDescription("Test data object model");

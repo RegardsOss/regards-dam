@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,17 +38,18 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @RestController
 @RequestMapping(value = DatasetController.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class DatasetController implements IResourceController<Dataset> {
 
     public static final String DATASET_PATH = "/datasets";
+
+    public static final String DATASET_DATA_ATTRIBUTES_PATH = "/data/attributes";
 
     public static final String DATASET_ID_PATH = "/{dataset_id}";
 
@@ -68,7 +70,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "create and send the dataset")
     public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") Dataset pDataset,
             @RequestPart("file") MultipartFile descriptionFile, BindingResult pResult)
-            throws ModuleException, IOException, PluginUtilsException {
+            throws ModuleException, IOException {
 
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
@@ -106,7 +108,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResponseBody
     @ResourceAccess(description = "Deletes a dataset")
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDatasetId)
-            throws EntityNotFoundException, PluginUtilsException {
+            throws EntityNotFoundException {
         service.delete(pDatasetId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -115,7 +117,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResponseBody
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
-            @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException, PluginUtilsException {
+            @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException {
 
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
@@ -128,13 +130,10 @@ public class DatasetController implements IResourceController<Dataset> {
     /**
      * Entry point to handle dissociation of {@link Dataset} specified by its id to other entities
      *
-     * @param pDatasetId
-     *            {@link Dataset} id
-     * @param pToBeDissociated
-     *            entity to dissociate
+     * @param pDatasetId {@link Dataset} id
+     * @param pToBeDissociated entity to dissociate
      * @return {@link Dataset} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
     @ResponseBody
@@ -149,13 +148,10 @@ public class DatasetController implements IResourceController<Dataset> {
     /**
      * Entry point to handle association of {@link Dataset} specified by its id to other entities
      *
-     * @param pDatasetId
-     *            {@link Dataset} id
-     * @param pToBeAssociatedWith
-     *            entities to be associated
+     * @param pDatasetId {@link Dataset} id
+     * @param pToBeAssociatedWith entities to be associated
      * @return {@link Dataset} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
     @ResponseBody
@@ -165,6 +161,17 @@ public class DatasetController implements IResourceController<Dataset> {
         final Dataset dataset = service.associate(pDatasetId, pToBeAssociatedWith);
         final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_DATA_ATTRIBUTES_PATH)
+    @ResponseBody
+    @ResourceAccess(description = "Retrieves data attributes of given datasets")
+    public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveDataAttributes(
+            @RequestParam(name = "datasetIds", required = false) Set<UniformResourceName> pUrns,
+            @RequestParam(name = "modelName", required = false) String pModelName, final Pageable pPageable,
+            final PagedResourcesAssembler<AttributeModel> pAssembler) throws ModuleException {
+        Page<AttributeModel> result = service.getDataAttributeModels(pUrns, pModelName, pPageable);
+        return new ResponseEntity<>(pAssembler.toResource(result), HttpStatus.OK);
     }
 
     @Override

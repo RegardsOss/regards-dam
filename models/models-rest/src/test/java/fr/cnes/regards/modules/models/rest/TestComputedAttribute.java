@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.util.Collection;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -24,7 +22,7 @@ public class TestComputedAttribute implements IComputedAttribute<Long, String> {
     }
 
     @Override
-    public void compute(Collection<Long> pPartialData) {
+    public void compute(Long pPartialData) {
 
     }
 
@@ -34,7 +32,7 @@ public class TestComputedAttribute implements IComputedAttribute<Long, String> {
     }
 
     @Override
-    public AttributeModel getAttributeComputed() {
+    public AttributeModel getAttributeToCompute() {
         return null;
     }
 

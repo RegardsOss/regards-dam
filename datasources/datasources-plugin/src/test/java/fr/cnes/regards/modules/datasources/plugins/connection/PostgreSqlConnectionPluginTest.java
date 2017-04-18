@@ -23,13 +23,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Christophe Mertz
- *
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
@@ -55,22 +52,18 @@ public class PostgreSqlConnectionPluginTest {
     private String dbPassword;
 
     @Before
-    public void setUp() throws DataSourcesPluginException, SQLException {
+    public void setUp() throws SQLException {
         IDBConnectionPlugin plgConn;
 
-        try {
-            plgConn = PluginUtils.getPlugin(getPostGreSqlParameters(), DefaultPostgreConnectionPlugin.class,
-                                            Arrays.asList(PLUGIN_PACKAGE));
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+        plgConn = PluginUtils.getPlugin(getPostGreSqlParameters(), DefaultPostgreConnectionPlugin.class,
+                                        Arrays.asList(PLUGIN_PACKAGE));
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgConn.testConnection());
     }
 
     @Test
-    public void getPostGreSqlConnection() throws PluginUtilsException {
+    public void getPostGreSqlConnection() {
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
                                                                              DefaultPostgreConnectionPlugin.class,
                                                                              Arrays.asList(PLUGIN_PACKAGE));
@@ -82,7 +75,7 @@ public class PostgreSqlConnectionPluginTest {
     }
 
     @Test
-    public void getMaxPoolSizeWithClose() throws PluginUtilsException, InterruptedException, SQLException {
+    public void getMaxPoolSizeWithClose() throws InterruptedException, SQLException {
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
                                                                              DefaultPostgreConnectionPlugin.class,
                                                                              Arrays.asList(PLUGIN_PACKAGE));
@@ -106,7 +99,7 @@ public class PostgreSqlConnectionPluginTest {
     }
 
     @Test
-    public void getMaxPoolSizeWithoutClose() throws PluginUtilsException, InterruptedException {
+    public void getMaxPoolSizeWithoutClose() throws InterruptedException {
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
                                                                              DefaultPostgreConnectionPlugin.class,
                                                                              Arrays.asList(PLUGIN_PACKAGE));
@@ -138,7 +131,7 @@ public class PostgreSqlConnectionPluginTest {
     }
 
     @Test
-    public void getMaxPoolSizeWithCloseByThread() throws PluginUtilsException, InterruptedException, SQLException {
+    public void getMaxPoolSizeWithCloseByThread() throws InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
@@ -193,7 +186,7 @@ public class PostgreSqlConnectionPluginTest {
     }
 
     @Test
-    public void getPostGreSqlConnectionError() throws PluginUtilsException {
+    public void getPostGreSqlConnectionError() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, "unknown")
@@ -210,7 +203,7 @@ public class PostgreSqlConnectionPluginTest {
         Assert.assertFalse(sqlConn.testConnection());
     }
 
-    private List<PluginParameter> getPostGreSqlParameters() throws PluginUtilsException {
+    private List<PluginParameter> getPostGreSqlParameters() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)

@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
@@ -8,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -33,6 +37,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
+import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -62,7 +67,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * Crawler ingestion tests
@@ -151,8 +155,15 @@ public class CrawlerIngestIT {
     @Autowired
     private ExternalDataRepository extDataRepos;
 
+    @Autowired
+    private IModelAttrAssocRepository attrAssocRepos;
+
     @Before
     public void setUp() throws Exception {
+        if (esRepos.indexExists(TENANT)) {
+            esRepos.deleteIndex(TENANT);
+        }
+        esRepos.createIndex(TENANT);
         tenantResolver.forceTenant(TENANT);
 
         crawlerService.setConsumeOnlyMode(false);
@@ -161,6 +172,7 @@ public class CrawlerIngestIT {
         amqpAdmin.purgeQueue(EntityEvent.class, false);
         rabbitVhostAdmin.unbind();
 
+        attrAssocRepos.deleteAll();
         entityRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
@@ -220,10 +232,11 @@ public class CrawlerIngestIT {
         }
     }
 
-    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
                               adapter.toJson(dataSourceModelMapping))
                 .getParameters();
@@ -232,7 +245,7 @@ public class CrawlerIngestIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getPostgresConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostgresConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)

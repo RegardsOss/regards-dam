@@ -1,6 +1,10 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +30,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.util.Beans;
+import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
@@ -42,7 +47,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
+import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Crawler service integration tests
@@ -138,7 +143,7 @@ public class CrawlerServiceIT {
 
     }
 
-    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf) throws PluginUtilsException {
+    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf)  {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
@@ -149,7 +154,7 @@ public class CrawlerServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getOracleConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
@@ -163,7 +168,7 @@ public class CrawlerServiceIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    public void buildData1() throws ModuleException, PluginUtilsException {
+    public void buildData1() throws ModuleException {
         esRepos.deleteIndex(tenant);
         if (!esRepos.indexExists(tenant)) {
             esRepos.createIndex(tenant);
@@ -176,7 +181,7 @@ public class CrawlerServiceIT {
         modelDataset = modelService.createModel(modelDataset);
 
         dataModel = new Model();
-        dataModel.setName("model_1");
+        dataModel.setName("model_1_" + System.currentTimeMillis());
         dataModel.setType(EntityType.DATA);
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
@@ -225,7 +230,7 @@ public class CrawlerServiceIT {
     }
 
     @Test
-    public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsException {
+    public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsRuntimeException {
         buildData1();
 
         crawlerService.startWork();
@@ -281,7 +286,7 @@ public class CrawlerServiceIT {
         dsService.delete(dataset1.getId());
 
         // To be sure that the crawlerService daemon has time to do its job
-        //        Thread.sleep(5000);
+        // Thread.sleep(5000);
         crawlerService.waitForEndOfWork();
 
         esRepos.refresh(tenant);

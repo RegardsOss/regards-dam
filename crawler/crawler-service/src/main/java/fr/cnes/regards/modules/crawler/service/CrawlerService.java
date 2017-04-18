@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +52,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -130,27 +133,27 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Current delay between all tenants poll check
      */
-    private static AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
 
     /**
      * Boolean indicating that a work is scheduled
      */
-    private static boolean scheduledWork = false;
+    private boolean scheduledWork = false;
 
     /**
      * Boolean indicating that something has been done
      */
-    private static boolean somethingDone = false;
+    private boolean somethingDone = false;
 
     /**
      * Boolean indicating that something is currently in progress
      */
-    private static boolean inProgress = false;
+    private boolean inProgress = false;
 
     /**
      * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
      */
-    private static boolean consumeOnlyMode = false;
+    private boolean consumeOnlyMode = false;
 
     /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
@@ -434,15 +437,14 @@ public class CrawlerService implements ICrawlerService {
                 DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-        // lets compute computed attributes from the dataset model
-        Set<IComputedAttribute<DataObject, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
-        computeDatasetAttributes(computationPlugins, page.getContent());
 
         while (page.hasNext()) {
             page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
             updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-            computeDatasetAttributes(computationPlugins, page.getContent());
         }
+        // lets compute computed attributes from the dataset model
+        Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
+        computationPlugins.forEach(p -> p.compute(dataset));
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
 
@@ -452,9 +454,9 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Create computed attributes from computation
      */
-    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<DataObject, ?>> computationPlugins) {
+    private void createComputedAttributes(Dataset dataset, Set<IComputedAttribute<Dataset, ?>> computationPlugins) {
         // for each computation plugin lets add the computed attribute
-        for (IComputedAttribute<DataObject, ?> plugin : computationPlugins) {
+        for (IComputedAttribute<Dataset, ?> plugin : computationPlugins) {
             AbstractAttribute<?> attributeToAdd = plugin.accept(new AttributeBuilderVisitor());
             if (attributeToAdd instanceof ObjectAttribute) {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
@@ -480,11 +482,6 @@ public class CrawlerService implements ICrawlerService {
                 dataset.getProperties().add(attributeToAdd);
             }
         }
-    }
-
-    private void computeDatasetAttributes(Set<IComputedAttribute<DataObject, ?>> computationPlugins,
-            List<DataObject> dataObjects) {
-        computationPlugins.forEach(p -> p.compute(dataObjects));
     }
 
     /**
@@ -531,20 +528,22 @@ public class CrawlerService implements ICrawlerService {
         if (!esRepos.indexExists(tenant)) {
             createIndex(tenant);
 
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
-            savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
+            Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
+                                                          new PageRequest(0, IEsRepository.BULK_SIZE));
+            savedObjectsCount += createDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
-                savedObjectsCount += this.createDataObjects(tenant, datasourceId, now, page.getContent());
+                page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
+                savedObjectsCount += createDataObjects(tenant, datasourceId, now, page.getContent());
             }
         } else { // index exists, data objects may also exist
-            Page<DataObject> page = dsPlugin.findAll(tenant, new PageRequest(0, IEsRepository.BULK_SIZE), date);
-            savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
+            Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
+                                                          new PageRequest(0, IEsRepository.BULK_SIZE));
+            savedObjectsCount += mergeDataObjects(tenant, datasourceId, now, page.getContent());
 
             while (page.hasNext()) {
-                page = dsPlugin.findAll(tenant, page.nextPageable(), date);
-                savedObjectsCount += this.mergeDataObjects(tenant, datasourceId, now, page.getContent());
+                page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
+                savedObjectsCount += mergeDataObjects(tenant, datasourceId, now, page.getContent());
             }
             // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
             // been updated (to update all associated data objects which have a lastUpdate date >= now)
@@ -564,6 +563,26 @@ public class CrawlerService implements ICrawlerService {
         }
 
         return new IngestionResult(now, savedObjectsCount);
+    }
+
+    private Page<DataObject> findAllFromDatasource(LocalDateTime date, String tenant, IDataSourcePlugin dsPlugin,
+            String datasourceId, Pageable pageable) {
+        Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
+        page.forEach(dataObject -> dataObject.setIpId(buildIpId(tenant, dataObject.getSipId(), datasourceId)));
+        return page;
+    }
+
+    /**
+     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
+     * {@link UUID#nameUUIDFromBytes(byte[]).
+     *
+     * @param tenant the tenant name
+     * @param sipId the original primary key value
+     * @return the IpId generated from given parameters
+     */
+    private static final UniformResourceName buildIpId(String tenant, String sipId, String datasourceId) {
+        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+                UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
     }
 
     @Override
@@ -620,24 +639,24 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public boolean working() {
+    public boolean working() { // NOSONAR : test purpose
         return delay.get() < MAX_DELAY_MS;
     }
 
     @Override
-    public boolean workingHard() {
+    public boolean workingHard() { // NOSONAR : test purpose
         return delay.get() == INITIAL_DELAY_MS;
     }
 
     @Override
-    public boolean strolling() {
+    public boolean strolling() { // NOSONAR : test purpose
         return delay.get() == MAX_DELAY_MS;
     }
 
     @Override
-    public void startWork() {
+    public void startWork() { // NOSONAR : test purpose
         // If crawler is busy, wait for it
-        while (this.working()) {
+        while (working()) {
             ;
         }
         scheduledWork = true;
@@ -646,7 +665,7 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public void waitForEndOfWork() throws InterruptedException {
+    public void waitForEndOfWork() throws InterruptedException { // NOSONAR : test purpose
         if (!scheduledWork) {
             throw new IllegalStateException("Before waiting, startWork() must be called");
         }
@@ -654,7 +673,7 @@ public class CrawlerService implements ICrawlerService {
         // In case work hasn't started yet.
         Thread.sleep(3_000);
         // As soon as something has been done, we wait for crawler service to no more be busy
-        while (inProgress || (!somethingDone && !this.strolling())) {
+        while (inProgress || (!somethingDone && !strolling())) {
             Thread.sleep(1_000);
         }
         LOGGER.info("...Work ended");

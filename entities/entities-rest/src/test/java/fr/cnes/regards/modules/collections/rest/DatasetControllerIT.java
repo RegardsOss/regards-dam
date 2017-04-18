@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.collections.rest;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -10,7 +12,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -23,6 +27,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -33,10 +38,10 @@ import fr.cnes.regards.modules.entities.rest.DatasetController;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @TestPropertySource(locations = { "classpath:test.properties" })
 @MultitenantTransactional
@@ -58,6 +63,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IDatasetRepository datasetRepository;
+
+    @Autowired
+    private IModelService modelService;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -185,7 +193,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSetClone,
                           expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
-
     }
 
     @Test
@@ -193,6 +200,49 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, expectations,
                              "Failed to delete a specific dataset using its id", dataSet1.getId());
+    }
+
+    @Test
+    public void testGetDataAttributes() throws ModuleException {
+        importModel("dataModel.xml");
+        importModel("datasetModel.xml");
+        Model dataModel = modelService.getModelByName("dataModel");
+        Model datasetModel = modelService.getModelByName("datasetModel");
+        Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
+        ds.setCreationDate(LocalDateTime.now());
+        ds.setLicence("pLicence");
+        ds.setDataModel(dataModel.getId());
+        ds = datasetRepository.save(ds);
+        StringJoiner sj = new StringJoiner("&", "?", "");
+        sj.add("modelName=" + datasetModel.getName());
+        String queryParams = sj.toString();
+
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(20)));
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
+                          expectations, "failed to fetch the data attributes");
+        sj.add("page=1");
+        queryParams = sj.toString();
+        expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
+                          expectations, "failed to fetch the data attributes");
+    }
+
+    /**
+     * Import model definition file from resources directory
+     *
+     * @param pFilename filename
+     * @return list of created model attributes
+     * @throws ModuleException if error occurs
+     */
+    private void importModel(String pFilename) throws ModuleException {
+        try {
+            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
+            modelService.importModel(input);
+        } catch (IOException e) {
+            String errorMessage = "Cannot import " + pFilename;
+            throw new AssertionError(errorMessage);
+        }
     }
 
     @Override

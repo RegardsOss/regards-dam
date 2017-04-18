@@ -66,6 +66,12 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     private String modelJSon;
 
     /**
+     * Ingestion refresh rate (in seconds)
+     */
+    @PluginParameter(name = REFRESH_RATE)
+    private Integer refreshRate;
+
+    /**
      * Init method
      */
     @PluginInit
@@ -126,4 +132,8 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
         return false;
     }
 
+    @Override
+    public int getRefreshRate() {
+        return refreshRate;
+    }
 }

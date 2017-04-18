@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.IOException;
@@ -111,9 +114,9 @@ public class EsRepository implements IEsRepository {
     private static final int MAX_TIMEOUT_RETRIES = 3;
 
     /**
-     * Target forwarding search {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} need to
-     * put in cache search because of pagination restrictions.
-     * This constant specifies duration cache time in minutes (from last access)
+     * Target forwarding search {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} need to put
+     * in cache search because of pagination restrictions. This constant specifies duration cache time in minutes (from
+     * last access)
      */
     private static final int TARGET_FORWARDING_CACHE_MN = 3;
 
@@ -126,7 +129,8 @@ public class EsRepository implements IEsRepository {
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
      */
     @Autowired
-    private AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new AggregationBuilderFacetTypeVisitor();
+    private final AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new
+    // AggregationBuilderFacetTypeVisitor();
 
     /**
      * Empty JSon object
@@ -176,22 +180,21 @@ public class EsRepository implements IEsRepository {
     /**
      * Constructor
      *
-     * @param pGson
-     *            JSon mapper bean
+     * @param pGson JSon mapper bean
      */
     public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
             @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
             @Value("${elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        this.gson = pGson;
-        this.esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
-        this.esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
-        this.esPort = pEsPort;
-        this.esClusterName = pEsClusterName;
-        this.aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
+        gson = pGson;
+        esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
+        esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
+        esPort = pEsPort;
+        esClusterName = pEsClusterName;
+        aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        client.addTransportAddress(new InetSocketTransportAddress(
-                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
+        client.addTransportAddress(
+                new InetSocketTransportAddress(InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
@@ -230,10 +233,9 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public String[] findIndices() {
-        return Iterables
-                .toArray(Iterables.transform(client.admin().indices().prepareGetSettings().get().getIndexToSettings(),
-                                             (pSetting) -> pSetting.key),
-                         String.class);
+        return Iterables.toArray(Iterables.transform(
+                client.admin().indices().prepareGetSettings().get().getIndexToSettings(), (pSetting) -> pSetting.key),
+                                 String.class);
     }
 
     @Override
@@ -326,8 +328,7 @@ public class EsRepository implements IEsRepository {
         for (final BulkItemResponse itemResponse : response.getItems()) {
             if (itemResponse.isFailed()) {
                 LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                          itemResponse.getId()),
-                            itemResponse.getFailure().getCause());
+                                          itemResponse.getId()), itemResponse.getFailure().getCause());
             } else {
                 savedDocCount++;
             }
@@ -352,7 +353,7 @@ public class EsRepository implements IEsRepository {
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
                     .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
         } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
-                                                              // loop.
+        // loop.
     }
 
     @Override
@@ -388,7 +389,7 @@ public class EsRepository implements IEsRepository {
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
                     .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
         } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
-                                                              // loop.
+        // loop.
     }
 
     @Override
@@ -491,14 +492,13 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * SearchAll cache used by {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} to
-     * avoid redo same ES request while changing page. SortedSet is necessary to be sure several consecutive
-     * calls return same ordered set
+     * SearchAll cache used by {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} to avoid redo
+     * same ES request while changing page. SortedSet is necessary to be sure several consecutive calls return same
+     * ordered set
      */
     private final LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
             .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)
             .build(new CacheLoader<CacheKey, SortedSet<Object>>() {
-
                 @Override
                 public SortedSet<Object> load(CacheKey key) throws Exception {
                     // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
@@ -507,7 +507,6 @@ public class EsRepository implements IEsRepository {
                     searchAll(key.getV1(), results::add, key.getV2(), key.getV3());
                     return results;
                 };
-
             });
 
     @SuppressWarnings("unchecked")
@@ -551,6 +550,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add sort to the request
+     *
      * @param request search request
      * @param pAscSortMap map(attribute name, true if ascending)
      */
@@ -571,8 +571,9 @@ public class EsRepository implements IEsRepository {
         for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
             String attributeName = sortEntry.getKey();
             // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
-            String lastPathAttName = attributeName.contains(".")
-                    ? attributeName.substring(attributeName.lastIndexOf('.') + 1) : attributeName;
+            String lastPathAttName = attributeName.contains(".") ?
+                    attributeName.substring(attributeName.lastIndexOf('.') + 1) :
+                    attributeName;
             // For all type mappings
             boolean typeText = false;
             for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
@@ -581,8 +582,8 @@ public class EsRepository implements IEsRepository {
                     FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
                     // If field type is String, we must add ".keyword" to attribute name
                     Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
-                    if ((metaDataMap.get(lastPathAttName) != null)
-                            && (metaDataMap.get(lastPathAttName) instanceof Map)) {
+                    if ((metaDataMap.get(lastPathAttName) != null) && (metaDataMap
+                            .get(lastPathAttName) instanceof Map)) {
                         Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
                         // Should contains "type" field but...
                         if (mappingMap.containsKey("type")) {
@@ -610,6 +611,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add aggregations to the search request.
+     *
      * @param pFacetsMap asked facets
      * @param request search request
      * @return true if a second pass is needed (managing range facets)
@@ -635,8 +637,9 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results
-     * (from first pass request results) to create range aggregagtions.
+     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first
+     * pass request results) to create range aggregagtions.
+     *
      * @param pFacetsMap asked facets
      * @param request search request
      * @param aggsMap first pass aggregagtions results
@@ -663,6 +666,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Compute aggregations results to fill results facet map of an attribute
+     *
      * @param aggsMap aggregation resuls map
      * @param facets map of results facets
      * @param facetType type of facet for given attribute
@@ -752,8 +756,9 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
             // LocalDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof LocalDateTime) ? LocalDateTimeAdapter.format((LocalDateTime) pValue)
-                    : pValue;
+            Object value = (pValue instanceof LocalDateTime) ?
+                    LocalDateTimeAdapter.format((LocalDateTime) pValue) :
+                    pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
@@ -773,6 +778,7 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Call specified request at least MAX_TIMEOUT_RETRIES
+     *
      * @param request
      * @return
      */

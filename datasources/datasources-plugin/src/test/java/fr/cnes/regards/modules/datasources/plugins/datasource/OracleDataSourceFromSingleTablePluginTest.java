@@ -32,17 +32,16 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Christophe Mertz
- *
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
@@ -83,9 +82,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
      *
      * @throws DataSourcesPluginException
      * @throws SQLException
-     *
-     * @throws JwtException
-     * @throws PluginUtilsException
+     * @throws JwtException @
      */
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException {
@@ -93,30 +90,23 @@ public class OracleDataSourceFromSingleTablePluginTest {
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         /*
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
-        try {
-            parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                     getOracleConnectionConfiguration())
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                                  adapter.toJson(dataSourceModelMapping))
-                    .getParameters();
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
 
-        try {
-            plgDBDataSource = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                                    Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+        parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+                                                 getOracleConnectionConfiguration())
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .getParameters();
+
+        plgDBDataSource = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
+                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE));
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
@@ -146,10 +136,9 @@ public class OracleDataSourceFromSingleTablePluginTest {
      * Define the {@link PluginConfiguration} for a {@link DefaultOracleConnectionPlugin} to connect to the Oracle
      * database.
      *
-     * @return the {@link PluginConfiguration}
-     * @throws PluginUtilsException
+     * @return the {@link PluginConfiguration} @
      */
-    private PluginConfiguration getOracleConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getOracleConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPassword)

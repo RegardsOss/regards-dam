@@ -40,7 +40,6 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -214,7 +213,7 @@ public class DatasetServiceTest {
 
     @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
-    public void createDataset() throws ModuleException, IOException, PluginUtilsException {
+    public void createDataset() throws ModuleException, IOException {
         Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
         Assert.assertEquals(dataSet2, dataSet);

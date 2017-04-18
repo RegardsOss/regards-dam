@@ -30,11 +30,9 @@ import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Christophe Mertz
- *
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
@@ -84,8 +82,7 @@ public class PostgreSQLConnectionTestWithService {
         final List<PluginConfiguration> pluginConfs = new ArrayList<>();
         pluginConfs.add(aPluginConfiguration);
 
-        Mockito.when(pluginConfRepositoryMocked
-                .findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
+        Mockito.when(pluginConfRepositoryMocked.findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
         Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
@@ -116,8 +113,7 @@ public class PostgreSQLConnectionTestWithService {
         final List<PluginConfiguration> pluginConfs = new ArrayList<>();
         pluginConfs.add(aPluginConfiguration);
 
-        Mockito.when(pluginConfRepositoryMocked
-                .findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
+        Mockito.when(pluginConfRepositoryMocked.findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
         Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
@@ -144,7 +140,7 @@ public class PostgreSQLConnectionTestWithService {
     /**
      * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
      * database
-     * 
+     *
      * @return the {@link PluginConfiguration}
      */
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
@@ -157,13 +153,9 @@ public class PostgreSQLConnectionTestWithService {
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        try {
-            return PluginUtils.getPluginConfiguration(params, DefaultPostgreConnectionPlugin.class,
-                                                      Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        } catch (PluginUtilsException e) {
-            LOG.error(e.getMessage());
-        }
-        return null;
+        return PluginUtils.getPluginConfiguration(params, DefaultPostgreConnectionPlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+
     }
 
 }

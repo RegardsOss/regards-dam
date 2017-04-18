@@ -48,11 +48,9 @@ import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginExc
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Christophe Mertz
- *
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
@@ -101,9 +99,7 @@ public class PostgreDataSourcePluginTest {
      *
      * @throws DataSourcesPluginException
      * @throws SQLException
-     *
-     * @throws JwtException
-     * @throws PluginUtilsException
+     * @throws JwtException @
      */
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException {
@@ -125,29 +121,20 @@ public class PostgreDataSourcePluginTest {
         /*
          * Initialize the DataSourceAttributeMapping
          */
-        this.buildModelAttributes();
+        buildModelAttributes();
 
         /*
          * Instantiate the data source plugin
          */
         List<PluginParameter> parameters;
-        try {
-            parameters = PluginParametersFactory.build()
-                    .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
-                                                     getPostgreConnectionConfiguration())
-                    .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
-                    .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from T_TEST_PLUGIN_DATA_SOURCE")
-                    .getParameters();
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+        parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
+                                                 getPostgreConnectionConfiguration())
+                .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+                .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from T_TEST_PLUGIN_DATA_SOURCE").getParameters();
 
-        try {
-            plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
-                                                    Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+        plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
+                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE));
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
@@ -213,10 +200,9 @@ public class PostgreDataSourcePluginTest {
      * Define the {@link PluginConfiguration} for a {@link DefaultPostgreConnectionPlugin} to connect to the PostgreSql
      * database
      *
-     * @return the {@link PluginConfiguration}
-     * @throws PluginUtilsException
+     * @return the {@link PluginConfiguration} @
      */
-    private PluginConfiguration getPostgreConnectionConfiguration() throws PluginUtilsException {
+    private PluginConfiguration getPostgreConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)

@@ -23,8 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
+import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -45,9 +45,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -83,6 +80,8 @@ public abstract class AbstractDataObjectMapping {
      * A default date
      */
     private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
+
+    private static final GeometryAdapter<?> GEOMETRY_ADAPTER = new GeometryAdapter<>();
 
     /**
      * A default value to indicates that the count request should be execute
@@ -179,6 +178,8 @@ public abstract class AbstractDataObjectMapping {
                 selectRequest = buildDateStatement(selectRequest, pDate);
                 countRequest = buildDateStatement(countRequest, pDate);
             }
+            LOG.debug("select request : " + selectRequest);
+            LOG.debug("count request : " + countRequest);
 
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
@@ -351,19 +352,6 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
-     * {@link UUID#nameUUIDFromBytes(byte[]).
-     *
-     * @param pTenant the tenant name
-     * @param pVal the value used to build the UUID
-     * @return the URN
-     */
-    private UniformResourceName buildUrn(String pTenant, String pVal) {
-        return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant,
-                UUID.nameUUIDFromBytes(pVal.getBytes()), 1);
-    }
-
-    /**
      * This class extracts data information from an attribute and sets this informations into the
      * {@link DataObject}.</br>
      * The REGARDS internal attributes's that are analyzed :
@@ -391,31 +379,34 @@ public abstract class AbstractDataObjectMapping {
             }
         }
 
-        InternalAttributes internalAt = mappingInternalAttributes.get(pAttrMapping.getName());
-
         if (pAttrMapping.isPrimaryKey()) {
             String val = pAttr.getValue().toString();
-            pData.setIpId(buildUrn(pTenant, val));
             pData.setSipId(val);
-        } else if (InternalAttributes.RAW_DATA.equals(internalAt) || InternalAttributes.THUMBNAIL.equals(internalAt)) {
-            StringAttribute str = (StringAttribute) pAttr.getValue();
+        } else if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
+            String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
                 pData.setFiles(new ArrayList<>());
             }
             try {
-                DataType type = InternalAttributes.RAW_DATA.equals(internalAt) ? DataType.RAWDATA : DataType.THUMBNAIL;
+                DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setDataType(type);
-                dataFile.setFileRef(new URI(str.getValue()));
+                dataFile.setFileRef(new URI(str));
                 pData.getFiles().add(dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }
-        } else if (InternalAttributes.LAST_UPDATE.equals(internalAt)) {
+        } else if (pAttrMapping.isLastUpdate()) {
             pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-        } else if (InternalAttributes.LABEL.equals(internalAt)) {
-            StringAttribute str = (StringAttribute) pAttr.getValue();
-            pData.setLabel(str.getValue());
+        } else if (pAttrMapping.isLabel()) {
+            pData.setLabel(((StringAttribute) pAttr).getValue());
+        } else if (pAttrMapping.isGeometry()) {
+            String str = ((StringAttribute) pAttr).getValue();
+            try {
+                pData.setGeometry(GEOMETRY_ADAPTER.read(new JsonReader(new StringReader(str))));
+            } catch (IOException ioe) {
+                LOG.error("Unable to deserialize geometry : " + str, ioe);
+            }
         } else {
             LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
         }
@@ -534,7 +525,7 @@ public abstract class AbstractDataObjectMapping {
         LAST_UPDATE,
 
         /**
-         * Identify an attribute for a file as {@link DataType}{@link #RAWDATA}
+         * Identify an attribute for a file as {@link DataType}{@link #RAW_DATA}
          */
         RAW_DATA,
 

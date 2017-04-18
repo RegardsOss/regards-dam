@@ -25,11 +25,9 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsException;
 
 /**
  * @author Christophe Mertz
- *
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
@@ -58,19 +56,15 @@ public class OracleConnectionPluginTest {
     public void setUp() throws DataSourcesPluginException, SQLException {
         IDBConnectionPlugin plgConn;
 
-        try {
-            plgConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
-                                            Arrays.asList(PLUGIN_PACKAGE));
-        } catch (PluginUtilsException e) {
-            throw new DataSourcesPluginException(e.getMessage());
-        }
+        plgConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
+                                        Arrays.asList(PLUGIN_PACKAGE));
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgConn.testConnection());
     }
 
     @Test
-    public void getOracleSqlConnection() throws PluginUtilsException {
+    public void getOracleSqlConnection() {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
@@ -81,7 +75,7 @@ public class OracleConnectionPluginTest {
     }
 
     @Test
-    public void getMaxPoolSizeWithClose() throws PluginUtilsException, InterruptedException, SQLException {
+    public void getMaxPoolSizeWithClose() throws InterruptedException, SQLException {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
@@ -104,7 +98,7 @@ public class OracleConnectionPluginTest {
     }
 
     @Test
-    public void getMaxPoolSizeWithoutClose() throws PluginUtilsException, InterruptedException, SQLException {
+    public void getMaxPoolSizeWithoutClose() throws InterruptedException, SQLException {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
 
@@ -134,7 +128,7 @@ public class OracleConnectionPluginTest {
     }
 
     @Test
-    public void getMaxPoolSizeWithCloseByThread() throws PluginUtilsException, InterruptedException, SQLException {
+    public void getMaxPoolSizeWithCloseByThread() throws InterruptedException, SQLException {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPassword)
@@ -188,7 +182,7 @@ public class OracleConnectionPluginTest {
         conn6.close();
     }
 
-    private List<PluginParameter> getOracleParameters() throws PluginUtilsException {
+    private List<PluginParameter> getOracleParameters() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPassword)
