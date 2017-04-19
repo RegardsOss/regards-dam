@@ -316,7 +316,7 @@ public abstract class AbstractDataObjectMapping {
         }
 
         if (LOG.isDebugEnabled() && (attr != null)) {
-            if (pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
+            if ((pAttrMapping.getName() != null) && pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "> of type <" + pAttrMapping.getType() + "> is :"
                                   + attr.getValue());
 
