@@ -14,7 +14,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Christophe Mertz
  * @author oroussel
  */
-public class DataSourceAttributeMapping {
+public abstract class AbstractAttributeMapping {
 
     /**
      * Constant to be used in mappingOptions. Indicates that the attribute has no specific mapping options
@@ -82,11 +82,7 @@ public class DataSourceAttributeMapping {
      */
     private short mappingOptions = NO_MAPPING_OPTIONS;
 
-    /**
-     * Default constructor
-     */
-    public DataSourceAttributeMapping() {
-        super();
+    protected AbstractAttributeMapping() {
     }
 
     /**
@@ -99,89 +95,14 @@ public class DataSourceAttributeMapping {
      * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
      * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
      */
-    public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
+    protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
             Integer pTypeDS, short pMappingOptions) {
-        this();
         this.name = pName;
         this.type = pType;
         this.nameSpace = pNameSpace;
         this.nameDS = pMappingDS;
         this.typeDS = pTypeDS;
         this.mappingOptions = pMappingOptions;
-    }
-
-    /**
-     * Constructor for a {@link DataSourceAttributeMapping} with a namespace
-     *
-     * @param pName the attribute name in the model
-     * @param pNameSpace the attribute name space in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
-     * @param pTypeDS The attribute type in the data source @see {@link Types}
-     * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
-     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
-     */
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, Integer pTypeDS,
-            short pMappingOptions) {
-        this(pName, null, pType, pMappingDS, pTypeDS, pMappingOptions);
-    }
-
-    /**
-     * Constructor
-     * @param pName  the attribute name in the model
-     * @param pNameSpace the attribute name space in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
-     * @param pTypeDS The attribute type in the data source @see {@link Types}
-     */
-    public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
-            Integer pTypeDS) {
-        this(pName, pNameSpace, pType, pMappingDS, pTypeDS, NO_MAPPING_OPTIONS);
-    }
-
-    /**
-     *
-     * @param pName the attribute name in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
-     * @param pTypeDS The attribute type in the data source @see {@link Types}
-     */
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, Integer pTypeDS) {
-        this(pName, null, pType, pMappingDS, pTypeDS);
-    }
-
-    /**
-     * Constructor for a {@link DataSourceAttributeMapping} with a namespace
-     * @param pName the attribute name in the model
-     * @param pNameSpace the attribute name space in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
-     */
-    public DataSourceAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
-        this(pName, pNameSpace, pType, pMappingDS, null);
-    }
-
-    /**
-     * Constructor for a {@link DataSourceAttributeMapping} without namespace
-     * @param pName the attribute name in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
-     * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
-     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
-     */
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS, short pMappingOptions) {
-        this(pName, pType, pMappingDS, null, pMappingOptions);
-    }
-
-    /**
-     * Constructor for a {@link DataSourceAttributeMapping} without namespace
-     *
-     * @param pName the attribute name in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
-     */
-    public DataSourceAttributeMapping(String pName, AttributeType pType, String pMappingDS) {
-        this(pName, pType, pMappingDS, NO_MAPPING_OPTIONS);
     }
 
     public String getName() {
@@ -258,5 +179,12 @@ public class DataSourceAttributeMapping {
 
     public boolean isGeometry() {
         return ((mappingOptions & GEOMETRY) == GEOMETRY);
+    }
+
+    public boolean isMappedToStaticProperty() {
+        // primary key => sipId, label => label, raw and thumbnail => files, geometry => geometry, last update => last
+        // update
+        return (mappingOptions != 0)
+                && (mappingOptions <= PRIMARY_KEY + LAST_UPDATE + LABEL + RAW_DATA + THUMBNAIL + GEOMETRY);
     }
 }
