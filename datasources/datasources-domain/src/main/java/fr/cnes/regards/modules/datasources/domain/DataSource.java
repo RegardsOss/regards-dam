@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.datasources.domain;
 
+import com.google.gson.annotations.JsonAdapter;
+import fr.cnes.regards.framework.gson.annotation.Gsonable;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 
 /**

@@ -12,23 +12,17 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
-import fr.cnes.regards.modules.crawler.service.ds.*;
-import fr.cnes.regards.modules.crawler.test.IngesterConfiguration;
 import fr.cnes.regards.modules.crawler.test.IngesterGeometryConfiguration;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -43,8 +37,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -150,21 +142,15 @@ public class IngesterGeometryServiceIT {
     }
 
     private void buildModelAttributes() {
-        List<DataSourceAttributeMapping> attributes = new ArrayList<>();
+        List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
-        attributes.add(new DataSourceAttributeMapping("line_id", AttributeType.INTEGER, "line_id",
-                                                      DataSourceAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "line_id",
+                                                  AbstractAttributeMapping.PRIMARY_KEY));
 
-        attributes.add(new DataSourceAttributeMapping("geometry", AttributeType.STRING, "polygon_geojson",
-                                                      DataSourceAttributeMapping.GEOMETRY));
+        attributes.add(new StaticAttributeMapping(AttributeType.STRING, "polygon_geojson",
+                                                    AbstractAttributeMapping.GEOMETRY));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
-    }
-
-    private void registerJSonModelAttributes() {
-        String tenant = tenantResolver.getTenant();
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "line_id");
-        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "geometry");
     }
 
     @Before
@@ -186,8 +172,6 @@ public class IngesterGeometryServiceIT {
 
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
-        // Register model attributes
-        registerJSonModelAttributes();
         dataModel = new Model();
         dataModel.setName("model_geom");
         dataModel.setType(EntityType.DATA);
@@ -202,7 +186,7 @@ public class IngesterGeometryServiceIT {
         datasetModel.setDescription("Test dataset model");
         modelService.createModel(datasetModel);
 
-        // Initialize the DataSourceAttributeMapping
+        // Initialize the AbstractAttributeMapping
         buildModelAttributes();
 
         // Connection PluginConf

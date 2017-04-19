@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +33,7 @@ import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
