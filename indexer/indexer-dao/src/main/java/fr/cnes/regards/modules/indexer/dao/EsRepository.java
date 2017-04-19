@@ -182,9 +182,9 @@ public class EsRepository implements IEsRepository {
      *
      * @param pGson JSon mapper bean
      */
-    public EsRepository(@Autowired Gson pGson, @Value("${elasticsearch.host:}") String pEsHost,
-            @Value("${elasticsearch.address:}") String pEsAddress, @Value("${elasticsearch.tcp.port}") int pEsPort,
-            @Value("${elasticsearch.cluster.name}") String pEsClusterName,
+    public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String pEsHost,
+            @Value("${regards.elasticsearch.address:}") String pEsAddress, @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
+            @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
         gson = pGson;
         esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
