@@ -44,8 +44,6 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
-    public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
-
     /**
      * By default, the refresh rate is set to 30 minutes (in ms)
      */

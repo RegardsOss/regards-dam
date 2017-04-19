@@ -64,8 +64,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
 
     protected abstract SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy);
 
-    public abstract IDBConnectionPlugin getDBConnection() throws SQLException;
-
     /**
      * This method initialize the {@link SqlGenerator} used to request the database.<br>
      *

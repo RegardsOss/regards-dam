@@ -185,7 +185,7 @@ public abstract class AbstractDataObjectMapping {
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
-                    dataObjects.add(processResultSet(pTenant, rs));
+                    dataObjects.add(processResultSet(rs));
                 }
             }
 
@@ -220,12 +220,11 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
      *
-     * @param pTenant the tenant name
      * @param pRs the {@link ResultSet}
      * @return the {@link DataObject} created
      * @throws SQLException An SQL error occurred
      */
-    protected DataObject processResultSet(String pTenant, ResultSet pRs) throws SQLException {
+    protected DataObject processResultSet(ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
 
         final Set<AbstractAttribute<?>> attributes = new HashSet<>();
