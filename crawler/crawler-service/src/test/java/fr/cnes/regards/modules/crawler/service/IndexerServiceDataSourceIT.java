@@ -134,16 +134,16 @@ public class IndexerServiceDataSourceIT {
     @Value("${oracle.datasource.driver}")
     private String driver;
 
-    @Value("${elasticsearch.host:}")
+    @Value("${regards.elasticsearch.host:}")
     private String esHost;
 
-    @Value("${elasticsearch.address:}")
+    @Value("${regards.elasticsearch.address:}")
     private String esAddress;
 
-    @Value("${elasticsearch.tcp.port}")
+    @Value("${regards.elasticsearch.tcp.port}")
     private int esPort;
 
-    @Value("${elasticsearch.cluster.name}")
+    @Value("${regards.elasticsearch.cluster.name}")
     private String esClusterName;
 
     @Autowired

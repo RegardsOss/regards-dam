@@ -33,8 +33,8 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
 
     private int stringFacetMinDocCount;
 
-    public AggregationBuilderFacetTypeVisitor(@Value("${elasticsearch.string.facet.size:10}") int stringFacetSize,
-            @Value("${elasticsearch.string.facet.min.doc.count:1}") int stringFacetMinDocCount) {
+    public AggregationBuilderFacetTypeVisitor(@Value("${regards.elasticsearch.string.facet.size:10}") int stringFacetSize,
+            @Value("${regards.elasticsearch.string.facet.min.doc.count:1}") int stringFacetMinDocCount) {
         this.stringFacetSize = stringFacetSize;
         this.stringFacetMinDocCount = stringFacetMinDocCount;
     }
