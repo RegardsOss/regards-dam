@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.datasources.domain;
 
 import java.util.List;
 
+import com.google.gson.annotations.JsonAdapter;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -13,6 +14,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  *
  */
+@JsonAdapter(value = ModelMappingAdapter.class)
 public class DataSourceModelMapping {
 
     /**
@@ -23,13 +25,13 @@ public class DataSourceModelMapping {
     /**
      * The mapping between the attribute of the {@link Model} of the attributes of th data source
      */
-    private List<DataSourceAttributeMapping> attributesMapping;
+    private List<AbstractAttributeMapping> attributesMapping;
 
     public DataSourceModelMapping() {
         super();
     }
 
-    public DataSourceModelMapping(Long pModelId, List<DataSourceAttributeMapping> pAttributesMapping) {
+    public DataSourceModelMapping(Long pModelId, List<AbstractAttributeMapping> pAttributesMapping) {
         super();
         this.model = pModelId;
         this.attributesMapping = pAttributesMapping;
@@ -43,11 +45,11 @@ public class DataSourceModelMapping {
         this.model = pModel;
     }
 
-    public List<DataSourceAttributeMapping> getAttributesMapping() {
+    public List<AbstractAttributeMapping> getAttributesMapping() {
         return attributesMapping;
     }
 
-    public void setAttributesMapping(List<DataSourceAttributeMapping> pAttributesMapping) {
+    public void setAttributesMapping(List<AbstractAttributeMapping> pAttributesMapping) {
         this.attributesMapping = pAttributesMapping;
     }
 

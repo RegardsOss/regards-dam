@@ -68,20 +68,20 @@ public class AccessGroupServiceTest {
 
     @Test
     public void testCreateAccessGroup() throws EntityAlreadyExistsException {
-        AccessGroup notDuplicate = new AccessGroup(AG1_NAME + "different");
-        AccessGroup shouldReturn = new AccessGroup(AG1_NAME + "different");
+        final AccessGroup notDuplicate = new AccessGroup(AG1_NAME + "different");
+        final AccessGroup shouldReturn = new AccessGroup(AG1_NAME + "different");
         shouldReturn.setId(2L);
 
         Mockito.when(dao.save(notDuplicate)).thenReturn(shouldReturn);
 
-        AccessGroup after = accessGroupService.createAccessGroup(notDuplicate);
+        final AccessGroup after = accessGroupService.createAccessGroup(notDuplicate);
         Assert.assertEquals(shouldReturn, after);
     }
 
     @Test(expected = EntityNotFoundException.class)
     public void testAssociateUserToGroupWithUnknownUser() throws EntityNotFoundException {
         final ResponseEntity<Resource<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        Mockito.when(projectUserClient.retrieveProjectUser(USER1_EMAIL)).thenReturn(mockedResponse);
+        Mockito.when(projectUserClient.retrieveProjectUserByEmail(USER1_EMAIL)).thenReturn(mockedResponse);
 
         accessGroupService.associateUserToAccessGroup(USER1_EMAIL, AG1_NAME);
 
@@ -90,7 +90,7 @@ public class AccessGroupServiceTest {
     @Test(expected = EntityNotFoundException.class)
     public void testDissociateUserFromGroupWithUnknownUser() throws EntityNotFoundException {
         final ResponseEntity<Resource<ProjectUser>> mockedResponse = new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        Mockito.when(projectUserClient.retrieveProjectUser(USER1_EMAIL)).thenReturn(mockedResponse);
+        Mockito.when(projectUserClient.retrieveProjectUserByEmail(USER1_EMAIL)).thenReturn(mockedResponse);
 
         accessGroupService.dissociateUserFromAccessGroup(USER1_EMAIL, AG1_NAME);
 

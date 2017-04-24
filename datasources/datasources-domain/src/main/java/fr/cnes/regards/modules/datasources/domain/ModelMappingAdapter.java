@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.datasources.utils;
+package fr.cnes.regards.modules.datasources.domain;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,19 +11,19 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  *
  * Class AttributeMappingAdapter
  *
- * GSON adapter for annotation {@link DataSourceAttributeMapping}
+ * GSON adapter for annotation {@link AbstractAttributeMapping}
  *
  * @author Christophe Mertz
  *
  */
+@GsonTypeAdapter(adapted = DataSourceModelMapping.class)
 public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
     /**
@@ -74,9 +74,11 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
         pOut.name(MAPPINGS_LABEL);
 
         pOut.beginArray();
-        for (final DataSourceAttributeMapping attr : pValue.getAttributesMapping()) {
+        for (final AbstractAttributeMapping attr : pValue.getAttributesMapping()) {
             pOut.beginObject();
-            pOut.name(NAME_LABEL).value(attr.getName());
+            if (attr.getName() != null) {
+                pOut.name(NAME_LABEL).value(attr.getName());
+            }
             pOut.name(TYPE_LABEL).value(attr.getType().name());
             pOut.name(MAPPING_OPTIONS).value(attr.getMappingOptions());
             if (attr.getNameSpace() != null) {
@@ -95,7 +97,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     @Override
     public DataSourceModelMapping read(final JsonReader pIn) throws IOException {
         DataSourceModelMapping dataSourceModelMapping = new DataSourceModelMapping();
-        final List<DataSourceAttributeMapping> attributes = new ArrayList<>();
+        final List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
         pIn.beginObject();
 
@@ -127,41 +129,50 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     }
 
     /**
-     * Read one attribute mapping and create a {@link DataSourceAttributeMapping}
+     * Read one attribute mapping and create a {@link AbstractAttributeMapping}
      *
      * @param pIn
      *            the {@link JsonReader} used to read a JSon and to convert in a data object
-     * @return a {@link DataSourceAttributeMapping}
+     * @return a {@link AbstractAttributeMapping}
      * @throws IOException
      *             An error throw, the Json format format is no correct
      */
-    private DataSourceAttributeMapping readMapping(final JsonReader pIn) throws IOException {
-        final DataSourceAttributeMapping attr = new DataSourceAttributeMapping();
+    private AbstractAttributeMapping readMapping(final JsonReader pIn) throws IOException {
+        String name = null;
+        String namespace = null;
+        String nameDS = null;
+        Integer typeDS = null;
+        AttributeType attributeType = null;
+        short mappingOptions = AbstractAttributeMapping.NO_MAPPING_OPTIONS;
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
                 case NAME_LABEL:
-                    attr.setName(pIn.nextString());
+                    name = pIn.nextString();
                     break;
                 case NAMESPACE_LABEL:
-                    attr.setNameSpace(pIn.nextString());
+                    namespace = pIn.nextString();
                     break;
                 case NAME_DS_LABEL:
-                    attr.setNameDS(pIn.nextString());
+                    nameDS = pIn.nextString();
                     break;
                 case TYPE_DS_LABEL:
-                    attr.setTypeDS(Integer.parseInt(pIn.nextString()));
+                    typeDS = Integer.parseInt(pIn.nextString());
                     break;
                 case TYPE_LABEL:
-                    attr.setType(AttributeType.valueOf(pIn.nextString()));
+                    attributeType = AttributeType.valueOf(pIn.nextString());
                     break;
                 case MAPPING_OPTIONS:
-                    attr.setMappingOption((short) pIn.nextInt());
+                    mappingOptions = (short) pIn.nextInt();
                     break;
                 default:
                     break;
             }
         }
-        return attr;
+        if (mappingOptions == AbstractAttributeMapping.NO_MAPPING_OPTIONS) {
+            return new DynamicAttributeMapping(name, namespace, attributeType, nameDS, typeDS);
+        } else {
+            return new StaticAttributeMapping(attributeType, nameDS, typeDS, mappingOptions);
+        }
     }
 
 }

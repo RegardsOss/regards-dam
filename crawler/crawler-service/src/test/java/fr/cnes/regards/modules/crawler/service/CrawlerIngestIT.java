@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import org.junit.After;
 import org.junit.Assert;
@@ -38,18 +39,16 @@ import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
@@ -180,7 +179,6 @@ public class CrawlerIngestIT {
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
         // Register model attributes
-        registerJSonModelAttributes();
         dataModel = new Model();
         dataModel.setName("model_1");
         dataModel.setType(EntityType.DATA);
@@ -195,7 +193,7 @@ public class CrawlerIngestIT {
         datasetModel.setDescription("Test dataset model");
         modelService.createModel(datasetModel);
 
-        // Initialize the DataSourceAttributeMapping
+        // Initialize the AbstractAttributeMapping
         buildModelAttributes();
 
         // Connection PluginConf
@@ -260,21 +258,15 @@ public class CrawlerIngestIT {
     }
 
     private void buildModelAttributes() {
-        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("ext_data_id", AttributeType.LONG, "id",
-                DataSourceAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id",
+                                                                   AbstractAttributeMapping.PRIMARY_KEY));
 
-        attributes.add(new DataSourceAttributeMapping("date", AttributeType.DATE_ISO8601, "date",
-                DataSourceAttributeMapping.LAST_UPDATE));
+        attributes.add(new StaticAttributeMapping(AttributeType.DATE_ISO8601, "date",
+                                                    AbstractAttributeMapping.LAST_UPDATE));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
-    }
-
-    private void registerJSonModelAttributes() {
-        String tenant = tenantResolver.getTenant();
-        gsonAttributeFactory.registerSubtype(tenant, LongAttribute.class, "ext_data_id");
-        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "date");
     }
 
     @Test

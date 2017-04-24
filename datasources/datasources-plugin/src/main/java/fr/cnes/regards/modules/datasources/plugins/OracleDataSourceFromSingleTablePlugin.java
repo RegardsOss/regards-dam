@@ -13,6 +13,7 @@ import java.time.ZoneId;
 
 import javax.sql.DataSource;
 
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,6 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -79,7 +79,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString()
                 + "table name=" + tableName + "model=" + modelJSon);
 
-        // Converts the modelJson to a list of DataSourceAttributeMapping
+        // Converts the modelJson to a list of AbstractAttributeMapping
         initDataSourceMapping(modelJSon);
 
         initializePluginMapping(tableName);
@@ -101,7 +101,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     }
 
     @Override
-    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         LocalDateTime ldt;
 

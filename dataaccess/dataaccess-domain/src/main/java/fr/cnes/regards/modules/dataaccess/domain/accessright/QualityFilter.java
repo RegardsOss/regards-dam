@@ -43,12 +43,6 @@ public class QualityFilter {
         qualityLevel = pQualityLevel;
     }
 
-    /*
-     * public Long getId() { return id; }
-     * 
-     * public void setId(Long pId) { id = pId; }
-     */
-
     public int getMaxScore() {
         return maxScore;
     }
