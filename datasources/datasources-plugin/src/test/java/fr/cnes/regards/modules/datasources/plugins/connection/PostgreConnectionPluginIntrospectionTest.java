@@ -73,7 +73,7 @@ public class PostgreConnectionPluginIntrospectionTest {
 
         postgreDBConn = PluginUtils.getPlugin(parameters, DefaultPostgreConnectionPlugin.class,
                                               Arrays.asList(PLUGIN_PACKAGE));
-        
+
         // Do not launch tests is Database is not available
         Assume.assumeTrue(postgreDBConn.testConnection());
     }
@@ -99,8 +99,20 @@ public class PostgreConnectionPluginIntrospectionTest {
         Assert.assertNotNull(tables);
         Assert.assertTrue(!tables.isEmpty());
 
+        tables.forEach((k, t) -> {
+            Assert.assertNotNull(t.getName());
+            LOG.info("table={}-{}-{}-{}-{}-{}", t.toString(), t.getPKey(), t.getName(), t.getTableDefinition(),
+                     t.getCatalog(), t.getSchema());
+
+        });
+
         Map<String, Column> columns = postgreDBConn.getColumns(TABLE_NAME_TEST);
         Assert.assertNotNull(columns);
+
+        columns.forEach((k, c) -> {
+            Assert.assertNotNull(c.getName());
+            LOG.info("column={}-{}", c.getName(), c.getJavaSqlType());
+        });
     }
 
 }
