@@ -61,8 +61,8 @@ public class AccessGroupService {
      * @param pProjectUserClient
      * @param pPublisher
      */
-    public AccessGroupService(IAccessGroupRepository pAccessGroupDao, IProjectUsersClient pProjectUserClient,
-            IPublisher pPublisher) {
+    public AccessGroupService(final IAccessGroupRepository pAccessGroupDao,
+            final IProjectUsersClient pProjectUserClient, final IPublisher pPublisher) {
         super();
         accessGroupDao = pAccessGroupDao;
         projectUserClient = pProjectUserClient;
@@ -74,21 +74,21 @@ public class AccessGroupService {
      *
      * @param pMicroserviceName
      */
-    public void setMicroserviceName(String pMicroserviceName) {
+    public void setMicroserviceName(final String pMicroserviceName) {
         microserviceName = pMicroserviceName;
     }
 
-    public Page<AccessGroup> retrieveAccessGroups(Pageable pPageable) {
+    public Page<AccessGroup> retrieveAccessGroups(final Pageable pPageable) {
         return accessGroupDao.findAll(pPageable);
     }
 
-    public AccessGroup createAccessGroup(AccessGroup pToBeCreated) throws EntityAlreadyExistsException {
+    public AccessGroup createAccessGroup(final AccessGroup pToBeCreated) throws EntityAlreadyExistsException {
         final AccessGroup alreadyExisting = accessGroupDao.findOneByName(pToBeCreated.getName());
         if (alreadyExisting != null) {
             throw new EntityAlreadyExistsException(
                     String.format(ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE, pToBeCreated.getName()));
         }
-        AccessGroup created = accessGroupDao.save(pToBeCreated);
+        final AccessGroup created = accessGroupDao.save(pToBeCreated);
         // Publish attribute creation
         publisher.publish(new AccessGroupCreated(created));
         return created;
@@ -99,8 +99,8 @@ public class AccessGroupService {
      * @return
      * @throws EntityNotFoundException
      */
-    public AccessGroup retrieveAccessGroup(String pAccessGroupName) throws EntityNotFoundException {
-        AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
+    public AccessGroup retrieveAccessGroup(final String pAccessGroupName) throws EntityNotFoundException {
+        final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
         if (ag == null) {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
@@ -110,7 +110,7 @@ public class AccessGroupService {
     /**
      * @param pAccessGroupName
      */
-    public void deleteAccessGroup(String pAccessGroupName) {
+    public void deleteAccessGroup(final String pAccessGroupName) {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
         if (toDelete != null) {
             accessGroupDao.delete(toDelete.getId());
@@ -125,7 +125,7 @@ public class AccessGroupService {
      * @return
      * @throws EntityNotFoundException
      */
-    public AccessGroup associateUserToAccessGroup(String pUserEmail, String pAccessGroupName)
+    public AccessGroup associateUserToAccessGroup(final String pUserEmail, final String pAccessGroupName)
             throws EntityNotFoundException {
         final User user = getUser(pUserEmail);
         if (user == null) {
@@ -133,16 +133,17 @@ public class AccessGroupService {
         }
         final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
         ag.addUser(user);
-        AccessGroup updated = accessGroupDao.save(ag);
+        final AccessGroup updated = accessGroupDao.save(ag);
         // Publish
         publisher.publish(new AccessGroupAssociationUpdated(updated));
         return updated;
     }
 
-    private User getUser(String pUserEmail) { // NOSONAR: method is used but by lambda so it is not recognized
+    private User getUser(final String pUserEmail) { // NOSONAR: method is used but by lambda so it is not recognized
         try {
             FeignSecurityManager.asSystem();
-            final ResponseEntity<Resource<ProjectUser>> response = projectUserClient.retrieveProjectUser(pUserEmail);
+            final ResponseEntity<Resource<ProjectUser>> response = projectUserClient
+                    .retrieveProjectUserByEmail(pUserEmail);
             final HttpStatus responseStatus = response.getStatusCode();
             if (!HttpUtils.isSuccess(responseStatus)) {
                 // if it gets here it's mainly because of 404 so it means entity not found
@@ -159,7 +160,7 @@ public class AccessGroupService {
      * @param pAccessGroupName
      * @throws EntityNotFoundException
      */
-    public AccessGroup dissociateUserFromAccessGroup(String pUserEmail, String pAccessGroupName)
+    public AccessGroup dissociateUserFromAccessGroup(final String pUserEmail, final String pAccessGroupName)
             throws EntityNotFoundException {
         final User user = getUser(pUserEmail);
         if (user == null) {
@@ -167,7 +168,7 @@ public class AccessGroupService {
         }
         final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
         ag.removeUser(user);
-        AccessGroup updated = accessGroupDao.save(ag);
+        final AccessGroup updated = accessGroupDao.save(ag);
         // Publish
         publisher.publish(new AccessGroupAssociationUpdated(updated));
         return updated;
@@ -178,7 +179,7 @@ public class AccessGroupService {
      * @param pPageable
      * @return
      */
-    public Page<AccessGroup> retrieveAccessGroupsOfUser(String pUserEmail, Pageable pPageable) {
+    public Page<AccessGroup> retrieveAccessGroupsOfUser(final String pUserEmail, final Pageable pPageable) {
         return accessGroupDao.findAllByUsersOrIsPublic(new User(pUserEmail), Boolean.TRUE, pPageable);
     }
 
@@ -188,13 +189,13 @@ public class AccessGroupService {
      * @return
      * @throws EntityNotFoundException
      */
-    public void setAccessGroupsOfUser(String pUserEmail, List<AccessGroup> pNewAcessGroups)
+    public void setAccessGroupsOfUser(final String pUserEmail, final List<AccessGroup> pNewAcessGroups)
             throws EntityNotFoundException {
-        Set<AccessGroup> actualAccessGroups = accessGroupDao.findAllByUsers(new User(pUserEmail));
-        for (AccessGroup actualGroup : actualAccessGroups) {
+        final Set<AccessGroup> actualAccessGroups = accessGroupDao.findAllByUsers(new User(pUserEmail));
+        for (final AccessGroup actualGroup : actualAccessGroups) {
             dissociateUserFromAccessGroup(pUserEmail, actualGroup.getName());
         }
-        for (AccessGroup newGroup : pNewAcessGroups) {
+        for (final AccessGroup newGroup : pNewAcessGroups) {
             associateUserToAccessGroup(pUserEmail, newGroup.getName());
         }
     }
@@ -203,7 +204,7 @@ public class AccessGroupService {
      * @param pId
      * @return
      */
-    public boolean existGroup(Long pId) {
+    public boolean existGroup(final Long pId) {
         return accessGroupDao.exists(pId);
     }
 
@@ -211,7 +212,7 @@ public class AccessGroupService {
      * @param pUser
      * @return
      */
-    public boolean existUser(User pUser) {
+    public boolean existUser(final User pUser) {
         final User user = getUser(pUser.getEmail());
         return user != null;
     }
@@ -224,8 +225,8 @@ public class AccessGroupService {
      * @return updated accessGroup
      * @throws ModuleException
      */
-    public AccessGroup update(String pAccessGroupName, AccessGroup pAccessGroup) throws ModuleException {
-        AccessGroup group = accessGroupDao.findOneByName(pAccessGroupName);
+    public AccessGroup update(final String pAccessGroupName, final AccessGroup pAccessGroup) throws ModuleException {
+        final AccessGroup group = accessGroupDao.findOneByName(pAccessGroupName);
         if (group == null) {
             throw new EntityNotFoundException(pAccessGroupName);
         }

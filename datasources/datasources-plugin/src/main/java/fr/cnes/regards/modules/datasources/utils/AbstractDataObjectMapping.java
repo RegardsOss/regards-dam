@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,6 @@ import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.entities.domain.DataFile;
@@ -128,22 +129,22 @@ public abstract class AbstractDataObjectMapping {
      * Get {@link DateAttribute}.
      *
      * @param pRs the {@link ResultSet}
-     * @param pAttrMapping the {@link DataSourceAttributeMapping}
+     * @param pAttrMapping the {@link AbstractAttributeMapping}
      * @return a new {@link DateAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
-    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException;
 
     /**
-     * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link DataSourceAttributeMapping}.
+     * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link AbstractAttributeMapping}.
      *
      * @param pRs The {@link ResultSet} to read
-     * @param pAttrMapping The {@link DataSourceAttributeMapping}
+     * @param pAttrMapping The {@link AbstractAttributeMapping}
      * @return the {@link LocalDateTime}
      * @throws SQLException An error occurred when try to read the {@link ResultSet}
      */
-    protected LocalDateTime buildLocatDateTime(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+    protected LocalDateTime buildLocatDateTime(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         long n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
         Instant instant = Instant.ofEpochMilli(n);
@@ -184,7 +185,7 @@ public abstract class AbstractDataObjectMapping {
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
-                    dataObjects.add(processResultSet(pTenant, rs));
+                    dataObjects.add(processResultSet(rs));
                 }
             }
 
@@ -219,12 +220,11 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
      *
-     * @param pTenant the tenant name
      * @param pRs the {@link ResultSet}
      * @return the {@link DataObject} created
      * @throws SQLException An SQL error occurred
      */
-    protected DataObject processResultSet(String pTenant, ResultSet pRs) throws SQLException {
+    protected DataObject processResultSet(ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
 
         final Set<AbstractAttribute<?>> attributes = new HashSet<>();
@@ -233,29 +233,27 @@ public abstract class AbstractDataObjectMapping {
         /**
          * Loop the attributes in the mapping
          */
-        for (DataSourceAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
+        for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
             try {
                 AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
 
                 if (attr != null) {
-                    if (attrMapping.getNameSpace() != null) {
-                        if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
-                            /**
-                             * It is a new name space
-                             */
-                            spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
+                    // dynamic mapping
+                    if (!attrMapping.isMappedToStaticProperty()) {
+                        if (attrMapping.getNameSpace() != null) {
+                            if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
+                                // It is a new name space
+                                spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
+                            }
+                            // Add the attribute to the namespace
+                            spaceNames.get(attrMapping.getNameSpace()).add(attr);
+                        } else {
+                            attributes.add(attr);
                         }
-
-                        // Add the attribute to the namespace
-                        spaceNames.get(attrMapping.getNameSpace()).add(attr);
-
-                    } else {
-                        attributes.add(attr);
+                    } else { // static mapping
+                        processStaticAttributes(data, attr, attrMapping);
                     }
-
-                    processInternalAttributes(pTenant, data, attr, attrMapping);
-
                 }
             } catch (SQLException e) {
                 LOG.error(e.getMessage(), e);
@@ -279,11 +277,11 @@ public abstract class AbstractDataObjectMapping {
      * Get an attribute define in the mapping in a {@link ResultSet}
      *
      * @param pRs the {@link ResultSet}
-     * @param pAttrMapping the {@link DataSourceAttributeMapping}
+     * @param pAttrMapping the {@link AbstractAttributeMapping}
      * @return a new {@link AbstractAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
-    private AbstractAttribute<?> buildAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+    private AbstractAttribute<?> buildAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         AbstractAttribute<?> attr = null;
         final String label = extractColumnName(pAttrMapping.getNameDS());
@@ -317,13 +315,13 @@ public abstract class AbstractDataObjectMapping {
         }
 
         if (LOG.isDebugEnabled() && (attr != null)) {
-            if (pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
+            if ((pAttrMapping.getName() != null) && pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "> of type <" + pAttrMapping.getType() + "> is :"
-                        + attr.getValue());
+                                  + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
-                        + pAttrMapping.getType() + "> is :" + attr.getValue());
+                                  + pAttrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -361,28 +359,17 @@ public abstract class AbstractDataObjectMapping {
      * <li>label
      * <li>description
      *
-     * @param pTenant the tenant name
      * @param pData the current {@link DataObject} to build
      * @param pAttr the current {@link AbstractAttribute} to analyze
-     * @param pAttrMapping the {@link DataSourceAttributeMapping} for the current attribute
+     * @param pAttrMapping the {@link AbstractAttributeMapping} for the current attribute
      */
-    private void processInternalAttributes(String pTenant, DataObject pData, AbstractAttribute<?> pAttr,
-            DataSourceAttributeMapping pAttrMapping) {
-        String nameSpace = pAttrMapping.getNameSpace();
-        if (LOG.isDebugEnabled()) {
-            if (nameSpace != null) {
-                LOG.debug("process the internal attribute : <" + pAttr.getName() + "> with namespace <" + nameSpace
-                        + ">");
-
-            } else {
-                LOG.debug("process the internal attribute : <" + pAttr.getName() + ">");
-            }
-        }
-
+    private void processStaticAttributes(DataObject pData, AbstractAttribute<?> pAttr,
+            AbstractAttributeMapping pAttrMapping) {
         if (pAttrMapping.isPrimaryKey()) {
             String val = pAttr.getValue().toString();
             pData.setSipId(val);
-        } else if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
+        }
+        if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
             String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
                 pData.setFiles(new ArrayList<>());
@@ -396,19 +383,20 @@ public abstract class AbstractDataObjectMapping {
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }
-        } else if (pAttrMapping.isLastUpdate()) {
+        }
+        if (pAttrMapping.isLastUpdate()) {
             pData.setLastUpdate((LocalDateTime) pAttr.getValue());
-        } else if (pAttrMapping.isLabel()) {
+        }
+        if (pAttrMapping.isLabel()) {
             pData.setLabel(((StringAttribute) pAttr).getValue());
-        } else if (pAttrMapping.isGeometry()) {
+        }
+        if (pAttrMapping.isGeometry()) {
             String str = ((StringAttribute) pAttr).getValue();
             try {
                 pData.setGeometry(GEOMETRY_ADAPTER.read(new JsonReader(new StringReader(str))));
             } catch (IOException ioe) {
                 LOG.error("Unable to deserialize geometry : " + str, ioe);
             }
-        } else {
-            LOG.trace("Unknown mapping for {}", pAttrMapping.getName());
         }
     }
 
@@ -453,9 +441,9 @@ public abstract class AbstractDataObjectMapping {
             return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
                                        INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         } else {
-            return pRequest
-                    .replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
-                                dateAttributeName + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "'");
+            return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
+                                       dateAttributeName + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                                               + "'");
         }
     }
 
@@ -468,7 +456,7 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
-     * representation to a {@link List} of {@link DataSourceAttributeMapping}.
+     * representation to a {@link List} of {@link AbstractAttributeMapping}.
      *
      * @param pModelJson the mapping in JSon format
      */
@@ -504,7 +492,7 @@ public abstract class AbstractDataObjectMapping {
      * This initialization is done, only once, before the read of the data.
      */
     private void initMappingInternalAttributes() {
-        for (DataSourceAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
+        for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
             if (attrMapping.isLabel()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
@@ -538,6 +526,8 @@ public abstract class AbstractDataObjectMapping {
          * Identify an attribute for a label attribute
          */
         LABEL
-    };
+    }
+
+    ;
 
 }

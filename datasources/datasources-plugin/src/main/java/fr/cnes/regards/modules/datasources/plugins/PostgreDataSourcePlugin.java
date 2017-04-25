@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -78,7 +78,7 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
         LOG.info("Init method call : "
                 + (dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
 
-        // Converts the modelJson to a list of DataSourceAttributeMapping
+        // Converts the modelJson to a list of AbstractAttributeMapping
         initDataSourceMapping(modelJSon);
     }
 
@@ -86,7 +86,7 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
     /**
      * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
      */
-    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, DataSourceAttributeMapping pAttrMapping)
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         LocalDateTime ldt;
 

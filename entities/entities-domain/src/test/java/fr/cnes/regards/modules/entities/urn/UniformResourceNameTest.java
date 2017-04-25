@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
 
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
@@ -19,6 +21,8 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 public class UniformResourceNameTest {
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_410")
+    @Purpose("The SIP identifier is an URN")
     public void testFromStringSIP() {
         final UniformResourceName sipUrn = new UniformResourceName(OAISIdentifier.SIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1);
@@ -28,6 +32,8 @@ public class UniformResourceNameTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_410")
+    @Purpose("The AIP identifier is an URN")
     public void testFromStringFullAIP() {
         final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1, 2L, "3");
@@ -36,6 +42,8 @@ public class UniformResourceNameTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_410")
+    @Purpose("The AIP identifier is an URN")
     public void testFromStringAIPWithoutRevision() {
         final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1, 2L);
@@ -44,6 +52,8 @@ public class UniformResourceNameTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_410")
+    @Purpose("The AIP identifier is an URN")
     public void testFromStringAIPWithoutOrder() {
         final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1, "revision");
@@ -52,6 +62,8 @@ public class UniformResourceNameTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_410")
+    @Purpose("The AIP identifier is an URN")
     public void testFromStringAIPWithoutOrderOrRevision() {
         final UniformResourceName aipUrn = new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, "CDPP",
                 UUID.randomUUID(), 1);

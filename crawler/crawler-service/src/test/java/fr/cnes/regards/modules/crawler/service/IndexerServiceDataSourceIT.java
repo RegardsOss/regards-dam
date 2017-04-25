@@ -18,6 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.entities.domain.attribute.*;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -32,11 +35,7 @@ import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,12 +60,11 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -136,16 +134,16 @@ public class IndexerServiceDataSourceIT {
     @Value("${oracle.datasource.driver}")
     private String driver;
 
-    @Value("${elasticsearch.host:}")
+    @Value("${regards.elasticsearch.host:}")
     private String esHost;
 
-    @Value("${elasticsearch.address:}")
+    @Value("${regards.elasticsearch.address:}")
     private String esAddress;
 
-    @Value("${elasticsearch.tcp.port}")
+    @Value("${regards.elasticsearch.tcp.port}")
     private int esPort;
 
-    @Value("${elasticsearch.cluster.name}")
+    @Value("${regards.elasticsearch.cluster.name}")
     private String esClusterName;
 
     @Autowired
@@ -239,7 +237,7 @@ public class IndexerServiceDataSourceIT {
         fragRepo.deleteAll();
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
-        registerJSonModelAttributes();
+        //        registerJSonModelAttributes();
 
         // get the plugin configuration for computed attributes
         initPluginConfForComputedAttributes();
@@ -251,7 +249,7 @@ public class IndexerServiceDataSourceIT {
         importModel(DATASET_MODEL_FILE_NAME);
         datasetModel = modelService.getModelByName("model_ds_1");
 
-        // Initialize the DataSourceAttributeMapping
+        // Initialize the AbstractAttributeMapping
         buildModelAttributes();
 
         // Connection PluginConf
@@ -360,54 +358,53 @@ public class IndexerServiceDataSourceIT {
     }
 
     private void buildModelAttributes() {
-        List<DataSourceAttributeMapping> attributes = new ArrayList<DataSourceAttributeMapping>();
+        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new DataSourceAttributeMapping("DATA_OBJECTS_ID", AttributeType.INTEGER, "DATA_OBJECTS_ID",
-                DataSourceAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "DATA_OBJECTS_ID",
+                                                  AbstractAttributeMapping.PRIMARY_KEY));
 
-        attributes.add(new DataSourceAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
-        attributes.add(new DataSourceAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
-        attributes.add(new DataSourceAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
+        attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
+        attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
+        attributes.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
 
-        attributes.add(new DataSourceAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
-        attributes.add(new DataSourceAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
-        attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
-        attributes.add(new DataSourceAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING,
-                "DATA_AUTHOR_COMPANY"));
+        attributes.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
+        attributes.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
+        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
+        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new DataSourceAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
-                Types.DECIMAL));
-        attributes.add(new DataSourceAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE",
-                Types.DECIMAL));
-        attributes.add(new DataSourceAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE", Types.DECIMAL));
+        attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
+                                                   Types.DECIMAL));
+        attributes
+                .add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE", Types.DECIMAL));
+        attributes
+                .add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601, "DATA_CREATION_DATE",
+                                                 Types.DECIMAL));
 
-        attributes.add(new DataSourceAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN", "LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX", "LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MIN", "ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
-        attributes.add(new DataSourceAttributeMapping("MAX", "ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
-        attributes.add(new DataSourceAttributeMapping("ANSA5_REAL", AttributeType.DOUBLE, "ANSA5_REAL"));
-        attributes.add(new DataSourceAttributeMapping("ANSR5_REAL", AttributeType.DOUBLE, "ANSR5_REAL"));
-        attributes.add(new DataSourceAttributeMapping("ANSE5_REAL", AttributeType.DOUBLE, "ANSE5_REAL"));
-        attributes.add(new DataSourceAttributeMapping("ANSE6_STRING", AttributeType.STRING, "ANSE6_STRING"));
-        attributes.add(new DataSourceAttributeMapping("ANSL6_2_STRING", AttributeType.STRING, "ANSL6_2_STRING"));
-        attributes.add(new DataSourceAttributeMapping("ANSR3_INT", "frag3", AttributeType.INTEGER, "ANSR3_INT"));
-        attributes.add(new DataSourceAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
-        attributes.add(new DataSourceAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
+        attributes.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
+        attributes.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
+        attributes.add(new DynamicAttributeMapping("MIN", "LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
+        attributes.add(new DynamicAttributeMapping("MAX", "LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+        attributes.add(new DynamicAttributeMapping("MIN", "ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
+        attributes.add(new DynamicAttributeMapping("MAX", "ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
+        attributes.add(new DynamicAttributeMapping("ANSA5_REAL", AttributeType.DOUBLE, "ANSA5_REAL"));
+        attributes.add(new DynamicAttributeMapping("ANSR5_REAL", AttributeType.DOUBLE, "ANSR5_REAL"));
+        attributes.add(new DynamicAttributeMapping("ANSE5_REAL", AttributeType.DOUBLE, "ANSE5_REAL"));
+        attributes.add(new DynamicAttributeMapping("ANSE6_STRING", AttributeType.STRING, "ANSE6_STRING"));
+        attributes.add(new DynamicAttributeMapping("ANSL6_2_STRING", AttributeType.STRING, "ANSL6_2_STRING"));
+        attributes.add(new DynamicAttributeMapping("ANSR3_INT", "frag3", AttributeType.INTEGER, "ANSR3_INT"));
+        attributes.add(new DynamicAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
+        attributes.add(new DynamicAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
 
-        attributes.add(new DataSourceAttributeMapping("ANSA7_URL", AttributeType.STRING, "ANSA7_URL",
-                DataSourceAttributeMapping.THUMBNAIL));
-        attributes.add(new DataSourceAttributeMapping("ANSE7_URL", AttributeType.STRING, "ANSE7_URL",
-                DataSourceAttributeMapping.RAW_DATA));
+        attributes
+                .add(new StaticAttributeMapping(AttributeType.STRING, "ANSA7_URL", AbstractAttributeMapping.THUMBNAIL));
+        attributes
+                .add(new StaticAttributeMapping(AttributeType.STRING, "ANSE7_URL", AbstractAttributeMapping.RAW_DATA));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 
     private void registerJSonModelAttributes() {
         String tenant = tenantResolver.getTenant();
-        gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "DATA_OBJECTS_ID");
         gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "FILE_SIZE");
         gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "FILE_TYPE");
         gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "FILE_NAME_ORIGINE");
@@ -437,9 +434,6 @@ public class IndexerServiceDataSourceIT {
         gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSR3_INT", "frag3");
         gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_1_INT", "frag3");
         gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_2_INT", "frag3");
-
-        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSA7_URL");
-        gsonAttributeFactory.registerSubtype(tenant, StringAttribute.class, "ANSE7_URL");
     }
 
     @Test
@@ -495,8 +489,8 @@ public class IndexerServiceDataSourceIT {
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // All data are associated with the 3 datasets so they must all have the 4 groups
@@ -516,8 +510,8 @@ public class IndexerServiceDataSourceIT {
         crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset1.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
         objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
@@ -526,8 +520,8 @@ public class IndexerServiceDataSourceIT {
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset2.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)
@@ -568,9 +562,9 @@ public class IndexerServiceDataSourceIT {
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        objectsPage = searchService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
-                                                      "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
-                                                      "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
+        objectsPage = searchService
+                .multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13, "properties.DATA_OBJECTS_ID",
+                                   "properties.FILE_SIZE", "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
         Assert.assertFalse(objectsPage.getContent().isEmpty());
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }
@@ -617,6 +611,7 @@ public class IndexerServiceDataSourceIT {
                             ((LocalDateTime) getDatasetProperty(pDataset, "START_DATE")).toInstant(ZoneOffset.UTC));
         Assert.assertEquals(Instant.parse(((InternalMax) aggregations.get("max_stop_date")).getValueAsString()),
                             ((LocalDateTime) getDatasetProperty(pDataset, "STOP_DATE")).toInstant(ZoneOffset.UTC));
+        client.close();
     }
 
     private Object getDatasetProperty(Dataset pDataset, String pPropertyName) {
@@ -635,6 +630,7 @@ public class IndexerServiceDataSourceIT {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
+            gsonAttributeFactory.refresh(tenant);
         } catch (IOException e) {
             String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);

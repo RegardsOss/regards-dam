@@ -24,11 +24,11 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -54,7 +54,7 @@ public class DataSourceService implements IDataSourceService {
     private final IDBConnectionService dbConnectionService;
 
     /**
-     * GSON adapter for {@link DataSourceAttributeMapping}
+     * GSON adapter for {@link AbstractAttributeMapping}
      */
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 

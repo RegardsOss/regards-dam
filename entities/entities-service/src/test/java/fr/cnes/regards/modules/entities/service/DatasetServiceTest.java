@@ -22,6 +22,8 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.test.report.annotation.Requirements;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -48,9 +50,9 @@ public class DatasetServiceTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatasetServiceTest.class);
 
-    private Model pModel1;
+    private Model model1;
 
-    private Model pModel2;
+    private Model model2;
 
     private Model modelOfObjects;
 
@@ -99,15 +101,15 @@ public class DatasetServiceTest {
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
         dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
         // populate the repository
-        pModel1 = new Model();
-        pModel1.setId(1L);
-        pModel2 = new Model();
-        pModel2.setId(2L);
+        model1 = new Model();
+        model1.setId(1L);
+        model2 = new Model();
+        model2.setId(2L);
 
-        dataSet1 = new Dataset(pModel1, "PROJECT", "dataSet1");
+        dataSet1 = new Dataset(model1, "PROJECT", "dataSet1");
         dataSet1.setLicence("licence");
         dataSet1.setId(1L);
-        dataSet2 = new Dataset(pModel2, "PROJECT", "dataSet2");
+        dataSet2 = new Dataset(model2, "PROJECT", "dataSet2");
         dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         Mockito.when(modelService.getModel(modelOfObjects.getId())).thenReturn(modelOfObjects);
@@ -211,8 +213,10 @@ public class DatasetServiceTest {
         return rootCrit;
     }
 
-    @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_400")
+    @Requirement("REGARDS_DSL_SYS_ARC_420")
+    @Purpose("The dataset identifier is an URN")
     public void createDataset() throws ModuleException, IOException {
         Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
@@ -231,6 +235,23 @@ public class DatasetServiceTest {
         }
         // never reached because test will fail first
         return null;
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_450")
+    @Purpose("The URN identifier of a dataset is uniq")
+    public void dataSetUrnUnicity() throws ModuleException, IOException {
+
+        String dataSetName = "dataSet1";
+
+        Dataset dataSet1 = new Dataset(model1, "PROJECT", dataSetName);
+        Dataset dataSet2 = new Dataset(model1, "PROJECT", dataSetName);
+
+        Assert.assertNotNull(dataSet1);
+        Assert.assertNotNull(dataSet2);
+        Assert.assertNotNull(dataSet1.getIpId());
+        Assert.assertNotNull(dataSet2.getIpId());
+        Assert.assertNotEquals(dataSet1.getIpId(), dataSet2.getIpId());
     }
 
 }

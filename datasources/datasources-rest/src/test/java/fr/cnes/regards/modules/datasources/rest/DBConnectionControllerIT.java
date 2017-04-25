@@ -98,6 +98,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_230")
+    @Purpose("If a HTTP request POST is unsupported or mal-formatted, the HTTP return code is 503")
     public void createEmptyDBConnectionWithPluginClassName() {
         final DBConnection dbConn = new DBConnection();
         dbConn.setPluginClassName(POSTGRESQL_PLUGIN_CONNECTION);

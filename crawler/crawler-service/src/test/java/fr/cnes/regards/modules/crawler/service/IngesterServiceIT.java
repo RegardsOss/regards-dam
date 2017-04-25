@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -37,15 +39,12 @@ import fr.cnes.regards.modules.crawler.service.ds.ExternalData3;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData3Repository;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
 import fr.cnes.regards.modules.crawler.test.IngesterConfiguration;
-import fr.cnes.regards.modules.datasources.domain.DataSourceAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
@@ -201,21 +200,14 @@ public class IngesterServiceIT {
     }
 
     private void buildModelAttributes() {
-        List<DataSourceAttributeMapping> attributes = new ArrayList<>();
+        List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
-        attributes.add(new DataSourceAttributeMapping("ext_data_id", AttributeType.LONG, "id",
-                                                      DataSourceAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id", AbstractAttributeMapping.PRIMARY_KEY));
 
-        attributes.add(new DataSourceAttributeMapping("date", AttributeType.DATE_ISO8601, "date",
-                                                      DataSourceAttributeMapping.LAST_UPDATE));
+        attributes.add(new StaticAttributeMapping(AttributeType.DATE_ISO8601, "date",
+                                                  AbstractAttributeMapping.LAST_UPDATE));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
-    }
-
-    private void registerJSonModelAttributes() {
-        String tenant = tenantResolver.getTenant();
-        gsonAttributeFactory.registerSubtype(tenant, LongAttribute.class, "ext_data_id");
-        gsonAttributeFactory.registerSubtype(tenant, DateAttribute.class, "date");
     }
 
     @Before
@@ -242,8 +234,6 @@ public class IngesterServiceIT {
 
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
-        // Register model attributes
-        registerJSonModelAttributes();
         dataModel = new Model();
         dataModel.setName("model_1");
         dataModel.setType(EntityType.DATA);
@@ -258,7 +248,7 @@ public class IngesterServiceIT {
         datasetModel.setDescription("Test dataset model");
         modelService.createModel(datasetModel);
 
-        // Initialize the DataSourceAttributeMapping
+        // Initialize the AbstractAttributeMapping
         buildModelAttributes();
 
         // Connection PluginConf
