@@ -28,17 +28,20 @@ public class DeletedEntity {
     @Id
     @SequenceGenerator(name = "EntitySequence", initialValue = 1, sequenceName = "seq_del_entity")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "EntitySequence")
-    protected Long id;
+    private Long id;
+
+    @Column(name = "creation_date")
+    private LocalDateTime creationDate;
 
     @Column(name = "update_date")
-    protected LocalDateTime lastUpdate;
+    private LocalDateTime lastUpdate;
 
     @Column(name = "deletion_date")
-    protected LocalDateTime deletionDate;
+    private LocalDateTime deletionDate;
 
     @Column(unique = true, nullable = false)
     @Convert(converter = UrnConverter.class)
-    protected UniformResourceName ipId;
+    private UniformResourceName ipId;
 
     public DeletedEntity() {
     }
@@ -75,4 +78,11 @@ public class DeletedEntity {
         ipId = pIpId;
     }
 
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
 }

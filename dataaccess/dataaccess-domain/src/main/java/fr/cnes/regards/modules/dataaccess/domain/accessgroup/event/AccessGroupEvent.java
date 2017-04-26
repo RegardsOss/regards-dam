@@ -11,7 +11,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
  *
  * @author Xavier-Alexandre Brochard
  */
-public abstract class AbstractAccessGroupEvent implements ISubscribable {
+public class AbstractAccessGroupEvent implements ISubscribable {
 
     /**
      * The source of the event
