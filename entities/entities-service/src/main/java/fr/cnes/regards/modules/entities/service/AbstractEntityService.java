@@ -678,6 +678,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
         DeletedEntity delEntity = new DeletedEntity();
+        delEntity.setCreationDate(entity.getCreationDate());
         delEntity.setDeletionDate(LocalDateTime.now());
         delEntity.setIpId(entity.getIpId());
         delEntity.setLastUpdate(entity.getLastUpdate());
