@@ -167,6 +167,9 @@ public class PostgreDataSourcePluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_ARC_120")
+    @Requirement("REGARDS_DSL_DAM_ARC_130")
+    @Purpose("The system allows to define a request to a data source to get a subset of the data")
     public void getDataSourceIntrospectionFromPastDate() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 

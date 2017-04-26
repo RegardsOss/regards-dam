@@ -61,7 +61,7 @@ public class PostgreConnectionPluginIntrospectionTest {
     private DefaultPostgreConnectionPlugin postgreDBConn;
 
     @Before
-    public void setUp()  {
+    public void setUp() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
@@ -81,7 +81,7 @@ public class PostgreConnectionPluginIntrospectionTest {
     @Test
     @Requirement("REGARDS_DSL_DAM_PLG_100")
     @Purpose("The system has a plugin that enables to connect to a PostreSql database")
-    public void getTables() {
+    public void postgreSqlConnection() {
         Assert.assertTrue(postgreDBConn.testConnection());
 
         Map<String, Table> tables = postgreDBConn.getTables();
@@ -90,9 +90,9 @@ public class PostgreConnectionPluginIntrospectionTest {
     }
 
     @Test
-    @Requirement("REGARDS_DSL_DAM_PLG_100")
-    @Purpose("The system has a plugin that enables to connect to a PostreSql database")
-    public void getColumns() {
+    @Requirement("REGARDS_DSL_DAM_SRC_155")
+    @Purpose("The system has a plugin that enables for a SGBD to get the list of tables and for a table, the list of columns and their types")
+    public void getTablesAndColumns() {
         Assert.assertTrue(postgreDBConn.testConnection());
 
         Map<String, Table> tables = postgreDBConn.getTables();
