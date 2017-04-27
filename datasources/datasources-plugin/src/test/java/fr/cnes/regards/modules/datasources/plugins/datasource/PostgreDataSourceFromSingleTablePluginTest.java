@@ -148,6 +148,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_ARC_140")
     @Requirement("REGARDS_DSL_DAM_PLG_210")
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by introspection")
     public void getDataSourceIntrospection() throws SQLException {
@@ -185,6 +186,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_ARC_140")
+    @Purpose("The system allows to define a mapping between the datasource's attributes and an internal model")
     public void getDataSourceIntrospectionFromPastDate() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 

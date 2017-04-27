@@ -21,6 +21,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
@@ -64,6 +66,8 @@ public class OracleConnectionPluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_ARC_100")
+    @Purpose("The system allows to define a connection to a data source")
     public void getOracleSqlConnection() {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));

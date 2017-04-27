@@ -12,14 +12,14 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
@@ -32,8 +32,6 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 public class OracleConnectionPluginIntrospectionTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(OracleConnectionPluginIntrospectionTest.class);
 
     private static final String PLUGIN_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -64,8 +62,7 @@ public class OracleConnectionPluginIntrospectionTest {
     }
 
     @Test
-    public void getTables() {
-
+    public void oracleConnection() {
         Assert.assertTrue(oracleDBConn.testConnection());
 
         Map<String, Table> tables = oracleDBConn.getTables();
@@ -74,8 +71,9 @@ public class OracleConnectionPluginIntrospectionTest {
     }
 
     @Test
-    public void getColumnsAndIndices() {
-
+    @Requirement("REGARDS_DSL_DAM_SRC_155")
+    @Purpose("The system has a plugin that enables for a SGBD to get the list of tables and for a table, the list of columns and their types")
+    public void getTablesAndColumns() {
         Map<String, Table> tables = oracleDBConn.getTables();
         Assert.assertNotNull(tables);
         Assert.assertTrue(!tables.isEmpty());
