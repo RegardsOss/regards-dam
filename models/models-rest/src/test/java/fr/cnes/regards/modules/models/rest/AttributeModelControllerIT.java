@@ -184,7 +184,8 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * POST a new attribute
      *
-     * @param pAttributeModel the attribute
+     * @param pAttributeModel
+     *            the attribute
      * @return {@link ResultActions}
      */
     private ResultActions createAttribute(AttributeModel pAttributeModel) {
@@ -207,11 +208,16 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * POST a new attribute
      *
-     * @param pName name
-     * @param pDescription description
-     * @param pType type
-     * @param pFragment fragment
-     * @param pRestriction restriction
+     * @param pName
+     *            name
+     * @param pDescription
+     *            description
+     * @param pType
+     *            type
+     * @param pFragment
+     *            fragment
+     * @param pRestriction
+     *            restriction
      * @return {@link ResultActions}
      */
     private ResultActions createAttribute(String pName, String pDescription, AttributeType pType, Fragment pFragment,
@@ -291,7 +297,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void getAllRestrictions() {
         final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isServiceUnavailable());
+        expectations.add(MockMvcResultMatchers.status().isBadRequest());
         performDefaultGet(AttributeModelController.TYPE_MAPPING + RESTRICTION_MAPPING, expectations,
                           "Restriction must be retrieve by type");
     }
