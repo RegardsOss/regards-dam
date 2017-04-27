@@ -63,7 +63,7 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
         IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
-        Mockito.when(projectUserClientMock.retrieveProjectUser(Matchers.any()))
+        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
         Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));

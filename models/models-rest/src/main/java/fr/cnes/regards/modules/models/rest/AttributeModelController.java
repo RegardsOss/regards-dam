@@ -50,7 +50,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
     public static final String PARAM_TYPE = "type";
 
     /**
-     * Request parameter : fragement name
+     * Request parameter : fragment name
      */
     public static final String PARAM_FRAGMENT_NAME = "fragmentName";
 

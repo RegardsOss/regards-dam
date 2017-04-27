@@ -13,6 +13,7 @@ import org.hamcrest.Matchers;
 import org.hsqldb.Types;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
+@Ignore
 public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
