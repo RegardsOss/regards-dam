@@ -3,7 +3,9 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessgroup.event;
 
+import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
+import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 
 /**
@@ -11,6 +13,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
  *
  * @author Xavier-Alexandre Brochard
  */
+@Event(target = Target.ALL)
 public class AccessGroupEvent implements ISubscribable {
 
     /**
@@ -19,7 +22,8 @@ public class AccessGroupEvent implements ISubscribable {
     private final AccessGroup accessGroup;
 
     /**
-     * @param pAccessGroup the source of the event
+     * @param pAccessGroup
+     *            the source of the event
      */
     public AccessGroupEvent(AccessGroup pAccessGroup) {
         super();
