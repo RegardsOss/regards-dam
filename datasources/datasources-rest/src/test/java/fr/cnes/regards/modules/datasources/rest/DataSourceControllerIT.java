@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import fr.cnes.regards.modules.datasources.domain.*;
 import org.hamcrest.Matchers;
 import org.hsqldb.Types;
 import org.junit.Assert;
@@ -34,6 +33,11 @@ import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSource;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
@@ -389,18 +393,17 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id", AbstractAttributeMapping.PRIMARY_KEY));
-        attributes
-                .add(new DynamicAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label"));
+        attributes.add(new DynamicAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                                                    "timeStampWithoutTimeZone", Types.TIMESTAMP));
+                "timeStampWithoutTimeZone", Types.TIMESTAMP));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
-                                                    "timeStampWithoutTimeZone"));
+                "timeStampWithoutTimeZone"));
         attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
         attributes.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
-                                                    "timeStampWithTimeZone", Types.TIMESTAMP));
+                "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

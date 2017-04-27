@@ -17,6 +17,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.test.report.annotation.Requirements;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -111,13 +112,31 @@ public class CollectionServiceTest {
 
     }
 
-    @Requirement("REGARDS_DSL_DAM_COL_010")
-    @Purpose("Le système doit permettre de créer une collection à partir d’un modèle préalablement défini et d’archiver cette collection sous forme d’AIP dans le composant « Archival storage ».")
     @Test
+    @Requirement("REGARDS_DSL_DAM_COL_010")
+    @Requirement("REGARDS_DSL_SYS_ARC_400")
+    @Purpose("REGARDS allows to create a collection based on a model - The collection identifier is an URN")
     public void createCollection() throws ModuleException, IOException {
         Mockito.when(collectionRepositoryMocked.save(collection2)).thenReturn(collection2);
         final Collection collection = collectionServiceMocked.create(collection2);
         Assert.assertEquals(collection2, collection);
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_450")
+    @Purpose("The URN identifier of a collection is uniq")
+    public void collectionUrnUnicity() throws ModuleException, IOException {
+
+        String collName = "collection1";
+
+        Collection coll1 = new Collection(pModel1, "PROJECT", collName);
+        Collection coll2 = new Collection(pModel1, "PROJECT", collName);
+
+        Assert.assertNotNull(coll1);
+        Assert.assertNotNull(coll2);
+        Assert.assertNotNull(coll1.getIpId());
+        Assert.assertNotNull(coll2.getIpId());
+        Assert.assertNotEquals(coll1.getIpId(), coll2.getIpId());
     }
 
 }

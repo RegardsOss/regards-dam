@@ -34,6 +34,7 @@ public class RestrictionService {
         restrictions = new ArrayList<>();
         restrictions.add(RestrictionFactory.buildEnumerationRestriction());
         restrictions.add(RestrictionFactory.buildFloatRangeRestriction(null, null, false, false));
+        restrictions.add(RestrictionFactory.buildLongRangeRestriction(null, null, false, false));
         restrictions.add(RestrictionFactory.buildIntegerRangeRestriction(null, null, false, false));
         restrictions.add(RestrictionFactory.buildPatternRestriction(null));
     }

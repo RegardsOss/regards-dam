@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.dataaccess.service;
 import java.util.List;
 import java.util.Set;
 
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.data.domain.Page;
@@ -27,9 +28,6 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAssociationUpdated;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupCreated;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDeleted;
 
 /**
  *
@@ -90,7 +88,7 @@ public class AccessGroupService {
         }
         final AccessGroup created = accessGroupDao.save(pToBeCreated);
         // Publish attribute creation
-        publisher.publish(new AccessGroupCreated(created));
+        publisher.publish(new AccessGroupEvent(created));
         return created;
     }
 
@@ -115,7 +113,7 @@ public class AccessGroupService {
         if (toDelete != null) {
             accessGroupDao.delete(toDelete.getId());
             // Publish attribute deletion
-            publisher.publish(new AccessGroupDeleted(toDelete));
+            publisher.publish(new AccessGroupEvent(toDelete));
         }
     }
 
@@ -135,7 +133,7 @@ public class AccessGroupService {
         ag.addUser(user);
         final AccessGroup updated = accessGroupDao.save(ag);
         // Publish
-        publisher.publish(new AccessGroupAssociationUpdated(updated));
+        publisher.publish(new AccessGroupEvent(updated));
         return updated;
     }
 
@@ -170,7 +168,7 @@ public class AccessGroupService {
         ag.removeUser(user);
         final AccessGroup updated = accessGroupDao.save(ag);
         // Publish
-        publisher.publish(new AccessGroupAssociationUpdated(updated));
+        publisher.publish(new AccessGroupEvent(updated));
         return updated;
     }
 

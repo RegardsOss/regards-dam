@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -20,26 +21,45 @@ import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSource;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
+import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -48,9 +68,9 @@ public class DatasetServiceTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DatasetServiceTest.class);
 
-    private Model pModel1;
+    private Model model1;
 
-    private Model pModel2;
+    private Model model2;
 
     private Model modelOfObjects;
 
@@ -82,6 +102,14 @@ public class DatasetServiceTest {
 
     private IModelService modelService;
 
+    private IPluginConfigurationRepository pluginConfRepositoryMocked;
+
+    private DataSourceModelMapping dataSourceModelMapping;
+
+    private ModelMappingAdapter adapter = new ModelMappingAdapter();
+
+    private IPublisher publisherMocked;
+
     /**
      * initialize the repo before each test
      *
@@ -98,16 +126,18 @@ public class DatasetServiceTest {
         modelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
         dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
-        // populate the repository
-        pModel1 = new Model();
-        pModel1.setId(1L);
-        pModel2 = new Model();
-        pModel2.setId(2L);
+        pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
 
-        dataSet1 = new Dataset(pModel1, "PROJECT", "dataSet1");
+        // populate the repository
+        model1 = new Model();
+        model1.setId(1L);
+        model2 = new Model();
+        model2.setId(2L);
+
+        dataSet1 = new Dataset(model1, "PROJECT", "dataSet1");
         dataSet1.setLicence("licence");
         dataSet1.setId(1L);
-        dataSet2 = new Dataset(pModel2, "PROJECT", "dataSet2");
+        dataSet2 = new Dataset(model2, "PROJECT", "dataSet2");
         dataSet2.setLicence("licence");
         setModelInPlace(importModel("sample-model-minimal.xml"));
         Mockito.when(modelService.getModel(modelOfObjects.getId())).thenReturn(modelOfObjects);
@@ -134,12 +164,13 @@ public class DatasetServiceTest {
         Mockito.when(entitiesRepositoryMocked.findOne(dataSet2.getId())).thenReturn(dataSet2);
 
         IDeletedEntityRepository deletedEntityRepositoryMocked = Mockito.mock(IDeletedEntityRepository.class);
-        IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
+        publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
                 deletedEntityRepositoryMocked, null, null, publisherMocked);
 
+        buildModelAttributes();
     }
 
     /**
@@ -211,8 +242,10 @@ public class DatasetServiceTest {
         return rootCrit;
     }
 
-    @Purpose("Le système doit permettre de créer une dataSet à partir d’un modèle préalablement défini et d’archiver cette dataSet sous forme d’AIP dans le composant « Archival storage ».")
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_400")
+    @Requirement("REGARDS_DSL_SYS_ARC_420")
+    @Purpose("The dataset identifier is an URN")
     public void createDataset() throws ModuleException, IOException {
         Mockito.when(dataSetRepositoryMocked.save(dataSet2)).thenReturn(dataSet2);
         final Dataset dataSet = dataSetServiceMocked.create(dataSet2, null);
@@ -231,6 +264,99 @@ public class DatasetServiceTest {
         }
         // never reached because test will fail first
         return null;
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_450")
+    @Purpose("The URN identifier of a dataset is uniq")
+    public void dataSetUrnUnicity() throws ModuleException, IOException {
+
+        String dataSetName = "dataSet1";
+
+        Dataset dataSet1 = new Dataset(model1, "PROJECT", dataSetName);
+        Dataset dataSet2 = new Dataset(model1, "PROJECT", dataSetName);
+
+        Assert.assertNotNull(dataSet1);
+        Assert.assertNotNull(dataSet2);
+        Assert.assertNotNull(dataSet1.getIpId());
+        Assert.assertNotNull(dataSet2.getIpId());
+        Assert.assertNotEquals(dataSet1.getIpId(), dataSet2.getIpId());
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_DAM_SET_200")
+    @Purpose("The system allows to update the data source assiated to a dataset")
+    public void dataSetUpdateDataSource() throws ModuleException, IOException {
+        PluginConfiguration postgreConf = getDataSourceMapping();
+        postgreConf.setId(33L);
+
+        dataSet1.setDataSource(postgreConf);
+
+        Mockito.when(pluginConfRepositoryMocked.exists(postgreConf.getId())).thenReturn(true);
+        Mockito.when(pluginConfRepositoryMocked.findOne(postgreConf.getId())).thenReturn(postgreConf);
+        Mockito.when(dataSetRepositoryMocked.findById(dataSet1.getId())).thenReturn(dataSet1);
+        Mockito.when(dataSourceServiceMocked.getDataSource(dataSet1.getDataSource().getId()))
+                .thenReturn(getDataSourceFromPluginConfiguration(postgreConf));
+        Mockito.when(dataSetRepositoryMocked.save(dataSet1)).thenReturn(dataSet1);
+
+        dataSetServiceMocked.update(dataSet1);
+
+        Mockito.verify(publisherMocked).publish(Mockito.any(EntityEvent.class));
+    }
+
+    private PluginConfiguration getPostgreConnectionConfiguration() {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, "dbUser")
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, "dbPassword")
+                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, "dbHost")
+                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, "dbPort")
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, "dbName")
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
+                                                  Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
+    }
+
+    private PluginConfiguration getDataSourceMapping() {
+        List<PluginParameter> parameters;
+        parameters = PluginParametersFactory.build()
+                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+                                                 getPostgreConnectionConfiguration())
+                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, "database_table_name")
+                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+                .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
+        return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
+                                                  Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
+
+    }
+
+    private void buildModelAttributes() {
+        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
+
+        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "ATTRIBUTE_ID",
+                AbstractAttributeMapping.PRIMARY_KEY));
+
+        attributes.add(new DynamicAttributeMapping("LABEL", AttributeType.STRING, "FILE_TYPE"));
+
+        dataSourceModelMapping = new DataSourceModelMapping(99L, attributes);
+    }
+
+    private DataSource getDataSourceFromPluginConfiguration(PluginConfiguration pPluginConf) throws IOException {
+        DataSource dataSource = new DataSource();
+
+        dataSource.setPluginConfigurationId(pPluginConf.getId());
+        dataSource.setLabel(pPluginConf.getLabel());
+        dataSource.setFromClause(pPluginConf.getParameterValue(IDataSourcePlugin.FROM_CLAUSE));
+        dataSource.setTableName(pPluginConf.getParameterValue(IDataSourceFromSingleTablePlugin.TABLE_PARAM));
+        dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM)));
+
+        PluginConfiguration plgConfig = pPluginConf.getParameterConfiguration(IDataSourcePlugin.CONNECTION_PARAM);
+        if (plgConfig != null) {
+            dataSource.setPluginConfigurationConnectionId(plgConfig.getId());
+        }
+
+        return dataSource;
     }
 
 }

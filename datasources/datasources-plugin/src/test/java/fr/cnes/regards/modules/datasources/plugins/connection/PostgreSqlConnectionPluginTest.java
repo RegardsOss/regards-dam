@@ -21,6 +21,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -63,6 +65,8 @@ public class PostgreSqlConnectionPluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_ARC_100")
+    @Purpose("The system allows to define a connection to a data source")
     public void getPostGreSqlConnection() {
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
                                                                              DefaultPostgreConnectionPlugin.class,
