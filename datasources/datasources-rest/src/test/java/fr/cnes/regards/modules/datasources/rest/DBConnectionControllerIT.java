@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
+@Ignore
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
