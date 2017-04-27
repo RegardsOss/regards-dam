@@ -109,7 +109,7 @@ public final class Table {
     }
 
     private String toString(String pName, String pVal) {
-        return (pVal != null && pVal != "") ? (pName + "=" + pVal) : "";
+        return (pVal != null && !pVal.isEmpty()) ? (pName + "=" + pVal) : "";
     }
 
     @Override
