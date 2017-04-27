@@ -484,7 +484,7 @@ public class IndexerServiceDataSourceIT {
         dsService.create(dataset3);
 
         crawlerService.waitForEndOfWork();
-        Thread.sleep(10_000);
+        Thread.sleep(20_000);
         // indexerService.refresh(tenant);
 
         // Retrieve dataset1 from ES
