@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +18,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.microservice.manager.MaintenanceManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
@@ -35,7 +35,6 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
-@Ignore
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
@@ -110,6 +109,11 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConn, expectations,
                            "Empty DBConnection shouldn't be created.");
+        MaintenanceManager.unSetMaintenance(DEFAULT_TENANT); // FIXME: there should be validation on the POJO and if
+                                                             // that validation is not passed then it should send back
+                                                             // the normalized error code cd
+                                                             // GlobalControllerAdvice#hibernateValidation rather than
+                                                             // putting the system in maintenance mode
     }
 
     @Test
