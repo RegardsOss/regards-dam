@@ -28,11 +28,9 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugi
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
- *
  * Test DBConnnection controller
  *
  * @author Christophe Mertz
- *
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional

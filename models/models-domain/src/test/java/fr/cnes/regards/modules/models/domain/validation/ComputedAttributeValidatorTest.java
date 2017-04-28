@@ -52,7 +52,7 @@ public class ComputedAttributeValidatorTest {
         metaData.setAuthor("toto");
         metaData.setDescription("titi");
         metaData.setVersion("tutu");
-        metaData.setInterfaceName(IComputedAttribute.class.getName());
+        metaData.getInterfaceNames().add(IComputedAttribute.class.getName());
         metaData.setPluginClassName("toto");
         PluginConfiguration conf = new PluginConfiguration(metaData, "testConf");
         invalidAssoc.setMode(ComputationMode.COMPUTED);

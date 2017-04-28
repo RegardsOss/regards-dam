@@ -284,7 +284,7 @@ public class IndexerServiceDataSourceIT {
         metadata.setAuthor("toto");
         metadata.setDescription("titi");
         metadata.setVersion("tutu");
-        metadata.setInterfaceName(IComputedAttribute.class.getName());
+        metadata.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadata.setPluginClassName(CountElementAttribute.class.getName());
         PluginConfiguration conf = new PluginConfiguration(metadata, "CountElementTestConf");
         conf.setParameters(parameters);
@@ -297,7 +297,7 @@ public class IndexerServiceDataSourceIT {
         metadataMin.setAuthor("toto");
         metadataMin.setDescription("titi");
         metadataMin.setVersion("tutu");
-        metadataMin.setInterfaceName(IComputedAttribute.class.getName());
+        metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataMin.setPluginClassName(MinDateAttribute.class.getName());
         PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateTestConf");
         confMin.setParameters(parametersMin);
@@ -310,7 +310,7 @@ public class IndexerServiceDataSourceIT {
         metadataMax.setAuthor("toto");
         metadataMax.setDescription("titi");
         metadataMax.setVersion("tutu");
-        metadataMax.setInterfaceName(IComputedAttribute.class.getName());
+        metadataMax.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataMax.setPluginClassName(MaxDateAttribute.class.getName());
         PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateTestConf");
         confMax.setParameters(parametersMax);
@@ -323,7 +323,7 @@ public class IndexerServiceDataSourceIT {
         metadataInteger.setAuthor("toto");
         metadataInteger.setDescription("titi");
         metadataInteger.setVersion("tutu");
-        metadataInteger.setInterfaceName(IComputedAttribute.class.getName());
+        metadataInteger.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataInteger.setPluginClassName(SumIntegerAttribute.class.getName());
         PluginConfiguration confInteger = new PluginConfiguration(metadataInteger, "SumIntegerTestConf");
         confInteger.setParameters(parametersInteger);

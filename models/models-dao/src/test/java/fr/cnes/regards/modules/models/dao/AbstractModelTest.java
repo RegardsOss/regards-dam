@@ -5,12 +5,13 @@ package fr.cnes.regards.modules.models.dao;
 
 import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Iterables;
 
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
-import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
@@ -19,8 +20,8 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRest
  * Common attribute model test methods
  *
  * @author Marc Sordi
- *
  */
+@TestPropertySource(locations = "classpath:application-test.properties")
 public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
 
     /**
@@ -54,11 +55,9 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
     protected IModelAttrAssocRepository modelAttributeRepository;
 
     /**
-     *
      * Save an attribute model
      *
-     * @param pAttributeModel
-     *            entity to save
+     * @param pAttributeModel entity to save
      * @return the saved attribute model
      */
     protected AttributeModel saveAttribute(final AttributeModel pAttributeModel) {
@@ -94,12 +93,9 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
     /**
      * Create a model
      *
-     * @param pName
-     *            model name
-     * @param pDescription
-     *            description
-     * @param pModelType
-     *            model type
+     * @param pName model name
+     * @param pDescription description
+     * @param pModelType model type
      * @return a model
      */
     protected Model createModel(String pName, String pDescription, EntityType pModelType) {

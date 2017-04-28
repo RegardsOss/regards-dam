@@ -34,7 +34,6 @@ import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
  * REST module controller
  *
  * @author Marc Sordi
- *
  */
 @MultitenantTransactional
 @TestPropertySource("classpath:test.properties")
@@ -63,7 +62,7 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
         IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
-        Mockito.when(projectUserClientMock.retrieveProjectUser(Matchers.any()))
+        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
         ag1 = new AccessGroup(AG1_NAME);
         ag1 = dao.save(ag1);
