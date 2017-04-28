@@ -64,6 +64,8 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
         Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
                 .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
+        Mockito.when(projectUserClientMock.retrieveProjectUserByEmail(Matchers.any()))
+                .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
         ag1 = new AccessGroup(AG1_NAME);
         ag1 = dao.save(ag1);
         AccessGroup ag2 = new AccessGroup(AG2_NAME);

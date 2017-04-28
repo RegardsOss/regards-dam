@@ -28,9 +28,11 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.plugin.MinDateAttribute;
 import fr.cnes.regards.modules.entities.service.plugin.NonUsable;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -61,6 +63,12 @@ public class EntitiesServiceIT {
     @Autowired
     private IPluginConfigurationRepository pluginConfRepos;
 
+    @Autowired
+    private IDatasetRepository datasetRepository;
+
+    @Autowired
+    private IModelRepository modelRepository;
+
     private Dataset dataset;
 
     private PluginConfiguration confNonUsable;
@@ -69,6 +77,8 @@ public class EntitiesServiceIT {
 
     @Before
     public void init() throws ModuleException {
+        datasetRepository.deleteAll();
+        modelRepository.deleteAll();
         pluginConfRepos.deleteAll();
 
         // first initialize the pluginConfiguration for the attributes

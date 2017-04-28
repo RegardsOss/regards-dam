@@ -2,7 +2,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 public final class Utils {
 
-    public static interface ConsumerWithException<T> {
+    public interface ConsumerWithException<T> {
 
         void accept(T t) throws Exception;
     }

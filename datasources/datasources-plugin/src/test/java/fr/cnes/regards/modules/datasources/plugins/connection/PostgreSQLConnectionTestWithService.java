@@ -62,7 +62,7 @@ public class PostgreSQLConnectionTestWithService {
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
 
     private IPluginService pluginServiceMocked;
-
+    
     @Before
     public void setUp() {
         // create a mock repository

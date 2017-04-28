@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,8 +18,10 @@ import org.mockito.Mockito;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.test.report.annotation.Requirements;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -55,38 +58,40 @@ public class EntityServiceTest {
 
     private Dataset dataset2;
 
+    private Model model2;
+
     @SuppressWarnings("unchecked")
     @Before
     public void init() {
 
         // populate the repository
-        Model pModel2 = new Model();
-        pModel2.setId(2L);
+        model2 = new Model();
+        model2.setId(2L);
 
-        collection2 = new Collection(pModel2, "PROJECT", "collection2");
+        collection2 = new Collection(model2, "PROJECT", "collection2");
         collection2.setId(2L);
         collection2.setDescriptionFile(new DescriptionFile("pDescription2"));
-        collection3 = new Collection(pModel2, "PROJECT", "collection3");
+        collection3 = new Collection(model2, "PROJECT", "collection3");
         collection3.setId(3L);
         collection3.setDescriptionFile(new DescriptionFile("pDescription3"));
         collection3.setLabel("pName3");
-        collection4 = new Collection(pModel2, "PROJECT", "collection4");
+        collection4 = new Collection(model2, "PROJECT", "collection4");
         collection4.setId(4L);
         collection4.setDescriptionFile(new DescriptionFile("pDescription4"));
         Set<String> collection2Tags = collection2.getTags();
         collection2Tags.add(collection4.getIpId().toString());
         collection2.setTags(collection2Tags);
 
-        data = new DataObject(null, "PROJECT", "objectc");
+        data = new DataObject(null, "PROJECT", "object");
         data.setId(1L);
-        doc = new Document(pModel2, "PROJECT", "doc");
+        doc = new Document(model2, "PROJECT", "doc");
         doc.setId(2L);
-        dataset = new Dataset(pModel2, "PROJECT", "dataset");
+        dataset = new Dataset(model2, "PROJECT", "dataset");
         dataset.setLicence("licence");
         dataset.setId(3L);
         dataset.setDescriptionFile(new DescriptionFile("datasetDesc"));
         dataset.setLabel("dataset");
-        dataset2 = new Dataset(pModel2, "PROJECT", "dataset2");
+        dataset2 = new Dataset(model2, "PROJECT", "dataset2");
         dataset2.setLicence("licence");
         dataset2.setDescriptionFile(new DescriptionFile("datasetDesc2"));
 
@@ -175,6 +180,9 @@ public class EntityServiceTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_400")
+    @Requirement("REGARDS_DSL_SYS_ARC_420")
+    @Purpose("A document identifier is an URN")
     public void testAssociateDatasetToAnything() {
         final List<AbstractEntity> entityList = new ArrayList<>();
         entityList.add(collection3);
@@ -210,5 +218,37 @@ public class EntityServiceTest {
      * Assert.assertFalse(collection3.getTags().contains(collection2.getIpId().toString()));
      * Assert.assertFalse(collection2.getTags().contains(collection3.getIpId().toString())); }
      */
+
+    @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_450")
+    @Purpose("The URN identifier of a document is uniq")
+    public void documentUrnUnicity() throws ModuleException, IOException {
+        String docName = "un document";
+
+        Document document1 = new Document(model2, "PROJECT", docName);
+        Document document2 = new Document(model2, "PROJECT", docName);
+
+        Assert.assertNotNull(document1);
+        Assert.assertNotNull(document2);
+        Assert.assertNotNull(document1.getIpId());
+        Assert.assertNotNull(document2.getIpId());
+        Assert.assertNotEquals(document1.getIpId(), document2.getIpId());
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_450")
+    @Purpose("The URN identifier of a data object is uniq")
+    public void dataUrnUnicity() throws ModuleException, IOException {
+        String dataObjectName = "un document";
+
+        DataObject document1 = new DataObject(model2, "PROJECT", dataObjectName);
+        DataObject document2 = new DataObject(model2, "PROJECT", dataObjectName);
+
+        Assert.assertNotNull(document1);
+        Assert.assertNotNull(document2);
+        Assert.assertNotNull(document1.getIpId());
+        Assert.assertNotNull(document2.getIpId());
+        Assert.assertNotEquals(document1.getIpId(), document2.getIpId());
+    }
 
 }

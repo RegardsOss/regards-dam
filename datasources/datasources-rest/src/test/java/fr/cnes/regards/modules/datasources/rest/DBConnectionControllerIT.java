@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
+@Ignore
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
@@ -96,6 +98,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_SYS_ARC_230")
+    @Purpose("If a HTTP request POST is unsupported or mal-formatted, the HTTP return code is 503")
     public void createEmptyDBConnectionWithPluginClassName() {
         final DBConnection dbConn = new DBConnection();
         dbConn.setPluginClassName(POSTGRESQL_PLUGIN_CONNECTION);

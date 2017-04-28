@@ -4,15 +4,22 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
+import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.cglib.core.Local;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +119,9 @@ public class CrawlerServiceIT {
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
+
+    @Autowired
+    private IDeletedEntityRepository deletedEntityRepository;
 
     private DataSourceModelMapping dataSourceModelMapping;
 
@@ -228,6 +238,8 @@ public class CrawlerServiceIT {
         coll3.setTags(Sets.newHashSet(dataset3.getIpId().toString()));
     }
 
+    @Requirement("REGARDS_DSL_DAM_CAT_210")
+    @Purpose("Le système doit publier automatiquement l’ensemble des jeux de données.")
     @Test
     public void testCrawl() throws InterruptedException, ModuleException, IOException, PluginUtilsRuntimeException {
         buildData1();
@@ -281,6 +293,7 @@ public class CrawlerServiceIT {
         Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
 
         crawlerService.startWork();
+        LocalDateTime suppressDate = LocalDateTime.now();
         collService.delete(coll1.getId());
         dsService.delete(dataset1.getId());
 
@@ -293,5 +306,15 @@ public class CrawlerServiceIT {
         Assert.assertNull(coll1Bis);
         ds1Bis = esRepos.get(tenant, dataset1);
         Assert.assertNull(ds1Bis);
+
+        // Check DeletedEntity has been created into database
+        LocalDateTime now = LocalDateTime.now();
+        Optional<DeletedEntity> deletedEntityOpt = deletedEntityRepository.findOneByIpId(coll1.getIpId());
+        Assert.assertTrue(deletedEntityOpt.isPresent());
+        DeletedEntity deletedEntity = deletedEntityOpt.get();
+        Assert.assertEquals(coll1.getCreationDate(), deletedEntity.getCreationDate());
+        Assert.assertEquals(coll1.getLastUpdate(), deletedEntity.getLastUpdate());
+        Assert.assertTrue(deletedEntity.getDeletionDate().isAfter(suppressDate));
+        Assert.assertTrue(deletedEntity.getDeletionDate().isBefore(now));
     }
 }

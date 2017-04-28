@@ -18,6 +18,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.entities.domain.attribute.*;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -444,15 +450,21 @@ public class IndexerServiceDataSourceIT {
         gsonAttributeFactory.registerSubtype(tenant, IntegerAttribute.class, "ANSL3_2_INT", "frag3");
     }
 
+    @Requirement("REGARDS_DSL_DAM_COL_420")
+    @Purpose("Requirement is for collection. Multi search field is used here on data objects but the code is the same")
     @Test
     public void test() throws ModuleException, IOException, InterruptedException {
         String tenant = tenantResolver.getTenant();
 
         // Creation
+        long start = System.currentTimeMillis();
         IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf);
+        System.out.println("Insertion : " + (System.currentTimeMillis() - start) + " ms");
 
         // Update
+        start = System.currentTimeMillis();
         IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf);
+        System.out.println("Update : " + (System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(summary1.getSavedObjectsCount(), summary2.getSavedObjectsCount());
 
         crawlerService.startWork();
@@ -484,7 +496,7 @@ public class IndexerServiceDataSourceIT {
         dsService.create(dataset3);
 
         crawlerService.waitForEndOfWork();
-        Thread.sleep(10_000);
+        Thread.sleep(20_000);
         // indexerService.refresh(tenant);
 
         // Retrieve dataset1 from ES
