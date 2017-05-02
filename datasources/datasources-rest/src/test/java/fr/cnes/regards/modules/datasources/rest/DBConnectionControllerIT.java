@@ -20,13 +20,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.microservice.manager.MaintenanceManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
+import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Test DBConnnection controller
@@ -62,6 +65,9 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Value("${postgresql.datasource.password}")
     private String dbPassword;
+
+    @Autowired
+    IPluginConfigurationRepository pluginConfR;
 
     @Autowired
     IDBConnectionService service;
@@ -140,12 +146,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("The system allows to get all existing connections")
     public void getAllDBConnection() throws ModuleException {
         initPluginConfDbConnections();
-
-        Assert.assertTrue(0 < service.getAllDBConnections().size());
+        addFakePluginConf();
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.length()", Matchers.is(3)));
 
         performDefaultGet(DBConnectionController.TYPE_MAPPING, expectations, "Could not get all DBConnection.");
     }
@@ -341,4 +347,16 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         return plgConfs;
     }
 
+    /**
+     * Add another plugin configuration to verify only db connections are retrieved.
+     */
+    private void addFakePluginConf() {
+        // Add fake plugin
+        List<String> prefixes = new ArrayList<>();
+        prefixes.add(this.getClass().getPackage().getName());
+        PluginMetaData metadata = PluginUtils.createPluginMetaData(FakeConnectionPlugin.class, prefixes);
+
+        PluginConfiguration configuration = new PluginConfiguration(metadata, "Fake");
+        pluginConfR.save(configuration);
+    }
 }
