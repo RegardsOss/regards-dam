@@ -50,7 +50,7 @@ public class RegardsQueryParser extends QueryParserHelper {
     }
 
     /**
-     * Call pase with the default field.
+     * Call parse with the default field.
      *
      * @param query
      *            the query string
