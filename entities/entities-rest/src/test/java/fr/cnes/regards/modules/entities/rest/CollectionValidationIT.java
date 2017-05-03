@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.collections.rest;
+package fr.cnes.regards.modules.entities.rest;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

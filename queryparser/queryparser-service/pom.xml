@@ -15,24 +15,6 @@
 	</parent>
 
 	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>module-plugins-service</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.accessrights</groupId>
-			<artifactId>accessrights-client</artifactId>
-		</dependency>
-		<dependency>
-			<!-- FIXME: is it the right import or should be entities-service? domain 
-				is taken for now as we just need the domain -->
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-domain</artifactId>
-		</dependency>
 		<!-- COTS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -45,24 +27,25 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-service</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>hateoas-regards-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-domain</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
-			<artifactId>dataaccess-client</artifactId>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>6.3.0</version>
+		</dependency>
+		<dependency> 
+			<groupId>fr.cnes.regards.framework</groupId> 
+			<artifactId>hateoas-regards-starter</artifactId> 
+		</dependency> 
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards</artifactId>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.collections.rest;
+package fr.cnes.regards.modules.entities.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,15 +13,23 @@ import java.util.*;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+
+import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
@@ -30,10 +38,14 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.rest.DatasetController;
+import fr.cnes.regards.modules.entities.rest.dto.DatasetDto;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -57,6 +69,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     private DataSource dataSource2;
 
+    private Model modelOfData;
+
     @Autowired
     private IDatasetRepository datasetRepository;
 
@@ -66,7 +80,25 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelRepository modelRepository;
 
+    @Autowired
+    private IAttributeModelRepository attributeModelRepository;
+
     private List<ResultMatcher> expectations;
+
+    @Configuration
+    static class Config {
+
+        @Bean
+        IAttributeModelClient attributeModelClient() {
+            return Mockito.mock(IAttributeModelClient.class);
+        }
+    }
+
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private IAttributeModelClient attributeModelClient;
 
     @Before
     public void init() {
@@ -76,7 +108,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         model1 = Model.build("modelName1", "model desc", EntityType.DATASET);
         model1 = modelRepository.save(model1);
 
-        Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
+        modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
         dataSet1 = new Dataset(model1, "PROJECT", "collection1");
         dataSet1.setCreationDate(OffsetDateTime.now());
@@ -222,6 +254,41 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
         performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
+    }
+
+    /**
+     * Check that the system automatically converts an OpenSearch query string into a search criterion
+     * @throws ModuleException
+     */
+    @Test
+    @Purpose("Check that the system automatically converts an OpenSearch query string into a search criterion")
+    public void testStringToICriterionConversion() throws ModuleException {
+        // Prepare test ecosystem
+        importModel("dataModel.xml");
+        importModel("datasetModel.xml");
+        Model datasetModel = modelService.getModelByName("datasetModel");
+
+        final DatasetDto dataSet = new DatasetDto(datasetModel, DEFAULT_TENANT,
+                "dataset from dto with subsetting clause as string");
+        dataSet.setLicence("licence");
+        dataSet.setCreationDate(LocalDateTime.now());
+        dataSet.setIpId(dataSet1.getIpId());
+        dataSet.setId(dataSet1.getId());
+        dataSet.setTags(dataSet1.getTags());
+        dataSet.setSipId(dataSet1.getSipId() + "new");
+        dataSet.setDataModel(modelOfData.getId());
+
+        // Set test case
+        dataSet.setSubsettingClause("FILE_SIZE:10");
+        Mockito.when(attributeModelClient.getAttributes(Mockito.any(), Mockito.any()))
+                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(Lists
+                        .newArrayList(AttributeModelBuilder.build("FILE_SIZE", AttributeType.INTEGER).get()))));
+
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+
+        performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSet, expectations,
+                          "Failed to update a specific dataset using its id", dataSet1.getId());
     }
 
     /**
