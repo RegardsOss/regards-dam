@@ -3,7 +3,9 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -236,10 +238,10 @@ public class CrawlerService implements ICrawlerService {
                 // Only one entity
                 if (ipIds.length == 1) {
                     inProgress = true;
-                    updateEntityIntoEs(tenant, ipIds[0], LocalDateTime.now());
+                    updateEntityIntoEs(tenant, ipIds[0], OffsetDateTime.now());
                 } else if (ipIds.length > 1) { // several entities at once
                     inProgress = true;
-                    updateEntitiesIntoEs(tenant, ipIds, LocalDateTime.now());
+                    updateEntitiesIntoEs(tenant, ipIds, OffsetDateTime.now());
                 }
                 somethingDone = true;
             }
@@ -247,7 +249,7 @@ public class CrawlerService implements ICrawlerService {
         return atLeastOnePoll;
     }
 
-    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime updateDate) {
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate) {
         this.updateEntityIntoEs(tenant, ipId, null, updateDate);
     }
 
@@ -259,8 +261,8 @@ public class CrawlerService implements ICrawlerService {
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
      * into account
      */
-    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, LocalDateTime lastUpdateDate,
-            LocalDateTime updateDate) {
+    private void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
+            OffsetDateTime updateDate) {
         LOGGER.info("received msg for " + ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
@@ -283,7 +285,7 @@ public class CrawlerService implements ICrawlerService {
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
     }
 
-    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime updateDate) {
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime updateDate) {
         this.updateEntitiesIntoEs(tenant, ipIds, null, updateDate);
     }
 
@@ -293,8 +295,8 @@ public class CrawlerService implements ICrawlerService {
      * @param tenant concerned tenant (also index intoES)
      * @param ipIds concerned entity IpIds
      */
-    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, LocalDateTime lastUpdateDate,
-            LocalDateTime updateDate) {
+    private void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime lastUpdateDate,
+            OffsetDateTime updateDate) {
         LOGGER.info("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
         List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
@@ -336,7 +338,7 @@ public class CrawlerService implements ICrawlerService {
         Set<String> notDatasetIpIds = new HashSet<>();
 
         Set<DataObject> toSaveObjects = new HashSet<>();
-        LocalDateTime updateDate = LocalDateTime.now();
+        OffsetDateTime updateDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         // Function to update an object (tags, groups, lastUpdate, ...)
         Consumer<DataObject> updateDataObject = object -> {
             object.getTags().remove(ipId);
@@ -413,7 +415,7 @@ public class CrawlerService implements ICrawlerService {
      *
      * @param dataset concerned dataset
      */
-    private void manageDatasetUpdate(Dataset dataset, LocalDateTime lastUpdateDate, LocalDateTime updateDate) {
+    private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate) {
         PluginConfiguration datasource = dataset.getDataSource();
         String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
@@ -495,7 +497,7 @@ public class CrawlerService implements ICrawlerService {
      * @param objects objects to update
      */
     private void updateDataObjectsFromDatasetUpdate(String tenant, String dsIpId, Set<String> groups,
-            LocalDateTime updateDate, Long datasetModelId, List<DataObject> objects) {
+            OffsetDateTime updateDate, Long datasetModelId, List<DataObject> objects) {
         Set<DataObject> toSaveObjects = new HashSet<>();
         objects.forEach(o -> {
             o.getTags().add(dsIpId);
@@ -517,14 +519,14 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    public IngestionResult ingest(PluginConfiguration pluginConf, LocalDateTime date) throws ModuleException {
+    public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime date) throws ModuleException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
         int savedObjectsCount = 0;
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         // If index doesn't exist, just create all data objects
         if (!esRepos.indexExists(tenant)) {
             createIndex(tenant);
@@ -566,7 +568,7 @@ public class CrawlerService implements ICrawlerService {
         return new IngestionResult(now, savedObjectsCount);
     }
 
-    private Page<DataObject> findAllFromDatasource(LocalDateTime date, String tenant, IDataSourcePlugin dsPlugin,
+    private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
             String datasourceId, Pageable pageable) {
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
         page.forEach(dataObject -> dataObject.setIpId(buildIpId(tenant, dataObject.getSipId(), datasourceId)));
@@ -588,7 +590,7 @@ public class CrawlerService implements ICrawlerService {
 
     @Override
     @Transactional
-    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, LocalDateTime lastUpdateDate) {
+    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, OffsetDateTime lastUpdateDate) {
         if (dsDatasetsPage.getContent().size() == 1) {
             this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId(), lastUpdateDate);
         } else {
@@ -597,9 +599,9 @@ public class CrawlerService implements ICrawlerService {
         }
     }
 
-    private int createDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
+    private int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
         // On all objects, it is necessary to set datasourceId and creation date
-        LocalDateTime creationDate = now;
+        OffsetDateTime creationDate = now;
         objects.forEach(dataObject -> {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
@@ -610,7 +612,7 @@ public class CrawlerService implements ICrawlerService {
         return esRepos.saveBulk(tenant, objects);
     }
 
-    private int mergeDataObjects(String tenant, String datasourceId, LocalDateTime now, List<DataObject> objects) {
+    private int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
         // Set of data objects to be saved (depends on existence of data objects into ES)
         Set<DataObject> toSaveObjects = new HashSet<>();
 

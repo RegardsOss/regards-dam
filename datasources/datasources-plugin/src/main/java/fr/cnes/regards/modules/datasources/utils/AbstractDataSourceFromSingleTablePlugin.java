@@ -6,7 +6,7 @@ package fr.cnes.regards.modules.datasources.utils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 
 import com.nurkiewicz.jdbcrepository.TableDescription;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
@@ -90,14 +89,11 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     /**
      * Build the SELECT request.</br>
      * Add the key word "%last_modification_date%" in the WHERE clause.
-     *
      * @param pPageable
-     *
      * @param pDate
-     *
      * @return the SELECT request
      */
-    protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
+    protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
         String selectRequest = sqlGenerator.selectAll(tableDescription, pPageable);
 
         if (pDate != null) {
@@ -129,7 +125,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return selectRequest;
     }
 
-    protected String getCountRequest(LocalDateTime pDate) {
+    protected String getCountRequest(OffsetDateTime pDate) {
         if (pDate == null) {
             return sqlGenerator.count(tableDescription);
         } else {
@@ -142,7 +138,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         return findAll(pTenant, pPageable, null);
     }
 
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) {
         if (sqlGenerator == null) {
             LOG.error("the sqlGenerator is null");
             return null;

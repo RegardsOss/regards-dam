@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.entities.domain.deleted;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -31,13 +32,13 @@ public class DeletedEntity {
     private Long id;
 
     @Column(name = "creation_date")
-    private LocalDateTime creationDate;
+    private OffsetDateTime creationDate;
 
     @Column(name = "update_date")
-    private LocalDateTime lastUpdate;
+    private OffsetDateTime lastUpdate;
 
     @Column(name = "deletion_date")
-    private LocalDateTime deletionDate;
+    private OffsetDateTime deletionDate;
 
     @Column(unique = true, nullable = false)
     @Convert(converter = UrnConverter.class)
@@ -54,19 +55,19 @@ public class DeletedEntity {
         id = pId;
     }
 
-    public LocalDateTime getLastUpdate() {
+    public OffsetDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(LocalDateTime pLastUpdate) {
+    public void setLastUpdate(OffsetDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
 
-    public LocalDateTime getDeletionDate() {
+    public OffsetDateTime getDeletionDate() {
         return deletionDate;
     }
 
-    public void setDeletionDate(LocalDateTime pDeletionDate) {
+    public void setDeletionDate(OffsetDateTime pDeletionDate) {
         deletionDate = pDeletionDate;
     }
 
@@ -78,11 +79,11 @@ public class DeletedEntity {
         ipId = pIpId;
     }
 
-    public LocalDateTime getCreationDate() {
+    public OffsetDateTime getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(LocalDateTime creationDate) {
+    public void setCreationDate(OffsetDateTime creationDate) {
         this.creationDate = creationDate;
     }
 }

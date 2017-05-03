@@ -9,6 +9,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +78,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         pModel = modelRepo.save(pModel);
         dataset = new Dataset(pModel, "pTenant", "dataset");
         dataset.setLicence("licence");
-        dataset.setCreationDate(LocalDateTime.now());
+        dataset.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
 
         List<Long> confs = new ArrayList<>(2);
         confs.add(1L);
@@ -92,7 +94,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
         dsDescription = new Dataset(srcModel, "pTenant", "dataSetWithDescription");
         dsDescription.setLicence("licence");
-        dsDescription.setCreationDate(LocalDateTime.now());
+        dsDescription.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         dsDescription.setDescriptionFile(new DescriptionFile(description.getBytes(Charset.forName("utf-8")),
                 MediaType.TEXT_MARKDOWN));
         dsDescription = datasetRepo.save(dsDescription);

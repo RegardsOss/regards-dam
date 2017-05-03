@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilders;
@@ -13,7 +14,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import com.google.common.base.Joiner;
 import com.vividsolutions.jts.geom.Coordinate;
 
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
@@ -128,20 +129,20 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     public QueryBuilder visitDateRangeCriterion(DateRangeCriterion pCriterion) {
         RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(pCriterion.getName());
 
-        for (ValueComparison<LocalDateTime> valueComp : pCriterion.getValueComparisons()) {
-            LocalDateTime date = valueComp.getValue();
+        for (ValueComparison<OffsetDateTime> valueComp : pCriterion.getValueComparisons()) {
+            OffsetDateTime date = valueComp.getValue();
             switch (valueComp.getOperator()) {
                 case GREATER:
-                    rangeQueryBuilder.gt(LocalDateTimeAdapter.format(date));
+                    rangeQueryBuilder.gt(OffsetDateTimeAdapter.format(date));
                     break;
                 case GREATER_OR_EQUAL:
-                    rangeQueryBuilder.gte(LocalDateTimeAdapter.format(date));
+                    rangeQueryBuilder.gte(OffsetDateTimeAdapter.format(date));
                     break;
                 case LESS:
-                    rangeQueryBuilder.lt(LocalDateTimeAdapter.format(date));
+                    rangeQueryBuilder.lt(OffsetDateTimeAdapter.format(date));
                     break;
                 case LESS_OR_EQUAL:
-                    rangeQueryBuilder.lte(LocalDateTimeAdapter.format(date));
+                    rangeQueryBuilder.lte(OffsetDateTimeAdapter.format(date));
                     break;
                 default:
             }

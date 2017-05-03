@@ -1,6 +1,8 @@
 package fr.cnes.regards.modules.crawler.domain;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,13 +32,13 @@ public class DatasourceIngestion {
      * Date of last ingestion (null if none yet)
      */
     @Column(name = "last_ingest_date")
-    private LocalDateTime lastIngestDate;
+    private OffsetDateTime lastIngestDate;
 
     /**
      * Date of next planned ingest date (= last ingest date + refresh rate of datasource plugin)
      */
     @Column(name = "next_planned_ingest_date")
-    private LocalDateTime nextPlannedIngestDate;
+    private OffsetDateTime nextPlannedIngestDate;
 
     /**
      * Status of previous or current ingestion
@@ -49,7 +51,7 @@ public class DatasourceIngestion {
      * Date of status change (default to object creation with NEW status if nothing provided)
      */
     @Column(name = "status_date")
-    private LocalDateTime statusDate = LocalDateTime.now();
+    private OffsetDateTime statusDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
 
     /**
      * Last ingestion saved objects count
@@ -73,7 +75,7 @@ public class DatasourceIngestion {
         this.id = id;
     }
 
-    public DatasourceIngestion(Long id, LocalDateTime nextPlannedIngestDate) {
+    public DatasourceIngestion(Long id, OffsetDateTime nextPlannedIngestDate) {
         this(id);
         this.nextPlannedIngestDate = nextPlannedIngestDate;
     }
@@ -86,11 +88,11 @@ public class DatasourceIngestion {
         id = pId;
     }
 
-    public LocalDateTime getLastIngestDate() {
+    public OffsetDateTime getLastIngestDate() {
         return lastIngestDate;
     }
 
-    public void setLastIngestDate(LocalDateTime pLastIngestDate) {
+    public void setLastIngestDate(OffsetDateTime pLastIngestDate) {
         lastIngestDate = pLastIngestDate;
     }
 
@@ -100,22 +102,22 @@ public class DatasourceIngestion {
 
     public void setStatus(IngestionStatus pStatus) {
         status = pStatus;
-        statusDate = LocalDateTime.now();
+        statusDate = OffsetDateTime.now().withOffsetSameLocal(ZoneOffset.UTC);
     }
 
-    public LocalDateTime getStatusDate() {
+    public OffsetDateTime getStatusDate() {
         return statusDate;
     }
 
-    public void setStatusDate(LocalDateTime pStatusDate) {
+    public void setStatusDate(OffsetDateTime pStatusDate) {
         statusDate = pStatusDate;
     }
 
-    public LocalDateTime getNextPlannedIngestDate() {
+    public OffsetDateTime getNextPlannedIngestDate() {
         return nextPlannedIngestDate;
     }
 
-    public void setNextPlannedIngestDate(LocalDateTime pNextPlannedIngestDate) {
+    public void setNextPlannedIngestDate(OffsetDateTime pNextPlannedIngestDate) {
         nextPlannedIngestDate = pNextPlannedIngestDate;
     }
 

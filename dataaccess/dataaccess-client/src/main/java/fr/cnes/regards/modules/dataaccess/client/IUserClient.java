@@ -21,6 +21,7 @@ import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 
 /**
+ * Client of UserController
  * @author Sylvain Vissiere-Guerinet
  *
  */

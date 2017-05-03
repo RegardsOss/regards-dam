@@ -4,9 +4,12 @@
 package fr.cnes.regards.modules.queryparser.service.builder;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
+
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 
 /**
  * Facade class wrapping a {@link TermRangeQueryNode} for simplifiying access to usefull parameters.
@@ -68,8 +71,8 @@ class TermRangeQueryNodeFacade {
     /**
      * @return the lower bound parsed as {@link LocalDateTime}
      */
-    public LocalDateTime getLowerBoundAsLocalDateTime() {
-        return LocalDateTime.parse(lowerBound);
+    public OffsetDateTime getLowerBoundAsDateTime() {
+        return OffsetDateTimeAdapter.parse(lowerBound);
     }
 
     /**
@@ -103,8 +106,8 @@ class TermRangeQueryNodeFacade {
     /**
      * @return the upper bound parsed as {@link LocalDateTime}
      */
-    public LocalDateTime getUpperBoundAsLocalDateTime() {
-        return LocalDateTime.parse(upperBound);
+    public OffsetDateTime getUpperBoundAsDateTime() {
+        return OffsetDateTimeAdapter.parse(upperBound);
     }
 
     /**

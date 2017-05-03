@@ -7,12 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.time.OffsetDateTime;
+import java.util.*;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -83,17 +79,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Model modelOfData = Model.build("modelOfData", "model desc", EntityType.DATA);
         modelOfData = modelRepository.save(modelOfData);
         dataSet1 = new Dataset(model1, "PROJECT", "collection1");
-        dataSet1.setCreationDate(LocalDateTime.now());
+        dataSet1.setCreationDate(OffsetDateTime.now());
         dataSet1.setLicence("licence");
         dataSet1.setSipId("SipId1");
         dataSet1.setLabel("label");
         dataSet3 = new Dataset(model1, "PROJECT", "collection3");
-        dataSet3.setCreationDate(LocalDateTime.now());
+        dataSet3.setCreationDate(OffsetDateTime.now());
         dataSet3.setLicence("licence");
         dataSet3.setSipId("SipId3");
         dataSet3.setLabel("label");
         dataSet4 = new Dataset(model1, "PROJECT", "collection4");
-        dataSet4.setCreationDate(LocalDateTime.now());
+        dataSet4.setCreationDate(OffsetDateTime.now());
         dataSet4.setLicence("licence");
         dataSet4.setSipId("SipId4");
         dataSet4.setLabel("label");
@@ -125,7 +121,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     public void testPostDataset() throws Exception {
         final Dataset dataSet2 = new Dataset(model1, null, "dataSet2");
         dataSet2.setLicence("licence");
-        dataSet2.setCreationDate(LocalDateTime.now());
+        dataSet2.setCreationDate(OffsetDateTime.now());
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -143,7 +139,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         Dataset dataSet21 = new Dataset(model1, null, "dataSet21");
         dataSet21.setLicence("licence");
-        dataSet21.setCreationDate(LocalDateTime.now());
+        dataSet21.setCreationDate(OffsetDateTime.now());
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
         MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
@@ -168,7 +164,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     public void testUpdateDataset() {
         final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "dataset1clone");
         dataSetClone.setLicence("licence");
-        dataSetClone.setCreationDate(LocalDateTime.now());
+        dataSetClone.setCreationDate(OffsetDateTime.now());
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setTags(dataSet1.getTags());
@@ -183,7 +179,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     public void testFullUpdate() {
         final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "collection1clone");
         dataSetClone.setLicence("licence");
-        dataSetClone.setCreationDate(LocalDateTime.now());
+        dataSetClone.setCreationDate(OffsetDateTime.now());
         dataSetClone.setIpId(dataSet1.getIpId());
         dataSetClone.setId(dataSet1.getId());
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
@@ -209,7 +205,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Model dataModel = modelService.getModelByName("dataModel");
         Model datasetModel = modelService.getModelByName("datasetModel");
         Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
-        ds.setCreationDate(LocalDateTime.now());
+        ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getId());
         ds = datasetRepository.save(ds);

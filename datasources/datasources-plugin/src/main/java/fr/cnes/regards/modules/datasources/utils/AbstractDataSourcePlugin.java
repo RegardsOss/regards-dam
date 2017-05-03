@@ -7,6 +7,7 @@ package fr.cnes.regards.modules.datasources.utils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     protected abstract String getFromClause();
 
-    protected String getSelectRequest(Pageable pPageable, LocalDateTime pDate) {
+    protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
         if (pDate != null) {
             return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + WHERE
                     + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + buildLimitPart(pPageable);
@@ -64,7 +65,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
         }
     }
 
-    protected String getCountRequest(LocalDateTime pDate) {
+    protected String getCountRequest(OffsetDateTime pDate) {
         if (pDate != null) {
             return SELECT_COUNT + getFromClause() + WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
 
@@ -81,7 +82,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      * @param pDate can be null
      * @return
      */
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) {
         final String selectRequest = getSelectRequest(pPageable, pDate);
         final String countRequest = getCountRequest(pDate);
 

@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.collections.rest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -181,7 +182,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
         final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
         collection.setSipId(sipId);
-        collection.setCreationDate(LocalDateTime.now());
+        collection.setCreationDate(OffsetDateTime.now());
         final Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));

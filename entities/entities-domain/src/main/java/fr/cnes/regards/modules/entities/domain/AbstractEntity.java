@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -85,7 +86,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @PastOrNow
     @Column(name = "update_date")
-    protected LocalDateTime lastUpdate;
+    protected OffsetDateTime lastUpdate;
 
     /**
      * time at which the entity was created
@@ -93,7 +94,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @PastOrNow
     @NotNull
     @Column(name = "creation_date")
-    protected LocalDateTime creationDate;
+    protected OffsetDateTime creationDate;
 
     /**
      * entity id for SGBD purpose mainly and REST request
@@ -157,19 +158,19 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return ipId.toString();
     }
 
-    public LocalDateTime getLastUpdate() {
+    public OffsetDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(LocalDateTime pLastUpdate) {
+    public void setLastUpdate(OffsetDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
 
-    public LocalDateTime getCreationDate() {
+    public OffsetDateTime getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(LocalDateTime pCreationDate) {
+    public void setCreationDate(OffsetDateTime pCreationDate) {
         creationDate = pCreationDate;
     }
 

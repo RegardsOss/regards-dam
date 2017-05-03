@@ -4,6 +4,8 @@
 package fr.cnes.regards.modules.dataaccess.rest;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,7 +104,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void init() {
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);

@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.plugin;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -31,7 +32,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
         description = "allows to compute the minimum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")
-public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation<LocalDateTime> {
+public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation<OffsetDateTime> {
 
     @Autowired
     private IEsRepository esRepo;
@@ -61,7 +62,7 @@ public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation
                 .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
         if (candidate.isPresent() && (candidate.get() instanceof DateAttribute)) {
             DateAttribute attributeOfInterest = (DateAttribute) candidate.get();
-            LocalDateTime value = attributeOfInterest.getValue();
+            OffsetDateTime value = attributeOfInterest.getValue();
             if (value != null) {
                 if (result != null) {
                     result = attributeOfInterest.getValue().isBefore(result) ? attributeOfInterest.getValue() : result;
