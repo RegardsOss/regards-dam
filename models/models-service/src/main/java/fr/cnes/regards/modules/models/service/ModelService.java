@@ -377,7 +377,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 }
             } else {
                 // Create attribute
-                attributeModelService.createAttribute(modelAtt.getAttribute());
+                attributeModelService.addAttribute(modelAtt.getAttribute());
             }
             // Bind attribute to model
             // but before lets check correctness because of PluginConfiguration

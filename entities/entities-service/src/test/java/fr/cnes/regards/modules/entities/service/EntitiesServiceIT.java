@@ -92,7 +92,7 @@ public class EntitiesServiceIT {
         metadataMin.setAuthor("toto");
         metadataMin.setDescription("titi");
         metadataMin.setVersion("tutu");
-        metadataMin.setInterfaceName(IComputedAttribute.class.getName());
+        metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataMin.setPluginClassName(MinDateAttribute.class.getName());
         confMin = new PluginConfiguration(metadataMin, "MinDateTestConf");
         confMin.setParameters(parametersMin);
@@ -105,7 +105,7 @@ public class EntitiesServiceIT {
         metadataNonUsable.setAuthor("toto");
         metadataNonUsable.setDescription("titi");
         metadataNonUsable.setVersion("tutu");
-        metadataNonUsable.setInterfaceName(IComputedAttribute.class.getName());
+        metadataNonUsable.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataNonUsable.setPluginClassName(NonUsable.class.getName());
         confNonUsable = new PluginConfiguration(metadataNonUsable, "ConfFromNonUsablePlugin");
         confNonUsable.setParameters(parametersNonUsable);

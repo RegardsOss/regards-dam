@@ -20,7 +20,7 @@ import fr.cnes.regards.modules.datasources.domain.Table;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@PluginInterface(description = "Plugin to manager a connection pool to a datasource")
+@PluginInterface(description = "Plugin to manage a connection pool to a datasource")
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     /**

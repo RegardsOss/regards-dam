@@ -39,7 +39,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
         }
         PluginConfiguration computationConf = pValue.getComputationConf();
         if (pValue.getMode().equals(ComputationMode.COMPUTED) && (computationConf != null)
-                && computationConf.getInterfaceName().equals(IComputedAttribute.class.getName())) {
+                && computationConf.getInterfaceNames().contains(IComputedAttribute.class.getName())) {
 
             IComputedAttribute<?, ?> plugin;
             try {

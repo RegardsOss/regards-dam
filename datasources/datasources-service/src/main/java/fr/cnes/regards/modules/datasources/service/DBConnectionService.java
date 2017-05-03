@@ -19,6 +19,7 @@ import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.domain.Table;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
@@ -42,7 +43,7 @@ public class DBConnectionService implements IDBConnectionService {
     public DBConnectionService(IPluginService pPluginService) {
         super();
         this.service = pPluginService;
-        this.service.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+        this.service.addPluginPackage(DefaultPostgreConnectionPlugin.class.getPackage().getName());
     }
 
     @Override
