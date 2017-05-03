@@ -96,7 +96,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                     modelService.getModel(pDataset.getDataModel()), attributeService, modelAttributeService);
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
-                        "given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
+                        "Given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
             }
         }
         return pDataset;
