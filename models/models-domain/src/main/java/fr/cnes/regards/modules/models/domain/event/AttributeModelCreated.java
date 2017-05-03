@@ -16,6 +16,10 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 @Event(target = Target.MICROSERVICE)
 public class AttributeModelCreated extends AbstractAttributeModelEvent {
 
+    public AttributeModelCreated() {
+        // Json constructor
+    }
+
     public AttributeModelCreated(AttributeModel pAttributeModel) {
         super(pAttributeModel);
     }
