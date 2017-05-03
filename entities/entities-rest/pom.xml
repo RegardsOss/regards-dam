@@ -52,5 +52,9 @@
 			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.queryparser</groupId>
+			<artifactId>queryparser-service</artifactId>
+		</dependency>
 	</dependencies>
 </project>
