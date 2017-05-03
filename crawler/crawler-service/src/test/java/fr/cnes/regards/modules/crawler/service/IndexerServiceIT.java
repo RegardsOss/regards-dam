@@ -4,7 +4,8 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -122,12 +123,12 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, StringArrayAttribute.class, "stringArraySand", "correspondance");
 
         attributes.add(AttributeBuilder.buildBoolean("booleanAtt", true));
-        attributes.add(AttributeBuilder.buildDateArray("dateArrayAtt", LocalDateTime.of(2016, 1, 13, 11, 5),
-                                                       LocalDateTime.of(2015, 12, 31, 11, 59),
-                                                       LocalDateTime.of(2000, 1, 1, 0, 0)));
-        attributes.add(AttributeBuilder.buildDate("dateAtt", LocalDateTime.of(1974, 10, 31, 1, 50)));
-        attributes.add(AttributeBuilder.buildDateInterval("dateInterval", LocalDateTime.of(1939, 9, 1, 0, 0),
-                                                          LocalDateTime.of(1945, 9, 2, 0, 0)));
+        attributes.add(AttributeBuilder.buildDateArray("dateArrayAtt", OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
+                                                       OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
+                                                       OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
+        attributes.add(AttributeBuilder.buildDate("dateAtt", OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
+        attributes.add(AttributeBuilder.buildDateInterval("dateInterval", OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                                          OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
         attributes.add(AttributeBuilder.buildDouble("maxDoubleValue", Double.MAX_VALUE));
         attributes.add(AttributeBuilder.buildDouble("minDoubleValue", Double.MIN_VALUE));
 

@@ -55,12 +55,12 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             .put(AttributeType.LONG_INTERVAL, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsLong()))
             .put(AttributeType.LONG_INTERVAL, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsLong(), pFacade.getUpperBoundAsLong()))
 
-            .put(AttributeType.DATE_INTERVAL, RangeComparison.GE, pFacade -> ICriterion.ge(pFacade.getField(), pFacade.getLowerBoundAsLocalDateTime()))
-            .put(AttributeType.DATE_INTERVAL, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsLocalDateTime()))
-            .put(AttributeType.DATE_INTERVAL, RangeComparison.LE, pFacade -> ICriterion.le(pFacade.getField(), pFacade.getUpperBoundAsLocalDateTime()))
-            .put(AttributeType.DATE_INTERVAL, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsLocalDateTime()))
-            .put(AttributeType.DATE_INTERVAL, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsLocalDateTime(), pFacade.getUpperBoundAsLocalDateTime()))
-            .put(AttributeType.DATE_ARRAY, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsLocalDateTime(), pFacade.getUpperBoundAsLocalDateTime()))
+            .put(AttributeType.DATE_INTERVAL, RangeComparison.GE, pFacade -> ICriterion.ge(pFacade.getField(), pFacade.getLowerBoundAsDateTime()))
+            .put(AttributeType.DATE_INTERVAL, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDateTime()))
+            .put(AttributeType.DATE_INTERVAL, RangeComparison.LE, pFacade -> ICriterion.le(pFacade.getField(), pFacade.getUpperBoundAsDateTime()))
+            .put(AttributeType.DATE_INTERVAL, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsDateTime()))
+            .put(AttributeType.DATE_INTERVAL, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
+            .put(AttributeType.DATE_ARRAY, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
             .build();
     // @formatter:on
 

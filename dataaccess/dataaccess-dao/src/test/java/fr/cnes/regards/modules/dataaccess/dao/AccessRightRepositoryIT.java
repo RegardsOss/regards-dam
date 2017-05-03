@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -70,7 +70,7 @@ public class AccessRightRepositoryIT extends AbstractDaoTransactionalTest {
 
     @Before
     public void init() {
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);

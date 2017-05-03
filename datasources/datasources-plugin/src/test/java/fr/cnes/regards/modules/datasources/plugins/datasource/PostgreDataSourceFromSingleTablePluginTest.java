@@ -5,10 +5,7 @@ package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -191,8 +188,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     public void getDataSourceIntrospectionFromPastDate() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 
-        LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
-        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
+        OffsetDateTime date = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).minusMinutes(2);
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), date);
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
 
@@ -211,7 +208,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     public void getDataSourceIntrospectionFromFutureDate() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 
-        LocalDateTime ldt = LocalDateTime.now().plusSeconds(10);
+        OffsetDateTime ldt = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).plusSeconds(10);
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
         Assert.assertNotNull(ll);
         Assert.assertEquals(0, ll.getContent().size());

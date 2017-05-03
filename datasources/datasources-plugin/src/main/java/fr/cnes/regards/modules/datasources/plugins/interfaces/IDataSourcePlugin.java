@@ -6,7 +6,7 @@ package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -89,7 +89,7 @@ public interface IDataSourcePlugin {
      *            Allows to filter the new entities created after this date parameter (can be null)
      * @return a page of entities
      */
-    Page<DataObject> findAll(String pTenant, Pageable pPageable, LocalDateTime pDate);
+    Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate);
 
     /**
      * Returns a {@link Page} of entities meeting the paging restriction provided in the {@code Pageable} object.

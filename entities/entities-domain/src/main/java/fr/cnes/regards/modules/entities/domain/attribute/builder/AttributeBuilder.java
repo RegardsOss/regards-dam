@@ -4,7 +4,7 @@
 package fr.cnes.regards.modules.entities.domain.attribute.builder;
 
 import java.net.URL;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
@@ -45,7 +45,7 @@ public final class AttributeBuilder {
     /**
      * Method allowing to get an AbstractAttribute according to the AttributeType, for the given name and value. The
      * type of pValue is expected to be coherant with the AttributeType. In particular, for intervals we are expecting
-     * {@link Range} and as dates we are expecting {@link LocalDateTime}
+     * {@link Range} and as dates we are expecting {@link OffsetDateTime}
      *
      * @param <U> type of the value
      * @param <T> type of the attribute generated
@@ -62,11 +62,11 @@ public final class AttributeBuilder {
             case BOOLEAN:
                 return (T) buildBoolean(pName, (Boolean) pValue);
             case DATE_ARRAY:
-                return (T) buildDateArray(pName, (LocalDateTime[]) pValue);
+                return (T) buildDateArray(pName, (OffsetDateTime[]) pValue);
             case DATE_INTERVAL:
-                return (T) buildDateInterval(pName, (Range<LocalDateTime>) pValue);
+                return (T) buildDateInterval(pName, (Range<OffsetDateTime>) pValue);
             case DATE_ISO8601:
-                return (T) buildDate(pName, (LocalDateTime) pValue);
+                return (T) buildDate(pName, (OffsetDateTime) pValue);
             case DOUBLE:
                 return (T) buildDouble(pName, (Double) pValue);
             case DOUBLE_ARRAY:
@@ -116,7 +116,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    private static DateIntervalAttribute buildDateInterval(String pName, Range<LocalDateTime> pValue) {
+    private static DateIntervalAttribute buildDateInterval(String pName, Range<OffsetDateTime> pValue) {
         DateIntervalAttribute att = new DateIntervalAttribute();
         att.setName(pName);
         att.setValue(pValue);
@@ -137,22 +137,22 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static DateArrayAttribute buildDateArray(String pName, LocalDateTime... pLocalDateTimes) {
+    public static DateArrayAttribute buildDateArray(String pName, OffsetDateTime... pOffsetDateTimes) {
         DateArrayAttribute att = new DateArrayAttribute();
         att.setName(pName);
-        att.setValue(pLocalDateTimes);
+        att.setValue(pOffsetDateTimes);
         return att;
     }
 
-    public static DateAttribute buildDate(String pName, LocalDateTime pLocalDateTime) {
+    public static DateAttribute buildDate(String pName, OffsetDateTime pOffsetDateTime) {
         DateAttribute att = new DateAttribute();
         att.setName(pName);
-        att.setValue(pLocalDateTime);
+        att.setValue(pOffsetDateTime);
         return att;
     }
 
-    public static DateIntervalAttribute buildDateInterval(String pName, LocalDateTime pLowerBoundDate,
-            LocalDateTime pUpperBoundDate) {
+    public static DateIntervalAttribute buildDateInterval(String pName, OffsetDateTime pLowerBoundDate,
+            OffsetDateTime pUpperBoundDate) {
         DateIntervalAttribute att = new DateIntervalAttribute();
         att.setName(pName);
         att.setValue(Range.closed(pLowerBoundDate, pUpperBoundDate));

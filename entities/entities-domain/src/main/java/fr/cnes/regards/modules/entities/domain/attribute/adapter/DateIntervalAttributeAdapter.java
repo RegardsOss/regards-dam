@@ -1,13 +1,13 @@
 package fr.cnes.regards.modules.entities.domain.attribute.adapter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import com.google.common.collect.Range;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
@@ -19,31 +19,31 @@ import fr.cnes.regards.modules.indexer.domain.IMapping;
  * @author oroussel
  */
 public class DateIntervalAttributeAdapter
-        extends AbstractIntervalAttributeTypeAdapter<LocalDateTime, DateIntervalAttribute> {
+        extends AbstractIntervalAttributeTypeAdapter<OffsetDateTime, DateIntervalAttribute> {
 
     @Override
-    protected void writeValueLowerBound(JsonWriter pOut, AbstractAttribute<Range<LocalDateTime>> pValue)
+    protected void writeValueLowerBound(JsonWriter pOut, AbstractAttribute<Range<OffsetDateTime>> pValue)
             throws IOException {
-        pOut.value(LocalDateTimeAdapter.format(pValue.getValue().lowerEndpoint()));
+        pOut.value(OffsetDateTimeAdapter.format(pValue.getValue().lowerEndpoint()));
     }
 
     @Override
-    protected void writeValueUpperBound(JsonWriter pOut, AbstractAttribute<Range<LocalDateTime>> pValue)
+    protected void writeValueUpperBound(JsonWriter pOut, AbstractAttribute<Range<OffsetDateTime>> pValue)
             throws IOException {
-        pOut.value(LocalDateTimeAdapter.format(pValue.getValue().upperEndpoint()));
+        pOut.value(OffsetDateTimeAdapter.format(pValue.getValue().upperEndpoint()));
     }
 
     @Override
-    protected Range<LocalDateTime> readRangeFromInnerJsonObject(JsonReader pIn) throws IOException {
-        LocalDateTime lowerBound = null;
-        LocalDateTime upperBound = null;
+    protected Range<OffsetDateTime> readRangeFromInnerJsonObject(JsonReader pIn) throws IOException {
+        OffsetDateTime lowerBound = null;
+        OffsetDateTime upperBound = null;
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
                 case IMapping.RANGE_LOWER_BOUND:
-                    lowerBound = LocalDateTimeAdapter.parse(pIn.nextString());
+                    lowerBound = OffsetDateTimeAdapter.parse(pIn.nextString());
                     break;
                 case IMapping.RANGE_UPPER_BOUND:
-                    upperBound = LocalDateTimeAdapter.parse(pIn.nextString());
+                    upperBound = OffsetDateTimeAdapter.parse(pIn.nextString());
                     break;
                 default:
             }
@@ -52,7 +52,7 @@ public class DateIntervalAttributeAdapter
     }
 
     @Override
-    protected DateIntervalAttribute createRangeAttribute(String pName, Range<LocalDateTime> pRange) {
+    protected DateIntervalAttribute createRangeAttribute(String pName, Range<OffsetDateTime> pRange) {
         return AttributeBuilder.buildDateInterval(pName, pRange.lowerEndpoint(), pRange.upperEndpoint());
     }
 

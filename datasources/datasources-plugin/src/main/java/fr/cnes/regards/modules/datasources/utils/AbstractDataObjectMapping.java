@@ -12,21 +12,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
-import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -35,9 +24,11 @@ import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
-
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.entities.domain.DataFile;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -46,6 +37,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -80,7 +72,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * A default date
      */
-    private static final LocalDateTime INIT_DATE = LocalDateTime.of(1, 1, 1, 0, 0);
+    private static final OffsetDateTime INIT_DATE = OffsetDateTime.of(1, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
 
     private static final GeometryAdapter<?> GEOMETRY_ADAPTER = new GeometryAdapter<>();
 
@@ -141,14 +133,14 @@ public abstract class AbstractDataObjectMapping {
      *
      * @param pRs The {@link ResultSet} to read
      * @param pAttrMapping The {@link AbstractAttributeMapping}
-     * @return the {@link LocalDateTime}
+     * @return the {@link OffsetDateTime}
      * @throws SQLException An error occurred when try to read the {@link ResultSet}
      */
-    protected LocalDateTime buildLocatDateTime(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
+    protected OffsetDateTime buildOffsetDateTime(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         long n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
         Instant instant = Instant.ofEpochMilli(n);
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
     }
 
     /**
@@ -164,7 +156,7 @@ public abstract class AbstractDataObjectMapping {
      * @return a page of {@link DataObject}
      */
     protected Page<DataObject> findAll(String pTenant, Connection pConn, String pSelectRequest, String pCountRequest,
-            Pageable pPageable, LocalDateTime pDate) {
+            Pageable pPageable, OffsetDateTime pDate) {
         List<DataObject> dataObjects = new ArrayList<>();
 
         try (Statement statement = pConn.createStatement()) {
@@ -385,7 +377,7 @@ public abstract class AbstractDataObjectMapping {
             }
         }
         if (pAttrMapping.isLastUpdate()) {
-            pData.setLastUpdate((LocalDateTime) pAttr.getValue());
+            pData.setLastUpdate((OffsetDateTime) pAttr.getValue());
         }
         if (pAttrMapping.isLabel()) {
             pData.setLabel(((StringAttribute) pAttr).getValue());
@@ -421,7 +413,7 @@ public abstract class AbstractDataObjectMapping {
      * @param pDate the date to used to build the date filter
      * @return the SQL request with a from clause to filter the result since a date
      */
-    private String buildDateStatement(String pRequest, LocalDateTime pDate) {
+    private String buildDateStatement(String pRequest, OffsetDateTime pDate) {
         // Search the attribute used to get the new data (first one is used)
         for (Map.Entry<String, InternalAttributes> entry : mappingInternalAttributes.entrySet()) {
             if (entry.getValue() == InternalAttributes.LAST_UPDATE) {
@@ -438,12 +430,10 @@ public abstract class AbstractDataObjectMapping {
 
         // if any date is defined, replace the keyword and used the first existing date
         if (pDate == null) {
-            return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
-                                       INIT_DATE.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD, OffsetDateTimeAdapter.format(INIT_DATE));
         } else {
             return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
-                                       dateAttributeName + "> '" + pDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                                               + "'");
+                                       dateAttributeName + "> '" + OffsetDateTimeAdapter.format(pDate) + "'");
         }
     }
 

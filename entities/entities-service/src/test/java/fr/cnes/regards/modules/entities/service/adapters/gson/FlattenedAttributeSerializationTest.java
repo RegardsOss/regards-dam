@@ -22,7 +22,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
@@ -116,7 +116,7 @@ public class FlattenedAttributeSerializationTest {
         factory.registerSubtype(StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
         gsonBuilder.registerTypeAdapterFactory(factory);
-        gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter().nullSafe());
+        gsonBuilder.registerTypeAdapter(LocalDateTime.class, new OffsetDateTimeAdapter().nullSafe());
         gson = gsonBuilder.create();
     }
 
