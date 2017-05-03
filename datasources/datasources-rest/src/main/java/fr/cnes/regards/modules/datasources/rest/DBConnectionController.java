@@ -41,8 +41,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @RestController
 // CHECKSTYLE:OFF
-@ModuleInfo(name = "dbconnection", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
-        documentation = "http://test")
+@ModuleInfo(name = "dbconnection", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI", documentation = "http://test")
 // CHECKSTYLE:ON
 @RequestMapping(DBConnectionController.TYPE_MAPPING)
 public class DBConnectionController implements IResourceController<PluginConfiguration> {
@@ -72,7 +71,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      *
      * @return a list of {@link PluginConfiguration}
      */
-    @ResourceAccess(description = "List all plugin'ss configurations defined for the plugin type IDBConnectionPlugin")
+    @ResourceAccess(description = "List all plugin's configurations defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<PluginConfiguration>>> getAllDBConnections() {
         return ResponseEntity.ok(toResources(dbConnectionService.getAllDBConnections()));
@@ -165,7 +164,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get the database's tables
-     * 
+     *
      * @param pConnectionId
      *            {@link PluginConfiguration} identifier
      * @return a {@link Map} that contains the database's tables
@@ -181,7 +180,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get the column of a table
-     * 
+     *
      * @param pConnectionId
      *            {@link PluginConfiguration} identifier
      * @param pTableName

@@ -31,13 +31,19 @@
 	<logger name="fr.cnes.regards" level="INFO" additivity="true">
 		<appender-ref ref="regardsAmqpAppender" />
 	</logger>
+	
+	<logger name="fr.cnes.regards" level="DEBUG">
+		<appender-ref ref="STDOUT" />
+	</logger>
 
- 	<logger name="org.springframework" level="INFO" />
-	<logger name="org.hibernate" level="INFO" />
+	<logger name="org.springframework" level="INFO" />
 	<logger name="com.mchange" level="INFO" />
 	<logger name="fr.cnes.regards.framework.logbackappender" level="DEBUG" />
 
-	<root level="info">
+	<logger name="org.hibernate.SQL" level="DEBUG" />
+	<logger name="org.hibernate.type.descriptor.sql" level="TRACE" />
+
+	<root level="debug">
 		<appender-ref ref="STDOUT" />
 	</root>
 

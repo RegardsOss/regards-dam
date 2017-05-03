@@ -34,7 +34,6 @@ import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
  * REST module controller
  *
  * @author Marc Sordi
- *
  */
 @MultitenantTransactional
 @TestPropertySource("classpath:test.properties")

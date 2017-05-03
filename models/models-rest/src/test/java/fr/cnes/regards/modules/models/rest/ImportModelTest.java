@@ -100,7 +100,7 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         metaData.setAuthor("toto");
         metaData.setDescription("titi");
         metaData.setVersion("tutu");
-        metaData.setInterfaceName(IComputedAttribute.class.getName());
+        metaData.getInterfaceNames().add(IComputedAttribute.class.getName());
         metaData.setPluginClassName(TestComputedAttribute.class.getName());
         PluginConfiguration conf = new PluginConfiguration(metaData, "ContactPluginConfTest");
         pluginService.addPluginPackage(TestComputedAttribute.class.getPackage().getName());

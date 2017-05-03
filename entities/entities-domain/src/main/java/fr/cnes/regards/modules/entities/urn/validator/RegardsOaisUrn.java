@@ -12,9 +12,12 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+
 /**
- * @author Sylvain Vissiere-Guerinet
+ * Annotation allowing to Validate {@link UniformResourceName} thanks to {@link RegardsOaisUrnValidator}
  *
+ * @author Sylvain Vissiere-Guerinet
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
@@ -28,19 +31,16 @@ public @interface RegardsOaisUrn {
     static final String CLASS_NAME = "fr.cnes.regards.modules.entities.urn.validator.RegardsOaisUrn.";
 
     /**
-     *
      * @return error message key
      */
     String message() default "{" + CLASS_NAME + "message}";
 
     /**
-     *
      * @return validation groups
      */
     Class<?>[] groups() default {};
 
     /**
-     *
      * @return custom payload
      */
     Class<? extends Payload>[] payload() default {};
