@@ -23,12 +23,14 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -70,7 +72,7 @@ public class DataSourceService implements IDataSourceService {
         super();
         this.service = pPluginService;
         this.dbConnectionService = pDBConnectionService;
-        this.service.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+        this.service.addPluginPackage(PostgreDataSourcePlugin.class.getPackage().getName());
     }
 
     @Override

@@ -10,7 +10,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Implement the type conversion logic for a String to a {@link UrnConverter}.<br>
- * This is automaticly used by Spring if need be.
+ * This is automatically used by Spring if need be.
  *
  * @author Xavier-Alexandre Brochard
  */

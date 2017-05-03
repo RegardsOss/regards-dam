@@ -138,7 +138,22 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
                 .add(MockMvcResultMatchers.jsonPath("$.content.label", Matchers.hasToString(dbConnection.getLabel())));
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConnection, expectations,
-                           "Empty DBConnection shouldn't be created.");
+                           "DBConnection creation request error");
+    }
+    
+    @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_010")
+    @Purpose("The system allows to create a connection by the configuration of a plugin's type IDBConnectionPlugin")
+    public void createDBConnectionWithJson() {
+        String dbConnectionRequest = readJsonContract("request-dbconnection.json");
+        
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+
+        performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConnectionRequest, expectations,
+                           "DBConnection creation request error");
     }
 
     @Test
