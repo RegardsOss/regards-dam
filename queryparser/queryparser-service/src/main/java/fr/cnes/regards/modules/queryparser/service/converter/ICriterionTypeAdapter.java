@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.entities.domain.converter;
+package fr.cnes.regards.modules.queryparser.service.converter;
 
 import java.io.IOException;
 

@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.rest.dto;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -49,9 +50,9 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
 
     protected Model model;
 
-    protected LocalDateTime lastUpdate;
+    protected OffsetDateTime lastUpdate;
 
-    protected LocalDateTime creationDate;
+    protected OffsetDateTime creationDate;
 
     protected Long id;
 
@@ -228,28 +229,28 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
     /**
      * @return the lastUpdate
      */
-    public LocalDateTime getLastUpdate() {
+    public OffsetDateTime getLastUpdate() {
         return lastUpdate;
     }
 
     /**
      * @param pLastUpdate the lastUpdate to set
      */
-    public void setLastUpdate(LocalDateTime pLastUpdate) {
+    public void setLastUpdate(OffsetDateTime pLastUpdate) {
         lastUpdate = pLastUpdate;
     }
 
     /**
      * @return the creationDate
      */
-    public LocalDateTime getCreationDate() {
+    public OffsetDateTime getCreationDate() {
         return creationDate;
     }
 
     /**
      * @param pCreationDate the creationDate to set
      */
-    public void setCreationDate(LocalDateTime pCreationDate) {
+    public void setCreationDate(OffsetDateTime pCreationDate) {
         creationDate = pCreationDate;
     }
 
