@@ -11,7 +11,7 @@ import com.google.gson.stream.JsonWriter;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
-import fr.cnes.regards.modules.opensearch.service.queryparser.RegardsQueryParser;
+import fr.cnes.regards.modules.opensearch.service.queryparser.QueryParser;
 
 /**
  * Type adapter reading an OpenSearch query string and converting it to an {@link ICriterion}
@@ -23,7 +23,7 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
     /**
      * Regards Query Parser. Autowired by Spring. Must not be null.
      */
-    private final RegardsQueryParser regardsQueryParser;
+    private final QueryParser queryParser;
 
     /**
      * Gson. Autowired by Spring. Must not be null.
@@ -31,12 +31,12 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
     private final Gson gson;
 
     /**
-     * @param pRegardsQueryParser Regards Query Parser. Autowired by Spring. Must not be null.
+     * @param pQueryParser Regards Query Parser. Autowired by Spring. Must not be null.
      * @param pGson Gson. Autowired by Spring. Must not be null.
      */
-    public ICriterionTypeAdapter(RegardsQueryParser pRegardsQueryParser, Gson pGson) {
+    public ICriterionTypeAdapter(QueryParser pQueryParser, Gson pGson) {
         super();
-        regardsQueryParser = pRegardsQueryParser;
+        queryParser = pQueryParser;
         gson = pGson;
     }
 
@@ -44,7 +44,7 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
     public ICriterion read(JsonReader in) throws IOException {
         try {
             String query = in.nextString();
-            return regardsQueryParser.parse(query);
+            return queryParser.parse(query);
         } catch (OpenSearchParseException e) {
             throw new JsonSyntaxException("An error occured during the parsing of the OpenSearch query", e);
         }

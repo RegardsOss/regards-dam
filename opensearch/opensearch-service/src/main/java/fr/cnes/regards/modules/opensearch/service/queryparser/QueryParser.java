@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemod
  * @author Xavier-Alexandre Brochard
  */
 @Component
-public class RegardsQueryParser extends QueryParserHelper implements IParser {
+public class QueryParser extends QueryParserHelper implements IParser {
 
     /**
      * The request parameter containing the OpenSearch query
@@ -49,7 +49,7 @@ public class RegardsQueryParser extends QueryParserHelper implements IParser {
      * Constructor
      * @param pAttributeModelCache provides access to {@link AttributeModel}s with caching facilities
      */
-    public RegardsQueryParser(@Autowired IAttributeModelCache pAttributeModelCache) {
+    public QueryParser(@Autowired IAttributeModelCache pAttributeModelCache) {
         super(new StandardQueryConfigHandler(), new StandardSyntaxParser(),
               new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(pAttributeModelCache));
         setEnablePositionIncrements(true);
@@ -58,7 +58,7 @@ public class RegardsQueryParser extends QueryParserHelper implements IParser {
 
     @Override
     public String toString() {
-        return "<RegardsQueryParser config=\"" + this.getQueryConfigHandler() + "\"/>";
+        return "<QueryParser config=\"" + this.getQueryConfigHandler() + "\"/>";
     }
 
     /* (non-Javadoc)

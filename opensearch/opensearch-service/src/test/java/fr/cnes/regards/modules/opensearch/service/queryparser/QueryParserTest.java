@@ -34,23 +34,23 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
-import fr.cnes.regards.modules.opensearch.service.queryparser.RegardsQueryParser;
+import fr.cnes.regards.modules.opensearch.service.queryparser.QueryParser;
 import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemodel.AttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemodel.IAttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
 
 /**
- * Unit test for {@link RegardsQueryParser}.
+ * Unit test for {@link QueryParser}.
  *
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
-public class RegardsQueryParserTest {
+public class QueryParserTest {
 
     /**
      * Class under test
      */
-    private static RegardsQueryParser parser;
+    private static QueryParser parser;
 
     /**
      * The tenant
@@ -88,7 +88,7 @@ public class RegardsQueryParserTest {
         ResponseEntity<List<Resource<AttributeModel>>> clientResponse = SampleDataUtils.ATTRIBUTE_MODEL_CLIENT_RESPONSE;
         Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(clientResponse);
 
-        parser = new RegardsQueryParser(attributeModelCache);
+        parser = new QueryParser(attributeModelCache);
     }
 
     @Test(expected = QueryNodeException.class)
