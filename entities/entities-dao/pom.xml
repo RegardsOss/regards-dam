@@ -26,6 +26,7 @@
 		<!-- Tests -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			
 			<artifactId>module-plugins-dao</artifactId>
 			<scope>test</scope>
 		</dependency>

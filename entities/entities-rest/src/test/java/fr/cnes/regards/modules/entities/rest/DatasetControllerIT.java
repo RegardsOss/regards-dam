@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import org.hamcrest.Matchers;
@@ -271,7 +272,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         final DatasetDto dataSet = new DatasetDto(datasetModel, DEFAULT_TENANT,
                 "dataset from dto with subsetting clause as string");
         dataSet.setLicence("licence");
-        dataSet.setCreationDate(LocalDateTime.now());
+        dataSet.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         dataSet.setIpId(dataSet1.getIpId());
         dataSet.setId(dataSet1.getId());
         dataSet.setTags(dataSet1.getTags());
