@@ -86,6 +86,7 @@ public class PostgreSQLConnectionTestWithService {
         Mockito.when(pluginConfRepositoryMocked.findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
                 .thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
+        Mockito.when(pluginConfRepositoryMocked.findAll()).thenReturn(pluginConfs);
         Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
 
         // Get the first Plugin
