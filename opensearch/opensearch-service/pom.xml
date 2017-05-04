@@ -6,7 +6,6 @@
 
 	<groupId>fr.cnes.regards.modules.queryparser</groupId>
 	<artifactId>opensearch-service</artifactId>
-	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
