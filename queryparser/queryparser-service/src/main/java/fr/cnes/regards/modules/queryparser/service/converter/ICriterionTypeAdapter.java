@@ -2,8 +2,6 @@ package fr.cnes.regards.modules.queryparser.service.converter;
 
 import java.io.IOException;
 
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.TypeAdapter;
@@ -12,7 +10,8 @@ import com.google.gson.stream.JsonWriter;
 
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.queryparser.service.RegardsQueryParser;
+import fr.cnes.regards.modules.queryparser.service.exception.OpenSearchParseException;
+import fr.cnes.regards.modules.queryparser.service.queryparser.RegardsQueryParser;
 
 /**
  * Type adapter reading an OpenSearch query string and converting it to an {@link ICriterion}
@@ -46,7 +45,7 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
         try {
             String query = in.nextString();
             return regardsQueryParser.parse(query);
-        } catch (QueryNodeException e) {
+        } catch (OpenSearchParseException e) {
             throw new JsonSyntaxException("An error occured during the parsing of the OpenSearch query", e);
         }
 
