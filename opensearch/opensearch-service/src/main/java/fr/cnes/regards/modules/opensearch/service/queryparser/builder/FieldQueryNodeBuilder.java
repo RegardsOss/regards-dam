@@ -15,7 +15,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.opensearch.service.queryparser.RegardsQueryParserMessages;
+import fr.cnes.regards.modules.opensearch.service.queryparser.QueryParserMessages;
 import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemodel.IAttributeModelCache;
 
 /**
@@ -53,7 +53,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
         try {
             attributeModel = attributeModelCache.findByName(field);
         } catch (EntityNotFoundException e) {
-            throw new QueryNodeException(new MessageImpl(RegardsQueryParserMessages.FIELD_TYPE_UNDETERMINATED, field),
+            throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, field),
                     e);
         }
 
@@ -75,7 +75,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 return ICriterion.contains(field, value);
             default:
                 throw new QueryNodeException(
-                        new MessageImpl(RegardsQueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
+                        new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
         }
     }
 

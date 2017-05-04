@@ -18,7 +18,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.opensearch.service.queryparser.RegardsQueryParserMessages;
+import fr.cnes.regards.modules.opensearch.service.queryparser.QueryParserMessages;
 import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemodel.IAttributeModelCache;
 
 /**
@@ -86,7 +86,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             attributeType = attributeModelCache.findByName(wrapper.getField()).getType();
         } catch (EntityNotFoundException e) {
             throw new QueryNodeException(
-                    new MessageImpl(RegardsQueryParserMessages.FIELD_TYPE_UNDETERMINATED, wrapper.getField()), e);
+                    new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, wrapper.getField()), e);
         }
 
         // Compute the type of range comparison: lower/greater than/equal or between
@@ -111,7 +111,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             boolean pIsLowerInclusive, boolean pIsUpperInclusive) throws QueryNodeException {
         if (pLowerText.isEmpty() && pUpperText.isEmpty()) {
             throw new QueryNodeException(
-                    new MessageImpl(RegardsQueryParserMessages.RANGE_NUMERIC_CANNOT_BE_EMPTY, pField));
+                    new MessageImpl(QueryParserMessages.RANGE_NUMERIC_CANNOT_BE_EMPTY, pField));
         } else if (pLowerText.isEmpty() && !pUpperText.isEmpty() && pIsUpperInclusive) {
             return RangeComparison.LE;
         } else if (pLowerText.isEmpty() && !pUpperText.isEmpty() && !pIsUpperInclusive) {

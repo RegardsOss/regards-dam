@@ -3,12 +3,13 @@
  */
 package fr.cnes.regards.modules.opensearch.service.queryparser;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,7 +35,6 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
-import fr.cnes.regards.modules.opensearch.service.queryparser.QueryParser;
 import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemodel.AttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.queryparser.cache.attributemodel.IAttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
@@ -77,6 +77,8 @@ public class QueryParserTest {
      */
     private static IAttributeModelCache attributeModelCache;
 
+    private static String QUERY_PREFIX = "q=";
+
     @BeforeClass
     public static void init() throws EntityNotFoundException {
         subscriber = Mockito.mock(ISubscriber.class);
@@ -91,24 +93,24 @@ public class QueryParserTest {
         parser = new QueryParser(attributeModelCache);
     }
 
-    @Test(expected = QueryNodeException.class)
+    @Test(expected = OpenSearchParseException.class)
     @Purpose("Tests queries like isTrue:false")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void booleanMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void booleanMatchTest() throws OpenSearchParseException {
         String field = SampleDataUtils.BOOLEAN_FIELD;
         Boolean value = true;
         String term = field + ":" + value;
-        parser.parse(term);
+        parser.parse(QUERY_PREFIX + term);
     }
 
     @Test
     @Purpose("Tests queries like altitude:8848")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void intMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void intMatchTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.INTEGER_FIELD;
         final Integer value = 8848;
         final String term = field + ":" + value;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof IntMatchCriterion);
@@ -123,11 +125,11 @@ public class QueryParserTest {
     @SuppressWarnings("unchecked")
     @Purpose("Tests queries like bpm:128.0")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void doubleMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void doubleMatchTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.DOUBLE_FIELD;
         final Double value = 145.6;
         final String term = field + ":" + value;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -144,10 +146,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:harrypotter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void stringMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void stringMatchTest() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_FIELD;
         final String val = "harrypotter";
-        final ICriterion criterion = parser.parse(key + ":" + val);
+        final String term = key + ":" + val;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -161,11 +164,12 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:\"harry potter\"")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void stringPhraseMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void stringPhraseMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String key = SampleDataUtils.STRING_FIELD;
         final String val = "\"a phrase query\"";
         final String expectedAfterParse = "a phrase query";
-        final ICriterion criterion = parser.parse(key + ":" + val);
+        final String term = key + ":" + val;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -179,10 +183,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:*potter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void wildcardLeading() throws QueryNodeException, OpenSearchParseException {
+    public void wildcardLeading() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_FIELD;
         final String val = "*potter";
-        final ICriterion criterion = parser.parse(key + ":" + val);
+        final String term = key + ":" + val;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -196,10 +201,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:harry*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void wildcardTrailing() throws QueryNodeException, OpenSearchParseException {
+    public void wildcardTrailing() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_FIELD;
         final String val = "harry*";
-        final ICriterion criterion = parser.parse(key + ":" + val);
+        final String term = key + ":" + val;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -213,10 +219,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:*rry*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void wildcardsAound() throws QueryNodeException, OpenSearchParseException {
+    public void wildcardsAound() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_FIELD;
         final String val = "*rry*";
-        final ICriterion criterion = parser.parse(key + ":" + val);
+        final String term = key + ":" + val;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -227,22 +234,25 @@ public class QueryParserTest {
         Assert.assertEquals("rry", crit.getValue());
     }
 
-    @Test(expected = QueryNodeException.class)
+    @Test(expected = OpenSearchParseException.class)
     @Purpose("Tests queries like title:har*ter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void wildcardMiddleTest() throws QueryNodeException, OpenSearchParseException {
+    public void wildcardMiddleTest() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_FIELD;
         final String val = "har*ter";
-        parser.parse(key + ":" + val);
+        final String term = key + ":" + val;
+        parser.parse(QUERY_PREFIX + term);
     }
 
     @Test
     @Purpose("Tests queries like title:harrypotter AND author:jkrowling")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void andMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void andMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
         String key0 = SampleDataUtils.STRING_FIELD;
         String key1 = SampleDataUtils.STRING_FIELD_1;
-        final ICriterion criterion = parser.parse(key0 + ":harrypotter AND " + key1 + ":jkrowling");
+        String term = key0 + ":harrypotter AND " + key1 + ":jkrowling";
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
+
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof AndCriterion);
 
@@ -255,10 +265,12 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:harrypotter OR author:jkrowling")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void orMatchTest() throws QueryNodeException, OpenSearchParseException {
+    public void orMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
         String key0 = SampleDataUtils.STRING_FIELD;
         String key1 = SampleDataUtils.STRING_FIELD_1;
-        final ICriterion criterion = parser.parse(key0 + ":val1 OR " + key1 + ":val2");
+        String term = key0 + ":val1 OR " + key1 + ":val2";
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
+
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof OrCriterion);
 
@@ -268,38 +280,38 @@ public class QueryParserTest {
         Assert.assertTrue(crit.getCriterions().get(1) instanceof StringMatchCriterion);
     }
 
-    @Test(expected = QueryNodeException.class)
+    @Test(expected = OpenSearchParseException.class)
     @Purpose("Tests queries like title:harry~")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void proximityTest() throws QueryNodeException, OpenSearchParseException {
-        parser.parse("field:value~");
+    public void proximityTest() throws OpenSearchParseException {
+        parser.parse(QUERY_PREFIX + "field:value~");
     }
 
-    @Test(expected = QueryNodeException.class)
+    @Test(expected = OpenSearchParseException.class)
     @Purpose("Tests queries like title:{harrypotter TO starwars}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void stringRangeTest() throws QueryNodeException, OpenSearchParseException {
+    public void stringRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.STRING_RANGE_FIELD;
         final String lowerInclusion = "{";
         final String lowerValue = "harrypotter";
         final String upperValue = "starwars";
         final String upperInclusion = "}";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        parser.parse(term);
+        parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
     }
 
     @SuppressWarnings("unchecked")
     @Test
     @Purpose("Tests queries like altitude:{90 TO 120}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerRangeExclusiveTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerRangeExclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_FIELD;
         final String lowerInclusion = "{";
         final Integer lowerValue = 90;
         final Integer upperValue = 120;
         final String upperInclusion = "}";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -316,14 +328,14 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:[90 TO 120]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerRangeInclusiveTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerRangeInclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_FIELD;
         final String lowerInclusion = "[";
         final Integer lowerValue = 0;
         final Integer upperValue = 2;
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -340,14 +352,14 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like bpm:{128.0 TO 145]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void doubleRangeSemiInclusiveTest() throws QueryNodeException, OpenSearchParseException {
+    public void doubleRangeSemiInclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.DOUBLE_RANGE_FIELD;
         final String lowerInclusion = "{";
         final Double lowerValue = 128d;
         final Double upperValue = 145d;
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -364,14 +376,14 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like distance:{0 TO 88]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void longRangeTest() throws QueryNodeException, OpenSearchParseException {
+    public void longRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LONG_RANGE_FIELD;
         final String lowerInclusion = "{";
         final Long lowerValue = 0L;
         final Long upperValue = 88L;
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -387,14 +399,14 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:[2007-12-03T10:15:30 TO 2007-12-03T11:15:30]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeRangeTest() throws QueryNodeException, OpenSearchParseException {
+    public void localDateTimeRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
         final String lowerInclusion = "{";
         final LocalDateTime lowerValue = LocalDateTime.now().minusHours(1);
         final LocalDateTime upperValue = LocalDateTime.now();
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof DateRangeCriterion);
@@ -412,11 +424,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{* TO 2007-12-03T10:15:30}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeLtTest() throws QueryNodeException, OpenSearchParseException {
+    public void localDateTimeLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
         final LocalDateTime upperValue = LocalDateTime.now();
         final String term = field + ":{ * TO " + upperValue + "}";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -432,11 +444,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{* TO 2007-12-03T10:15:30]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeLeTest() throws QueryNodeException, OpenSearchParseException {
+    public void localDateTimeLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
         final LocalDateTime upperValue = LocalDateTime.now();
         final String term = field + ":{ * TO " + upperValue + "]";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -452,11 +464,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{2007-12-03T10:15:30 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeGtTest() throws QueryNodeException, OpenSearchParseException {
+    public void localDateTimeGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
         final LocalDateTime lowerValue = LocalDateTime.now();
         final String term = field + ":{" + lowerValue + " TO *}";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -472,11 +484,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:[2007-12-03T10:15:30 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeGeTest() throws QueryNodeException, OpenSearchParseException {
+    public void localDateTimeGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
         final LocalDateTime lowerValue = LocalDateTime.now();
         final String term = field + ":[ " + lowerValue + " TO *}";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -493,11 +505,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{* TO 1}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerLtTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_FIELD;
         final Integer upperValue = 1;
         final String term = field + ":{ * TO " + upperValue + "}";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -513,11 +525,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{* TO 1]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerLeTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_FIELD;
         final Integer upperValue = 1;
         final String term = field + ":{ * TO " + upperValue + "]";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -533,11 +545,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{1 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerGtTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_FIELD;
         final Integer lowerValue = 1;
         final String term = field + ":{" + lowerValue + " TO *}";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -553,11 +565,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:[1 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerGeTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_FIELD;
         final Integer lowerValue = 1;
         final String term = field + ":[ " + lowerValue + " TO *}";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -572,11 +584,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like (title:harrypotter)")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void parenthesisAroundAllTest() throws QueryNodeException, OpenSearchParseException {
+    public void parenthesisAroundAllTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.STRING_FIELD;
         final String value = "harrypotter";
         final String term = "(" + field + ":" + value + ")";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -589,10 +601,10 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like title:(harrypotter OR starwars)")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void parenthesisAroundOrTest() throws QueryNodeException, OpenSearchParseException {
+    public void parenthesisAroundOrTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.STRING_FIELD;
         final String term = field + ":(harrypotter OR starwars)";
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof OrCriterion);
@@ -601,11 +613,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like cast:danielradcliffe")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void stringArrayTest() throws QueryNodeException, OpenSearchParseException {
+    public void stringArrayTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.STRING_ARRAY_FIELD;
         final String value = "danielradcliffe";
         final String term = field + ":" + value;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
@@ -618,11 +630,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like years:2001")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void integerArrayTest() throws QueryNodeException, OpenSearchParseException {
+    public void integerArrayTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.INTEGER_ARRAY_FIELD;
         final Integer value = 2001;
         final String term = field + ":" + value;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof IntMatchCriterion);
@@ -636,11 +648,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like duration:159")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void doubleArrayTest() throws QueryNodeException, OpenSearchParseException {
+    public void doubleArrayTest() throws OpenSearchParseException {
         final String field = SampleDataUtils.DOUBLE_ARRAY_FIELD;
         final Double value = 159d;
         final String term = field + ":" + value;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
@@ -657,14 +669,14 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like releases:[2001-11-04T00:00:00 TO 2001-11-16T23:59:59]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void containsDateBetweenTest() throws QueryNodeException, OpenSearchParseException {
+    public void containsDateBetweenTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_ARRAY;
         final LocalDateTime lowerValue = LocalDateTime.parse("2001-11-04T00:00:00");
         final LocalDateTime upperValue = LocalDateTime.parse("2001-11-16T23:59:59");
         final String lowerInclusion = "[";
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof DateRangeCriterion);
@@ -681,9 +693,9 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like tags:plop AND tags:(A\\:A OR B\\:B OR C\\:C)")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void handlesSmallRealLifeQuery() throws QueryNodeException, OpenSearchParseException {
+    public void handlesSmallRealLifeQuery() throws OpenSearchParseException, UnsupportedEncodingException {
         final String term = SampleDataUtils.SMALL_REAL_LIFE_QUERY;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof AndCriterion);
@@ -696,9 +708,9 @@ public class QueryParserTest {
 
     @Test
     @Purpose("Checks that escaping special characters is not needed when using double quotes")
-    public void escapingNotNeededWhenDoubleQuotes() throws QueryNodeException, OpenSearchParseException {
+    public void escapingNotNeededWhenDoubleQuotes() throws OpenSearchParseException, UnsupportedEncodingException {
         final String term = SampleDataUtils.UNESCAPED_QUERY_WITH_DOUBLE_QUOTES_AND_CHARS_TO_ESCAPE;
-        final ICriterion criterion = parser.parse(term);
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof StringMatchCriterion);
