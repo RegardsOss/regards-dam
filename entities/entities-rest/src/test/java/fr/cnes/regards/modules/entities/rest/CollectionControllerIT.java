@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -36,6 +37,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @TestPropertySource(locations = { "classpath:test.properties" })
 @MultitenantTransactional
+@ContextConfiguration(classes = { ControllerITConfig.class })
 public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     /**

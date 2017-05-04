@@ -328,7 +328,7 @@ public interface ICriterion {
     /**
      * Criterion to test the intersection with a circle giving center coordinates and radius.
      * @param center coordinates of center
-     * @param radius radius eventually with unit (ie "100m" or "5km")
+     * @param radius radius eventually with unit (ie "100m" or "5km"), default to meters
      * @return criterion
      */
     static ICriterion intersectsCircle(Double[] center, String radius) {
