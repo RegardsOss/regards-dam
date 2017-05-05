@@ -5,7 +5,8 @@ package fr.cnes.regards.modules.opensearch.service.queryparser;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +19,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -399,11 +401,11 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:[2007-12-03T10:15:30 TO 2007-12-03T11:15:30]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
+    public void OffsetDateTimeRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
         final String lowerInclusion = "{";
-        final LocalDateTime lowerValue = LocalDateTime.now().minusHours(1);
-        final LocalDateTime upperValue = LocalDateTime.now();
+        final OffsetDateTime lowerValue = OffsetDateTime.now().minusHours(1);
+        final OffsetDateTime upperValue = OffsetDateTime.now();
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -413,10 +415,10 @@ public class QueryParserTest {
         final DateRangeCriterion crit = (DateRangeCriterion) criterion;
 
         Assert.assertEquals(field, crit.getName());
-        final Set<ValueComparison<LocalDateTime>> expectedValueComparisons = new HashSet<>();
+        final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons
-                .add(new ValueComparison<LocalDateTime>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
-        expectedValueComparisons.add(new ValueComparison<LocalDateTime>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
+                .add(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
+        expectedValueComparisons.add(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
@@ -424,19 +426,19 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{* TO 2007-12-03T10:15:30}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
+    public void OffsetDateTimeLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
-        final LocalDateTime upperValue = LocalDateTime.now();
+        final OffsetDateTime upperValue = OffsetDateTime.now();
         final String term = field + ":{ * TO " + upperValue + "}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
-        final RangeCriterion<LocalDateTime> crit = (RangeCriterion<LocalDateTime>) criterion;
+        final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
         Assert.assertEquals(field, crit.getName());
-        final Set<ValueComparison<LocalDateTime>> expectedValueComparisons = new HashSet<>();
-        expectedValueComparisons.add(new ValueComparison<LocalDateTime>(ComparisonOperator.LESS, upperValue));
+        final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
+        expectedValueComparisons.add(new ValueComparison<OffsetDateTime>(ComparisonOperator.LESS, upperValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
@@ -444,19 +446,19 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{* TO 2007-12-03T10:15:30]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
+    public void OffsetDateTimeLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
-        final LocalDateTime upperValue = LocalDateTime.now();
+        final OffsetDateTime upperValue = OffsetDateTime.now();
         final String term = field + ":{ * TO " + upperValue + "]";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
-        final RangeCriterion<LocalDateTime> crit = (RangeCriterion<LocalDateTime>) criterion;
+        final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
         Assert.assertEquals(field, crit.getName());
-        final Set<ValueComparison<LocalDateTime>> expectedValueComparisons = new HashSet<>();
-        expectedValueComparisons.add(new ValueComparison<LocalDateTime>(ComparisonOperator.LESS_OR_EQUAL, upperValue));
+        final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
+        expectedValueComparisons.add(new ValueComparison<OffsetDateTime>(ComparisonOperator.LESS_OR_EQUAL, upperValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
@@ -464,19 +466,19 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{2007-12-03T10:15:30 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
+    public void OffsetDateTimeGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
-        final LocalDateTime lowerValue = LocalDateTime.now();
+        final OffsetDateTime lowerValue = OffsetDateTime.now();
         final String term = field + ":{" + lowerValue + " TO *}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
-        final RangeCriterion<LocalDateTime> crit = (RangeCriterion<LocalDateTime>) criterion;
+        final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
         Assert.assertEquals(field, crit.getName());
-        final Set<ValueComparison<LocalDateTime>> expectedValueComparisons = new HashSet<>();
-        expectedValueComparisons.add(new ValueComparison<LocalDateTime>(ComparisonOperator.GREATER, lowerValue));
+        final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
+        expectedValueComparisons.add(new ValueComparison<OffsetDateTime>(ComparisonOperator.GREATER, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
@@ -484,20 +486,20 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:[2007-12-03T10:15:30 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void localDateTimeGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
+    public void OffsetDateTimeGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_FIELD;
-        final LocalDateTime lowerValue = LocalDateTime.now();
+        final OffsetDateTime lowerValue = OffsetDateTime.now();
         final String term = field + ":[ " + lowerValue + " TO *}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof RangeCriterion);
-        final RangeCriterion<LocalDateTime> crit = (RangeCriterion<LocalDateTime>) criterion;
+        final RangeCriterion<OffsetDateTime> crit = (RangeCriterion<OffsetDateTime>) criterion;
 
         Assert.assertEquals(field, crit.getName());
-        final Set<ValueComparison<LocalDateTime>> expectedValueComparisons = new HashSet<>();
+        final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons
-                .add(new ValueComparison<LocalDateTime>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
+                .add(new ValueComparison<OffsetDateTime>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 
@@ -671,8 +673,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void containsDateBetweenTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_ARRAY;
-        final LocalDateTime lowerValue = LocalDateTime.parse("2001-11-04T00:00:00");
-        final LocalDateTime upperValue = LocalDateTime.parse("2001-11-16T23:59:59");
+        final OffsetDateTime lowerValue = OffsetDateTimeAdapter.parse("2001-11-04T00:00:00");
+        final OffsetDateTime upperValue = OffsetDateTimeAdapter.parse("2001-11-16T23:59:59");
         final String lowerInclusion = "[";
         final String upperInclusion = "]";
         final String term = field + ":" + lowerInclusion + lowerValue + " TO " + upperValue + upperInclusion;
@@ -683,10 +685,10 @@ public class QueryParserTest {
         final DateRangeCriterion crit = (DateRangeCriterion) criterion;
 
         Assert.assertEquals(field, crit.getName());
-        final Set<ValueComparison<LocalDateTime>> expectedValueComparisons = new HashSet<>();
+        final Set<ValueComparison<OffsetDateTime>> expectedValueComparisons = new HashSet<>();
         expectedValueComparisons
-                .add(new ValueComparison<LocalDateTime>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
-        expectedValueComparisons.add(new ValueComparison<LocalDateTime>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
+                .add(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, lowerValue));
+        expectedValueComparisons.add(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, lowerValue));
         Assert.assertEquals(expectedValueComparisons, crit.getValueComparisons());
     }
 

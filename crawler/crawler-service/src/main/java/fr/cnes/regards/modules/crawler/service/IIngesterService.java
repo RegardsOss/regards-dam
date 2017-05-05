@@ -11,9 +11,9 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
  */
 public interface IIngesterService {
 
-    public void manage();
+    void manage();
 
-    public void updateAndCleanTenantDatasourceIngestions(String tenant);
+    void updateAndCleanTenantDatasourceIngestions(String tenant);
 
-    public Optional<DatasourceIngestion> pickAndStartDatasourceIngestion(String tenant);
+    Optional<DatasourceIngestion> pickAndStartDatasourceIngestion(String tenant);
 }

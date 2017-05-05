@@ -4,18 +4,12 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,17 +26,14 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
-import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
-import fr.cnes.regards.modules.crawler.service.ds.ExternalData2;
-import fr.cnes.regards.modules.crawler.service.ds.ExternalData2Repository;
-import fr.cnes.regards.modules.crawler.service.ds.ExternalData3;
-import fr.cnes.regards.modules.crawler.service.ds.ExternalData3Repository;
-import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
+import fr.cnes.regards.modules.crawler.service.ds.*;
 import fr.cnes.regards.modules.crawler.test.IngesterConfiguration;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
@@ -316,7 +307,7 @@ public class IngesterServiceIT {
         // ExternalData has a Date not a DateTime so its creation date will be available tomorrow, not today
         Assert.assertTrue(dsIngestions.stream().allMatch(dsIngest -> dsIngest.getSavedObjectsCount() == 0));
 
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         ExternalData2 data2_0 = new ExternalData2(now);
         extData2Repos.save(data2_0);
         ExternalData3 data3_0 = new ExternalData3(now);

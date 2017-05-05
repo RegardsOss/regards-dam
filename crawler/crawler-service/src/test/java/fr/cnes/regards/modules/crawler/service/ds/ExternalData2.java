@@ -1,13 +1,10 @@
 package fr.cnes.regards.modules.crawler.service.ds;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 
 /**
  * External Datasource data.<br/>
@@ -25,12 +22,13 @@ public class ExternalData2 {
     private Long id;
 
     @Column
-    private LocalDateTime date;
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
+    private OffsetDateTime date;
 
     public ExternalData2() {
     }
 
-    public ExternalData2(LocalDateTime pDate) {
+    public ExternalData2(OffsetDateTime pDate) {
         date = pDate;
     }
 
@@ -42,11 +40,11 @@ public class ExternalData2 {
         id = pId;
     }
 
-    public LocalDateTime getDate() {
+    public OffsetDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDateTime pDate) {
+    public void setDate(OffsetDateTime pDate) {
         date = pDate;
     }
 
