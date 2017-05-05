@@ -19,6 +19,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.vividsolutions</groupId>
+			<artifactId>jts</artifactId>
+		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
@@ -38,13 +42,14 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>6.3.0</version>
 		</dependency>
-		<dependency> 
-			<groupId>fr.cnes.regards.framework</groupId> 
-			<artifactId>hateoas-regards-starter</artifactId> 
-		</dependency> 
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards-starter</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>module-regards</artifactId>
 		</dependency>
 	</dependencies>
+
 </project>
