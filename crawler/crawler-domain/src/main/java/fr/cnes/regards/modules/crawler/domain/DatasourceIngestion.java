@@ -4,14 +4,11 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.hibernate.annotations.Type;
+
+import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 
 /**
  * Datasource ingestion entity. Indicates the status of the last and current datsource ingestion.
@@ -32,12 +29,14 @@ public class DatasourceIngestion {
      * Date of last ingestion (null if none yet)
      */
     @Column(name = "last_ingest_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime lastIngestDate;
 
     /**
      * Date of next planned ingest date (= last ingest date + refresh rate of datasource plugin)
      */
     @Column(name = "next_planned_ingest_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime nextPlannedIngestDate;
 
     /**
@@ -51,6 +50,7 @@ public class DatasourceIngestion {
      * Date of status change (default to object creation with NEW status if nothing provided)
      */
     @Column(name = "status_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime statusDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
 
     /**
@@ -102,7 +102,7 @@ public class DatasourceIngestion {
 
     public void setStatus(IngestionStatus pStatus) {
         status = pStatus;
-        statusDate = OffsetDateTime.now().withOffsetSameLocal(ZoneOffset.UTC);
+        statusDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
     }
 
     public OffsetDateTime getStatusDate() {

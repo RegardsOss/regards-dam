@@ -69,7 +69,7 @@ class TermRangeQueryNodeFacade {
     }
 
     /**
-     * @return the lower bound parsed as {@link LocalDateTime}
+     * @return the lower bound parsed as {@link OffsetDateTime}
      */
     public OffsetDateTime getLowerBoundAsDateTime() {
         return OffsetDateTimeAdapter.parse(lowerBound);
@@ -104,7 +104,7 @@ class TermRangeQueryNodeFacade {
     }
 
     /**
-     * @return the upper bound parsed as {@link LocalDateTime}
+     * @return the upper bound parsed as {@link OffsetDateTime}
      */
     public OffsetDateTime getUpperBoundAsDateTime() {
         return OffsetDateTimeAdapter.parse(upperBound);

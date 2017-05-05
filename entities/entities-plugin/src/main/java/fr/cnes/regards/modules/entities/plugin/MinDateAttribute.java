@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.plugin;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.Set;
