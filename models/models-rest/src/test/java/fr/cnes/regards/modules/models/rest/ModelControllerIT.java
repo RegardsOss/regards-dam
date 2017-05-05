@@ -81,7 +81,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isBadRequest());
+        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
 
         performDefaultPost(ModelController.TYPE_MAPPING, model, expectations, "Empty model shouldn't be created.");
     }
