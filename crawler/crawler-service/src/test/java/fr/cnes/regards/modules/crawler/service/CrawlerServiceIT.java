@@ -4,7 +4,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -293,7 +293,7 @@ public class CrawlerServiceIT {
         Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
 
         crawlerService.startWork();
-        LocalDateTime suppressDate = LocalDateTime.now();
+        OffsetDateTime suppressDate = OffsetDateTime.now();
         collService.delete(coll1.getId());
         dsService.delete(dataset1.getId());
 
@@ -308,7 +308,7 @@ public class CrawlerServiceIT {
         Assert.assertNull(ds1Bis);
 
         // Check DeletedEntity has been created into database
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         Optional<DeletedEntity> deletedEntityOpt = deletedEntityRepository.findOneByIpId(coll1.getIpId());
         Assert.assertTrue(deletedEntityOpt.isPresent());
         DeletedEntity deletedEntity = deletedEntityOpt.get();

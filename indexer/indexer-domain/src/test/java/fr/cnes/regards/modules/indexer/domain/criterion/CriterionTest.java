@@ -1,9 +1,12 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,8 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 
 // CHECKSTYLE:OFF
 public class CriterionTest {
@@ -63,8 +65,8 @@ public class CriterionTest {
         ICriterion numericAndCriterion = ICriterion.and(numericCritList);
 
         // All theses criterions (AND)
-        ICriterion rootCrit = ICriterion.and(containsCrit, endsWithCrit, startsWithCrit, equalsCrit,
-                                             numericAndCriterion);
+        ICriterion rootCrit = ICriterion
+                .and(containsCrit, endsWithCrit, startsWithCrit, equalsCrit, numericAndCriterion);
 
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
     }
@@ -72,27 +74,28 @@ public class CriterionTest {
     @Test
     public void test2() throws IOException {
         final String RESULT = "(ALL) OR (attributes.alwaysTrue IS TRUE) OR (attributes.alwaysFalse IS FALSE) OR "
-                + "(attributes.creationDate ∈ { x / { x ≥ 2017-01-01T00:00:00, x ≤ 2017-12-31T23:59:59 })";
+                + "(attributes.creationDate ∈ { x / { x ≥ 2017-01-01T00:00:00Z, x ≤ 2017-12-31T23:59:59Z })";
 
         ICriterion rootCrit = ICriterion.or(ICriterion.all(), ICriterion.isTrue("attributes.alwaysTrue"),
-                                            ICriterion.isFalse("attributes.alwaysFalse"),
-                                            ICriterion.between("attributes.creationDate",
-                                                               LocalDateTime.of(2017, 1, 1, 0, 0), LocalDateTime
-                                                                       .of(2017, 12, 31, 23, 59, 59)));
+                                            ICriterion.isFalse("attributes.alwaysFalse"), ICriterion
+                                                    .between("attributes.creationDate",
+                                                             OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                                             OffsetDateTime
+                                                                     .of(2017, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC)));
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
     }
 
     @Test
     public void test3() throws IOException {
-        final String RESULT = "(att.creationDate ∈ { x / { x > 2010-01-01T00:00:00 }) OR (att.updateDate ∈ "
-                + "{ x / { x ≥ 2010-01-01T00:00:00 }) OR (att.deleteDate ∈ { x / { x < 2018-01-01T00:00:00 })"
-                + " OR (att.deleteDate ∈ { x / { x ≤ 2017-12-31T23:59:59 })";
+        final String RESULT = "(att.creationDate ∈ { x / { x > 2010-01-01T00:00:00Z }) OR (att.updateDate ∈ "
+                + "{ x / { x ≥ 2010-01-01T00:00:00Z }) OR (att.deleteDate ∈ { x / { x < 2018-01-01T00:00:00Z })"
+                + " OR (att.deleteDate ∈ { x / { x ≤ 2017-12-31T23:59:59Z })";
         ICriterion rootCrit = ICriterion
-                .or(ICriterion.gt("att.creationDate", LocalDateTime.of(2010, 1, 1, 0, 0)),
-                    ICriterion.ge("att.updateDate", LocalDateTime.of(2010, 1, 1, 0, 0)),
-                    ICriterion.lt("att.deleteDate", LocalDateTime.of(2018, 1, 1, 0, 0)),
-                    ICriterion.le("att.deleteDate", LocalDateTime.of(2017, 12, 31, 23, 59, 59)));
+                .or(ICriterion.gt("att.creationDate", OffsetDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)),
+                    ICriterion.ge("att.updateDate", OffsetDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)),
+                    ICriterion.lt("att.deleteDate", OffsetDateTime.of(2018, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)),
+                    ICriterion.le("att.deleteDate", OffsetDateTime.of(2017, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC)));
 
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
@@ -102,12 +105,14 @@ public class CriterionTest {
     public void test4() throws IOException {
         final String RESULT = "((att.id == 1) OR (att.id == 2) OR (att.id == 3) OR (att.id == 4) OR (att.id == 5)) "
                 + "OR (att.ints == 3) OR (att.doubles ∈ { x / x ≥ 3.141582653589793, x ≤ 3.141602653589793 }) OR "
-                + "(att.dates ∈ { x / { x ≥ 2010-01-01T00:00:00, x ≤ 2020-01-01T00:00:00 })";
+                + "(att.dates ∈ { x / { x ≥ 2010-01-01T00:00:00Z, x ≤ 2020-01-01T00:00:00Z })";
         ICriterion rootCrit = ICriterion
                 .or(Lists.newArrayList(ICriterion.in("att.id", 1, 2, 3, 4, 5), ICriterion.contains("att.ints", 3),
                                        ICriterion.contains("att.doubles", Math.PI, 1e-5), ICriterion
-                                               .containsDateBetween("att.dates", LocalDateTime.of(2010, 1, 1, 0, 0),
-                                                                    LocalDateTime.of(2020, 1, 1, 0, 0))));
+                                               .containsDateBetween("att.dates", OffsetDateTime
+                                                       .of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC), OffsetDateTime
+                                                                            .of(2020, 1, 1, 0, 0, 0, 0,
+                                                                                ZoneOffset.UTC))));
 
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
@@ -127,10 +132,11 @@ public class CriterionTest {
     @Test
     public void test6() throws IOException {
         final String RESULT = "((att.intRange.lowerBound ∈ { x / x ≤ 12 }) AND (att.intRange.upperBound ∈ "
-                + "{ x / x ≥ 12 })) OR ((att.dateRange.lowerBound ∈ { x / { x ≤ 2020-01-01T00:00:00 }) AND "
-                + "(att.dateRange.upperBound ∈ { x / { x ≥ 2010-01-01T00:00:00 }))";
+                + "{ x / x ≥ 12 })) OR ((att.dateRange.lowerBound ∈ { x / { x ≤ 2020-01-01T00:00:00Z }) AND "
+                + "(att.dateRange.upperBound ∈ { x / { x ≥ 2010-01-01T00:00:00Z }))";
         ICriterion rootCrit = ICriterion.or(ICriterion.into("att.intRange", 12), ICriterion
-                .intersects("att.dateRange", LocalDateTime.of(2010, 1, 1, 0, 0), LocalDateTime.of(2020, 1, 1, 0, 0)));
+                .intersects("att.dateRange", OffsetDateTime.of(2010, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                            OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
 
         ICriterionVisitor<String> visitor = new TestCriterionVisitor();
         Assert.assertEquals(RESULT, rootCrit.accept(visitor));
@@ -180,8 +186,8 @@ public class CriterionTest {
 
         @Override
         public String visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
-            return pCriterion.getName() + " IN "
-                    + Arrays.stream(pCriterion.getValue()).collect(Collectors.joining("\", \"", "(\"", "\")"));
+            return pCriterion.getName() + " IN " + Arrays.stream(pCriterion.getValue())
+                    .collect(Collectors.joining("\", \"", "(\"", "\")"));
         }
 
         @Override
@@ -219,7 +225,7 @@ public class CriterionTest {
             buf.append(" ∈ { x / ");
             // for all comparisons
             String ranges = pCriterion.getValueComparisons().stream()
-                    .sorted((a, b) -> a.getValue().compareTo(b.getValue())).map(valueComp -> {
+                    .sorted(Comparator.comparing(ValueComparison::getValue)).map(valueComp -> {
                         String op;
                         switch (valueComp.getOperator()) {
                             case GREATER:
@@ -237,7 +243,7 @@ public class CriterionTest {
                             default:
                                 op = "";
                         }
-                        return op + LocalDateTimeAdapter.format(valueComp.getValue());
+                        return op + OffsetDateTimeAdapter.format(valueComp.getValue());
                     }).collect(Collectors.joining(", ", "{ ", " }"));
             buf.append(ranges);
             return buf.toString();

@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -70,25 +70,25 @@ public interface ICriterion {
         return crit;
     }
 
-    static ICriterion gt(String pAttName, LocalDateTime pDate) {
+    static ICriterion gt(String pAttName, OffsetDateTime pDate) {
         DateRangeCriterion crit = new DateRangeCriterion(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER, pDate));
         return crit;
     }
 
-    static ICriterion ge(String pAttName, LocalDateTime pDate) {
+    static ICriterion ge(String pAttName, OffsetDateTime pDate) {
         DateRangeCriterion crit = new DateRangeCriterion(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pDate));
         return crit;
     }
 
-    static ICriterion lt(String pAttName, LocalDateTime pDate) {
+    static ICriterion lt(String pAttName, OffsetDateTime pDate) {
         DateRangeCriterion crit = new DateRangeCriterion(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS, pDate));
         return crit;
     }
 
-    static ICriterion le(String pAttName, LocalDateTime pDate) {
+    static ICriterion le(String pAttName, OffsetDateTime pDate) {
         DateRangeCriterion crit = new DateRangeCriterion(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pDate));
         return crit;
@@ -225,7 +225,7 @@ public interface ICriterion {
      * @param pUpperDate inclusive upper bound
      * @return criterion
      */
-    static ICriterion containsDateBetween(String pAttName, LocalDateTime pLowerDate, LocalDateTime pUpperDate) {
+    static ICriterion containsDateBetween(String pAttName, OffsetDateTime pLowerDate, OffsetDateTime pUpperDate) {
         return ICriterion.between(pAttName, pLowerDate, pUpperDate);
     }
 
@@ -279,7 +279,7 @@ public interface ICriterion {
      * @param pUpper inclusive upper bound
      * @return criterion
      */
-    static ICriterion between(String pAttName, LocalDateTime pLower, LocalDateTime pUpper) {
+    static ICriterion between(String pAttName, OffsetDateTime pLower, OffsetDateTime pUpper) {
         DateRangeCriterion crit = new DateRangeCriterion(pAttName);
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pLower));
         crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pUpper));
@@ -319,7 +319,7 @@ public interface ICriterion {
      * @param pUpperBound upper bound
      * @return criterion
      */
-    static ICriterion intersects(String pAttName, LocalDateTime pLowerBound, LocalDateTime pUpperBound) {
+    static ICriterion intersects(String pAttName, OffsetDateTime pLowerBound, OffsetDateTime pUpperBound) {
         return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pUpperBound),
                               ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
     }
@@ -328,7 +328,7 @@ public interface ICriterion {
     /**
      * Criterion to test the intersection with a circle giving center coordinates and radius.
      * @param center coordinates of center
-     * @param radius radius eventually with unit (ie "100m" or "5km")
+     * @param radius radius eventually with unit (ie "100m" or "5km"), default to meters
      * @return criterion
      */
     static ICriterion intersectsCircle(Double[] center, String radius) {
@@ -337,7 +337,7 @@ public interface ICriterion {
 
     /**
      * Criterion to test the intersection with a polygon
-     * @param center coordinates of polygon
+     * @param coordinates coordinates of polygon
      * @return criterion
      */
     static ICriterion intersectsPolygon(Double[][][] coordinates) {

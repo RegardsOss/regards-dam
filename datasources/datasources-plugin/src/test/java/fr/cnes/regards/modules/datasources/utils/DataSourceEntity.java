@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,6 +21,7 @@ import javax.persistence.Table;
 import org.hibernate.validator.constraints.NotBlank;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 
 /**
@@ -60,6 +62,7 @@ public class DataSourceEntity implements IIdentifiable<Long> {
 
     private LocalDateTime timeStampWithoutTimeZone; // Types.TIMESTAMP
 
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime timeStampWithTimeZone; // Types.TIMESTAMP or Types.TIMESTAMP_WITH_TIMEZONE > JDBC 4.2
 
     private Boolean update;

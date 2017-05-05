@@ -41,7 +41,10 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
+ * Rest controller managing {@link Dataset}s
+ *
  * @author Sylvain Vissiere-Guerinet
+ * @author Xavier-Alexandre Brochard
  */
 @RestController
 @RequestMapping(value = DatasetController.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -66,7 +69,6 @@ public class DatasetController implements IResourceController<Dataset> {
     private IDatasetService service;
 
     @RequestMapping(method = RequestMethod.POST)
-    @ResponseBody
     @ResourceAccess(description = "create and send the dataset")
     public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") Dataset pDataset,
             @RequestPart("file") MultipartFile descriptionFile, BindingResult pResult)
@@ -80,7 +82,6 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    @ResponseBody
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
     public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(final Pageable pPageable,
             final PagedResourcesAssembler<Dataset> pAssembler) {
@@ -92,7 +93,6 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
-    @ResponseBody
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException {
@@ -105,7 +105,6 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
-    @ResponseBody
     @ResourceAccess(description = "Deletes a dataset")
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDatasetId)
             throws EntityNotFoundException {
@@ -114,11 +113,9 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
-    @ResponseBody
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException {
-
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
 
@@ -136,7 +133,6 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
-    @ResponseBody
     @ResourceAccess(description = "Dissociate a list of entities from a dataset")
     public ResponseEntity<Resource<Dataset>> dissociateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Set<UniformResourceName> pToBeDissociated) throws ModuleException {
@@ -154,7 +150,6 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
-    @ResponseBody
     @ResourceAccess(description = "associate the list of entities to the dataset")
     public ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {

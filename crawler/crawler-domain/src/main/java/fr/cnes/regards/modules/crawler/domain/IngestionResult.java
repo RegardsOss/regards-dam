@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.crawler.domain;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * Ingestion result summary
@@ -8,21 +9,21 @@ import java.time.LocalDateTime;
  */
 public class IngestionResult {
 
-    private LocalDateTime date;
+    private OffsetDateTime date;
 
     private int savedObjectsCount = 0;
 
-    public IngestionResult(LocalDateTime pDate, int pSaveObjectsCount) {
+    public IngestionResult(OffsetDateTime pDate, int pSaveObjectsCount) {
         super();
         date = pDate;
         savedObjectsCount = pSaveObjectsCount;
     }
 
-    public LocalDateTime getDate() {
+    public OffsetDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDateTime pDate) {
+    public void setDate(OffsetDateTime pDate) {
         date = pDate;
     }
 

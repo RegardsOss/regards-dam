@@ -7,18 +7,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.time.OffsetDateTime;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -76,19 +66,14 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.*;
 
 /**
  * Elasticsearch repository implementation
@@ -552,7 +537,7 @@ public class EsRepository implements IEsRepository {
      * Add sort to the request
      *
      * @param request search request
-     * @param pAscSortMap map(attribute name, true if ascending)
+     * @param pSort map(attribute name, true if ascending)
      */
     private void manageSortRequest(String pIndex, SearchRequestBuilder request, Sort pSort) {
         // Convert Sort into linked hash map
@@ -718,9 +703,9 @@ public class EsRepository implements IEsRepository {
             case DATE: {
                 org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
-                Map<com.google.common.collect.Range<LocalDateTime>, Long> valueMap = new LinkedHashMap<>();
+                Map<com.google.common.collect.Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
                 for (Bucket bucket : dateRange.getBuckets()) {
-                    Range<LocalDateTime> valueRange;
+                    Range<OffsetDateTime> valueRange;
                     // Case with no value : every bucket has a NaN value (as from, to or both)
                     if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
                         // If first bucket contains NaN value, it means there are no value at all
@@ -732,13 +717,13 @@ public class EsRepository implements IEsRepository {
                         if (bucket.getToAsString() == null) {
                             valueRange = Range.all();
                         } else { // (-∞ -> value]
-                            valueRange = Range.atMost(LocalDateTimeAdapter.parse(bucket.getToAsString()));
+                            valueRange = Range.atMost(OffsetDateTimeAdapter.parse(bucket.getToAsString()));
                         }
                     } else if (bucket.getToAsString() == null) { // ? -> +∞)
-                        valueRange = Range.greaterThan(LocalDateTimeAdapter.parse(bucket.getFromAsString()));
+                        valueRange = Range.greaterThan(OffsetDateTimeAdapter.parse(bucket.getFromAsString()));
                     } else { // [value -> value)
-                        valueRange = Range.closedOpen(LocalDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                      LocalDateTimeAdapter.parse(bucket.getToAsString()));
+                        valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                      OffsetDateTimeAdapter.parse(bucket.getToAsString()));
                     }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
@@ -755,9 +740,9 @@ public class EsRepository implements IEsRepository {
             String... pFields) {
         try {
             final List<T> results = new ArrayList<>();
-            // LocalDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof LocalDateTime) ?
-                    LocalDateTimeAdapter.format((LocalDateTime) pValue) :
+            // OffsetDateTime must be formatted to be correctly used following Gson mapping
+            Object value = (pValue instanceof OffsetDateTime) ?
+                    OffsetDateTimeAdapter.format((OffsetDateTime) pValue) :
                     pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));

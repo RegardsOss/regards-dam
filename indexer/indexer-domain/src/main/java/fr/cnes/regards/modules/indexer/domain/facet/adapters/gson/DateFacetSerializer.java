@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.indexer.domain.facet.adapters.gson;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -40,10 +41,6 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
 
         private final List<AdaptedFacetValue> values;
 
-        /**
-         * @param pAttributeName
-         * @param pValues
-         */
         public AdaptedFacet(DateFacet pFacet) {
             super();
             attributeName = pFacet.getAttributeName();
@@ -68,12 +65,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
 
         private final String openSearchQuery;
 
-        /**
-         * @param pLowerBound
-         * @param pUpperBound
-         * @param pCount
-         */
-        public AdaptedFacetValue(Entry<Range<LocalDateTime>, Long> pEntry, String pAttributeName) {
+        public AdaptedFacetValue(Entry<Range<OffsetDateTime>, Long> pEntry, String pAttributeName) {
             super();
             lowerBound = pEntry.getKey().lowerEndpoint().toString();
             upperBound = pEntry.getKey().upperEndpoint().toString();

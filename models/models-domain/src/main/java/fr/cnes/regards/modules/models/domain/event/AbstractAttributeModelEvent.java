@@ -19,17 +19,20 @@ public abstract class AbstractAttributeModelEvent implements ISubscribable {
     /**
      * {@link Fragment} name
      */
-    private final String fragmentName;
+    private String fragmentName;
 
     /**
      * {@link AttributeModel} name
      */
-    private final String attributeName;
+    private String attributeName;
 
     /**
      * {@link AttributeType}
      */
-    private final AttributeType attributeType;
+    private AttributeType attributeType;
+
+    public AbstractAttributeModelEvent() {
+    }
 
     public AbstractAttributeModelEvent(AttributeModel pAttributeModel) {
         this.fragmentName = pAttributeModel.getFragment().getName();
@@ -47,6 +50,18 @@ public abstract class AbstractAttributeModelEvent implements ISubscribable {
 
     public String getFragmentName() {
         return fragmentName;
+    }
+
+    public void setFragmentName(String pFragmentName) {
+        fragmentName = pFragmentName;
+    }
+
+    public void setAttributeName(String pAttributeName) {
+        attributeName = pAttributeName;
+    }
+
+    public void setAttributeType(AttributeType pAttributeType) {
+        attributeType = pAttributeType;
     }
 
 }

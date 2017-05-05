@@ -22,7 +22,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -136,7 +136,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         factory.registerSubtype(TENANT, StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
         gsonBuilder.registerTypeAdapterFactory(factory);
-        gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter().nullSafe());
+        gsonBuilder.registerTypeAdapter(LocalDateTime.class, new OffsetDateTimeAdapter().nullSafe());
         gson = gsonBuilder.create();
     }
 

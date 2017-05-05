@@ -24,7 +24,7 @@
 		<module>entities</module>
 		<module>indexer</module>
 		<module>models</module>
-		<module>queryparser</module>
+		<module>opensearch</module>
 	</modules>
 
 </project>

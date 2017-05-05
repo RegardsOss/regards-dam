@@ -54,9 +54,7 @@ public class AccessRightService {
     public Page<AccessRight> retrieveAccessRights(String pAccessGroupName, UniformResourceName pDatasetIpId,
             Pageable pPageable) throws EntityNotFoundException {
         if (pAccessGroupName != null) {
-            Page<AccessRight> page = retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
-            List<AccessRight> content = page.getContent().stream().map(uar -> uar).collect(Collectors.toList());
-            return new PageImpl<>(content, pPageable, page.getTotalElements());
+            return retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
         }
         return retrieveAccessRightsByDataset(pDatasetIpId, pPageable);
     }

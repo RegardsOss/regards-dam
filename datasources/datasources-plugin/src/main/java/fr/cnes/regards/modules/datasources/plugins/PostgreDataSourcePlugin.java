@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 import javax.sql.DataSource;
@@ -88,10 +89,10 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
      */
     protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
-        LocalDateTime ldt;
+        OffsetDateTime date;
 
         if (pAttrMapping.getTypeDS() == null) {
-            ldt = buildLocatDateTime(pRs, pAttrMapping);
+            date = buildOffsetDateTime(pRs, pAttrMapping);
         } else {
             long n;
             Instant instant;
@@ -100,20 +101,20 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
                 case Types.TIME:
                     n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
                     instant = Instant.ofEpochMilli(n);
-                    ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
                     break;
                 case Types.DATE:
                     n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
                     instant = Instant.ofEpochMilli(n);
-                    ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
                     break;
                 default:
-                    ldt = buildLocatDateTime(pRs, pAttrMapping);
+                    date = buildOffsetDateTime(pRs, pAttrMapping);
                     break;
             }
         }
 
-        return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
+        return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
     }
 
     @Override

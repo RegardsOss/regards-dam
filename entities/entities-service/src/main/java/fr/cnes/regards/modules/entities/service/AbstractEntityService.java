@@ -3,19 +3,13 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,26 +23,16 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.*;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -314,7 +298,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * @param pEntityId an AbstractEntity identifier
-     * @param pToAssociate UniformResourceName Set representing AbstractEntity to be associated to pCollection
+     * @param pIpIds UniformResourceName Set representing AbstractEntity to be associated to pCollection
      * @throws EntityNotFoundException
      */
     @Override
@@ -361,7 +345,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // IpIds of entities that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         this.manageGroups(entity, updatedIpIds);
-        entity.setCreationDate(LocalDateTime.now());
+        entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
         entity = getStorageService().storeAIP(entity);
@@ -569,7 +553,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity
-        pEntity.setLastUpdate(LocalDateTime.now());
+        pEntity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         U updated = repository.save(pEntity);
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
@@ -679,7 +663,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
         DeletedEntity delEntity = new DeletedEntity();
         delEntity.setCreationDate(entity.getCreationDate());
-        delEntity.setDeletionDate(LocalDateTime.now());
+        delEntity.setDeletionDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         delEntity.setIpId(entity.getIpId());
         delEntity.setLastUpdate(entity.getLastUpdate());
         return delEntity;

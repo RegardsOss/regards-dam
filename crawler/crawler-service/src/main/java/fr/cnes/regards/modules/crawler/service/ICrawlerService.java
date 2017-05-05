@@ -1,6 +1,6 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.springframework.data.domain.Page;
 
@@ -46,13 +46,13 @@ public interface ICrawlerService {
      * @param date date used for finding objects on datasource (strictly greatest than)
      * @return a summary containing the count of DataObjects ingested from given datasource and the ingestion date
      */
-    IngestionResult ingest(PluginConfiguration pluginConfiguration, LocalDateTime date) throws ModuleException;
+    IngestionResult ingest(PluginConfiguration pluginConfiguration, OffsetDateTime date) throws ModuleException;
 
     /**
      * Transactional method updating a page of datasets
      * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
      */
-    void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, LocalDateTime lastUpdateDate);
+    void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, OffsetDateTime lastUpdateDate);
 
     /**
      * To be used by tests only.

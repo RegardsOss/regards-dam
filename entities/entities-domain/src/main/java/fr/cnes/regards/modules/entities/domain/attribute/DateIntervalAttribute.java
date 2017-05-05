@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.entities.domain.attribute;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import com.google.common.collect.Range;
 import com.google.gson.annotations.JsonAdapter;
@@ -18,7 +19,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  *
  */
 @JsonAdapter(DateIntervalAttributeAdapter.class)
-public class DateIntervalAttribute extends AbstractAttribute<Range<LocalDateTime>> {
+public class DateIntervalAttribute extends AbstractAttribute<Range<OffsetDateTime>> {
 
     @Override
     public boolean represents(AttributeType pAttributeType) {

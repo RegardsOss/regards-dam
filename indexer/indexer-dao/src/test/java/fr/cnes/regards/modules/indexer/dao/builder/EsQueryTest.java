@@ -1,8 +1,9 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -10,38 +11,28 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import org.assertj.core.util.Maps;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import fr.cnes.regards.framework.gson.adapters.LocalDateTimeAdapter;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import fr.cnes.regards.modules.indexer.domain.facet.*;
 
 public class EsQueryTest {
 
@@ -113,15 +104,15 @@ public class EsQueryTest {
         final int[] INTS = IntStream.generate(() -> ai.getAndIncrement()).limit(20).toArray();
         final double[] DOUBLES = { Math.PI, Math.E, Math.sqrt(2), 1.2, 2.3, 5.e24, -0.3e12, 1.54e-12, 1.0,
                 1.1234567891011121314, 0., 0., 0., 0., 0. };
-        LocalDateTime date = LocalDateTime.of(2017, Month.JANUARY, 1, 12, 0);
+        OffsetDateTime date = OffsetDateTime.of(2017, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC);
         AtomicInteger ai2 = new AtomicInteger(0);
-        final LocalDateTime[] DATES = Stream.generate(() -> date.plusDays(ai2.getAndIncrement())).limit(20)
-                .collect(Collectors.toList()).toArray(new LocalDateTime[20]);
+        final OffsetDateTime[] DATES = Stream.generate(() -> date.plusDays(ai2.getAndIncrement())).limit(20)
+                .collect(Collectors.toList()).toArray(new OffsetDateTime[20]);
         List<Item> items = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             // size attribute from 1 to 10
             Properties att = new Properties(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i],
-                                            LocalDateTime.of(2017, Month.JANUARY, 1 + i, 10, 47),
+                                            OffsetDateTime.of(2017, 1, 1 + i, 10, 47, 0, 0, ZoneOffset.UTC),
                                             Arrays.copyOfRange(LOREM_IPSUM, i, i + 10),
                                             Arrays.copyOfRange(INTS, i, i + 10), Arrays.copyOfRange(DOUBLES, i, i + 5),
                                             Arrays.copyOfRange(DATES, i, i + 10));
@@ -145,10 +136,10 @@ public class EsQueryTest {
         final int[] INTS = IntStream.generate(() -> ai.getAndIncrement()).limit(20).toArray();
         final double[] DOUBLES = { Math.PI, Math.E, Math.sqrt(2), 1.2, 2.3, 5.e24, -0.3e12, 1.54e-12, 1.0,
                 1.1234567891011121314, 0., 0., 0., 0., 0. };
-        LocalDateTime date = LocalDateTime.of(2017, Month.JANUARY, 1, 12, 0);
+        OffsetDateTime date = OffsetDateTime.of(2017, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC);
         AtomicInteger ai2 = new AtomicInteger(0);
-        final LocalDateTime[] DATES = Stream.generate(() -> date.plusDays(ai2.getAndIncrement())).limit(20)
-                .collect(Collectors.toList()).toArray(new LocalDateTime[20]);
+        final OffsetDateTime[] DATES = Stream.generate(() -> date.plusDays(ai2.getAndIncrement())).limit(20)
+                .collect(Collectors.toList()).toArray(new OffsetDateTime[20]);
 
         long onlySaveTime = 0l;
 
@@ -156,7 +147,7 @@ public class EsQueryTest {
         for (int i = 0; i < BIG_VOLUME_SIZE; i++) {
             // size attribute from 1 to 10
             Properties att = new Properties(i + 1, (9 - i) + (Math.random() / 10.), STRINGS[i % 10],
-                                            LocalDateTime.of(2017, Month.JANUARY, 1 + (i % 10), 10, 47),
+                                            OffsetDateTime.of(2017, 1, 1 + (i % 10), 10, 47, 0, 0, ZoneOffset.UTC),
                                             Arrays.copyOfRange(LOREM_IPSUM, i % 10, (i % 10) + 10),
                                             Arrays.copyOfRange(INTS, i % 10, (i % 10) + 10),
                                             Arrays.copyOfRange(DOUBLES, i % 10, (i % 10) + 5),
@@ -430,15 +421,15 @@ public class EsQueryTest {
 
         // On Dates
         ICriterion gtDateCriterion = ICriterion
-                .gt("properties.date", LocalDateTime.of(2017, Month.JANUARY, 1, 10, 47, 0));
+                .gt("properties.date", OffsetDateTime.of(2017, 1, 1, 10, 47, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(9, repository.search(searchKey, 10, gtDateCriterion).getContent().size());
         ICriterion geDateCriterion = ICriterion
-                .ge("properties.date", LocalDateTime.of(2017, Month.JANUARY, 1, 10, 47, 0));
+                .ge("properties.date", OffsetDateTime.of(2017, 1, 1, 10, 47, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(10, repository.search(searchKey, 10, geDateCriterion).getContent().size());
 
         ICriterion betweenDateCriterion = ICriterion
-                .between("properties.date", LocalDateTime.of(2017, Month.JANUARY, 2, 10, 47, 0),
-                         LocalDateTime.of(2017, Month.JANUARY, 4, 10, 47, 0));
+                .between("properties.date", OffsetDateTime.of(2017, 1, 2, 10, 47, 0, 0, ZoneOffset.UTC),
+                         OffsetDateTime.of(2017, 1, 4, 10, 47, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(3, repository.search(searchKey, 10, betweenDateCriterion).getContent().size());
 
         // On strings array
@@ -454,12 +445,12 @@ public class EsQueryTest {
         Assert.assertEquals(5, repository.search(searchKey, 10, containsDoubleCrit2).getContent().size());
         // On date array
         ICriterion containsDateCrit = ICriterion
-                .containsDateBetween("properties.dates", LocalDateTime.of(2017, Month.JANUARY, 1, 0, 0),
-                                     LocalDateTime.of(2017, Month.JANUARY, 1, 23, 59, 59, 999));
+                .containsDateBetween("properties.dates", OffsetDateTime.of(2017, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+                                     OffsetDateTime.of(2017, 1, 1, 23, 59, 59, 999999, ZoneOffset.UTC));
         Assert.assertEquals(1, repository.search(searchKey, 10, containsDateCrit).getContent().size());
         ICriterion containsDateCrit2 = ICriterion
-                .containsDateBetween("properties.dates", LocalDateTime.of(2017, Month.JANUARY, 2, 0, 0),
-                                     LocalDateTime.of(2017, Month.JANUARY, 3, 23, 59, 59, 999));
+                .containsDateBetween("properties.dates", OffsetDateTime.of(2017, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC),
+                                     OffsetDateTime.of(2017, 1, 3, 23, 59, 59, 999999, ZoneOffset.UTC));
         Assert.assertEquals(3, repository.search(searchKey, 10, containsDateCrit2).getContent().size());
 
         // On int ranges
@@ -476,21 +467,21 @@ public class EsQueryTest {
 
         // On date ranges
         ICriterion interDatesCrit1 = ICriterion
-                .intersects("properties.dateRange", LocalDateTime.of(2016, Month.JANUARY, 4, 12, 0, 0),
-                            LocalDateTime.of(2018, Month.JANUARY, 4, 12, 0, 0));
+                .intersects("properties.dateRange", OffsetDateTime.of(2016, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC),
+                            OffsetDateTime.of(2018, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(10, repository.search(searchKey, 10, interDatesCrit1).getContent().size());
         ICriterion interDatesCrit2 = ICriterion
-                .intersects("properties.dateRange", LocalDateTime.of(2016, Month.JANUARY, 4, 12, 0, 0),
-                            LocalDateTime.of(2017, Month.JANUARY, 1, 12, 0, 0));
+                .intersects("properties.dateRange", OffsetDateTime.of(2016, 1, 4, 12, 0, 0, 0, ZoneOffset.UTC),
+                            OffsetDateTime.of(2017, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, repository.search(searchKey, 10, interDatesCrit2).getContent().size());
         ICriterion interDatesCrit3 = ICriterion
-                .intersects("properties.dateRange", LocalDateTime.of(2017, Month.JANUARY, 19, 12, 0, 0),
-                            LocalDateTime.of(2018, Month.JANUARY, 1, 12, 0, 0));
+                .intersects("properties.dateRange", OffsetDateTime.of(2017, 1, 19, 12, 0, 0, 0, ZoneOffset.UTC),
+                            OffsetDateTime.of(2018, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, repository.search(searchKey, 10, interDatesCrit3).getContent().size());
 
         ICriterion interDatesCrit4 = ICriterion
-                .intersects("properties.dateRange", LocalDateTime.of(2017, Month.JANUARY, 2, 12, 0, 0),
-                            LocalDateTime.of(2017, Month.JANUARY, 18, 12, 0, 0));
+                .intersects("properties.dateRange", OffsetDateTime.of(2017, 1, 2, 12, 0, 0, 0, ZoneOffset.UTC),
+                            OffsetDateTime.of(2017, 1, 18, 12, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(10, repository.search(searchKey, 10, interDatesCrit4).getContent().size());
 
         // On boolean
@@ -503,10 +494,10 @@ public class EsQueryTest {
                             repository.multiFieldsSearch(searchKey, 10, "Lorem", "properties.text", "properties.tags")
                                     .getContent().size());
         Assert.assertEquals(2, repository
-                .multiFieldsSearch(searchKey, 10, LocalDateTime.of(2017, Month.JANUARY, 10, 12, 0),
+                .multiFieldsSearch(searchKey, 10, OffsetDateTime.of(2017, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC),
                                    "properties.dateRange.*").getContent().size());
         Assert.assertEquals(10, repository
-                .multiFieldsSearch(searchKey, 10, LocalDateTime.of(2017, Month.JANUARY, 10, 12, 0),
+                .multiFieldsSearch(searchKey, 10, OffsetDateTime.of(2017, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC),
                                    "properties.dateRange.*", "properties.dates").getContent().size());
         Assert.assertEquals(1, repository.multiFieldsSearch(searchKey, 10, Math.PI, "properties.double*").getContent()
                 .size());
@@ -557,8 +548,8 @@ public class EsQueryTest {
 
         // With criterions
         ICriterion interDatesCrit4 = ICriterion
-                .intersects("properties.dateRange", LocalDateTime.of(2017, Month.JANUARY, 2, 12, 0, 0),
-                            LocalDateTime.of(2017, Month.JANUARY, 18, 12, 0, 0));
+                .intersects("properties.dateRange", OffsetDateTime.of(2017, 1, 2, 12, 0, 0, 0, ZoneOffset.UTC),
+                            OffsetDateTime.of(2017, 1, 18, 12, 0, 0, 0, ZoneOffset.UTC));
         Map<String, FacetType> facetReqMap = new ImmutableMap.Builder<String, FacetType>()
                 .put("properties.tags", FacetType.STRING).put("properties.ints", FacetType.NUMERIC)
                 .put("properties.dates", FacetType.DATE).build();
@@ -818,17 +809,17 @@ public class EsQueryTest {
         public Properties() {
         }
 
-        public Properties(int pSize, double pWeight, String pText, LocalDateTime pDate, String[] pTags, int[] pInts,
-                double[] pDoubles, LocalDateTime[] pDates) {
+        public Properties(int pSize, double pWeight, String pText, OffsetDateTime pDate, String[] pTags, int[] pInts,
+                double[] pDoubles, OffsetDateTime[] pDates) {
             super();
             size = pSize;
             weight = pWeight;
             text = pText;
-            date = LocalDateTimeAdapter.format(pDate);
+            date = OffsetDateTimeAdapter.format(pDate);
             tags = pTags;
             ints = pInts;
             doubles = pDoubles;
-            dates = Arrays.stream(pDates).map(d -> LocalDateTimeAdapter.format(d)).collect(Collectors.toList())
+            dates = Arrays.stream(pDates).map(d -> OffsetDateTimeAdapter.format(d)).collect(Collectors.toList())
                     .toArray(new String[pDates.length]);
             dateRange = new Range<>();
             dateRange.lowerBound = dates[0];

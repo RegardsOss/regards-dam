@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.crawler.dao;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +19,6 @@ public interface IDatasourceIngestionRepository extends JpaRepository<Datasource
      * and with given status (usually 'STARTED')
      * @return a DatasourceIngestion or nothing
      */
-    Optional<DatasourceIngestion> findTopByNextPlannedIngestDateLessThanAndStatusNot(LocalDateTime limitDate,
+    Optional<DatasourceIngestion> findTopByNextPlannedIngestDateLessThanAndStatusNot(OffsetDateTime limitDate,
             IngestionStatus status);
 }

@@ -1,11 +1,11 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
- * LocalDateTime RangeCriterion specialization
+ * OffsetDateTime RangeCriterion specialization
  */
-public class DateRangeCriterion extends RangeCriterion<LocalDateTime> implements ICriterion {
+public class DateRangeCriterion extends RangeCriterion<OffsetDateTime> implements ICriterion {
 
     protected DateRangeCriterion(String pName) {
         super(pName);

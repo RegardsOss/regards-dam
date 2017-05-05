@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
@@ -13,7 +13,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Marc Sordi
  *
  */
-public class DateArrayAttribute extends AbstractAttribute<LocalDateTime[]> {
+public class DateArrayAttribute extends AbstractAttribute<OffsetDateTime[]> {
 
     @Override
     public boolean represents(AttributeType pAttributeType) {
