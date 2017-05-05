@@ -3,11 +3,15 @@
  */
 package fr.cnes.regards.modules.datasources.domain;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotBlank;
+
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 
 /**
  * @author Christophe Mertz
- *
  */
 public class DBConnection {
 
@@ -19,46 +23,56 @@ public class DBConnection {
     /**
      * The label of the DbConnection
      */
+    @NotBlank
     private String label;
 
     /**
      * The plugin class name that implements the IDBConnectionPlugin interface
      */
+    @NotBlank
     private String pluginClassName;
 
     /**
      * The user to used for the database connection
      */
+    @NotBlank
     private String user;
 
     /**
      * The user's password to used for the database connection
      */
+    @NotBlank
     private String password;
 
     /**
      * The URL to the database's host
      */
+    @NotBlank
     private String dbHost;
 
     /**
      * The PORT to the database's host
      */
+    @NotBlank
     private String dbPort;
 
     /**
      * The NAME of the database
      */
+    @NotBlank
     private String dbName;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
      */
+    @NotNull
     private Integer maxPoolSize;
 
     /**
      * Minimum number of Connections a pool will maintain at any given time.
      */
+    @NotNull
+    @Min(3)
     private Integer minPoolSize;
 
     public Long getPluginConfigurationId() {
