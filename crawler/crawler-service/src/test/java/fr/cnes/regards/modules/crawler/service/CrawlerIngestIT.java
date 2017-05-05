@@ -29,6 +29,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
@@ -134,6 +135,9 @@ public class CrawlerIngestIT {
     private IPluginService pluginService;
 
     @Autowired
+    private IPluginConfigurationRepository puginConfRepos;
+
+    @Autowired
     private IRabbitVirtualHostAdmin rabbitVhostAdmin;
 
     @Autowired
@@ -174,6 +178,7 @@ public class CrawlerIngestIT {
 
         attrAssocRepos.deleteAll();
         entityRepos.deleteAll();
+        puginConfRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
 
@@ -212,7 +217,7 @@ public class CrawlerIngestIT {
     @After
     public void clean() {
         // Don't use entity service to clean because events are published on RabbitMQ
-        if ((dataset != null) && (dataset.getId() != null)) {
+        if (dataset != null) {
             Utils.execute(entityRepos::delete, dataset.getId());
         }
 
