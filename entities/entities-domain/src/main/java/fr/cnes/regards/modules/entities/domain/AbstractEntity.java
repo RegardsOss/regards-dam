@@ -35,6 +35,7 @@ import org.hibernate.annotations.TypeDefs;
 import com.google.gson.annotations.JsonAdapter;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -86,6 +87,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @PastOrNow
     @Column(name = "update_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime lastUpdate;
 
     /**
@@ -94,6 +96,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @PastOrNow
     @NotNull
     @Column(name = "creation_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime creationDate;
 
     /**
