@@ -105,7 +105,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isServiceUnavailable());
+        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConn, expectations,
                            "Empty DBConnection shouldn't be created.");
@@ -326,7 +326,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         dbConnection.setDbHost(dbHost);
         dbConnection.setDbPort(dbPort);
         dbConnection.setDbName(dbName);
-        dbConnection.setMinPoolSize(1);
+        dbConnection.setMinPoolSize(3);
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel(pLabel);
         dbConnection.setPluginClassName(pPluginClassName);
