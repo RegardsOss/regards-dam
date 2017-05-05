@@ -14,6 +14,10 @@
 	</parent>
 
 	<dependencies>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.queryparser</groupId>
+			<artifactId>opensearch-domain</artifactId>
+		</dependency>
 		<!-- COTS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
