@@ -142,13 +142,6 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
             return false;
         }
         Fragment other = (Fragment) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
         if (name == null) {
             if (other.name != null) {
                 return false;
