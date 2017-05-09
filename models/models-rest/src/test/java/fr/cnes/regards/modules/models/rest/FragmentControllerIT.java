@@ -76,7 +76,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isBadRequest());
+        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
 
         performDefaultPost(FragmentController.TYPE_MAPPING, fragment, expectations,
                            "Empty fragment shouldn't be created.");
