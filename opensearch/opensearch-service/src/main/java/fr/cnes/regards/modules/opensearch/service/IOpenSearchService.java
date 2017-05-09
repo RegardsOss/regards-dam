@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.opensearch.service;
 
+import fr.cnes.regards.modules.opensearch.service.parser.IParser;
 
 /**
  * 

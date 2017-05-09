@@ -9,9 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.opensearch.service.aggregator.AndParserAggregator;
+import fr.cnes.regards.modules.opensearch.service.aggregator.IParserAggregator;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
-import fr.cnes.regards.modules.opensearch.service.geoparser.GeoParser;
-import fr.cnes.regards.modules.opensearch.service.queryparser.QueryParser;
+import fr.cnes.regards.modules.opensearch.service.parser.CircleParser;
+import fr.cnes.regards.modules.opensearch.service.parser.GeometryParser;
+import fr.cnes.regards.modules.opensearch.service.parser.IParser;
+import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 
 /**
  * Parses generic OpenSearch requests like <code>q={searchTerms}&lat={geo:lat?}&lon={geo:lon?}&r={geo:radius?}&g=POLYGON((0.582%2040.496%2C%200.231%2040.737%2C%200.736%2042.869%2C%203.351%2042.386%2C%203.263%2041.814%2C%202.164%2041.265%2C%200.978%20%20%2040.957%2C%200.802%2040.781%2C%200.978%2040.649%2C%200.582%2040.496))</code>
@@ -34,11 +38,13 @@ public class OpenSearchService implements IOpenSearchService {
 
     /**
      * @param pQueryParser Parses the "q" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     * @param pGeoParser Parses the "lat"/"lon"/"r"/"g" part of an OpenSearch request. Autowired by Spring. Must not be null.
+     * @param pGeometryParser Parses the "g" part of an OpenSearch request. Autowired by Spring. Must not be null.
+     * @param pCircleParser Parses the "lat"/"lon"/"r" part of an OpenSearch request. Autowired by Spring. Must not be null.
      */
-    public OpenSearchService(@Autowired QueryParser pQueryParser, @Autowired GeoParser pGeoParser) {
+    public OpenSearchService(@Autowired QueryParser pQueryParser, @Autowired GeometryParser pGeometryParser,
+            @Autowired CircleParser pCircleParser) {
         super();
-        parser = AGGREGATOR.aggregate(pQueryParser, pGeoParser);
+        parser = AGGREGATOR.aggregate(pQueryParser, pGeometryParser, pCircleParser);
     }
 
     @Override

@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.modules.queryparser</groupId>
+	<groupId>fr.cnes.regards.modules.opensearch</groupId>
 	<artifactId>opensearch-service</artifactId>
 
 	<parent>
@@ -18,6 +18,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vividsolutions</groupId>
+			<artifactId>jts</artifactId>
 		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
@@ -38,13 +42,14 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>6.3.0</version>
 		</dependency>
-		<dependency> 
-			<groupId>fr.cnes.regards.framework</groupId> 
-			<artifactId>hateoas-regards-starter</artifactId> 
-		</dependency> 
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards-starter</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>module-regards</artifactId>
 		</dependency>
 	</dependencies>
+
 </project>
