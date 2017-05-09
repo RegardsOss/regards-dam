@@ -43,6 +43,9 @@ public class CountElementAttribute extends AbstractFromDataObjectAttributeComput
             description = "Name of the Fragment of the attribute to compute. If the computed attribute belongs to the default fragment, this value can be set to null.")
     protected String attributeToComputeFragmentName;
 
+    /**
+     * Plugin initialization method
+     */
     @PluginInit
     public void init() {
         initAbstract(esRepo, attModelService, tenantResolver);

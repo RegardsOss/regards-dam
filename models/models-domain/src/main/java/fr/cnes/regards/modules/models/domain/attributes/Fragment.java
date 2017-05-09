@@ -127,24 +127,41 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
         return DEFAULT_FRAGMENT_NAME;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
-    public boolean equals(Object pObj) {
-        if (Fragment.class.isInstance(pObj)) {
-            final Fragment f = (Fragment) pObj;
-            if ((f == null) || (f.getName() == null)) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        Fragment other = (Fragment) obj;
+        if (name == null) {
+            if (other.name != null) {
                 return false;
             }
-            return f.getName().equals(name);
+        } else if (!name.equals(other.name)) {
+            return false;
         }
-        return false;
+        return true;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
-        if (name == null) {
-            return 0;
-        }
-        return name.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = (prime * result) + ((id == null) ? 0 : id.hashCode());
+        result = (prime * result) + ((name == null) ? 0 : name.hashCode());
+        return result;
     }
 
     @Override

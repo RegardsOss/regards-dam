@@ -85,11 +85,6 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
      */
     private final String apiAttribute = "/{pAttributeId}";
 
-    /**
-     * Fragment endpoint
-     */
-    private final String fragmentApi = "/fragments/{pFragmentId}";
-
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -313,8 +308,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
 
-        performDefaultPost(ModelAttrAssocController.TYPE_MAPPING + fragmentApi, null, expectations,
-                           "Should bind fragment", mod.getId(), frag.getId());
+        performDefaultPost(ModelAttrAssocController.TYPE_MAPPING + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag,
+                           expectations, "Should bind fragment", mod.getId());
     }
 
     /**
@@ -337,15 +332,15 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         attributeModelService.addAttribute(att);
         attributeModelService.addAttribute(att2);
 
-        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag.getId());
+        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag);
 
         final List<ModelAttrAssoc> modelAttributes = modelAttributeService.getModelAttrAssocs(mod.getId());
 
         List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
-        performDefaultDelete(ModelAttrAssocController.TYPE_MAPPING + fragmentApi, expectations,
-                             "Fragment's attributes should be deleted", mod.getId(), frag.getId());
+        performDefaultDelete(ModelAttrAssocController.TYPE_MAPPING + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING,
+                             expectations, "Fragment's attributes should be deleted", mod.getId(), frag.getId());
 
         expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNotFound());

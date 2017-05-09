@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
@@ -35,11 +36,13 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  *
  */
 @Service
+@MultitenantTransactional
 public class FragmentService implements IFragmentService {
 
     /**
      * Class logger
      */
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(FragmentService.class);
 
     /**
