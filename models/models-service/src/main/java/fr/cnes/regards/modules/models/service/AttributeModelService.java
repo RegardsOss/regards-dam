@@ -42,6 +42,7 @@ import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionEx
  *
  */
 @Service
+@MultitenantTransactional
 public class AttributeModelService implements IAttributeModelService {
 
     /**
@@ -103,7 +104,6 @@ public class AttributeModelService implements IAttributeModelService {
         return (attModels != null) ? Lists.newArrayList(attModels) : Collections.emptyList();
     }
 
-    @MultitenantTransactional
     @Override
     public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
         createAttribute(pAttributeModel);
@@ -116,7 +116,6 @@ public class AttributeModelService implements IAttributeModelService {
         return pAttributeModel;
     }
 
-    @MultitenantTransactional
     @Override
     public Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException {
         if (pAttributeModels != null) {
