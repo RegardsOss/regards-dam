@@ -337,7 +337,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         attributeModelService.addAttribute(att);
         attributeModelService.addAttribute(att2);
 
-        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag.getId());
+        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag);
 
         final List<ModelAttrAssoc> modelAttributes = modelAttributeService.getModelAttrAssocs(mod.getId());
 

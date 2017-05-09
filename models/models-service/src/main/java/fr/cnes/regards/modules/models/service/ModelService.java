@@ -239,10 +239,11 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     @MultitenantTransactional
-    public List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
+    public List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Fragment pFragment) throws ModuleException {
         final List<ModelAttrAssoc> modAtts = new ArrayList<>();
         final Model model = getModel(pModelId);
         final Iterable<ModelAttrAssoc> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
+        final Long pFragmentId = pFragment.getId();
 
         // Check if fragment not already bound
         if (!isBoundFragment(existingModelAtts, pFragmentId)) {

@@ -170,11 +170,11 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      *             if binding cannot be done
      */
     @ResourceAccess(description = "Bind fragment attributes to a model")
-    @RequestMapping(method = RequestMethod.POST, value = "/fragments/{pFragmentId}")
+    @RequestMapping(method = RequestMethod.POST, value = "/fragments")
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable Long pModelId,
-            @PathVariable Long pFragmentId) throws ModuleException {
+         @Valid @RequestBody Fragment pFrament) throws ModuleException {
         return ResponseEntity
-                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFragmentId), pModelId));
+                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFrament), pModelId));
     }
 
     /**

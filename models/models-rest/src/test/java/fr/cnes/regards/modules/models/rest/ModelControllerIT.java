@@ -192,7 +192,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
         attributeModelService.addAttribute(attMod);
 
-        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment().getId());
+        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment());
 
         // Contact fragment
         final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
@@ -202,7 +202,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                 .withPatternRestriction("[0-9 ]{10}");
         attributeModelService.addAttribute(attMod);
 
-        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment().getId());
+        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment());
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
