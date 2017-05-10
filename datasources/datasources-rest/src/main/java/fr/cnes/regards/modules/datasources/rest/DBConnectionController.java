@@ -23,6 +23,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.representation.GenericResponseBody;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.datasources.domain.Column;
@@ -41,7 +42,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @RestController
 // CHECKSTYLE:OFF
-@ModuleInfo(name = "dbconnection", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI", documentation = "http://test")
+@ModuleInfo(name = "dbconnection", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
+        documentation = "http://test")
 // CHECKSTYLE:ON
 @RequestMapping(DBConnectionController.TYPE_MAPPING)
 public class DBConnectionController implements IResourceController<PluginConfiguration> {
@@ -158,8 +160,14 @@ public class DBConnectionController implements IResourceController<PluginConfigu
      */
     @ResourceAccess(description = "Test the connection to the database")
     @RequestMapping(method = RequestMethod.POST, value = "/{pConnectionId}")
-    public ResponseEntity<Boolean> testDBConnection(@PathVariable Long pConnectionId) throws ModuleException {
-        return ResponseEntity.ok(dbConnectionService.testDBConnection(pConnectionId));
+    public ResponseEntity<GenericResponseBody> testDBConnection(@PathVariable Long pConnectionId)
+            throws ModuleException {
+
+        if (dbConnectionService.testDBConnection(pConnectionId)) {
+            return ResponseEntity.ok(new GenericResponseBody("Valid connection"));
+        } else {
+            return ResponseEntity.badRequest().body(new GenericResponseBody("Invalid connection"));
+        }
     }
 
     /**

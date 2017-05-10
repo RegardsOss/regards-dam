@@ -56,20 +56,20 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
     /**
      * A {@link ComboPooledDataSource} to used to connect to a data source
      */
-    protected ComboPooledDataSource cpds;
+    protected ComboPooledDataSource pooledDataSource;
 
     protected abstract IDBConnectionPlugin getDBConnectionPlugin();
 
     /**
      * The driver used to connect to the database
-     * 
+     *
      * @return the JDBC driver
      */
     protected abstract String getJdbcDriver();
 
     /**
      * The SQL request used to test the connection to the database
-     * 
+     *
      * @return the SQL request
      */
     protected abstract String getSqlRequestTestConnection();
@@ -77,14 +77,14 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
     /**
      * The URL used to connect to the database.</br>
      * Generally this URL look likes : jdbc:xxxxx//host:port/databaseName
-     * 
+     *
      * @return the database's URL
      */
     protected abstract String buildUrl();
 
     /**
      * Initialize the {@link ComboPooledDataSource}
-     * 
+     *
      * @param pUser
      *            The user to used for the database connection
      * @param pPassword
@@ -95,15 +95,15 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
      *            Minimum number of Connections a pool will maintain at any given time.
      */
     protected void createPoolConnection(String pUser, String pPassword, Integer pMaxPoolSize, Integer pMinPoolSize) {
-        cpds = new ComboPooledDataSource();
-        cpds.setJdbcUrl(buildUrl());
-        cpds.setUser(pUser);
-        cpds.setPassword(pPassword);
-        cpds.setMaxPoolSize(pMaxPoolSize);
-        cpds.setMinPoolSize(pMinPoolSize);
+        pooledDataSource = new ComboPooledDataSource();
+        pooledDataSource.setJdbcUrl(buildUrl());
+        pooledDataSource.setUser(pUser);
+        pooledDataSource.setPassword(pPassword);
+        pooledDataSource.setMaxPoolSize(pMaxPoolSize);
+        pooledDataSource.setMinPoolSize(pMinPoolSize);
 
         try {
-            cpds.setDriverClass(getJdbcDriver());
+            pooledDataSource.setDriverClass(getJdbcDriver());
         } catch (PropertyVetoException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -111,35 +111,46 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
 
     /**
      * Test the connection to the database
-     * 
+     *
      * @return true if the connection is active
      */
+    @Override
     public boolean testConnection() {
         boolean isConnected = false;
-        try (Connection conn = cpds.getConnection()) {
+        try (Connection conn = pooledDataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
                 // Execute a simple SQL request
                 try (ResultSet rs = statement.executeQuery(getSqlRequestTestConnection())) {
                     isConnected = true;
                 }
             }
-            conn.close();
         } catch (SQLException e) {
             LOG.error("Unable to connect to the database", e);
         }
         return isConnected;
     }
 
+    /* (non-Javadoc)
+     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin#closeConnection()
+     */
+    @Override
+    public void closeConnection() {
+        if (pooledDataSource != null) {
+            pooledDataSource.close();
+        }
+    }
+
     /**
      * Get a {@link Connection} to the database
-     * 
+     *
      * @return the {@link Connection}
-     * @throws SQLException 
-     * 
+     * @throws SQLException
+     *
      */
+    @Override
     public Connection getConnection() throws SQLException {
         try {
-            return cpds.getConnection();
+            return pooledDataSource.getConnection();
         } catch (SQLException e) {
             LOG.error(e.getMessage());
             throw e;
@@ -148,9 +159,10 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
 
     /**
      * Returns all the table from the database.
-     * 
+     *
      * @return a {@link Map} of {@link Table}
      */
+    @Override
     public Map<String, Table> getTables() {
         Map<String, Table> tables = new HashMap<>();
         ResultSet rs = null;
@@ -181,7 +193,7 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
 
     /**
      * Get the primary key name of a database's table
-     * 
+     *
      * @param pMetaData
      *            The {@link DatabaseMetaData} of the database
      * @param pCatalog
@@ -209,11 +221,12 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
 
     /**
      * Get the columns of a {@link Table} from the database
-     * 
+     *
      * @param pTableName
      *            a table of the database
      * @return a {@link Map} of {@link Column}
      */
+    @Override
     public Map<String, Column> getColumns(String pTableName) {
         Map<String, Column> cols = new HashMap<>();
 
