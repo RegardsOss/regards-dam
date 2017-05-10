@@ -228,6 +228,7 @@ public class CrawlerService implements ICrawlerService {
         TenantWrapper<EntityEvent> wrapper = poller.poll(EntityEvent.class);
         if (wrapper != null) {
             String tenant = wrapper.getTenant();
+            LOGGER.info("Received message from tenant {} created at {}", tenant, wrapper.getDate());
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
                 atLeastOnePoll = true;
@@ -263,7 +264,7 @@ public class CrawlerService implements ICrawlerService {
      */
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate) {
-        LOGGER.info("received msg for " + ipId.toString());
+        LOGGER.info("received msg for {}", ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
