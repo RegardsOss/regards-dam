@@ -3,11 +3,13 @@
  */
 package fr.cnes.regards.modules.opensearch.service.exception;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+
 /**
  * Thrown when an error occurs during the parsing of an OpenSearch request.
  * @author Xavier-Alexandre Brochard
  */
-public class OpenSearchParseException extends Exception {
+public class OpenSearchParseException extends ModuleException { //NOSONAR
 
     /**
      * @param pMessage the message

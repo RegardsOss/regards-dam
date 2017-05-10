@@ -39,7 +39,11 @@ public class AndParserAggregator implements IParserAggregator {
                             + pParameters + ", failing silently", e);
                 }
             }
-            return ICriterion.and(criteria.toArray(new ICriterion[criteria.size()]));
+            if (criteria.isEmpty()) {
+                return null;
+            } else {
+                return ICriterion.and(criteria.toArray(new ICriterion[criteria.size()]));
+            }
         };
     }
 
