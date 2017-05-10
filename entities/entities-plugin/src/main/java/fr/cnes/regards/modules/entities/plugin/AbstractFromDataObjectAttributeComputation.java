@@ -20,6 +20,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
+ * Implementation of {@link IComputedAttribute} plugin interface.
+ * @param <R> type of the attribute value
  * @author Sylvain Vissiere-Guerinet
  */
 public abstract class AbstractFromDataObjectAttributeComputation<R> implements IComputedAttribute<Dataset, R> {
@@ -73,7 +75,7 @@ public abstract class AbstractFromDataObjectAttributeComputation<R> implements I
      * Extract the properties of the fragment in which the attribute
      * {@link AbstractFromDataObjectAttributeComputation#attributeToCompute} is located
      */
-    protected Set<AbstractAttribute<?>> extractProperties(DataObject datum) {
+    protected Set<AbstractAttribute<?>> extractProperties(DataObject datum) { //NOSONAR
         if (attributeToCompute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
             return datum.getProperties().stream().filter(p -> !(p instanceof ObjectAttribute))
@@ -81,11 +83,10 @@ public abstract class AbstractFromDataObjectAttributeComputation<R> implements I
         } else {
             // the attribute is in a fragment so we have to be get the right fragment(ObjectAttribute) before we
             // can access the attribute
-            Set<AbstractAttribute<?>> candidates = datum.getProperties().stream()
+            return datum.getProperties().stream()
                     .filter(p -> (p instanceof ObjectAttribute)
                             && p.getName().equals(attributeToCompute.getFragment().getName()))
                     .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream()).collect(Collectors.toSet());
-            return candidates;
         }
     }
 
