@@ -14,14 +14,17 @@ public class BroadcastEntityEvent implements ISubscribable {
     /**
      * Business id identifying an entity
      */
-    protected UniformResourceName[] ipIds;
+    private UniformResourceName[] ipIds;
+
+    private EventType eventType;
 
     private BroadcastEntityEvent() {
         super();
     }
 
-    public BroadcastEntityEvent(UniformResourceName... pIpIds) {
+    public BroadcastEntityEvent(EventType pEventType, UniformResourceName... pIpIds) {
         this();
+        eventType = pEventType;
         ipIds = pIpIds;
     }
 
@@ -34,4 +37,12 @@ public class BroadcastEntityEvent implements ISubscribable {
         ipIds = pIpIds;
     }
 
+    public EventType getEventType() {
+        return eventType;
+    }
+
+    @SuppressWarnings("unused")
+    private void setEventType(EventType eventType) {
+        this.eventType = eventType;
+    }
 }

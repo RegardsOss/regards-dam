@@ -20,7 +20,7 @@ public class EntityEvent implements IPollable {
     /**
      * Business id identifying an entity
      */
-    protected UniformResourceName[] ipIds;
+    private UniformResourceName[] ipIds;
 
     private EntityEvent() {
         super();
