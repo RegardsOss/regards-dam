@@ -37,7 +37,6 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
  * NotCriterion(subCriterion) leads to the visit of subcriterion (because the NotCriterion is coherent)
  *
  * @author Sylvain Vissiere-Guerinet
- *
  */
 public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
@@ -56,7 +55,10 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     private final IModelAttrAssocService modelAttributeService;
 
     /**
-     *
+     * Constructor
+     * @param pModel the model
+     * @param pAttributeService the attribute service
+     * @param pModelAttributeService the model attribute service
      */
     public SubsettingCoherenceVisitor(Model pModel, IAttributeModelService pAttributeService,
             IModelAttrAssocService pModelAttributeService) {
@@ -172,10 +174,6 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
         if (attribute == null) {
             // attributeName is unknown
             LOG.error(String.format(ATTRIBUTE_DOES_NOT_EXIST, attributeFullName));
-            return null;
-        }
-        if (!attribute.isQueryable()) {
-            LOG.error(String.format(ATTRIBUTE_IS_NOT_QUERYABLE, attributeFullName, referenceModel.getName()));
             return null;
         }
         ModelAttrAssoc modelAttribute = modelAttributeService.getModelAttrAssoc(referenceModel.getId(), attribute);

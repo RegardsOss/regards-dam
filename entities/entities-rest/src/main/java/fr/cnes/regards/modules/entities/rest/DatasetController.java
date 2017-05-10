@@ -38,7 +38,9 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
  * Rest controller managing {@link Dataset}s
@@ -91,6 +93,12 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @Autowired
     private IDatasetService service;
+
+    /**
+     * Service parsing/converting OpenSearch string requests to {@link ICriterion}
+     */
+    @Autowired
+    private IOpenSearchService openSearchService;
 
     /**
      * Create a dataset
@@ -177,6 +185,9 @@ public class DatasetController implements IResourceController<Dataset> {
             @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException {
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
+
+        // Convert OpenSearch subsetting clause
+        pDataset.setSubsettingClause(openSearchService.parse(pDataset.getOpenSearchSubsettingClause()));
 
         Dataset dataSet = service.update(pDatasetId, pDataset);
         final Resource<Dataset> resource = toResource(dataSet);

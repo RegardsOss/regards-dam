@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +42,8 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.rest.dto.DatasetDto;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -96,6 +96,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IAttributeModelClient attributeModelClient;
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
     @Before
     public void init() {
@@ -264,29 +267,36 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         // Prepare test ecosystem
         importModel("dataModel.xml");
         importModel("datasetModel.xml");
+        Model dataModel = modelService.getModelByName("dataModel");
         Model datasetModel = modelService.getModelByName("datasetModel");
 
-        final DatasetDto dataSet = new DatasetDto(datasetModel, DEFAULT_TENANT,
-                "dataset from dto with subsetting clause as string");
-        dataSet.setLicence("licence");
-        dataSet.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
-        dataSet.setIpId(dataSet1.getIpId());
-        dataSet.setId(dataSet1.getId());
-        dataSet.setTags(dataSet1.getTags());
-        dataSet.setSipId(dataSet1.getSipId() + "new");
-        dataSet.setDataModel(modelOfData.getId());
+        final Dataset dataSetClone = new Dataset(datasetModel, "", "Coucou");
+        dataSetClone.setLicence("licence");
+        dataSetClone.setCreationDate(OffsetDateTime.now());
+        dataSetClone.setIpId(dataSet1.getIpId());
+        dataSetClone.setId(dataSet1.getId());
+        dataSetClone.setTags(dataSet1.getTags());
+        dataSetClone.setSipId(dataSet1.getSipId() + "new");
+        dataSetClone.setDataModel(dataModel.getId());
+        dataSetClone.getProperties().add(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
+        dataSetClone.getProperties().add(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
+        dataSetClone.getProperties().add(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
+        dataSetClone.getProperties().add(AttributeBuilder.buildLong("count", 454L));
 
         // Set test case
-        dataSet.setSubsettingClause("q=FILE_SIZE:10");
+        dataSetClone.setOpenSearchSubsettingClause("q=FILE_SIZE:10");
         Mockito.when(attributeModelClient.getAttributes(Mockito.any(), Mockito.any()))
                 .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(Lists
                         .newArrayList(AttributeModelBuilder.build("FILE_SIZE", AttributeType.INTEGER).get()))));
 
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT + ".content", Matchers.notNullValue()));
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT + ".content.subsettingClause",
+                                                        Matchers.notNullValue()));
 
-        performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSet, expectations,
-                          "Failed to update a specific dataset using its id", dataSet1.getId());
+        performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSetClone,
+                          expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
     }
 
     /**
@@ -300,6 +310,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
+            gsonAttributeFactory.refresh(DEFAULT_TENANT);
         } catch (IOException e) {
             String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);
