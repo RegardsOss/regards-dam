@@ -36,6 +36,7 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
+import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
@@ -361,6 +362,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     private void publishEvents(Set<UniformResourceName> pIpIds) {
         publisher.publish(new EntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
+        publisher.publish(new BroadcastEntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
     }
 
     /**
