@@ -66,14 +66,14 @@ public class DBConnection {
      * Maximum number of Connections a pool will maintain at any given time.
      */
     @NotNull
-    private Integer maxPoolSize;
+    private Integer maxPoolSize = 10;
 
     /**
      * Minimum number of Connections a pool will maintain at any given time.
      */
     @NotNull
     @Min(3)
-    private Integer minPoolSize;
+    private Integer minPoolSize = 3;
 
     public Long getPluginConfigurationId() {
         return pluginConfigurationId;
