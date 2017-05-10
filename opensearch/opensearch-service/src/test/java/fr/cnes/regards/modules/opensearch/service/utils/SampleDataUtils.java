@@ -5,13 +5,8 @@ package fr.cnes.regards.modules.opensearch.service.utils;
 
 import java.util.List;
 
-import org.springframework.hateoas.Resource;
-import org.springframework.http.ResponseEntity;
-
 import com.google.common.collect.Lists;
 
-import fr.cnes.regards.framework.hateoas.HateoasUtils;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -110,6 +105,9 @@ public class SampleDataUtils {
     public static final AttributeModel TAGS_ATTRIBUTE_MODEL = AttributeModelBuilder
             .build(TAGS_FIELD, AttributeType.STRING_ARRAY).get();
 
+    /**
+     * For mocking result of a call to {@link IAttributeModelService#getAttributes(null, null)}
+     */
     public static final List<AttributeModel> LIST = Lists
             .newArrayList(BOOLEAN_ATTRIBUTE_MODEL, INTEGER_ATTRIBUTE_MODEL, DOUBLE_ATTRIBUTE_MODEL,
                           LONG_ATTRIBUTE_MODEL, STRING_ATTRIBUTE_MODEL, STRING_ATTRIBUTE_MODEL_1,
@@ -117,12 +115,6 @@ public class SampleDataUtils {
                           LONG_RANGE_ATTRIBUTE_MODEL, LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL,
                           INTEGER_ARRAY_ATTRIBUTE_MODEL, DOUBLE_ARRAY_ATTRIBUTE_MODEL, LONG_ARRAY_ATTRIBUTE_MODEL,
                           STRING_ARRAY_ATTRIBUTE_MODEL, LOCAL_DATE_TIME_ARRAY_ATTRIBUTE_MODEL, TAGS_ATTRIBUTE_MODEL);
-
-    /**
-     * Sample response from the {@link IAttributeModelClient}
-     */
-    public static final ResponseEntity<List<Resource<AttributeModel>>> ATTRIBUTE_MODEL_CLIENT_RESPONSE = ResponseEntity
-            .ok(HateoasUtils.wrapList(SampleDataUtils.LIST));
 
     /**
      * A query like the ones the REGARDS frontend is likely to use
