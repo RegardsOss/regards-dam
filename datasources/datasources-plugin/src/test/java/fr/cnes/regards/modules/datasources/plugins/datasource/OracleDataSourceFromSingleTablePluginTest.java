@@ -31,6 +31,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
@@ -115,6 +117,10 @@ public class OracleDataSourceFromSingleTablePluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_100")
+    @Requirement("REGARDS_DSL_DAM_SRC_110")
+    @Requirement("REGARDS_DSL_DAM_SRC_140")
+    @Purpose("The system allows to create a plugin to get a subset of the datasource's data")
     public void getDataSourceIntrospection() throws SQLException {
         LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
