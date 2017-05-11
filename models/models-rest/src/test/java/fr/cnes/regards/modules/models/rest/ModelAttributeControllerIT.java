@@ -363,8 +363,9 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.name").value(mod.getName()));
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
 
-        performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + fragmentApi,
-                           null, expectations, "Should bind fragment", mod.getId(), frag.getId());
+        performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, expectations, "Should bind fragment",
+                           mod.getId());
     }
 
     /**
@@ -394,7 +395,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                + fragmentApi, expectations, "Fragment's attributes should be deleted", mod.getId(), frag.getId());
+                + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, expectations,
+                             "Fragment's attributes should be deleted", mod.getId(), frag.getId());
 
         expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNotFound());
