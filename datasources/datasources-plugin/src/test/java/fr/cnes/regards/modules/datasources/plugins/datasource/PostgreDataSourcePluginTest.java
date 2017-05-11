@@ -142,6 +142,9 @@ public class PostgreDataSourcePluginTest {
     }
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_SRC_100")
+    @Requirement("REGARDS_DSL_DAM_SRC_110")
+    @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Requirement("REGARDS_DSL_DAM_PLG_200")
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by setting a SQL request")
     public void getDataSourceIntrospection() throws SQLException {
