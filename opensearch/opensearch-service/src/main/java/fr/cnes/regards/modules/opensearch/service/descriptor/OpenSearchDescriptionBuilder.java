@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.opensearch.service.descriptor;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Set;
@@ -14,12 +16,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriUtils;
 
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.models.client.IModelClient;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -35,7 +37,7 @@ import fr.cnes.regards.modules.search.schema.UrlType;
  * @author Sylvain Vissiere-Guerinet
  */
 @Component
-public class OpenSearchDescriptorBuilder {
+public class OpenSearchDescriptionBuilder {
 
     private static final String DESCRIPTION = "%s REGARDS Search Engine";
 
@@ -51,21 +53,17 @@ public class OpenSearchDescriptorBuilder {
 
     private final IRuntimeTenantResolver tenantResolver;
 
-    private final IModelClient modelClient;
-
     private final IModelAttrAssocClient modelAttrAssocClient;
 
-    public OpenSearchDescriptorBuilder(@Value("${regards.opensearch.contact}") String contact,
+    public OpenSearchDescriptionBuilder(@Value("${regards.opensearch.contact}") String contact,
             @Value("${regards.opensearch.developer}") String developer,
             @Value("${spring.application.name}") String microserviceName, @Autowired IProjectsClient projectClient,
-            @Autowired IRuntimeTenantResolver tenantResolver, IModelClient modelClient,
-            @Autowired IModelAttrAssocClient modelAttrAssocClient) {
+            @Autowired IRuntimeTenantResolver tenantResolver, @Autowired IModelAttrAssocClient modelAttrAssocClient) {
         this.contact = contact;
         this.developer = developer;
         this.microserviceName = microserviceName;
         this.projectClient = projectClient;
         this.tenantResolver = tenantResolver;
-        this.modelClient = modelClient;
         this.modelAttrAssocClient = modelAttrAssocClient;
     }
 
@@ -75,18 +73,30 @@ public class OpenSearchDescriptorBuilder {
      * @param searchOn entity type which attributes are relevant for the search. Can be null in which case it means
      * everything
      * @param endpointPath endpoint concerned by the search
+     * @throws UnsupportedEncodingException
      */
-    public OpenSearchDescription build(EntityType searchOn, String endpointPath) {
+    public OpenSearchDescription build(EntityType searchOn, String endpointPath) throws UnsupportedEncodingException {
         // lets build the generic part of the descriptor
         String currentTenant = tenantResolver.getTenant();
         Project project = getProject(currentTenant);
         OpenSearchDescription desc = buildGenerics(project);
 
         UrlType url = new UrlType();
-        StringJoiner sj = new StringJoiner("/", project.getHost(), "");
-        sj.add(microserviceName);
+        StringJoiner sj = new StringJoiner("/");
+        sj.add(project.getHost());
+        // UriUtils.encode give back the string in US-ASCII encoding, so let create a new String that will then reencode
+        // the string however the jvm wants
+        sj.add(new String(UriUtils.encode(microserviceName, Charset.defaultCharset().name()).getBytes(),
+                StandardCharsets.US_ASCII));
         sj.add(endpointPath);
         String urlTemplate = sj.toString();
+        // urlTemplate can contains double slashes on the part part which is valid but ugly so let make the worlkd a bit
+        // prettier. We choose project.getHost().length()-1 because Project.getHost() can finish by a "/" so we would
+        // have a double "/" with the joiner and we admit that what the administrator entered as host is valid
+        int incorrectDoubleSlashIndex = project.getHost().length() - 1;
+        String correctPart = urlTemplate.substring(0, incorrectDoubleSlashIndex);
+        String incorrectPart = urlTemplate.substring(incorrectDoubleSlashIndex);
+        urlTemplate = correctPart + incorrectPart.replaceAll("//", "/");
         urlTemplate += "?q={searchTerms}";
         url.setTemplate(urlTemplate);
         desc.getUrl().add(url);
@@ -111,7 +121,7 @@ public class OpenSearchDescriptorBuilder {
                     result.append("{boolean}");
                     break;
                 case DATE_ARRAY:
-                    result.append("{ISO-8601 date} OR").append(getAttributeFullName(attr)).append(":")
+                    result.append("{ISO-8601 date} OR ").append(getAttributeFullName(attr)).append(":")
                             .append("{ISO-8601 date}");
                     break;
                 case DATE_INTERVAL:
@@ -124,7 +134,7 @@ public class OpenSearchDescriptorBuilder {
                     result.append("{double value}");
                     break;
                 case DOUBLE_ARRAY:
-                    result.append("{double value} OR").append(getAttributeFullName(attr)).append(":")
+                    result.append("{double value} OR ").append(getAttributeFullName(attr)).append(":")
                             .append("{double value}");
                     break;
                 case DOUBLE_INTERVAL:
@@ -137,11 +147,11 @@ public class OpenSearchDescriptorBuilder {
                     result.append("{integer value}");
                     break;
                 case LONG_ARRAY:
-                    result.append("{long value} OR").append(getAttributeFullName(attr)).append(":")
+                    result.append("{long value} OR ").append(getAttributeFullName(attr)).append(":")
                             .append("{long value}");
                     break;
                 case INTEGER_ARRAY:
-                    result.append("{integer value} OR").append(getAttributeFullName(attr)).append(":")
+                    result.append("{integer value} OR ").append(getAttributeFullName(attr)).append(":")
                             .append("{integer value}");
                     break;
                 case LONG_INTERVAL:
@@ -154,7 +164,7 @@ public class OpenSearchDescriptorBuilder {
                     result.append("{string}");
                     break;
                 case STRING_ARRAY:
-                    result.append("{string} OR").append(getAttributeFullName(attr)).append(":").append("{string}");
+                    result.append("{string} OR ").append(getAttributeFullName(attr)).append(":").append("{string}");
                     break;
                 case URL:
                     result.append("{url}");
@@ -169,8 +179,11 @@ public class OpenSearchDescriptorBuilder {
     }
 
     private String getAttributeFullName(AttributeModel attr) {
-        return attr.getFragment().isDefaultFragment() ? attr.getName()
-                : attr.getFragment().getName() + "." + attr.getName();
+        if (attr.getFragment().isDefaultFragment()) {
+            return "properties." + attr.getName();
+        } else {
+            return "properties." + attr.getFragment().getName() + "." + attr.getName();
+        }
     }
 
     private OpenSearchDescription buildGenerics(Project project) {
