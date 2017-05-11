@@ -17,12 +17,13 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
+ * Feign client handling {@link AttributeModel}s
  * @author Xavier-Alexandre Brochard
  */
 @RestClient(name = "rs-dam")
 @RequestMapping(value = IAttributeModelClient.PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-public interface IAttributeModelClient { // NOSONAR
+public interface IAttributeModelClient { //NOSONAR
 
     /**
      * Mapping
@@ -39,6 +40,12 @@ public interface IAttributeModelClient { // NOSONAR
      */
     public static final String PARAM_FRAGMENT_NAME = "fragmentName";
 
+    /**
+     * Get the list of {@link AttributeModel}
+     * @param pType the type to filter on
+     * @param pFragmentName the fragment to filter on
+     * @return the list wrapped in an HTTP response
+     */
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) AttributeType pType,

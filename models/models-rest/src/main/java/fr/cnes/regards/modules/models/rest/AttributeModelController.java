@@ -69,6 +69,12 @@ public class AttributeModelController implements IResourceController<AttributeMo
      */
     private final IResourceService resourceService;
 
+    /**
+     * Constructor
+     * @param pAttributeService Attribute service
+     * @param pResourceService Resource service
+     * @param pRestrictionService Restriction service
+     */
     public AttributeModelController(IAttributeModelService pAttributeService, IResourceService pResourceService,
             RestrictionService pRestrictionService) {
         this.attributeService = pAttributeService;

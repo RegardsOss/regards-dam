@@ -86,4 +86,9 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
         }
     }
 
+    @Override
+    public void closeConnection() {
+        client.close();
+    }
+
 }

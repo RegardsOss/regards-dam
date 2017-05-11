@@ -15,13 +15,12 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
-import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  * In this implementation, we choose to repopulate (and not only evict) the cache for a tenant in response to "create" and "delete" events.<br>
@@ -40,7 +39,7 @@ public class AttributeModelCache implements IAttributeModelCache {
     /**
      * Feign client for rs-dam {@link AttributeModel} controller. Autowired by Spring.
      */
-    private final IAttributeModelClient attributeModelClient;
+    private final IAttributeModelService attributeModelService;
 
     /**
      * AMPQ messages subscriber. Autowired by Spring.
@@ -55,14 +54,14 @@ public class AttributeModelCache implements IAttributeModelCache {
     /**
      * Creates a new instance of the service with passed services/repos
      *
-     * @param pAttributeModelClient Service returning the list of attribute models and keeping the list up-to-date
+     * @param pAttributeModelService Service returning the list of attribute models
      * @param pSubscriber the AMQP events subscriber
      * @param pRuntimeTenantResolver the runtime tenant resolver
      */
-    public AttributeModelCache(IAttributeModelClient pAttributeModelClient, ISubscriber pSubscriber,
+    public AttributeModelCache(IAttributeModelService pAttributeModelService, ISubscriber pSubscriber,
             IRuntimeTenantResolver pRuntimeTenantResolver) {
         super();
-        attributeModelClient = pAttributeModelClient;
+        attributeModelService = pAttributeModelService;
         subscriber = pSubscriber;
         runtimeTenantResolver = pRuntimeTenantResolver;
     }
@@ -78,12 +77,12 @@ public class AttributeModelCache implements IAttributeModelCache {
 
     @Override
     public List<AttributeModel> getAttributeModels(String pTenant) {
-        return doGetAttributeModels();
+        return doGetAttributeModels(pTenant);
     }
 
     @Override
     public List<AttributeModel> getAttributeModelsThenCache(String pTenant) {
-        return doGetAttributeModels();
+        return doGetAttributeModels(pTenant);
     }
 
     /**
@@ -91,12 +90,15 @@ public class AttributeModelCache implements IAttributeModelCache {
      * The method is private because it is not expected to be used directly, but via its cached facade "getAttributeModels" method.
      * @return the list of user's access groups
      */
-    private List<AttributeModel> doGetAttributeModels() {
+    private List<AttributeModel> doGetAttributeModels(String pTenant) {
         // Enable system call as follow (thread safe action)
         FeignSecurityManager.asSystem();
 
-        // Perform client call
-        List<AttributeModel> result = HateoasUtils.unwrapList(attributeModelClient.getAttributes(null, null).getBody());
+        // Force tenant
+        runtimeTenantResolver.forceTenant(pTenant);
+
+        // Retrieve the list of attribute models
+        List<AttributeModel> result = attributeModelService.getAttributes(null, null);
 
         // Disable system call if necessary after client request(s)
         FeignSecurityManager.reset();

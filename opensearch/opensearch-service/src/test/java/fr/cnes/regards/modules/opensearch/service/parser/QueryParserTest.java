@@ -7,15 +7,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
@@ -33,10 +30,8 @@ import fr.cnes.regards.modules.indexer.domain.criterion.OrCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeModelCache;
-import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
 
@@ -59,37 +54,19 @@ public class QueryParserTest {
     private static final String TENANT = "tenant";
 
     /**
-     * AMQP events subscriber
+     * Prefix for OpenSearch queries
      */
-    private static ISubscriber subscriber;
-
-    /**
-     * Mock client providing {@link AttributeModel}s
-     */
-    private static IAttributeModelClient attributeModelClient;
-
-    /**
-     * Retrieve current tenant at runtime
-     */
-    private static IRuntimeTenantResolver runtimeTenantResolver;
-
-    /**
-     * Provide {@link AttributeModel}s with caching facilities
-     */
-    private static IAttributeModelCache attributeModelCache;
-
     private static String QUERY_PREFIX = "q=";
 
     @BeforeClass
     public static void init() throws EntityNotFoundException {
-        subscriber = Mockito.mock(ISubscriber.class);
-        attributeModelClient = Mockito.mock(IAttributeModelClient.class);
-        runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
+        ISubscriber subscriber = Mockito.mock(ISubscriber.class);
+        IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn(TENANT);
-        attributeModelCache = new AttributeModelCache(attributeModelClient, subscriber, runtimeTenantResolver);
-
-        ResponseEntity<List<Resource<AttributeModel>>> clientResponse = SampleDataUtils.ATTRIBUTE_MODEL_CLIENT_RESPONSE;
-        Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(clientResponse);
+        IAttributeModelService attributeModelService = Mockito.mock(IAttributeModelService.class);
+        Mockito.when(attributeModelService.getAttributes(null, null)).thenReturn(SampleDataUtils.LIST);
+        AttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelService, subscriber,
+                runtimeTenantResolver);
 
         parser = new QueryParser(attributeModelCache);
     }

@@ -5,14 +5,15 @@ package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -32,16 +33,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
-import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -100,7 +103,6 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      *
      * @throws DataSourcesPluginException
      * @throws SQLException
-     * @throws JwtException @
      */
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException {
@@ -109,16 +111,14 @@ public class PostgreDataSourceFromSingleTablePluginTest {
          */
         repository.deleteAll();
         repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
-                                             LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
-                                             LocalDateTime.now(), OffsetDateTime.now().minusMinutes(33), true));
+                LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
+                OffsetDateTime.now().minusMinutes(33), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
-                                             LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10),
-                                             LocalDateTime.now().plusHours(33), OffsetDateTime.now().minusSeconds(22),
-                                             true));
+                LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10), LocalDateTime.now().plusHours(33),
+                OffsetDateTime.now().minusSeconds(22), true));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
-                                             25.565465465454564654654654, LocalDate.now().minusDays(10),
-                                             LocalTime.now().minusHours(9), LocalDateTime.now().minusMonths(2),
-                                             OffsetDateTime.now().minusHours(7), false));
+                25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
+                LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7), false));
         nbElements = 3;
 
         /*
@@ -145,8 +145,10 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     }
 
     @Test
-    @Requirement("REGARDS_DSL_DAM_ARC_140")
     @Requirement("REGARDS_DSL_DAM_PLG_210")
+    @Requirement("REGARDS_DSL_DAM_SRC_100")
+    @Requirement("REGARDS_DSL_DAM_SRC_110")
+    @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by introspection")
     public void getDataSourceIntrospection() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
@@ -243,17 +245,18 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id", AbstractAttributeMapping.PRIMARY_KEY));
-        attributes.add(new StaticAttributeMapping(AttributeType.STRING, "'" + HELLO + "- '||label as label", AbstractAttributeMapping.LABEL));
+        attributes.add(new StaticAttributeMapping(AttributeType.STRING, "'" + HELLO + "- '||label as label",
+                AbstractAttributeMapping.LABEL));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                                                    "timeStampWithoutTimeZone", Types.TIMESTAMP));
+                "timeStampWithoutTimeZone", Types.TIMESTAMP));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
-                                                    "timeStampWithoutTimeZone"));
+                "timeStampWithoutTimeZone"));
         attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
         attributes.add(new StaticAttributeMapping(AttributeType.DATE_ISO8601, "timeStampWithTimeZone", Types.TIMESTAMP,
-                                                  AbstractAttributeMapping.LAST_UPDATE));
+                AbstractAttributeMapping.LAST_UPDATE));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

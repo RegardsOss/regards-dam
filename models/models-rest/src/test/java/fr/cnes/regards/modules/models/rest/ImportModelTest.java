@@ -72,7 +72,7 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
     }
 
     private void importModel(String pFilename) {
-        importModel(pFilename, MockMvcResultMatchers.status().isOk());
+        importModel(pFilename, MockMvcResultMatchers.status().isCreated());
     }
 
     private void importModel(String pFilename, ResultMatcher pMatcher) {

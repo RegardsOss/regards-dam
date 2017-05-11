@@ -297,7 +297,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void tesConnectionFailed() throws ModuleException {
+    public void testConnectionFailed() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
         dbConnection.setMinPoolSize(5);
         dbConnection.setMaxPoolSize(9);
@@ -308,7 +308,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.status().isBadRequest());
 
         performDefaultPost(DBConnectionController.TYPE_MAPPING + "/{pConnectionId}", dbConnection, expectations,
                            "The DBConnection is not valid.", dbConnection.getPluginConfigurationId());
