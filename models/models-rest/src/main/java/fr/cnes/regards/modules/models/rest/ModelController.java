@@ -257,13 +257,11 @@ public class ModelController implements IResourceController<Model> {
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
                                 MethodParamFactory.build(EntityType.class));
-        // Import / Export
+        // Export
         resourceService.addLink(resource, this.getClass(), "exportModel", "export",
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "importModel", "import",
-                                MethodParamFactory.build(MultipartFile.class));
         return resource;
     }
 
