@@ -69,6 +69,13 @@ public class Dataset extends AbstractDescEntity {
     private ICriterion subsettingClause;
 
     /**
+     * Representation of the above subsetting clause as an OpenSearch string request
+     */
+    @Type(type = "text")
+    @Column
+    private String openSearchSubsettingClause;
+
+    /**
      * set of quotations associated to the {@link Dataset}
      */
     @ElementCollection
@@ -157,5 +164,19 @@ public class Dataset extends AbstractDescEntity {
     @Override
     public boolean equals(Object pObj) {
         return super.equals(pObj);
+    }
+
+    /**
+     * @return the openSearchSubsettingClause
+     */
+    public String getOpenSearchSubsettingClause() {
+        return openSearchSubsettingClause;
+    }
+
+    /**
+     * @param pOpenSearchSubsettingClause the openSearchSubsettingClause to set
+     */
+    public void setOpenSearchSubsettingClause(String pOpenSearchSubsettingClause) {
+        openSearchSubsettingClause = pOpenSearchSubsettingClause;
     }
 }

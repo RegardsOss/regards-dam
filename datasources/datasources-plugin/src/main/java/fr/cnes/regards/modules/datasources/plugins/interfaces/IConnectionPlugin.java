@@ -20,12 +20,12 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 public interface IConnectionPlugin {
 
     /**
-     * The user name 
+     * The user name
      */
     static final String USER_PARAM = "user";
 
     /**
-     * The user's password 
+     * The user's password
      */
     static final String PASSWORD_PARAM = "password"; // NOSONAR
 
@@ -51,9 +51,14 @@ public interface IConnectionPlugin {
 
     /**
      * Test the connection
-     * 
+     *
      * @return true if the connection is active
      */
     boolean testConnection();
+
+    /**
+     * Close a connection
+     */
+    void closeConnection();
 
 }

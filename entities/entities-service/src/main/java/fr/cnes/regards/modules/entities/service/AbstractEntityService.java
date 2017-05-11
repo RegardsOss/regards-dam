@@ -36,7 +36,9 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
+import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
+import fr.cnes.regards.modules.entities.domain.event.EventType;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
@@ -350,17 +352,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         updatedIpIds.add(entity.getIpId());
         entity = getStorageService().storeAIP(entity);
         // AMQP event publishing
-        publishEvents(updatedIpIds);
+        publishEvents(EventType.CREATE, updatedIpIds);
         return entity;
     }
 
     /**
      * Publish events to AMQP, one event by IpId
      *
+     * @param eventType event type (CREATE, DELETE, ...)
      * @param pIpIds ipId URNs of entities that need an Event publication onto AMQP
      */
-    private void publishEvents(Set<UniformResourceName> pIpIds) {
+    private void publishEvents(EventType eventType, Set<UniformResourceName> pIpIds) {
         publisher.publish(new EntityEvent(pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
+        publisher.publish(new BroadcastEntityEvent(eventType, pIpIds.toArray(new UniformResourceName[pIpIds.size()])));
     }
 
     /**
@@ -582,7 +586,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         }
         updated = getStorageService().updateAIP(updated);
         // AMQP event publishing
-        publishEvents(updatedIpIds);
+        publishEvents(EventType.UPDATE, updatedIpIds);
         return updated;
     }
 
@@ -634,7 +638,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         deletedEntityRepository.save(createDeletedEntity(pToDelete));
         getStorageService().deleteAIP(pToDelete);
         // Publish events to AMQP
-        publishEvents(updatedIpIds);
+        publishEvents(EventType.DELETE, updatedIpIds);
         return pToDelete;
     }
 

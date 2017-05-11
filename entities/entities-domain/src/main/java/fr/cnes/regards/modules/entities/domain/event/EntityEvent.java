@@ -9,7 +9,8 @@ import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- * Entity event sent to AMQP indicating that the concerned entity has been created/modified/deleted
+ * Microservice specific entity event (@see CrawlerService) sent to AMQP indicating that the concerned entity has been
+ * created/modified/deleted
  * @author oroussel
  * @author Sylvain Vissiere-Guerinet
  */
@@ -19,7 +20,7 @@ public class EntityEvent implements IPollable {
     /**
      * Business id identifying an entity
      */
-    protected UniformResourceName[] ipIds;
+    private UniformResourceName[] ipIds;
 
     private EntityEvent() {
         super();

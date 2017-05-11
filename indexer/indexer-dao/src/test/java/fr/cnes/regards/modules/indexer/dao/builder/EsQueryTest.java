@@ -622,6 +622,7 @@ public class EsQueryTest {
      * Some search queries are done then
      */
     @Test
+    @Ignore
     public void testSearchWithSource() {
         // Remove this comment to create BIG_VOLUME_SIZE entities into ES if not already present
         //        this.createData2();

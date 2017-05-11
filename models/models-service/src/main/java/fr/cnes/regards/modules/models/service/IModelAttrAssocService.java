@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.models.service;
 import java.util.List;
 import java.util.Set;
 
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -35,7 +36,7 @@ public interface IModelAttrAssocService {
 
     void unbindAttributeFromModel(Long pModelId, Long pAttributeId) throws ModuleException;
 
-    List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
+    List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Fragment pFragment) throws ModuleException;
 
     /**
      * Propagate a fragment update
