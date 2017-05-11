@@ -149,7 +149,7 @@ public abstract class AbstractAttributeMapping {
         mappingOptions |= option;
     }
 
-    public void setMappingOption(short options) {
+    public void setMappingOptions(short options) {
         mappingOptions = options;
     }
 
