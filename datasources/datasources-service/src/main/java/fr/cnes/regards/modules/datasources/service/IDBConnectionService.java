@@ -48,13 +48,13 @@ public interface IDBConnectionService {
      *
      * Get the {@link PluginConfiguration}.
      *
-     * @param pId
+     * @param pConfigurationId
      *            a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
      * @throws ModuleException
      *             throw if an error occurs
      */
-    PluginConfiguration getDBConnection(Long pId) throws ModuleException;
+    PluginConfiguration getDBConnection(Long pConfigurationId) throws ModuleException;
 
     /**
      *
@@ -71,24 +71,24 @@ public interface IDBConnectionService {
     /**
      * Delete a {@link DBConnection}.
      * 
-     * @param pId
+     * @param pConfigurationId
      *            a {@link PluginConfiguration} identifier
      * @throws ModuleException
      *             throw if an error occurs
      */
-    void deleteDBConnection(Long pId) throws ModuleException;
+    void deleteDBConnection(Long pConfigurationId) throws ModuleException;
 
     /**
      * Querying the status of a database connection pools.
      * 
-     * @param pId
+     * @param pConfigurationId
      *            a {@link PluginConfiguration} identifier
      * @return true success to the connection to the database.</br>
      *         false unable to connect to the database
      * @throws ModuleException
      *             throw if an error occurs
      */
-    Boolean testDBConnection(Long pId) throws ModuleException;
+    Boolean testDBConnection(Long pConfigurationId) throws ModuleException;
 
     /**
      * 

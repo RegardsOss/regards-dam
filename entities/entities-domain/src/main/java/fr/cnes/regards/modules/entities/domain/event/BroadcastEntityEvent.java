@@ -1,33 +1,30 @@
-/*
- * LICENSE_PLACEHOLDER
- */
 package fr.cnes.regards.modules.entities.domain.event;
 
 import fr.cnes.regards.framework.amqp.event.Event;
-import fr.cnes.regards.framework.amqp.event.IPollable;
+import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- * Microservice specific entity event (@see CrawlerService) sent to AMQP indicating that the concerned entity has been
- * created/modified/deleted
+ * Broadcast entity event to be sent to all microservices
  * @author oroussel
- * @author Sylvain Vissiere-Guerinet
  */
-@Event(target = Target.MICROSERVICE)
-public class EntityEvent implements IPollable {
-
+@Event(target = Target.ALL)
+public class BroadcastEntityEvent implements ISubscribable {
     /**
      * Business id identifying an entity
      */
     private UniformResourceName[] ipIds;
 
-    private EntityEvent() {
+    private EventType eventType;
+
+    private BroadcastEntityEvent() {
         super();
     }
 
-    public EntityEvent(UniformResourceName... pIpIds) {
+    public BroadcastEntityEvent(EventType pEventType, UniformResourceName... pIpIds) {
         this();
+        eventType = pEventType;
         ipIds = pIpIds;
     }
 
@@ -40,4 +37,12 @@ public class EntityEvent implements IPollable {
         ipIds = pIpIds;
     }
 
+    public EventType getEventType() {
+        return eventType;
+    }
+
+    @SuppressWarnings("unused")
+    private void setEventType(EventType eventType) {
+        this.eventType = eventType;
+    }
 }

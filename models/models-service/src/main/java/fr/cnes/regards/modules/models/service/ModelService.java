@@ -53,6 +53,7 @@ import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
  * @author Marc Sordi
  */
 @Service
+@MultitenantTransactional
 public class ModelService implements IModelService, IModelAttrAssocService {
 
     /**
@@ -149,7 +150,6 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    @MultitenantTransactional
     public Model duplicateModel(Long pModelId, Model pModel) throws ModuleException {
         if (!modelRepository.exists(pModelId)) {
             throw new EntityNotFoundException(pModel.getId(), Model.class);
@@ -240,11 +240,11 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    @MultitenantTransactional
-    public List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
+    public List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Fragment pFragment) throws ModuleException {
         final List<ModelAttrAssoc> modAtts = new ArrayList<>();
         final Model model = getModel(pModelId);
         final Iterable<ModelAttrAssoc> existingModelAtts = modelAttributeRepository.findByModelId(pModelId);
+        final Long pFragmentId = pFragment.getId();
 
         // Check if fragment not already bound
         if (!isBoundFragment(existingModelAtts, pFragmentId)) {
@@ -287,7 +287,6 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    @MultitenantTransactional
     public void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
         final Iterable<ModelAttrAssoc> modelAtts = modelAttributeRepository.findByModelId(pModelId);
         if (modelAtts != null) {
@@ -331,7 +330,6 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         XmlExportHelper.exportModel(pOutputStream, model, modelAtts);
     }
 
-    @MultitenantTransactional
     @Override
     public Model importModel(InputStream pInputStream) throws ModuleException {
         // Import model from input stream

@@ -32,7 +32,7 @@ public class DBConnectionService implements IDBConnectionService {
     /**
      * Attribute plugin service
      */
-    private final IPluginService service;
+    private final IPluginService pluginService;
 
     /**
      * The constructor with an instance of the {@link PluginService}
@@ -42,51 +42,59 @@ public class DBConnectionService implements IDBConnectionService {
      */
     public DBConnectionService(IPluginService pPluginService) {
         super();
-        this.service = pPluginService;
-        this.service.addPluginPackage(DefaultPostgreConnectionPlugin.class.getPackage().getName());
+        this.pluginService = pPluginService;
+        this.pluginService.addPluginPackage(DefaultPostgreConnectionPlugin.class.getPackage().getName());
     }
 
     @Override
     public List<PluginConfiguration> getAllDBConnections() {
-        return service.getPluginConfigurationsByType(IDBConnectionPlugin.class);
+        return pluginService.getPluginConfigurationsByType(IDBConnectionPlugin.class);
     }
 
     @Override
     public PluginConfiguration createDBConnection(DBConnection pDbConnection) throws ModuleException {
 
-        PluginMetaData metaData = service.checkPluginClassName(IDBConnectionPlugin.class,
-                                                               pDbConnection.getPluginClassName());
+        PluginMetaData metaData = pluginService.checkPluginClassName(IDBConnectionPlugin.class,
+                                                                     pDbConnection.getPluginClassName());
 
-        return service.savePluginConfiguration(new PluginConfiguration(metaData, pDbConnection.getLabel(),
+        return pluginService.savePluginConfiguration(new PluginConfiguration(metaData, pDbConnection.getLabel(),
                 buildParameters(pDbConnection)));
     }
 
     @Override
-    public PluginConfiguration getDBConnection(Long pId) throws ModuleException {
-        return service.getPluginConfiguration(pId);
+    public PluginConfiguration getDBConnection(Long pConfigurationId) throws ModuleException {
+        return pluginService.getPluginConfiguration(pConfigurationId);
     }
 
     @Override
     public PluginConfiguration updateDBConnection(DBConnection pDbConnection) throws ModuleException {
         // Get the PluginConfiguration
-        PluginConfiguration plgConf = service.getPluginConfiguration(pDbConnection.getPluginConfigurationId());
+        PluginConfiguration plgConf = pluginService.getPluginConfiguration(pDbConnection.getPluginConfigurationId());
 
         // Update the PluginParamater of the PluginConfiguration
         UnaryOperator<PluginParameter> unaryOpt = pn -> mergeParameters(pn, pDbConnection);
         plgConf.getParameters().replaceAll(unaryOpt);
 
-        return service.updatePluginConfiguration(plgConf);
+        return pluginService.updatePluginConfiguration(plgConf);
     }
 
     @Override
-    public void deleteDBConnection(Long pId) throws ModuleException {
-        service.deletePluginConfiguration(pId);
+    public void deleteDBConnection(Long pConfigurationId) throws ModuleException {
+        pluginService.deletePluginConfiguration(pConfigurationId);
     }
 
     @Override
-    public Boolean testDBConnection(Long pId) throws ModuleException {
-        IDBConnectionPlugin plg = service.getPlugin(pId);
-        return plg.testConnection();
+    public Boolean testDBConnection(Long pConfigurationId) throws ModuleException {
+        // Instanciate plugin
+        IDBConnectionPlugin plg = pluginService.getPlugin(pConfigurationId);
+        // Test connection
+        Boolean result = plg.testConnection();
+        // Remove plugin instance from cache after closing connection
+        if (!result) {
+            plg.closeConnection();
+            pluginService.cleanPluginCache(pConfigurationId);
+        }
+        return result;
     }
 
     /**
@@ -111,7 +119,7 @@ public class DBConnectionService implements IDBConnectionService {
 
     /**
      * Update the {@link PluginParameter} with the appropriate {@link DBConnection} attribute
-     * 
+     *
      * @param pPlgParam
      *            a {@link PluginParameter}
      * @param pDbConn
@@ -149,13 +157,13 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public Map<String, Table> getTables(Long pId) throws ModuleException {
-        IDBConnectionPlugin plg = service.getPlugin(pId);
+        IDBConnectionPlugin plg = pluginService.getPlugin(pId);
         return plg.getTables();
     }
 
     @Override
     public Map<String, Column> getColumns(Long pId, String pTableName) throws ModuleException {
-        IDBConnectionPlugin plg = service.getPlugin(pId);
+        IDBConnectionPlugin plg = pluginService.getPlugin(pId);
         return plg.getColumns(pTableName);
     }
 

@@ -49,6 +49,10 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     public static final String TYPE_MAPPING = "/{pModelId}/attributes";
 
+    public static final String FRAGMENT_BIND_MAPPING = "/fragments";
+
+    public static final String FRAGMENT_UNBIND_MAPPING = "/fragments/{pFragmentId}";
+
     public static final String ASSOCS_MAPPING = "/assocs";
 
     /**
@@ -171,10 +175,11 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Bind fragment attributes to a model")
     @RequestMapping(method = RequestMethod.POST, value = TYPE_MAPPING + "/fragments/{pFragmentId}")
+    @RequestMapping(method = RequestMethod.POST, value = FRAGMENT_BIND_MAPPING)
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable Long pModelId,
-            @PathVariable Long pFragmentId) throws ModuleException {
+            @Valid @RequestBody Fragment pFrament) throws ModuleException {
         return ResponseEntity
-                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFragmentId), pModelId));
+                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFrament), pModelId));
     }
 
     /**
@@ -190,6 +195,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Unbind fragment attributes from a model")
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + "/fragments/{pFragmentId}")
+    @RequestMapping(method = RequestMethod.DELETE, value = FRAGMENT_UNBIND_MAPPING)
     public ResponseEntity<Void> unbindNSAttributeFromModel(@PathVariable Long pModelId, @PathVariable Long pFragmentId)
             throws ModuleException {
         modelAttrAssocService.unbindNSAttributeToModel(pModelId, pFragmentId);

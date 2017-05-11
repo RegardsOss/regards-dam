@@ -94,6 +94,7 @@ public class CollectionController implements IResourceController<Collection> {
      *
      * @param pCollectionId {@link Collection} id
      * @param pCollection {@link Collection}
+     * @param pResult for validation of entites' properties
      * @return update {@link Collection} as a {@link Resource}
      * @throws ModuleException if error occurs! @
      */

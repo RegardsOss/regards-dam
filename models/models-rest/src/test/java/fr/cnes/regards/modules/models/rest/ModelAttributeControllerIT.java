@@ -87,11 +87,6 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
      */
     private final String apiAttribute = "/{pAttributeId}";
 
-    /**
-     * Fragment endpoint
-     */
-    private final String fragmentApi = "/fragments/{pFragmentId}";
-
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -391,7 +386,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         attributeModelService.addAttribute(att);
         attributeModelService.addAttribute(att2);
 
-        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag.getId());
+        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag);
 
         final List<ModelAttrAssoc> modelAttributes = modelAttributeService.getModelAttrAssocs(mod.getId());
 

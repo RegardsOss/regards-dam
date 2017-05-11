@@ -46,7 +46,8 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 @RestController
 // CHECKSTYLE:OFF
-@ModuleInfo(name = "models", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI", documentation = "http://test")
+@ModuleInfo(name = "models", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
+        documentation = "http://test")
 // CHECKSTYLE:ON
 @RequestMapping(ModelController.TYPE_MAPPING)
 public class ModelController implements IResourceController<Model> {
@@ -227,15 +228,14 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Import a model")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Void> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
+    public ResponseEntity<Model> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
         try {
-            modelService.importModel(pFile.getInputStream());
+            return ResponseEntity.ok(modelService.importModel(pFile.getInputStream()));
         } catch (IOException e) {
             final String message = "Error with file stream while importing model.";
             LOGGER.error(message, e);
             throw new ModuleException(e);
         }
-        return ResponseEntity.noContent().build();
     }
 
     @Override

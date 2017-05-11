@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+    <name>VALIDATION_DATA_MODEL</name>
+    <description>Modèle des données de validation</description>
+    <version>1</version>
+    <type>DATA</type>
+    <attribute>
+        <name></name>
+        <type></type>
+    </attribute>
+    <fragment>
+        <name></name>
+    </fragment>
+</model>

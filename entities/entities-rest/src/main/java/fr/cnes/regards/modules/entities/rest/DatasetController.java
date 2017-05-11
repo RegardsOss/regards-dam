@@ -38,7 +38,9 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
  * Rest controller managing {@link Dataset}s
@@ -50,24 +52,63 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 @RequestMapping(value = DatasetController.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class DatasetController implements IResourceController<Dataset> {
 
+    /**
+     * Endpoint for datasets
+     */
     public static final String DATASET_PATH = "/datasets";
 
+    /**
+     * Endpoint for data attributes
+     */
     public static final String DATASET_DATA_ATTRIBUTES_PATH = "/data/attributes";
 
+    /**
+     * Endpoint for a specific dataset
+     */
     public static final String DATASET_ID_PATH = "/{dataset_id}";
 
+    /**
+     * Endpoint to associate dataset
+     */
     public static final String DATASET_ID_ASSOCIATE_PATH = DATASET_ID_PATH + "/associate";
 
+    /**
+     * Endpoint to dissociate dataset
+     */
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
+    /**
+     * Endpoint to retrieve dataset description file
+     */
     public static final String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
 
+    /**
+     * Service handling hypermedia resources
+     */
     @Autowired
     private IResourceService resourceService;
 
+    /**
+     * Service handling {@link Dataset}
+     */
     @Autowired
     private IDatasetService service;
 
+    /**
+     * Service parsing/converting OpenSearch string requests to {@link ICriterion}
+     */
+    @Autowired
+    private IOpenSearchService openSearchService;
+
+    /**
+     * Create a dataset
+     * @param pDataset the dataset to create
+     * @param descriptionFile the description file
+     * @param pResult for validation of entites' properties
+     * @return the created dataset wrapped in an HTTP response
+     * @throws ModuleException
+     * @throws IOException
+     */
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create and send the dataset")
     public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") Dataset pDataset,
@@ -81,6 +122,12 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
+    /**
+     * Retrieve datasets
+     * @param pPageable the page
+     * @param pAssembler the dataset resources assembler
+     * @return the page of dataset wrapped in an HTTP response
+     */
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
     public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(final Pageable pPageable,
@@ -92,6 +139,12 @@ public class DatasetController implements IResourceController<Dataset> {
 
     }
 
+    /**
+     * Retrieve the dataset of passed id
+     * @param pDatasetId the id of the dataset
+     * @return the dataset of passed id
+     * @throws EntityNotFoundException Thrown when no dataset with given id could be found
+     */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Retrieves a dataset")
     public ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long pDatasetId)
@@ -104,6 +157,12 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
+    /**
+     * Delete dataset of given id
+     * @param pDatasetId the id of the dataset to delete
+     * @return a no content HTTP response
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Deletes a dataset")
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDatasetId)
@@ -112,12 +171,23 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Update dataset of given id
+     * @param pDatasetId the id of the dataset to update
+     * @param pDataset the new values of the dataset
+     * @param pResult for validation of entites' properties
+     * @return the updated dataset wrapped in an HTTP response
+     * @throws ModuleException
+     */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @Valid @RequestBody Dataset pDataset, BindingResult pResult) throws ModuleException {
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
+
+        // Convert OpenSearch subsetting clause
+        pDataset.setSubsettingClause(openSearchService.parse(pDataset.getOpenSearchSubsettingClause()));
 
         Dataset dataSet = service.update(pDatasetId, pDataset);
         final Resource<Dataset> resource = toResource(dataSet);
@@ -158,6 +228,15 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
+    /**
+     * Retrieve data attributes of datasets of given URNs and given model name
+     * @param pUrns the URNs of datasets
+     * @param pModelName the model name
+     * @param pPageable the page
+     * @param pAssembler the resources assembler
+     * @return the page of attribute models wrapped in an HTTP response
+     * @throws ModuleException
+     */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_DATA_ATTRIBUTES_PATH)
     @ResponseBody
     @ResourceAccess(description = "Retrieves data attributes of given datasets")
