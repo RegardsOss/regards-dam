@@ -145,8 +145,10 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     }
 
     @Test
-    @Requirement("REGARDS_DSL_DAM_ARC_140")
     @Requirement("REGARDS_DSL_DAM_PLG_210")
+    @Requirement("REGARDS_DSL_DAM_SRC_100")
+    @Requirement("REGARDS_DSL_DAM_SRC_110")
+    @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by introspection")
     public void getDataSourceIntrospection() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());

@@ -65,6 +65,11 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     private final IResourceService resourceService;
 
+    /**
+     * Constructor
+     * @param pModelAttrAssocService Model attribute association service
+     * @param pResourceService Resource service
+     */
     public ModelAttrAssocController(IModelAttrAssocService pModelAttrAssocService, IResourceService pResourceService) {
         modelAttrAssocService = pModelAttrAssocService;
         resourceService = pResourceService;
@@ -176,9 +181,9 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @ResourceAccess(description = "Bind fragment attributes to a model")
     @RequestMapping(method = RequestMethod.POST, value = TYPE_MAPPING + FRAGMENT_BIND_MAPPING)
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable Long pModelId,
-            @Valid @RequestBody Fragment pFrament) throws ModuleException {
+            @Valid @RequestBody Fragment pFragment) throws ModuleException {
         return ResponseEntity
-                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFrament), pModelId));
+                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFragment), pModelId));
     }
 
     /**
