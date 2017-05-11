@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.models.service;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -484,6 +486,17 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         List<ModelAttrAssoc> attributes = modelAttributeRepository.findByModelId(pId);
         return attributes.stream().filter(attr -> ComputationMode.COMPUTED.equals(attr.getMode()))
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Collection<ModelAttrAssoc> getModelAttrAssocsFor(EntityType pType) {
+        if (pType != null) {
+            Collection<Model> models = getModels(pType);
+            Collection<Long> modelsIds = Collections2.transform(models, (model -> model.getId()));
+            return modelAttributeRepository.findAllByModelIdIn(modelsIds);
+        } else {
+            return modelAttributeRepository.findAll();
+        }
     }
 
 }

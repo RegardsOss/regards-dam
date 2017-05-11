@@ -15,7 +15,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.queryparser</groupId>
+			<groupId>fr.cnes.regards.modules.opensearch</groupId>
 			<artifactId>opensearch-domain</artifactId>
 		</dependency>
 		<!-- COTS -->
@@ -27,6 +27,10 @@
 			<groupId>com.vividsolutions</groupId>
 			<artifactId>jts</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.project</groupId>
+			<artifactId>project-client</artifactId>
+		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
@@ -36,6 +40,10 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-domain</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
