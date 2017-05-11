@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,7 +43,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * REST interface for managing data {@link Model}
  *
  * @author msordi
- *
+ * @author Xavier-Alexandre Brochard
  */
 @RestController
 // CHECKSTYLE:OFF
@@ -82,6 +83,11 @@ public class ModelController implements IResourceController<Model> {
      */
     private final IResourceService resourceService;
 
+    /**
+     * Constructor
+     * @param pModelService Model attribute service
+     * @param pResourceService Resource service
+     */
     public ModelController(IModelService pModelService, IResourceService pResourceService) {
         this.modelService = pModelService;
         this.resourceService = pResourceService;
@@ -230,7 +236,8 @@ public class ModelController implements IResourceController<Model> {
     @RequestMapping(method = RequestMethod.POST, value = "/import")
     public ResponseEntity<Model> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
         try {
-            return ResponseEntity.ok(modelService.importModel(pFile.getInputStream()));
+            Model model = modelService.importModel(pFile.getInputStream());
+            return new ResponseEntity<>(model, HttpStatus.CREATED);
         } catch (IOException e) {
             final String message = "Error with file stream while importing model.";
             LOGGER.error(message, e);
