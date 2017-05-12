@@ -213,4 +213,25 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
         Assert.assertNotNull(payload(resultActions));
     }
+
+    /**
+     * Create a dataset model
+     * @throws ModuleException
+     */
+    @Test
+    @Requirement("REGARDS_DSL_DAM_MOD_010")
+    @Purpose("Delete a model")
+    public void deleteModelTest_shouldDeleteModel() throws ModuleException {
+        // Prepare test
+        final Model model = modelService
+                .createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DOCUMENT));
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
+
+        // Perform test
+        performDefaultDelete(ModelController.TYPE_MAPPING + "/{pModelId}", expectations, "Model should be deleted",
+                             model.getId());
+    }
 }
