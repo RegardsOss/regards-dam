@@ -92,7 +92,7 @@ public final class XmlImportHelper {
         final Model xmlModel = read(pInputStream, Model.class);
 
         if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {
-            final String message = String.format("Import for module %s is skipped because no attribute is bound!",
+            final String message = String.format("Import for model %s is skipped because no attribute is bound!",
                                                  xmlModel.getName());
             LOGGER.error(message);
             throw new ImportException(message);
