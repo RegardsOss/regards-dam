@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -276,9 +275,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else if (!ipId.equals(other.getIpId())) {
-            return false;
-        }
+        } else
+            if (!ipId.equals(other.getIpId())) {
+                return false;
+            }
         return true;
     }
 

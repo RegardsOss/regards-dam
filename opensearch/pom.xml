@@ -25,10 +25,16 @@
 				<artifactId>opensearch-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.opensearch</groupId>
+				<artifactId>opensearch-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	
 	<modules>
 		<module>opensearch-service</module>
+		<module>opensearch-domain</module>
 	</modules>
 </project>
