@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.opensearch.service.descriptor;
+package fr.cnes.regards.modules.opensearch.service.description;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -43,10 +43,6 @@ public class OpenSearchDescriptionBuilder {
 
     private static final String SHORT_NAME = "%s Search";
 
-    private final String contact;
-
-    private final String developer;
-
     private final String microserviceName;
 
     private final IProjectsClient projectClient;
@@ -55,12 +51,9 @@ public class OpenSearchDescriptionBuilder {
 
     private final IModelAttrAssocClient modelAttrAssocClient;
 
-    public OpenSearchDescriptionBuilder(@Value("${regards.opensearch.contact}") String contact,
-            @Value("${regards.opensearch.developer}") String developer,
-            @Value("${spring.application.name}") String microserviceName, @Autowired IProjectsClient projectClient,
-            @Autowired IRuntimeTenantResolver tenantResolver, @Autowired IModelAttrAssocClient modelAttrAssocClient) {
-        this.contact = contact;
-        this.developer = developer;
+    public OpenSearchDescriptionBuilder(@Value("${spring.application.name}") String microserviceName,
+            @Autowired IProjectsClient projectClient, @Autowired IRuntimeTenantResolver tenantResolver,
+            @Autowired IModelAttrAssocClient modelAttrAssocClient) {
         this.microserviceName = microserviceName;
         this.projectClient = projectClient;
         this.tenantResolver = tenantResolver;
@@ -190,9 +183,7 @@ public class OpenSearchDescriptionBuilder {
         OpenSearchDescription desc = new OpenSearchDescription();
         desc.setInputEncoding(StandardCharsets.UTF_8.displayName());
         desc.setOutputEncoding(StandardCharsets.UTF_8.displayName());
-        desc.setContact(contact);
         desc.setDescription(String.format(DESCRIPTION, project.getName()));
-        desc.setDeveloper(developer);
         desc.setShortName(String.format(SHORT_NAME, project.getName()));
         return desc;
     }

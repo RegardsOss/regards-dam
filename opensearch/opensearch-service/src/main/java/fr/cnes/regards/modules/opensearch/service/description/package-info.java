@@ -5,4 +5,4 @@
  * @author Sylvain Vissiere-Guerinet
  *
  */
-package fr.cnes.regards.modules.opensearch.service.descriptor;
+package fr.cnes.regards.modules.opensearch.service.description;
