@@ -4,9 +4,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * Datasource attribute mapping for static fields ie primary key, label, last update date, raw data, thumbnail or
- * geometry. This kind of attribute mapping doesn't have a name nor a namespace but must have one or more mapping
- * options (mostly only one but nothing prevents to have several).
+ * geometry. This kind of attribute mapping doesn't have a namespace and type.
  * @author oroussel
+ * @author Christophe Mertz
  */
 public class StaticAttributeMapping extends AbstractAttributeMapping {
 
@@ -16,27 +16,42 @@ public class StaticAttributeMapping extends AbstractAttributeMapping {
 
     /**
      * Complete constructor
-     * @param pType type of attribute in model
-     * @param pMappingDS mapping name in datasource
-     * @param pTypeDS type of attribute in datasource
-     * @param pMappingOptions OR bitwise of Mapping options {@link AbstractAttributeMapping#NO_MAPPING_OPTIONS},
-     * @link {@link AbstractAttributeMapping#GEOMETRY}, @link {@link AbstractAttributeMapping#LABEL},
-     * @link {@link AbstractAttributeMapping#RAW_DATA}, ...
+     * @param name the attribute name in model
+     * @param type the attribute type in model
+     * @param mappingDS mapping name in datasource
+     * @param typeDS the attribute type in datasource
      */
-    public StaticAttributeMapping(AttributeType pType, String pMappingDS,
-            Integer pTypeDS, short pMappingOptions) {
-        super(null, null, pType, pMappingDS, pTypeDS, pMappingOptions);
+    public StaticAttributeMapping(String name, AttributeType type, String mappingDS, Integer typeDS) {
+        super(name, null, type, mappingDS, typeDS);
     }
 
     /**
      * Minimal constructor
-     * @param pType type of attribute in model
-     * @param pMappingDS mapping name in datasource
-     * @param pMappingOptions OR bitwise of Mapping options {@link AbstractAttributeMapping#NO_MAPPING_OPTIONS},
-     * @link {@link AbstractAttributeMapping#GEOMETRY}, @link {@link AbstractAttributeMapping#LABEL},
-     * @link {@link AbstractAttributeMapping#RAW_DATA}, ...
+     * @param name the attribute name in model
+     * @param mappingDS mapping name in datasource
+     * @param typeDS the attribute type in datasource
      */
-    public StaticAttributeMapping(AttributeType pType, String pMappingDS, short pMappingOptions) {
-        this(pType, pMappingDS, null, pMappingOptions);
+    public StaticAttributeMapping(String name, String mappingDS, Integer typeDS) {
+        super(name, null, null, mappingDS, typeDS);
     }
+
+    /**
+     * Minimal constructor
+     * @param name the attribute name in model
+     * @param mappingDS mapping name in datasource
+     */
+    public StaticAttributeMapping(String name, String mappingDS) {
+        super(name, null, null, mappingDS, null);
+    }
+
+    /**
+     * Complete constructor
+     * @param name the attribute name in model
+     * @param type the attribute type in model
+     * @param mappingDS mapping name in datasource
+     */
+    public StaticAttributeMapping(String name, AttributeType type, String mappingDS) {
+        super(name, null, type, mappingDS, null);
+    }
+
 }

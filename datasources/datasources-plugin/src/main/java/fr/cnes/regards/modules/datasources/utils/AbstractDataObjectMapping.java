@@ -12,9 +12,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
@@ -231,8 +241,12 @@ public abstract class AbstractDataObjectMapping {
                 AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
 
                 if (attr != null) {
-                    // dynamic mapping
-                    if (!attrMapping.isMappedToStaticProperty()) {
+
+                    if (attrMapping.isMappedToStaticProperty()) {
+                        // static attribute mapping
+                        processStaticAttributes(data, attr, attrMapping);
+                    } else {
+                        // dynamic attribute mapping
                         if (attrMapping.getNameSpace() != null) {
                             if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
                                 // It is a new name space
@@ -243,8 +257,6 @@ public abstract class AbstractDataObjectMapping {
                         } else {
                             attributes.add(attr);
                         }
-                    } else { // static mapping
-                        processStaticAttributes(data, attr, attrMapping);
                     }
                 }
             } catch (SQLException e) {
@@ -309,11 +321,11 @@ public abstract class AbstractDataObjectMapping {
         if (LOG.isDebugEnabled() && (attr != null)) {
             if ((pAttrMapping.getName() != null) && pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "> of type <" + pAttrMapping.getType() + "> is :"
-                                  + attr.getValue());
+                        + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
-                                  + pAttrMapping.getType() + "> is :" + attr.getValue());
+                        + pAttrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -349,7 +361,8 @@ public abstract class AbstractDataObjectMapping {
      * <li>raw data
      * <li>thumbnail
      * <li>label
-     * <li>description
+     * <li>last update date
+     * <li>geometry
      *
      * @param pData the current {@link DataObject} to build
      * @param pAttr the current {@link AbstractAttribute} to analyze

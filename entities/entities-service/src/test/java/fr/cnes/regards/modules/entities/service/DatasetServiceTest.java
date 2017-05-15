@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.hsqldb.Types;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +32,6 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -52,7 +52,6 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
@@ -334,10 +333,8 @@ public class DatasetServiceTest {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "ATTRIBUTE_ID",
-                AbstractAttributeMapping.PRIMARY_KEY));
-
-        attributes.add(new DynamicAttributeMapping("LABEL", AttributeType.STRING, "FILE_TYPE"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "ATTRIBUTE_ID", Types.INTEGER));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "FILE_TYPE"));
 
         dataSourceModelMapping = new DataSourceModelMapping(99L, attributes);
     }
