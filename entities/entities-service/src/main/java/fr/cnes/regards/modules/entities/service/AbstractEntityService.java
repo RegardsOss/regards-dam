@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -43,8 +44,10 @@ import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
+import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -106,11 +109,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final IPublisher publisher;
 
+    private final IRuntimeTenantResolver runtimeTenantResolver;
+
     public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<U> pRepository, EntityManager pEm,
-            IPublisher pPublisher) {
+            IPublisher pPublisher,IRuntimeTenantResolver runtimeTenantResolver) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
@@ -120,6 +125,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         repository = pRepository;
         em = pEm;
         publisher = pPublisher;
+        this.runtimeTenantResolver=runtimeTenantResolver;
     }
 
     @Override
@@ -339,6 +345,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     public U create(U pEntity, MultipartFile file) throws ModuleException, IOException {
         U entity = check(pEntity);
 
+        // Set IpId
+        if(entity.getIpId()==null) {
+            entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
+                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+        }
         // Set description
         if (entity instanceof AbstractDescEntity) {
             this.setDescription((AbstractDescEntity) entity, file);
