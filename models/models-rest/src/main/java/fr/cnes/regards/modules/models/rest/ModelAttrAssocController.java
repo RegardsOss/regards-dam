@@ -93,7 +93,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "List all model attributes")
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable Long pModelId)
+    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId)
             throws ModuleException {
         return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(pModelId), pModelId));
     }
