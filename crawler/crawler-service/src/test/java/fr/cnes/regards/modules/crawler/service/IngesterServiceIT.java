@@ -193,10 +193,9 @@ public class IngesterServiceIT {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
-        attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id", AbstractAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
 
-        attributes.add(new StaticAttributeMapping(AttributeType.DATE_ISO8601, "date",
-                                                  AbstractAttributeMapping.LAST_UPDATE));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601, "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }

@@ -354,8 +354,7 @@ public class IndexerServiceDataSourceIT {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "DATA_OBJECTS_ID",
-                AbstractAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER, "DATA_OBJECTS_ID"));
 
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -389,9 +388,9 @@ public class IndexerServiceDataSourceIT {
         attributes.add(new DynamicAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
 
         attributes
-                .add(new StaticAttributeMapping(AttributeType.STRING, "ANSA7_URL", AbstractAttributeMapping.THUMBNAIL));
+                .add(new StaticAttributeMapping(AbstractAttributeMapping.THUMBNAIL, AttributeType.STRING, "ANSA7_URL"));
         attributes
-                .add(new StaticAttributeMapping(AttributeType.STRING, "ANSE7_URL", AbstractAttributeMapping.RAW_DATA));
+                .add(new StaticAttributeMapping(AbstractAttributeMapping.RAW_DATA, AttributeType.STRING, "ANSE7_URL", Types.VARCHAR));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }

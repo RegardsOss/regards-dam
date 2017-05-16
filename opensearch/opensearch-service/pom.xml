@@ -14,10 +14,33 @@
 	</parent>
 
 	<dependencies>
-		<!-- Module dependencies -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.opensearch</groupId>
+			<artifactId>opensearch-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.project</groupId>
+			<artifactId>project-client</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-service</artifactId>
+			<artifactId>models-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards</artifactId>
 		</dependency>
 		<!-- COTS -->
 		<dependency>
@@ -28,32 +51,16 @@
 			<groupId>com.vividsolutions</groupId>
 			<artifactId>jts</artifactId>
 		</dependency>
-		<!-- Test dependencies -->
-		<dependency>
-			<groupId>fr.cnes.regards.framework.test</groupId>
-			<artifactId>regards-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-queryparser</artifactId>
 			<version>6.3.0</version>
 		</dependency>
+		<!-- Test dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>hateoas-regards-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>module-regards</artifactId>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

@@ -278,9 +278,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else if (!ipId.equals(other.getIpId())) {
-            return false;
-        }
+        } else
+            if (!ipId.equals(other.getIpId())) {
+                return false;
+            }
         return true;
     }
 

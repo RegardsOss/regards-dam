@@ -151,11 +151,9 @@ public class IngesterGeometryServiceIT {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
-        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "line_id",
-                                                  AbstractAttributeMapping.PRIMARY_KEY));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER, "line_id"));
 
-        attributes.add(new StaticAttributeMapping(AttributeType.STRING, "polygon_geojson",
-                                                    AbstractAttributeMapping.GEOMETRY));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.GEOMETRY, AttributeType.STRING, "polygon_geojson"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }

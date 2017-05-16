@@ -244,9 +244,10 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id", AbstractAttributeMapping.PRIMARY_KEY));
-        attributes.add(new StaticAttributeMapping(AttributeType.STRING, "'" + HELLO + "- '||label as label",
-                AbstractAttributeMapping.LABEL));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id",
+                Types.INTEGER));
+
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'" + HELLO + "- '||label as label"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
@@ -255,8 +256,8 @@ public class PostgreDataSourceFromSingleTablePluginTest {
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
         attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
-        attributes.add(new StaticAttributeMapping(AttributeType.DATE_ISO8601, "timeStampWithTimeZone", Types.TIMESTAMP,
-                AbstractAttributeMapping.LAST_UPDATE));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
+                "timeStampWithTimeZone", Types.TIMESTAMP));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

@@ -17,39 +17,34 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 public abstract class AbstractAttributeMapping {
 
     /**
-     * Constant to be used in mappingOptions. Indicates that the attribute has no specific mapping options
+     * Constant used for the primary key attribute
      */
-    public static final short NO_MAPPING_OPTIONS = 0;
+    public static final String PRIMARY_KEY = "sipId";
 
     /**
-     * Constant to be used in mappingOptions. Indicates the attribute is a primary key
+     * Constant used for the last update attribute
      */
-    public static final short PRIMARY_KEY = 1;
+    public static final String LAST_UPDATE = "lastUpdate";
 
     /**
-     * Constant to be used in mappingOptions. Indicates the attribute is the last update field
+     * Constant used for the label attribute
      */
-    public static final short LAST_UPDATE = 2;
+    public static final String LABEL = "label";
 
     /**
-     * Constant to be used in mappingOptions. Indicates the attribute is the label
+     * Constant used for the raw data attribute
      */
-    public static final short LABEL = 4;
+    public static final String RAW_DATA = "download";
 
     /**
-     * Constant to be used in mappingOptions. Indicates the attribute is raw data
+     * Constant used for the thumbnail attribute 
      */
-    public static final short RAW_DATA = 8;
+    public static final String THUMBNAIL = "thumbnail";
 
     /**
-     * Constant to be used in mappingOptions. Indicates the attribute is a thumbnail
+     * Constant used for the geometry attribute
      */
-    public static final short THUMBNAIL = 16;
-
-    /**
-     * Constant to be used in mappingOptions. Indicates the attribute is a geometry
-     */
-    public static final short GEOMETRY = 32;
+    public static final String GEOMETRY = "geometry";
 
     /**
      * The attribute name in the model
@@ -76,12 +71,6 @@ public abstract class AbstractAttributeMapping {
      */
     private Integer typeDS = null;
 
-    /**
-     * Combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
-     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
-     */
-    private short mappingOptions = NO_MAPPING_OPTIONS;
-
     protected AbstractAttributeMapping() {
     }
 
@@ -92,17 +81,44 @@ public abstract class AbstractAttributeMapping {
      * @param pType the attribute type in the model @see {@link AttributeType}
      * @param pMappingDS The attribute name in the data source
      * @param pTypeDS The attribute type in the data source @see {@link Types}
-     * @param pMappingOptions combination of mapping options, ie a OR bitwise (| operator) of {@value #PRIMARY_KEY}, {@value #LAST_UPDATE},
-     * {@value #RAW_DATA}, {@value #LABEL} and {@value #THUMBNAIL}
      */
     protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
-            Integer pTypeDS, short pMappingOptions) {
+            Integer pTypeDS) {
         this.name = pName;
-        this.type = pType;
         this.nameSpace = pNameSpace;
         this.nameDS = pMappingDS;
         this.typeDS = pTypeDS;
-        this.mappingOptions = pMappingOptions;
+        if (pType == null && isMappedToStaticProperty()) {
+            this.type = getStaticdAttributeType(pName);
+        } else {
+            this.type = pType;
+        }
+    }
+
+    /**
+     * Get the {@link AttributeType} for a static attribute
+     * @param staticAttrName of one of the static attribute :
+     * <li>{@value #PRIMARY_KEY}
+     * <li>{@value #LAST_UPDATE}
+     * <li>{@value #LABEL}
+     * <li>{@value #RAW_DATA}
+     * <li>{@value #THUMBNAIL}
+     * <li>{@value #GEOMETRY}
+     * @return the {@link AttributeType}
+     */
+    private AttributeType getStaticdAttributeType(String staticAttrName) {
+        switch (staticAttrName) {
+            case PRIMARY_KEY:
+                return AttributeType.LONG;
+            case LABEL:
+            case RAW_DATA:
+            case THUMBNAIL:
+                return AttributeType.STRING;
+            case LAST_UPDATE:
+                return AttributeType.DATE_ISO8601;
+            default:
+                return null;
+        }
     }
 
     public String getName() {
@@ -145,46 +161,31 @@ public abstract class AbstractAttributeMapping {
         this.typeDS = pTypeDS;
     }
 
-    public void addMappingOption(short option) {
-        mappingOptions |= option;
-    }
-
-    public void setMappingOption(short options) {
-        mappingOptions = options;
-    }
-
-    public short getMappingOptions() {
-        return mappingOptions;
-    }
-
     public boolean isPrimaryKey() {
-        return ((mappingOptions & PRIMARY_KEY) == PRIMARY_KEY);
+        return name.equals(PRIMARY_KEY);
     }
 
     public boolean isLastUpdate() {
-        return ((mappingOptions & LAST_UPDATE) == LAST_UPDATE);
+        return name.equals(LAST_UPDATE);
     }
 
     public boolean isLabel() {
-        return ((mappingOptions & LABEL) == LABEL);
+        return name.equals(LABEL);
     }
 
     public boolean isRawData() {
-        return ((mappingOptions & RAW_DATA) == RAW_DATA);
+        return name.equals(RAW_DATA);
     }
 
     public boolean isThumbnail() {
-        return ((mappingOptions & THUMBNAIL) == THUMBNAIL);
+        return name.equals(THUMBNAIL);
     }
 
     public boolean isGeometry() {
-        return ((mappingOptions & GEOMETRY) == GEOMETRY);
+        return name.equals(GEOMETRY);
     }
 
     public boolean isMappedToStaticProperty() {
-        // primary key => sipId, label => label, raw and thumbnail => files, geometry => geometry, last update => last
-        // update
-        return (mappingOptions != 0)
-                && (mappingOptions <= PRIMARY_KEY + LAST_UPDATE + LABEL + RAW_DATA + THUMBNAIL + GEOMETRY);
+        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() || isThumbnail() || isGeometry();
     }
 }

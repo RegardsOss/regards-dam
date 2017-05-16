@@ -13,24 +13,18 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ComparisonOperator;
-import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.MatchType;
-import fr.cnes.regards.modules.indexer.domain.criterion.OrCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
-import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.indexer.domain.criterion.*;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.AttributeModelCache;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
@@ -63,9 +57,9 @@ public class QueryParserTest {
         ISubscriber subscriber = Mockito.mock(ISubscriber.class);
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn(TENANT);
-        IAttributeModelService attributeModelService = Mockito.mock(IAttributeModelService.class);
-        Mockito.when(attributeModelService.getAttributes(null, null)).thenReturn(SampleDataUtils.LIST);
-        AttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelService, subscriber,
+        IAttributeModelClient attributeModelClient = Mockito.mock(IAttributeModelClient.class);
+        Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(new ResponseEntity<>(HateoasUtils.wrapList(SampleDataUtils.LIST), HttpStatus.OK));
+        AttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelClient, subscriber,
                 runtimeTenantResolver);
 
         parser = new QueryParser(attributeModelCache);

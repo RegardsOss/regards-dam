@@ -28,7 +28,6 @@ public class DataSource {
 
     private String label;
 
-    // une table
     private String tableName;
 
     private String fromClause;

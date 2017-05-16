@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.datasources.service;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class DBConnectionServiceIT {
     private IRuntimeTenantResolver runtimeTenantResolver;
 
     @Test
+    @Ignore
     public void createWrongDbConnection() throws ModuleException {
 
         // Working tenant

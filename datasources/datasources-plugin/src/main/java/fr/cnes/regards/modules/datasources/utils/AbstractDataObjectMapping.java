@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,7 +229,7 @@ public abstract class AbstractDataObjectMapping {
     protected DataObject processResultSet(ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
 
-        final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
+        final Set<AbstractAttribute<?>> attributes = new HashSet<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
 
         /**
@@ -240,8 +241,12 @@ public abstract class AbstractDataObjectMapping {
                 AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
 
                 if (attr != null) {
-                    // dynamic mapping
-                    if (!attrMapping.isMappedToStaticProperty()) {
+
+                    if (attrMapping.isMappedToStaticProperty()) {
+                        // static attribute mapping
+                        processStaticAttributes(data, attr, attrMapping);
+                    } else {
+                        // dynamic attribute mapping
                         if (attrMapping.getNameSpace() != null) {
                             if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
                                 // It is a new name space
@@ -252,8 +257,6 @@ public abstract class AbstractDataObjectMapping {
                         } else {
                             attributes.add(attr);
                         }
-                    } else { // static mapping
-                        processStaticAttributes(data, attr, attrMapping);
                     }
                 }
             } catch (SQLException e) {
@@ -358,7 +361,8 @@ public abstract class AbstractDataObjectMapping {
      * <li>raw data
      * <li>thumbnail
      * <li>label
-     * <li>description
+     * <li>last update date
+     * <li>geometry
      *
      * @param pData the current {@link DataObject} to build
      * @param pAttr the current {@link AbstractAttribute} to analyze
