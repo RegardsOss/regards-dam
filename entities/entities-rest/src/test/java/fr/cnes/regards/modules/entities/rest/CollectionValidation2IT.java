@@ -29,7 +29,6 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.rest.dto.CollectionDto;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
