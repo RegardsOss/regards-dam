@@ -26,11 +26,11 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "SumLongAttribute", version = "1.0.0",
+@Plugin(id = "LongSumComputePlugin", version = "1.0.0",
         description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-public class SumLongAttribute extends AbstractFromDataObjectAttributeComputation<Long> {
+public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> {
 
     @Autowired
     private IEsRepository esRepo;
@@ -41,32 +41,38 @@ public class SumLongAttribute extends AbstractFromDataObjectAttributeComputation
     @Autowired
     private IAttributeModelService attModelService;
 
-    @PluginParameter(name = "attributeToComputeName", description = "Name of the attribute to compute.")
+    @PluginParameter(name = "resultAttributeName", description = "Name of the attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
-    @PluginParameter(name = "attributeToComputeFragmentName",
-            description = "Name of the Fragment of the attribute to compute. If the computed attribute belongs to the default fragment, this value can be set to null.")
+    @PluginParameter(name = "resultAttributeFragmentName",
+            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.")
     private String attributeToComputeFragmentName;
+
+    @PluginParameter(name = "parameterAttributeName",
+            description = "Name of the parameter attribute used to compute result attribute.")
+    private String parameterAttributeName;
+
+    @PluginParameter(name = "parameterAttributeFragmentName",
+            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.")
+    private String parameterAttributeFragmentName;
 
     /**
      * Plugin initialization method
      */
     @PluginInit
     public void init() {
-        initAbstract(esRepo, attModelService, tenantResolver);
-        attributeToCompute = attModelService.findByNameAndFragmentName(attributeToComputeName,
-                                                                       attributeToComputeFragmentName);
-        result = 0L;
+        super.initAbstract(esRepo, attModelService, tenantResolver);
+        super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
+                   parameterAttributeFragmentName);
+        super.result = 0L;
     }
 
-    private void doSum(Set<AbstractAttribute<?>> pProperties) {
-        Optional<AbstractAttribute<?>> candidate = pProperties.stream()
-                .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
-        if (candidate.isPresent() && (candidate.get() instanceof LongAttribute)) {
-            LongAttribute attributeOfInterest = (LongAttribute) candidate.get();
-            Long value = attributeOfInterest.getValue();
+    private void doSum(Optional<AbstractAttribute<?>> propertyOpt) {
+        if (propertyOpt.isPresent() && (propertyOpt.get() instanceof LongAttribute)) {
+            LongAttribute property = (LongAttribute) propertyOpt.get();
+            Long value = property.getValue();
             if (value != null) {
-                result += value;
+                super.result += value;
             }
         }
     }
@@ -78,7 +84,7 @@ public class SumLongAttribute extends AbstractFromDataObjectAttributeComputation
 
     @Override
     protected Consumer<DataObject> doCompute() {
-        return datum -> doSum(extractProperties(datum));
+        return object -> doSum(extractProperty(object));
     }
 
 }

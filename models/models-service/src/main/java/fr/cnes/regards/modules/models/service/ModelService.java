@@ -370,7 +370,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                     // Replace with existing
                     modelAtt.setAttribute(existing);
                 } else {
-                    String format = "Attribute model \"{}\" already exists but is not compatible with imported one.";
+                    String format = "Attribute model \"%s\" already exists but is not compatible with imported one.";
                     String errorMessage = String.format(format, imported.getName());
                     LOGGER.error(errorMessage);
                     throw new ImportException(errorMessage);

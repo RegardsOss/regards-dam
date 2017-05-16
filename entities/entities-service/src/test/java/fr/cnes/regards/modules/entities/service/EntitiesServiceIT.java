@@ -30,7 +30,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.plugin.MinDateAttribute;
+import fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin;
 import fr.cnes.regards.modules.entities.service.plugin.NonUsable;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
@@ -86,20 +86,20 @@ public class EntitiesServiceIT {
         pluginService.addPluginPackage(NonUsable.class.getPackage().getName());
         // create a pluginConfiguration with a label for min
         List<PluginParameter> parametersMin = PluginParametersFactory.build()
-                .addParameter("attributeToComputeName", "minDate").getParameters();
+                .addParameter("resultAttributeName", "minDate").getParameters();
         PluginMetaData metadataMin = new PluginMetaData();
-        metadataMin.setPluginId("MinDateAttribute");
+        metadataMin.setPluginId("MinDateComputePlugin");
         metadataMin.setAuthor("toto");
         metadataMin.setDescription("titi");
         metadataMin.setVersion("tutu");
         metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadataMin.setPluginClassName(MinDateAttribute.class.getName());
+        metadataMin.setPluginClassName(MinDateComputePlugin.class.getName());
         confMin = new PluginConfiguration(metadataMin, "MinDateTestConf");
         confMin.setParameters(parametersMin);
         confMin = pluginService.savePluginConfiguration(confMin);
         // create a pluginConfiguration with a label
         List<PluginParameter> parametersNonUsable = PluginParametersFactory.build()
-                .addParameter("attributeToComputeName", "maxDate").getParameters();
+                .addParameter("resultAttributeName", "maxDate").getParameters();
         PluginMetaData metadataNonUsable = new PluginMetaData();
         metadataNonUsable.setPluginId("NonUsable");
         metadataNonUsable.setAuthor("toto");
@@ -122,7 +122,7 @@ public class EntitiesServiceIT {
     public void testGetComputationPlugins() throws ModuleException {
         Set<IComputedAttribute<Dataset, ?>> results = entitiesService.getComputationPlugins(dataset);
         for (IComputedAttribute<Dataset, ?> plugin : results) {
-            Assert.assertEquals(MinDateAttribute.class, plugin.getClass());
+            Assert.assertEquals(MinDateComputePlugin.class, plugin.getClass());
         }
     }
 

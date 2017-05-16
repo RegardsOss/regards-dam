@@ -35,13 +35,14 @@ public @interface ComputedAttribute {
     /**
      * Class to validate
      */
-    static final String CLASS_NAME = "fr.cnes.regards.modules.models.domain.validation.ComputedAttribute";
+    String CLASS_NAME = "fr.cnes.regards.modules.models.domain.validation.ComputedAttribute";
 
     /**
      * @return error message key
      */
-    String message() default "{" + CLASS_NAME
-            + " validated ModelAttrAssoc has a computation mode of CUSTOM and does not specify a PluginConfiguration of a ICalculationModel plugin}";
+    String message() default "{Validation annotation @" + CLASS_NAME
+            + " validating ModelAttrAssoc (attribute %s): mode is COMPUTED but associated PluginConfiguration %s is null "
+            + "or not implementing IComputedAttribute or has an incompatible attribute type}";
 
     /**
      * @return validation groups

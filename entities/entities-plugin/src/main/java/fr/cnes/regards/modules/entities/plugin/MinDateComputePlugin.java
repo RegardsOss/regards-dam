@@ -27,11 +27,11 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
  *
  * @author Sylvain Vissiere-Guerinet
  */
-@Plugin(id = "MinDateAttribute",
+@Plugin(id = "MinDateComputePlugin",
         description = "allows to compute the minimum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")
-public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation<OffsetDateTime> {
+public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<OffsetDateTime> {
 
     @Autowired
     private IEsRepository esRepo;
@@ -42,12 +42,20 @@ public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation
     @Autowired
     private IAttributeModelService attModelService;
 
-    @PluginParameter(name = "attributeToComputeName", description = "Name of the attribute to compute.")
+    @PluginParameter(name = "resultAttributeName", description = "Name of the attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
-    @PluginParameter(name = "attributeToComputeFragmentName",
-            description = "Name of the Fragment of the attribute to compute. If the computed attribute belongs to the default fragment, this value can be set to null.")
+    @PluginParameter(name = "resultAttributeFragmentName",
+            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.")
     private String attributeToComputeFragmentName;
+
+    @PluginParameter(name = "parameterAttributeName",
+            description = "Name of the parameter attribute used to compute result attribute.")
+    private String parameterAttributeName;
+
+    @PluginParameter(name = "parameterAttributeFragmentName",
+            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.")
+    private String parameterAttributeFragmentName;
 
     /**
      * Plugin initialization method
@@ -55,21 +63,19 @@ public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation
     @PluginInit
     public void init() {
         initAbstract(esRepo, attModelService, tenantResolver);
-        attributeToCompute = attModelService.findByNameAndFragmentName(attributeToComputeName,
-                                                                       attributeToComputeFragmentName);
+        super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
+                   parameterAttributeFragmentName);
     }
 
-    private void getMinDate(Set<AbstractAttribute<?>> pProperties) {
-        Optional<AbstractAttribute<?>> candidate = pProperties.stream()
-                .filter(p -> p.getName().equals(attributeToCompute.getName())).findFirst();
-        if (candidate.isPresent() && (candidate.get() instanceof DateAttribute)) {
-            DateAttribute attributeOfInterest = (DateAttribute) candidate.get();
-            OffsetDateTime value = attributeOfInterest.getValue();
+    private void getMinDate(Optional<AbstractAttribute<?>> parameterOpt) {
+        if (parameterOpt.isPresent() && (parameterOpt.get() instanceof DateAttribute)) {
+            DateAttribute parameter = (DateAttribute) parameterOpt.get();
+            OffsetDateTime value = parameter.getValue();
             if (value != null) {
                 if (result != null) {
-                    result = attributeOfInterest.getValue().isBefore(result) ? attributeOfInterest.getValue() : result;
+                    result = value.isBefore(result) ? parameter.getValue() : result;
                 } else {
-                    result = attributeOfInterest.getValue();
+                    result = value;
                 }
             }
         }
@@ -82,7 +88,7 @@ public class MinDateAttribute extends AbstractFromDataObjectAttributeComputation
 
     @Override
     protected Consumer<DataObject> doCompute() {
-        return datum -> getMinDate(extractProperties(datum));
+        return object -> getMinDate(extractProperty(object));
     }
 
 }
