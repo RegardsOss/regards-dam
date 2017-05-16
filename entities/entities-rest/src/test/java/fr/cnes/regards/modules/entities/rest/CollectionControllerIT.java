@@ -15,10 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import com.google.gson.GsonBuilder;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
@@ -76,6 +79,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelRepository modelRepository;
 
+    @Autowired
+    private GsonBuilder gsonBuilder;
+
     private List<ResultMatcher> expectations;
 
     @Before
@@ -128,9 +134,13 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         collection2.setCreationDate(OffsetDateTime.now());
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(COLLECTIONS, collection2, expectations, "Failed to create a new collection");
+        final String collectionStr = gsonBuilder.create().toJson(collection2);
+        final MockMultipartFile collection = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                collectionStr.getBytes());
+        final List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collection);
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
     }
 
