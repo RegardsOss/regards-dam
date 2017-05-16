@@ -15,9 +15,9 @@ import org.mockito.Mockito;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.test.report.annotation.Requirements;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -103,9 +103,12 @@ public class CollectionServiceTest {
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
 
+        IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
+        Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
+
         collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
                 deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
-                publisherMocked);
+                publisherMocked, runtimeTenantResolver);
 
         // collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
         // pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);

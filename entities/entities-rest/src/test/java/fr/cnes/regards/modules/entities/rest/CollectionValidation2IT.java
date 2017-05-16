@@ -32,7 +32,9 @@ import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilde
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.rest.ModelController;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  * Test collection validation
@@ -61,6 +63,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
      */
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory attributeAdapterFactory;
+
+    /**
+     * {@link IAttributeModelService} service
+     */
+    @Autowired
+    private IAttributeModelService attributeModelService;
 
     /**
      * The XML file used as a model
@@ -145,9 +153,10 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Import a model
      *
-     * @param pFilename model to import from resources folder
+     * @param pFilename
+     *            model to import from resources folder
      */
-    private void importModel(String pFilename) {
+    private void importModel(final String pFilename) {
 
         final Path filePath = Paths.get("src", "test", "resources", pFilename);
 
@@ -157,7 +166,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
 
-        attributeAdapterFactory.refresh(DEFAULT_TENANT);
+        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+        attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);
     }
 
     @Test
@@ -168,10 +178,10 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if a good collection is created
      *
-     * @throws ModuleException module exception
+     * @throws Exception
      */
     @Test
-    public void postCollection() throws ModuleException {
+    public void postCollection() throws Exception {
 
         // Create a good collection
 
@@ -204,7 +214,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if error occurs when an attribute has a bad type
      *
-     * @throws ModuleException module exception
+     * @throws ModuleException
+     *             module exception
      */
     @Test(expected = JsonParseException.class)
     public void postCollectionWithBadType() throws ModuleException {
@@ -241,7 +252,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if an error occurs when giving an attribute a bad name
      *
-     * @throws ModuleException module exception
+     * @throws ModuleException
+     *             module exception
      */
     @Test(expected = AssertionError.class)
     public void postCollectionWithBadAttributeName() throws ModuleException {
@@ -274,7 +286,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     /**
      * Test if an error occurs when an enumaration restriction is violated
      *
-     * @throws ModuleException module exception
+     * @throws ModuleException
+     *             module exception
      */
     @Test
     public void postCollectionWithWrongValue() throws ModuleException {

@@ -3,19 +3,10 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 
@@ -87,11 +78,11 @@ public class Dataset extends AbstractDescEntity {
      */
     @Type(type = "text")
     @Column
-    @NotNull
     private String licence;
 
     public Dataset() {
-        this(null, null, null);
+        // we use super and not this because at deserialization we need a ipId null at the object creation which is then replaced by the attribute if present or added by creation method
+        super(null, null, null);
     }
 
     public Dataset(Model pModel, String pTenant, String pLabel) {

@@ -3,13 +3,12 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,16 +18,11 @@ import org.mockito.Mockito;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.test.report.annotation.Requirements;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.*;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
@@ -107,9 +101,11 @@ public class EntityServiceTest {
         EntityManager emMocked = Mockito.mock(EntityManager.class);
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
+        IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
+        Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
-                null, null, entitiesRepositoryMocked, emMocked, publisherMocked);
+                null, null, entitiesRepositoryMocked, emMocked, publisherMocked, runtimeTenantResolver);
 
         //        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
         //                null, null, emMocked, publisherMocked);

@@ -48,8 +48,10 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -81,6 +83,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IModelService modelService;
+
+    @Autowired
+    private IAttributeModelService attributeModelService;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -156,25 +161,25 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/markdown",
+        final MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/markdown",
                 "some xml".getBytes());
-        MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+        final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
                 gson(dataSet2).getBytes());
 
-        List<MockMultipartFile> fileList = new ArrayList<>(2);
+        final List<MockMultipartFile> fileList = new ArrayList<>(2);
         fileList.add(dataset);
         fileList.add(firstFile);
 
         performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
                                  "Failed to create a new dataset");
 
-        Dataset dataSet21 = new Dataset(model1, null, "dataSet21");
+        final Dataset dataSet21 = new Dataset(model1, null, "dataSet21");
         dataSet21.setLicence("licence");
         dataSet21.setCreationDate(OffsetDateTime.now());
 
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
-        MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        MockMultipartFile dataset21 = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
+        final MockMultipartFile dataset21 = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
                 gson(dataSet21).getBytes());
         fileList.clear();
         fileList.add(pdf);
@@ -233,14 +238,14 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     public void testGetDataAttributes() throws ModuleException {
         importModel("dataModel.xml");
         importModel("datasetModel.xml");
-        Model dataModel = modelService.getModelByName("dataModel");
-        Model datasetModel = modelService.getModelByName("datasetModel");
+        final Model dataModel = modelService.getModelByName("dataModel");
+        final Model datasetModel = modelService.getModelByName("datasetModel");
         Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
         ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
         ds.setDataModel(dataModel.getId());
         ds = datasetRepository.save(ds);
-        StringJoiner sj = new StringJoiner("&", "?", "");
+        final StringJoiner sj = new StringJoiner("&", "?", "");
         sj.add("modelName=" + datasetModel.getName());
         String queryParams = sj.toString();
 
@@ -257,6 +262,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
      * Check that the system automatically converts an OpenSearch query string into a search criterion
+     * 
      * @throws ModuleException
      */
     @Test
@@ -265,8 +271,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         // Prepare test ecosystem
         importModel("dataModel.xml");
         importModel("datasetModel.xml");
-        Model dataModel = modelService.getModelByName("dataModel");
-        Model datasetModel = modelService.getModelByName("datasetModel");
+        final Model dataModel = modelService.getModelByName("dataModel");
+        final Model datasetModel = modelService.getModelByName("datasetModel");
 
         final Dataset dataSetClone = new Dataset(datasetModel, "", "Coucou");
         dataSetClone.setLicence("licence");
@@ -300,17 +306,20 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     /**
      * Import model definition file from resources directory
      *
-     * @param pFilename filename
+     * @param pFilename
+     *            filename
      * @return list of created model attributes
-     * @throws ModuleException if error occurs
+     * @throws ModuleException
+     *             if error occurs
      */
-    private void importModel(String pFilename) throws ModuleException {
+    private void importModel(final String pFilename) throws ModuleException {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
-            gsonAttributeFactory.refresh(DEFAULT_TENANT);
-        } catch (IOException e) {
-            String errorMessage = "Cannot import " + pFilename;
+            final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+            gsonAttributeFactory.refresh(DEFAULT_TENANT, atts);
+        } catch (final IOException e) {
+            final String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);
         }
     }

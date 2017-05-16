@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -29,8 +30,8 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<Collection> pRepository, EntityManager pEm,
-            IPublisher pPublisher) {
+            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
-              pDatasetRepository, pRepository, pEm, pPublisher);
+              pDatasetRepository, pRepository, pEm, pPublisher, runtimeTenantResolver);
     }
 }
