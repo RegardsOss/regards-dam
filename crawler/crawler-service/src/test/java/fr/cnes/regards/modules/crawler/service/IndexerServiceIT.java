@@ -9,7 +9,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -100,7 +99,7 @@ public class IndexerServiceIT {
 
         // Creating a Collection with all types of attributes
         Collection collection = new Collection(model, tenant, "coll1");
-        Set<AbstractAttribute<?>> attributes = new HashSet<>();
+        HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
         gsonAttributeFactory.registerSubtype(tenant, DateArrayAttribute.class, "dateArrayAtt");
@@ -123,11 +122,14 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, StringArrayAttribute.class, "stringArraySand", "correspondance");
 
         attributes.add(AttributeBuilder.buildBoolean("booleanAtt", true));
-        attributes.add(AttributeBuilder.buildDateArray("dateArrayAtt", OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
+        attributes.add(AttributeBuilder.buildDateArray("dateArrayAtt",
+                                                       OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder.buildDate("dateAtt", OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder.buildDateInterval("dateInterval", OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
+        attributes.add(AttributeBuilder.buildDate("dateAtt",
+                                                  OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
+        attributes.add(AttributeBuilder.buildDateInterval("dateInterval",
+                                                          OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
                                                           OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
         attributes.add(AttributeBuilder.buildDouble("maxDoubleValue", Double.MAX_VALUE));
         attributes.add(AttributeBuilder.buildDouble("minDoubleValue", Double.MIN_VALUE));
@@ -226,7 +228,7 @@ public class IndexerServiceIT {
 
     private Collection createCollection(Model collModel, int i) {
         Collection collection = new Collection(collModel, SEARCH, "coll" + i);
-        Set<AbstractAttribute<?>> attributes = new HashSet<>();
+        HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
         attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));

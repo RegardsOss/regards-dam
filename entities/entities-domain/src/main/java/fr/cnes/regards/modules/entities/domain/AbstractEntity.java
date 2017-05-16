@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +27,7 @@ import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
@@ -37,6 +37,7 @@ import com.google.gson.annotations.JsonAdapter;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
+import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
@@ -136,7 +137,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * list of attributes associated to this entity
      */
-    @Type(type = "jsonb")
+    @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE,
+            value = "fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute") })
     @Column(columnDefinition = "jsonb")
     @Valid
     protected Set<AbstractAttribute<?>> properties = new HashSet<>();

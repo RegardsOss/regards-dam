@@ -12,9 +12,17 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
@@ -219,7 +228,7 @@ public abstract class AbstractDataObjectMapping {
     protected DataObject processResultSet(ResultSet pRs) throws SQLException {
         final DataObject data = new DataObject();
 
-        final Set<AbstractAttribute<?>> attributes = new HashSet<>();
+        final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
 
         /**
@@ -309,11 +318,11 @@ public abstract class AbstractDataObjectMapping {
         if (LOG.isDebugEnabled() && (attr != null)) {
             if ((pAttrMapping.getName() != null) && pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "> of type <" + pAttrMapping.getType() + "> is :"
-                                  + attr.getValue());
+                        + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
-                                  + pAttrMapping.getType() + "> is :" + attr.getValue());
+                        + pAttrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
