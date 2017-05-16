@@ -23,7 +23,9 @@ import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.rest.ModelController;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
@@ -50,6 +52,12 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
     private IModelService modelService;
 
     /**
+     * {@link IAttributeModelService} service
+     */
+    @Autowired
+    private IAttributeModelService attributeModelService;
+
+    /**
      * Attribute Adapter Factory
      */
     @Autowired
@@ -61,7 +69,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
      * @param pFilename
      *            model to import from resources folder
      */
-    private void importModel(String pFilename) {
+    private void importModel(final String pFilename) {
 
         final Path filePath = Paths.get("src", "test", "resources", pFilename);
 
@@ -71,7 +79,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
 
-        attributeAdapterFactory.refresh(DEFAULT_TENANT);
+        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+        attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);
     }
 
     /**
@@ -84,9 +93,9 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
     public void testSimpleModel() throws ModuleException {
         importModel("simple-model.xml");
 
-        Model mission = modelService.getModelByName("MISSION");
+        final Model mission = modelService.getModelByName("MISSION");
 
-        Collection mission1 = new Collection(mission, null, "SPOT");
+        final Collection mission1 = new Collection(mission, null, "SPOT");
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
