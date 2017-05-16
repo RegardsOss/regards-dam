@@ -6,6 +6,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * Datasource attribute mapping for dynamic fields ie without mapping options.
  * This kind of attribute mapping must have and optionaly a namespace but cannot have mapping options
  * @author oroussel
+ * @author Christophe Mertz
  */
 public class DynamicAttributeMapping extends AbstractAttributeMapping {
 
@@ -23,7 +24,7 @@ public class DynamicAttributeMapping extends AbstractAttributeMapping {
      */
     public DynamicAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
             Integer pTypeDS) {
-        super(pName, pNameSpace, pType, pMappingDS, pTypeDS, NO_MAPPING_OPTIONS);
+        super(pName, pNameSpace, pType, pMappingDS, pTypeDS);
     }
 
     public DynamicAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {

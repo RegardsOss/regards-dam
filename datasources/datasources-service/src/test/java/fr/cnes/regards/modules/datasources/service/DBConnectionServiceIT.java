@@ -21,6 +21,11 @@ import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 
 /**
+ *
+ * FIXME
+ * - test connection
+ * - test that plugin conf is cleaned from plugin cache if test does not succeed
+ *
  * @author Marc Sordi
  *
  */

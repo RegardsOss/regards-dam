@@ -16,7 +16,6 @@ import java.util.StringJoiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -261,7 +260,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
      * @throws ModuleException
      */
     @Test
-    @Ignore
     @Purpose("Check that the system automatically converts an OpenSearch query string into a search criterion")
     public void testStringToICriterionConversion() throws ModuleException {
         // Prepare test ecosystem

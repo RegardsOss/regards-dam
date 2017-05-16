@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -27,4 +28,6 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
 
     @Query("SELECT assoc.attribute FROM ModelAttrAssoc assoc WHERE assoc.model.id IN :modelIds")
     Page<AttributeModel> findAllAttributeByModelIdIn(@Param("modelIds") List<Long> pModelIds, Pageable pPageable);
+
+    Collection<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelsIds);
 }

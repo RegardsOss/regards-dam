@@ -16,9 +16,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  *
- * Class AttributeMappingAdapter
- *
- * GSON adapter for annotation {@link AbstractAttributeMapping}
+ * GSON adapter for {@link DataSourceModelMapping}
  *
  * @author Christophe Mertz
  *
@@ -32,19 +30,14 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     private static final String MODEL_LABEL = "model";
 
     /**
-     * Label for the apings field
+     * Label for the attributes list defined for the mapping
      */
-    private static final String MAPPINGS_LABEL = "mappings";
+    private static final String MAPPINGS_LABEL = "attributesMapping";
 
     /**
      * Label for name field
      */
     private static final String NAME_LABEL = "name";
-
-    /**
-     * Label for mapping options field
-     */
-    private static final String MAPPING_OPTIONS = "mapping_options";
 
     /**
      * Label for type field
@@ -80,7 +73,6 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                 pOut.name(NAME_LABEL).value(attr.getName());
             }
             pOut.name(TYPE_LABEL).value(attr.getType().name());
-            pOut.name(MAPPING_OPTIONS).value(attr.getMappingOptions());
             if (attr.getNameSpace() != null) {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
@@ -143,7 +135,6 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
         String nameDS = null;
         Integer typeDS = null;
         AttributeType attributeType = null;
-        short mappingOptions = AbstractAttributeMapping.NO_MAPPING_OPTIONS;
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
                 case NAME_LABEL:
@@ -159,19 +150,20 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     typeDS = Integer.parseInt(pIn.nextString());
                     break;
                 case TYPE_LABEL:
-                    attributeType = AttributeType.valueOf(pIn.nextString());
-                    break;
-                case MAPPING_OPTIONS:
-                    mappingOptions = (short) pIn.nextInt();
+                    String val = pIn.nextString();
+                    if (!val.isEmpty()) {
+                        attributeType = AttributeType.valueOf(val);
+                    }
                     break;
                 default:
                     break;
             }
         }
-        if (mappingOptions == AbstractAttributeMapping.NO_MAPPING_OPTIONS) {
-            return new DynamicAttributeMapping(name, namespace, attributeType, nameDS, typeDS);
+        
+        if (attributeType == null && (namespace == null || namespace.isEmpty())) {
+            return new StaticAttributeMapping(name, null, nameDS, typeDS);
         } else {
-            return new StaticAttributeMapping(attributeType, nameDS, typeDS, mappingOptions);
+            return new DynamicAttributeMapping(name, namespace, attributeType, nameDS, typeDS);
         }
     }
 

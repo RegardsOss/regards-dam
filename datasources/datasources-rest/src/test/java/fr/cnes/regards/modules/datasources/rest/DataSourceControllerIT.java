@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -103,6 +104,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping modelMapping;
+    
+    private final static ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
     protected Logger getLogger() {
@@ -210,6 +213,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         // Update the DataSource
         dataSource.setFromClause("from table where table.id>1000");
+        
+        String mm = adapter.toJson(modelMapping);
+        
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
@@ -392,8 +398,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AttributeType.LONG, "id", AbstractAttributeMapping.PRIMARY_KEY));
-        attributes.add(new DynamicAttributeMapping("name", AttributeType.STRING, "'Hello Toulouse-'||label as label"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id", Types.INTEGER));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'Hello Toulouse-'||label"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
