@@ -34,7 +34,7 @@
         </attribute>
         <attribute>
             <name>state</name>
-            <type>ENUMERATION</type>
+            <type>STRING</type>
         </attribute>
     </fragment>
 </model>

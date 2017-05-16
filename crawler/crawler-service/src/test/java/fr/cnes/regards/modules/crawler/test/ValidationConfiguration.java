@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import fr.cnes.regards.framework.amqp.*;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
@@ -15,7 +16,7 @@ import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfigu
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
 
 /**
- * Created by oroussel on 12/05/17.
+ * @author oroussel
  */
 @Configuration
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler.service", "fr.cnes.regards.modules.indexer",
@@ -33,4 +34,30 @@ public class ValidationConfiguration {
     public IResourceService getResourceService() {
         return Mockito.mock(IResourceService.class);
     }
+
+    @Bean
+    public IPoller getPoller() {
+        return Mockito.mock(IPoller.class);
+    }
+
+    @Bean
+    public IPublisher getPublisher() {
+        return Mockito.mock(IPublisher.class);
+    }
+
+    @Bean
+    public ISubscriber getSubscriber() {
+        return Mockito.mock(ISubscriber.class);
+    }
+
+    @Bean
+    public IInstanceSubscriber getInstanceSubscriber() {
+        return Mockito.mock(IInstanceSubscriber.class);
+    }
+
+    @Bean
+    public IInstancePublisher getInstancePublisher() {
+        return Mockito.mock(IInstancePublisher.class);
+    }
+
 }

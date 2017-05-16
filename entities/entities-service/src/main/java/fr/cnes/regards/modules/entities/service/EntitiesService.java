@@ -21,7 +21,7 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.plugin.CountElementAttribute;
+import fr.cnes.regards.modules.entities.plugin.CountPlugin;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
@@ -54,7 +54,7 @@ public class EntitiesService implements IEntitiesService {
 
     @PostConstruct
     public void initPluginPackage() {
-        pluginService.addPluginPackage(CountElementAttribute.class.getPackage().getName());
+        pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
     }
 
     @Override

@@ -29,29 +29,52 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
     }
 
     @Override
-    public boolean isValid(ModelAttrAssoc pValue, ConstraintValidatorContext pContext) {
-        if (pValue == null) {
+    public boolean isValid(ModelAttrAssoc modelAttrAssoc, ConstraintValidatorContext context) {
+        if (modelAttrAssoc == null) {
             return true;
         }
-        if (pValue.getAttribute() == null) {
+        String template = context.getDefaultConstraintMessageTemplate();
+        if (modelAttrAssoc.getAttribute() == null) {
             LOG.debug("ModelAttrAssoc to validate has no AttributeModel specified");
+            String msg = String.format(template, "null", "undefined");
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
             return false;
         }
-        PluginConfiguration computationConf = pValue.getComputationConf();
-        if (pValue.getMode().equals(ComputationMode.COMPUTED) && (computationConf != null)
-                && computationConf.getInterfaceNames().contains(IComputedAttribute.class.getName())) {
+        // If computed attribute, check that computation plugin mechanism is correct
+        PluginConfiguration computationConf = modelAttrAssoc.getComputationConf();
+        if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null) && computationConf
+                .getInterfaceNames().contains(IComputedAttribute.class.getName())) {
 
             IComputedAttribute<?, ?> plugin;
             try {
+                // Retrieve computation plugin and instance it
                 plugin = (IComputedAttribute<?, ?>) Class.forName(computationConf.getPluginClassName()).newInstance();
-                return plugin.getSupported().equals(pValue.getAttribute().getType());
+                // Check validated attribute type is the same as plugin managed attribute type
+                boolean ok = (plugin.getSupported() == modelAttrAssoc.getAttribute().getType());
+                if (!ok) {
+                    String msg = String.format(template, modelAttrAssoc.getAttribute().getName(),
+                                               computationConf);
+                    context.disableDefaultConstraintViolation();
+                    context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
+                }
+                return ok;
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                LOG.error("ModelAttrAssoc of id: " + pValue.getId()
-                        + " cannot be validated because we couldn't instanciate the associated plugin to check the coherence of its return type.");
+                LOG.error("ModelAttrAssoc of id: " + modelAttrAssoc.getId()
+                                  + " cannot be validated because we couldn't instanciate the associated plugin to check the "
+                                  + "coherence of its return type.");
                 throw new RuntimeException(e); // NOSONAR
             }
         }
-        return ComputationMode.GIVEN.equals(pValue.getMode());
+        // It is not a computed attribute so it must be GIVEN one
+        boolean ok = (modelAttrAssoc.getMode() == ComputationMode.GIVEN);
+        if (!ok) {
+            String msg = String.format(template, modelAttrAssoc.getAttribute().getName(),
+                                       computationConf);
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
+        }
+        return ok;
     }
 
 }

@@ -27,7 +27,7 @@
     </attribute>
     <attribute>
         <name>count</name>
-        <type>INTEGER</type>
+        <type>LONG</type>
         <computationMode>COMPUTED</computationMode>
         <configurationLabel>CountValidationConf</configurationLabel>
     </attribute></model>
