@@ -86,7 +86,8 @@ public class EntitiesServiceIT {
         pluginService.addPluginPackage(NonUsable.class.getPackage().getName());
         // create a pluginConfiguration with a label for min
         List<PluginParameter> parametersMin = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "minDate").getParameters();
+                .addParameter("resultAttributeName", "minDate")
+                .addParameter("parameterAttributeName", "minDate").getParameters();
         PluginMetaData metadataMin = new PluginMetaData();
         metadataMin.setPluginId("MinDateComputePlugin");
         metadataMin.setAuthor("toto");
@@ -99,7 +100,8 @@ public class EntitiesServiceIT {
         confMin = pluginService.savePluginConfiguration(confMin);
         // create a pluginConfiguration with a label
         List<PluginParameter> parametersNonUsable = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "maxDate").getParameters();
+                .addParameter("resultAttributeName", "maxDate")
+                .addParameter("parameterAttributeName", "maxDate").getParameters();
         PluginMetaData metadataNonUsable = new PluginMetaData();
         metadataNonUsable.setPluginId("NonUsable");
         metadataNonUsable.setAuthor("toto");
