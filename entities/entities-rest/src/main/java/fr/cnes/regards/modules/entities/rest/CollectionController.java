@@ -44,8 +44,10 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
         documentation = "http://test")
 // CHECKSTYLE:ON
-@RequestMapping(value = "/collections")
+@RequestMapping(CollectionController.ROOT_MAPPING)
 public class CollectionController implements IResourceController<Collection> {
+
+    public static final String ROOT_MAPPING = "/collections";
 
     /**
      * Service

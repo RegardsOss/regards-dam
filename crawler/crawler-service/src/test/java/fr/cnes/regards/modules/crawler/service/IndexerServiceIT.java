@@ -46,6 +46,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
@@ -64,6 +65,9 @@ public class IndexerServiceIT {
 
     @Value("${regards.tenant}")
     private String tenant;
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     @Autowired
     private IIndexerService indexerService;
@@ -85,6 +89,10 @@ public class IndexerServiceIT {
 
     @Before
     public void setUp() throws Exception {
+
+        // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
+        gsonAttributeFactoryHandler.onApplicationEvent(null);
+
         runtimeTenantResolver.forceTenant(tenant);
         indexerService.deleteIndex(tenant);
         // indexerService.deleteIndex(SEARCH);
@@ -92,14 +100,14 @@ public class IndexerServiceIT {
 
     @Test
     public void testSave() throws IOException {
-        Model model = new Model();
+        final Model model = new Model();
         model.setDescription("Description");
         model.setName("name");
         model.setType(EntityType.COLLECTION);
 
         // Creating a Collection with all types of attributes
-        Collection collection = new Collection(model, tenant, "coll1");
-        HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
+        final Collection collection = new Collection(model, tenant, "coll1");
+        final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
 
         gsonAttributeFactory.registerSubtype(tenant, BooleanAttribute.class, "booleanAtt");
         gsonAttributeFactory.registerSubtype(tenant, DateArrayAttribute.class, "dateArrayAtt");
@@ -157,7 +165,7 @@ public class IndexerServiceIT {
 
         attributes.add(AttributeBuilder.buildString("string", "Esope reste et se repose"));
 
-        ObjectAttribute fragment = AttributeBuilder
+        final ObjectAttribute fragment = AttributeBuilder
                 .buildObject("correspondance",
                              AttributeBuilder.buildStringArray("stringArrayMusset",
                                                                "Quand je mets à vos pieds un éternel hommage",
@@ -181,7 +189,7 @@ public class IndexerServiceIT {
         indexerService.refresh(tenant);
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
-        List<Collection> singleCollColl = searchService
+        final List<Collection> singleCollColl = searchService
                 .search(new SimpleSearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
                         ICriterion.eq("properties.int", 42))
                 .getContent();
@@ -192,7 +200,7 @@ public class IndexerServiceIT {
     @Ignore
     public void testSaveBulk() {
         // Model for collection
-        Model collModel = new Model();
+        final Model collModel = new Model();
         collModel.setDescription("model for collections");
         collModel.setName("collModel");
         collModel.setType(EntityType.COLLECTION);
@@ -204,10 +212,10 @@ public class IndexerServiceIT {
         indexerService.createIndex(SEARCH);
 
         // Creating a Collection for this model
-        int[] COUNTS = { 10, 100, 1000, 10000 };
+        final int[] COUNTS = { 10, 100, 1000, 10000 };
         int totalCount = 0;
         for (int i = 0; i < 100; i++) {
-            int count = COUNTS[(int) (Math.random() * COUNTS.length)];
+            final int count = COUNTS[(int) (Math.random() * COUNTS.length)];
             totalCount += count;
             bulkSave(count, collModel);
         }
@@ -215,20 +223,20 @@ public class IndexerServiceIT {
 
     }
 
-    private void bulkSave(int count, Model collModel) {
-        List<Collection> collections = new ArrayList<>();
+    private void bulkSave(final int count, final Model collModel) {
+        final List<Collection> collections = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             collections.add(createCollection(collModel, i + 1));
         }
-        long start = System.currentTimeMillis();
-        int savedCollCount = indexerService.saveBulkEntities(SEARCH, collections);
+        final long start = System.currentTimeMillis();
+        final int savedCollCount = indexerService.saveBulkEntities(SEARCH, collections);
         LOGGER.info("Bulk save ({} collections) : {} ms", collections.size(), System.currentTimeMillis() - start);
         Assert.assertEquals(collections.size(), savedCollCount);
     }
 
-    private Collection createCollection(Model collModel, int i) {
-        Collection collection = new Collection(collModel, SEARCH, "coll" + i);
-        HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
+    private Collection createCollection(final Model collModel, final int i) {
+        final Collection collection = new Collection(collModel, SEARCH, "coll" + i);
+        final HashSet<AbstractAttribute<?>> attributes = new HashSet<>();
         attributes.add(AttributeBuilder.buildInteger("altitude", (int) (Math.random() * 8848)));
         attributes.add(AttributeBuilder.buildDouble("longitude", (Math.random() * 360.) - 180.));
         attributes.add(AttributeBuilder.buildDouble("latitude", (Math.random() * 180.) - 90.));
@@ -243,13 +251,13 @@ public class IndexerServiceIT {
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "latitude");
         gsonAttributeFactory.registerSubtype(tenant, DoubleAttribute.class, "longitude");
 
-        ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
+        final ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
         // SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
-        SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities(SEARCH);
+        final SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities(SEARCH);
         Page<? extends AbstractEntity> collPage = searchService.search(searchKey, 10, criterion);
         int count = 0;
         while (true) {
-            for (AbstractEntity coll : collPage.getContent()) {
+            for (final AbstractEntity coll : collPage.getContent()) {
                 count++;
             }
             if (collPage.isLast()) {

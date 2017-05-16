@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -57,6 +58,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 /**
  * @author Sylvain Vissiere-Guerinet
  */
+@DirtiesContext
 @TestPropertySource(locations = { "classpath:test.properties" })
 @MultitenantTransactional
 @ContextConfiguration(classes = { ControllerITConfig.class })
@@ -262,7 +264,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
      * Check that the system automatically converts an OpenSearch query string into a search criterion
-     * 
+     *
      * @throws ModuleException
      */
     @Test

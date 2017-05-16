@@ -39,6 +39,7 @@ import fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
@@ -47,11 +48,14 @@ import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Pseudo IT test used for initialisation of Validation
+ *
  * @author oroussel
  */
 @RunWith(SpringRunner.class)
@@ -62,6 +66,9 @@ public class ValidationIT {
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -102,6 +109,9 @@ public class ValidationIT {
 
     @Autowired
     private IModelService modelService;
+
+    @Autowired
+    private IAttributeModelService attributeModelService;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -149,28 +159,32 @@ public class ValidationIT {
     @Autowired
     private IPluginConfigurationRepository pluginConfRepo;
 
-//    @Autowired
-//    private IRabbitVirtualHostAdmin rabbitVhostAdmin;
-//
-//    @Autowired
-//    private RegardsAmqpAdmin amqpAdmin;
-//
-//    private Model dataModel;
-//
-//    private Model datasetModel;
+    // @Autowired
+    // private IRabbitVirtualHostAdmin rabbitVhostAdmin;
+    //
+    // @Autowired
+    // private RegardsAmqpAdmin amqpAdmin;
+    //
+    // private Model dataModel;
+    //
+    // private Model datasetModel;
 
     private PluginConfiguration dataSourcePluginConf;
 
-//    private Dataset dataset1;
-//
-//    private Dataset dataset2;
-//
-//    private Dataset dataset3;
+    // private Dataset dataset1;
+    //
+    // private Dataset dataset2;
+    //
+    // private Dataset dataset3;
 
     private PluginConfiguration dBConnectionConf;
 
     @Before
     public void setUp() throws Exception {
+
+        // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
+        gsonAttributeFactoryHandler.onApplicationEvent(null);
+
         tenantResolver.forceTenant(tenant);
         if (esRepos.indexExists(tenant)) {
             esRepos.deleteIndex(tenant);
@@ -179,9 +193,9 @@ public class ValidationIT {
 
         crawlerService.setConsumeOnlyMode(true);
 
-//        rabbitVhostAdmin.bind(tenantResolver.getTenant());
-//        amqpAdmin.purgeQueue(EntityEvent.class, false);
-//        rabbitVhostAdmin.unbind();
+        // rabbitVhostAdmin.bind(tenantResolver.getTenant());
+        // amqpAdmin.purgeQueue(EntityEvent.class, false);
+        // rabbitVhostAdmin.unbind();
 
         entityRepos.deleteAll();
         modelAttrAssocRepo.deleteAll();
@@ -189,37 +203,37 @@ public class ValidationIT {
         attrModelRepo.deleteAll();
         modelRepository.deleteAll();
         fragRepo.deleteAll();
-//        pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+        // pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
         // Connection PluginConf
-//        dBConnectionConf = getPostgresConnectionConfiguration();
-//        pluginService.savePluginConfiguration(dBConnectionConf);
+        // dBConnectionConf = getPostgresConnectionConfiguration();
+        // pluginService.savePluginConfiguration(dBConnectionConf);
 
-//        DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        // DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
 
         // DataSource PluginConf
-//        dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
-//        pluginService.savePluginConfiguration(dataSourcePluginConf);
+        // dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
+        // pluginService.savePluginConfiguration(dataSourcePluginConf);
     }
 
+    // @After
+    // public void clean() {
+    // entityRepos.deleteAll();
+    // modelAttrAssocRepo.deleteAll();
+    // pluginConfRepo.deleteAll();
+    // attrModelRepo.deleteAll();
+    // modelRepository.deleteAll();
+    // fragRepo.deleteAll();
+    // }
 
-//    @After
-//    public void clean() {
-//        entityRepos.deleteAll();
-//        modelAttrAssocRepo.deleteAll();
-//        pluginConfRepo.deleteAll();
-//        attrModelRepo.deleteAll();
-//        modelRepository.deleteAll();
-//        fragRepo.deleteAll();
-//    }
-
-    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) {
+    private PluginConfiguration getPostgresDataSource(final PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_VIEW)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping)).getParameters();
+                              adapter.toJson(dataSourceModelMapping))
+                .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -239,50 +253,50 @@ public class ValidationIT {
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-//    private void buildModelAttributes() {
-//        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
-//
-//        attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "DATA_OBJECTS_ID",
-//                                                  AbstractAttributeMapping.PRIMARY_KEY));
-//
-//        attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
-//        attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
-//        attributes.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
-//
-//        attributes.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
-//        attributes.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
-//        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
-//        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
-//
-//        attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
-//                                                   Types.DECIMAL));
-//        attributes
-//                .add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE", Types.DECIMAL));
-//        attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-//                                                   "DATA_CREATION_DATE", Types.DECIMAL));
-//
-//        attributes.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
-//        attributes.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
-//        attributes.add(new DynamicAttributeMapping("MIN", "LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-//        attributes.add(new DynamicAttributeMapping("MAX", "LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-//        attributes.add(new DynamicAttributeMapping("MIN", "ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
-//        attributes.add(new DynamicAttributeMapping("MAX", "ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
-//        attributes.add(new DynamicAttributeMapping("ANSA5_REAL", AttributeType.DOUBLE, "ANSA5_REAL"));
-//        attributes.add(new DynamicAttributeMapping("ANSR5_REAL", AttributeType.DOUBLE, "ANSR5_REAL"));
-//        attributes.add(new DynamicAttributeMapping("ANSE5_REAL", AttributeType.DOUBLE, "ANSE5_REAL"));
-//        attributes.add(new DynamicAttributeMapping("ANSE6_STRING", AttributeType.STRING, "ANSE6_STRING"));
-//        attributes.add(new DynamicAttributeMapping("ANSL6_2_STRING", AttributeType.STRING, "ANSL6_2_STRING"));
-//        attributes.add(new DynamicAttributeMapping("ANSR3_INT", "frag3", AttributeType.INTEGER, "ANSR3_INT"));
-//        attributes.add(new DynamicAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
-//        attributes.add(new DynamicAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
-//
-//        attributes
-//                .add(new StaticAttributeMapping(AttributeType.STRING, "ANSA7_URL", AbstractAttributeMapping.THUMBNAIL));
-//        attributes
-//                .add(new StaticAttributeMapping(AttributeType.STRING, "ANSE7_URL", AbstractAttributeMapping.RAW_DATA));
-//
-//        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
-//    }
+    // private void buildModelAttributes() {
+    // List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
+    //
+    // attributes.add(new StaticAttributeMapping(AttributeType.INTEGER, "DATA_OBJECTS_ID",
+    // AbstractAttributeMapping.PRIMARY_KEY));
+    //
+    // attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
+    // attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
+    // attributes.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
+    //
+    // attributes.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
+    // attributes.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
+    // attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
+    // attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
+    //
+    // attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
+    // Types.DECIMAL));
+    // attributes
+    // .add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE", Types.DECIMAL));
+    // attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
+    // "DATA_CREATION_DATE", Types.DECIMAL));
+    //
+    // attributes.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
+    // attributes.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
+    // attributes.add(new DynamicAttributeMapping("MIN", "LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
+    // attributes.add(new DynamicAttributeMapping("MAX", "LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
+    // attributes.add(new DynamicAttributeMapping("MIN", "ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
+    // attributes.add(new DynamicAttributeMapping("MAX", "ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
+    // attributes.add(new DynamicAttributeMapping("ANSA5_REAL", AttributeType.DOUBLE, "ANSA5_REAL"));
+    // attributes.add(new DynamicAttributeMapping("ANSR5_REAL", AttributeType.DOUBLE, "ANSR5_REAL"));
+    // attributes.add(new DynamicAttributeMapping("ANSE5_REAL", AttributeType.DOUBLE, "ANSE5_REAL"));
+    // attributes.add(new DynamicAttributeMapping("ANSE6_STRING", AttributeType.STRING, "ANSE6_STRING"));
+    // attributes.add(new DynamicAttributeMapping("ANSL6_2_STRING", AttributeType.STRING, "ANSL6_2_STRING"));
+    // attributes.add(new DynamicAttributeMapping("ANSR3_INT", "frag3", AttributeType.INTEGER, "ANSR3_INT"));
+    // attributes.add(new DynamicAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
+    // attributes.add(new DynamicAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
+    //
+    // attributes
+    // .add(new StaticAttributeMapping(AttributeType.STRING, "ANSA7_URL", AbstractAttributeMapping.THUMBNAIL));
+    // attributes
+    // .add(new StaticAttributeMapping(AttributeType.STRING, "ANSE7_URL", AbstractAttributeMapping.RAW_DATA));
+    //
+    // dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+    // }
 
     @Test
     public void validationInserts() throws IOException, ModuleException {
@@ -299,19 +313,20 @@ public class ValidationIT {
                                                "validationDataModel1.xml"));
         modelService.importModel(input);
 
+        final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
 
-        gsonAttributeFactory.refresh(tenant);
+        gsonAttributeFactory.refresh(tenant, attributes);
     }
 
     private void initPluginConfForValidation() throws ModuleException {
         pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
         pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
         // conf for "count"
-        List<PluginParameter> parameters = PluginParametersFactory.build()
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameter("resultAttributeName", "count").getParameters();
 
         // Emulate plugin annotation (user will create an annotation)
-        PluginMetaData metadata = new PluginMetaData();
+        final PluginMetaData metadata = new PluginMetaData();
         metadata.setPluginId("CountPlugin");
         metadata.setAuthor("O. Rousselot");
         metadata.setDescription("");
@@ -319,49 +334,49 @@ public class ValidationIT {
         metadata.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadata.setPluginClassName(CountPlugin.class.getName());
 
-        PluginConfiguration confCount = new PluginConfiguration(metadata, "CountValidationConf");
+        final PluginConfiguration confCount = new PluginConfiguration(metadata, "CountValidationConf");
         confCount.setParameters(parameters);
         pluginService.savePluginConfiguration(confCount);
 
         // create a pluginConfiguration with a label for start_date
-        List<PluginParameter> parametersMin = PluginParametersFactory.build()
+        final List<PluginParameter> parametersMin = PluginParametersFactory.build()
                 .addParameter("resultAttributeName", "start_date").getParameters();
-        PluginMetaData metadataMin = new PluginMetaData();
+        final PluginMetaData metadataMin = new PluginMetaData();
         metadataMin.setPluginId("MinDateComputePlugin");
         metadataMin.setAuthor("O. Rousselot");
         metadataMin.setDescription("");
         metadataMin.setVersion("1");
         metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataMin.setPluginClassName(MinDateComputePlugin.class.getName());
-        PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateValidationConf");
+        final PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateValidationConf");
         confMin.setParameters(parametersMin);
         pluginService.savePluginConfiguration(confMin);
 
         // create a pluginConfiguration with a label for end_date
-        List<PluginParameter> parametersMax = PluginParametersFactory.build()
+        final List<PluginParameter> parametersMax = PluginParametersFactory.build()
                 .addParameter("resultAttributeName", "end_date").getParameters();
-        PluginMetaData metadataMax = new PluginMetaData();
+        final PluginMetaData metadataMax = new PluginMetaData();
         metadataMax.setPluginId("MaxDateComputePlugin");
         metadataMax.setAuthor("O. Rousselot");
         metadataMax.setDescription("");
         metadataMax.setVersion("1");
         metadataMax.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataMax.setPluginClassName(MaxDateComputePlugin.class.getName());
-        PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateValidationConf");
+        final PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateValidationConf");
         confMax.setParameters(parametersMax);
         pluginService.savePluginConfiguration(confMax);
 
         // create a pluginConfiguration with a label for value_l1
-        List<PluginParameter> parametersInteger = PluginParametersFactory.build()
+        final List<PluginParameter> parametersInteger = PluginParametersFactory.build()
                 .addParameter("resultAttributeName", "values_l1_sum").getParameters();
-        PluginMetaData metadataLong = new PluginMetaData();
+        final PluginMetaData metadataLong = new PluginMetaData();
         metadataLong.setPluginId("LongSumComputePlugin");
         metadataLong.setAuthor("O. Rousselot");
         metadataLong.setDescription("");
         metadataLong.setVersion("1");
         metadataLong.getInterfaceNames().add(IComputedAttribute.class.getName());
         metadataLong.setPluginClassName(LongSumComputePlugin.class.getName());
-        PluginConfiguration confLong = new PluginConfiguration(metadataLong, "SumLongValidationConf");
+        final PluginConfiguration confLong = new PluginConfiguration(metadataLong, "SumLongValidationConf");
         confLong.setParameters(parametersInteger);
         pluginService.savePluginConfiguration(confLong);
     }

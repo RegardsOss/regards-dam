@@ -10,7 +10,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -43,6 +48,7 @@ import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -57,6 +63,9 @@ import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @Ignore
 public class CrawlerServiceIT {
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceIT.class);
 
@@ -125,6 +134,10 @@ public class CrawlerServiceIT {
 
     @Before
     public void setUp() {
+
+        // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
+        gsonAttributeFactoryHandler.onApplicationEvent(null);
+
         tenantResolver.forceTenant(tenant);
 
         crawlerService.setConsumeOnlyMode(false);
@@ -148,7 +161,7 @@ public class CrawlerServiceIT {
 
     }
 
-    private PluginConfiguration getOracleDataSource(PluginConfiguration pluginConf)  {
+    private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
@@ -271,25 +284,25 @@ public class CrawlerServiceIT {
         Collection coll1Bis = esRepos.get(tenant, coll1);
         Assert.assertNotNull(coll1Bis);
         Assert.assertTrue(Beans.equals(coll1, coll1Bis, "getModel"));
-        Collection coll2Bis = esRepos.get(tenant, coll2);
+        final Collection coll2Bis = esRepos.get(tenant, coll2);
         Assert.assertNotNull(coll2Bis);
         Assert.assertTrue(Beans.equals(coll2, coll2Bis, "getModel"));
-        Collection coll3Bis = esRepos.get(tenant, coll3);
+        final Collection coll3Bis = esRepos.get(tenant, coll3);
         Assert.assertNotNull(coll3Bis);
         Assert.assertTrue(Beans.equals(coll3, coll3Bis, "getModel"));
 
         Dataset ds1Bis = esRepos.get(tenant, dataset1);
         Assert.assertNotNull(ds1Bis);
         Assert.assertTrue(Beans.equals(dataset1, ds1Bis, "getModel"));
-        Dataset ds2Bis = esRepos.get(tenant, dataset2);
+        final Dataset ds2Bis = esRepos.get(tenant, dataset2);
         Assert.assertNotNull(ds2Bis);
         Assert.assertTrue(Beans.equals(dataset2, ds2Bis, "getModel"));
-        Dataset ds3Bis = esRepos.get(tenant, dataset3);
+        final Dataset ds3Bis = esRepos.get(tenant, dataset3);
         Assert.assertNotNull(ds3Bis);
         Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
 
         crawlerService.startWork();
-        OffsetDateTime suppressDate = OffsetDateTime.now();
+        final OffsetDateTime suppressDate = OffsetDateTime.now();
         collService.delete(coll1.getId());
         dsService.delete(dataset1.getId());
 
@@ -304,10 +317,10 @@ public class CrawlerServiceIT {
         Assert.assertNull(ds1Bis);
 
         // Check DeletedEntity has been created into database
-        OffsetDateTime now = OffsetDateTime.now();
-        Optional<DeletedEntity> deletedEntityOpt = deletedEntityRepository.findOneByIpId(coll1.getIpId());
+        final OffsetDateTime now = OffsetDateTime.now();
+        final Optional<DeletedEntity> deletedEntityOpt = deletedEntityRepository.findOneByIpId(coll1.getIpId());
         Assert.assertTrue(deletedEntityOpt.isPresent());
-        DeletedEntity deletedEntity = deletedEntityOpt.get();
+        final DeletedEntity deletedEntity = deletedEntityOpt.get();
         Assert.assertEquals(coll1.getCreationDate(), deletedEntity.getCreationDate());
         Assert.assertEquals(coll1.getLastUpdate(), deletedEntity.getLastUpdate());
         Assert.assertTrue(deletedEntity.getDeletionDate().isAfter(suppressDate));

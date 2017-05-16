@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -206,9 +207,14 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(collectionAPI, collection, expectations, "Failed to create a new collection");
+        final String collectionStr = gsonBuilder.create().toJson(collection);
+        final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+        final List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
+                                 "Failed to create a new collection");
     }
 
     /**
@@ -244,9 +250,14 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
         expectations.add(MockMvcResultMatchers.status().is5xxServerError());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(collectionAPI, collection, expectations, collectionCreationError);
+        final String collectionStr = gsonBuilder.create().toJson(collection);
+        final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+        final List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
+                                 "Failed to create a new collection");
     }
 
     /**
@@ -278,9 +289,14 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
         expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(collectionAPI, collection, expectations, collectionCreationError);
+        final String collectionStr = gsonBuilder.create().toJson(collection);
+        final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+        final List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
+                                 "Failed to create a new collection");
     }
 
     /**
@@ -313,9 +329,14 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
         expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPost(collectionAPI, collection, expectations, collectionCreationError);
+        final String collectionStr = gsonBuilder.create().toJson(collection);
+        final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+        final List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
+                                 "Failed to create a new collection");
     }
 
     @Override
