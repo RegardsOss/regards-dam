@@ -114,28 +114,28 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
             throws SQLException {
         OffsetDateTime ldt;
 
-        if (pAttrMapping.getTypeDS() == null) {
+//        if (pAttrMapping.getTypeDS() == null) {
             ldt = buildOffsetDateTime(pRs, pAttrMapping);
-        } else {
-            long n;
-            Instant instant;
-
-            switch (pAttrMapping.getTypeDS()) {
-                case Types.TIME:
-                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
-                    instant = Instant.ofEpochMilli(n);
-                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
-                    break;
-                case Types.DATE:
-                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
-                    instant = Instant.ofEpochMilli(n);
-                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
-                    break;
-                default:
-                    ldt = buildOffsetDateTime(pRs, pAttrMapping);
-                    break;
-            }
-        }
+//        } else {
+//            long n;
+//            Instant instant;
+//
+//            switch (pAttrMapping.getTypeDS()) {
+//                case Types.TIME:
+//                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
+//                    instant = Instant.ofEpochMilli(n);
+//                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
+//                    break;
+//                case Types.DATE:
+//                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
+//                    instant = Instant.ofEpochMilli(n);
+//                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
+//                    break;
+//                default:
+//                    ldt = buildOffsetDateTime(pRs, pAttrMapping);
+//                    break;
+//            }
+//        }
 
         return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
     }

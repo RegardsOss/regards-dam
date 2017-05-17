@@ -5,11 +5,14 @@
 package fr.cnes.regards.modules.datasources.utils;
 
 import java.beans.PropertyVetoException;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+import fr.cnes.regards.framework.jpa.json.JsonBinarySqlTypeDescriptor;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
@@ -234,16 +238,19 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
         try (Connection conn = getDBConnectionPlugin().getConnection()) {
 
             DatabaseMetaData metaData = conn.getMetaData();
+            Map<Integer, String> jdbcMappings = getAllJdbcTypeNames();
 
             try (ResultSet rs = metaData.getColumns(null, null, pTableName, null)) {
 
                 while (rs.next()) {
+                    String typeName = jdbcMappings.get(rs.getInt("DATA_TYPE"));
+
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
-                                + logInt(rs, "DATA_TYPE"));
+                                + logInt(rs, "DATA_TYPE") + " : " + typeName);
                     }
-
-                    Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
+                    
+                    Column column = new Column(rs.getString(COLUMN_NAME), typeName);
                     cols.put(column.getName(), column);
                 }
             }
@@ -253,6 +260,21 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
             LOG.error(e.getMessage(), e);
         }
         return cols;
+    }
+    
+    private Map<Integer, String> getAllJdbcTypeNames() {
+
+        Map<Integer, String> result = new HashMap<Integer, String>();
+
+        for (Field field : Types.class.getFields()) {
+                try {
+                    result.put((Integer)field.get(null), field.getName());
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    LOG.error(e.getMessage(),e);
+                }
+        }
+
+        return result;
     }
 
     private String logString(ResultSet pRs, String pParamName) throws SQLException {

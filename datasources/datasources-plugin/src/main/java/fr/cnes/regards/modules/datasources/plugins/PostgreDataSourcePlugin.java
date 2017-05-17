@@ -91,28 +91,28 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
             throws SQLException {
         OffsetDateTime date;
 
-        if (pAttrMapping.getTypeDS() == null) {
+//        if (pAttrMapping.getTypeDS() == null) {
             date = buildOffsetDateTime(pRs, pAttrMapping);
-        } else {
-            long n;
-            Instant instant;
-
-            switch (pAttrMapping.getTypeDS()) {
-                case Types.TIME:
-                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
-                    instant = Instant.ofEpochMilli(n);
-                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
-                    break;
-                case Types.DATE:
-                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
-                    instant = Instant.ofEpochMilli(n);
-                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
-                    break;
-                default:
-                    date = buildOffsetDateTime(pRs, pAttrMapping);
-                    break;
-            }
-        }
+//        } else {
+//            long n;
+//            Instant instant;
+//
+//            switch (pAttrMapping.getTypeDS()) {
+//                case Types.TIME:
+//                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
+//                    instant = Instant.ofEpochMilli(n);
+//                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
+//                    break;
+//                case Types.DATE:
+//                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
+//                    instant = Instant.ofEpochMilli(n);
+//                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
+//                    break;
+//                default:
+//                    date = buildOffsetDateTime(pRs, pAttrMapping);
+//                    break;
+//            }
+//        }
 
         return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
     }

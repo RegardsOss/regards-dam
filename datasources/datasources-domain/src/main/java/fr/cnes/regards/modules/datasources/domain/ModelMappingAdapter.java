@@ -52,12 +52,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     /**
      * Label for name field in data source
      */
-    private static final String NAME_DS_LABEL = "nameDs";
-
-    /**
-     * Label for type field in data source
-     */
-    private static final String TYPE_DS_LABEL = "typeDs";
+    private static final String NAME_DS_LABEL = "nameDS";
 
     @Override
     public void write(final JsonWriter pOut, final DataSourceModelMapping pValue) throws IOException {
@@ -77,9 +72,6 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                 pOut.name(NAMESPACE_LABEL).value(attr.getNameSpace());
             }
             pOut.name(NAME_DS_LABEL).value(attr.getNameDS());
-            if (attr.getTypeDS() != null) {
-                pOut.name(TYPE_DS_LABEL).value(attr.getTypeDS());
-            }
             pOut.endObject();
         }
         pOut.endArray();
@@ -133,7 +125,6 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
         String name = null;
         String namespace = null;
         String nameDS = null;
-        Integer typeDS = null;
         AttributeType attributeType = null;
         while (pIn.hasNext()) {
             switch (pIn.nextName()) {
@@ -145,9 +136,6 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     break;
                 case NAME_DS_LABEL:
                     nameDS = pIn.nextString();
-                    break;
-                case TYPE_DS_LABEL:
-                    typeDS = Integer.parseInt(pIn.nextString());
                     break;
                 case TYPE_LABEL:
                     String val = pIn.nextString();
@@ -161,9 +149,9 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
         }
         
         if (attributeType == null && (namespace == null || namespace.isEmpty())) {
-            return new StaticAttributeMapping(name, null, nameDS, typeDS);
+            return new StaticAttributeMapping(name, null, nameDS);
         } else {
-            return new DynamicAttributeMapping(name, namespace, attributeType, nameDS, typeDS);
+            return new DynamicAttributeMapping(name, namespace, attributeType, nameDS);
         }
     }
 

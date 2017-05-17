@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.datasources.domain;
 
-import java.sql.Types;
-
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
@@ -66,11 +64,6 @@ public abstract class AbstractAttributeMapping {
      */
     private String nameDS;
 
-    /**
-     * The attribute type in the datasource, see {@link Types}
-     */
-    private Integer typeDS = null;
-
     protected AbstractAttributeMapping() {
     }
 
@@ -80,14 +73,12 @@ public abstract class AbstractAttributeMapping {
      * @param pNameSpace the attribute name space in the model
      * @param pType the attribute type in the model @see {@link AttributeType}
      * @param pMappingDS The attribute name in the data source
-     * @param pTypeDS The attribute type in the data source @see {@link Types}
      */
     protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
             Integer pTypeDS) {
         this.name = pName;
         this.nameSpace = pNameSpace;
         this.nameDS = pMappingDS;
-        this.typeDS = pTypeDS;
         if (pType == null && isMappedToStaticProperty()) {
             this.type = getStaticdAttributeType(pName);
         } else {
@@ -151,14 +142,6 @@ public abstract class AbstractAttributeMapping {
 
     public void setNameDS(String pNameDS) {
         this.nameDS = pNameDS;
-    }
-
-    public Integer getTypeDS() {
-        return typeDS;
-    }
-
-    public void setTypeDS(Integer pTypeDS) {
-        this.typeDS = pTypeDS;
     }
 
     public boolean isPrimaryKey() {

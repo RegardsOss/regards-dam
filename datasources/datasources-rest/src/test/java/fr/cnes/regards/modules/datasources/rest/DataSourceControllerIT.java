@@ -13,6 +13,7 @@ import org.hamcrest.Matchers;
 import org.hsqldb.Types;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,9 +215,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         // Update the DataSource
         dataSource.setFromClause("from table where table.id>1000");
         
-        String mm = adapter.toJson(modelMapping);
-        
-
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
@@ -394,12 +392,26 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         return dataSource;
     }
+    
+    @Test
+    @Ignore
+    public void createDataSourceWithJson() {
+        String dataSourceRequest = readJsonContract("request-datasource.json");
+        
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSourceRequest, expectations,
+                "DataSource creation request error.");        
+    }    
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id", Types.INTEGER));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'Hello Toulouse-'||label"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name", Types.VARCHAR));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));

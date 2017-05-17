@@ -307,7 +307,7 @@ public abstract class AbstractDataObjectMapping {
                 attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(label));
                 break;
             case DATE_ISO8601:
-                attr = buildDateAttribute(pRs, pAttrMapping);
+//                attr = buildDateAttribute(pRs, pAttrMapping);
                 break;
             default:
                 break;

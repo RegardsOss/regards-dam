@@ -106,24 +106,24 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
             throws SQLException {
         OffsetDateTime date;
 
-        if (pAttrMapping.getTypeDS() == null) {
+//        if (pAttrMapping.getTypeDS() == null) {
             date = buildOffsetDateTime(pRs, pAttrMapping);
-        } else {
-            long n;
-            Instant instant;
-
-            switch (pAttrMapping.getTypeDS()) {
-                case Types.DECIMAL:
-                case Types.NUMERIC:
-                    n = pRs.getLong(pAttrMapping.getNameDS());
-                    instant = Instant.ofEpochMilli(n);
-                    date = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
-                    break;
-                default:
-                    date = buildOffsetDateTime(pRs, pAttrMapping);
-                    break;
-            }
-        }
+//        } else {
+//            long n;
+//            Instant instant;
+//
+//            switch (pAttrMapping.getTypeDS()) {
+//                case Types.DECIMAL:
+//                case Types.NUMERIC:
+//                    n = pRs.getLong(pAttrMapping.getNameDS());
+//                    instant = Instant.ofEpochMilli(n);
+//                    date = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
+//                    break;
+//                default:
+//                    date = buildOffsetDateTime(pRs, pAttrMapping);
+//                    break;
+//            }
+//        }
 
         return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
     }

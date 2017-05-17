@@ -1,0 +1,26 @@
+{
+	"label": "Datasource #1",
+    "pluginConfigurationConnectionId": "1",
+    "pluginClassName": "fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin",
+    "mapping": {
+        "model": 1,
+        "attributesMapping": [{
+            "name": "sipId",
+            "type": "",
+            "namespace": "",
+            "nameDs": "id"
+        }, {
+            "name": "Attr2",
+            "type": "STRING",
+            "namespace": "Fragment_1",
+            "nameDs": "description"
+        }, {
+            "name": "label",
+            "type": "",
+            "namespace": "",
+            "nameDs": "name"
+        }]
+    },
+    "tableName": "t_project",
+    "fromClause": "" 
+}
