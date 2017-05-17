@@ -8,13 +8,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 import javax.sql.DataSource;
 
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +22,7 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -84,6 +83,12 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
         initDataSourceMapping(modelJSon);
 
         initializePluginMapping(tableName);
+        
+        try {
+            initDataSourceColumns(getDBConnection());
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(),e);
+        }
     }
 
     @Override
@@ -105,25 +110,26 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         OffsetDateTime date;
+        Integer typeDS = getTypeDs(pAttrMapping.getNameDS());
 
-//        if (pAttrMapping.getTypeDS() == null) {
+        if (typeDS == null) {
             date = buildOffsetDateTime(pRs, pAttrMapping);
-//        } else {
-//            long n;
-//            Instant instant;
-//
-//            switch (pAttrMapping.getTypeDS()) {
-//                case Types.DECIMAL:
-//                case Types.NUMERIC:
-//                    n = pRs.getLong(pAttrMapping.getNameDS());
-//                    instant = Instant.ofEpochMilli(n);
-//                    date = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
-//                    break;
-//                default:
-//                    date = buildOffsetDateTime(pRs, pAttrMapping);
-//                    break;
-//            }
-//        }
+        } else {
+            long n;
+            Instant instant;
+
+            switch (typeDS) {
+                case Types.DECIMAL:
+                case Types.NUMERIC:
+                    n = pRs.getLong(pAttrMapping.getNameDS());
+                    instant = Instant.ofEpochMilli(n);
+                    date = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
+                    break;
+                default:
+                    date = buildOffsetDateTime(pRs, pAttrMapping);
+                    break;
+            }
+        }
 
         return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
     }

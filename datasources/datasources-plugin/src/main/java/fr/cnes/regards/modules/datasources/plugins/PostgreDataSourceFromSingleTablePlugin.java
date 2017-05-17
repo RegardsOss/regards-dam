@@ -89,6 +89,12 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         initDataSourceMapping(modelJSon);
 
         initializePluginMapping(tableName);
+        
+        try {
+            initDataSourceColumns(getDBConnection());
+        } catch (SQLException e) {
+            LOG.error(e.getMessage(),e);
+        }
     }
 
     @Override
@@ -112,30 +118,31 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
      */
     protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
-        OffsetDateTime ldt;
+        OffsetDateTime ldt;        
+        Integer typeDS = getTypeDs(pAttrMapping.getNameDS());
 
-//        if (pAttrMapping.getTypeDS() == null) {
+        if (typeDS == null) {
             ldt = buildOffsetDateTime(pRs, pAttrMapping);
-//        } else {
-//            long n;
-//            Instant instant;
-//
-//            switch (pAttrMapping.getTypeDS()) {
-//                case Types.TIME:
-//                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
-//                    instant = Instant.ofEpochMilli(n);
-//                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
-//                    break;
-//                case Types.DATE:
-//                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
-//                    instant = Instant.ofEpochMilli(n);
-//                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
-//                    break;
-//                default:
-//                    ldt = buildOffsetDateTime(pRs, pAttrMapping);
-//                    break;
-//            }
-//        }
+        } else {
+            long n;
+            Instant instant;
+
+            switch (typeDS) {
+                case Types.TIME:
+                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
+                    instant = Instant.ofEpochMilli(n);
+                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
+                    break;
+                case Types.DATE:
+                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
+                    instant = Instant.ofEpochMilli(n);
+                    ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
+                    break;
+                default:
+                    ldt = buildOffsetDateTime(pRs, pAttrMapping);
+                    break;
+            }
+        }
 
         return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
     }

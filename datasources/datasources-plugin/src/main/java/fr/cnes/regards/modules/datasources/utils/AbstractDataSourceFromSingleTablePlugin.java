@@ -7,6 +7,7 @@ package fr.cnes.regards.modules.datasources.utils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,9 @@ import org.springframework.data.domain.Pageable;
 
 import com.nurkiewicz.jdbcrepository.TableDescription;
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
@@ -54,6 +57,8 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      */
     private TableDescription tableDescription;
 
+    private Map<String, Column> columnsType;
+
     /**
      *
      */
@@ -84,6 +89,16 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
             }
             sqlGenerator = buildSqlGenerator(buildColumnClause(columns.toArray(new String[0])), orderByColumn);
         }
+    }
+
+    protected void initDataSourceColumns(IDBConnectionPlugin dbConnection) {
+
+        columnsType = dbConnection.getColumns(tableDescription.getName());
+
+    }
+
+    protected Integer getTypeDs(String colName) {
+        return columnsType.get(extractColumnName(colName)).getSqlType();
     }
 
     /**

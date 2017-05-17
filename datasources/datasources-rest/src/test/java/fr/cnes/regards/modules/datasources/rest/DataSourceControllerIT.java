@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matchers;
-import org.hsqldb.Types;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -105,7 +104,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping modelMapping;
-    
+
     private final static ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
@@ -214,7 +213,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         // Update the DataSource
         dataSource.setFromClause("from table where table.id>1000");
-        
+
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
         expectations.add(MockMvcResultMatchers
@@ -392,36 +391,36 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         return dataSource;
     }
-    
+
     @Test
     @Ignore
     public void createDataSourceWithJson() {
         String dataSourceRequest = readJsonContract("request-datasource.json");
-        
+
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSourceRequest, expectations,
-                "DataSource creation request error.");        
-    }    
+                           "DataSource creation request error.");
+    }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id", Types.INTEGER));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name", Types.VARCHAR));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithoutTimeZone", Types.TIMESTAMP));
+                "timeStampWithoutTimeZone"));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
+        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone", Types.TIMESTAMP));
+                "timeStampWithTimeZone"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

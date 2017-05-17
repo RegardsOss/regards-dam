@@ -390,12 +390,10 @@ public class IndexerServiceDataSourceIT {
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
-                Types.DECIMAL));
-        attributes
-                .add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE", Types.DECIMAL));
+        attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE"));
+        attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE", Types.DECIMAL));
+                "DATA_CREATION_DATE"));
 
         attributes.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
@@ -414,8 +412,7 @@ public class IndexerServiceDataSourceIT {
 
         attributes
                 .add(new StaticAttributeMapping(AbstractAttributeMapping.THUMBNAIL, AttributeType.STRING, "ANSA7_URL"));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.RAW_DATA, AttributeType.STRING, "ANSE7_URL",
-                Types.VARCHAR));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.RAW_DATA, AttributeType.STRING, "ANSE7_URL"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }

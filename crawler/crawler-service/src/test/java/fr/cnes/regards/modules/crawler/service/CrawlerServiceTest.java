@@ -4,15 +4,11 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -35,11 +31,14 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -112,8 +111,7 @@ public class CrawlerServiceTest {
                                                  getOracleConnectionConfiguration())
                 .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
-                    .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-                .getParameters();
+                .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
         dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
                                          Arrays.asList(PLUGIN_CURRENT_PACKAGE));
 
@@ -171,7 +169,8 @@ public class CrawlerServiceTest {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER, "DATA_OBJECTS_ID"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
+                "DATA_OBJECTS_ID"));
 
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -180,15 +179,12 @@ public class CrawlerServiceTest {
         attributes.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
         attributes.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
-        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING,
-                                                    "DATA_AUTHOR_COMPANY"));
+        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE",
-                                                    Types.DECIMAL));
-        attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE",
-                                                    Types.DECIMAL));
+        attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE"));
+        attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                                                   "DATA_CREATION_DATE", Types.DECIMAL));
+                "DATA_CREATION_DATE"));
 
         attributes.add(new DynamicAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));

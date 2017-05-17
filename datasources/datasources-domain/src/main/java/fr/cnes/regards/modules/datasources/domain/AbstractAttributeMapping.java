@@ -74,8 +74,7 @@ public abstract class AbstractAttributeMapping {
      * @param pType the attribute type in the model @see {@link AttributeType}
      * @param pMappingDS The attribute name in the data source
      */
-    protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS,
-            Integer pTypeDS) {
+    protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
         this.name = pName;
         this.nameSpace = pNameSpace;
         this.nameDS = pMappingDS;
@@ -107,6 +106,9 @@ public abstract class AbstractAttributeMapping {
                 return AttributeType.STRING;
             case LAST_UPDATE:
                 return AttributeType.DATE_ISO8601;
+            case GEOMETRY:
+                // TODO CMZ
+                return null;
             default:
                 return null;
         }
