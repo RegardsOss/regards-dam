@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.models.dao;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
@@ -53,6 +54,14 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
      */
     @Autowired
     protected IModelAttrAssocRepository modelAttributeRepository;
+
+    @Before
+    public void cleanBefore() {
+        modelAttributeRepository.deleteAll();
+        attModelRepository.deleteAll();
+        modelRepository.deleteAll();
+        fragmentRepository.deleteAll();
+    }
 
     /**
      * Save an attribute model
