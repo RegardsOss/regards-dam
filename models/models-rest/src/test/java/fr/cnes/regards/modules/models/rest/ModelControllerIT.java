@@ -169,7 +169,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         modelService.createModel(model);
 
         // Attribute #1 in default fragment
-        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING).withoutRestriction();
+        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests").withoutRestriction();
         attributeModelService.addAttribute(attMod);
 
         ModelAttrAssoc modAtt = new ModelAttrAssoc();
@@ -177,7 +177,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
 
         // Attribute #2 in default fragment
-        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN).isAlterable().withoutRestriction();
+        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests").isAlterable().withoutRestriction();
         attributeModelService.addAttribute(attMod);
 
         modAtt = new ModelAttrAssoc();
@@ -188,7 +188,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
 
         // Attribute #3 in geo fragment
-        attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
+        attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
         attributeModelService.addAttribute(attMod);
 
@@ -198,7 +198,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
 
         // Attribute #5 in contact fragment
-        attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING).fragment(contact)
+        attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
         attributeModelService.addAttribute(attMod);
 

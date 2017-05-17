@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fragment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="model_V1.0.xsd">
+	xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
 	<name>IMPORT_FRAGMENT</name>
 	<description>Imported fragment from integration test</description>
-	<attribute alterable="false" optional="true" queryable="false"
-		facetable="false">
+	<attribute alterable="false" optional="true">
+		<label>forTests</label>
 		<name>IT_BOOLEAN</name>
 		<type>BOOLEAN</type>
 	</attribute>
-	<attribute alterable="false" optional="false" queryable="true"
-		facetable="true">
+	<attribute alterable="false" optional="false">
+		<label>forTests</label>
 		<name>IT_STRING</name>
 		<type>STRING</type>
 		<restriction>

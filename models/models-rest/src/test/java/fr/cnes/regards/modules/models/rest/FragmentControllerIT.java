@@ -165,14 +165,13 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
             // Check fragment
             Assert.assertEquals(fragmentName, attModel.getFragment().getName());
             Assert.assertEquals("Imported fragment from integration test", attModel.getFragment().getDescription());
+            Assert.assertEquals("forTests", attModel.getLabel());
 
             if ("IT_BOOLEAN".equals(attModel.getName())) {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
                 Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
                 Assert.assertTrue(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
                 Assert.assertNull(attModel.getRestriction());
             }
 
@@ -180,9 +179,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.STRING, attModel.getType());
                 Assert.assertFalse(attModel.isAlterable());
-                Assert.assertTrue(attModel.isFacetable());
                 Assert.assertFalse(attModel.isOptional());
-                Assert.assertTrue(attModel.isQueryable());
 
                 Assert.assertNotNull(attModel.getRestriction());
                 Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
@@ -201,7 +198,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         fragmentRepository.save(Fragment.buildFragment("Geo", "Geographic information"));
         fragmentRepository.save(Fragment.buildFragment("Contact", "Contact card"));
 
-        final AttributeModel attModel = AttributeModelBuilder.build("FIRST", AttributeType.BOOLEAN)
+        final AttributeModel attModel = AttributeModelBuilder.build("FIRST", AttributeType.BOOLEAN, "ForTests")
                 .withoutRestriction();
         attributeModelService.addAttribute(attModel);
     }

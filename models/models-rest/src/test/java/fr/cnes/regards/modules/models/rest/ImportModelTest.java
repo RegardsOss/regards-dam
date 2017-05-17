@@ -122,14 +122,13 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         for (ModelAttrAssoc modAtt : modAtts) {
 
             final AttributeModel attModel = modAtt.getAttribute();
+            Assert.assertEquals("forTests", attModel.getLabel());
 
             if ("att_string".equals(attModel.getName())) {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.STRING, attModel.getType());
                 Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
                 Assert.assertTrue(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
                 Assert.assertNull(attModel.getRestriction());
                 Assert.assertEquals(Fragment.buildDefault(), attModel.getFragment());
                 Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
@@ -139,9 +138,7 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.STRING, attModel.getType());
                 Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
                 Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
                 Assert.assertNotNull(attModel.getRestriction());
                 Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
                 final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();

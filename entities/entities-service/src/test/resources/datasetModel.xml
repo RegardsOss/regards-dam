@@ -6,12 +6,14 @@
 	<version>Version</version>
 	<type>DATASET</type>
 	<attribute>
+		<label>forTests</label>
 		<name>minDate</name>
 		<type>DATE_ISO8601</type>
 		<computationMode>COMPUTED</computationMode>
 		<configurationLabel>MinDateTestConf</configurationLabel>
 	</attribute>
 	<attribute>
+		<label>forTests</label>
 		<name>maxDate</name>
 		<type>DATE_ISO8601</type>
 		<computationMode>COMPUTED</computationMode>
