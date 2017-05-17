@@ -26,6 +26,7 @@ import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationReposit
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -127,6 +128,9 @@ public class DatasetServiceTest {
         dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
         pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
 
+        IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
+        Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
+
         // populate the repository
         model1 = new Model();
         model1.setId(1L);
@@ -167,7 +171,7 @@ public class DatasetServiceTest {
         publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
-                deletedEntityRepositoryMocked, null, null, publisherMocked);
+                deletedEntityRepositoryMocked, null, null, publisherMocked, runtimeTenantResolver);
 
         buildModelAttributes();
     }

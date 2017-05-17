@@ -3,11 +3,11 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -31,9 +31,9 @@ public class EntityService extends AbstractEntityService<AbstractEntity> impleme
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<AbstractEntity> pRepository,
-            EntityManager pEm, IPublisher pPublisher) {
+            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
-              pDatasetRepository, pRepository, pEm, pPublisher);
+              pDatasetRepository, pRepository, pEm, pPublisher, runtimeTenantResolver);
 
     }
 

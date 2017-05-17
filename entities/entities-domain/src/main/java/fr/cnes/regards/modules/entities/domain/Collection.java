@@ -23,13 +23,15 @@ import fr.cnes.regards.modules.models.domain.Model;
 @DiscriminatorValue("COLLECTION")
 public class Collection extends AbstractDescEntity { // NOSONAR
 
-    public Collection(Model pModel, String pTenant, String pLabel) {
+    public Collection(final Model pModel, final String pTenant, final String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.COLLECTION, pTenant, UUID.randomUUID(), 1),
               pLabel);
     }
 
     public Collection() {
-        this(null, null, null);
+        // we use super and not this because at deserialization we need a ipId null at the object creation which is then
+        // replaced by the attribute if present or added by creation method
+        super(null, null, null);
     }
 
     @Override
