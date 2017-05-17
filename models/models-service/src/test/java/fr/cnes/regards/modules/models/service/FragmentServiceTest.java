@@ -170,7 +170,7 @@ public class FragmentServiceTest {
     public void deleteNonEmptyFragment() throws ModuleException {
         final Long fragmentId = 1L;
         final List<AttributeModel> attModels = new ArrayList<>();
-        attModels.add(AttributeModelBuilder.build("MOCK", AttributeType.STRING).withoutRestriction());
+        attModels.add(AttributeModelBuilder.build("MOCK", AttributeType.STRING, "ForTests").withoutRestriction());
 
         Mockito.when(mockAttModelR.findByFragmentId(fragmentId)).thenReturn(attModels);
 
@@ -190,10 +190,11 @@ public class FragmentServiceTest {
 
         final List<AttributeModel> attModels = new ArrayList<>();
         // CHECKSTYLE:OFF
-        attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN).withoutRestriction());
-        attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING)
+        attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN, "ForTests").withoutRestriction());
+        attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING, "ForTests")
                 .withEnumerationRestriction("public", "scientist", "user"));
-        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.DOUBLE_ARRAY).description("physical data")
+        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.DOUBLE_ARRAY,
+                                                  "ForTests").description("physical data")
                 .withoutRestriction());
         // CHECKSTYLE:ON
 
@@ -233,24 +234,21 @@ public class FragmentServiceTest {
             for (AttributeModel attModel : attModels) {
                 // Check fragment
                 Assert.assertEquals("fragmentName", attModel.getFragment().getName());
+                Assert.assertEquals("forTests", attModel.getLabel());
                 final String name = attModel.getName();
 
                 if ("NAME".equals(name)) {
                     Assert.assertNull(attModel.getDescription());
                     Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
                     Assert.assertFalse(attModel.isAlterable());
-                    Assert.assertFalse(attModel.isFacetable());
                     Assert.assertTrue(attModel.isOptional());
-                    Assert.assertFalse(attModel.isQueryable());
                     Assert.assertNull(attModel.getRestriction());
                 } else
                     if ("PROFILE".equals(name)) {
                         Assert.assertNull(attModel.getDescription());
                         Assert.assertEquals(AttributeType.STRING, attModel.getType());
                         Assert.assertFalse(attModel.isAlterable());
-                        Assert.assertFalse(attModel.isFacetable());
                         Assert.assertFalse(attModel.isOptional());
-                        Assert.assertTrue(attModel.isQueryable());
                         Assert.assertNotNull(attModel.getRestriction());
                         Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
                         final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
@@ -262,9 +260,7 @@ public class FragmentServiceTest {
                             Assert.assertEquals("physical data", attModel.getDescription());
                             Assert.assertEquals(AttributeType.DOUBLE_ARRAY, attModel.getType());
                             Assert.assertTrue(attModel.isAlterable());
-                            Assert.assertTrue(attModel.isFacetable());
                             Assert.assertFalse(attModel.isOptional());
-                            Assert.assertTrue(attModel.isQueryable());
                             Assert.assertNull(attModel.getRestriction());
                         } else {
                             Assert.fail("Unexpected attribute");

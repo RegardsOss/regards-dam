@@ -3,39 +3,20 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.validator.constraints.NotBlank;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.*;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
 import fr.cnes.regards.modules.models.schema.Property;
@@ -116,19 +97,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private Fragment fragment;
 
     /**
-     * Whether this attribute is a search criterion
-     */
-    @Column(nullable = false)
-    private boolean queryable;
-
-    /**
-     * Whether this attribute can be used for facet<br/>
-     * Only queryable attribute can be a facet!
-     */
-    @Column
-    private boolean facetable;
-
-    /**
      * Whether this attribute can be alterate by users
      */
     @Column
@@ -139,6 +107,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      */
     @Column
     private boolean optional;
+
+    @Column(length = 20)
+    @NotBlank
+    private String label;
 
     /**
      * Applicable restriction
@@ -229,6 +201,14 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         return (restriction != null) && !restriction.getType().equals(RestrictionType.NO_RESTRICTION);
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     @Override
     public boolean equals(Object pObj) {
         if (pObj instanceof AttributeModel) {
@@ -264,22 +244,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public void setOptional(boolean pOptional) {
         optional = pOptional;
-    }
-
-    public boolean isQueryable() {
-        return queryable;
-    }
-
-    public void setQueryable(boolean pQueryable) {
-        queryable = pQueryable;
-    }
-
-    public boolean isFacetable() {
-        return facetable;
-    }
-
-    public void setFacetable(boolean pFacetable) {
-        facetable = pFacetable;
     }
 
     public String getGroup() {
@@ -318,12 +282,11 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     public Attribute toXml() {
         final Attribute xmlAtt = new Attribute();
         xmlAtt.setName(name);
+        xmlAtt.setLabel(label);
         xmlAtt.setDescription(description);
         xmlAtt.setDefaultValue(defaultValue);
         xmlAtt.setAlterable(alterable);
-        xmlAtt.setFacetable(facetable);
         xmlAtt.setOptional(optional);
-        xmlAtt.setQueryable(queryable);
         if (restriction != null) {
             xmlAtt.setRestriction(restriction.toXml());
         }
@@ -353,12 +316,11 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @Override
     public void fromXml(Attribute pXmlElement) {
         setName(pXmlElement.getName());
+        setLabel(pXmlElement.getLabel());
         setDescription(pXmlElement.getDescription());
         setDefaultValue(pXmlElement.getDefaultValue());
         setAlterable(pXmlElement.isAlterable());
-        setFacetable(pXmlElement.isFacetable());
         setOptional(pXmlElement.isOptional());
-        setQueryable(pXmlElement.isQueryable());
         if (pXmlElement.getRestriction() != null) {
             final Restriction xmlRestriction = pXmlElement.getRestriction();
             if (xmlRestriction.getEnumeration() != null) {

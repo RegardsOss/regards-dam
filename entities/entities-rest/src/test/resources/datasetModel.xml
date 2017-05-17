@@ -6,24 +6,28 @@
 	<version>1</version>
 	<type>DATASET</type>
 	<attribute>
+		<label>forTests</label>
 		<name>START_DATE</name>
 		<description>date at which the acquisition of the data has started</description>
 		<type>DATE_ISO8601</type>
 		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<attribute>
+		<label>forTests</label>
 		<name>STOP_DATE</name>
 		<description>date at which the acquisition of the data has ended</description>
 		<type>DATE_ISO8601</type>
 		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<attribute>
+		<label>forTests</label>
 		<name>FILE_SIZE</name>
 		<description>file size</description>
 		<type>INTEGER</type>
 		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<attribute>
+		<label>forTests</label>
 		<name>count</name>
 		<type>LONG</type>
 		<computationMode>GIVEN</computationMode>

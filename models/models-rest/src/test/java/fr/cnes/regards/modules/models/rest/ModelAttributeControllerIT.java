@@ -112,7 +112,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     private AttributeModel createAttribute(String pName) throws ModuleException {
-        final AttributeModel att = AttributeModelBuilder.build("att" + pName, AttributeType.STRING).get();
+        final AttributeModel att = AttributeModelBuilder.build("att" + pName, AttributeType.STRING, "ForTests").get();
         return attributeModelService.addAttribute(att);
     }
 
@@ -338,8 +338,10 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment frag = Fragment.buildFragment("testFrag", null);
         fragmentRepository.save(frag);
 
-        final AttributeModel att = AttributeModelBuilder.build("att" + name, AttributeType.STRING).fragment(frag).get();
-        final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, AttributeType.STRING).fragment(frag)
+        final AttributeModel att = AttributeModelBuilder.build("att" + name, AttributeType.STRING,
+                                                               "ForTests").fragment(frag).get();
+        final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, AttributeType.STRING,
+                                                                "ForTests").fragment(frag)
                 .get();
         attributeModelService.addAttribute(att);
         attributeModelService.addAttribute(att2);
@@ -381,8 +383,10 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final Fragment frag = Fragment.buildFragment(name, null);
         fragmentRepository.save(frag);
 
-        final AttributeModel att = AttributeModelBuilder.build("att" + name, AttributeType.STRING).fragment(frag).get();
-        final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, AttributeType.STRING).fragment(frag)
+        final AttributeModel att = AttributeModelBuilder.build("att" + name, AttributeType.STRING,
+                                                               "ForTests").fragment(frag).get();
+        final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, AttributeType.STRING,
+                                                                "ForTests").fragment(frag)
                 .get();
         attributeModelService.addAttribute(att);
         attributeModelService.addAttribute(att2);

@@ -227,7 +227,8 @@ public class ModelServiceTest {
 
         final Fragment frag = Fragment.buildFragment("FRAG", null);
         final Long attId = 10L;
-        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING).fragment(frag)
+        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING,
+                                                                    "ForTests").fragment(frag)
                 .withId(attId).get();
 
         final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
@@ -260,7 +261,8 @@ public class ModelServiceTest {
 
         final Fragment frag = Fragment.buildFragment("FR2AG", null);
         final Long attId = 10L;
-        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING).fragment(frag)
+        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING,
+                                                                    "ForTests").fragment(frag)
                 .withId(attId).withPatternRestriction(".*");
 
         final Long modAttId = 10L;
@@ -293,13 +295,13 @@ public class ModelServiceTest {
         final List<ModelAttrAssoc> modAtts = new ArrayList<>();
 
         // Attribute #1 in default fragment
-        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING)
+        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests")
                 .fragment(Fragment.buildDefault()).withoutRestriction();
         ModelAttrAssoc modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
         // Attribute #2 in default fragment
-        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN).fragment(Fragment.buildDefault())
+        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests").fragment(Fragment.buildDefault())
                 .withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
@@ -308,7 +310,7 @@ public class ModelServiceTest {
         final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
 
         // Attribute #3 in geo fragment
-        attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(geo)
+        attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
@@ -317,7 +319,7 @@ public class ModelServiceTest {
         final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
 
         // Attribute #5 in contact fragment
-        attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING).fragment(contact)
+        attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
