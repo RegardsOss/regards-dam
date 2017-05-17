@@ -6,6 +6,7 @@
 	<version>Version</version>
 	<type>DATASET</type>
 	<attribute>
+		<label>forTests</label>
 		<name>count</name>
 		<type>LONG</type>
 		<computationMode>COMPUTED</computationMode>

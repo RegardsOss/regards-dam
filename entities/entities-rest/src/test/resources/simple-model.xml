@@ -4,7 +4,8 @@
 	<name>MISSION</name>
 	<description>Sample mission</description>
 	<type>COLLECTION</type>
-	<attribute >
+	<attribute>
+		<label>forTests</label>
 		<name>reference</name>
 		<type>STRING</type>
 	</attribute>

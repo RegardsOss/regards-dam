@@ -35,7 +35,8 @@ public class CleanDatabaseTest extends AbstractModelTest {
 
     @Test
     public void deleteAttributeWithRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("withRestrictionAttribute", AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build("withRestrictionAttribute", AttributeType.STRING,
+                                                                    "ForTests")
                 .withPatternRestriction("MOCKPATTERN");
         final AttributeModel saved = saveAttribute(attModel);
         attModelRepository.delete(saved);
@@ -50,11 +51,11 @@ public class CleanDatabaseTest extends AbstractModelTest {
     @Test
     public void deleteAttributeWithNoRestriction() {
 
-        final AttributeModel attModel = AttributeModelBuilder.build("TO_DELETE", AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build("TO_DELETE", AttributeType.STRING, "ForTests")
                 .withoutRestriction();
         final AttributeModel saved = saveAttribute(attModel);
 
-        final AttributeModel attModel2 = AttributeModelBuilder.build("TO_DELETE_TWO", AttributeType.STRING)
+        final AttributeModel attModel2 = AttributeModelBuilder.build("TO_DELETE_TWO", AttributeType.STRING, "ForTests")
                 .withoutRestriction();
         saveAttribute(attModel2);
 

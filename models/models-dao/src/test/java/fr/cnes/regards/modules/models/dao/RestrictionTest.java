@@ -25,7 +25,7 @@ public class RestrictionTest extends AbstractModelTest {
 
     @Test
     public void enumRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("ENUM", AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build("ENUM", AttributeType.STRING, "ForTests")
                 .withEnumerationRestriction("FIRST", "SECOND");
         saveAttribute(attModel);
 
@@ -40,7 +40,7 @@ public class RestrictionTest extends AbstractModelTest {
      */
     @Test
     public void floatRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("FLOAT", AttributeType.DOUBLE_INTERVAL)
+        final AttributeModel attModel = AttributeModelBuilder.build("FLOAT", AttributeType.DOUBLE_INTERVAL, "ForTests")
                 .withFloatRangeRestriction(Double.MIN_VALUE, Double.MAX_VALUE, false, false);
         saveAttribute(attModel);
 
@@ -58,7 +58,7 @@ public class RestrictionTest extends AbstractModelTest {
      */
     @Test
     public void integerRestriction() {
-        final AttributeModel attModel = AttributeModelBuilder.build("INTEGER", AttributeType.INTEGER_ARRAY)
+        final AttributeModel attModel = AttributeModelBuilder.build("INTEGER", AttributeType.INTEGER_ARRAY, "ForTests")
                 .withIntegerRangeRestriction(Integer.MIN_VALUE, Integer.MAX_VALUE, false, true);
         saveAttribute(attModel);
 
@@ -74,7 +74,7 @@ public class RestrictionTest extends AbstractModelTest {
     @Test
     public void patternRestriction() {
         final String pattern = "pattern";
-        final AttributeModel attModel = AttributeModelBuilder.build("STRING", AttributeType.STRING_ARRAY)
+        final AttributeModel attModel = AttributeModelBuilder.build("STRING", AttributeType.STRING_ARRAY, "ForTests")
                 .withPatternRestriction(pattern);
         saveAttribute(attModel);
 

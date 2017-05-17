@@ -5,10 +5,12 @@
 	<description>Sample mission</description>
 	<type>COLLECTION</type>
 	<attribute>
+		<label>forTests</label>
 		<name>reference</name>
 		<type>STRING</type>
 	</attribute>
 	<attribute>
+		<label>forTests</label>
 		<name>active</name>
 		<type>BOOLEAN</type>
 	</attribute>
@@ -16,6 +18,7 @@
 		<name>geo</name>
 		<description>Geographic information</description>
 		<attribute>
+			<label>forTests</label>
 			<name>crs</name>
 			<type>STRING</type>
 			<restriction>

@@ -285,7 +285,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setOpenSearchSubsettingClause("q=FILE_SIZE:10");
         Mockito.when(attributeModelClient.getAttributes(Mockito.any(), Mockito.any()))
                 .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(Lists
-                        .newArrayList(AttributeModelBuilder.build("FILE_SIZE", AttributeType.INTEGER).get()))));
+                        .newArrayList(AttributeModelBuilder.build("FILE_SIZE", AttributeType.INTEGER, "ForTests").get()))));
 
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));

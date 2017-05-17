@@ -55,55 +55,55 @@ public class SampleDataUtils {
 
     // Build some attribute models for all attribute types
     public static final AttributeModel BOOLEAN_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(BOOLEAN_FIELD, AttributeType.BOOLEAN).get();
+            .build(BOOLEAN_FIELD, AttributeType.BOOLEAN, "ForTests").get();
 
     public static final AttributeModel INTEGER_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(INTEGER_FIELD, AttributeType.INTEGER).get();
+            .build(INTEGER_FIELD, AttributeType.INTEGER, "ForTests").get();
 
     public static final AttributeModel DOUBLE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(DOUBLE_FIELD, AttributeType.DOUBLE).get();
+            .build(DOUBLE_FIELD, AttributeType.DOUBLE, "ForTests").get();
 
     public static final AttributeModel LONG_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LONG_FIELD, AttributeType.LONG).get();
+            .build(LONG_FIELD, AttributeType.LONG, "ForTests").get();
 
     public static final AttributeModel STRING_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(STRING_FIELD, AttributeType.STRING).get();
+            .build(STRING_FIELD, AttributeType.STRING, "ForTests").get();
 
     public static final AttributeModel STRING_ATTRIBUTE_MODEL_1 = AttributeModelBuilder
-            .build(STRING_FIELD_1, AttributeType.STRING).get();
+            .build(STRING_FIELD_1, AttributeType.STRING, "ForTests").get();
 
     public static final AttributeModel LOCAL_DATE_TIME_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LOCAL_DATE_TIME_FIELD, AttributeType.DATE_ISO8601).get();
+            .build(LOCAL_DATE_TIME_FIELD, AttributeType.DATE_ISO8601, "ForTests").get();
 
     public static final AttributeModel INTEGER_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(INTEGER_RANGE_FIELD, AttributeType.INTEGER_INTERVAL).get();
+            .build(INTEGER_RANGE_FIELD, AttributeType.INTEGER_INTERVAL, "ForTests").get();
 
     public static final AttributeModel DOUBLE_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(DOUBLE_RANGE_FIELD, AttributeType.DOUBLE_INTERVAL).get();
+            .build(DOUBLE_RANGE_FIELD, AttributeType.DOUBLE_INTERVAL, "ForTests").get();
 
     public static final AttributeModel LONG_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LONG_RANGE_FIELD, AttributeType.LONG_INTERVAL).get();
+            .build(LONG_RANGE_FIELD, AttributeType.LONG_INTERVAL, "ForTests").get();
 
     public static final AttributeModel LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LOCAL_DATE_TIME_RANGE_FIELD, AttributeType.DATE_INTERVAL).get();
+            .build(LOCAL_DATE_TIME_RANGE_FIELD, AttributeType.DATE_INTERVAL, "ForTests").get();
 
     public static final AttributeModel INTEGER_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(INTEGER_ARRAY_FIELD, AttributeType.INTEGER_ARRAY).get();
+            .build(INTEGER_ARRAY_FIELD, AttributeType.INTEGER_ARRAY, "ForTests").get();
 
     public static final AttributeModel DOUBLE_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(DOUBLE_ARRAY_FIELD, AttributeType.DOUBLE_ARRAY).get();
+            .build(DOUBLE_ARRAY_FIELD, AttributeType.DOUBLE_ARRAY, "ForTests").get();
 
     public static final AttributeModel LONG_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LONG_ARRAY_FIELD, AttributeType.LONG_ARRAY).get();
+            .build(LONG_ARRAY_FIELD, AttributeType.LONG_ARRAY, "ForTests").get();
 
     public static final AttributeModel STRING_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(STRING_ARRAY_FIELD, AttributeType.STRING_ARRAY).get();
+            .build(STRING_ARRAY_FIELD, AttributeType.STRING_ARRAY, "ForTests").get();
 
     public static final AttributeModel LOCAL_DATE_TIME_ARRAY_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(LOCAL_DATE_TIME_ARRAY, AttributeType.DATE_ARRAY).get();
+            .build(LOCAL_DATE_TIME_ARRAY, AttributeType.DATE_ARRAY, "ForTests").get();
 
     public static final AttributeModel TAGS_ATTRIBUTE_MODEL = AttributeModelBuilder
-            .build(TAGS_FIELD, AttributeType.STRING_ARRAY).get();
+            .build(TAGS_FIELD, AttributeType.STRING_ARRAY, "ForTests").get();
 
     /**
      * For mocking result of a call to {@link IAttributeModelService#getAttributes(null, null)}

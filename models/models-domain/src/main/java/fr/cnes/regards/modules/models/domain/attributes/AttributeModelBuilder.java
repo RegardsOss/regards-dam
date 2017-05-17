@@ -26,14 +26,13 @@ public final class AttributeModelBuilder {
         this.attributeModel = pAttributeModel;
     }
 
-    public static AttributeModelBuilder build(String pName, AttributeType pType) {
+    public static AttributeModelBuilder build(String pName, AttributeType pType, String label) {
         final AttributeModel am = new AttributeModel();
         am.setName(pName);
         am.setType(pType);
         am.setAlterable(Boolean.FALSE);
-        am.setQueryable(Boolean.FALSE);
-        am.setFacetable(Boolean.FALSE);
         am.setOptional(Boolean.FALSE);
+        am.setLabel(label);
         return new AttributeModelBuilder(am);
     }
 
@@ -53,17 +52,6 @@ public final class AttributeModelBuilder {
 
     public AttributeModelBuilder isAlterable() {
         attributeModel.setAlterable(Boolean.TRUE);
-        return this;
-    }
-
-    public AttributeModelBuilder isQueryable() {
-        attributeModel.setQueryable(Boolean.TRUE);
-        return this;
-    }
-
-    public AttributeModelBuilder isQueryableAndFacetable() {
-        attributeModel.setQueryable(Boolean.TRUE);
-        attributeModel.setFacetable(Boolean.TRUE);
         return this;
     }
 

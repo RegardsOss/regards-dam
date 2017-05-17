@@ -6,11 +6,13 @@
 	<version>Version</version>
 	<type>DATA</type>
 	<attribute>
+		<label>forTests</label>
 		<name>sizeInteger</name>
 		<type>INTEGER</type>
 		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<attribute>
+		<label>forTests</label>
 		<name>sizeLong</name>
 		<type>LONG</type>
 		<computationMode>GIVEN</computationMode>

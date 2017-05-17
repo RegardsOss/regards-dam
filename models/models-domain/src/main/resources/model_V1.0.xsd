@@ -46,6 +46,16 @@
 		</xs:simpleType>
 	</xs:element>
 
+	<!-- Define label -->
+	<xs:element name="label">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:minLength value="1"/>
+				<xs:maxLength value="20"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+
 	<!-- Define description -->
 	<xs:element name="description">
 		<xs:simpleType>
@@ -62,6 +72,7 @@
 	<xs:element name="attribute">
 		<xs:complexType>
 			<xs:sequence>
+				<xs:element ref="label" minOccurs="1" maxOccurs="1"/>
 				<xs:element ref="name" />
 				<xs:element ref="description" minOccurs="0" />
 				<xs:element ref="type" />
@@ -77,10 +88,6 @@
 			<xs:attribute name="alterable" type="xs:boolean"
 				default="false" />
 			<xs:attribute name="optional" type="xs:boolean" default="false" />
-			<xs:attribute name="queryable" type="xs:boolean"
-				default="false" />
-			<xs:attribute name="facetable" type="xs:boolean"
-				default="false" />
 			<xs:attribute name="group" type="xs:string" />
 		</xs:complexType>
 	</xs:element>

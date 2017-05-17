@@ -87,6 +87,7 @@ public class ModelImportTest {
             // Check attributes
             final AttributeModel attModel = modAtt.getAttribute();
             Assert.assertNotNull(attModel);
+            Assert.assertEquals("forTests", attModel.getLabel());
 
             if ("att_string".equals(attModel.getName())) {
                 Assert.assertNotNull(attModel.getFragment());
@@ -94,9 +95,7 @@ public class ModelImportTest {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.STRING, attModel.getType());
                 Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
                 Assert.assertTrue(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
                 Assert.assertNull(attModel.getRestriction());
                 Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
             }
@@ -107,9 +106,7 @@ public class ModelImportTest {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.BOOLEAN, attModel.getType());
                 Assert.assertTrue(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
                 Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
                 Assert.assertNull(attModel.getRestriction());
                 Assert.assertEquals(ComputationMode.COMPUTED, modAtt.getMode());
             }
@@ -122,9 +119,7 @@ public class ModelImportTest {
                 Assert.assertNull(attModel.getDescription());
                 Assert.assertEquals(AttributeType.STRING, attModel.getType());
                 Assert.assertFalse(attModel.isAlterable());
-                Assert.assertFalse(attModel.isFacetable());
                 Assert.assertFalse(attModel.isOptional());
-                Assert.assertFalse(attModel.isQueryable());
 
                 Assert.assertNotNull(attModel.getRestriction());
                 Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
