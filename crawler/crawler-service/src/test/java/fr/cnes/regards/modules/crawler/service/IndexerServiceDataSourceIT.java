@@ -9,7 +9,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -30,10 +29,7 @@ import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +41,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -60,11 +55,7 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.*;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -339,7 +330,7 @@ public class IndexerServiceDataSourceIT {
         confInteger = pluginService.savePluginConfiguration(confInteger);
     }
 
-    // @After
+    @After
     public void clean() {
         entityRepos.deleteAll();
         modelAttrAssocRepo.deleteAll();

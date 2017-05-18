@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,11 +67,6 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
     @Override
     protected Logger getLogger() {
         return LOGGER;
-    }
-
-    @Before
-    public void cleanUp() {
-        fragmentRepository.deleteAll();
     }
 
     @Test
