@@ -5,11 +5,14 @@
 package fr.cnes.regards.modules.datasources.utils;
 
 import java.beans.PropertyVetoException;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
+import fr.cnes.regards.framework.jpa.json.JsonBinarySqlTypeDescriptor;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
@@ -50,6 +54,8 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
     private static final String COLUMN_NAME = "COLUMN_NAME";
 
     private static final String TYPE_NAME = "TYPE_NAME";
+
+    private static final String DATA_TYPE = "DATA_TYPE";
 
     private static final String REMARKS = "REMARKS";
 
@@ -239,11 +245,12 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
 
                 while (rs.next()) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
-                                + logInt(rs, "DATA_TYPE"));
+                        LOG.debug("[COLUMN] --> " + logString(rs, COLUMN_NAME) + logString(rs, TYPE_NAME)
+                                + logInt(rs, DATA_TYPE));
                     }
 
-                    Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME));
+                    Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME),
+                            rs.getInt(DATA_TYPE));
                     cols.put(column.getName(), column);
                 }
             }

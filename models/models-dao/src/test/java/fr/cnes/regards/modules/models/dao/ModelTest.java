@@ -41,7 +41,7 @@ public class ModelTest extends AbstractModelTest {
         final Model model = createModel("MISSION", "Scientist mission collection", EntityType.COLLECTION);
 
         // Create attribute
-        AttributeModel attModel = AttributeModelBuilder.build("NAME", AttributeType.STRING).get();
+        AttributeModel attModel = AttributeModelBuilder.build("NAME", AttributeType.STRING, "ForTests").get();
         attModel = saveAttribute(attModel);
 
         // Create model attribute

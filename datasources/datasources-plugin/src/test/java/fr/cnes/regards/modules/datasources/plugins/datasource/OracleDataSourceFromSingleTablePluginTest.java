@@ -162,7 +162,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                "DATA_OBJECT_ID", Types.INTEGER));
+                "DATA_OBJECT_ID"));
 
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -173,11 +173,10 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, "START_DATE", Types.DECIMAL));
-        attributes
-                .add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE", Types.DECIMAL));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, "START_DATE"));
+        attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE", Types.DECIMAL));
+                "DATA_CREATION_DATE"));
 
         attributes.add(new DynamicAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));

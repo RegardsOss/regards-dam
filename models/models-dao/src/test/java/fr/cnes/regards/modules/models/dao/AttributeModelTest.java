@@ -37,7 +37,7 @@ public class AttributeModelTest extends AbstractModelTest {
         final String attName = "FAKE";
         final String description = "DESCRIPTION OF THE FAKE ATTRIBUTE";
 
-        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING, "ForTests")
                 .description(description).get();
         saveAttribute(attModel);
 
@@ -47,8 +47,6 @@ public class AttributeModelTest extends AbstractModelTest {
         Assert.assertEquals(AttributeType.STRING, att.getType());
         Assert.assertEquals(description, att.getDescription());
         Assert.assertEquals(Boolean.FALSE, att.isAlterable());
-        Assert.assertEquals(Boolean.FALSE, att.isQueryable());
-        Assert.assertEquals(Boolean.FALSE, att.isFacetable());
         Assert.assertEquals(Boolean.FALSE, att.isOptional());
     }
 
@@ -63,11 +61,12 @@ public class AttributeModelTest extends AbstractModelTest {
         final String description = "All consistent geo attributes";
         final Fragment f = Fragment.buildFragment(name, description);
 
-        final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.INTEGER).fragment(f)
+        final AttributeModel attModel1 = AttributeModelBuilder.build("GEOMETRY", AttributeType.INTEGER,
+                                                                     "ForTests").fragment(f)
                 .withoutRestriction();
         saveAttribute(attModel1);
 
-        final AttributeModel attModel2 = AttributeModelBuilder.build("CRS", AttributeType.STRING).fragment(f)
+        final AttributeModel attModel2 = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(f)
                 .withEnumerationRestriction("EARTH", "ASTRO", "MARS");
         saveAttribute(attModel2);
 
@@ -82,7 +81,7 @@ public class AttributeModelTest extends AbstractModelTest {
 
     @Test
     public void deleteAttributeTest() {
-        final AttributeModel attModel = AttributeModelBuilder.build("TO_DELETE", AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build("TO_DELETE", AttributeType.STRING, "ForTests")
                 .withoutRestriction();
         final AttributeModel saved = saveAttribute(attModel);
         attModelRepository.delete(saved);

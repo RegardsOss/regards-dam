@@ -6,22 +6,27 @@
     <version>1</version>
     <type>DATA</type>
     <attribute>
+        <label>weight</label>
         <name>weight</name>
         <type>INTEGER</type>
     </attribute>
     <attribute>
+        <label>date UTC</label>
         <name>date</name>
         <type>DATE_ISO8601</type>
     </attribute>
     <attribute>
+        <label>description</label>
         <name>description</name>
         <type>STRING</type>
     </attribute>
     <attribute>
+        <label>long value</label>
         <name>value_l1</name>
         <type>LONG</type>
     </attribute>
     <attribute>
+        <label>double value</label>
         <name>value_d1</name>
         <type>DOUBLE</type>
     </attribute>
@@ -29,10 +34,12 @@
     <fragment>
         <name>fragment1</name>
         <attribute>
+            <label>activated</label>
             <name>activated</name>
             <type>BOOLEAN</type>
         </attribute>
         <attribute>
+            <label>data state</label>
             <name>state</name>
             <type>STRING</type>
         </attribute>

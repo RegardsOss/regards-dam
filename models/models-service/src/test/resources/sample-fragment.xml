@@ -3,13 +3,13 @@
 	xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
 	<name>fragmentName</name>
 	<description>Sample fragment</description>
-	<attribute alterable="false" optional="true" queryable="false"
-		facetable="false">
+	<attribute alterable="false" optional="true">
+        <label>forTests</label>
 		<name>NAME</name>
 		<type>BOOLEAN</type>
 	</attribute>
-	<attribute alterable="false" optional="false" queryable="true"
-		facetable="false">
+	<attribute alterable="false" optional="false">
+		<label>forTests</label>
 		<name>PROFILE</name>
 		<type>STRING</type>
 		<restriction>
@@ -20,8 +20,8 @@
 			</enumeration>
 		</restriction>
 	</attribute>
-	<attribute alterable="true" optional="false" queryable="true"
-		facetable="true">
+	<attribute alterable="true" optional="false">
+		<label>forTests</label>
 		<name>DATA</name>
 		<description>physical data</description>
 		<type>DOUBLE_ARRAY</type>

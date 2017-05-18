@@ -5,10 +5,12 @@
 	<description>Sample mission</description>
 	<type>COLLECTION</type>
 	<attribute optional="true">
+        <label>forTests</label>
 		<name>att_string</name>
 		<type>STRING</type>
 	</attribute>
 	<attribute alterable="true">
+        <label>forTests</label>
 		<name>att_boolean</name>
 		<type>BOOLEAN</type>
 		<computationMode>COMPUTED</computationMode>
@@ -17,6 +19,7 @@
 		<name>GEO</name>
 		<description>Geographic information</description>
 		<attribute>
+            <label>forTests</label>
 			<name>CRS</name>
 			<type>STRING</type>
 			<restriction>

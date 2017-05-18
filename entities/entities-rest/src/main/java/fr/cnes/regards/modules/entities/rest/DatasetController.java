@@ -112,7 +112,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.POST)
     @ResourceAccess(description = "create and send the dataset")
     public ResponseEntity<Resource<Dataset>> createDataset(@Valid @RequestPart("dataset") Dataset pDataset,
-            @RequestPart("file") MultipartFile descriptionFile, BindingResult pResult)
+            @RequestPart(value = "file", required = false) MultipartFile descriptionFile, BindingResult pResult)
             throws ModuleException, IOException {
 
         // Validate dynamic model
