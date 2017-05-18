@@ -6,6 +6,7 @@
     <version>1</version>
     <type>COLLECTION</type>
     <attribute>
+        <label>Name of collection</label>
         <name>name</name>
         <type>STRING</type>
     </attribute>
