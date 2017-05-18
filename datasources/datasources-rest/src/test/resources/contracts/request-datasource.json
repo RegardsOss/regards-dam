@@ -8,17 +8,17 @@
             "name": "sipId",
             "type": "",
             "namespace": "",
-            "nameDs": "id"
+            "nameDS": "id"
         }, {
             "name": "Attr2",
             "type": "STRING",
             "namespace": "Fragment_1",
-            "nameDs": "description"
+            "nameDS": "description"
         }, {
             "name": "label",
             "type": "",
             "namespace": "",
-            "nameDs": "name"
+            "nameDS": "name"
         }]
     },
     "tableName": "t_project",

@@ -337,7 +337,7 @@ public class DatasetServiceTest {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "ATTRIBUTE_ID", Types.INTEGER));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "ATTRIBUTE_ID"));
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "FILE_TYPE"));
 
         dataSourceModelMapping = new DataSourceModelMapping(99L, attributes);

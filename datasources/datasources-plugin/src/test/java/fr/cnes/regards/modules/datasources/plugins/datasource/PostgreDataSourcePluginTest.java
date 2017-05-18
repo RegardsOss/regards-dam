@@ -65,7 +65,9 @@ public class PostgreDataSourcePluginTest {
 
     private static final String TENANT = "PG_TENANT";
 
-    private static final String HELLO = "Hello Toulouse";
+    private static final String HELLO = "hello world from ";
+    
+    private static final String NAME_ATTR = "name";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -154,10 +156,14 @@ public class PostgreDataSourcePluginTest {
         Assert.assertNotNull(ll);
         Assert.assertEquals(nbElements, ll.getContent().size());
 
-        ll.getContent().get(0).getProperties().forEach(attr -> {
-            if (attr.getName().equals("name")) {
-                Assert.assertTrue(attr.getValue().toString().contains(HELLO));
-            }
+        ll.getContent().forEach(dataObj-> {
+            LOG.info("------------------->");
+            dataObj.getProperties().forEach(attr-> {
+                LOG.info(attr.getName() + " : " + attr.getValue());
+                if (attr.getName().equals(NAME_ATTR)) {
+                    Assert.assertTrue(attr.getValue().toString().contains(HELLO));
+                }
+            });
         });
 
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
@@ -177,10 +183,14 @@ public class PostgreDataSourcePluginTest {
         Assert.assertNotNull(ll);
         Assert.assertEquals(1, ll.getContent().size());
 
-        ll.getContent().get(0).getProperties().forEach(attr -> {
-            if (attr.getName().equals("name")) {
-                Assert.assertTrue(attr.getValue().toString().contains(HELLO));
-            }
+        ll.getContent().forEach(dataObj-> {
+            LOG.info("------------------->");
+            dataObj.getProperties().forEach(attr-> {
+                LOG.info(attr.getName() + " : " + attr.getValue());
+                if (attr.getName().equals(NAME_ATTR)) {
+                    Assert.assertTrue(attr.getValue().toString().contains(HELLO));
+                }
+            });
         });
 
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
@@ -226,19 +236,18 @@ public class PostgreDataSourcePluginTest {
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id",
-                Types.INTEGER));
-        attributes.add(new DynamicAttributeMapping("name", AttributeType.STRING, "'" + HELLO + "- '||label as label"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
+        attributes.add(new DynamicAttributeMapping(NAME_ATTR, AttributeType.STRING, "'" + HELLO + "--> '||label as label"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithoutTimeZone", Types.TIMESTAMP));
+                "timeStampWithoutTimeZone"));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
+        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone", Types.TIMESTAMP));
+                "timeStampWithTimeZone"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

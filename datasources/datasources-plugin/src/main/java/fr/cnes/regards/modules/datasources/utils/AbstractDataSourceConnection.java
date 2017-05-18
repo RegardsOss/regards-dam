@@ -55,6 +55,8 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
 
     private static final String TYPE_NAME = "TYPE_NAME";
 
+    private static final String DATA_TYPE = "DATA_TYPE";
+
     private static final String REMARKS = "REMARKS";
 
     /**
@@ -238,19 +240,17 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
         try (Connection conn = getDBConnectionPlugin().getConnection()) {
 
             DatabaseMetaData metaData = conn.getMetaData();
-            Map<Integer, String> jdbcMappings = getAllJdbcTypeNames();
 
             try (ResultSet rs = metaData.getColumns(null, null, pTableName, null)) {
 
                 while (rs.next()) {
-                    String typeName = jdbcMappings.get(rs.getInt("DATA_TYPE"));
-
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("[COLUMN] --> " + logString(rs, "COLUMN_NAME") + logString(rs, "TYPE_NAME")
-                                + logInt(rs, "DATA_TYPE") + " : " + typeName);
+                        LOG.debug("[COLUMN] --> " + logString(rs, COLUMN_NAME) + logString(rs, TYPE_NAME)
+                                + logInt(rs, DATA_TYPE));
                     }
-                    
-                    Column column = new Column(rs.getString(COLUMN_NAME), typeName);
+
+                    Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME),
+                            rs.getInt(DATA_TYPE));
                     cols.put(column.getName(), column);
                 }
             }
@@ -260,21 +260,6 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
             LOG.error(e.getMessage(), e);
         }
         return cols;
-    }
-    
-    private Map<Integer, String> getAllJdbcTypeNames() {
-
-        Map<Integer, String> result = new HashMap<Integer, String>();
-
-        for (Field field : Types.class.getFields()) {
-                try {
-                    result.put((Integer)field.get(null), field.getName());
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    LOG.error(e.getMessage(),e);
-                }
-        }
-
-        return result;
     }
 
     private String logString(ResultSet pRs, String pParamName) throws SQLException {
