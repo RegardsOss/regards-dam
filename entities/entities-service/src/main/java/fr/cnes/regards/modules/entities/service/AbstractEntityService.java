@@ -343,7 +343,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     @Override
     public U create(U pEntity, MultipartFile file) throws ModuleException, IOException {
-        U entity = check(pEntity);
+        U entity = checkCreation(pEntity);
 
         // Set IpId
         if(entity.getIpId()==null) {
@@ -507,9 +507,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toUpperCase();
     }
 
-    private U check(U pEntity) throws ModuleException {
+    private U checkCreation(U pEntity) throws ModuleException {
         checkModelExists(pEntity);
-        return doCheck(pEntity);
+        doCheck(pEntity, null);
+        return pEntity;
     }
 
     /**
@@ -518,9 +519,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param pEntity
      * @return
      */
-    protected U doCheck(U pEntity) throws ModuleException {
+    protected void doCheck(U pEntity, U entityInDB) throws ModuleException {
         // nothing by default
-        return pEntity;
     }
 
     /**
@@ -540,7 +540,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         if (!pEntityId.equals(pEntity.getId())) {
             throw new EntityInconsistentIdentifierException(pEntityId, pEntity.getId(), pEntity.getClass());
         }
-        return doCheck(pEntity);
+        doCheck(pEntity, entityInDb);
+        return entityInDb;
     }
 
     @Override
