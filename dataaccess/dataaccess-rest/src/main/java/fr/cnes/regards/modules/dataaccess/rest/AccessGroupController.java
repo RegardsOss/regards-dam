@@ -61,16 +61,16 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @ResourceAccess(description = "send the whole list of accessGroups")
     public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(final Pageable pPageable,
             final PagedResourcesAssembler<AccessGroup> pAssembler) {
-        Page<AccessGroup> accessGroups = accessGroupService.retrieveAccessGroups(pPageable);
+        final Page<AccessGroup> accessGroups = accessGroupService.retrieveAccessGroups(pPageable);
         return new ResponseEntity<>(toPagedResources(accessGroups, pAssembler), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create an access group according to the parameter")
-    public ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody AccessGroup pToBeCreated)
+    public ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody final AccessGroup pToBeCreated)
             throws EntityAlreadyExistsException {
-        AccessGroup created = accessGroupService.createAccessGroup(pToBeCreated);
+        final AccessGroup created = accessGroupService.createAccessGroup(pToBeCreated);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
@@ -78,7 +78,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @ResponseBody
     @ResourceAccess(description = "send the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName) throws EntityNotFoundException {
+            @Valid @PathVariable("name") final String pAccessGroupName) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
@@ -86,7 +86,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
     @ResourceAccess(description = "delete the access group of name requested")
-    public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") String pAccessGroupName) {
+    public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") final String pAccessGroupName) {
         accessGroupService.deleteAccessGroup(pAccessGroupName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -94,8 +94,9 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME)
     @ResponseBody
     @ResourceAccess(description = "only used to modify the privacy of the group")
-    public ResponseEntity<Resource<AccessGroup>> updateAccessGroup(@Valid @PathVariable("name") String pAccessGroupName,
-            @Valid AccessGroup pAccessGroup) throws ModuleException {
+    public ResponseEntity<Resource<AccessGroup>> updateAccessGroup(
+            @Valid @PathVariable("name") final String pAccessGroupName, @Valid final AccessGroup pAccessGroup)
+            throws ModuleException {
         final AccessGroup ag = accessGroupService.update(pAccessGroupName, pAccessGroup);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
@@ -104,8 +105,8 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @ResponseBody
     @ResourceAccess(description = "associated the user of email specified to the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName, @Valid @PathVariable("email") String pUserEmail)
-            throws EntityNotFoundException {
+            @Valid @PathVariable("name") final String pAccessGroupName,
+            @Valid @PathVariable("email") final String pUserEmail) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.associateUserToAccessGroup(pUserEmail, pAccessGroupName);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
@@ -114,21 +115,26 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @ResponseBody
     @ResourceAccess(description = "dissociated the user of email specified from the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(
-            @Valid @PathVariable("name") String pAccessGroupName, @Valid @PathVariable("email") String pUserEmail)
-            throws EntityNotFoundException {
+            @Valid @PathVariable("name") final String pAccessGroupName,
+            @Valid @PathVariable("email") final String pUserEmail) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.dissociateUserFromAccessGroup(pUserEmail, pAccessGroupName);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
 
     @Override
-    public Resource<AccessGroup> toResource(AccessGroup pElement, Object... pExtras) {
-        Resource<AccessGroup> resource = resourceService.toResource(pElement);
+    public Resource<AccessGroup> toResource(final AccessGroup pElement, final Object... pExtras) {
+        final Resource<AccessGroup> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "retrieveAccessGroup", LinkRels.SELF,
                                 MethodParamFactory.build(String.class, pElement.getName()));
-        resourceService.addLink(resource, this.getClass(), "deleteAccessGroup", LinkRels.DELETE,
-                                MethodParamFactory.build(String.class, pElement.getName()));
+        resourceService.addLink(resource, this.getClass(), "updateAccessGroup", LinkRels.UPDATE,
+                                MethodParamFactory.build(String.class, pElement.getName()),
+                                MethodParamFactory.build(AccessGroup.class));
+        if (pElement.getUsers().isEmpty()) {
+            resourceService.addLink(resource, this.getClass(), "deleteAccessGroup", LinkRels.DELETE,
+                                    MethodParamFactory.build(String.class, pElement.getName()));
+        }
         resourceService.addLink(resource, this.getClass(), "createAccessGroup", LinkRels.CREATE,
                                 MethodParamFactory.build(AccessGroup.class, pElement));
-        return resourceService.toResource(pElement);
+        return resource;
     }
 }
