@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.datasources.domain;
 
+import javax.validation.constraints.NotNull;
+
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 
 /**
@@ -19,13 +21,16 @@ public class DataSource {
     /**
      * The associated {@link PluginConfiguration} to the {@link DBConnection}
      */
+    @NotNull
     private Long pluginConfigurationConnectionId;
 
     /**
-     * The plugin class name that implements the IDBConnectionPlugin interface
+     * The plugin class name that implements the {@link  IDataSourcePlugin} interface
      */
+    @NotNull
     private String pluginClassName;
 
+    @NotNull
     private String label;
 
     private String tableName;
