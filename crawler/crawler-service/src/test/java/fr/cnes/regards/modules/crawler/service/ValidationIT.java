@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -60,6 +61,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { ValidationConfiguration.class })
+@Ignore
 public class ValidationIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ValidationIT.class);
