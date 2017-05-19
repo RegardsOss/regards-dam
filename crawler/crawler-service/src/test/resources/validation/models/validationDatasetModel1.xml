@@ -6,6 +6,7 @@
     <version>1</version>
     <type>DATASET</type>
     <attribute>
+        <label>name attribute</label>
         <name>name</name>
         <type>STRING</type>
     </attribute>

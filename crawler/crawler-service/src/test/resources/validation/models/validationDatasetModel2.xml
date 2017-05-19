@@ -6,6 +6,7 @@
     <version>1</version>
     <type>DATASET</type>
     <attribute>
+        <label>count label</label>
         <name>count</name>
         <type>LONG</type>
         <computationMode>COMPUTED</computationMode>

@@ -6,10 +6,12 @@
     <version>1</version>
     <type>DATA</type>
     <attribute>
+        <label>pays</label>
         <name>country</name>
         <type>STRING</type>
     </attribute>
     <attribute>
+        <label>superficie</label>
         <name>area</name>
         <type>DOUBLE</type>
     </attribute>
