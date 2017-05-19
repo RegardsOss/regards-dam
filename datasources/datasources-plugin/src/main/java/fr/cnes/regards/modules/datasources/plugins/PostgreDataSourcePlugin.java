@@ -6,11 +6,7 @@ package fr.cnes.regards.modules.datasources.plugins;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
 import javax.sql.DataSource;
 
@@ -84,36 +80,9 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
     }
 
     @Override
-    /**
-     * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
-     */
     protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
-        OffsetDateTime date;
-
-        if (pAttrMapping.getTypeDS() == null) {
-            date = buildOffsetDateTime(pRs, pAttrMapping);
-        } else {
-            long n;
-            Instant instant;
-
-            switch (pAttrMapping.getTypeDS()) {
-                case Types.TIME:
-                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
-                    instant = Instant.ofEpochMilli(n);
-                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
-                    break;
-                case Types.DATE:
-                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
-                    instant = Instant.ofEpochMilli(n);
-                    date = OffsetDateTime.ofInstant(instant, ZoneId.of ("UTC"));
-                    break;
-                default:
-                    date = buildOffsetDateTime(pRs, pAttrMapping);
-                    break;
-            }
-        }
-
+        OffsetDateTime date = buildOffsetDateTime(pRs, pAttrMapping);
         return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
     }
 

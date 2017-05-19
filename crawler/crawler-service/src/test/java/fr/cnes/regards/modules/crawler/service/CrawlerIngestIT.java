@@ -52,7 +52,7 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -77,7 +77,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 public class CrawlerIngestIT {
 
     @Autowired
-    private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
+    private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -164,6 +164,10 @@ public class CrawlerIngestIT {
 
     @Before
     public void setUp() throws Exception {
+
+        // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
+        gsonAttributeFactoryHandler.onApplicationEvent(null);
+
         if (esRepos.indexExists(TENANT)) {
             esRepos.deleteIndex(TENANT);
         }
@@ -206,7 +210,7 @@ public class CrawlerIngestIT {
         dBConnectionConf = getPostgresConnectionConfiguration();
         pluginService.savePluginConfiguration(dBConnectionConf);
 
-        DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        final DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
         Assume.assumeTrue(dbCtx.testConnection());
 
         // DataSource PluginConf
@@ -236,7 +240,7 @@ public class CrawlerIngestIT {
         }
     }
 
-    private PluginConfiguration getPostgresDataSource(PluginConfiguration pluginConf) {
+    private PluginConfiguration getPostgresDataSource(final PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
@@ -264,18 +268,19 @@ public class CrawlerIngestIT {
     }
 
     private void buildModelAttributes() {
-        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
+        final List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601, "date"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
+                "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 
     @Test
     public void test() throws ModuleException, IOException, InterruptedException {
-        String tenant = tenantResolver.getTenant();
+        final String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
         indexerService.deleteIndex(tenant);
 
@@ -301,14 +306,14 @@ public class CrawlerIngestIT {
         Thread.sleep(10_000);
 
         // Retrieve dataset1 from ES
-        UniformResourceName ipId = dataset.getIpId();
+        final UniformResourceName ipId = dataset.getIpId();
         dataset = (Dataset) searchService.get(ipId);
         if (dataset == null) {
             esRepos.refresh(tenant);
             dataset = (Dataset) searchService.get(ipId);
         }
 
-        SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
+        final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.eq("tags", dataset.getIpId().toString()));

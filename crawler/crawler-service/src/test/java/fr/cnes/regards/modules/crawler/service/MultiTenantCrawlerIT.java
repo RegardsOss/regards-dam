@@ -1,30 +1,37 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import com.google.common.collect.Sets;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
-import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.indexer.dao.EsRepository;
-import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
-import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelService;
-import org.junit.*;
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
+import com.google.common.collect.Sets;
+
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
+import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
+import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.indexer.dao.EsRepository;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * Multitenant crawler test
+ * 
  * @author oroussel
  */
 @RunWith(SpringRunner.class)
@@ -37,6 +44,9 @@ public class MultiTenantCrawlerIT {
 
     @Value("${spring.application.name:}")
     private String toTestPropertiesExists;
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     @Autowired
     private IModelService modelService;
@@ -61,11 +71,16 @@ public class MultiTenantCrawlerIT {
 
     @BeforeClass
     public static void toBeOrNotToBe() throws URISyntaxException {
-        Assume.assumeTrue(ClassLoader.getSystemResource("multitenant_" + System.getProperty("user.name") + ".properties") != null);
+        Assume.assumeTrue(ClassLoader
+                .getSystemResource("multitenant_" + System.getProperty("user.name") + ".properties") != null);
     }
 
     @Before
     public void init() {
+
+        // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
+        gsonAttributeFactoryHandler.onApplicationEvent(null);
+
         if (esRepos.indexExists(TENANT1)) {
             esRepos.deleteIndex(TENANT1);
         }
@@ -88,10 +103,10 @@ public class MultiTenantCrawlerIT {
         Model model1 = Model.build("model1_" + TENANT1, "modele pour tenant " + TENANT1, EntityType.COLLECTION);
         model1 = modelService.createModel(model1);
 
-        Collection coll11 = new Collection(model1, TENANT1, "collection 1 pour tenant " + TENANT1);
+        final Collection coll11 = new Collection(model1, TENANT1, "collection 1 pour tenant " + TENANT1);
         coll11.setGroups(Sets.newHashSet("Michou", "Jojo"));
         collService.create(coll11);
-        Collection coll12 = new Collection(model1, TENANT1, "collection 2 pour tenant " + TENANT1);
+        final Collection coll12 = new Collection(model1, TENANT1, "collection 2 pour tenant " + TENANT1);
         coll12.setTags(Sets.newHashSet(coll11.getIpId().toString()));
         collService.create(coll12);
 
@@ -99,11 +114,11 @@ public class MultiTenantCrawlerIT {
         Model model2 = Model.build("model2_" + TENANT2, "modele pour tenant " + TENANT2, EntityType.COLLECTION);
         model2 = modelService.createModel(model2);
 
-        Collection coll21 = new Collection(model2, TENANT2, "collection 1 pour tenant " + TENANT2);
+        final Collection coll21 = new Collection(model2, TENANT2, "collection 1 pour tenant " + TENANT2);
         coll21.setGroups(Sets.newHashSet("Riri", "Fifi", "Loulou"));
         collService.create(coll21);
 
-        Collection coll22 = new Collection(model2, TENANT2, "collection 2 pour tenant " + TENANT2);
+        final Collection coll22 = new Collection(model2, TENANT2, "collection 2 pour tenant " + TENANT2);
         coll22.setTags(Sets.newHashSet(coll21.getIpId().toString()));
         collService.create(coll22);
 
@@ -111,12 +126,12 @@ public class MultiTenantCrawlerIT {
         esRepos.refresh(TENANT1);
         esRepos.refresh(TENANT2);
 
-        Collection coll12FromEs = esRepos.get(TENANT1, coll12);
+        final Collection coll12FromEs = esRepos.get(TENANT1, coll12);
         // coll12 tags coll11 so coll11 groups must have been copied to coll12
         Assert.assertArrayEquals(Sets.newTreeSet(coll11.getGroups()).toArray(),
                                  Sets.newTreeSet(coll12FromEs.getGroups()).toArray());
 
-        Collection coll22FromEs = esRepos.get(TENANT2, coll22);
+        final Collection coll22FromEs = esRepos.get(TENANT2, coll22);
         // coll22 tags coll21 so coll21 groups must have been copied to coll22
         Assert.assertArrayEquals(Sets.newTreeSet(coll21.getGroups()).toArray(),
                                  Sets.newTreeSet(coll22FromEs.getGroups()).toArray());

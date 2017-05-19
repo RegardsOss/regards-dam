@@ -6,7 +6,6 @@ package fr.cnes.regards.modules.datasources.utils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 import org.slf4j.Logger;

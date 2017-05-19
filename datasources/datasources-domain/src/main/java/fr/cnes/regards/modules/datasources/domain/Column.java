@@ -6,6 +6,8 @@ package fr.cnes.regards.modules.datasources.domain;
 
 import java.sql.Types;
 
+import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
+
 /**
  * This class describes a column of a SQL database.
  *
@@ -24,6 +26,9 @@ public final class Column {
      */
     private String javaSqlType;
 
+    @GsonIgnore
+    private Integer sqlType;
+
     /**
      *
      */
@@ -31,17 +36,11 @@ public final class Column {
         super();
     }
 
-    /**
-     * 
-     * @param pName
-     *            the name of the column
-     * @param pJavaSqlType
-     *            the SQL type of the column
-     */
-    public Column(String pName, String pJavaSqlType) {
+    public Column(String pName, String pJavaSqlType, Integer pSqlType) {
         super();
         name = pName;
         javaSqlType = pJavaSqlType;
+        this.sqlType = pSqlType;
     }
 
     public String getName() {
@@ -58,6 +57,14 @@ public final class Column {
 
     public void setJavaSqlType(String pJavaSqlType) {
         javaSqlType = pJavaSqlType;
+    }
+
+    public Integer getSqlType() {
+        return sqlType;
+    }
+
+    public void setSqlType(Integer sqlType) {
+        this.sqlType = sqlType;
     }
 
     @Override

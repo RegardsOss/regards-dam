@@ -3,16 +3,14 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matchers;
-import org.hsqldb.Types;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +31,7 @@ import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.*;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
@@ -46,6 +39,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.plugins.utils.PluginUtils;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test {@link DataSource} controller
@@ -104,7 +98,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration pluginPostgreDbConnection;
 
     private DataSourceModelMapping modelMapping;
-    
+
     private final static ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
@@ -198,6 +192,15 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    public void getUnknownDataSource() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isNotFound());
+
+        performDefaultGet(DataSourceController.TYPE_MAPPING + "/{pPluginConfId}", expectations,
+                          "DataSource shouldn't be retrieve.", Long.MAX_VALUE);
+    }
+
+    @Test
     @Requirement("REGARDS_DSL_DAM_SRC_120")
     @Purpose("The system allows to update a datasource by updating the SQL request")
     public void dataSourceUpdateFromClause() {
@@ -213,9 +216,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         // Update the DataSource
         dataSource.setFromClause("from table where table.id>1000");
-        
-        String mm = adapter.toJson(modelMapping);
-        
 
         // Define expectations
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_LABEL, Matchers.equalTo(dataSource.getLabel())));
@@ -395,21 +395,35 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         return dataSource;
     }
 
+    @Test
+    @Ignore
+    public void createDataSourceWithJson() {
+        String dataSourceRequest = readJsonContract("request-datasource.json");
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+
+        performDefaultPost(DataSourceController.TYPE_MAPPING, dataSourceRequest, expectations,
+                           "DataSource creation request error.");
+    }
+
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id", Types.INTEGER));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'Hello Toulouse-'||label"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithoutTimeZone", Types.TIMESTAMP));
+                "timeStampWithoutTimeZone"));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date", Types.DATE));
+        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone", Types.TIMESTAMP));
+                "timeStampWithTimeZone"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);

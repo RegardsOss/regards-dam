@@ -31,7 +31,7 @@ public interface IModelAttrAssocClient {
     public static final String ASSOCS_MAPPING = "/assocs";
 
     @RequestMapping(method = RequestMethod.GET, path = TYPE_MAPPING)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable Long pModelId);
+    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId);
 
     @RequestMapping(path = ASSOCS_MAPPING, method = RequestMethod.GET)
     public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(

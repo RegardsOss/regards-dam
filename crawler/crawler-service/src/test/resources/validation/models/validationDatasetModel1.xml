@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
-    <name>VALIDATION_DATASET_MODEL</name>
-    <description>Modèle de jeu de données de validation</description>
+    <name>VALIDATION_DATASET_MODEL_1</name>
+    <description>Validation dataset model</description>
     <version>1</version>
     <type>DATASET</type>
     <attribute>
+        <name>name</name>
+        <type>STRING</type>
+    </attribute>
+    <attribute>
+        <label>data start date</label>
         <name>start_date</name>
         <description>date at which the acquisition of the data has started</description>
         <type>DATE_ISO8601</type>
@@ -13,6 +18,7 @@
         <configurationLabel>MinDateValidationConf</configurationLabel>
     </attribute>
     <attribute>
+        <label>data end date</label>
         <name>end_date</name>
         <description>date at which the acquisition of the data has ended</description>
         <type>DATE_ISO8601</type>
@@ -20,12 +26,14 @@
         <configurationLabel>MaxDateValidationConf</configurationLabel>
     </attribute>
     <attribute>
+        <label>long sum</label>
         <name>values_l1_sum</name>
         <type>LONG</type>
         <computationMode>COMPUTED</computationMode>
         <configurationLabel>SumLongValidationConf</configurationLabel>
     </attribute>
     <attribute>
+        <label>number of data</label>
         <name>count</name>
         <type>LONG</type>
         <computationMode>COMPUTED</computationMode>

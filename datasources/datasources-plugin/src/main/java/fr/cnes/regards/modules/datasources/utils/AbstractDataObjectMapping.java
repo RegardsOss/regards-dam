@@ -288,23 +288,23 @@ public abstract class AbstractDataObjectMapping {
     private AbstractAttribute<?> buildAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
             throws SQLException {
         AbstractAttribute<?> attr = null;
-        final String label = extractColumnName(pAttrMapping.getNameDS());
+        final String colName = extractColumnName(pAttrMapping.getNameDS());
 
         switch (pAttrMapping.getType()) {
             case STRING:
-                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(label));
+                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(colName));
                 break;
             case LONG:
-                attr = AttributeBuilder.buildLong(pAttrMapping.getName(), pRs.getLong(label));
+                attr = AttributeBuilder.buildLong(pAttrMapping.getName(), pRs.getLong(colName));
                 break;
             case INTEGER:
-                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(label));
+                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(colName));
                 break;
             case BOOLEAN:
-                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(label));
+                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(colName));
                 break;
             case DOUBLE:
-                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(label));
+                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(colName));
                 break;
             case DATE_ISO8601:
                 attr = buildDateAttribute(pRs, pAttrMapping);
@@ -333,19 +333,19 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Extracts a column label from a PL/SQL expression.</br>
+     * Extracts a column name from a PL/SQL expression.</br>
      * The column label is placed after the word 'AS'.
      *
      * @param pAttrMapping The PL/SQL expression to analyze
      * @return the column label extracted from the PL/SQL
      */
-    private String extractColumnName(String pAttrMapping) {
+    protected String extractColumnName(String pAttrMapping) {
         int pos = pAttrMapping.toLowerCase().lastIndexOf(AS);
 
         if (pos > 0) {
             String str = pAttrMapping.substring(pos + AS.length()).trim();
             if (LOG.isDebugEnabled()) {
-                LOG.debug("the column label extracted is :<" + str + ">");
+                LOG.debug("the extracted column name is : <" + str + ">");
             }
             return str;
         } else {
@@ -529,8 +529,6 @@ public abstract class AbstractDataObjectMapping {
          * Identify an attribute for a label attribute
          */
         LABEL
-    }
-
-    ;
+    };
 
 }

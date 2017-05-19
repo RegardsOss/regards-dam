@@ -36,7 +36,7 @@ public class FragmentTest extends AbstractModelTest {
 
         final Fragment fragment = Fragment.buildFragment("fragment1", "description fragment 1");
 
-        final AttributeModel attModel = AttributeModelBuilder.build("fragment_att1", AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build("fragment_att1", AttributeType.STRING, "ForTests")
                 .fragment(fragment).withoutRestriction();
         saveAttribute(attModel);
 

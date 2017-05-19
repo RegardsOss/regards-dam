@@ -22,6 +22,7 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.domain.geometry.GeometryType;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
+import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -30,6 +31,9 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 public class GeometryIT {
+
+    @Autowired
+    private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     @Autowired
     private ICollectionService collService;
@@ -59,6 +63,10 @@ public class GeometryIT {
 
     @PostConstruct
     public void initEs() {
+
+        // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
+        gsonAttributeFactoryHandler.onApplicationEvent(null);
+
         tenantResolver.forceTenant(TENANT);
 
         if (esRepos.indexExists(TENANT)) {
@@ -99,7 +107,7 @@ public class GeometryIT {
         collection.setGeometry(new Geometry.Point(new Double[] { 41.12, -71.34 }));
         collService.create(collection);
 
-        Collection collFromDB = collService.load(collection.getId());
+        final Collection collFromDB = collService.load(collection.getId());
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeometryType.POINT);
         Assert.assertTrue(collFromDB.getGeometry() instanceof Geometry.Point);
         Assert.assertArrayEquals(new Double[] { 41.12, -71.34 }, collFromDB.getGeometry().getCoordinates());
@@ -115,7 +123,7 @@ public class GeometryIT {
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
-        Collection collFromEs = esRepos.get(TENANT, collection);
+        final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeometryType.POINT);
         Assert.assertArrayEquals(new Double[] { 41.12, -71.34 }, collFromEs.getGeometry().getCoordinates());
     }
@@ -131,11 +139,11 @@ public class GeometryIT {
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
-        Geometry<?> geometry = new Geometry.MultiPoint(new Double[][] { { 41.12, -71.34 }, { 42., -72. } });
+        final Geometry<?> geometry = new Geometry.MultiPoint(new Double[][] { { 41.12, -71.34 }, { 42., -72. } });
         collection.setGeometry(geometry);
         collService.create(collection);
 
-        Collection collFromDB = collService.load(collection.getId());
+        final Collection collFromDB = collService.load(collection.getId());
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeometryType.MULTI_POINT);
         Assert.assertTrue(collFromDB.getGeometry() instanceof Geometry.MultiPoint);
         Assert.assertArrayEquals(new Double[][] { { 41.12, -71.34 }, { 42., -72. } },
@@ -145,7 +153,7 @@ public class GeometryIT {
         collection2.setGeometry(new Geometry.LineString(new Double[][] { { 41.12, -71.34 }, { 42., -72. } }));
         collService.create(collection2);
 
-        Collection coll2FromDB = collService.load(collection2.getId());
+        final Collection coll2FromDB = collService.load(collection2.getId());
         Assert.assertTrue(coll2FromDB.getGeometry().getType() == GeometryType.LINE_STRING);
         Assert.assertTrue(coll2FromDB.getGeometry() instanceof Geometry.LineString);
         Assert.assertArrayEquals(new Double[][] { { 41.12, -71.34 }, { 42., -72. } },
@@ -162,7 +170,7 @@ public class GeometryIT {
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
-        Collection collFromEs = esRepos.get(TENANT, collection);
+        final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeometryType.MULTI_POINT);
         Assert.assertArrayEquals(new Double[][] { { 41.12, -71.34 }, { 42., -72. } },
                                  collFromEs.getGeometry().getCoordinates());
@@ -173,7 +181,7 @@ public class GeometryIT {
         esRepos.save(TENANT, collection2);
         esRepos.refresh(TENANT);
 
-        Collection coll2FromEs = esRepos.get(TENANT, collection2);
+        final Collection coll2FromEs = esRepos.get(TENANT, collection2);
         Assert.assertTrue(coll2FromEs.getGeometry().getType() == GeometryType.LINE_STRING);
         Assert.assertArrayEquals(new Double[][] { { 41.12, -71.34 }, { 42., -72. } },
                                  coll2FromEs.getGeometry().getCoordinates());
@@ -191,12 +199,12 @@ public class GeometryIT {
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
-        Geometry<?> geometry = new Geometry.MultiLineString(
+        final Geometry<?> geometry = new Geometry.MultiLineString(
                 new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } }, { { 39.12, -70.34 }, { 38., -70. } } });
         collection.setGeometry(geometry);
         collService.create(collection);
 
-        Collection collFromDB = collService.load(collection.getId());
+        final Collection collFromDB = collService.load(collection.getId());
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeometryType.MULTI_LINE_STRING);
         Assert.assertTrue(collFromDB.getGeometry() instanceof Geometry.MultiLineString);
         Assert.assertArrayEquals(new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } },
@@ -207,7 +215,7 @@ public class GeometryIT {
                 new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } }, { { 39.12, -70.34 }, { 38., -70. } } }));
         collService.create(collection2);
 
-        Collection coll2FromDB = collService.load(collection2.getId());
+        final Collection coll2FromDB = collService.load(collection2.getId());
         Assert.assertTrue(coll2FromDB.getGeometry().getType() == GeometryType.POLYGON);
         Assert.assertTrue(coll2FromDB.getGeometry() instanceof Geometry.Polygon);
         Assert.assertArrayEquals(new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } },
@@ -225,14 +233,14 @@ public class GeometryIT {
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
-        Collection collFromEs = esRepos.get(TENANT, collection);
+        final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeometryType.MULTI_LINE_STRING);
         Assert.assertArrayEquals(new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } },
                 { { 39.12, -70.34 }, { 38., -70. } } }, collFromEs.getGeometry().getCoordinates());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         // Polygon with hole defined using http://geojson.io
-        Double[][][] polygon = new Double[][][] {
+        final Double[][][] polygon = new Double[][][] {
                 { { 1.4522552490234373, 43.62365009386727 }, { 1.4556884765625, 43.57641143300888 },
                         { 1.5250396728515625, 43.57641143300888 }, { 1.531219482421875, 43.62215891380659 },
                         { 1.4522552490234373, 43.62365009386727 } },
@@ -244,7 +252,7 @@ public class GeometryIT {
         esRepos.save(TENANT, collection2);
         esRepos.refresh(TENANT);
 
-        Collection coll2FromEs = esRepos.get(TENANT, collection2);
+        final Collection coll2FromEs = esRepos.get(TENANT, collection2);
         Assert.assertTrue(coll2FromEs.getGeometry().getType() == GeometryType.POLYGON);
         Assert.assertArrayEquals(polygon, coll2FromEs.getGeometry().getCoordinates());
 
@@ -261,15 +269,15 @@ public class GeometryIT {
 
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
-        Double[][][][] multiPolygon = new Double[][][][] {
+        final Double[][][][] multiPolygon = new Double[][][][] {
                 { { { 102.0, 2.0 }, { 103.0, 2.0 }, { 103.0, 3.0 }, { 102.0, 3.0 }, { 102.0, 2.0 } } },
                 { { { 100.0, 0.0 }, { 101.0, 0.0 }, { 101.0, 1.0 }, { 100.0, 1.0 }, { 100.0, 0.0 } },
                         { { 100.2, 0.2 }, { 100.2, 0.8 }, { 100.8, 0.8 }, { 100.8, 0.2 }, { 100.2, 0.2 } } } };
-        Geometry<?> geometry = new Geometry.MultiPolygon(multiPolygon);
+        final Geometry<?> geometry = new Geometry.MultiPolygon(multiPolygon);
         collection.setGeometry(geometry);
         collService.create(collection);
 
-        Collection collFromDB = collService.load(collection.getId());
+        final Collection collFromDB = collService.load(collection.getId());
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeometryType.MULTI_POLYGON);
         Assert.assertTrue(collFromDB.getGeometry() instanceof Geometry.MultiPolygon);
         Assert.assertArrayEquals(multiPolygon, collFromDB.getGeometry().getCoordinates());
@@ -279,7 +287,7 @@ public class GeometryIT {
     public void testOnEsMultiPolygon() throws ModuleException, IOException {
         // Setting a geometry onto collection
         collection = new Collection(collectionModel, TENANT, "collection with geometry");
-        Double[][][][] multiPolygon = new Double[][][][] {
+        final Double[][][][] multiPolygon = new Double[][][][] {
                 { { { 102.0, 2.0 }, { 103.0, 2.0 }, { 103.0, 3.0 }, { 102.0, 3.0 }, { 102.0, 2.0 } } },
                 { { { 100.0, 0.0 }, { 101.0, 0.0 }, { 101.0, 1.0 }, { 100.0, 1.0 }, { 100.0, 0.0 } },
                         { { 100.2, 0.2 }, { 100.2, 0.8 }, { 100.8, 0.8 }, { 100.8, 0.2 }, { 100.2, 0.2 } } } };
@@ -288,7 +296,7 @@ public class GeometryIT {
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
-        Collection collFromEs = esRepos.get(TENANT, collection);
+        final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeometryType.MULTI_POLYGON);
         Assert.assertArrayEquals(multiPolygon, collFromEs.getGeometry().getCoordinates());
     }
@@ -305,14 +313,14 @@ public class GeometryIT {
 
         collService.create(collection);
 
-        Collection collFromDB = collService.load(collection.getId());
+        final Collection collFromDB = collService.load(collection.getId());
         Assert.assertNull(collFromDB.getGeometry());
 
         // Index creation with geometry mapping
         esRepos.save(TENANT, collection);
         esRepos.refresh(TENANT);
 
-        Collection collFromEs = esRepos.get(TENANT, collection);
+        final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertNull(collFromEs.getGeometry());
     }
 }

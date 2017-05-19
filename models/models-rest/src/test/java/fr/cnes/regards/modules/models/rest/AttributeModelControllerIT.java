@@ -223,7 +223,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     private ResultActions createAttribute(String pName, String pDescription, AttributeType pType, Fragment pFragment,
             AbstractRestriction pRestriction) {
 
-        final AttributeModel attModel = AttributeModelBuilder.build(pName, pType).description(pDescription)
+        final AttributeModel attModel = AttributeModelBuilder.build(pName, pType, "ForTests").description(pDescription)
                 .fragment(pFragment).get();
         attModel.setRestriction(pRestriction);
         return createAttribute(attModel);
@@ -271,7 +271,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
 
         // Content
-        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING)
+        final AttributeModel attModel = AttributeModelBuilder.build(attName, AttributeType.STRING, "ForTests")
                 .withEnumerationRestriction(acceptableValues);
 
         performDefaultPost(AttributeModelController.TYPE_MAPPING, attModel, expectations,
@@ -282,7 +282,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         conflictExpectations.add(MockMvcResultMatchers.status().isConflict());
 
         // Same clone model ... replay
-        final AttributeModel conflictAttModel = AttributeModelBuilder.build(attName, AttributeType.STRING)
+        final AttributeModel conflictAttModel = AttributeModelBuilder.build(attName, AttributeType.STRING, "ForTests")
                 .withEnumerationRestriction(acceptableValues);
 
         performDefaultPost(AttributeModelController.TYPE_MAPPING, conflictAttModel, conflictExpectations,
@@ -320,7 +320,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     public void updateAttributeModel() {
         final String name = "UPDATABLE";
         final AttributeType type = AttributeType.URL;
-        final AttributeModel attMod = AttributeModelBuilder.build(name, type).description("DESC").get();
+        final AttributeModel attMod = AttributeModelBuilder.build(name, type, "ForTests").description("DESC").get();
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -358,7 +358,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Ignore
     public void removeRestriction() {
-        final AttributeModel attMod = AttributeModelBuilder.build("attModRestr", AttributeType.STRING)
+        final AttributeModel attMod = AttributeModelBuilder.build("attModRestr", AttributeType.STRING, "ForTests")
                 .description("desc").withPatternRestriction("pattern");
 
         final List<ResultMatcher> expectations = new ArrayList<>();
@@ -386,7 +386,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Test
     public void createAndUpdateAttributeWithRestriction() {
-        AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.INTEGER)
+        AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.INTEGER, "ForTests")
                 .withIntegerRangeRestriction(1, 3, false, false);
         ResultActions resultActions = createAttribute(attModel);
 
@@ -412,7 +412,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Test
     public void createAndUpdateAttributeWithRestriction2() {
-        AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.LONG)
+        AttributeModel attModel = AttributeModelBuilder.build("NB_OBJECTS", AttributeType.LONG, "ForTests")
                 .withLongRangeRestriction(Long.MIN_VALUE, Long.MAX_VALUE, false, false);
         ResultActions resultActions = createAttribute(attModel);
 
