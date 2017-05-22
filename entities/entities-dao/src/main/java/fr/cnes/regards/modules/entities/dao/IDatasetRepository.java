@@ -23,12 +23,6 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @Repository
 public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
-    /**
-     * @param pDatasetId
-     * @return
-     */
-    @Query("from Dataset ds left join fetch ds.descriptionFile where ds.id=:id")
-    Dataset findOneDescriptionFile(@Param("id") Long pDatasetId);
 
     List<Dataset> findByGroups(String group);
 
@@ -75,5 +69,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelName(String pModelName);
+
+    @Query("from Dataset ds left join fetch ds.descriptionFile where ds.id=:id")
+    Dataset findOneDescriptionFile(@Param("id") Long datasetId);
 
 }

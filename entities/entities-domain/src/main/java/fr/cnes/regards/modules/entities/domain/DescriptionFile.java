@@ -3,11 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
+import javax.persistence.*;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.annotations.Type;
@@ -19,8 +15,15 @@ import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Embeddable
+@Entity
+@Table(name="t_description_file")
 public class DescriptionFile {
+
+
+    @Id
+    @SequenceGenerator(name = "DescriptionFileSequence", initialValue = 1, sequenceName = "seq_description_file")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DescriptionFileSequence")
+    protected Long id;
 
     /**
      * Description URL
@@ -34,16 +37,10 @@ public class DescriptionFile {
     protected String description;
 
     @Column(name = "description_file_content")
-    @Basic(fetch = FetchType.LAZY)
-    // this content can be heavy so we don't want to get it all the time so LAZY loading. To do so, this maven plugin is
-    // needed : org.hibernate.orm.tooling:hibernate-enhance-maven-plugin
     private byte[] content;
 
     @Column(name = "description_file_type")
     @Convert(converter = MediaTypeConverter.class)
-    @Basic(fetch = FetchType.LAZY)
-    // this content can be heavy so we don't want to get it all the time so LAZY loading. To do so, this maven plugin is
-    // needed : org.hibernate.orm.tooling:hibernate-enhance-maven-plugin
     private MediaType type;
 
     protected DescriptionFile() {

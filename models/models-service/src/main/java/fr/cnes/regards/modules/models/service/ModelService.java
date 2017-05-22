@@ -161,7 +161,6 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) throws ModuleException {
-        getModel(pModelId);
         Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelId(pModelId);
         return (modelAttributes != null) ? ImmutableList.copyOf(modelAttributes) : Collections.emptyList();
     }

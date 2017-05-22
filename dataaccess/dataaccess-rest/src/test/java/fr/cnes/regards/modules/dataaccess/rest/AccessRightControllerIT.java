@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -31,12 +30,7 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.*;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -88,7 +82,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private final String ds2Name = "DS2";
 
-    private final String dsDesc = "DESC";
+    private final String dsDesc = "http://test.test";
 
     private AccessRight ar1;
 

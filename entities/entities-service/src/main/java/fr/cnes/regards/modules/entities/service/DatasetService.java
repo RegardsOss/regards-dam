@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Objects;
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
@@ -25,6 +26,7 @@ import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -46,21 +48,25 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author oroussel
  */
 @Service
+@MultitenantTransactional
 public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
 
     private final IAttributeModelService attributeService;
 
     private final DataSourceService dataSourceService;
 
+    private final IDescriptionFileRepository descriptionFileRepository;
+
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttrAssocService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver) {
+            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
+        this.descriptionFileRepository=descriptionFileRepository;
     }
 
     /**
@@ -120,21 +126,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         }
     }
 
-    /**
-     * Retrieve the descriptionFile of a DataSet.
-     *
-     * @param pDatasetId
-     * @return the DescriptionFile or null
-     * @throws EntityNotFoundException
-     */
-    public DescriptionFile retrieveDatasetDescription(Long pDatasetId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(pDatasetId);
-        if (ds == null) {
-            throw new EntityNotFoundException(pDatasetId, Dataset.class);
-        }
-        return ds.getDescriptionFile();
-    }
-
     @Override
     public Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> urns, String modelName,
             Pageable pPageable) throws ModuleException {
@@ -150,6 +141,27 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 return getDataAttributeModelsFromDatasets(datasets, pPageable);
             }
         }
+    }
+
+    @Override
+    public DescriptionFile retrieveDescription(Long datasetId) throws EntityNotFoundException {
+        Dataset ds=datasetRepository.findOneDescriptionFile(datasetId);
+        if(ds==null) {
+            throw new EntityNotFoundException(datasetId, Dataset.class);
+        }
+        DescriptionFile desc=ds.getDescriptionFile();
+        return desc;
+    }
+
+    @Override
+    public void removeDescription(Long datasetId) throws EntityNotFoundException {
+        Dataset ds=datasetRepository.findOneDescriptionFile(datasetId);
+        if(ds==null) {
+            throw new EntityNotFoundException(datasetId, Dataset.class);
+        }
+        DescriptionFile desc=ds.getDescriptionFile();
+        ds.setDescriptionFile(null);
+        descriptionFileRepository.delete(desc);
     }
 
     /**

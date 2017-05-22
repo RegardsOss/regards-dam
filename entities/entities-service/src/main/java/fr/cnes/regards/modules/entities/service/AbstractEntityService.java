@@ -111,6 +111,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
+
+
     public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
@@ -247,6 +249,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             }
         }
     }
+
 
     /**
      * Compute available validators
