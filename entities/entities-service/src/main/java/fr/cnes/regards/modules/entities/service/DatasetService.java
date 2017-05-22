@@ -13,9 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Objects;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
@@ -103,10 +105,19 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    protected Dataset doCheck(Dataset pEntity) throws ModuleException {
+    protected void doCheck(Dataset pEntity, Dataset entityInDB) throws ModuleException {
         Dataset ds = checkDataSource(pEntity);
         ds = checkSubsettingCriterion(ds);
-        return ds;
+        //check for updates on data model or datasource
+        //if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
+        if(entityInDB!=null) {
+            if(!Objects.equal(pEntity.getDataSource(), entityInDB.getDataSource())) {
+                throw new EntityOperationForbiddenException("Datasources of datasets cannot be updated");
+            }
+            if(!Objects.equal(pEntity.getDataModel(), entityInDB.getDataModel())) {
+                throw new EntityOperationForbiddenException("Data models of datasets cannot be updated");
+            }
+        }
     }
 
     /**

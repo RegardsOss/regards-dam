@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+    <name>VALIDATION_DATASET_MODEL_2</name>
+    <description>Validation dataset model</description>
+    <version>1</version>
+    <type>DATASET</type>
+    <attribute>
+        <label>count label</label>
+        <name>count</name>
+        <type>LONG</type>
+        <computationMode>COMPUTED</computationMode>
+        <configurationLabel>CountValidationConf</configurationLabel>
+    </attribute></model>

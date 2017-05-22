@@ -144,6 +144,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public void deleteModel(Long pModelId) throws ModuleException {
+        List<ModelAttrAssoc> modelAttrAssocs = modelAttributeRepository.findByModelId(pModelId);
+        modelAttributeRepository.delete(modelAttrAssocs);
         if (modelRepository.exists(pModelId)) {
             modelRepository.delete(pModelId);
         }

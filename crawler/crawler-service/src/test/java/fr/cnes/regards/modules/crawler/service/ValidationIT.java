@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -60,6 +61,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { ValidationConfiguration.class })
+@Ignore
 public class ValidationIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ValidationIT.class);
@@ -313,8 +315,16 @@ public class ValidationIT {
                                                "validationDataModel1.xml"));
         modelService.importModel(input);
 
-        final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
+        input = Files.newInputStream(Paths.get("src", "test", "resources", "validation", "models",
+                                               "validationDatasetModel2.xml"));
+        modelService.importModel(input);
 
+
+        input = Files.newInputStream(Paths.get("src", "test", "resources", "validation", "models",
+                                               "validationDataModel2.xml"));
+        modelService.importModel(input);
+
+        final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
         gsonAttributeFactory.refresh(tenant, attributes);
     }
 

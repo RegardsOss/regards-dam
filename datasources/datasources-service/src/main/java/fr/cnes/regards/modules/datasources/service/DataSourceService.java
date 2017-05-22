@@ -365,6 +365,7 @@ public class DataSourceService implements IDataSourceService {
 
         dataSource.setPluginConfigurationId(pPluginConf.getId());
         dataSource.setLabel(pPluginConf.getLabel());
+        dataSource.setPluginClassName(pPluginConf.getPluginClassName());
         dataSource.setFromClause(pPluginConf.getParameterValue(IDataSourcePlugin.FROM_CLAUSE));
         dataSource.setTableName(pPluginConf.getParameterValue(IDataSourceFromSingleTablePlugin.TABLE_PARAM));
         dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM)));
