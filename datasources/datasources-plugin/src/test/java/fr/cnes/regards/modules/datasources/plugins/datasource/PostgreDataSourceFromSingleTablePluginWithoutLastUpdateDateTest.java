@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -13,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hsqldb.Types;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -41,8 +41,8 @@ import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
@@ -57,17 +57,19 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgreDataSourcePluginTest {
+public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    private static final String TENANT = "PG_TENANT";
+    private static final String TENANT = "PGDB_TENANT";
 
     private static final String HELLO = "hello world from ";
     
     private static final String NAME_ATTR = "name";
+
+    private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -84,7 +86,7 @@ public class PostgreDataSourcePluginTest {
     @Value("${postgresql.datasource.password}")
     private String dbPassword;
 
-    private IDataSourcePlugin plgDBDataSource;
+    private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
     private DataSourceModelMapping modelMapping;
 
@@ -131,12 +133,13 @@ public class PostgreDataSourcePluginTest {
          */
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build()
-                .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
+                .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                                  getPostgreConnectionConfiguration())
-                .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
-                .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from\n\n\nT_TEST_PLUGIN_DATA_SOURCE").getParameters();
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
 
-        plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
+        plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                 Arrays.asList(PLUGIN_CURRENT_PACKAGE));
 
         // Do not launch tests is Database is not available
@@ -144,44 +147,15 @@ public class PostgreDataSourcePluginTest {
     }
 
     @Test
-    @Requirement("REGARDS_DSL_DAM_SRC_100")
-    @Requirement("REGARDS_DSL_DAM_SRC_110")
-    @Requirement("REGARDS_DSL_DAM_SRC_140")
-    @Requirement("REGARDS_DSL_DAM_PLG_200")
-    @Purpose("The system has a plugin that enables to define a datasource to a PostreSql database by setting a SQL request")
-    public void getDataSourceIntrospection() throws SQLException {
-        Assert.assertEquals(nbElements, repository.count());
-
-        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10));
-        Assert.assertNotNull(ll);
-        Assert.assertEquals(nbElements, ll.getContent().size());
-
-        ll.getContent().forEach(dataObj-> {
-            LOG.info("------------------->");
-            dataObj.getProperties().forEach(attr-> {
-                LOG.info(attr.getName() + " : " + attr.getValue());
-                if (attr.getName().equals(NAME_ATTR)) {
-                    Assert.assertTrue(attr.getValue().toString().contains(HELLO));
-                }
-            });
-        });
-
-        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
-        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
-    }
-
-    @Test
-    @Requirement("REGARDS_DSL_DAM_ARC_120")
-    @Requirement("REGARDS_DSL_DAM_ARC_130")
-    @Purpose("The system allows to define a request to a data source to get a subset of the data")
+    @Requirement("REGARDS_DSL_DAM_ARC_140")
+    @Purpose("The system allows to define a mapping between the datasource's attributes and an internal model")
     public void getDataSourceIntrospectionFromPastDate() throws SQLException {
         Assert.assertEquals(nbElements, repository.count());
 
         OffsetDateTime date = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).minusMinutes(2);
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), date);
         Assert.assertNotNull(ll);
-        Assert.assertEquals(1, ll.getContent().size());
+        Assert.assertEquals(3, ll.getContent().size());
 
         ll.getContent().forEach(dataObj-> {
             LOG.info("------------------->");
@@ -196,21 +170,6 @@ public class PostgreDataSourcePluginTest {
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
         ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
-    }
-
-    @Test
-    public void getDataSourceIntrospectionFromFutureDate() throws SQLException {
-        Assert.assertEquals(nbElements, repository.count());
-
-        OffsetDateTime ldt = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).plusSeconds(10);
-        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10), ldt);
-        Assert.assertNotNull(ll);
-        Assert.assertEquals(0, ll.getContent().size());
-    }
-
-    @After
-    public void erase() {
-        // repository.deleteAll();
     }
 
     /**
@@ -237,17 +196,16 @@ public class PostgreDataSourcePluginTest {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
-        attributes.add(new DynamicAttributeMapping(NAME_ATTR, AttributeType.STRING, "'" + HELLO + "--> '||label as label"));
+
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'" + HELLO + "- '||label as label"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithoutTimeZone"));
+                "timestampwithouttimezone"));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
-                "timeStampWithoutTimeZone"));
+                "timestampwithouttimezone"));
         attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
         modelMapping = new DataSourceModelMapping(123L, attributes);
