@@ -15,8 +15,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -29,7 +32,10 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  * @author Sylvain Vissiere-Guerinet
  */
 @Entity
-@Table(name = "t_access_right")
+@Table(name = "t_access_right",
+        uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" }))
+@NamedEntityGraph(name = "graph.accessright.dataset.and.accesgroup",
+        attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup") })
 public class AccessRight implements IIdentifiable<Long> {
 
     @Id
@@ -52,8 +58,10 @@ public class AccessRight implements IIdentifiable<Long> {
     /**
      * It is mandatory to have no cascade at all on Dataset (a Dataset CRUD must be done through DatasetService)
      */
-    @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dataset_id", foreignKey = @ForeignKey(name = "fk_access_right_access_dataset_id"),
+            updatable = false)
     private Dataset dataset;
 
     @NotNull
@@ -65,8 +73,8 @@ public class AccessRight implements IIdentifiable<Long> {
     protected AccessRight() {
     }
 
-    public AccessRight(QualityFilter pQualityFilter, AccessLevel pAccessLevel, Dataset pDataset,
-            AccessGroup pAccessGroup) {
+    public AccessRight(final QualityFilter pQualityFilter, final AccessLevel pAccessLevel, final Dataset pDataset,
+            final AccessGroup pAccessGroup) {
         super();
         qualityFilter = pQualityFilter;
         accessLevel = pAccessLevel;
@@ -78,7 +86,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return dataset;
     }
 
-    public void setDataset(Dataset pDataset) {
+    public void setDataset(final Dataset pDataset) {
         dataset = pDataset;
     }
 
@@ -86,7 +94,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return qualityFilter;
     }
 
-    public void setQualityFilter(QualityFilter pQualityFilter) {
+    public void setQualityFilter(final QualityFilter pQualityFilter) {
         qualityFilter = pQualityFilter;
     }
 
@@ -94,7 +102,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return accessLevel;
     }
 
-    public void setAccessLevel(AccessLevel pAccessLevel) {
+    public void setAccessLevel(final AccessLevel pAccessLevel) {
         accessLevel = pAccessLevel;
     }
 
@@ -102,7 +110,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return dataAccessRight;
     }
 
-    public void setDataAccessRight(DataAccessRight pDataAccessRight) {
+    public void setDataAccessRight(final DataAccessRight pDataAccessRight) {
         dataAccessRight = pDataAccessRight;
     }
 
@@ -110,7 +118,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return dataset;
     }
 
-    public void setConstrained(Dataset pConstrained) {
+    public void setConstrained(final Dataset pConstrained) {
         dataset = pConstrained;
     }
 
@@ -119,7 +127,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return id;
     }
 
-    public void setId(Long pId) {
+    public void setId(final Long pId) {
         id = pId;
     }
 
@@ -127,7 +135,7 @@ public class AccessRight implements IIdentifiable<Long> {
         return accessGroup;
     }
 
-    public void setAccessGroup(AccessGroup pAccessGroup) {
+    public void setAccessGroup(final AccessGroup pAccessGroup) {
         accessGroup = pAccessGroup;
     }
 

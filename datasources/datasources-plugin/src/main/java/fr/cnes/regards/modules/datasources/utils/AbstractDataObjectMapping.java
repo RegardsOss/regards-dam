@@ -120,12 +120,12 @@ public abstract class AbstractDataObjectMapping {
     /**
      * The attribute name used for the date comparison
      */
-    private String dateAttributeName = "";
+    private String lastUpdateAttributeName = "";
 
     /**
      * For each attributes of the data source, this map contains an optional internal attribute type
      */
-    private final Map<String, InternalAttributes> mappingInternalAttributes = new HashMap<>();
+    private Map<String, InternalAttributes> mappingInternalAttributes = null;
 
     /**
      * Get {@link DateAttribute}.
@@ -173,9 +173,6 @@ public abstract class AbstractDataObjectMapping {
 
             String selectRequest = pSelectRequest;
             String countRequest = pCountRequest;
-
-            // for each attributes to read, defines the REGARDS internal attributes corresponding
-            initMappingInternalAttributes();
 
             if (pDate != null) {
                 selectRequest = buildDateStatement(selectRequest, pDate);
@@ -427,17 +424,8 @@ public abstract class AbstractDataObjectMapping {
      * @return the SQL request with a from clause to filter the result since a date
      */
     private String buildDateStatement(String pRequest, OffsetDateTime pDate) {
-        // Search the attribute used to get the new data (first one is used)
-        for (Map.Entry<String, InternalAttributes> entry : mappingInternalAttributes.entrySet()) {
-            if (entry.getValue() == InternalAttributes.LAST_UPDATE) {
-                dateAttributeName = entry.getKey();
-                LOG.debug("Attribute for date comparison found: " + entry.getKey());
-                break;
-            }
-        }
-
         // Any attribute is defined in the mapping for compare the date, return
-        if (dateAttributeName.isEmpty()) {
+        if (getLastUpdateAttributeName().isEmpty()) {
             return pRequest;
         }
 
@@ -445,8 +433,9 @@ public abstract class AbstractDataObjectMapping {
         if (pDate == null) {
             return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD, OffsetDateTimeAdapter.format(INIT_DATE));
         } else {
-            return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
-                                       dateAttributeName + "> '" + OffsetDateTimeAdapter.format(pDate) + "'");
+            return pRequest
+                    .replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
+                                getLastUpdateAttributeName() + "> '" + OffsetDateTimeAdapter.format(pDate) + "'");
         }
     }
 
@@ -474,6 +463,22 @@ public abstract class AbstractDataObjectMapping {
         extractColumnsFromMapping();
     }
 
+    protected String getLastUpdateAttributeName() {
+        if (!lastUpdateAttributeName.isEmpty()) {
+            return lastUpdateAttributeName;
+        }
+
+        for (Map.Entry<String, InternalAttributes> entry : getMappingInternalAttributes().entrySet()) {
+            if (entry.getValue() == InternalAttributes.LAST_UPDATE) {
+                lastUpdateAttributeName = entry.getKey();
+                LOG.debug("Attribute for date comparison found: " + entry.getKey());
+                break;
+            }
+        }
+
+        return lastUpdateAttributeName;
+    }
+
     /**
      * This method extracts the {@link List} of columns from the data source mapping.
      */
@@ -495,8 +500,9 @@ public abstract class AbstractDataObjectMapping {
      * This initialization is done, only once, before the read of the data.
      */
     private void initMappingInternalAttributes() {
+        mappingInternalAttributes = new HashMap<>();
+        
         for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
-
             if (attrMapping.isLabel()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
             } else if (attrMapping.isRawData()) {
@@ -507,6 +513,14 @@ public abstract class AbstractDataObjectMapping {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LAST_UPDATE);
             }
         }
+    }
+
+    protected Map<String, InternalAttributes> getMappingInternalAttributes() {
+        if (mappingInternalAttributes == null) {
+            initMappingInternalAttributes();
+        }
+
+        return mappingInternalAttributes;
     }
 
     private enum InternalAttributes {
