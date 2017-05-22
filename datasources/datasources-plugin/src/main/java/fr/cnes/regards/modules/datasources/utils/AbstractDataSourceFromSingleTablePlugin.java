@@ -111,7 +111,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
         String selectRequest = sqlGenerator.selectAll(tableDescription, pPageable);
 
-        if (pDate != null) {
+        if (pDate != null && !getLastUpdateAttributeName().isEmpty()) {
 
             if (selectRequest.contains(WHERE)) {
                 // Add at the beginning of the where clause
@@ -141,7 +141,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     protected String getCountRequest(OffsetDateTime pDate) {
-        if (pDate == null) {
+        if (pDate == null || getLastUpdateAttributeName().isEmpty()) {
             return sqlGenerator.count(tableDescription);
         } else {
             return sqlGenerator.count(tableDescription) + WHERE
