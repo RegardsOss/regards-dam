@@ -45,7 +45,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
-            "plgConfDataSource.parameters.dynamicsValues" })
+            "plgConfDataSource.parameters.dynamicsValues", "descriptionFile" })
     List<Dataset> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
@@ -56,7 +56,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
-            "plgConfDataSource.parameters.dynamicsValues" })
+            "plgConfDataSource.parameters.dynamicsValues", "descriptionFile" })
     Dataset findByIpId(UniformResourceName pIpId);
 
     /**
