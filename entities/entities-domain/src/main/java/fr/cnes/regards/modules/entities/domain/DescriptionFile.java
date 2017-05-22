@@ -34,7 +34,7 @@ public class DescriptionFile {
     @Type(type = "text")
     @Pattern(regexp = URL_REGEXP,
             message = "Description url must conform to regular expression \"" + URL_REGEXP + "\".")
-    protected String description;
+    protected String url;
 
     @Column(name = "description_file_content")
     private byte[] content;
@@ -43,12 +43,12 @@ public class DescriptionFile {
     @Convert(converter = MediaTypeConverter.class)
     private MediaType type;
 
-    protected DescriptionFile() {
+    public DescriptionFile() {
     }
 
     public DescriptionFile(String pDescription) {
         super();
-        this.description = pDescription;
+        this.url = pDescription;
     }
 
     public DescriptionFile(byte[] pContent, MediaType pType) {
@@ -73,12 +73,12 @@ public class DescriptionFile {
         type = pType;
     }
 
-    public String getDescription() {
-        return description;
+    public String getUrl() {
+        return url;
     }
 
-    public void setDescription(String pDescription) {
-        description = pDescription;
+    public void setUrl(String pDescription) {
+        url = pDescription;
     }
 
 }

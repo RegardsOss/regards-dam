@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.entities.domain;
 
 import javax.persistence.*;
 
+import com.google.gson.annotations.JsonAdapter;
+import fr.cnes.regards.modules.entities.domain.converter.DescriptionFileAdapter;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -19,6 +21,7 @@ public abstract class AbstractDescEntity extends AbstractEntity {
      * Description file
      */
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonAdapter(value = DescriptionFileAdapter.class)
     private DescriptionFile descriptionFile;
 
     protected AbstractDescEntity() {
