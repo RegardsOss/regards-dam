@@ -23,7 +23,8 @@ public class DescriptionFileAdapter extends TypeAdapter<DescriptionFile> {
     public void write(JsonWriter out, DescriptionFile descriptionFile) throws IOException {
         out.beginObject();
         out.name("type");
-        out.value(descriptionFile.getType().toString());
+        MediaType type=descriptionFile.getType();
+        out.value(type==null?null:type.toString());
         out.name("url");
         out.value(descriptionFile.getUrl());
         out.endObject();

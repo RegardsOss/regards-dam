@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +41,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
         documentation = "http://test")
 // CHECKSTYLE:ON
-@RequestMapping(CollectionController.ROOT_MAPPING)
+@RequestMapping(path=CollectionController.ROOT_MAPPING, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
@@ -178,7 +179,6 @@ public class CollectionController implements IResourceController<Collection> {
      * @
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResponseBody
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
     public ResponseEntity<Resource<Collection>> createCollection(
             @Valid @RequestPart(name = "collection") final Collection pCollection,

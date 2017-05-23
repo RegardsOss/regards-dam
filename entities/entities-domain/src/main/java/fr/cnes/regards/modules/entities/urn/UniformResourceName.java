@@ -3,20 +3,16 @@
  */
 package fr.cnes.regards.modules.entities.urn;
 
-import java.util.StringJoiner;
-import java.util.UUID;
-import java.util.regex.Pattern;
-
 import javax.persistence.Convert;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.util.StringJoiner;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.util.Assert;
 
-import com.google.gson.annotations.JsonAdapter;
-
-import fr.cnes.regards.modules.entities.urn.converters.UrnAdapter;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.urn.validator.RegardsOaisUrn;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -37,7 +33,6 @@ import fr.cnes.regards.modules.models.domain.EntityType;
  */
 @RegardsOaisUrn
 @Convert(converter = UrnConverter.class)
-@JsonAdapter(UrnAdapter.class)
 public class UniformResourceName {
 
     public static final String URN_PATTERN = "URN:[^:]+:[^:]+:[^:]+:[^:]+:V\\d{1,3}(,\\d+)?(:REV.+)?";

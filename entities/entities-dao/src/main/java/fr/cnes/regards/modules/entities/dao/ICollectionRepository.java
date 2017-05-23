@@ -47,4 +47,7 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model", "descriptionFile" })
     Collection findByIpId(UniformResourceName pIpId);
+
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
+    Collection findById(Long pId);
 }

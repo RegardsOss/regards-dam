@@ -33,6 +33,7 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -146,8 +147,15 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         final String collectionStr = gsonBuilder.create().toJson(collection2);
         final MockMultipartFile collection = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
                 collectionStr.getBytes());
-        final List<MockMultipartFile> parts = new ArrayList<>();
+        List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
+
+        //we have tested to create a collection with a pdf description, so lets test with an url
+        Collection collectionWithUrl= new Collection(model1, DEFAULT_TENANT, "collectionWithURL");
+        collectionWithUrl.setDescriptionFile(new DescriptionFile("https://descrition.url.test/lol"));
+        parts.clear();
+        parts.add(new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_UTF8_VALUE, gson(collectionWithUrl).getBytes()));
         performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
     }
