@@ -178,6 +178,9 @@ public class IndexerServiceDataSourceIT {
     private ISearchService searchService;
 
     @Autowired
+    private IIngesterService ingesterService;
+
+    @Autowired
     private ICrawlerService crawlerService;
 
     @Autowired
@@ -232,6 +235,7 @@ public class IndexerServiceDataSourceIT {
         esRepos.createIndex(tenant);
 
         crawlerService.setConsumeOnlyMode(false);
+        ingesterService.setConsumeOnlyMode(true);
 
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
         amqpAdmin.purgeQueue(EntityEvent.class, false);
