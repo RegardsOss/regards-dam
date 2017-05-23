@@ -329,22 +329,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     @Override
-    public U dissociate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
-        final U entity = repository.findById(pEntityId);
-        if (entity == null) {
-            throw new EntityNotFoundException(pEntityId);
-        }
-        // Removing tags to detached entity
-        em.detach(entity);
-        entity.getTags().removeAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
-        final U entityInDb = repository.findById(pEntityId);
-        // And detach it too because it is the over one that will be persisted
-        em.detach(entityInDb);
-        this.updateWithoutCheck(entity, entityInDb);
-        return entity;
-    }
-
-    @Override
     public U create(U pEntity, MultipartFile file) throws ModuleException, IOException {
         U entity = checkCreation(pEntity);
 
@@ -367,6 +351,22 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         entity = getStorageService().storeAIP(entity);
         // AMQP event publishing
         publishEvents(EventType.CREATE, updatedIpIds);
+        return entity;
+    }
+
+    @Override
+    public U dissociate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
+        final U entity = repository.findById(pEntityId);
+        if (entity == null) {
+            throw new EntityNotFoundException(pEntityId);
+        }
+        // Removing tags to detached entity
+        em.detach(entity);
+        entity.getTags().removeAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        final U entityInDb = repository.findById(pEntityId);
+        // And detach it too because it is the over one that will be persisted
+        em.detach(entityInDb);
+        this.updateWithoutCheck(entity, entityInDb);
         return entity;
     }
 
@@ -566,14 +566,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
+    /**
+     * Really do the update of entities
+     *
+     * @param pEntity updated entity to be saved
+     * @param entityInDb only there for comparison for group management
+     * @return updated entity with group set correclty
+     */
     private U updateWithoutCheck(U pEntity, U entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
-        // Update entity
-        entityInDb.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
-        U updated = repository.save(entityInDb);
+        // Update entity, checks already assures us that everything which is updated can be updated so we can just put pEntity into the DB.
+        pEntity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+        U updated = repository.save(pEntity);
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks)) {
