@@ -54,6 +54,7 @@ public class AccessRight implements IIdentifiable<Long> {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
+    @JoinColumn(name = "dataset_id", foreignKey = @javax.persistence.ForeignKey(name = "fk_access_right_dataset_id"))
     private Dataset dataset;
 
     @NotNull

@@ -18,6 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -33,16 +34,17 @@ import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
  *         with the front
  */
 @Entity
-@Table(name = "t_access_group")
+@Table(name = "t_access_group",
+        uniqueConstraints = @UniqueConstraint(name = "uk_access_group_name", columnNames = { "name" }))
 public class AccessGroup implements IIdentifiable<Long> {
 
     @Id
-    @SequenceGenerator(name = "AccessGroupSequence", initialValue = 1, sequenceName = "SEQ_ACCESS_GROUP")
+    @SequenceGenerator(name = "AccessGroupSequence", initialValue = 1, sequenceName = "seq_access_group")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AccessGroupSequence")
     private Long id;
 
     @NotNull
-    @Column(length = 32, unique = true, updatable = false)
+    @Column(length = 32, updatable = false)
     private String name;
 
     @NotNull

@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -28,7 +29,8 @@ import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
  *
  */
 @Entity
-@Table(name = "t_fragment", indexes = { @Index(name = "idx_name", columnList = "name") })
+@Table(name = "t_fragment", indexes = { @Index(name = "idx_name", columnList = "name") },
+        uniqueConstraints = @UniqueConstraint(name = "uk_fragment_name", columnNames = { "name" }))
 @SequenceGenerator(name = "fragmentSequence", initialValue = 1, sequenceName = "seq_fragment")
 public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.modules.models.schema.Fragment> {
 
@@ -57,7 +59,7 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
             message = "Fragment name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Fragment name must be between "
             + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
-    @Column(unique = true, nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
+    @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
     /**

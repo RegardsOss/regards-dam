@@ -3,12 +3,30 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -16,6 +34,7 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
 import com.google.gson.annotations.JsonAdapter;
+
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
@@ -37,7 +56,8 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 @Entity
-@Table(name = "t_entity", indexes = { @Index(name = "idx_entity_ipId", columnList = "ipId") })
+@Table(name = "t_entity", indexes = { @Index(name = "idx_entity_ipId", columnList = "ipId") },
+        uniqueConstraints = @UniqueConstraint(name = "uk_entity_ipId", columnNames = { "ipId" }))
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
@@ -47,7 +67,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * Information Package ID for REST request
      */
-    @Column(unique = true, nullable = false, length = MAX_IPID_SIZE)
+    @Column(nullable = false, length = MAX_IPID_SIZE)
     @Convert(converter = UrnConverter.class)
     @Valid
     protected UniformResourceName ipId;
@@ -101,7 +121,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * meaning<br/>
      */
     @ElementCollection
-    @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"))
+    @CollectionTable(name = "t_entity_tag", joinColumns = @JoinColumn(name = "entity_id"),
+            foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_tag_entity_id"))
     @Column(name = "value", length = 200)
     protected Set<String> tags = new HashSet<>();
 
@@ -111,7 +132,8 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * to collections that tag the dataset and then added to collections that tag collections containing groups)
      */
     @ElementCollection
-    @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"))
+    @CollectionTable(name = "t_entity_group", joinColumns = @JoinColumn(name = "entity_id"),
+            foreignKey = @javax.persistence.ForeignKey(name = "fk_entity_group_entity_id"))
     @Column(name = "name", length = 200)
     protected Set<String> groups = new HashSet<>();
 
@@ -259,10 +281,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
             if (other.getIpId() != null) {
                 return false;
             }
-        } else
-            if (!ipId.equals(other.getIpId())) {
-                return false;
-            }
+        } else if (!ipId.equals(other.getIpId())) {
+            return false;
+        }
         return true;
     }
 

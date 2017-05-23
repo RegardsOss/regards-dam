@@ -3,10 +3,18 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.Type;
 
@@ -70,7 +78,8 @@ public class Dataset extends AbstractDescEntity {
      * set of quotations associated to the {@link Dataset}
      */
     @ElementCollection
-    @CollectionTable(name = "t_dataset_quotation", joinColumns = @JoinColumn(name = "dataset_id"))
+    @CollectionTable(name = "t_dataset_quotation", joinColumns = @JoinColumn(name = "dataset_id"),
+            foreignKey = @javax.persistence.ForeignKey(name = "fk_dataset_quotation_dataset_id"))
     private Set<String> quotations = new HashSet<>();
 
     /**
