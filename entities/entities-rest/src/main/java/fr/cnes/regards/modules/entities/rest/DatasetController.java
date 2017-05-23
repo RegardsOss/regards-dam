@@ -3,10 +3,11 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,14 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -36,6 +30,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -77,10 +72,7 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
-    /**
-     * Endpoint to retrieve dataset description file
-     */
-    public static final String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
+    public static final String DATASET_ID_PATH_FILE = DATASET_ID_PATH + "/file";
 
     /**
      * Service handling hypermedia resources
@@ -165,6 +157,34 @@ public class DatasetController implements IResourceController<Dataset> {
         }
         final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH_FILE)
+    @ResourceAccess(description = "Retrieves a dataset description file content")
+    public void retrieveDatasetDescription(@PathVariable("dataset_id") Long pDatasetId, HttpServletResponse response)
+            throws EntityNotFoundException, IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        DescriptionFile file=service.retrieveDescription(pDatasetId);
+        if(file!=null) {
+            out.write(file.getContent());
+            response.setContentType(file.getType().toString());
+            response.setContentLength(out.size());
+            response.getOutputStream().write(out.toByteArray());
+            response.getOutputStream().flush();
+            response.setStatus(HttpStatus.OK.value());
+        } else {
+            response.setStatus(HttpStatus.NO_CONTENT.value());
+        }
+    }
+
+
+    @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH_FILE)
+    @ResourceAccess(description = "remove a dataset description file content")
+    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("dataset_id") Long pDatasetId)
+            throws EntityNotFoundException {
+        service.removeDescription(pDatasetId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**

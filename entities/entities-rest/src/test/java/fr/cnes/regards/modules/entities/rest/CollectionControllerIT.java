@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,11 +27,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.google.gson.GsonBuilder;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -84,6 +90,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
     private List<ResultMatcher> expectations;
 
+    @Autowired
+    private ICollectionService collectionService;
+
     @Before
     public void initRepos() {
         expectations = new ArrayList<>();
@@ -138,8 +147,15 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         final String collectionStr = gsonBuilder.create().toJson(collection2);
         final MockMultipartFile collection = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
                 collectionStr.getBytes());
-        final List<MockMultipartFile> parts = new ArrayList<>();
+        List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
+
+        //we have tested to create a collection with a pdf description, so lets test with an url
+        Collection collectionWithUrl= new Collection(model1, DEFAULT_TENANT, "collectionWithURL");
+        collectionWithUrl.setDescriptionFile(new DescriptionFile("https://descrition.url.test/lol"));
+        parts.clear();
+        parts.add(new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_UTF8_VALUE, gson(collectionWithUrl).getBytes()));
         performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
     }
@@ -155,6 +171,26 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
                           collection1.getId());
     }
 
+    @Test
+    public void testCollectionDescriptionFile() throws IOException, ModuleException {
+
+        Collection collection = new Collection(model1, DEFAULT_TENANT, "dataSet21");
+        
+        collection.setCreationDate(OffsetDateTime.now());
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
+        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
+        collection=collectionService.create(collection, pdf);
+        expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
+        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
+        expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
+        performDefaultGet(CollectionController.ROOT_MAPPING+CollectionController.COLLECTION_ID_PATH_FILE, expectations, "Could not fetch collection description file", collection.getId());
+
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
+        performDefaultDelete(CollectionController.ROOT_MAPPING+CollectionController.COLLECTION_ID_PATH_FILE, expectations, "Could not delete collection description file", collection.getId());
+
+    }
+    
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Purpose("Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
             + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")

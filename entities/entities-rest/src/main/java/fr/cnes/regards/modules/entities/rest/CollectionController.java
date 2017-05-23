@@ -3,25 +3,21 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -33,6 +29,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
@@ -44,10 +41,12 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
         documentation = "http://test")
 // CHECKSTYLE:ON
-@RequestMapping(CollectionController.ROOT_MAPPING)
+@RequestMapping(path=CollectionController.ROOT_MAPPING, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
+
+    public static final String COLLECTION_ID_PATH_FILE = "/{collection_id}/file";
 
     /**
      * Service
@@ -92,6 +91,33 @@ public class CollectionController implements IResourceController<Collection> {
         final Collection collection = collectionService.load(pCollectionId);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = COLLECTION_ID_PATH_FILE)
+    @ResourceAccess(description = "Retrieves a collection description file content")
+    public void retrieveCollectionDescription(@PathVariable("collection_id") Long pCollectionId, HttpServletResponse response)
+            throws EntityNotFoundException, IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        DescriptionFile file=collectionService.retrieveDescription(pCollectionId);
+        if(file!=null) {
+            out.write(file.getContent());
+            response.setContentType(file.getType().toString());
+            response.setContentLength(out.size());
+            response.getOutputStream().write(out.toByteArray());
+            response.getOutputStream().flush();
+            response.setStatus(HttpStatus.OK.value());
+        } else {
+            response.setStatus(HttpStatus.NO_CONTENT.value());
+        }
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_ID_PATH_FILE)
+    @ResourceAccess(description = "remove a dataset description file content")
+    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("collection_id") Long pDatasetId)
+            throws EntityNotFoundException {
+        collectionService.removeDescription(pDatasetId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -153,7 +179,6 @@ public class CollectionController implements IResourceController<Collection> {
      * @
      */
     @RequestMapping(method = RequestMethod.POST)
-    @ResponseBody
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
     public ResponseEntity<Resource<Collection>> createCollection(
             @Valid @RequestPart(name = "collection") final Collection pCollection,

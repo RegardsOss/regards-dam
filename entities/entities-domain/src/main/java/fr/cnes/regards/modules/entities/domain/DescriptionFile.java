@@ -3,11 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
+import javax.persistence.*;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.annotations.Type;
@@ -19,8 +15,15 @@ import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Embeddable
+@Entity
+@Table(name="t_description_file")
 public class DescriptionFile {
+
+
+    @Id
+    @SequenceGenerator(name = "DescriptionFileSequence", initialValue = 1, sequenceName = "seq_description_file")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DescriptionFileSequence")
+    protected Long id;
 
     /**
      * Description URL
@@ -31,27 +34,21 @@ public class DescriptionFile {
     @Type(type = "text")
     @Pattern(regexp = URL_REGEXP,
             message = "Description url must conform to regular expression \"" + URL_REGEXP + "\".")
-    protected String description;
+    protected String url;
 
     @Column(name = "description_file_content")
-    @Basic(fetch = FetchType.LAZY)
-    // this content can be heavy so we don't want to get it all the time so LAZY loading. To do so, this maven plugin is
-    // needed : org.hibernate.orm.tooling:hibernate-enhance-maven-plugin
     private byte[] content;
 
     @Column(name = "description_file_type")
     @Convert(converter = MediaTypeConverter.class)
-    @Basic(fetch = FetchType.LAZY)
-    // this content can be heavy so we don't want to get it all the time so LAZY loading. To do so, this maven plugin is
-    // needed : org.hibernate.orm.tooling:hibernate-enhance-maven-plugin
     private MediaType type;
 
-    protected DescriptionFile() {
+    public DescriptionFile() {
     }
 
     public DescriptionFile(String pDescription) {
         super();
-        this.description = pDescription;
+        this.url = pDescription;
     }
 
     public DescriptionFile(byte[] pContent, MediaType pType) {
@@ -76,12 +73,12 @@ public class DescriptionFile {
         type = pType;
     }
 
-    public String getDescription() {
-        return description;
+    public String getUrl() {
+        return url;
     }
 
-    public void setDescription(String pDescription) {
-        description = pDescription;
+    public void setUrl(String pDescription) {
+        url = pDescription;
     }
 
 }

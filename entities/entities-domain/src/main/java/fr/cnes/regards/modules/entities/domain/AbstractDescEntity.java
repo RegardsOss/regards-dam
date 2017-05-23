@@ -3,11 +3,10 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.*;
 
+import com.google.gson.annotations.JsonAdapter;
+import fr.cnes.regards.modules.entities.domain.converter.DescriptionFileAdapter;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -21,7 +20,8 @@ public abstract class AbstractDescEntity extends AbstractEntity {
     /**
      * Description file
      */
-    @Embedded
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonAdapter(value = DescriptionFileAdapter.class)
     private DescriptionFile descriptionFile;
 
     protected AbstractDescEntity() {

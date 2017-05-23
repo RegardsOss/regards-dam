@@ -8,9 +8,11 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
@@ -34,4 +36,8 @@ public interface IDatasetService extends IEntityService<Dataset> {
      */
     Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
+
+    DescriptionFile retrieveDescription(Long datasetId) throws EntityNotFoundException;
+
+    void removeDescription(Long datasetId) throws EntityNotFoundException;
 }

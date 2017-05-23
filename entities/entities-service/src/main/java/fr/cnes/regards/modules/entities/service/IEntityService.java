@@ -16,6 +16,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -78,7 +79,7 @@ public interface IEntityService<U extends AbstractEntity> {
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
      *
      * @param pEntityId entity source id
-     * @param pToAssociates URNs of entities to be dissociated from source entity
+     * @param pToBeDissociated URNs of entities to be dissociated from source entity
      * @throws EntityNotFoundException
      */
     U dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
