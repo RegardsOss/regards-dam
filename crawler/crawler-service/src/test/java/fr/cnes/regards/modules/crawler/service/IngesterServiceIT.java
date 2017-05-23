@@ -67,11 +67,11 @@ public class IngesterServiceIT {
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
-    private static final String T_DATA_1 = "T_DATA";
+    private static final String T_DATA_1 = "t_data";
 
-    private static final String T_DATA_2 = "T_DATA_2";
+    private static final String T_DATA_2 = "t_data_2";
 
-    private static final String T_DATA_3 = "T_DATA_3";
+    private static final String T_DATA_3 = "t_data_3";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -227,6 +227,7 @@ public class IngesterServiceIT {
         esRepository.createIndex(TENANT);
 
         crawlerService.setConsumeOnlyMode(true);
+        ingesterService.setConsumeOnlyMode(true);
 
         dsIngestionRepos.deleteAll();
         extData1Repos.deleteAll();

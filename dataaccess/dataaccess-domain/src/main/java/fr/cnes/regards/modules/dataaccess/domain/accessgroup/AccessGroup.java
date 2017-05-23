@@ -57,11 +57,12 @@ public class AccessGroup implements IIdentifiable<Long> {
     @Column(name = "public")
     private boolean isPublic = Boolean.FALSE;
 
-    @SuppressWarnings("unused")
-    private AccessGroup() { // NOSONAR
+    public AccessGroup() {
+        super();
+        name = "";
     }
 
-    public AccessGroup(String pName) {
+    public AccessGroup(final String pName) {
         super();
         name = pName;
     }
@@ -71,7 +72,7 @@ public class AccessGroup implements IIdentifiable<Long> {
         return id;
     }
 
-    public void setId(Long pId) {
+    public void setId(final Long pId) {
         id = pId;
     }
 
@@ -79,15 +80,15 @@ public class AccessGroup implements IIdentifiable<Long> {
         return name;
     }
 
-    public void setName(String pName) {
+    public void setName(final String pName) {
         name = pName;
     }
 
-    public void addUser(User pUser) {
+    public void addUser(final User pUser) {
         users.add(pUser);
     }
 
-    public void removeUser(User pUser) {
+    public void removeUser(final User pUser) {
         users.remove(pUser);
     }
 
@@ -99,16 +100,16 @@ public class AccessGroup implements IIdentifiable<Long> {
         return isPublic;
     }
 
-    public void setPublic(boolean pIsPublic) {
+    public void setPublic(final boolean pIsPublic) {
         isPublic = pIsPublic;
     }
 
-    public void setUsers(Set<User> pUsers) {
+    public void setUsers(final Set<User> pUsers) {
         users = pUsers;
     }
 
     @Override
-    public boolean equals(Object pOther) {
+    public boolean equals(final Object pOther) {
         return (pOther instanceof AccessGroup) && ((AccessGroup) pOther).name.equals(name);
     }
 

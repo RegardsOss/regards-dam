@@ -7,5 +7,5 @@ create sequence seq_access_group start 1 increment 50;
 create sequence seq_access_right start 1 increment 50;
 alter table t_access_right add constraint fk_access_right_access_group_id foreign key (access_group_id) references t_access_group;
 alter table t_access_right add constraint fk_access_right_plugin_conf foreign key (plugin_conf_id) references t_plugin_configuration;
-alter table t_access_right add constraint fk_access_right_dataset_id foreign key (dataset_id) references t_entity;
+alter table t_access_right add constraint fk_access_right_access_dataset_id foreign key (dataset_id) references t_entity;
 alter table ta_access_group_users add constraint fk_access_group_users foreign key (access_group_id) references t_access_group;

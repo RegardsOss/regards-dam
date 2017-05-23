@@ -96,16 +96,16 @@ public class AccessRightServiceTest {
 
     @Test
     public void testRetrieveAccessRightsNoArgs() throws EntityNotFoundException {
-        List<AccessRight> expected = new ArrayList<>();
+        final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         expected.add(GAR12);
         expected.add(GAR21);
         expected.add(GAR22);
-        Page<AccessRight> pageExpected = new PageImpl<>(expected);
-        Pageable pageable = new PageRequest(0, 10);
+        final Page<AccessRight> pageExpected = new PageImpl<>(expected);
+        final Pageable pageable = new PageRequest(0, 10);
         Mockito.when(arRepo.findAll(pageable)).thenReturn(pageExpected);
 
-        Page<AccessRight> result = service.retrieveAccessRights(null, null, new PageRequest(0, 10));
+        final Page<AccessRight> result = service.retrieveAccessRights(null, null, new PageRequest(0, 10));
         Assert.assertTrue(result.getContent().contains(GAR11));
         Assert.assertTrue(result.getContent().contains(GAR12));
         Assert.assertTrue(result.getContent().contains(GAR21));
@@ -114,15 +114,15 @@ public class AccessRightServiceTest {
 
     @Test
     public void testRetrieveAccessRightsDSArgs() throws EntityNotFoundException {
-        List<AccessRight> expected = new ArrayList<>();
+        final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         expected.add(GAR12);
-        Page<AccessRight> pageExpected = new PageImpl<>(expected);
-        Pageable pageable = new PageRequest(0, 10);
+        final Page<AccessRight> pageExpected = new PageImpl<>(expected);
+        final Pageable pageable = new PageRequest(0, 10);
         Mockito.when(arRepo.findAllByDataset(DS1, pageable)).thenReturn(pageExpected);
         Mockito.when(dsService.load(DS1.getIpId())).thenReturn(DS1);
 
-        Page<AccessRight> result = service.retrieveAccessRights(null, DS1.getIpId(), new PageRequest(0, 10));
+        final Page<AccessRight> result = service.retrieveAccessRights(null, DS1.getIpId(), new PageRequest(0, 10));
         Assert.assertTrue(result.getContent().contains(GAR11));
         Assert.assertTrue(result.getContent().contains(GAR12));
         Assert.assertFalse(result.getContent().contains(GAR21));
@@ -131,15 +131,15 @@ public class AccessRightServiceTest {
 
     @Test
     public void testRetrieveAccessRightsGroupArgs() throws EntityNotFoundException {
-        List<AccessRight> expected = new ArrayList<>();
+        final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         expected.add(GAR21);
-        Page<AccessRight> pageExpected = new PageImpl<>(expected);
-        Pageable pageable = new PageRequest(0, 10);
+        final Page<AccessRight> pageExpected = new PageImpl<>(expected);
+        final Pageable pageable = new PageRequest(0, 10);
         Mockito.when(arRepo.findAllByAccessGroup(AG1, pageable)).thenReturn(pageExpected);
         Mockito.when(agService.retrieveAccessGroup(AG1.getName())).thenReturn(AG1);
 
-        Page<AccessRight> result = service.retrieveAccessRights(AG1.getName(), null, new PageRequest(0, 10));
+        final Page<AccessRight> result = service.retrieveAccessRights(AG1.getName(), null, new PageRequest(0, 10));
         Assert.assertTrue(result.getContent().contains(GAR11));
         Assert.assertFalse(result.getContent().contains(GAR12));
         Assert.assertTrue(result.getContent().contains(GAR21));
@@ -148,15 +148,16 @@ public class AccessRightServiceTest {
 
     @Test
     public void testRetrieveAccessRightsFullArgs() throws EntityNotFoundException {
-        List<AccessRight> expected = new ArrayList<>();
+        final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
-        Page<AccessRight> pageExpected = new PageImpl<>(expected);
-        Pageable pageable = new PageRequest(0, 10);
+        final Page<AccessRight> pageExpected = new PageImpl<>(expected);
+        final Pageable pageable = new PageRequest(0, 10);
         Mockito.when(arRepo.findAllByAccessGroupAndDataset(AG1, DS1, pageable)).thenReturn(pageExpected);
         Mockito.when(agService.retrieveAccessGroup(AG1.getName())).thenReturn(AG1);
         Mockito.when(dsService.load(DS1.getIpId())).thenReturn(DS1);
 
-        Page<AccessRight> result = service.retrieveAccessRights(AG1.getName(), DS1.getIpId(), new PageRequest(0, 10));
+        final Page<AccessRight> result = service.retrieveAccessRights(AG1.getName(), DS1.getIpId(),
+                                                                      new PageRequest(0, 10));
         Assert.assertTrue(result.getContent().contains(GAR11));
         Assert.assertFalse(result.getContent().contains(GAR12));
         Assert.assertFalse(result.getContent().contains(GAR21));
@@ -171,7 +172,7 @@ public class AccessRightServiceTest {
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void testUpdateAccessRightInconsistentId() throws RabbitMQVhostException, ModuleException {
-        Mockito.when(arRepo.findOne(3L)).thenReturn(GAR11);
+        Mockito.when(arRepo.findById(3L)).thenReturn(GAR11);
         service.updateAccessRight(3L, GAR22);
     }
 }

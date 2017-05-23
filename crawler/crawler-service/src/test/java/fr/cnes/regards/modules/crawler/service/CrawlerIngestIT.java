@@ -81,7 +81,7 @@ public class CrawlerIngestIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    private static final String TABLE_NAME_TEST = "T_DATA";
+    private static final String TABLE_NAME_TEST = "t_data";
 
     private static final String TENANT = "INGEST";
 
