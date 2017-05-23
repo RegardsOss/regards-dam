@@ -37,7 +37,8 @@ import fr.cnes.regards.modules.models.schema.Attribute;
  * @author msordi
  */
 @Entity
-@Table(name = "ta_model_att_att", uniqueConstraints = @UniqueConstraint(columnNames = { "attribute_id", "model_id" }))
+@Table(name = "ta_model_att_att", uniqueConstraints = @UniqueConstraint(name = "uk_model_att_att_id_model_id",
+        columnNames = { "attribute_id", "model_id" }))
 @SequenceGenerator(name = "modelAttSequence", initialValue = 1, sequenceName = "seq_model_att")
 @ComputedAttribute
 public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable<Long>, IXmlisable<Attribute> {

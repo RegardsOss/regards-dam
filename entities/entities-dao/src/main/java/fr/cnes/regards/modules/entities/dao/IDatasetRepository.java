@@ -29,7 +29,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     /**
      * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
      *
-     * @param pId id of entity
+     * @param pId
+     *            id of entity
      * @return entity
      */
     @Override
@@ -40,7 +41,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     /**
      * Find all datasets of which ipId belongs to given set (eagerly loading all relations)
      *
-     * @param pIpIds set of ipId
+     * @param pIpIds
+     *            set of ipId
      * @return found entities
      */
     @Override
@@ -51,7 +53,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     /**
      * Find entity of given IpId eagerly loading all common relations (except pluginConfigurationIds)
      *
-     * @param pIpId ipId of which entity
+     * @param pIpId
+     *            ipId of which entity
      * @return found entity
      */
     @Override
@@ -62,7 +65,8 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     /**
      * Find all entities complient with the given modelName
      *
-     * @param pModelName name of the model we want to be complient with
+     * @param pModelName
+     *            name of the model we want to be complient with
      * @return datasets complient with the given model
      */
     @Override
@@ -72,5 +76,17 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     @Query("from Dataset ds left join fetch ds.descriptionFile where ds.id=:id")
     Dataset findOneDescriptionFile(@Param("id") Long datasetId);
+
+    /**
+     * Find all entities complient with the given modelName
+     *
+     * @param pModelName
+     *            name of the model we want to be complient with
+     * @return datasets complient with the given model
+     */
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
+            "plgConfDataSource.parameters.dynamicsValues" })
+    Set<Dataset> findAllByModelId(Set<Long> pModelIds);
 
 }

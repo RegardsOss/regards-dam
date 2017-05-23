@@ -3,20 +3,41 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
-import javax.persistence.*;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.validator.constraints.NotBlank;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.*;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
 import fr.cnes.regards.modules.models.schema.Property;
@@ -27,7 +48,8 @@ import fr.cnes.regards.modules.models.schema.Type;
  * @author msordi
  */
 @Entity
-@Table(name = "t_attribute_model", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "fragment_id" }))
+@Table(name = "t_attribute_model", uniqueConstraints = @UniqueConstraint(name = "uk_attribute_model_name_fragment_id",
+        columnNames = { "name", "fragment_id" }))
 @SequenceGenerator(name = "attModelSequence", initialValue = 1, sequenceName = "seq_att_model")
 public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute> {
 

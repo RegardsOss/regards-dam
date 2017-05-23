@@ -1,7 +1,6 @@
 package fr.cnes.regards.modules.entities.domain.deleted;
 
 import java.time.OffsetDateTime;
-import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -11,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
@@ -20,7 +20,8 @@ import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
  * The purpose of this entity is only to keep some informations about deleted entities.
  */
 @Entity
-@Table(name = "t_deleted_entity")
+@Table(name = "t_deleted_entity",
+        uniqueConstraints = @UniqueConstraint(name = "uk_deleted_entity_ipId", columnNames = { "ipId" }))
 public class DeletedEntity {
 
     /**
@@ -40,7 +41,7 @@ public class DeletedEntity {
     @Column(name = "deletion_date")
     private OffsetDateTime deletionDate;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     @Convert(converter = UrnConverter.class)
     private UniformResourceName ipId;
 

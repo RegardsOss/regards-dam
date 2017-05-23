@@ -16,11 +16,17 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>regards-core-jpa-common</artifactId>
+			<artifactId>jpa-multitenant-regards-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
 			<artifactId>crawler-domain</artifactId>
+		</dependency>
+		<!-- Tests dependencies -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-multitenant-regards-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.domain;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 /**
