@@ -15,8 +15,17 @@ public class CrawlerInitializer {
     @Autowired
     private ICrawlerService crawlerService;
 
+    @Autowired
+    private IIngesterService ingesterService;
+
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
         crawlerService.crawl();
     }
+
+    @EventListener
+    public void onApplicationEvent2(ContextRefreshedEvent event) {
+        ingesterService.listenToPluginConfChange();
+    }
+
 }

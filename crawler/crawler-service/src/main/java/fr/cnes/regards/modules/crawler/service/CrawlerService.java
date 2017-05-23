@@ -186,13 +186,13 @@ public class CrawlerService implements ICrawlerService {
             if (stopAsked) {
                 break;
             }
-            boolean atLeastOnPoll = false;
+            boolean atLeastOnePoll = false;
             // For all tenants
             for (String tenant : tenantResolver.getAllTenants()) {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
-                    atLeastOnPoll |= self.doPoll();
+                    atLeastOnePoll |= self.doPoll();
                 } catch (RuntimeException t) {
                     LOGGER.error("Cannot manage entity event message", t);
                 }
@@ -200,7 +200,7 @@ public class CrawlerService implements ICrawlerService {
                 inProgress = false;
             }
             // If a poll has been done, don't wait and reset delay to initial value
-            if (atLeastOnPoll) {
+            if (atLeastOnePoll) {
                 delay.set(INITIAL_DELAY_MS);
             } else { // else, wait and double delay for next time (limited to MAX_DELAY)
                 try {
