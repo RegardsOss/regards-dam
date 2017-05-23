@@ -16,6 +16,7 @@ import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -83,8 +84,11 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         @Override
         public void handle(final TenantWrapper<AttributeModelCreated> pWrapper) {
             final AttributeModelCreated amc = pWrapper.getContent();
-            factory.registerSubtype(pWrapper.getTenant(), factory.getClassByType(amc.getAttributeType()),
-                                    amc.getAttributeName(), amc.getFragmentName());
+            if(amc.getFragmentName().equals(Fragment.getDefaultName())) {
+                factory.registerSubtype(pWrapper.getTenant(), factory.getClassByType(amc.getAttributeType()), amc.getAttributeName(), null);
+            } else {
+                factory.registerSubtype(pWrapper.getTenant(), factory.getClassByType(amc.getAttributeType()), amc.getAttributeName(), amc.getFragmentName());
+            }
         }
     }
 
@@ -98,8 +102,11 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         @Override
         public void handle(final TenantWrapper<AttributeModelDeleted> pWrapper) {
             final AttributeModelDeleted amd = pWrapper.getContent();
-            factory.unregisterSubtype(pWrapper.getTenant(), factory.getClassByType(amd.getAttributeType()),
-                                      amd.getAttributeName(), amd.getFragmentName());
+            if(amd.getFragmentName().equals(Fragment.getDefaultName())) {
+                factory.unregisterSubtype(pWrapper.getTenant(), factory.getClassByType(amd.getAttributeType()), amd.getAttributeName(), null);
+            } else {
+                factory.unregisterSubtype(pWrapper.getTenant(), factory.getClassByType(amd.getAttributeType()), amd.getAttributeName(), amd.getFragmentName());
+            }
         }
     }
 

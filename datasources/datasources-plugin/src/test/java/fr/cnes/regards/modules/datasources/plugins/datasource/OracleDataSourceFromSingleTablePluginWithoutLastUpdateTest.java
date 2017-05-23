@@ -4,7 +4,10 @@
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,9 +51,9 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class OracleDataSourceFromSingleTablePluginTest {
+public class OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(OracleDataSourceFromSingleTablePluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
@@ -119,8 +122,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
     @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system allows to create a plugin to get a subset of the datasource's data")
     public void getDataSourceIntrospection() throws SQLException {
-        LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
-        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
+        OffsetDateTime lastUpdateDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).minusYears(6);
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000), lastUpdateDate);
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
 
@@ -172,7 +175,6 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
         attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, "START_DATE"));
         attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
                 "DATA_CREATION_DATE"));
