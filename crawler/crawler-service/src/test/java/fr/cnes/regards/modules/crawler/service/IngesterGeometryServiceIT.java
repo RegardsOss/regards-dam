@@ -177,6 +177,7 @@ public class IngesterGeometryServiceIT {
         }
         esRepository.createIndex(TENANT);
         crawlerService.setConsumeOnlyMode(true);
+        ingesterService.setConsumeOnlyMode(true);
 
         dsIngestionRepos.deleteAll();
 

@@ -227,6 +227,7 @@ public class IngesterServiceIT {
         esRepository.createIndex(TENANT);
 
         crawlerService.setConsumeOnlyMode(true);
+        ingesterService.setConsumeOnlyMode(true);
 
         dsIngestionRepos.deleteAll();
         extData1Repos.deleteAll();
