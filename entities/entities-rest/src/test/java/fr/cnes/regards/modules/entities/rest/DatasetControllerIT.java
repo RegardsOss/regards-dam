@@ -8,7 +8,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -28,6 +32,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -243,7 +248,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         ds.setDataModel(dataModel.getId());
         ds = datasetRepository.save(ds);
         final StringJoiner sj = new StringJoiner("&", "?", "");
-        sj.add("modelName=" + datasetModel.getName());
+        sj.add("modelIds=" + datasetModel.getId());
         String queryParams = sj.toString();
 
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -270,13 +275,13 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        //pre-created datasets do not use the same data model so we cannot use them for this test: we have to create one
-        Dataset dataSet=new Dataset(datasetModel, DEFAULT_TENANT, "Base");
+        // pre-created datasets do not use the same data model so we cannot use them for this test: we have to create
+        // one
+        final Dataset dataSet = new Dataset(datasetModel, DEFAULT_TENANT, "Base");
         dataSet.setCreationDate(OffsetDateTime.now());
         dataSet.setSipId("SipId1");
         dataSet.setLabel("label");
         dataSet.setDataModel(dataModel.getId());
-
 
         final Dataset dataSetClone = new Dataset(datasetModel, "", "Coucou");
         dataSetClone.setLicence("licence");
@@ -294,8 +299,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         // Set test case
         dataSetClone.setOpenSearchSubsettingClause("q=FILE_SIZE:10");
         Mockito.when(attributeModelClient.getAttributes(Mockito.any(), Mockito.any()))
-                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(Lists
-                        .newArrayList(AttributeModelBuilder.build("FILE_SIZE", AttributeType.INTEGER, "ForTests").get()))));
+                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(Lists.newArrayList(AttributeModelBuilder
+                        .build("FILE_SIZE", AttributeType.INTEGER, "ForTests").get()))));
 
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
