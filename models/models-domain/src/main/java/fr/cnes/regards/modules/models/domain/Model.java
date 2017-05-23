@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -30,7 +31,8 @@ import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
  *
  */
 @Entity
-@Table(name = "t_model", indexes = { @Index(name = "idx_model_name", columnList = "name") })
+@Table(name = "t_model", indexes = { @Index(name = "idx_model_name", columnList = "name") },
+        uniqueConstraints = @UniqueConstraint(name = "uk_model_name", columnNames = { "name" }))
 @SequenceGenerator(name = "modelSequence", initialValue = 1, sequenceName = "seq_model")
 public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.modules.models.schema.Model> {
 
@@ -63,7 +65,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     @Pattern(regexp = NAME_REGEXP, message = "Model name must conform to regular expression \"" + NAME_REGEXP + "\".")
     @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE,
             message = "Attribute name must be between " + NAME_MIN_SIZE + " and " + NAME_MAX_SIZE + " length.")
-    @Column(nullable = false, updatable = false, unique = true, length = NAME_MAX_SIZE)
+    @Column(nullable = false, updatable = false, length = NAME_MAX_SIZE)
     private String name;
 
     /**

@@ -10,6 +10,7 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.validation.constraints.NotNull;
@@ -38,7 +39,8 @@ public class EnumerationRestriction extends AbstractRestriction {
      */
     @NotNull
     @ElementCollection
-    @JoinTable(name = "ta_enum_restr_accept_values", joinColumns = @JoinColumn(name = "restriction_id"))
+    @JoinTable(name = "ta_enum_restr_accept_values", joinColumns = @JoinColumn(name = "restriction_id",
+            foreignKey = @ForeignKey(name = "fk_enum_restr_accept_values_restriction_id")))
     @Column(name = "value")
     private Set<String> acceptableValues;
 

@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.dao;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
