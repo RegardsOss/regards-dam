@@ -15,10 +15,12 @@ import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.models.domain.event.FragmentDeletedEvent;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
@@ -84,11 +86,10 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         @Override
         public void handle(final TenantWrapper<AttributeModelCreated> pWrapper) {
             final AttributeModelCreated amc = pWrapper.getContent();
-            if(amc.getFragmentName().equals(Fragment.getDefaultName())) {
-                factory.registerSubtype(pWrapper.getTenant(), factory.getClassByType(amc.getAttributeType()), amc.getAttributeName(), null);
-            } else {
-                factory.registerSubtype(pWrapper.getTenant(), factory.getClassByType(amc.getAttributeType()), amc.getAttributeName(), amc.getFragmentName());
-            }
+            String tenant=pWrapper.getTenant();
+            runtimeTenantResolver.forceTenant(tenant);
+            AttributeModel attributeModel=attributeModelService.findByNameAndFragmentName(amc.getAttributeName(), amc.getFragmentName());
+            factory.registerAttribute(tenant, attributeModel);
         }
     }
 
@@ -107,6 +108,16 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
             } else {
                 factory.unregisterSubtype(pWrapper.getTenant(), factory.getClassByType(amd.getAttributeType()), amd.getAttributeName(), amd.getFragmentName());
             }
+        }
+    }
+
+    private class UnregisterFragmentHandler implements IHandler<FragmentDeletedEvent> {
+
+        @Override
+        public void handle(final TenantWrapper<FragmentDeletedEvent> pWrapper) {
+            String tenant=pWrapper.getTenant();
+            FragmentDeletedEvent fragmentDeleted = pWrapper.getContent();
+            factory.registerSubtype(tenant, ObjectAttribute.class, fragmentDeleted.getFragmentName());
         }
     }
 
