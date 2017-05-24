@@ -58,7 +58,6 @@ public class IngesterService implements IIngesterService {
      */
     private static final int MAX_DELAY_MS = 1000;
 
-
     /**
      * All tenants resolver
      */
@@ -99,12 +98,10 @@ public class IngesterService implements IIngesterService {
      */
     private boolean stopAsked = false;
 
-
     /**
      * Current delay between all tenants poll check
      */
     private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
-
 
     /**
      * Once IIngesterService bean has been initialized, retrieve self proxy to permit transactional calls.
@@ -283,7 +280,10 @@ public class IngesterService implements IIngesterService {
     private void updatePlannedDate(DatasourceIngestion dsIngestion, int refreshRate) {
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate());
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
+                        dsIngestion.getLastIngestDate();
+                dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
