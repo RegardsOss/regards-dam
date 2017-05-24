@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.scheduling.annotation.EnableAsync;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
@@ -26,8 +25,6 @@ import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfigura
                 SecurityVoterAutoConfiguration.class, WebSecurityAutoConfiguration.class })
 @PropertySource(value = { "classpath:test.properties", "classpath:test_${user.name}.properties" },
         ignoreResourceNotFound = true)
-@EnableAsync
-//@EnableScheduling <-- Do not set that, this will activate IngesterService during all tests
 public class CrawlerConfiguration {
 
     @Bean
