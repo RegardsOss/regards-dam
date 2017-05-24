@@ -189,6 +189,7 @@ public class IngesterService implements IIngesterService {
     @Override
     @Scheduled(fixedRateString = "${regards.ingester.rate.ms:900000}")
     public void manage() {
+        LOGGER.debug("IngesterService.manage() called...");
         try {
             // if this method is called while currently been executed, doItAgain is set to true and nothing else is
             // done
@@ -247,6 +248,7 @@ public class IngesterService implements IIngesterService {
         } finally { // In all cases, set managing to false
             managing.set(false);
         }
+        LOGGER.debug("...IngesterService.manage() ended.");
     }
 
     @Override
