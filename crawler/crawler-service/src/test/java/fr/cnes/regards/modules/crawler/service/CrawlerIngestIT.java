@@ -124,6 +124,9 @@ public class CrawlerIngestIT {
     private ICrawlerService crawlerService;
 
     @Autowired
+    private IIngesterService ingesterService;
+
+    @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
@@ -177,6 +180,7 @@ public class CrawlerIngestIT {
         tenantResolver.forceTenant(TENANT);
 
         crawlerService.setConsumeOnlyMode(false);
+        ingesterService.setConsumeOnlyMode(true);
 
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
         amqpAdmin.purgeQueue(EntityEvent.class, false);
