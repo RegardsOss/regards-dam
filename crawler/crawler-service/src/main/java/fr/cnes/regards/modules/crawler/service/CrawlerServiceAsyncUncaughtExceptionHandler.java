@@ -17,7 +17,7 @@ import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
  */
 public class CrawlerServiceAsyncUncaughtExceptionHandler implements AsyncUncaughtExceptionHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerServiceAsyncUncaughtExceptionHandler.class);
 
     private static final String HR = "*****************************************************";
 
