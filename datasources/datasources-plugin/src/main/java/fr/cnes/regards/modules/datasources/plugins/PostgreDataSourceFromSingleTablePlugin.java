@@ -68,13 +68,13 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     /**
      * Is this data source is a REGARDS internal data source
      */
-    @PluginParameter(name = IS_INTERNAL_PARAM)
+    @PluginParameter(name = IS_INTERNAL_PARAM, value="false")
     private String internalDataSource;
 
     /**
      * Ingestion refresh rate
      */
-    @PluginParameter(name = REFRESH_RATE)
+    @PluginParameter(name = REFRESH_RATE, value="1800")
     private Integer refreshRate;
 
     /**
