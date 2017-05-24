@@ -1,10 +1,13 @@
 package fr.cnes.regards.modules.models.domain.event;
 
+import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
+import fr.cnes.regards.framework.amqp.event.Target;
 
 /**
  * @author Sylvain VISSIERE-GUERINET
  */
+@Event(target = Target.MICROSERVICE)
 public class FragmentDeletedEvent implements ISubscribable {
 
     private String fragmentName;

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
@@ -95,7 +96,7 @@ public class FragmentServiceTest {
 
     @Before
     public void beforeTest() {
-        fragmentService = new FragmentService(mockFragmentR, mockAttModelR, mockAttModelS);
+        fragmentService = new FragmentService(mockFragmentR, mockAttModelR, mockAttModelS, Mockito.mock(IPublisher.class));
     }
 
     @Test

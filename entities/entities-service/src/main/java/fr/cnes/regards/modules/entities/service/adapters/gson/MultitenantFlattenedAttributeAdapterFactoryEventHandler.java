@@ -66,6 +66,7 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
     public void onApplicationEvent(final ApplicationReadyEvent pEvent) {
         subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
         subscriber.subscribeTo(AttributeModelDeleted.class, new UnregisterHandler());
+        subscriber.subscribeTo(FragmentDeletedEvent.class, new UnregisterFragmentHandler());
         // Retrieve all tenants
         for (final String tenant : tenantResolver.getAllActiveTenants()) {
             // Set thread tenant to route database retrieval
@@ -117,7 +118,7 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         public void handle(final TenantWrapper<FragmentDeletedEvent> pWrapper) {
             String tenant=pWrapper.getTenant();
             FragmentDeletedEvent fragmentDeleted = pWrapper.getContent();
-            factory.registerSubtype(tenant, ObjectAttribute.class, fragmentDeleted.getFragmentName());
+            factory.unregisterSubtype(tenant, ObjectAttribute.class, fragmentDeleted.getFragmentName());
         }
     }
 

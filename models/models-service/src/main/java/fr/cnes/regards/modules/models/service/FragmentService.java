@@ -110,7 +110,7 @@ public class FragmentService implements IFragmentService {
     public void deleteFragment(Long pFragmentId) throws ModuleException {
         // Check if fragment is empty
         final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
-        if ((attModels != null) || !Iterables.isEmpty(attModels)) {
+        if (attModels!=null && !Iterables.isEmpty(attModels)) {
             throw new EntityNotEmptyException(pFragmentId, Fragment.class);
         }
         if (fragmentRepository.exists(pFragmentId)) {
