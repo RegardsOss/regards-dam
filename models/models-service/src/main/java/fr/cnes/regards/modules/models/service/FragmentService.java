@@ -14,18 +14,14 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.event.FragmentDeletedEvent;
 import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
 
@@ -60,11 +56,14 @@ public class FragmentService implements IFragmentService {
      */
     private final IAttributeModelService attributeModelService;
 
+    private final IPublisher publisher;
+
     public FragmentService(IFragmentRepository pFragmentRepository, IAttributeModelRepository pAttributeModelRepository,
-            IAttributeModelService pAttributeModelService) {
+            IAttributeModelService pAttributeModelService, IPublisher publisher) {
         this.fragmentRepository = pFragmentRepository;
         this.attributeModelRepository = pAttributeModelRepository;
         this.attributeModelService = pAttributeModelService;
+        this.publisher=publisher;
     }
 
     @Override
@@ -111,11 +110,13 @@ public class FragmentService implements IFragmentService {
     public void deleteFragment(Long pFragmentId) throws ModuleException {
         // Check if fragment is empty
         final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
-        if ((attModels != null) || !Iterables.isEmpty(attModels)) {
+        if (attModels!=null && !Iterables.isEmpty(attModels)) {
             throw new EntityNotEmptyException(pFragmentId, Fragment.class);
         }
         if (fragmentRepository.exists(pFragmentId)) {
-            fragmentRepository.delete(pFragmentId);
+            Fragment toDelete=fragmentRepository.findOne(pFragmentId);
+            fragmentRepository.delete(toDelete);
+            publisher.publish(new FragmentDeletedEvent(toDelete.getName()));
         }
     }
 

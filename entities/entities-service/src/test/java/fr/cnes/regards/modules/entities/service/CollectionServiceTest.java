@@ -108,7 +108,7 @@ public class CollectionServiceTest {
 
         collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
                 deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
-                publisherMocked, runtimeTenantResolver);
+                publisherMocked, runtimeTenantResolver, null);
 
         // collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
         // pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);

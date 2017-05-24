@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -27,6 +28,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
+@ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 public class GeometrySearchIT {
 
     @Autowired

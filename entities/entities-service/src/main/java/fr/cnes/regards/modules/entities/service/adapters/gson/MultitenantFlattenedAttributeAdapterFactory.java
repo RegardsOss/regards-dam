@@ -108,19 +108,23 @@ public class MultitenantFlattenedAttributeAdapterFactory
      */
     protected void registerAttributes(final String pTenant, final List<AttributeModel> pAttributes) {
         if (pAttributes != null) {
-            for (final AttributeModel att : pAttributes) {
-                // Define namespace if required
-                String namespace = null;
-                // Register namespace as an object wrapper
-                if (!att.getFragment().isDefaultFragment()) {
-                    namespace = att.getFragment().getName();
-                    registerSubtype(pTenant, ObjectAttribute.class, namespace);
-                }
-
-                // Register attribute
-                registerSubtype(pTenant, getClassByType(att.getType()), att.getName(), namespace);
+            for (AttributeModel att : pAttributes) {
+                registerAttribute(pTenant, att);
             }
         }
+    }
+
+    protected void registerAttribute(String pTenant, AttributeModel att) {
+        // Define namespace if required
+        String namespace = null;
+        // Register namespace as an object wrapper
+        if (!att.getFragment().isDefaultFragment()) {
+            namespace = att.getFragment().getName();
+            registerSubtype(pTenant, ObjectAttribute.class, namespace);
+        }
+
+        // Register attribute
+        registerSubtype(pTenant, getClassByType(att.getType()), att.getName(), namespace);
     }
 
     public void refresh(final String pTenant, final List<AttributeModel> pAttributes) {

@@ -6,9 +6,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.scheduling.annotation.EnableAsync;
 
-import fr.cnes.regards.framework.amqp.*;
+import fr.cnes.regards.framework.amqp.IInstancePublisher;
+import fr.cnes.regards.framework.amqp.IInstanceSubscriber;
+import fr.cnes.regards.framework.amqp.IPoller;
+import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
@@ -27,9 +30,8 @@ import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfigura
                 SecurityVoterAutoConfiguration.class, WebSecurityAutoConfiguration.class })
 @PropertySource(value = { "classpath:validation.properties", "classpath:validation_${user.name}.properties" },
         ignoreResourceNotFound = true)
-@EnableAsync
-//@EnableScheduling <-- Do not set that, this will activate IngesterService during all tests
 public class ValidationConfiguration {
+
     @Bean
     public IResourceService getResourceService() {
         return Mockito.mock(IResourceService.class);
