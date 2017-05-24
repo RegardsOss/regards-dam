@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -53,6 +54,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterGeometryConfiguration.class })
+@ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 @DirtiesContext
 public class IngesterGeometryServiceIT {
 
