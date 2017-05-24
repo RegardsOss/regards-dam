@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -63,6 +65,7 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
 import fr.cnes.regards.modules.entities.plugin.CountPlugin;
@@ -438,6 +441,7 @@ public class IndexerServiceDataSourceIT {
         dataset1.setDataSource(dataSourcePluginConf);
         dataset1.setTags(Sets.newHashSet("BULLSHIT"));
         dataset1.setGroups(Sets.newHashSet("group0", "group11"));
+        dataset1.setDescriptionFile(new DescriptionFile("http://description.for/fun"));
         dsService.create(dataset1);
 
         dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
@@ -447,7 +451,9 @@ public class IndexerServiceDataSourceIT {
         dataset2.setLicence("licence");
         dataset2.setDataSource(dataSourcePluginConf);
         dataset2.setGroups(Sets.newHashSet("group12", "group11"));
-        dsService.create(dataset2);
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
+        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
+        dsService.create(dataset2, pdf);
 
         dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
         dataset3.setDataModel(dataModel.getId());
