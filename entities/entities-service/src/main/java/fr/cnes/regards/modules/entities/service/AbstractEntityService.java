@@ -322,7 +322,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         em.detach(entity);
         entity.getTags().addAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
         final U entityInDb = repository.findById(pEntityId);
-        // And detach it too because it is the over one that will be persisted
+        // And detach it because it is the other one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
         return entity;
@@ -364,7 +364,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         em.detach(entity);
         entity.getTags().removeAll(pIpIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
         final U entityInDb = repository.findById(pEntityId);
-        // And detach it too because it is the over one that will be persisted
+        // And detach it too because it is the other one that will be persisted
         em.detach(entityInDb);
         this.updateWithoutCheck(entity, entityInDb);
         return entity;
@@ -548,14 +548,20 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     @Override
-    public U update(Long pEntityId, U pEntity) throws ModuleException {
+    public U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException {
         // checks
         U entityInDb = checkUpdate(pEntityId, pEntity);
+        if (pEntity instanceof AbstractDescEntity) {
+            // In all cases....
+            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity)entityInDb).getDescriptionFile());
+            // ...and eventually be overriden if file != null (see this.setDescription() method)
+            this.setDescription((AbstractDescEntity) pEntity, file);
+        }
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
     @Override
-    public U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
+    public U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException {
         U entityInDb = repository.findOneByIpId(pEntityUrn);
         if (entityInDb == null) {
             throw new EntityNotFoundException(pEntity.getIpId().toString());
@@ -563,6 +569,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         pEntity.setId(entityInDb.getId());
         // checks
         entityInDb = checkUpdate(entityInDb.getId(), pEntity);
+        if (pEntity instanceof AbstractDescEntity) {
+            // In all cases....
+            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity)entityInDb).getDescriptionFile());
+            // ...and eventually be overriden if file != null (see this.setDescription() method)
+            this.setDescription((AbstractDescEntity) pEntity, file);
+        }
+
         return updateWithoutCheck(pEntity, entityInDb);
     }
 

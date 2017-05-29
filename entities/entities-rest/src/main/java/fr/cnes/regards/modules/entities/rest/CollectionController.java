@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
         documentation = "http://test")
 // CHECKSTYLE:ON
-@RequestMapping(path=CollectionController.ROOT_MAPPING, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(path = CollectionController.ROOT_MAPPING, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
@@ -95,12 +95,12 @@ public class CollectionController implements IResourceController<Collection> {
 
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_ID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a collection description file content")
-    public void retrieveCollectionDescription(@PathVariable("collection_id") Long pCollectionId, HttpServletResponse response)
-            throws EntityNotFoundException, IOException {
+    public void retrieveCollectionDescription(@PathVariable("collection_id") Long pCollectionId,
+            HttpServletResponse response) throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        DescriptionFile file=collectionService.retrieveDescription(pCollectionId);
-        if(file!=null) {
+        DescriptionFile file = collectionService.retrieveDescription(pCollectionId);
+        if (file != null) {
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
@@ -137,7 +137,9 @@ public class CollectionController implements IResourceController<Collection> {
     @ResponseBody
     @ResourceAccess(description = "Update a collection")
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") final Long pCollectionId,
-            @Valid @RequestBody final Collection pCollection, final BindingResult pResult) throws ModuleException {
+            @Valid @RequestPart(name = "collection") final Collection pCollection,
+            @RequestPart(name = "description", required = false) final MultipartFile descriptionFile,
+            final BindingResult pResult) throws ModuleException {
 
         // Validate dynamic model
         collectionService.validate(pCollection, pResult, false);
@@ -188,7 +190,7 @@ public class CollectionController implements IResourceController<Collection> {
         // Validate dynamic model
         collectionService.validate(pCollection, pResult, false);
 
-        final Collection collection = collectionService.create(pCollection, null);
+        final Collection collection = collectionService.create(pCollection, descriptionFile);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.CREATED);
     }
