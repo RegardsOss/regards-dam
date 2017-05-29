@@ -39,4 +39,5 @@
         <type>LONG</type>
         <computationMode>COMPUTED</computationMode>
         <configurationLabel>CountValidationConf</configurationLabel>
-    </attribute></model>
+    </attribute>
+</model>
