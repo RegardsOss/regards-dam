@@ -5,9 +5,9 @@ package fr.cnes.regards.modules.entities.plugin;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
+
+import org.elasticsearch.common.Strings;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -61,7 +61,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         attributeToCompute = attModelService
                 .findByNameAndFragmentName(attributeToComputeName, attributeToComputeFragmentName);
         if (attributeToCompute == null) {
-            if (attributeToComputeFragmentName != null) {
+            if (!Strings.isNullOrEmpty(attributeToComputeFragmentName)) {
                 throw new EntityNotFoundException(
                         String.format("Cannot find computed attribute '%s'.'%s'", attributeToComputeFragmentName,
                                       attributeToComputeName));
@@ -72,7 +72,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         parameterAttribute = attModelService
                 .findByNameAndFragmentName(parameterAttributeName, parameterAttributeFragmentName);
         if (parameterAttribute == null) {
-            if (parameterAttributeFragmentName != null) {
+            if (!Strings.isNullOrEmpty(parameterAttributeFragmentName)) {
                 throw new EntityNotFoundException(
                         String.format("Cannot find parameter attribute '%s'.'%s'", parameterAttributeFragmentName,
                                       parameterAttributeName));

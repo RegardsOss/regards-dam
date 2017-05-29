@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -285,7 +286,7 @@ public class AttributeModelService implements IAttributeModelService {
 
     @Override
     public AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName) {
-        if (pFragmentName == null) {
+        if (Strings.isNullOrEmpty(pFragmentName)) {
             return attModelRepository.findByNameAndFragmentName(pAttributeName, Fragment.getDefaultName());
         }
         return attModelRepository.findByNameAndFragmentName(pAttributeName, pFragmentName);
