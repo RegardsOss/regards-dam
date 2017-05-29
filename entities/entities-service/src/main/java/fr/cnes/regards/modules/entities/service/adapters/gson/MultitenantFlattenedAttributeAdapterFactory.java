@@ -8,8 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -194,11 +192,6 @@ public class MultitenantFlattenedAttributeAdapterFactory
                 throw new IllegalArgumentException(errorMessage);
         }
         return matchingClass;
-    }
-
-    @PostConstruct
-    private void init() {
-        System.out.println("test");
     }
 
     @Override
