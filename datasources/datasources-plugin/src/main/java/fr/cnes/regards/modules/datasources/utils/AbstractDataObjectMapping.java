@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -244,7 +245,7 @@ public abstract class AbstractDataObjectMapping {
                         processStaticAttributes(data, attr, attrMapping);
                     } else {
                         // dynamic attribute mapping
-                        if (attrMapping.getNameSpace() != null) {
+                        if (!Strings.isNullOrEmpty(attrMapping.getNameSpace())) {
                             if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
                                 // It is a new name space
                                 spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
