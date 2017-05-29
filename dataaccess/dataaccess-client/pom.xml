@@ -45,11 +45,11 @@
 			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-dao</artifactId>
 			<scope>test</scope>
-		</dependency>
+		</dependency-->
 
 	</dependencies>
 </project>
