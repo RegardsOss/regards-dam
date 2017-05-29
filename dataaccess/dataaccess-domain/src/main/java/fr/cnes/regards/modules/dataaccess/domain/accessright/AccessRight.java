@@ -33,7 +33,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  */
 @Entity
 @Table(name = "t_access_right",
-        uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" }))
+        uniqueConstraints = @UniqueConstraint(columnNames = { "access_group_id", "dataset_id" }, name = "uk_access_right_access_group_id_dataset_id"))
 @NamedEntityGraph(name = "graph.accessright.dataset.and.accesgroup",
         attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup") })
 public class AccessRight implements IIdentifiable<Long> {
