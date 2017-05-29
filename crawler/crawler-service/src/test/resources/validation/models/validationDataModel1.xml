@@ -15,7 +15,7 @@
         <name>date</name>
         <type>DATE_ISO8601</type>
     </attribute>
-    <attribute>
+    <attribute optional="true">
         <label>description</label>
         <name>description</name>
         <type>STRING</type>
