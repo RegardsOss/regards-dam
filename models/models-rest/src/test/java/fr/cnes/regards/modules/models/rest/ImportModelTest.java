@@ -81,8 +81,8 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(pMatcher);
 
-        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
-                                 "Should be able to import a model");
+        performDefaultFileUploadPost(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
+                                     "Should be able to import a model");
     }
 
     /**

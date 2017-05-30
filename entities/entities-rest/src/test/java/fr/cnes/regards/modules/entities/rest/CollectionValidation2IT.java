@@ -164,8 +164,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
-                                 "Should be able to import a fragment");
+        performDefaultFileUploadPost(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
+                                     "Should be able to import a fragment");
 
         final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
         attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);
@@ -213,8 +213,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
-        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
-                                 "Failed to create a new collection");
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
+                                     "Failed to create a new collection");
     }
 
     /**
@@ -256,8 +256,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
-        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
-                                 "Failed to create a new collection");
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
+                                     "Failed to create a new collection");
     }
 
     /**
@@ -295,8 +295,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
-        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
-                                 "Failed to create a new collection");
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
+                                     "Failed to create a new collection");
     }
 
     /**
@@ -335,8 +335,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
-        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
-                                 "Failed to create a new collection");
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
+                                     "Failed to create a new collection");
     }
 
     @Override
