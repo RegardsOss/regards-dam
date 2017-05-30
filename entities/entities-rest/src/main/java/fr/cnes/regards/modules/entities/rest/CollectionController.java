@@ -139,12 +139,12 @@ public class CollectionController implements IResourceController<Collection> {
     public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") final Long pCollectionId,
             @Valid @RequestPart(name = "collection") final Collection pCollection,
             @RequestPart(name = "description", required = false) final MultipartFile descriptionFile,
-            final BindingResult pResult) throws ModuleException {
+            final BindingResult pResult) throws ModuleException, IOException {
 
         // Validate dynamic model
         collectionService.validate(pCollection, pResult, false);
 
-        final Collection collection = collectionService.update(pCollectionId, pCollection);
+        final Collection collection = collectionService.update(pCollectionId, pCollection, descriptionFile);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -249,6 +249,7 @@ public class CollectionController implements IResourceController<Collection> {
         resourceService.addLink(resource, this.getClass(), "updateCollection", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Collection.class),
+                                MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociateCollection", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
