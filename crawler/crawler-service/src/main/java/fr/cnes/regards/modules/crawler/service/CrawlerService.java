@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -135,7 +134,7 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Current delay between all tenants poll check
      */
-    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+    private final AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
 
     /**
      * Boolean indicating that a work is scheduled
@@ -188,7 +187,7 @@ public class CrawlerService implements ICrawlerService {
             }
             boolean atLeastOnePoll = false;
             // For all tenants
-            for (String tenant : tenantResolver.getAllTenants()) {
+            for (String tenant : tenantResolver.getAllActiveTenants()) {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
