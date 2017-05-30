@@ -76,8 +76,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
-                                 "Should be able to import a fragment");
+        performDefaultFileUploadPost(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
+                                     "Should be able to import a fragment");
 
         final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
         attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);

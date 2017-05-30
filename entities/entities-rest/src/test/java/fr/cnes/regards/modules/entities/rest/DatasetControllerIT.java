@@ -180,8 +180,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         fileList.add(dataset);
         fileList.add(firstFile);
 
-        performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
-                                 "Failed to create a new dataset");
+        performDefaultFileUploadPost(DatasetController.DATASET_PATH, fileList, expectations,
+                                     "Failed to create a new dataset");
 
         final Dataset dataSet21 = new Dataset(model1, null, "dataSet21");
         dataSet21.setLicence("licence");
@@ -194,8 +194,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         fileList.clear();
         fileList.add(pdf);
         fileList.add(dataset21);
-        performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
-                                 "Failed to create a new dataset");
+        performDefaultFileUploadPost(DatasetController.DATASET_PATH, fileList, expectations,
+                                     "Failed to create a new dataset");
     }
 
     @Test
