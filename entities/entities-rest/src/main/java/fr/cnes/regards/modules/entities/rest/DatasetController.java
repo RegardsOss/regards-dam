@@ -218,14 +218,16 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") final Long pDatasetId,
-            @Valid @RequestBody final Dataset pDataset, final BindingResult pResult) throws ModuleException {
+            @Valid @RequestBody final Dataset pDataset,
+            @RequestPart(name = "description", required = false) final MultipartFile descriptionFile,
+            final BindingResult pResult) throws ModuleException, IOException {
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
 
         // Convert OpenSearch subsetting clause
         pDataset.setSubsettingClause(openSearchService.parse(pDataset.getOpenSearchSubsettingClause()));
 
-        final Dataset dataSet = service.update(pDatasetId, pDataset);
+        final Dataset dataSet = service.update(pDatasetId, pDataset, descriptionFile);
         final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
@@ -307,7 +309,9 @@ public class DatasetController implements IResourceController<Dataset> {
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(BindingResult.class));
+                                MethodParamFactory.build(Dataset.class),
+                                MethodParamFactory.build(MultipartFile.class),
+                                MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociateDataset", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
