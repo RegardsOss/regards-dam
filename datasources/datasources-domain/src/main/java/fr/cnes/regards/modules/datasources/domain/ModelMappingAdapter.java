@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -148,7 +149,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             }
         }
         
-        if (attributeType == null && (namespace == null || namespace.isEmpty())) {
+        if (attributeType == null && Strings.isNullOrEmpty(namespace)) {
             return new StaticAttributeMapping(name, null, nameDS);
         } else {
             return new DynamicAttributeMapping(name, namespace, attributeType, nameDS);

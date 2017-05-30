@@ -107,8 +107,7 @@ public abstract class AbstractAttributeMapping {
             case LAST_UPDATE:
                 return AttributeType.DATE_ISO8601;
             case GEOMETRY:
-                // TODO CMZ
-                return null;
+                return AttributeType.STRING;
             default:
                 return null;
         }
