@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
+import org.junit.Ignore;
+
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractScriptGeneratorTest;
 
 /**
@@ -11,6 +13,7 @@ import fr.cnes.regards.framework.jpa.multitenant.test.AbstractScriptGeneratorTes
 * @author Marc Sordi
 *
 */
+@Ignore
 public class ScriptGeneratorTest extends AbstractScriptGeneratorTest {
 
 }
