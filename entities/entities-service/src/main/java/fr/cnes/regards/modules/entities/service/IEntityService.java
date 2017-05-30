@@ -16,7 +16,6 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -39,7 +38,7 @@ public interface IEntityService<U extends AbstractEntity> {
     /**
      * Load entity by id without relations
      *
-     * @param ip Database id
+     * @param id Database id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
     U load(Long id);
@@ -113,7 +112,7 @@ public interface IEntityService<U extends AbstractEntity> {
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(Long pEntityId, U pEntity) throws ModuleException;
+    U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException;
 
     /**
      * Update entity of ipId pEntityUrn according to pEntity
@@ -123,7 +122,7 @@ public interface IEntityService<U extends AbstractEntity> {
      * @return updated entity from database
      * @throws ModuleException
      */
-    U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException;
+    U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException;
 
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
@@ -134,10 +133,33 @@ public interface IEntityService<U extends AbstractEntity> {
      * @throws ModuleException
      */
     default U update(U pEntity) throws ModuleException {
-        if (pEntity.getId() != null) {
-            return this.update(pEntity.getId(), pEntity);
-        } else {
-            return this.update(pEntity.getIpId(), pEntity);
+        try {
+            if (pEntity.getId() != null) {
+                return this.update(pEntity.getId(), pEntity, null);
+            } else {
+                return this.update(pEntity.getIpId(), pEntity, null);
+            }
+        } catch (IOException ioe) { // NOSONAR
+            // Cannot happen
+            return null;
+        }
+    }
+
+    default U update(UniformResourceName pEntityUrn, U pEntity) throws ModuleException {
+        try {
+            return this.update(pEntityUrn, pEntity, null);
+        } catch (IOException ioe) { // NOSONAR
+            // Cannot happen
+            return null;
+        }
+    }
+
+    default U update(Long pEntityId, U pEntity) throws ModuleException {
+        try {
+            return this.update(pEntityId, pEntity, null);
+        } catch (IOException ioe) { // NOSONAR
+            // Cannot happen
+            return null;
         }
     }
 

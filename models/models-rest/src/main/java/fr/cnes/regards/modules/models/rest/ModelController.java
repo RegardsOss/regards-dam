@@ -3,12 +3,11 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.io.IOException;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -234,10 +228,10 @@ public class ModelController implements IResourceController<Model> {
      */
     @ResourceAccess(description = "Import a model")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Model> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
+    public ResponseEntity<Resource<Model>> importModel(@RequestParam("file") MultipartFile pFile) throws ModuleException {
         try {
             Model model = modelService.importModel(pFile.getInputStream());
-            return new ResponseEntity<>(model, HttpStatus.CREATED);
+            return new ResponseEntity<>(toResource(model), HttpStatus.CREATED);
         } catch (IOException e) {
             final String message = "Error with file stream while importing model.";
             LOGGER.error(message, e);
