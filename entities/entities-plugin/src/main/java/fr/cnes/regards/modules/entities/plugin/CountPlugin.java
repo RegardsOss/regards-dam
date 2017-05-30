@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.plugin;
 
-import java.util.function.Consumer;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -17,7 +15,6 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
-import fr.cnes.regards.modules.models.domain.IComputedAttributeVisitor;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -46,7 +43,8 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
 
     @PluginParameter(name = "resultAttributeFragmentName",
             description = "Name of the attribute to compute fragment. If the computed attribute belongs to the "
-                    + "default fragment, this value can be set to null.")
+                    + "default fragment, this value can be set to null.",
+            optional=true)
     private String attributeToComputeFragmentName;
 
     private AttributeModel attributeToCompute;

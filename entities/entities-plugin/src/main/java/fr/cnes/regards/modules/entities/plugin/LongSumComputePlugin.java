@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.entities.plugin;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,11 +40,13 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
     @Autowired
     private IAttributeModelService attModelService;
 
-    @PluginParameter(name = "resultAttributeName", description = "Name of the attribute to compute (ie result attribute).")
+    @PluginParameter(name = "resultAttributeName",
+            description = "Name of the attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
     @PluginParameter(name = "resultAttributeFragmentName",
-            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.")
+            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.",
+            optional=true)
     private String attributeToComputeFragmentName;
 
     @PluginParameter(name = "parameterAttributeName",
@@ -53,7 +54,8 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
     private String parameterAttributeName;
 
     @PluginParameter(name = "parameterAttributeFragmentName",
-            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.")
+            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.",
+            optional=true)
     private String parameterAttributeFragmentName;
 
     /**

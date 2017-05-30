@@ -165,8 +165,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
 
             Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
 
-            conn.close();
-
             return pages;
         } catch (SQLException e) {
             LOG.error("Unable to obtain a database connection.", e);
