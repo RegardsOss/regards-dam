@@ -6,9 +6,19 @@ package fr.cnes.regards.modules.indexer.dao;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -73,7 +83,11 @@ import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.*;
+import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**
  * Elasticsearch repository implementation
@@ -99,7 +113,7 @@ public class EsRepository implements IEsRepository {
     private static final int MAX_TIMEOUT_RETRIES = 3;
 
     /**
-     * Target forwarding search {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} need to put
+     * Target forwarding search {@link EsRepository#searchAll} need to put
      * in cache search because of pagination restrictions. This constant specifies duration cache time in minutes (from
      * last access)
      */
@@ -327,8 +341,9 @@ public class EsRepository implements IEsRepository {
     public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
         SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
         requestBuilder = requestBuilder.setTypes(searchKey.getSearchTypes());
+        ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
         SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
-                .setQuery(pCrit.accept(CRITERION_VISITOR)).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
+                .setQuery(crit.accept(CRITERION_VISITOR)).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
         // Scroll until no hits are returned
         do {
             for (final SearchHit hit : scrollResp.getHits().getHits()) {
@@ -342,7 +357,7 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <R> void searchAll(SearchKey<?, R> searchKey, Consumer<R> action, ICriterion crit, String attributeSource) {
+    public <R> void searchAll(SearchKey<?, R> searchKey, Consumer<R> action, ICriterion pCrit, String attributeSource) {
         // If attribute source is 'toto.titi.tutu', result from ES is '{"toto":{"titi":{"tutu":{...}}}}'
         // We just want "{...}"
         String startJsonResultStr = attributeSource;
@@ -357,6 +372,7 @@ public class EsRepository implements IEsRepository {
 
         SearchRequestBuilder searchRequest = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
         searchRequest = searchRequest.setTypes(searchKey.getSearchTypes());
+        ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
         SearchResponse scrollResp = searchRequest.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
                 .setQuery(crit.accept(CRITERION_VISITOR)).setFetchSource(attributeSource, null)
                 .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
@@ -395,14 +411,15 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion criterion,
+    public <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCrit,
             Map<String, FacetType> pFacetsMap) {
         String index = searchKey.getSearchIndex().toLowerCase();
         try {
             final List<T> results = new ArrayList<>();
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
+            ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
             QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
-                    .filter(criterion.accept(CRITERION_VISITOR));
+                    .filter(crit.accept(CRITERION_VISITOR));
             SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
             request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                     .setSize(pPageRequest.getPageSize());
@@ -477,7 +494,7 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * SearchAll cache used by {@link EsRepository#searchAll(String, Class, Consumer, ICriterion, String)} to avoid redo
+     * SearchAll cache used by {@link EsRepository#searchAll} to avoid redo
      * same ES request while changing page. SortedSet is necessary to be sure several consecutive calls return same
      * ordered set
      */

@@ -1,5 +1,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
@@ -13,9 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -216,6 +215,9 @@ public class IngesterService implements IIngesterService {
                         if (dsIngestionOpt.isPresent()) {
                             atLeastOneIngestionDone = true;
                             DatasourceIngestion dsIngestion = dsIngestionOpt.get();
+                            // Reinit old DatasourceIngestion properties
+                            dsIngestion.setStackTrace(null);
+                            dsIngestion.setSavedObjectsCount(0);
                             try {
                                 // Launch datasource ingestion
                                 IngestionResult summary = crawlerService
@@ -225,7 +227,7 @@ public class IngesterService implements IIngesterService {
                                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
                                 dsIngestion.setLastIngestDate(summary.getDate());
                             } catch (ModuleException | RuntimeException e) {
-                                // Set Status to Error...
+                                // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
