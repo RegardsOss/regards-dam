@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,14 +99,24 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     protected Integer getTypeDs(String colName) {
-        LOG.info("******************************************************************");
-        LOG.info("Retrieving type for {}", colName);
-        LOG.info("Retrieving type for {}", extractColumnName(colName));
-        for (Entry<String, Column> columnType : columnsType.entrySet()) {
-            LOG.info("Column name {} mapped to {}", columnType.getKey(),
-                     columnType.getValue() != null ? columnType.getValue().getName() : "none");
+        LOG.debug("******************************************************************");
+        LOG.debug("Retrieving type for {}", colName);
+        String extractColumnName = extractColumnName(colName);
+        LOG.debug("Extracted type is {}", extractColumnName);
+        if (extractColumnName != null) {
+            Column col = columnsType.get(extractColumnName(colName));
+            if (col != null) {
+                LOG.debug("Column name {} mapped to {} / JAVA {} / SQL {}", extractColumnName, col.getName(),
+                          col.getJavaSqlType(), col.getSqlType());
+            } else {
+                LOG.debug("No column mapped to {}", extractColumnName);
+            }
         }
-        LOG.info("******************************************************************");
+        //        for (Entry<String, Column> columnType : columnsType.entrySet()) {
+        //            LOG.debug("Column name {} mapped to {}", columnType.getKey(),
+        //                      columnType.getValue() != null ? columnType.getValue().getName() : "none");
+        //        }
+        LOG.debug("******************************************************************");
         return columnsType.get(extractColumnName(colName)).getSqlType();
     }
 
