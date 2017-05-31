@@ -5,14 +5,11 @@
 package fr.cnes.regards.modules.datasources.utils;
 
 import java.beans.PropertyVetoException;
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
-import fr.cnes.regards.framework.jpa.json.JsonBinarySqlTypeDescriptor;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
@@ -189,7 +185,6 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
                                             rs.getString(TABLE_NAME)));
                 tables.put(table.getName(), table);
             }
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -254,8 +249,6 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
                     cols.put(column.getName(), column);
                 }
             }
-
-            conn.close();
         } catch (SQLException e) {
             LOG.error(e.getMessage(), e);
         }
