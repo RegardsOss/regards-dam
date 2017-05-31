@@ -3,10 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -15,6 +11,9 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.annotations.Type;
 
