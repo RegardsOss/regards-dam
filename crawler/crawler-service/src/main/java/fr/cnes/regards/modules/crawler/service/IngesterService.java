@@ -49,14 +49,14 @@ public class IngesterService implements IIngesterService {
      * time no event has been pulled (limited to MAX_DELAY_MS). When an event is pulled (during a tenants event
      * inspection), no wait is done and delay is reset to INITIAL_DELAY_MS
      */
-    private static final int INITIAL_DELAY_MS = 1;
+    private static final int INITIAL_DELAY_MS = 1000;
 
     /**
      * To avoid CPU overload, a delay is set between each loop of tenants event inspection. This delay is doubled each
      * time no event has been pulled (limited to MAX_DELAY_MS). When an event is pulled (during a tenants event
      * inspection), no wait is done and delay is reset to INITIAL_DELAY_MS
      */
-    private static final int MAX_DELAY_MS = 1000;
+    private static final int MAX_DELAY_MS = 10000;
 
     /**
      * All tenants resolver
@@ -101,7 +101,7 @@ public class IngesterService implements IIngesterService {
     /**
      * Current delay between all tenants poll check
      */
-    private AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
+    private final AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
 
     /**
      * Once IIngesterService bean has been initialized, retrieve self proxy to permit transactional calls.
@@ -115,7 +115,7 @@ public class IngesterService implements IIngesterService {
      * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it
      * in parallel)
      */
-    private AtomicBoolean managing = new AtomicBoolean(false);
+    private final AtomicBoolean managing = new AtomicBoolean(false);
 
     /**
      * An atomic boolean permitting to take into account a new datasource creation or update while managing current ones
@@ -140,7 +140,7 @@ public class IngesterService implements IIngesterService {
             }
             boolean atLeastOnePoll = false;
             // For all tenants
-            for (String tenant : tenantResolver.getAllTenants()) {
+            for (String tenant : tenantResolver.getAllActiveTenants()) {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll a plugin conf event on this tenant
@@ -215,6 +215,9 @@ public class IngesterService implements IIngesterService {
                         if (dsIngestionOpt.isPresent()) {
                             atLeastOneIngestionDone = true;
                             DatasourceIngestion dsIngestion = dsIngestionOpt.get();
+                            // Reinit old DatasourceIngestion properties
+                            dsIngestion.setStackTrace(null);
+                            dsIngestion.setSavedObjectsCount(0);
                             try {
                                 // Launch datasource ingestion
                                 IngestionResult summary = crawlerService
@@ -224,7 +227,7 @@ public class IngesterService implements IIngesterService {
                                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
                                 dsIngestion.setLastIngestDate(summary.getDate());
                             } catch (ModuleException | RuntimeException e) {
-                                // Set Status to Error...
+                                // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
@@ -257,8 +260,8 @@ public class IngesterService implements IIngesterService {
         List<PluginConfiguration> pluginConfs = new ArrayList<>(
                 pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class));
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
-        pluginConfs.stream().mapToLong(PluginConfiguration::getId).filter(id -> !dsIngestionRepos.exists(id)).mapToObj(
-                id -> dsIngestionRepos
+        pluginConfs.stream().mapToLong(PluginConfiguration::getId).filter(id -> !dsIngestionRepos.exists(id))
+                .mapToObj(id -> dsIngestionRepos
                         .save(new DatasourceIngestion(id, OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC))))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources
@@ -280,15 +283,14 @@ public class IngesterService implements IIngesterService {
     private void updatePlannedDate(DatasourceIngestion dsIngestion, int refreshRate) {
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
-                        dsIngestion.getLastIngestDate();
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
+                        ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) : dsIngestion.getLastIngestDate();
                 dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(
-                        dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
+                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
+                                                                                          ChronoUnit.SECONDS));
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case STARTED: // Already in progress
@@ -304,8 +306,8 @@ public class IngesterService implements IIngesterService {
     @Transactional
     public Optional<DatasourceIngestion> pickAndStartDatasourceIngestion(String pTenant) {
         Optional<DatasourceIngestion> dsIngestionOpt = dsIngestionRepos
-                .findTopByNextPlannedIngestDateLessThanAndStatusNot(
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), IngestionStatus.STARTED);
+                .findTopByNextPlannedIngestDateLessThanAndStatusNot(OffsetDateTime.now()
+                        .withOffsetSameInstant(ZoneOffset.UTC), IngestionStatus.STARTED);
         if (dsIngestionOpt.isPresent()) {
             DatasourceIngestion dsIngestion = dsIngestionOpt.get();
             dsIngestion.setStatus(IngestionStatus.STARTED);

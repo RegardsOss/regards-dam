@@ -3,25 +3,20 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.io.IOException;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -201,15 +196,15 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Import a fragment")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Void> importFragment(@RequestParam("file") MultipartFile pFile) throws ModuleException {
+    public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile pFile) throws ModuleException {
         try {
-            fragmentService.importFragment(pFile.getInputStream());
+            Fragment frag=fragmentService.importFragment(pFile.getInputStream());
+            return new ResponseEntity<>(toResource(frag), HttpStatus.CREATED);
         } catch (IOException e) {
             final String message = "Error with file stream while importing fragment.";
             LOGGER.error(message, e);
             throw new ModuleException(e);
         }
-        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -223,13 +218,11 @@ public class FragmentController implements IResourceController<Fragment> {
         resourceService.addLink(resource, this.getClass(), "deleteFragment", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "getFragments", LinkRels.LIST);
-        // Import / Export
+        // Export
         resourceService.addLink(resource, this.getClass(), "exportFragment", "export",
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "importFragment", "import",
-                                MethodParamFactory.build(MultipartFile.class));
         return resource;
     }
 }

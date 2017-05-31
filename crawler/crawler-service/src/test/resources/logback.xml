@@ -13,8 +13,9 @@
 
 <!-- 	<logger name="org.springframework" level="INFO" />
 	<logger name="org.hibernate" level="INFO" />
-	<logger name="fr.cnes.regards.modules.datasources.utils" level="DEBUG" />
  -->
+	<logger name="fr.cnes.regards.modules.datasources.utils" level="DEBUG" />
+
 	<root level="error">
 		<appender-ref ref="STDOUT" />
 	</root>
