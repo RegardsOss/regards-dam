@@ -74,6 +74,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
      * @param pTable
      *            the table used to requests the database
      */
+    @Override
     public void initializePluginMapping(String pTable) {
 
         // reset the number of data element hosted by the datasource
@@ -98,6 +99,24 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     protected Integer getTypeDs(String colName) {
+        LOG.debug("******************************************************************");
+        LOG.debug("Retrieving type for {}", colName);
+        String extractColumnName = extractColumnName(colName);
+        LOG.debug("Extracted type is {}", extractColumnName);
+        if (extractColumnName != null) {
+            Column col = columnsType.get(extractColumnName(colName));
+            if (col != null) {
+                LOG.debug("Column name {} mapped to {} / JAVA {} / SQL {}", extractColumnName, col.getName(),
+                          col.getJavaSqlType(), col.getSqlType());
+            } else {
+                LOG.debug("No column mapped to {}", extractColumnName);
+            }
+        }
+        //        for (Entry<String, Column> columnType : columnsType.entrySet()) {
+        //            LOG.debug("Column name {} mapped to {}", columnType.getKey(),
+        //                      columnType.getValue() != null ? columnType.getValue().getName() : "none");
+        //        }
+        LOG.debug("******************************************************************");
         return columnsType.get(extractColumnName(colName)).getSqlType();
     }
 
@@ -111,7 +130,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
         String selectRequest = sqlGenerator.selectAll(tableDescription, pPageable);
 
-        if (pDate != null && !getLastUpdateAttributeName().isEmpty()) {
+        if ((pDate != null) && !getLastUpdateAttributeName().isEmpty()) {
 
             if (selectRequest.contains(WHERE)) {
                 // Add at the beginning of the where clause
@@ -141,7 +160,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     protected String getCountRequest(OffsetDateTime pDate) {
-        if (pDate == null || getLastUpdateAttributeName().isEmpty()) {
+        if ((pDate == null) || getLastUpdateAttributeName().isEmpty()) {
             return sqlGenerator.count(tableDescription);
         } else {
             return sqlGenerator.count(tableDescription) + WHERE
@@ -149,10 +168,12 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         }
     }
 
+    @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
         return findAll(pTenant, pPageable, null);
     }
 
+    @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) {
         if (sqlGenerator == null) {
             LOG.error("the sqlGenerator is null");
