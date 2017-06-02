@@ -147,7 +147,7 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         final Path filePath = Paths.get("src", "test", "resources", "fragment_it.xml");
 
         final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
+        expectations.add(MockMvcResultMatchers.status().isCreated());
 
         performDefaultFileUploadPost(FragmentController.TYPE_MAPPING + "/import", filePath, expectations,
                                      "Should be able to import a fragment");
