@@ -6,18 +6,27 @@ import java.util.Set;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 
 /**
  * Page implementation with facets values
+ *
  * @param <T> the type of which the page consists.
  * @author oroussel
  */
-public class FacetPage<T> extends PageImpl<T> {
+public class FacetPage<T extends IIndexable> extends PageImpl<T> {
 
     /**
-     * Facet map.
-     * key is attribute name and value is of type {@link IFacet}
+     * serialVersionUID field.
+     *
+     * @author CS
+     * @since 1.0-SNAPSHOT
+     */
+    private static final long serialVersionUID = 2759694831627379041L;
+
+    /**
+     * Facet map. key is attribute name and value is of type {@link IFacet}
      */
     private Set<IFacet<?>> facets;
 
