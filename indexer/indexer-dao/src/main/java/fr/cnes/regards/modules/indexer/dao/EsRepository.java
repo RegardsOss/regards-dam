@@ -25,7 +25,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.assertj.core.util.Sets;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetaData;
@@ -465,7 +464,7 @@ public class EsRepository implements IEsRepository {
             }
             // If no facet, juste returns a "simple" Page
             if (facetResults == null) {
-                return new FacetPage<>(results, Sets.newHashSet(), pPageRequest, response.getHits().getTotalHits());
+                return new FacetPage<>(results, new HashSet<>(), pPageRequest, response.getHits().getTotalHits());
             } else { // else returns a FacetPage
                 return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
             }
