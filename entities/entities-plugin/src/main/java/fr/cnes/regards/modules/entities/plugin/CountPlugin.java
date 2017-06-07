@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.entities.plugin;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.common.base.Strings;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
@@ -13,11 +14,12 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
  * This implementation allows to compute the number of {@link DataObject} of a {@link Dataset}
@@ -36,7 +38,7 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
-    private IAttributeModelService attModelService;
+    protected IAttributeModelRepository attModelRepos;
 
     @PluginParameter(name = "resultAttributeName",
             description = "Name of the attribute to compute (ie result attribute).")
@@ -56,8 +58,8 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
      */
     @PluginInit
     public void init() {
-        attributeToCompute = attModelService
-                .findByNameAndFragmentName(attributeToComputeName, attributeToComputeFragmentName);
+        attributeToCompute = attModelRepos.findByNameAndFragmentName(attributeToComputeName, Strings.isNullOrEmpty(
+                attributeToComputeFragmentName) ? Fragment.getDefaultName() : attributeToComputeFragmentName);
     }
 
     @Override

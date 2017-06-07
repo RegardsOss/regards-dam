@@ -15,29 +15,37 @@
         <name>start_date</name>
         <description>date at which the acquisition of the data has started</description>
         <type>DATE_ISO8601</type>
-        <computationMode>COMPUTED</computationMode>
-        <configurationLabel>MinDateValidationConf</configurationLabel>
+        <computation>
+            <label>MinDateValidationConf</label>
+            <min_compute parameterAttributeName="date"/>
+        </computation>
     </attribute>
     <attribute>
         <label>data end date</label>
         <name>end_date</name>
         <description>date at which the acquisition of the data has ended</description>
         <type>DATE_ISO8601</type>
-        <computationMode>COMPUTED</computationMode>
-        <configurationLabel>MaxDateValidationConf</configurationLabel>
+        <computation>
+            <label>MaxDateValidationConf</label>
+            <max_compute parameterAttributeName="date"/>
+        </computation>
     </attribute>
     <attribute>
         <label>long sum</label>
         <name>values_l1_sum</name>
         <type>LONG</type>
-        <computationMode>COMPUTED</computationMode>
-        <configurationLabel>SumLongValidationConf</configurationLabel>
+        <computation>
+            <label>SumLongValidationConf</label>
+            <sum_compute parameterAttributeName="value_l1"/>
+        </computation>
     </attribute>
     <attribute>
         <label>number of data</label>
         <name>count</name>
         <type>LONG</type>
-        <computationMode>COMPUTED</computationMode>
-        <configurationLabel>CountValidationConf</configurationLabel>
+        <computation>
+            <label>CountValidationConf</label>
+            <count/>
+        </computation>
     </attribute>
 </model>

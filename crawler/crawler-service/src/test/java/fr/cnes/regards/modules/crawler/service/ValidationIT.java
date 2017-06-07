@@ -22,7 +22,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -36,10 +35,6 @@ import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
-import fr.cnes.regards.modules.entities.plugin.CountPlugin;
-import fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin;
-import fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin;
-import fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -49,7 +44,6 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -330,65 +324,65 @@ public class ValidationIT {
     }
 
     private void initPluginConfForValidation() throws ModuleException {
-        pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
-        pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
-        // conf for "count"
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "count").getParameters();
-
-        // Emulate plugin annotation (user will create an annotation)
-        final PluginMetaData metadata = new PluginMetaData();
-        metadata.setPluginId("CountPlugin");
-        metadata.setAuthor("O. Rousselot");
-        metadata.setDescription("");
-        metadata.setVersion("1");
-        metadata.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadata.setPluginClassName(CountPlugin.class.getName());
-
-        final PluginConfiguration confCount = new PluginConfiguration(metadata, "CountValidationConf");
-        confCount.setParameters(parameters);
-        pluginService.savePluginConfiguration(confCount);
-
-        // create a pluginConfiguration with a label for start_date
-        final List<PluginParameter> parametersMin = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "start_date").getParameters();
-        final PluginMetaData metadataMin = new PluginMetaData();
-        metadataMin.setPluginId("MinDateComputePlugin");
-        metadataMin.setAuthor("O. Rousselot");
-        metadataMin.setDescription("");
-        metadataMin.setVersion("1");
-        metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadataMin.setPluginClassName(MinDateComputePlugin.class.getName());
-        final PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateValidationConf");
-        confMin.setParameters(parametersMin);
-        pluginService.savePluginConfiguration(confMin);
-
-        // create a pluginConfiguration with a label for end_date
-        final List<PluginParameter> parametersMax = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "end_date").getParameters();
-        final PluginMetaData metadataMax = new PluginMetaData();
-        metadataMax.setPluginId("MaxDateComputePlugin");
-        metadataMax.setAuthor("O. Rousselot");
-        metadataMax.setDescription("");
-        metadataMax.setVersion("1");
-        metadataMax.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadataMax.setPluginClassName(MaxDateComputePlugin.class.getName());
-        final PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateValidationConf");
-        confMax.setParameters(parametersMax);
-        pluginService.savePluginConfiguration(confMax);
-
-        // create a pluginConfiguration with a label for value_l1
-        final List<PluginParameter> parametersInteger = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "values_l1_sum").getParameters();
-        final PluginMetaData metadataLong = new PluginMetaData();
-        metadataLong.setPluginId("LongSumComputePlugin");
-        metadataLong.setAuthor("O. Rousselot");
-        metadataLong.setDescription("");
-        metadataLong.setVersion("1");
-        metadataLong.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadataLong.setPluginClassName(LongSumComputePlugin.class.getName());
-        final PluginConfiguration confLong = new PluginConfiguration(metadataLong, "SumLongValidationConf");
-        confLong.setParameters(parametersInteger);
-        pluginService.savePluginConfiguration(confLong);
+        //        pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
+        //        pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
+        //        // conf for "count"
+        //        final List<PluginParameter> parameters = PluginParametersFactory.build()
+        //                .addParameter("resultAttributeName", "count").getParameters();
+        //
+        //        // Emulate plugin annotation (user will create an annotation)
+        //        final PluginMetaData metadata = new PluginMetaData();
+        //        metadata.setPluginId("CountPlugin");
+        //        metadata.setAuthor("O. Rousselot");
+        //        metadata.setDescription("");
+        //        metadata.setVersion("1");
+        //        metadata.getInterfaceNames().add(IComputedAttribute.class.getName());
+        //        metadata.setPluginClassName(CountPlugin.class.getName());
+        //
+        //        final PluginConfiguration confCount = new PluginConfiguration(metadata, "CountValidationConf");
+        //        confCount.setParameters(parameters);
+        //        pluginService.savePluginConfiguration(confCount);
+        //
+        //        // create a pluginConfiguration with a label for start_date
+        //        final List<PluginParameter> parametersMin = PluginParametersFactory.build()
+        //                .addParameter("resultAttributeName", "start_date").getParameters();
+        //        final PluginMetaData metadataMin = new PluginMetaData();
+        //        metadataMin.setPluginId("MinDateComputePlugin");
+        //        metadataMin.setAuthor("O. Rousselot");
+        //        metadataMin.setDescription("");
+        //        metadataMin.setVersion("1");
+        //        metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
+        //        metadataMin.setPluginClassName(MinDateComputePlugin.class.getName());
+        //        final PluginConfiguration confMin = new PluginConfiguration(metadataMin, "MinDateValidationConf");
+        //        confMin.setParameters(parametersMin);
+        //        pluginService.savePluginConfiguration(confMin);
+        //
+        //        // create a pluginConfiguration with a label for end_date
+        //        final List<PluginParameter> parametersMax = PluginParametersFactory.build()
+        //                .addParameter("resultAttributeName", "end_date").getParameters();
+        //        final PluginMetaData metadataMax = new PluginMetaData();
+        //        metadataMax.setPluginId("MaxDateComputePlugin");
+        //        metadataMax.setAuthor("O. Rousselot");
+        //        metadataMax.setDescription("");
+        //        metadataMax.setVersion("1");
+        //        metadataMax.getInterfaceNames().add(IComputedAttribute.class.getName());
+        //        metadataMax.setPluginClassName(MaxDateComputePlugin.class.getName());
+        //        final PluginConfiguration confMax = new PluginConfiguration(metadataMax, "MaxDateValidationConf");
+        //        confMax.setParameters(parametersMax);
+        //        pluginService.savePluginConfiguration(confMax);
+        //
+        //        // create a pluginConfiguration with a label for value_l1
+        //        final List<PluginParameter> parametersInteger = PluginParametersFactory.build()
+        //                .addParameter("resultAttributeName", "values_l1_sum").getParameters();
+        //        final PluginMetaData metadataLong = new PluginMetaData();
+        //        metadataLong.setPluginId("LongSumComputePlugin");
+        //        metadataLong.setAuthor("O. Rousselot");
+        //        metadataLong.setDescription("");
+        //        metadataLong.setVersion("1");
+        //        metadataLong.getInterfaceNames().add(IComputedAttribute.class.getName());
+        //        metadataLong.setPluginClassName(LongSumComputePlugin.class.getName());
+        //        final PluginConfiguration confLong = new PluginConfiguration(metadataLong, "SumLongValidationConf");
+        //        confLong.setParameters(parametersInteger);
+        //        pluginService.savePluginConfiguration(confLong);
     }
 }

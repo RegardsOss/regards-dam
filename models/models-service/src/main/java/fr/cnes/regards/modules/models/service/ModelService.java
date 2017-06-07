@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -30,6 +30,8 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
 import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -222,7 +224,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         }
         if (!pModelAttribute.getId().equals(pAttributeId)) {
             throw new EntityInconsistentIdentifierException(pAttributeId, pModelAttribute.getId(),
-                    ModelAttrAssoc.class);
+                                                            ModelAttrAssoc.class);
         }
         if (!modelAttributeRepository.exists(pAttributeId)) {
             throw new EntityNotFoundException(pAttributeId, ModelAttrAssoc.class);
@@ -310,12 +312,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         final List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(pSourceModelId);
         if (modelAtts != null) {
             for (ModelAttrAssoc modelAtt : modelAtts) {
-                // Create model attributes to link base attributes
-                final ModelAttrAssoc duplicatedModelAtt = new ModelAttrAssoc();
-                duplicatedModelAtt.setMode(modelAtt.getMode());
-                duplicatedModelAtt.setAttribute(modelAtt.getAttribute());
-                duplicatedModelAtt.setModel(pTargetModel);
-                modelAttributeRepository.save(duplicatedModelAtt);
+                // Computed model associations are not duplicated
+                if (modelAtt.getMode() == ComputationMode.GIVEN) {
+                    // Create model attributes to link base attributes
+                    final ModelAttrAssoc duplicatedModelAtt = new ModelAttrAssoc();
+                    duplicatedModelAtt.setAttribute(modelAtt.getAttribute());
+                    duplicatedModelAtt.setModel(pTargetModel);
+                    modelAttributeRepository.save(duplicatedModelAtt);
+                }
             }
         }
         return pTargetModel;
@@ -333,8 +337,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public Model importModel(InputStream pInputStream) throws ModuleException {
+        List<PluginConfiguration> plgConfigurations = new ArrayList<>();
         // Import model from input stream
-        final List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(pInputStream);
+        final List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(pInputStream, plgConfigurations);
+        // Create/update PLuginConfigurations if the are some
+        if (!plgConfigurations.isEmpty()) {
+            this.eventualyCreatePluginConfigurations(plgConfigurations);
+        }
+
         // Create model once
         Model newModel = createModel(modelAtts.get(0).getModel()); // List of model attributes cannot be empty here
         // Create or control model attributes
@@ -342,6 +352,44 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Return created model
         LOGGER.info("New model \"{}\" with version \"{}\" created", newModel.getName(), newModel.getVersion());
         return newModel;
+    }
+
+    private void eventualyCreatePluginConfigurations(List<PluginConfiguration> plgConfigurations)
+            throws ModuleException {
+        for (PluginConfiguration plgConf : plgConfigurations) {
+            // If plugin configuration already exists
+            if (pluginService.existsByLabel(plgConf.getLabel())) {
+                // New one must be consistent with existing one
+                PluginConfiguration currentPlgConf = pluginService.getPluginConfigurationByLabel(plgConf.getLabel());
+                // Most of plugin configuration attributes come from plugin Metadata which have been retrieved from database
+                // so only plugin parameters should be consistently checked
+                for (PluginParameter param : plgConf.getParameters()) {
+                    String curValue = currentPlgConf.getParameterValue(param.getName());
+                    // Plugin parameter found
+                    if (curValue != null) {
+                        if (!Objects.equals(param.getValue(), curValue)) {
+                            String msg = String
+                                    .format("Compute plugin with label %s is inconsistent with existing one : "
+                                                    + "plugin parameter %s with value %s differs from existing "
+                                                    + "value (%s)", plgConf.getLabel(), param.getName(),
+                                            param.getValue(), curValue);
+                            LOGGER.error(msg);
+                            throw new ImportException(msg);
+                        }
+                    } else { // Plugin parameter not found
+                        String msg = String.format("Compute plugin with label %s is inconsistent with existing one : "
+                                                           + "no plugin parameter %s found", plgConf.getLabel(),
+                                                   param.getName());
+                        LOGGER.error(msg);
+                        throw new ImportException(msg);
+                    }
+                }
+                // No need to save new one
+            } else {
+                // Plugin is ok (new or consistent with previous one
+                pluginService.savePluginConfiguration(plgConf);
+            }
+        }
     }
 
     /**
@@ -387,12 +435,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                     modelAtt.setComputationConf(null);
                     break;
                 case COMPUTED:
-                    modelAtt.setComputationConf(pluginService
-                            .getPluginConfigurationByLabel(modelAtt.getComputationConf().getLabel()));
+                    modelAtt.setComputationConf(
+                            pluginService.getPluginConfigurationByLabel(modelAtt.getComputationConf().getLabel()));
                     break;
                 default:
-                    throw new IllegalArgumentException(modelAtt.getMode() + " is not a handled value of "
-                            + ComputationMode.class.getName() + " in " + getClass().getName());
+                    throw new IllegalArgumentException(
+                            modelAtt.getMode() + " is not a handled value of " + ComputationMode.class.getName()
+                                    + " in " + getClass().getName());
             }
             modelAttributeRepository.save(modelAtt);
 
@@ -401,8 +450,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         for (Map.Entry<String, List<AttributeModel>> entry : fragmentAttMap.entrySet()) {
             if (!containsExactly(entry.getKey(), entry.getValue())) {
-                String errorMessage = String.format("Imported fragment \"%s\" not compatible with existing one.",
-                                                    entry.getKey());
+                String errorMessage = String
+                        .format("Imported fragment \"%s\" not compatible with existing one.", entry.getKey());
                 LOGGER.error(errorMessage);
                 throw new ImportException(errorMessage);
             }
@@ -465,14 +514,15 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Check attributes
         for (AttributeModel attMod : pAttModels) {
             if (!pFragmentName.equals(attMod.getFragment().getName())) {
-                LOGGER.error(String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)",
-                                           attMod.getName(), pFragmentName, attMod.getFragment().getName()));
+                LOGGER.error(
+                        String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)", attMod.getName(),
+                                      pFragmentName, attMod.getFragment().getName()));
                 return false;
             }
 
             if (!existingAttModels.contains(attMod)) {
-                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(),
-                                           pFragmentName));
+                LOGGER.error(
+                        String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(), pFragmentName));
                 return false;
             }
         }

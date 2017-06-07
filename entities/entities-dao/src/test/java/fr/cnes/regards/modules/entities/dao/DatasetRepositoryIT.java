@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -24,7 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.gson.Gson;
-
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
@@ -165,7 +163,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         try {
             input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
 
-            return XmlImportHelper.importModel(input);
+            return XmlImportHelper.importModel(input, new ArrayList<>());
         } catch (IOException | ImportException e) {
             LOG.debug("import of model failed", e);
             Assert.fail();

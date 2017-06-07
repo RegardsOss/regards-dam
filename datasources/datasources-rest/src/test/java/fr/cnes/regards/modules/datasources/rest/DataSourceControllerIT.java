@@ -125,7 +125,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_110")
-    @Purpose("The system allows to define a datasource by the setting a SQL request")
+    @Purpose("The system allows to define a datasource by setting a SQL request")
     public void createDataSourceWithFromClauseTest() {
         final DataSource dataSource = createDataSourceWithFromClause();
 

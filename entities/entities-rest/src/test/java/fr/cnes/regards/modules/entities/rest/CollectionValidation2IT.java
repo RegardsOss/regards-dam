@@ -22,10 +22,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -70,6 +71,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
      */
     @Autowired
     private IAttributeModelService attributeModelService;
+
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
+    @Autowired
+    private Gson gson;
 
     /**
      * The XML file used as a model
@@ -208,7 +215,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
 
-        final String collectionStr = gsonBuilder.create().toJson(collection);
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
@@ -251,7 +259,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         expectations.add(MockMvcResultMatchers.status().is5xxServerError());
 
-        final String collectionStr = gsonBuilder.create().toJson(collection);
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
@@ -290,7 +299,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-        final String collectionStr = gsonBuilder.create().toJson(collection);
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
@@ -330,7 +340,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-        final String collectionStr = gsonBuilder.create().toJson(collection);
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
                 MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();

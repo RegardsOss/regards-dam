@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class ModelImportTest {
     private Iterable<ModelAttrAssoc> importModel(String pFilename) throws ModuleException {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
-            return XmlImportHelper.importModel(input);
+            return XmlImportHelper.importModel(input, new ArrayList<>());
         } catch (IOException e) {
             String errorMessage = "Cannot import minimal model";
             LOGGER.debug(errorMessage);
@@ -108,7 +109,7 @@ public class ModelImportTest {
                 Assert.assertTrue(attModel.isAlterable());
                 Assert.assertFalse(attModel.isOptional());
                 Assert.assertNull(attModel.getRestriction());
-                Assert.assertEquals(ComputationMode.COMPUTED, modAtt.getMode());
+                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
             }
 
             if ("CRS".equals(attModel.getName())) {
@@ -128,7 +129,7 @@ public class ModelImportTest {
                 Assert.assertTrue(er.getAcceptableValues().contains("Mars"));
                 Assert.assertTrue(er.getAcceptableValues().contains("Venus"));
 
-                Assert.assertEquals(ComputationMode.GIVEN, modAtt.getMode());
+                Assert.assertEquals(ComputationMode.COMPUTED, modAtt.getMode());
             }
 
         }

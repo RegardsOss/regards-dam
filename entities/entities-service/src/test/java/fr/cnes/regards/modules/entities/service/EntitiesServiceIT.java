@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -22,16 +21,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin;
-import fr.cnes.regards.modules.entities.service.plugin.NonUsable;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -55,9 +48,6 @@ public class EntitiesServiceIT {
     private IModelService modelService;
 
     @Autowired
-    private IPluginService pluginService;
-
-    @Autowired
     private JWTService jwtService;
 
     @Autowired
@@ -71,10 +61,6 @@ public class EntitiesServiceIT {
 
     private Dataset dataset;
 
-    private PluginConfiguration confNonUsable;
-
-    private PluginConfiguration confMin;
-
     @Before
     public void init() throws ModuleException {
         datasetRepository.deleteAll();
@@ -83,35 +69,6 @@ public class EntitiesServiceIT {
 
         // first initialize the pluginConfiguration for the attributes
         jwtService.injectMockToken("PROJECT", "ADMIN");
-        pluginService.addPluginPackage(NonUsable.class.getPackage().getName());
-        // create a pluginConfiguration with a label for min
-        List<PluginParameter> parametersMin = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "minDate")
-                .addParameter("parameterAttributeName", "minDate").getParameters();
-        PluginMetaData metadataMin = new PluginMetaData();
-        metadataMin.setPluginId("MinDateComputePlugin");
-        metadataMin.setAuthor("toto");
-        metadataMin.setDescription("titi");
-        metadataMin.setVersion("tutu");
-        metadataMin.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadataMin.setPluginClassName(MinDateComputePlugin.class.getName());
-        confMin = new PluginConfiguration(metadataMin, "MinDateTestConf");
-        confMin.setParameters(parametersMin);
-        confMin = pluginService.savePluginConfiguration(confMin);
-        // create a pluginConfiguration with a label
-        List<PluginParameter> parametersNonUsable = PluginParametersFactory.build()
-                .addParameter("resultAttributeName", "maxDate")
-                .addParameter("parameterAttributeName", "maxDate").getParameters();
-        PluginMetaData metadataNonUsable = new PluginMetaData();
-        metadataNonUsable.setPluginId("NonUsable");
-        metadataNonUsable.setAuthor("toto");
-        metadataNonUsable.setDescription("titi");
-        metadataNonUsable.setVersion("tutu");
-        metadataNonUsable.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metadataNonUsable.setPluginClassName(NonUsable.class.getName());
-        confNonUsable = new PluginConfiguration(metadataNonUsable, "ConfFromNonUsablePlugin");
-        confNonUsable.setParameters(parametersNonUsable);
-        confNonUsable = pluginService.savePluginConfiguration(confNonUsable);
         // then import the model of dataset
         importModel(datasetModelFileName);
         // instantiate the dataset

@@ -8,13 +8,11 @@
 		<label>forTests</label>
 		<name>att_string</name>
 		<type>STRING</type>
-		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<attribute alterable="true" optional="false">
 		<label>forTests</label>
 		<name>att_boolean</name>
 		<type>BOOLEAN</type>
-		<computationMode>COMPUTED</computationMode>
 	</attribute>
 	<fragment>
 		<name>GEO</name>
@@ -30,7 +28,10 @@
 					<value>Venus</value>
 				</enumeration>
 			</restriction>
-			<computationMode>GIVEN</computationMode>
+			<computation>
+				<label>Toto</label>
+				<count/>
+			</computation>
 		</attribute>
 	</fragment>
 </model>
