@@ -16,18 +16,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
  * @author oroussel
  */
 public class FacetPage<T extends IIndexable> extends PageImpl<T> {
-
-    /**
-     * serialVersionUID field.
-     *
-     * @author CS
-     * @since 1.0-SNAPSHOT
-     */
-    private static final long serialVersionUID = 2759694831627379041L;
-
-    /**
-     * Facet map. key is attribute name and value is of type {@link IFacet}
-     */
     private Set<IFacet<?>> facets;
 
     public FacetPage(List<T> pContent, Set<IFacet<?>> pFacets, Pageable pPageable, long pTotal) {

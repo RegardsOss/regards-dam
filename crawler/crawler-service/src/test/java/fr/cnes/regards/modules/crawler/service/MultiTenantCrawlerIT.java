@@ -22,8 +22,8 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -84,10 +84,10 @@ public class MultiTenantCrawlerIT {
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
         if (esRepos.indexExists(TENANT1)) {
-            esRepos.deleteIndex(TENANT1);
+            esRepos.deleteAll(TENANT1);
         }
         if (esRepos.indexExists(TENANT2)) {
-            esRepos.deleteIndex(TENANT2);
+            esRepos.deleteAll(TENANT2);
         }
 
         tenantResolver.forceTenant(TENANT1);

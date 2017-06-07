@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.service.adapters.gson;
+package fr.cnes.regards.modules.entities.gson;
 
 import java.util.Iterator;
 
@@ -23,6 +23,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
  * @author Marc Sordi
  *
  */
+@Deprecated
 @SuppressWarnings("rawtypes")
 public class AttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
 

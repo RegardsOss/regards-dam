@@ -13,7 +13,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  * @author Marc Sordi
  *
  */
-@Event(target = Target.MICROSERVICE)
+@Event(target = Target.ALL)
 public class AttributeModelCreated extends AbstractAttributeModelEvent {
 
     public AttributeModelCreated() {

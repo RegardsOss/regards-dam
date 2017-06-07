@@ -1,10 +1,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,7 +18,7 @@ import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -50,9 +49,10 @@ public class GeometrySearchIT {
 
         // Index creation with geometry mapping
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
+            esRepos.deleteAll(TENANT);
+        } else {
+            esRepos.createIndex(TENANT);
         }
-        esRepos.createIndex(TENANT);
         esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
                 .toArray(length -> new String[length]));
 

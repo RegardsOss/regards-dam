@@ -46,10 +46,10 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
+import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -189,8 +189,9 @@ public class CrawlerServiceIT {
     }
 
     public void buildData1() throws ModuleException {
-        esRepos.deleteIndex(tenant);
-        if (!esRepos.indexExists(tenant)) {
+        if (esRepos.indexExists(tenant)) {
+            esRepos.deleteAll(tenant);
+        } else {
             esRepos.createIndex(tenant);
         }
 

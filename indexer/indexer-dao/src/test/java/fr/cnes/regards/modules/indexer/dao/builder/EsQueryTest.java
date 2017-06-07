@@ -2,9 +2,15 @@ package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
-import java.time.Month;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -14,7 +20,12 @@ import java.util.stream.Stream;
 import org.assertj.core.util.Maps;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +43,11 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.*;
+import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 public class EsQueryTest {
 
@@ -90,11 +105,12 @@ public class EsQueryTest {
     }
 
     private void createData() {
-        try {
-            repository.deleteIndex(INDEX);
-        } catch (IndexNotFoundException infe) {
+        if (repository.indexExists(INDEX)) {
+            repository.deleteAll(INDEX);
+        } else {
+            repository.createIndex(INDEX);
         }
-        repository.createIndex(INDEX);
+
         final String[] STRINGS = { "Le", "petit", "chat", "est", "mort", "de", "sa", "belle", "mort",
                 "ou écrasé on sait pas trop" };
         final String[] LOREM_IPSUM = { "Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
@@ -122,11 +138,11 @@ public class EsQueryTest {
     }
 
     private void createData2() {
-        try {
-            repository.deleteIndex(INDEX2);
-        } catch (IndexNotFoundException infe) {
+        if (repository.indexExists(INDEX2)) {
+            repository.deleteAll(INDEX2);
+        } else {
+            repository.createIndex(INDEX2);
         }
-        repository.createIndex(INDEX2);
         final String[] STRINGS = { "Le", "petit", "chat", "est", "mort", "de", "sa", "belle", "mort",
                 "ou écrasé on sait pas trop" };
         final String[] LOREM_IPSUM = { "Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",

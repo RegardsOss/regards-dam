@@ -45,7 +45,7 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugi
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
+import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -222,9 +222,10 @@ public class IngesterServiceIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepository.indexExists(TENANT)) {
-            esRepository.deleteIndex(TENANT);
+            esRepository.deleteAll(TENANT);
+        } else {
+            esRepository.createIndex(TENANT);
         }
-        esRepository.createIndex(TENANT);
 
         crawlerService.setConsumeOnlyMode(true);
         ingesterService.setConsumeOnlyMode(true);
@@ -250,7 +251,7 @@ public class IngesterServiceIT {
         modelService.createModel(dataModel);
 
         datasetModel = new Model();
-        datasetModel.setName("model_ds_1");
+        datasetModel.setName("model_ds_1" + System.currentTimeMillis());
         datasetModel.setType(EntityType.DATASET);
         datasetModel.setVersion("1");
         datasetModel.setDescription("Test dataset model");

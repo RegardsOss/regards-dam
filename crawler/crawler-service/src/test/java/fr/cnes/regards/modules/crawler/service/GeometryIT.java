@@ -1,9 +1,8 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
-
-import javax.annotation.PostConstruct;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -22,8 +21,8 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.domain.geometry.GeometryType;
+import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.entities.service.adapters.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -72,9 +71,10 @@ public class GeometryIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
+            esRepos.deleteAll(TENANT);
+        } else {
+            esRepos.createIndex(TENANT);
         }
-        esRepos.createIndex(TENANT);
         esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
                 .toArray(length -> new String[length]));
 

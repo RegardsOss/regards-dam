@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.service.adapters.gson;
+package fr.cnes.regards.modules.entities.gson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +13,7 @@ import org.assertj.core.util.Arrays;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
@@ -32,12 +36,17 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
  *
  * @author Marc Sordi
  */
-public class AttributeSerializationTest {
+public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(AttributeSerializationTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultitenantPolymorphicTypeAdapterFactoryTest.class);
+
+    /**
+     * Tenant
+     */
+    private static final String TENANT = "tenant";
 
     /**
      * "description" attribute
@@ -72,7 +81,7 @@ public class AttributeSerializationTest {
     /**
      * Polymorphic factory
      */
-    private AttributeAdapterFactory factory;
+    private MultitenantFlattenedAttributeAdapterFactory factory;
 
     /**
      * Gson instance
@@ -80,19 +89,42 @@ public class AttributeSerializationTest {
     private Gson gson;
 
     /**
+     * {@link ISubscriber} service
+     */
+    private ISubscriber mockSubscriber;
+
+    /**
+     * {@link ITenantResolver}
+     */
+    private ITenantResolver mockTenantResolver;
+
+    /**
+     * {@link IRuntimeTenantResolver}
+     */
+    private IRuntimeTenantResolver mockRuntimeTenantResolver;
+
+    /**
      * Init GSON context
      */
     @Before
     public void initGson() {
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-        factory = new AttributeAdapterFactory();
 
+        mockSubscriber = Mockito.mock(ISubscriber.class);
+        mockTenantResolver = Mockito.mock(ITenantResolver.class);
+        mockRuntimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
+        Mockito.when(mockRuntimeTenantResolver.getTenant()).thenReturn(TENANT);
+
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+
+        gsonBuilder.registerTypeAdapterFactory(new TestEntityAdapterFactory());
+
+        factory = new MultitenantFlattenedAttributeAdapterFactory(mockRuntimeTenantResolver);
         // Register sub type(s)
-        factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
-        factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
-        factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
-        factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
-        factory.registerSubtype(StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
+        factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
+        factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
+        factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
+        factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
+        factory.registerSubtype(TENANT, StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
         gsonBuilder.registerTypeAdapterFactory(factory);
         gsonBuilder.registerTypeAdapter(LocalDateTime.class, new OffsetDateTimeAdapter().nullSafe());
@@ -104,7 +136,7 @@ public class AttributeSerializationTest {
      */
     @Test
     public void onlyRootAttribute() {
-        Car car = getCarWithRootAttribute();
+        final Car car = getCarWithRootAttribute();
 
         final String jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
@@ -118,7 +150,7 @@ public class AttributeSerializationTest {
      */
     @Test
     public void addAttributeAtRuntime() {
-        Car car = getCarWithRootAttribute();
+        final Car car = getCarWithRootAttribute();
 
         String jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
@@ -131,12 +163,12 @@ public class AttributeSerializationTest {
 
         try {
             gson.toJson(car);
-        } catch (JsonParseException e) {
+        } catch (final JsonParseException e) {
             LOGGER.error("New attribute not registered");
         }
 
         // Registering new attribute
-        factory.registerSubtype(BooleanAttribute.class, DISCRIMINATOR_RUNNABLE);
+        factory.registerSubtype(TENANT, BooleanAttribute.class, DISCRIMINATOR_RUNNABLE);
 
         jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
@@ -150,21 +182,21 @@ public class AttributeSerializationTest {
      */
     @Test
     public void nestedAttributes() {
-        Car car = getCarWithRootAttribute();
+        final Car car = getCarWithRootAttribute();
         addNestedAttributes(car);
 
         final String jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        final Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
         Assert.assertEquals(2, attributes.size());
 
-        List<String> expectedRootAttributes = new ArrayList<>();
+        final List<String> expectedRootAttributes = new ArrayList<>();
         expectedRootAttributes.add(DISCRIMINATOR_DESCRIPTION);
         expectedRootAttributes.add(DISCRIMINATOR_GEO);
 
-        for (AbstractAttribute<?> att : attributes) {
+        for (final AbstractAttribute<?> att : attributes) {
             Assert.assertTrue(expectedRootAttributes.contains(att.getName()));
 
             if (DISCRIMINATOR_DESCRIPTION.equals(att.getName())) {
@@ -173,7 +205,6 @@ public class AttributeSerializationTest {
 
             if (DISCRIMINATOR_GEO.equals(att.getName())) {
                 Assert.assertTrue(att instanceof ObjectAttribute);
-
             }
         }
     }
@@ -183,7 +214,7 @@ public class AttributeSerializationTest {
      */
     @Test
     public void conflictAttributes() {
-        Car car = getCarWithRootAttribute();
+        final Car car = getCarWithRootAttribute();
         addNestedAttributes(car);
         addConflictAttributes(car);
 
@@ -191,17 +222,17 @@ public class AttributeSerializationTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        final Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
 
         final int expectedSize = 3;
         Assert.assertEquals(expectedSize, attributes.size());
 
-        List<String> expectedRootAttributes = new ArrayList<>();
+        final List<String> expectedRootAttributes = new ArrayList<>();
         expectedRootAttributes.add(DISCRIMINATOR_DESCRIPTION);
         expectedRootAttributes.add(DISCRIMINATOR_GEO);
         expectedRootAttributes.add(DISCRIMINATOR_ORG);
 
-        for (AbstractAttribute<?> att : attributes) {
+        for (final AbstractAttribute<?> att : attributes) {
             Assert.assertTrue(expectedRootAttributes.contains(att.getName()));
 
             if (DISCRIMINATOR_DESCRIPTION.equals(att.getName())) {
@@ -210,9 +241,9 @@ public class AttributeSerializationTest {
 
             if (DISCRIMINATOR_ORG.equals(att.getName())) {
                 Assert.assertTrue(att instanceof ObjectAttribute);
-                ObjectAttribute geo = (ObjectAttribute) att;
+                final ObjectAttribute geo = (ObjectAttribute) att;
 
-                for (AbstractAttribute<?> nested : geo.getValue()) {
+                for (final AbstractAttribute<?> nested : geo.getValue()) {
                     if (DISCRIMINATOR_DESCRIPTION.equals(nested.getName())) {
                         Assert.assertTrue(nested instanceof StringArrayAttribute);
                     }
@@ -226,11 +257,11 @@ public class AttributeSerializationTest {
      * @return {@link Car}
      */
     private Car getCarWithRootAttribute() {
-        Car car = new Car();
+        final Car car = new Car();
 
-        Set<AbstractAttribute<?>> attributes = new HashSet<>();
+        final Set<AbstractAttribute<?>> attributes = new HashSet<>();
 
-        StringAttribute description = new StringAttribute();
+        final StringAttribute description = new StringAttribute();
         description.setName(DISCRIMINATOR_DESCRIPTION);
         description.setValue("test description");
         attributes.add(description);
@@ -240,30 +271,32 @@ public class AttributeSerializationTest {
     }
 
     /**
-     * @param pCar {@link Car}
+     * @param pCar
+     *            {@link Car}
      */
-    private void addRuntimeRootAttribute(Car pCar) {
+    private void addRuntimeRootAttribute(final Car pCar) {
 
-        BooleanAttribute runnable = new BooleanAttribute();
+        final BooleanAttribute runnable = new BooleanAttribute();
         runnable.setName(DISCRIMINATOR_RUNNABLE);
         runnable.setValue(true);
         pCar.getProperties().add(runnable);
     }
 
     /**
-     * @param pCar {@link Car} with nested attributes
+     * @param pCar
+     *            {@link Car} with nested attributes
      */
-    private void addNestedAttributes(Car pCar) {
+    private void addNestedAttributes(final Car pCar) {
 
         // Namespace or fragment name
-        ObjectAttribute geo = new ObjectAttribute();
+        final ObjectAttribute geo = new ObjectAttribute();
         geo.setName(DISCRIMINATOR_GEO);
 
-        StringAttribute crs = new StringAttribute();
+        final StringAttribute crs = new StringAttribute();
         crs.setName(DISCRIMINATOR_CRS);
         crs.setValue("WGS84");
 
-        Set<AbstractAttribute<?>> atts = new HashSet<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(crs);
         geo.setValue(atts);
 
@@ -271,21 +304,23 @@ public class AttributeSerializationTest {
     }
 
     /**
-     * @param pCar {@link Car} with conflicting attributes
+     * @param pCar
+     *            {@link Car} with conflicting attributes
      */
-    private void addConflictAttributes(Car pCar) {
+    private void addConflictAttributes(final Car pCar) {
         // Namespace or fragment name
-        ObjectAttribute org = new ObjectAttribute();
+        final ObjectAttribute org = new ObjectAttribute();
         org.setName(DISCRIMINATOR_ORG);
 
-        StringArrayAttribute description = new StringArrayAttribute();
+        final StringArrayAttribute description = new StringArrayAttribute();
         description.setName(DISCRIMINATOR_DESCRIPTION);
         description.setValue(Arrays.array("desc1", "desc2"));
 
-        Set<AbstractAttribute<?>> atts = new HashSet<>();
+        final Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(description);
         org.setValue(atts);
 
         pCar.getProperties().add(org);
     }
+
 }
