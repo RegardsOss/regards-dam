@@ -46,7 +46,6 @@ public class ComputedAttributeValidatorTest {
         metaData.getInterfaceNames().add(IComputedAttribute.class.getName());
         metaData.setPluginClassName("toto");
         PluginConfiguration conf = new PluginConfiguration(metaData, "testConf");
-        invalidAssoc.setMode(ComputationMode.COMPUTED);
         invalidAssoc.setComputationConf(conf);
         final Set<ConstraintViolation<ModelAttrAssoc>> modelAttrAssocConstraintViolation = validator
                 .validate(invalidAssoc);

@@ -85,33 +85,6 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
     protected abstract String buildUrl();
 
     /**
-     * Initialize the {@link ComboPooledDataSource}
-     *
-     * @param pUser
-     *            The user to used for the database connection
-     * @param pPassword
-     *            The user's password to used for the database connection
-     * @param pMaxPoolSize
-     *            Maximum number of Connections a pool will maintain at any given time.
-     * @param pMinPoolSize
-     *            Minimum number of Connections a pool will maintain at any given time.
-     */
-    protected void createPoolConnection(String pUser, String pPassword, Integer pMaxPoolSize, Integer pMinPoolSize) {
-        pooledDataSource = new ComboPooledDataSource();
-        pooledDataSource.setJdbcUrl(buildUrl());
-        pooledDataSource.setUser(pUser);
-        pooledDataSource.setPassword(pPassword);
-        pooledDataSource.setMaxPoolSize(pMaxPoolSize);
-        pooledDataSource.setMinPoolSize(pMinPoolSize);
-
-        try {
-            pooledDataSource.setDriverClass(getJdbcDriver());
-        } catch (PropertyVetoException e) {
-            LOG.error(e.getMessage(), e);
-        }
-    }
-
-    /**
      * Test the connection to the database
      *
      * @return true if the connection is active
@@ -132,8 +105,38 @@ public abstract class AbstractDataSourceConnection implements IDBConnectionPlugi
         return isConnected;
     }
 
-    /* (non-Javadoc)
-     * @see fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin#closeConnection()
+    /**
+     * Initialize the {@link ComboPooledDataSource}
+     *
+     * @param pUser
+     *            The user to used for the database connection
+     * @param pPassword
+     *            The user's password to used for the database connection
+     * @param pMaxPoolSize
+     *            Maximum number of Connections a pool will maintain at any given time.
+     * @param pMinPoolSize
+     *            Minimum number of Connections a pool will maintain at any given time.
+     */
+    protected void createPoolConnection(String pUser, String pPassword, Integer pMaxPoolSize, Integer pMinPoolSize) {
+        String url = buildUrl();
+        LOG.info("Create data source pool (url : {})", url);
+        pooledDataSource = new ComboPooledDataSource();
+        pooledDataSource.setJdbcUrl(url);
+        pooledDataSource.setUser(pUser);
+        pooledDataSource.setPassword(pPassword);
+        pooledDataSource.setMaxPoolSize(pMaxPoolSize);
+        pooledDataSource.setMinPoolSize(pMinPoolSize);
+
+        try {
+            pooledDataSource.setDriverClass(getJdbcDriver());
+        } catch (PropertyVetoException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
+
+
+    /**
+     * Destroy the {@link ComboPooledDataSource}
      */
     @Override
     public void closeConnection() {

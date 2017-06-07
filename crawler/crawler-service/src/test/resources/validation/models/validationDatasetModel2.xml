@@ -9,7 +9,10 @@
         <label>count label</label>
         <name>count</name>
         <type>LONG</type>
-        <computationMode>COMPUTED</computationMode>
-        <configurationLabel>CountValidationConf</configurationLabel>
+
+        <computation>
+            <label>CountValidationConf</label>
+            <count/>
+        </computation>
     </attribute>
 </model>

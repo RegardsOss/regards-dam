@@ -91,7 +91,6 @@ public class DBConnectionService implements IDBConnectionService {
         Boolean result = plg.testConnection();
         // Remove plugin instance from cache after closing connection
         if (!result) {
-            plg.closeConnection();
             pluginService.cleanPluginCache(pConfigurationId);
         }
         return result;

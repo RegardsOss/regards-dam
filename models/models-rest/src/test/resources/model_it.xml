@@ -8,7 +8,6 @@
 		<label>forTests</label>
 		<name>att_string</name>
 		<type>STRING</type>
-		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<fragment>
 		<name>GEO</name>
@@ -24,7 +23,6 @@
 					<value>Venus</value>
 				</enumeration>
 			</restriction>
-			<computationMode>GIVEN</computationMode>
 		</attribute>
 	</fragment>
 	<fragment>
@@ -33,12 +31,14 @@
 		<attribute alterable="true" optional="true">
 			<label>forTests</label>
 			<name>Phone</name>
-			<type>STRING</type>
-			<restriction>
-				<pattern>[0-9 ]{10}</pattern>
-			</restriction>
-			<computationMode>COMPUTED</computationMode>
-			<configurationLabel>ContactPluginConfTest</configurationLabel>
+			<type>LONG</type>
+			<!--<restriction>-->
+				<!--<pattern>[0-9 ]{10}</pattern>-->
+			<!--</restriction>-->
+			<computation>
+				<label>ContactPluginConfTest</label>
+				<count/>
+			</computation>
 		</attribute>
 	</fragment>
 </model>

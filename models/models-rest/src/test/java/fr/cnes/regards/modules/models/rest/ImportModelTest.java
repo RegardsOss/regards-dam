@@ -18,15 +18,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
-import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -94,18 +91,6 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_MOD_050")
     @Purpose("Import model - Allows to share model or add predefined model ")
     public void importSingleModel() throws ModuleException {
-
-        PluginMetaData metaData = new PluginMetaData();
-        metaData.setPluginId("tata");
-        metaData.setAuthor("toto");
-        metaData.setDescription("titi");
-        metaData.setVersion("tutu");
-        metaData.getInterfaceNames().add(IComputedAttribute.class.getName());
-        metaData.setPluginClassName(TestComputedAttribute.class.getName());
-        PluginConfiguration conf = new PluginConfiguration(metaData, "ContactPluginConfTest");
-        pluginService.addPluginPackage(TestComputedAttribute.class.getPackage().getName());
-        pluginService.addPluginPackage(IComputedAttribute.class.getPackage().getName());
-        conf = pluginService.savePluginConfiguration(conf);
 
         importModel("model_it.xml");
 
