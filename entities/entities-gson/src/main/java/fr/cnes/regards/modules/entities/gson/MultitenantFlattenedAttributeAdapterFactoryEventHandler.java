@@ -1,10 +1,12 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.service.adapters.gson;
+package fr.cnes.regards.modules.entities.gson;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -13,15 +15,13 @@ import org.springframework.stereotype.Component;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
-import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
 import fr.cnes.regards.modules.models.domain.event.FragmentDeletedEvent;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  * Handler to initialize subTypes for MultitenantFlattenedAttributeAdapterFactory after ApplicationReadyEvent sent.
@@ -31,6 +31,12 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 @Component
 public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         implements ApplicationListener<ApplicationReadyEvent> {
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(MultitenantFlattenedAttributeAdapterFactoryEventHandler.class);
 
     /**
      * AMQ Subscriber
@@ -45,16 +51,10 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
     private ITenantResolver tenantResolver;
 
     /**
-     * Runtime tenant resolver
+     * Helper class to initialize factory based on stored {@link AttributeModel}
      */
     @Autowired
-    private IRuntimeTenantResolver runtimeTenantResolver;
-
-    /**
-     * AttributeModel service to retrieve AttributeModels entities.
-     */
-    @Autowired
-    private IAttributeModelService attributeModelService;
+    private IAttributeHelper attributeHelper;
 
     /**
      * Factory to work with
@@ -69,10 +69,10 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         subscriber.subscribeTo(FragmentDeletedEvent.class, new UnregisterFragmentHandler());
         // Retrieve all tenants
         for (final String tenant : tenantResolver.getAllActiveTenants()) {
-            // Set thread tenant to route database retrieval
-            runtimeTenantResolver.forceTenant(tenant);
             // Register for tenant
-            final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+            final List<AttributeModel> atts = attributeHelper.getAllAttributes(tenant);
+            LOGGER.debug("Registering allready configured attributes and fragments");
+            // Use factory algorithm
             factory.registerAttributes(tenant, atts);
         }
     }
@@ -87,9 +87,14 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
         @Override
         public void handle(final TenantWrapper<AttributeModelCreated> pWrapper) {
             final AttributeModelCreated amc = pWrapper.getContent();
-            String tenant=pWrapper.getTenant();
-            runtimeTenantResolver.forceTenant(tenant);
-            AttributeModel attributeModel=attributeModelService.findByNameAndFragmentName(amc.getAttributeName(), amc.getFragmentName());
+
+            String tenant = pWrapper.getTenant();
+            Fragment fragment = new Fragment();
+            fragment.setName(amc.getFragmentName());
+            AttributeModel attributeModel = AttributeModelBuilder
+                    .build(amc.getAttributeName(), amc.getAttributeType(), null).fragment(fragment).get();
+
+            // Use factory algorithm
             factory.registerAttribute(tenant, attributeModel);
         }
     }
@@ -103,22 +108,37 @@ public class MultitenantFlattenedAttributeAdapterFactoryEventHandler
 
         @Override
         public void handle(final TenantWrapper<AttributeModelDeleted> pWrapper) {
-            final AttributeModelDeleted amd = pWrapper.getContent();
-            if(amd.getFragmentName().equals(Fragment.getDefaultName())) {
-                factory.unregisterSubtype(pWrapper.getTenant(), factory.getClassByType(amd.getAttributeType()), amd.getAttributeName(), null);
-            } else {
-                factory.unregisterSubtype(pWrapper.getTenant(), factory.getClassByType(amd.getAttributeType()), amd.getAttributeName(), amd.getFragmentName());
-            }
+            AttributeModelDeleted amd = pWrapper.getContent();
+
+            String tenant = pWrapper.getTenant();
+            Fragment fragment = new Fragment();
+            fragment.setName(amd.getFragmentName());
+            AttributeModel attributeModel = AttributeModelBuilder
+                    .build(amd.getAttributeName(), amd.getAttributeType(), null).fragment(fragment).get();
+
+            // Use factory algorithm
+            factory.unregisterAttribute(tenant, attributeModel);
         }
     }
 
+    /**
+     * Handle {@link Fragment} deletion
+     *
+     * @author Marc Sordi
+     *
+     */
     private class UnregisterFragmentHandler implements IHandler<FragmentDeletedEvent> {
 
         @Override
         public void handle(final TenantWrapper<FragmentDeletedEvent> pWrapper) {
-            String tenant=pWrapper.getTenant();
+            String tenant = pWrapper.getTenant();
             FragmentDeletedEvent fragmentDeleted = pWrapper.getContent();
-            factory.unregisterSubtype(tenant, ObjectAttribute.class, fragmentDeleted.getFragmentName());
+
+            Fragment fragment = new Fragment();
+            fragment.setName(fragmentDeleted.getFragmentName());
+
+            // Use factory algorithm
+            factory.unregisterFragment(tenant, fragment);
         }
     }
 
