@@ -25,6 +25,7 @@
 		<module>entities-rest</module>
 		<module>entities-client</module>
 		<module>entities-plugin</module>
+		<module>entities-gson</module>
 	</modules>
 
 	<dependencyManagement>

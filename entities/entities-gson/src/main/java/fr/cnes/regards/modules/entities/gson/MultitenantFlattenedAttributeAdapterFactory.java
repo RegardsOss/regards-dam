@@ -1,14 +1,12 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.service.adapters.gson;
+package fr.cnes.regards.modules.entities.gson;
 
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +16,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import fr.cnes.regards.framework.amqp.ISubscriber;
-import fr.cnes.regards.framework.amqp.domain.IHandler;
-import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
-import fr.cnes.regards.framework.gson.adapters.PolymorphicTypeAdapterFactory;
+import fr.cnes.regards.framework.gson.adapters.MultitenantPolymorphicTypeAdapterFactory;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactoryBean;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
@@ -33,27 +30,31 @@ import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongArrayAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.UrlAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
-import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 
 /**
  * Manage dynamic attribute (de)serialization
  *
  * @author Marc Sordi
  */
-public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttribute> {
+@SuppressWarnings("rawtypes")
+@GsonTypeAdapterFactoryBean
+public class MultitenantFlattenedAttributeAdapterFactory
+        extends MultitenantPolymorphicTypeAdapterFactory<AbstractAttribute> {
 
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(FlattenedAttributeAdapterFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultitenantFlattenedAttributeAdapterFactory.class);
 
     /**
      * Discriminator field
@@ -75,71 +76,92 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      */
     private static final String REGEXP_ESCAPE = "\\";
 
-    /**
-     * {@link AttributeModel} service
-     */
-    private final IAttributeModelService attributeModelService;
-
-    /**
-     * Subscriber listening to model change events to update attribute mapping dynamically
-     */
-    private final ISubscriber subscriber;
-
-    public FlattenedAttributeAdapterFactory(final IAttributeModelService pAttributeModelService,
-            final ISubscriber pSubscriber) {
-        super(AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
-        attributeModelService = pAttributeModelService;
-        subscriber = pSubscriber;
+    public MultitenantFlattenedAttributeAdapterFactory(final IRuntimeTenantResolver pRuntimeTenantResolver) {
+        super(pRuntimeTenantResolver, AbstractAttribute.class, DISCRIMINATOR_FIELD_NAME);
+        runtimeTenantResolver = pRuntimeTenantResolver;
     }
 
-    public void registerSubtype(final Class<?> pType, final String pDiscriminatorFieldValue, final String pNamespace) {
-        if (pNamespace == null) {
-            registerSubtype(pType, pDiscriminatorFieldValue);
-        } else {
-            registerSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
-        }
-    }
-
-    public void unregisterSubtype(final Class<?> pType, final String pDiscriminatorFieldValue,
+    public void registerSubtype(final String pTenant, final Class<?> pType, final String pDiscriminatorFieldValue,
             final String pNamespace) {
         if (pNamespace == null) {
-            unregisterSubtype(pType, pDiscriminatorFieldValue);
+            registerSubtype(pTenant, pType, pDiscriminatorFieldValue);
         } else {
-            unregisterSubtype(pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+            registerSubtype(pTenant, pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
         }
     }
 
-    @PostConstruct
-    private void initSubtypes() {
-        subscriber.subscribeTo(AttributeModelCreated.class, new RegisterHandler());
-        subscriber.subscribeTo(AttributeModelDeleted.class, new UnregisterHandler());
-        registerAttributes();
-    }
-
-    public void refresh() {
-        registerAttributes();
+    public void unregisterSubtype(final String pTenant, final Class<?> pType, final String pDiscriminatorFieldValue,
+            final String pNamespace) {
+        if (pNamespace == null) {
+            unregisterSubtype(pTenant, pType, pDiscriminatorFieldValue);
+        } else {
+            unregisterSubtype(pTenant, pType, pNamespace.concat(NS_SEPARATOR).concat(pDiscriminatorFieldValue));
+        }
     }
 
     /**
-     * Dynamically register configured {@link AttributeModel}"
+     * Dynamically register configured {@link AttributeModel} for a particular tenant
+     *
+     * @param pTenant
+     *            tenant
      */
-    protected void registerAttributes() {
-        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
-        if (atts != null) {
-            for (final AttributeModel att : atts) {
-
-                // Define namespace if required
-                String namespace = null;
-                // Register namespace as an object wrapper
-                if (!att.getFragment().isDefaultFragment()) {
-                    namespace = att.getFragment().getName();
-                    registerSubtype(ObjectAttribute.class, namespace);
-                }
-
-                // Register attribute
-                registerSubtype(getClassByType(att.getType()), att.getName(), namespace);
+    public void registerAttributes(final String pTenant, final List<AttributeModel> pAttributes) {
+        if (pAttributes != null) {
+            for (AttributeModel att : pAttributes) {
+                registerAttribute(pTenant, att);
             }
         }
+    }
+
+    /**
+     * Register attribute
+     * @param pTenant tenant
+     * @param att the attribute containing its fragment with its name and its type and name.
+     */
+    public void registerAttribute(String pTenant, AttributeModel att) {
+        // Define namespace if required
+        String namespace = null;
+        // Register namespace as an object wrapper
+        if (!att.getFragment().isDefaultFragment()) {
+            namespace = att.getFragment().getName();
+            registerSubtype(pTenant, ObjectAttribute.class, namespace);
+        }
+
+        // Register attribute
+        registerSubtype(pTenant, getClassByType(att.getType()), att.getName(), namespace);
+    }
+
+    /**
+     * Unregister attribute
+     * @param pTenant tenant
+     * @param att the attribute containing its fragment with its name and its type and name.
+     */
+    public void unregisterAttribute(String pTenant, AttributeModel att) {
+        // Define namespace if required
+        String namespace = null;
+        // Register namespace as an object wrapper
+        if (!att.getFragment().isDefaultFragment()) {
+            namespace = att.getFragment().getName();
+        }
+
+        // Unregister attribute
+        unregisterSubtype(pTenant, getClassByType(att.getType()), att.getName(), namespace);
+    }
+
+    /**
+     * Unregister fragment mapping
+     * @param pTenant tenant
+     * @param fragment the fragment containing its name
+     */
+    public void unregisterFragment(String pTenant, Fragment fragment) {
+        if (!fragment.isDefaultFragment()) {
+            // Unregister fragment
+            unregisterSubtype(pTenant, ObjectAttribute.class, fragment.getName());
+        }
+    }
+
+    public void refresh(final String pTenant, final List<AttributeModel> pAttributes) {
+        registerAttributes(pTenant, pAttributes);
     }
 
     /**
@@ -147,7 +169,7 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
      *            {@link AttributeType}
      * @return corresponding {@link Serializable} class
      */
-    protected Class<?> getClassByType(final AttributeType pAttributeType) { // NOSONAR
+    public Class<?> getClassByType(final AttributeType pAttributeType) { // NOSONAR
         // Retrieve matching attribute class
         Class<?> matchingClass;
         switch (pAttributeType) {
@@ -189,6 +211,15 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
                 break;
             case URL:
                 matchingClass = UrlAttribute.class;
+                break;
+            case LONG:
+                matchingClass = LongAttribute.class;
+                break;
+            case LONG_ARRAY:
+                matchingClass = LongArrayAttribute.class;
+                break;
+            case LONG_INTERVAL:
+                matchingClass = LongIntervalAttribute.class;
                 break;
             default:
                 final String errorMessage = String.format("Unexpected attribute type \"%s\".", pAttributeType);
@@ -435,33 +466,5 @@ public class FlattenedAttributeAdapterFactory extends PolymorphicTypeAdapterFact
                                                   pJsonElement.toString(), pFieldName);
         LOGGER.error(errorMessage);
         return new IllegalArgumentException(errorMessage);
-    }
-
-    /**
-     * Handle {@link AttributeModel} creation
-     *
-     * @author Marc Sordi
-     */
-    private class RegisterHandler implements IHandler<AttributeModelCreated> {
-
-        @Override
-        public void handle(final TenantWrapper<AttributeModelCreated> pT) {
-            final AttributeModelCreated amc = pT.getContent();
-            registerSubtype(getClassByType(amc.getAttributeType()), amc.getAttributeName(), amc.getFragmentName());
-        }
-    }
-
-    /**
-     * Handle {@link AttributeModel} deletion
-     *
-     * @author Marc Sordi
-     */
-    private class UnregisterHandler implements IHandler<AttributeModelDeleted> {
-
-        @Override
-        public void handle(final TenantWrapper<AttributeModelDeleted> pT) {
-            final AttributeModelDeleted amd = pT.getContent();
-            unregisterSubtype(getClassByType(amd.getAttributeType()), amd.getAttributeName(), amd.getFragmentName());
-        }
     }
 }

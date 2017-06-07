@@ -1,7 +1,7 @@
 /*
  * LICENSE_PLACEHOLDER
  */
-package fr.cnes.regards.modules.entities.service.adapters.gson;
+package fr.cnes.regards.modules.entities.gson;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,7 +13,6 @@ import org.assertj.core.util.Arrays;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,34 +20,25 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 
-import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.entities.gson.AttributeAdapterFactory;
 
 /**
  * Test attribute serialization
  *
  * @author Marc Sordi
  */
-public class MultitenantPolymorphicTypeAdapterFactoryTest {
+public class AttributeSerializationTest {
 
     /**
      * Class logger
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(MultitenantPolymorphicTypeAdapterFactoryTest.class);
-
-    /**
-     * Tenant
-     */
-    private static final String TENANT = "tenant";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttributeSerializationTest.class);
 
     /**
      * "description" attribute
@@ -83,7 +73,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     /**
      * Polymorphic factory
      */
-    private MultitenantFlattenedAttributeAdapterFactory factory;
+    private AttributeAdapterFactory factory;
 
     /**
      * Gson instance
@@ -91,48 +81,19 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     private Gson gson;
 
     /**
-     * {@link AttributeModel} service
-     */
-    private IAttributeModelService mockAttModelService;
-
-    /**
-     * {@link ISubscriber} service
-     */
-    private ISubscriber mockSubscriber;
-
-    /**
-     * {@link ITenantResolver}
-     */
-    private ITenantResolver mockTenantResolver;
-
-    /**
-     * {@link IRuntimeTenantResolver}
-     */
-    private IRuntimeTenantResolver mockRuntimeTenantResolver;
-
-    /**
      * Init GSON context
      */
     @Before
     public void initGson() {
-
-        mockAttModelService = Mockito.mock(IAttributeModelService.class);
-        mockSubscriber = Mockito.mock(ISubscriber.class);
-        mockTenantResolver = Mockito.mock(ITenantResolver.class);
-        mockRuntimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
-        Mockito.when(mockRuntimeTenantResolver.getTenant()).thenReturn(TENANT);
-
         final GsonBuilder gsonBuilder = new GsonBuilder();
+        factory = new AttributeAdapterFactory();
 
-        gsonBuilder.registerTypeAdapterFactory(new TestEntityAdapterFactory());
-
-        factory = new MultitenantFlattenedAttributeAdapterFactory(mockRuntimeTenantResolver);
         // Register sub type(s)
-        factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
-        factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
-        factory.registerSubtype(TENANT, StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
-        factory.registerSubtype(TENANT, ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
-        factory.registerSubtype(TENANT, StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
+        factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_DESCRIPTION);
+        factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_GEO); // geo namespace
+        factory.registerSubtype(StringAttribute.class, DISCRIMINATOR_CRS, DISCRIMINATOR_GEO);
+        factory.registerSubtype(ObjectAttribute.class, DISCRIMINATOR_ORG); // org namespace
+        factory.registerSubtype(StringArrayAttribute.class, DISCRIMINATOR_DESCRIPTION, DISCRIMINATOR_ORG);
 
         gsonBuilder.registerTypeAdapterFactory(factory);
         gsonBuilder.registerTypeAdapter(LocalDateTime.class, new OffsetDateTimeAdapter().nullSafe());
@@ -144,7 +105,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
      */
     @Test
     public void onlyRootAttribute() {
-        final Car car = getCarWithRootAttribute();
+        Car car = getCarWithRootAttribute();
 
         final String jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
@@ -158,7 +119,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
      */
     @Test
     public void addAttributeAtRuntime() {
-        final Car car = getCarWithRootAttribute();
+        Car car = getCarWithRootAttribute();
 
         String jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
@@ -171,12 +132,12 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
         try {
             gson.toJson(car);
-        } catch (final JsonParseException e) {
+        } catch (JsonParseException e) {
             LOGGER.error("New attribute not registered");
         }
 
         // Registering new attribute
-        factory.registerSubtype(TENANT, BooleanAttribute.class, DISCRIMINATOR_RUNNABLE);
+        factory.registerSubtype(BooleanAttribute.class, DISCRIMINATOR_RUNNABLE);
 
         jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
@@ -190,21 +151,21 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
      */
     @Test
     public void nestedAttributes() {
-        final Car car = getCarWithRootAttribute();
+        Car car = getCarWithRootAttribute();
         addNestedAttributes(car);
 
         final String jsonCar = gson.toJson(car);
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        final Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
         Assert.assertEquals(2, attributes.size());
 
-        final List<String> expectedRootAttributes = new ArrayList<>();
+        List<String> expectedRootAttributes = new ArrayList<>();
         expectedRootAttributes.add(DISCRIMINATOR_DESCRIPTION);
         expectedRootAttributes.add(DISCRIMINATOR_GEO);
 
-        for (final AbstractAttribute<?> att : attributes) {
+        for (AbstractAttribute<?> att : attributes) {
             Assert.assertTrue(expectedRootAttributes.contains(att.getName()));
 
             if (DISCRIMINATOR_DESCRIPTION.equals(att.getName())) {
@@ -213,6 +174,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
             if (DISCRIMINATOR_GEO.equals(att.getName())) {
                 Assert.assertTrue(att instanceof ObjectAttribute);
+
             }
         }
     }
@@ -222,7 +184,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
      */
     @Test
     public void conflictAttributes() {
-        final Car car = getCarWithRootAttribute();
+        Car car = getCarWithRootAttribute();
         addNestedAttributes(car);
         addConflictAttributes(car);
 
@@ -230,17 +192,17 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         LOGGER.info(jsonCar);
         final Car parsedCar = gson.fromJson(jsonCar, Car.class);
 
-        final Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
+        Set<AbstractAttribute<?>> attributes = parsedCar.getProperties();
 
         final int expectedSize = 3;
         Assert.assertEquals(expectedSize, attributes.size());
 
-        final List<String> expectedRootAttributes = new ArrayList<>();
+        List<String> expectedRootAttributes = new ArrayList<>();
         expectedRootAttributes.add(DISCRIMINATOR_DESCRIPTION);
         expectedRootAttributes.add(DISCRIMINATOR_GEO);
         expectedRootAttributes.add(DISCRIMINATOR_ORG);
 
-        for (final AbstractAttribute<?> att : attributes) {
+        for (AbstractAttribute<?> att : attributes) {
             Assert.assertTrue(expectedRootAttributes.contains(att.getName()));
 
             if (DISCRIMINATOR_DESCRIPTION.equals(att.getName())) {
@@ -249,9 +211,9 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
 
             if (DISCRIMINATOR_ORG.equals(att.getName())) {
                 Assert.assertTrue(att instanceof ObjectAttribute);
-                final ObjectAttribute geo = (ObjectAttribute) att;
+                ObjectAttribute geo = (ObjectAttribute) att;
 
-                for (final AbstractAttribute<?> nested : geo.getValue()) {
+                for (AbstractAttribute<?> nested : geo.getValue()) {
                     if (DISCRIMINATOR_DESCRIPTION.equals(nested.getName())) {
                         Assert.assertTrue(nested instanceof StringArrayAttribute);
                     }
@@ -265,11 +227,11 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
      * @return {@link Car}
      */
     private Car getCarWithRootAttribute() {
-        final Car car = new Car();
+        Car car = new Car();
 
-        final Set<AbstractAttribute<?>> attributes = new HashSet<>();
+        Set<AbstractAttribute<?>> attributes = new HashSet<>();
 
-        final StringAttribute description = new StringAttribute();
+        StringAttribute description = new StringAttribute();
         description.setName(DISCRIMINATOR_DESCRIPTION);
         description.setValue("test description");
         attributes.add(description);
@@ -279,32 +241,30 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     }
 
     /**
-     * @param pCar
-     *            {@link Car}
+     * @param pCar {@link Car}
      */
-    private void addRuntimeRootAttribute(final Car pCar) {
+    private void addRuntimeRootAttribute(Car pCar) {
 
-        final BooleanAttribute runnable = new BooleanAttribute();
+        BooleanAttribute runnable = new BooleanAttribute();
         runnable.setName(DISCRIMINATOR_RUNNABLE);
         runnable.setValue(true);
         pCar.getProperties().add(runnable);
     }
 
     /**
-     * @param pCar
-     *            {@link Car} with nested attributes
+     * @param pCar {@link Car} with nested attributes
      */
-    private void addNestedAttributes(final Car pCar) {
+    private void addNestedAttributes(Car pCar) {
 
         // Namespace or fragment name
-        final ObjectAttribute geo = new ObjectAttribute();
+        ObjectAttribute geo = new ObjectAttribute();
         geo.setName(DISCRIMINATOR_GEO);
 
-        final StringAttribute crs = new StringAttribute();
+        StringAttribute crs = new StringAttribute();
         crs.setName(DISCRIMINATOR_CRS);
         crs.setValue("WGS84");
 
-        final Set<AbstractAttribute<?>> atts = new HashSet<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(crs);
         geo.setValue(atts);
 
@@ -312,23 +272,21 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
     }
 
     /**
-     * @param pCar
-     *            {@link Car} with conflicting attributes
+     * @param pCar {@link Car} with conflicting attributes
      */
-    private void addConflictAttributes(final Car pCar) {
+    private void addConflictAttributes(Car pCar) {
         // Namespace or fragment name
-        final ObjectAttribute org = new ObjectAttribute();
+        ObjectAttribute org = new ObjectAttribute();
         org.setName(DISCRIMINATOR_ORG);
 
-        final StringArrayAttribute description = new StringArrayAttribute();
+        StringArrayAttribute description = new StringArrayAttribute();
         description.setName(DISCRIMINATOR_DESCRIPTION);
         description.setValue(Arrays.array("desc1", "desc2"));
 
-        final Set<AbstractAttribute<?>> atts = new HashSet<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
         atts.add(description);
         org.setValue(atts);
 
         pCar.getProperties().add(org);
     }
-
 }
