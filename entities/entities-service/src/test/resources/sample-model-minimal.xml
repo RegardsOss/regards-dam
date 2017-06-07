@@ -13,7 +13,6 @@
 		<label>forTests</label>
 		<name>att_boolean</name>
 		<type>BOOLEAN</type>
-		<computationMode>GIVEN</computationMode>
 	</attribute>
 	<fragment>
 		<name>GEO</name>
@@ -41,7 +40,6 @@
 			<restriction>
 				<pattern>[0-9 ]{10}</pattern>
 			</restriction>
-			<computationMode>GIVEN</computationMode>
 		</attribute>
 	</fragment>
 </model>

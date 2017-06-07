@@ -255,7 +255,7 @@ public class DatasetServiceTest {
         try {
             input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
 
-            return XmlImportHelper.importModel(input);
+            return XmlImportHelper.importModel(input, new ArrayList<>());
         } catch (IOException | ImportException e) {
             LOG.debug("import of model failed", e);
             Assert.fail();

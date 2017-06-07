@@ -10,30 +10,38 @@
 		<name>START_DATE</name>
 		<description>date at which the acquisition of the data has started</description>
 		<type>DATE_ISO8601</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>MinDateTestConf</configurationLabel>
+		<computation>
+			<label>MinDateTestConf</label>
+			<min_compute parameterAttributeName="START_DATE"/>
+		</computation>
 	</attribute>
 	<attribute>
 		<label>forTests</label>
 		<name>STOP_DATE</name>
 		<description>date at which the acquisition of the data has ended</description>
 		<type>DATE_ISO8601</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>MaxDateTestConf</configurationLabel>
+		<computation>
+			<label>MaxDateTestConf</label>
+			<max_compute parameterAttributeName="STOP_DATE"/>
+		</computation>
 	</attribute>
 	<attribute>
 		<label>forTests</label>
 		<name>FILE_SIZE</name>
 		<description>file size</description>
 		<type>INTEGER</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>SumIntegerTestConf</configurationLabel>
+		<computation>
+			<label>SumIntegerTestConf</label>
+			<sum_compute parameterAttributeName="FILE_SIZE"/>
+		</computation>
 	</attribute>
 	<attribute>
 		<label>forTests</label>
 		<name>count</name>
 		<type>LONG</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>CountElementTestConf</configurationLabel>
+		<computation>
+			<label>CountElementTestConf</label>
+			<count/>
+		</computation>
 	</attribute>
 </model>

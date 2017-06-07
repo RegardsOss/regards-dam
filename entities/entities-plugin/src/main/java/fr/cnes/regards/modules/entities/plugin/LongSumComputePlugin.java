@@ -16,8 +16,8 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  * This Implementation of IComputedAttribute allows to compute the sum of {@link LongAttribute} according to a
@@ -38,7 +38,7 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
-    private IAttributeModelService attModelService;
+    private IAttributeModelRepository attModelRepos;
 
     @PluginParameter(name = "resultAttributeName",
             description = "Name of the attribute to compute (ie result attribute).")
@@ -63,7 +63,7 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
      */
     @PluginInit
     public void init() {
-        super.initAbstract(esRepo, attModelService, tenantResolver);
+        super.initAbstract(esRepo, attModelRepos, tenantResolver);
         super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
                    parameterAttributeFragmentName);
         super.result = 0L;

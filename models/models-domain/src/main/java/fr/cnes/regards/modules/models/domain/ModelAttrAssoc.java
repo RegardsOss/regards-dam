@@ -5,8 +5,6 @@ package fr.cnes.regards.modules.models.domain;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,6 +23,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.validation.ComputedAttribute;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 import fr.cnes.regards.modules.models.schema.Attribute;
+import fr.cnes.regards.modules.models.schema.Computation;
+import fr.cnes.regards.modules.models.schema.NoParamPluginType;
+import fr.cnes.regards.modules.models.schema.ParamPluginType;
 
 /**
  * Model - attribute association.</br>
@@ -58,14 +59,6 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     @NotNull
     private AttributeModel attribute;
 
-    /**
-     * Whether this attribute in computed or not
-     */
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private ComputationMode mode = ComputationMode.GIVEN;
-
     @OneToOne
     @JoinColumn(name = "compute_conf_id", foreignKey = @ForeignKey(name = "fk_plugin_id"))
     private PluginConfiguration computationConf;
@@ -91,7 +84,6 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         attribute = pAttributeModel;
         model = pModel;
         pos = pPosition;
-        mode = ComputationMode.GIVEN;
     }
 
     public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition) {// NOSONAR
@@ -185,19 +177,48 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     }
 
     public ComputationMode getMode() {
-        return mode;
-    }
-
-    public void setMode(ComputationMode pMode) {
-        mode = pMode;
+        return (computationConf == null) ? ComputationMode.GIVEN : ComputationMode.COMPUTED;
     }
 
     @Override
     public Attribute toXml() {
         final Attribute xmlAtt = attribute.toXml();
-        xmlAtt.setComputationMode(mode.toString());
         if (computationConf != null) {
-            xmlAtt.setConfigurationLabel(computationConf.getLabel());
+            Computation computation = new Computation();
+            computation.setLabel(computationConf.getLabel());
+            // Cyclic dependency between entities plugin and models-domain
+            // TODO : Find a good idea to avoid this shit
+            switch (computationConf.getPluginClassName()) {
+                case "fr.cnes.regards.modules.entities.plugin.CountPlugin":
+                    computation.setCount(new NoParamPluginType());
+                    break;
+                case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
+                case "fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin":
+                    ParamPluginType paramPluginType1 = new ParamPluginType();
+                    paramPluginType1.setParameterAttributeName(attribute.getName());
+                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
+                        paramPluginType1.setParameterAttributeFragmentName(attribute.getFragment().getName());
+                    }
+                    computation.setSumCompute(paramPluginType1);
+                    break;
+                case "fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin":
+                    ParamPluginType paramPluginType2 = new ParamPluginType();
+                    paramPluginType2.setParameterAttributeName(attribute.getName());
+                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
+                        paramPluginType2.setParameterAttributeFragmentName(attribute.getFragment().getName());
+                    }
+                    computation.setMinCompute(paramPluginType2);
+                    break;
+                case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
+                    ParamPluginType paramPluginType3 = new ParamPluginType();
+                    paramPluginType3.setParameterAttributeName(attribute.getName());
+                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
+                        paramPluginType3.setParameterAttributeFragmentName(attribute.getFragment().getName());
+                    }
+                    computation.setMaxCompute(paramPluginType3);
+                    break;
+            }
+            xmlAtt.setComputation(computation);
         }
         return xmlAtt;
     }
@@ -208,15 +229,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         final AttributeModel attModel = new AttributeModel();
         attModel.fromXml(pXmlElement);
         setAttribute(attModel);
-        // Manage computation mode
-        String computationModeString = pXmlElement.getComputationMode();
-        if (computationModeString != null) {
-            setMode(ComputationMode.valueOf(computationModeString));
-            if (computationModeString.equals(ComputationMode.COMPUTED.toString())) {
-                computationConf = new PluginConfiguration();
-                computationConf.setLabel(pXmlElement.getConfigurationLabel());
-            }
-        }
+
     }
 
     public PluginConfiguration getComputationConf() {

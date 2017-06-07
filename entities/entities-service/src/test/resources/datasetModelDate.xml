@@ -9,14 +9,18 @@
 		<label>forTests</label>
 		<name>minDate</name>
 		<type>DATE_ISO8601</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>MinDateTestConf</configurationLabel>
+		<computation>
+			<label>MinDateTestConf</label>
+			<min_compute parameterAttributeName="minDate"/>
+		</computation>
 	</attribute>
 	<attribute>
 		<label>forTests</label>
 		<name>maxDate</name>
 		<type>DATE_ISO8601</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>MaxDateTestConf</configurationLabel>
+		<computation>
+			<label>MaxDateTestConf</label>
+			<max_compute parameterAttributeName="maxDate"/>
+		</computation>
 	</attribute>
 </model>

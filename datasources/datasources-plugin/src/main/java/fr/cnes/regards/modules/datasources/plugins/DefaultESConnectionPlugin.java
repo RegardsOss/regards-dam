@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginDestroy;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
@@ -87,6 +88,7 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
     }
 
     @Override
+    @PluginDestroy
     public void closeConnection() {
         client.close();
     }
