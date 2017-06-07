@@ -189,8 +189,9 @@ public class CrawlerServiceIT {
     }
 
     public void buildData1() throws ModuleException {
-        esRepos.deleteIndex(tenant);
-        if (!esRepos.indexExists(tenant)) {
+        if (esRepos.indexExists(tenant)) {
+            esRepos.deleteAll(tenant);
+        } else {
             esRepos.createIndex(tenant);
         }
 

@@ -25,11 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import de.svenjacobs.loremipsum.LoremIpsum;
-import fr.cnes.regards.modules.indexer.dao.EsRepository;
-import fr.cnes.regards.modules.indexer.dao.FacetPage;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -277,9 +273,10 @@ public class EsRepositoryTest {
     public void testEmpty() {
         String index = "toto";
         if (repository.indexExists(index)) {
-            repository.deleteIndex(index);
+            repository.deleteAll(index);
+        } else {
+            repository.createIndex(index);
         }
-        repository.createIndex(index);
 
         Map<String, FacetType> facetMap = new HashMap<>();
         facetMap.put("titi", FacetType.DATE);

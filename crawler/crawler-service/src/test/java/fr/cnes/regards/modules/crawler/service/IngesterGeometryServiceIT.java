@@ -173,9 +173,10 @@ public class IngesterGeometryServiceIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepository.indexExists(TENANT)) {
-            esRepository.deleteIndex(TENANT);
+            esRepository.deleteAll(TENANT);
+        } else {
+            esRepository.createIndex(TENANT);
         }
-        esRepository.createIndex(TENANT);
         crawlerService.setConsumeOnlyMode(true);
         ingesterService.setConsumeOnlyMode(true);
 

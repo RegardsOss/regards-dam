@@ -145,6 +145,13 @@ public interface IEsRepository {
     boolean delete(String pIndex, String pType, String pId);
 
     /**
+     * Delete all documents from index
+     * @param index index
+     * @return number of documents deleted
+     */
+    long deleteAll(String index);
+
+    /**
      * Same as {@link #delete(String, String, String)} using docId and type of provided document
      *
      * @param pIndex index

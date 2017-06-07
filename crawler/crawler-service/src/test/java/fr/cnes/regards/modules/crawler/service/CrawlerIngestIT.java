@@ -174,9 +174,10 @@ public class CrawlerIngestIT {
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
+            esRepos.deleteAll(TENANT);
+        } else {
+            esRepos.createIndex(TENANT);
         }
-        esRepos.createIndex(TENANT);
         tenantResolver.forceTenant(TENANT);
 
         crawlerService.setConsumeOnlyMode(false);
@@ -203,7 +204,7 @@ public class CrawlerIngestIT {
         modelService.createModel(dataModel);
 
         datasetModel = new Model();
-        datasetModel.setName("model_ds_1");
+        datasetModel.setName("model_ds_1" + System.currentTimeMillis());
         datasetModel.setType(EntityType.DATASET);
         datasetModel.setVersion("1");
         datasetModel.setDescription("Test dataset model");
