@@ -112,10 +112,6 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
                 LOG.debug("No column mapped to {}", extractColumnName);
             }
         }
-        //        for (Entry<String, Column> columnType : columnsType.entrySet()) {
-        //            LOG.debug("Column name {} mapped to {}", columnType.getKey(),
-        //                      columnType.getValue() != null ? columnType.getValue().getName() : "none");
-        //        }
         LOG.debug("******************************************************************");
         return columnsType.get(extractColumnName(colName)).getSqlType();
     }

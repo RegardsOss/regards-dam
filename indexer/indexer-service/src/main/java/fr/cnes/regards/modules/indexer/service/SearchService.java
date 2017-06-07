@@ -1,5 +1,6 @@
 package fr.cnes.regards.modules.indexer.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -7,7 +8,6 @@ import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,7 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
@@ -31,7 +32,7 @@ public class SearchService implements ISearchService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends IIndexable> T get(UniformResourceName urn) {
+    public <T extends IIndexable> T get(final UniformResourceName urn) {
         Class<? extends IIndexable> clazz;
         switch (urn.getEntityType()) {
             case COLLECTION:
@@ -53,36 +54,36 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public <T> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pPageRequest, ICriterion pCriterion,
-            Map<String, FacetType> pFacetsMap) {
+    public <T extends IIndexable> FacetPage<T> search(final SimpleSearchKey<T> searchKey, final Pageable pPageRequest,
+            final ICriterion pCriterion, final Map<String, FacetType> pFacetsMap) {
         return repository.search(searchKey, pPageRequest, pCriterion, pFacetsMap);
     }
 
     @Override
-    public <S, T extends IIndexable> Page<T> search(JoinEntitySearchKey<S, T> searchKey, Pageable pageRequest,
-            ICriterion pCriterion) {
+    public <S, T extends IIndexable> FacetPage<T> search(final JoinEntitySearchKey<S, T> searchKey,
+            final Pageable pageRequest, final ICriterion pCriterion) {
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
-        SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(), searchKey.getSearchTypeMap(),
-                String[].class);
+        final SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(),
+                searchKey.getSearchTypeMap(), String[].class);
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
-        Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
+        final Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
                 .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
         // Function to get Entity from its ipId (URN) (from Elasticsearch)
-        Function<String, T> toAskedEntityFct = tag -> repository
+        final Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
                      tag, searchKey.getResultClass());
         List<T> objects = repository.search(tagSearchKey, pCriterion, "tags", askedTypePredicate, toAskedEntityFct);
-        int total = objects.size();
+        final int total = objects.size();
         if (!objects.isEmpty()) {
             objects = objects.subList(pageRequest.getOffset(),
                                       Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
         }
-        return new PageImpl<>(objects, pageRequest, total);
+        return new FacetPage<>(objects, new HashSet<>(), pageRequest, total);
     }
 
     @Override
-    public <T> Page<T> multiFieldsSearch(SearchKey<T, T> pSearchKey, Pageable pPageRequest, Object pValue,
-            String... pFields) {
+    public <T> Page<T> multiFieldsSearch(final SearchKey<T, T> pSearchKey, final Pageable pPageRequest,
+            final Object pValue, final String... pFields) {
         return repository.multiFieldsSearch(pSearchKey, pPageRequest, pValue, pFields);
     }
 }

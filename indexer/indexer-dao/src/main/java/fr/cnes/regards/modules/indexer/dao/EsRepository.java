@@ -76,6 +76,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
@@ -113,9 +114,7 @@ public class EsRepository implements IEsRepository {
     private static final int MAX_TIMEOUT_RETRIES = 3;
 
     /**
-     * Target forwarding search {@link EsRepository#searchAll} need to put
-     * in cache search because of pagination restrictions. This constant specifies duration cache time in minutes (from
-     * last access)
+     * Target forwarding search {@link EsRepository#searchAll} need to put in cache search because of pagination restrictions. This constant specifies duration cache time in minutes (from last access)
      */
     private static final int TARGET_FORWARDING_CACHE_MN = 3;
 
@@ -182,7 +181,8 @@ public class EsRepository implements IEsRepository {
      * @param pGson JSon mapper bean
      */
     public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String pEsHost,
-            @Value("${regards.elasticsearch.address:}") String pEsAddress, @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
+            @Value("${regards.elasticsearch.address:}") String pEsAddress,
+            @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
         gson = pGson;
@@ -192,8 +192,8 @@ public class EsRepository implements IEsRepository {
         esClusterName = pEsClusterName;
         aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        client.addTransportAddress(
-                new InetSocketTransportAddress(InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
+        client.addTransportAddress(new InetSocketTransportAddress(
+                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
@@ -232,9 +232,10 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public String[] findIndices() {
-        return Iterables.toArray(Iterables.transform(
-                client.admin().indices().prepareGetSettings().get().getIndexToSettings(), (pSetting) -> pSetting.key),
-                                 String.class);
+        return Iterables
+                .toArray(Iterables.transform(client.admin().indices().prepareGetSettings().get().getIndexToSettings(),
+                                             (pSetting) -> pSetting.key),
+                         String.class);
     }
 
     @Override
@@ -327,7 +328,8 @@ public class EsRepository implements IEsRepository {
         for (final BulkItemResponse itemResponse : response.getItems()) {
             if (itemResponse.isFailed()) {
                 LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                          itemResponse.getId()), itemResponse.getFailure().getCause());
+                                          itemResponse.getId()),
+                            itemResponse.getFailure().getCause());
             } else {
                 savedDocCount++;
             }
@@ -411,8 +413,8 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T> Page<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest, ICriterion pCrit,
-            Map<String, FacetType> pFacetsMap) {
+    public <T extends IIndexable> FacetPage<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest,
+            ICriterion pCrit, Map<String, FacetType> pFacetsMap) {
         String index = searchKey.getSearchIndex().toLowerCase();
         try {
             final List<T> results = new ArrayList<>();
@@ -462,7 +464,7 @@ public class EsRepository implements IEsRepository {
             }
             // If no facet, juste returns a "simple" Page
             if (facetResults == null) {
-                return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
+                return new FacetPage<>(results, new HashSet<>(), pPageRequest, response.getHits().getTotalHits());
             } else { // else returns a FacetPage
                 return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
             }
@@ -494,13 +496,12 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * SearchAll cache used by {@link EsRepository#searchAll} to avoid redo
-     * same ES request while changing page. SortedSet is necessary to be sure several consecutive calls return same
-     * ordered set
+     * SearchAll cache used by {@link EsRepository#searchAll} to avoid redo same ES request while changing page. SortedSet is necessary to be sure several consecutive calls return same ordered set
      */
     private final LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
             .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)
             .build(new CacheLoader<CacheKey, SortedSet<Object>>() {
+
                 @Override
                 public SortedSet<Object> load(CacheKey key) throws Exception {
                     // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
@@ -573,9 +574,8 @@ public class EsRepository implements IEsRepository {
         for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
             String attributeName = sortEntry.getKey();
             // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
-            String lastPathAttName = attributeName.contains(".") ?
-                    attributeName.substring(attributeName.lastIndexOf('.') + 1) :
-                    attributeName;
+            String lastPathAttName = attributeName.contains(".")
+                    ? attributeName.substring(attributeName.lastIndexOf('.') + 1) : attributeName;
             // For all type mappings
             boolean typeText = false;
             for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
@@ -584,8 +584,8 @@ public class EsRepository implements IEsRepository {
                     FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
                     // If field type is String, we must add ".keyword" to attribute name
                     Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
-                    if ((metaDataMap.get(lastPathAttName) != null) && (metaDataMap
-                            .get(lastPathAttName) instanceof Map)) {
+                    if ((metaDataMap.get(lastPathAttName) != null)
+                            && (metaDataMap.get(lastPathAttName) instanceof Map)) {
                         Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
                         // Should contains "type" field but...
                         if (mappingMap.containsKey("type")) {
@@ -639,8 +639,7 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first
-     * pass request results) to create range aggregagtions.
+     * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first pass request results) to create range aggregagtions.
      *
      * @param pFacetsMap asked facets
      * @param request search request
@@ -656,13 +655,15 @@ public class EsRepository implements IEsRepository {
                 Percentiles percentiles = (Percentiles) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_POSTFIX);
                 request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
-            } else if (facetType == FacetType.DATE) {
-                Percentiles percentiles = (Percentiles) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
-                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
-            } else { // Let it as upper
-                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
-            }
+            } else
+                if (facetType == FacetType.DATE) {
+                    Percentiles percentiles = (Percentiles) aggsMap
+                            .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
+                    request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName,
+                                                                  percentiles));
+                } else { // Let it as upper
+                    request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
+                }
         }
     }
 
@@ -707,11 +708,12 @@ public class EsRepository implements IEsRepository {
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost((Double) bucket.getTo());
                         }
-                    } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
-                        valueRange = Range.greaterThan((Double) bucket.getFrom());
-                    } else { // [value -> value)
-                        valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
-                    }
+                    } else
+                        if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
+                            valueRange = Range.greaterThan((Double) bucket.getFrom());
+                        } else { // [value -> value)
+                            valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                        }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
                 facets.add(new NumericFacet(attributeName, valueMap));
@@ -736,12 +738,13 @@ public class EsRepository implements IEsRepository {
                         } else { // (-∞ -> value]
                             valueRange = Range.atMost(OffsetDateTimeAdapter.parse(bucket.getToAsString()));
                         }
-                    } else if (bucket.getToAsString() == null) { // ? -> +∞)
-                        valueRange = Range.greaterThan(OffsetDateTimeAdapter.parse(bucket.getFromAsString()));
-                    } else { // [value -> value)
-                        valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                      OffsetDateTimeAdapter.parse(bucket.getToAsString()));
-                    }
+                    } else
+                        if (bucket.getToAsString() == null) { // ? -> +∞)
+                            valueRange = Range.greaterThan(OffsetDateTimeAdapter.parse(bucket.getFromAsString()));
+                        } else { // [value -> value)
+                            valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                          OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                        }
                     valueMap.put(valueRange, bucket.getDocCount());
                 }
                 facets.add(new DateFacet(attributeName, valueMap));
@@ -758,9 +761,8 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
             // OffsetDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof OffsetDateTime) ?
-                    OffsetDateTimeAdapter.format((OffsetDateTime) pValue) :
-                    pValue;
+            Object value = (pValue instanceof OffsetDateTime) ? OffsetDateTimeAdapter.format((OffsetDateTime) pValue)
+                    : pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
