@@ -182,10 +182,14 @@ public abstract class AbstractDataObjectMapping {
             LOG.debug("select request : " + selectRequest);
             LOG.debug("count request : " + countRequest);
 
+            // Retrieve the model
+            Model model = new Model();
+            model.setId(dataSourceMapping.getModel());
+
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
-                    dataObjects.add(processResultSet(rs));
+                    dataObjects.add(processResultSet(rs, model));
                 }
             }
 
@@ -220,11 +224,11 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
      *
-     * @param pRs the {@link ResultSet}
+     * @param resultSet the {@link ResultSet}
      * @return the {@link DataObject} created
      * @throws SQLException An SQL error occurred
      */
-    protected DataObject processResultSet(ResultSet pRs) throws SQLException {
+    protected DataObject processResultSet(ResultSet resultSet, Model model) throws SQLException {
         final DataObject data = new DataObject();
 
         final Set<AbstractAttribute<?>> attributes = new HashSet<>();
@@ -236,7 +240,7 @@ public abstract class AbstractDataObjectMapping {
         for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
             try {
-                AbstractAttribute<?> attr = buildAttribute(pRs, attrMapping);
+                AbstractAttribute<?> attr = buildAttribute(resultSet, attrMapping);
 
                 if (attr != null) {
 
@@ -271,6 +275,7 @@ public abstract class AbstractDataObjectMapping {
         });
 
         data.setProperties(attributes);
+        data.setModel(model);
 
         return data;
     }
