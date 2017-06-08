@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -80,6 +81,8 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
+    private Map<Long, Object> pluginCacheMap = new HashMap<>();
+
     /**
      * Initialize the plugin's parameter
      *
@@ -108,7 +111,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
                 .getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
+                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE), pluginCacheMap);
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());
@@ -154,15 +157,20 @@ public class OracleDataSourceFromSingleTablePluginTest {
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        PluginConfiguration plgConfConn = PluginUtils
+                .getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+                                        Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        pluginCacheMap.put(plgConfConn.getId(), (Object)PluginUtils
+                .getPlugin(plgConfConn, plgConfConn.getPluginClassName(), Arrays.asList(PLUGIN_CURRENT_PACKAGE),
+                           pluginCacheMap));
+        return plgConfConn;
     }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                "DATA_OBJECT_ID"));
+                                                  "DATA_OBJECT_ID"));
 
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -176,7 +184,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, "START_DATE"));
         attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE"));
+                                                   "DATA_CREATION_DATE"));
 
         attributes.add(new DynamicAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
