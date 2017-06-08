@@ -53,6 +53,7 @@ public class IUserClientIT extends AbstractRegardsWebIT {
 
     @Before
     public void init() {
+        jwtService.injectMockToken(DEFAULT_TENANT, DEFAULT_ROLE);
         client = FeignClientBuilder.build(new TokenClientProvider<>(IUserClient.class,
                 "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
         FeignSecurityManager.asSystem();

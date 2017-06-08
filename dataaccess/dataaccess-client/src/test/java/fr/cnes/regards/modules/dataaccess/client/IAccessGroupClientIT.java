@@ -56,6 +56,7 @@ public class IAccessGroupClientIT extends AbstractRegardsWebIT {
 
     @Before
     public void init() {
+        jwtService.injectMockToken(DEFAULT_TENANT, DEFAULT_ROLE);
         client = FeignClientBuilder.build(new TokenClientProvider<>(IAccessGroupClient.class,
                 "http://" + serverAddress + ":" + getPort(), feignSecurityManager));
         FeignSecurityManager.asSystem();
