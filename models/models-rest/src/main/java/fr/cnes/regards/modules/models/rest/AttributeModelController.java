@@ -72,7 +72,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Constructor
-     * 
+     *
      * @param pAttributeService
      *            Attribute service
      * @param pResourceService
@@ -130,7 +130,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * @throws ModuleException
      *             if error occurs!
      */
-    @ResourceAccess(description = "Get an attribute")
+    @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
     public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable final Long pAttributeId)
             throws ModuleException {
