@@ -421,7 +421,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     private IStorageService getStorageService() {
         List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
         return PluginUtils.getPlugin(parameters, LocalStoragePlugin.class,
-                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()));
+                                     Arrays.asList(LocalStoragePlugin.class.getPackage().getName()), new HashMap<>());
 
     }
 

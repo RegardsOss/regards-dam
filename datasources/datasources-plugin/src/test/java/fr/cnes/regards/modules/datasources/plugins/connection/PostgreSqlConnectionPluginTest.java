@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.datasources.plugins.connection;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Assert;
@@ -58,7 +59,7 @@ public class PostgreSqlConnectionPluginTest {
         IDBConnectionPlugin plgConn;
 
         plgConn = PluginUtils.getPlugin(getPostGreSqlParameters(), DefaultPostgreConnectionPlugin.class,
-                                        Arrays.asList(PLUGIN_PACKAGE));
+                                        Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgConn.testConnection());
@@ -68,9 +69,9 @@ public class PostgreSqlConnectionPluginTest {
     @Requirement("REGARDS_DSL_DAM_ARC_100")
     @Purpose("The system allows to define a connection to a data source")
     public void getPostGreSqlConnection() {
-        final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
-                                                                             DefaultPostgreConnectionPlugin.class,
-                                                                             Arrays.asList(PLUGIN_PACKAGE));
+        final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
+                .getPlugin(getPostGreSqlParameters(), DefaultPostgreConnectionPlugin.class,
+                           Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -80,9 +81,9 @@ public class PostgreSqlConnectionPluginTest {
 
     @Test
     public void getMaxPoolSizeWithClose() throws InterruptedException, SQLException {
-        final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
-                                                                             DefaultPostgreConnectionPlugin.class,
-                                                                             Arrays.asList(PLUGIN_PACKAGE));
+        final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
+                .getPlugin(getPostGreSqlParameters(), DefaultPostgreConnectionPlugin.class,
+                           Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -104,9 +105,9 @@ public class PostgreSqlConnectionPluginTest {
 
     @Test
     public void getMaxPoolSizeWithoutClose() throws InterruptedException {
-        final DefaultPostgreConnectionPlugin sqlConn = PluginUtils.getPlugin(getPostGreSqlParameters(),
-                                                                             DefaultPostgreConnectionPlugin.class,
-                                                                             Arrays.asList(PLUGIN_PACKAGE));
+        final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
+                .getPlugin(getPostGreSqlParameters(), DefaultPostgreConnectionPlugin.class,
+                           Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -146,7 +147,8 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
-                .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+                .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -201,7 +203,8 @@ public class PostgreSqlConnectionPluginTest {
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
-                .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+                .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
         Assert.assertFalse(sqlConn.testConnection());

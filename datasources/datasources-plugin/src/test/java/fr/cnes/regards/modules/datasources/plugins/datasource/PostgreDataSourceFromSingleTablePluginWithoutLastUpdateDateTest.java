@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,9 +11,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -140,7 +139,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,
-                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());

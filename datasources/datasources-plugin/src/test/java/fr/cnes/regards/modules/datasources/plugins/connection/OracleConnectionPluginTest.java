@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.datasources.plugins.connection;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Assert;
@@ -58,8 +59,9 @@ public class OracleConnectionPluginTest {
     public void setUp() throws DataSourcesPluginException, SQLException {
         IDBConnectionPlugin plgConn;
 
-        plgConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
-                                        Arrays.asList(PLUGIN_PACKAGE));
+        plgConn = PluginUtils
+                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgConn.testConnection());
@@ -70,7 +72,8 @@ public class OracleConnectionPluginTest {
     @Purpose("The system allows to define a connection to a data source")
     public void getOracleSqlConnection() {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
-                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -81,7 +84,8 @@ public class OracleConnectionPluginTest {
     @Test
     public void getMaxPoolSizeWithClose() throws InterruptedException, SQLException {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
-                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -104,7 +108,8 @@ public class OracleConnectionPluginTest {
     @Test
     public void getMaxPoolSizeWithoutClose() throws InterruptedException, SQLException {
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
-                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
@@ -143,7 +148,8 @@ public class OracleConnectionPluginTest {
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         final DefaultOracleConnectionPlugin sqlConn = PluginUtils
-                .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE));
+                .getPlugin(parameters, DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         Assert.assertNotNull(sqlConn);
 
