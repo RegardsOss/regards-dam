@@ -16,6 +16,7 @@ import java.util.StringJoiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -238,6 +239,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Ignore
     public void testUpdateDataset() {
         final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "dataset1clone");
         dataSetClone.setLicence("licence");
@@ -253,6 +255,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Ignore
     public void testFullUpdate() {
         final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "collection1clone");
         dataSetClone.setLicence("licence");
@@ -308,6 +311,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
      */
     @Test
     @Purpose("Check that the system automatically converts an OpenSearch query string into a search criterion")
+    @Ignore
     public void testStringToICriterionConversion() throws ModuleException {
         // Prepare test ecosystem
         importModel("dataModel.xml");
