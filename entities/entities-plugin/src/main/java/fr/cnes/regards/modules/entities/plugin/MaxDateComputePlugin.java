@@ -17,8 +17,8 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.IAttributeModelService;
 
 /**
  * This IComputedAttribute implementation allows to compute the maximum of a {@link DateAttribute} according to a
@@ -39,7 +39,7 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
-    private IAttributeModelService attModelService;
+    private IAttributeModelRepository attModelRepos;
 
     @PluginParameter(name = "resultAttributeName",
             description = "Name of the attribute to compute (ie result attribute).")
@@ -64,7 +64,7 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
      */
     @PluginInit
     public void init() {
-        super.initAbstract(esRepo, attModelService, tenantResolver);
+        super.initAbstract(esRepo, attModelRepos, tenantResolver);
         super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
                    parameterAttributeFragmentName);
     }

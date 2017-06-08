@@ -7,7 +7,7 @@ import fr.cnes.regards.framework.amqp.event.Target;
 /**
  * @author Sylvain VISSIERE-GUERINET
  */
-@Event(target = Target.MICROSERVICE)
+@Event(target = Target.ALL)
 public class FragmentDeletedEvent implements ISubscribable {
 
     private String fragmentName;
@@ -29,10 +29,12 @@ public class FragmentDeletedEvent implements ISubscribable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if ((o == null) || (getClass() != o.getClass())) {
             return false;
+        }
 
         FragmentDeletedEvent that = (FragmentDeletedEvent) o;
 

@@ -9,7 +9,9 @@
 		<label>forTests</label>
 		<name>count</name>
 		<type>LONG</type>
-		<computationMode>COMPUTED</computationMode>
-		<configurationLabel>CountElementTestConf</configurationLabel>
+		<computation>
+			<label>CountElementTestConf</label>
+			<count/>
+		</computation>
 	</attribute>
 </model>

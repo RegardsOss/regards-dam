@@ -16,7 +16,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-service</artifactId>
+			<artifactId>models-dao</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>

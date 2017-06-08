@@ -13,7 +13,6 @@
         <label>forTests</label>
 		<name>att_boolean</name>
 		<type>BOOLEAN</type>
-		<computationMode>COMPUTED</computationMode>
 	</attribute>
 	<fragment>
 		<name>GEO</name>
@@ -29,6 +28,10 @@
 					<value>Venus</value>
 				</enumeration>
 			</restriction>
+			<computation>
+				<label>Toto</label>
+				<count/>
+			</computation>
 		</attribute>
 	</fragment>
 </model>

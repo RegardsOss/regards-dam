@@ -3,11 +3,10 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
@@ -19,7 +18,6 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
@@ -40,7 +38,6 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRes
  */
 @MultitenantTransactional
 public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
-
     /**
      * Logger
      */
