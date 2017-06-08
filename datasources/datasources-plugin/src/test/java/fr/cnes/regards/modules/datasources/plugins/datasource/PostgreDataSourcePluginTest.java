@@ -11,9 +11,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-import org.hsqldb.Types;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -137,7 +137,7 @@ public class PostgreDataSourcePluginTest {
                 .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from\n\n\nT_TEST_PLUGIN_DATA_SOURCE").getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourcePlugin.class,
-                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());

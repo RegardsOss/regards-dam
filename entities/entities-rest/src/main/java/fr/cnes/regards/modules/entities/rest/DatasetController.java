@@ -218,7 +218,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") final Long pDatasetId,
-            @Valid @RequestBody final Dataset pDataset,
+            @Valid @RequestPart(name = "dataset") final Dataset pDataset,
             @RequestPart(name = "description", required = false) final MultipartFile descriptionFile,
             final BindingResult pResult) throws ModuleException, IOException {
         // Validate dynamic model

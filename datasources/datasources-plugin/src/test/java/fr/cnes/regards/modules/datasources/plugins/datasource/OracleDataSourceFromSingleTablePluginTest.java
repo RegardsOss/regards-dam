@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Assert;
@@ -107,7 +108,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
                 .getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+                                                Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgDBDataSource.getDBConnection().testConnection());

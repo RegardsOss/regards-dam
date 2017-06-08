@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.plugins.connection;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,6 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * @author Christophe Mertz
@@ -72,7 +72,7 @@ public class PostgreConnectionPluginIntrospectionTest {
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         postgreDBConn = PluginUtils.getPlugin(parameters, DefaultPostgreConnectionPlugin.class,
-                                              Arrays.asList(PLUGIN_PACKAGE));
+                                              Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(postgreDBConn.testConnection());

@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.crawler.service;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -116,7 +117,7 @@ public class CrawlerServiceTest {
                 .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
                 .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
         dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(dsPlugin.getDBConnection().testConnection());
