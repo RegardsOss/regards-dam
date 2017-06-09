@@ -140,7 +140,7 @@ public class CrawlerIngestIT {
     private IPluginService pluginService;
 
     @Autowired
-    private IPluginConfigurationRepository puginConfRepos;
+    private IPluginConfigurationRepository pluginConfRepos;
 
     @Autowired
     private IRabbitVirtualHostAdmin rabbitVhostAdmin;
@@ -188,8 +188,8 @@ public class CrawlerIngestIT {
         rabbitVhostAdmin.unbind();
 
         attrAssocRepos.deleteAll();
+        pluginConfRepos.deleteAll();
         entityRepos.deleteAll();
-        puginConfRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
 
@@ -314,10 +314,10 @@ public class CrawlerIngestIT {
 
         // Retrieve dataset1 from ES
         final UniformResourceName ipId = dataset.getIpId();
-        dataset = (Dataset) searchService.get(ipId);
+        dataset = searchService.get(ipId);
         if (dataset == null) {
             esRepos.refresh(tenant);
-            dataset = (Dataset) searchService.get(ipId);
+            dataset = searchService.get(ipId);
         }
 
         final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
