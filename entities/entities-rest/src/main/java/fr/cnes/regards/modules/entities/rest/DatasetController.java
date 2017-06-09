@@ -215,11 +215,11 @@ public class DatasetController implements IResourceController<Dataset> {
      * @return the updated dataset wrapped in an HTTP response
      * @throws ModuleException
      */
-    @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
+    @RequestMapping(method = RequestMethod.POST, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") final Long pDatasetId,
-            @Valid @RequestPart(name = "dataset") final Dataset pDataset,
-            @RequestPart(name = "description", required = false) final MultipartFile descriptionFile,
+            @Valid @RequestPart("dataset") final Dataset pDataset,
+            @RequestPart(value="file", required = false) final MultipartFile descriptionFile,
             final BindingResult pResult) throws ModuleException, IOException {
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
