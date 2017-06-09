@@ -1,10 +1,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,9 +49,10 @@ public class GeometrySearchIT {
 
         // Index creation with geometry mapping
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
+            esRepos.deleteAll(TENANT);
+        } else {
+            esRepos.createIndex(TENANT);
         }
-        esRepos.createIndex(TENANT);
         esRepos.setGeometryMapping(TENANT, Arrays.stream(EntityType.values()).map(EntityType::toString)
                 .toArray(length -> new String[length]));
 

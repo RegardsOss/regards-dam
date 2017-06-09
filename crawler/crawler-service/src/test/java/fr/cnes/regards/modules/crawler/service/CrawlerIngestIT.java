@@ -140,7 +140,7 @@ public class CrawlerIngestIT {
     private IPluginService pluginService;
 
     @Autowired
-    private IPluginConfigurationRepository puginConfRepos;
+    private IPluginConfigurationRepository pluginConfRepos;
 
     @Autowired
     private IRabbitVirtualHostAdmin rabbitVhostAdmin;
@@ -174,9 +174,10 @@ public class CrawlerIngestIT {
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteIndex(TENANT);
+            esRepos.deleteAll(TENANT);
+        } else {
+            esRepos.createIndex(TENANT);
         }
-        esRepos.createIndex(TENANT);
         tenantResolver.forceTenant(TENANT);
 
         crawlerService.setConsumeOnlyMode(false);
@@ -188,7 +189,7 @@ public class CrawlerIngestIT {
 
         attrAssocRepos.deleteAll();
         entityRepos.deleteAll();
-        puginConfRepos.deleteAll();
+        pluginConfRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
 
@@ -203,7 +204,7 @@ public class CrawlerIngestIT {
         modelService.createModel(dataModel);
 
         datasetModel = new Model();
-        datasetModel.setName("model_ds_1");
+        datasetModel.setName("model_ds_1" + System.currentTimeMillis());
         datasetModel.setType(EntityType.DATASET);
         datasetModel.setVersion("1");
         datasetModel.setDescription("Test dataset model");
@@ -313,10 +314,10 @@ public class CrawlerIngestIT {
 
         // Retrieve dataset1 from ES
         final UniformResourceName ipId = dataset.getIpId();
-        dataset = (Dataset) searchService.get(ipId);
+        dataset = searchService.get(ipId);
         if (dataset == null) {
             esRepos.refresh(tenant);
-            dataset = (Dataset) searchService.get(ipId);
+            dataset = searchService.get(ipId);
         }
 
         final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);

@@ -1,7 +1,5 @@
 package fr.cnes.regards.modules.entities.domain.deleted;
 
-import java.time.OffsetDateTime;
-
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -11,7 +9,9 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import java.time.OffsetDateTime;
 
+import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 
@@ -33,12 +33,15 @@ public class DeletedEntity {
     private Long id;
 
     @Column(name = "creation_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime creationDate;
 
     @Column(name = "update_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime lastUpdate;
 
     @Column(name = "deletion_date")
+    @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime deletionDate;
 
     @Column(nullable = false)

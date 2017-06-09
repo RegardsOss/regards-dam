@@ -84,10 +84,10 @@ public class MultiTenantCrawlerIT {
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
         if (esRepos.indexExists(TENANT1)) {
-            esRepos.deleteIndex(TENANT1);
+            esRepos.deleteAll(TENANT1);
         }
         if (esRepos.indexExists(TENANT2)) {
-            esRepos.deleteIndex(TENANT2);
+            esRepos.deleteAll(TENANT2);
         }
 
         tenantResolver.forceTenant(TENANT1);

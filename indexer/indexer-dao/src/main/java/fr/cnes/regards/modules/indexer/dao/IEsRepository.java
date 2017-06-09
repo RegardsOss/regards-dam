@@ -145,6 +145,13 @@ public interface IEsRepository {
     boolean delete(String pIndex, String pType, String pId);
 
     /**
+     * Delete all documents from index
+     * @param index index
+     * @return number of documents deleted
+     */
+    long deleteAll(String index);
+
+    /**
      * Same as {@link #delete(String, String, String)} using docId and type of provided document
      *
      * @param pIndex index
@@ -230,7 +237,7 @@ public interface IEsRepository {
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
-     * @param search key the search key
+     * @param searchKey the search key
      * @param <T> class of document type
      * @return specified result page
      */

@@ -25,7 +25,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -36,8 +35,10 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.test.util.Beans;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -53,6 +54,7 @@ import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
@@ -181,7 +183,7 @@ public class CrawlerServiceIT {
                 .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
                 .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
                 .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
@@ -189,8 +191,9 @@ public class CrawlerServiceIT {
     }
 
     public void buildData1() throws ModuleException {
-        esRepos.deleteIndex(tenant);
-        if (!esRepos.indexExists(tenant)) {
+        if (esRepos.indexExists(tenant)) {
+            esRepos.deleteAll(tenant);
+        } else {
             esRepos.createIndex(tenant);
         }
 
@@ -206,7 +209,9 @@ public class CrawlerServiceIT {
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), Collections.emptyList());
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), Collections.singletonList(
+                new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
+                                           "DATA_OBJECTS_ID")));
 
         pluginConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(pluginConf);
@@ -323,8 +328,8 @@ public class CrawlerServiceIT {
         final Optional<DeletedEntity> deletedEntityOpt = deletedEntityRepository.findOneByIpId(coll1.getIpId());
         Assert.assertTrue(deletedEntityOpt.isPresent());
         final DeletedEntity deletedEntity = deletedEntityOpt.get();
-        Assert.assertEquals(coll1.getCreationDate(), deletedEntity.getCreationDate());
-        Assert.assertEquals(coll1.getLastUpdate(), deletedEntity.getLastUpdate());
+        Assert.assertTrue(coll1.getCreationDate().equals(deletedEntity.getCreationDate()));
+        Assert.assertTrue(coll1.getLastUpdate().equals(deletedEntity.getLastUpdate()));
         Assert.assertTrue(deletedEntity.getDeletionDate().isAfter(suppressDate));
         Assert.assertTrue(deletedEntity.getDeletionDate().isBefore(now));
     }

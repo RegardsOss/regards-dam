@@ -4,6 +4,7 @@
 package fr.cnes.regards.modules.datasources.plugins.connection;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class OracleConnectionPluginIntrospectionTest {
     @Before
     public void setUp() {
         oracleDBConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
-                                             Arrays.asList(PLUGIN_PACKAGE));
+                                             Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(oracleDBConn.testConnection());

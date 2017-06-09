@@ -196,7 +196,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
             + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Test
-    @Ignore // we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder
+    @Ignore("we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder")
     public void testUpdateCollection() {
         final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
         collectionClone.setIpId(collection1.getIpId());
@@ -218,7 +218,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     @Requirement("REGARDS_DSL_DAM_COL_220")
     @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
-    @Ignore // we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder
+    @Ignore("we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder")
     public void testFullUpdate() {
         final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
         collectionClone.setIpId(collection1.getIpId());
