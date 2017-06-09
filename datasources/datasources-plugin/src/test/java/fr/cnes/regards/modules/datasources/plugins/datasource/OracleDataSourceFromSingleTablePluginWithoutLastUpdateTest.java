@@ -51,6 +51,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+@Ignore
 public class OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest {
 
     private static final Logger LOG = LoggerFactory
