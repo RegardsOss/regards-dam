@@ -495,7 +495,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         String fileContentType = pFile.getContentType();
         int charsetIdx = fileContentType.indexOf(";charset");
         String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-        return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+        return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE) || contentType.equals("text/x-markdown");
     }
 
     /**
