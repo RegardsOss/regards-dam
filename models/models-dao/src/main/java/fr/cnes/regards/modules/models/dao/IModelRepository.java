@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.models.dao;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -24,4 +26,9 @@ public interface IModelRepository extends CrudRepository<Model, Long> {
     List<Model> findByType(EntityType pType);
 
     Model findByName(String pName);
+
+    @Override
+    @Modifying
+    @Query(value = "DELETE FROM t_model CASCADE")
+    void deleteAll();
 }
