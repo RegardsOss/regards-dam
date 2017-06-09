@@ -69,6 +69,7 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
 
     @Override
     public void compute(Dataset dataset) {
+        count = 0;
         // create the search
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
                                                                       EntityType.DATA.toString(), DataObject.class);

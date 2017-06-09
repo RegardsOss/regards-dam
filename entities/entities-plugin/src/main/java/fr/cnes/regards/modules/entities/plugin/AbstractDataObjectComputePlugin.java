@@ -91,6 +91,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
      */
     @Override
     public void compute(Dataset dataset) {
+        result = null;
         // create the search
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
                                                                       EntityType.DATA.toString(), DataObject.class);

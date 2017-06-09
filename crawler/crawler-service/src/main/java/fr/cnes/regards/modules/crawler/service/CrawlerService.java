@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -16,10 +19,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -67,10 +65,6 @@ import fr.cnes.regards.modules.models.domain.IComputedAttribute;
  */
 @Service
 public class CrawlerService implements ICrawlerService {
-
-    private static final String DATA_SOURCE_ID = "dataSourceId";
-
-    private static final String LAST_UPDATE = "lastUpdate";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
 
@@ -416,18 +410,11 @@ public class CrawlerService implements ICrawlerService {
      * @param dataset concerned dataset
      */
     private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate) {
-        PluginConfiguration datasource = dataset.getDataSource();
-        String datasourceId = datasource.getId().toString();
         ICriterion subsettingCrit = dataset.getSubsettingClause();
-        // Add datasource id restriction
-        if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
-            subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, datasourceId);
-        } else {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, datasourceId));
-        }
+
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(LAST_UPDATE, lastUpdateDate));
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(Dataset.LAST_UPDATE, lastUpdateDate));
         }
 
         String tenant = runtimeTenantResolver.getTenant();
