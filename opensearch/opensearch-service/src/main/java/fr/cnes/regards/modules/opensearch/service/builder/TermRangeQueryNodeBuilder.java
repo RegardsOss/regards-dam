@@ -13,12 +13,12 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
 
 import com.google.common.collect.ImmutableTable;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeModelCache;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
 
 /**
@@ -31,7 +31,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
     /**
      * Service retrieving the up-to-date list of {@link AttributeModel}s. Autowired by Spring.
      */
-    private final IAttributeModelCache attributeModelCache;
+    private final IAttributeFinder attributeFinder;
 
     // Define a static two-entries table storing the different criterion builders based on the type of attribute and the
     // type of comparison performed
@@ -68,9 +68,9 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
      * @param pAttributeModelCache
      *            Service retrieving the up-to-date list of {@link AttributeModel}s
      */
-    public TermRangeQueryNodeBuilder(IAttributeModelCache pAttributeModelCache) {
+    public TermRangeQueryNodeBuilder(IAttributeFinder attributeFinder) {
         super();
-        attributeModelCache = pAttributeModelCache;
+        this.attributeFinder = attributeFinder;
     }
 
     @Override
@@ -83,10 +83,10 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
         // Retrieve the corresponding model
         AttributeType attributeType;
         try {
-            attributeType = attributeModelCache.findByName(wrapper.getField()).getType();
-        } catch (EntityNotFoundException e) {
+            attributeType = attributeFinder.findByName(wrapper.getField()).getType();
+        } catch (OpenSearchUnknownParameter e) {
             throw new QueryNodeException(
-                    new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, wrapper.getField()), e);
+                    new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage(), e));
         }
 
         // Compute the type of range comparison: lower/greater than/equal or between
@@ -110,8 +110,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
     private RangeComparison getRangeComparison(String pField, String pLowerText, String pUpperText, // NOSONAR
             boolean pIsLowerInclusive, boolean pIsUpperInclusive) throws QueryNodeException {
         if (pLowerText.isEmpty() && pUpperText.isEmpty()) {
-            throw new QueryNodeException(
-                    new MessageImpl(QueryParserMessages.RANGE_NUMERIC_CANNOT_BE_EMPTY, pField));
+            throw new QueryNodeException(new MessageImpl(QueryParserMessages.RANGE_NUMERIC_CANNOT_BE_EMPTY, pField));
         } else if (pLowerText.isEmpty() && !pUpperText.isEmpty() && pIsUpperInclusive) {
             return RangeComparison.LE;
         } else if (pLowerText.isEmpty() && !pUpperText.isEmpty() && !pIsUpperInclusive) {

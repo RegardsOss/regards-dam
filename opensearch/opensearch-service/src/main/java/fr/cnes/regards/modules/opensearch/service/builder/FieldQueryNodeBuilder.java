@@ -9,13 +9,13 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.PointQueryNode;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeModelCache;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
 
 /**
@@ -31,15 +31,15 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
     /**
      * Service retrieving the up-to-date list of {@link AttributeModel}s. Autowired by Spring.
      */
-    private final IAttributeModelCache attributeModelCache;
+    private final IAttributeFinder finder;
 
     /**
      * @param pAttributeModelCache
      *            Service retrieving the up-to-date list of {@link AttributeModel}s
      */
-    public FieldQueryNodeBuilder(IAttributeModelCache pAttributeModelCache) {
+    public FieldQueryNodeBuilder(IAttributeFinder finder) {
         super();
-        attributeModelCache = pAttributeModelCache;
+        this.finder = finder;
     }
 
     @Override
@@ -51,9 +51,9 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
 
         AttributeModel attributeModel;
         try {
-            attributeModel = attributeModelCache.findByName(field);
-        } catch (EntityNotFoundException e) {
-            throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, field),
+            attributeModel = finder.findByName(field);
+        } catch (OpenSearchUnknownParameter e) {
+            throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()),
                     e);
         }
 
@@ -74,8 +74,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
             case STRING_ARRAY:
                 return ICriterion.contains(field, value);
             default:
-                throw new QueryNodeException(
-                        new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
+                throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
         }
     }
 

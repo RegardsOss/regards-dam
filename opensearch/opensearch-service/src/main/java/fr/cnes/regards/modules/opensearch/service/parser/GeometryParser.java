@@ -43,7 +43,7 @@ public class GeometryParser implements IParser {
                 return ICriterion.intersectsPolygon(coordinates);
             } else {
                 // Only Polygons are handled for now
-                throw new OpenSearchParseException("The passed WKT string does not referecne");
+                throw new OpenSearchParseException("The passed WKT string does not reference");
             }
 
         } catch (ParseException e) {
