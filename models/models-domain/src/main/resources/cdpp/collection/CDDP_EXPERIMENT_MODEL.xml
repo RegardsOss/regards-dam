@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../model_V1.0.xsd">
+	<name>CDDP_EXPERIMENT_MODEL</name>
+	<description>Description des attributs de l'expérience auquel se rapporte un jeu CDPP</description>
+	<version>1</version>
+	<type>COLLECTION</type>
+    <attribute>
+        <label>Nom d'expérience</label>
+        <name>EXPERIMENT</name>
+        <description>Nom d'expérience</description>
+        <type>STRING</type>
+        <restriction>
+            <pattern>/^.{1,32}$/</pattern>
+        </restriction>
+    </attribute>
+</model>

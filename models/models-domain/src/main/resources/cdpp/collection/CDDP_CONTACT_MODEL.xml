@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../model_V1.0.xsd">
+	<name>CDDP_CONTACT_MODEL</name>
+	<description>Description du point de contact auquel se rapporte un jeu CDPP</description>
+	<version>1</version>
+	<type>COLLECTION</type>
+    <attribute>
+        <label>Nom du contact</label>
+        <name>NAME</name>
+        <description>Nom du point de contact pour le jeu de donnees</description>
+        <type>STRING</type>
+        <restriction>
+            <pattern>/^.{1,100}$/</pattern>
+        </restriction>
+    </attribute>
+    <attribute>
+        <label>Email du contact</label>
+        <name>EMAIL</name>
+        <description>Email du point de contact pour le jeu de donnees</description>
+        <type>STRING</type>
+        <restriction>
+            <pattern>/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i</pattern>
+        </restriction>
+    </attribute>
+</model>

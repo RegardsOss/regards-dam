@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../model_V1.0.xsd">
+	<name>CDDP_MISSION_MODEL</name>
+	<description>Description des caractéristiques de la mission à laquelle se rapporte un jeu CDPP</description>
+	<version>1</version>
+	<type>COLLECTION</type>
+    <attribute>
+        <label>Nom de la mission</label>
+        <name>MISSION</name>
+        <description>Nom de la mission</description>
+        <type>STRING</type>
+        <restriction>
+            <pattern>/^.{1,32}$/</pattern>
+        </restriction>
+    </attribute>
+    <attribute>
+        <label>Contact</label>
+        <name>MISSION_KEY_PERSONNEL</name>
+        <description>Coordonnées d'un personnel clé pour la mission</description>
+        <type>STRING</type>
+        <restriction>
+            <pattern>/^.{1,64}$/</pattern>
+        </restriction>
+    </attribute>
+    <attribute>
+        <label>Date de début de mission</label>
+        <name>MISSION_START_DATE</name>
+        <description>Date de début de mission</description>
+        <type>DATE_ISO8601</type>
+    </attribute>
+    <attribute>
+        <label>Date de fin de mission</label>
+        <name>MISSION_STOP_DATE</name>
+        <description>Date de fin de mission</description>
+        <type>DATE_ISO8601</type>
+    </attribute>
+</model>

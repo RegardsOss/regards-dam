@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../model_V1.0.xsd">
+	<name>CDDP_DATA_MODEL</name>
+	<description>Description d'un objet de données caracterisé par une période temporelle</description>
+	<version>1</version>
+	<type>DATA</type>
+	<attribute>
+		<label>Taille</label>
+		<name>FILE_SIZE</name>
+		<description>Taille du fichier d'archive en Koctets. Convention : 1 Koctets=1000octets, en arrondissant a l'unité supérieure</description>
+		<type>INTEGER</type>
+	</attribute>
+	<fragment>
+		<name>TIME_PERIOD</name>
+		<description>Période temporelle (date debut - date fin) au format YYYY-MM-DDThh:mm:ss</description>
+		<version>1</version>
+		<attribute>
+			<label>Date et temps debut</label>
+			<name>START_DATE</name>
+			<description>Date et temps debut</description>
+			<type>DATE_ISO8601</type>
+		</attribute>
+		<attribute>
+			<label>Date et temps fin</label>
+			<name>STOP_DATE</name>
+			<description>Date et temps fin</description>
+			<type>DATE_ISO8601</type>
+		</attribute>
+	</fragment>
+</model>
