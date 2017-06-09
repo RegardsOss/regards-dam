@@ -35,6 +35,10 @@ import fr.cnes.regards.modules.models.domain.Model;
 @DiscriminatorValue("DATASET")
 public class Dataset extends AbstractDescEntity {
 
+    public static final String DATA_SOURCE_ID = "dataSourceId";
+
+    public static final String LAST_UPDATE = "lastUpdate";
+
     /**
      * value allowing the system to order a set of result
      */
@@ -111,8 +115,23 @@ public class Dataset extends AbstractDescEntity {
         return EntityType.DATASET.toString();
     }
 
+    /**
+     * Get the ICriterion tree containing DATA_SOURCE_ID restriction ie different from saved subsetting clause and
+     * opensearch one which are user-friendly (do not contain views of intern structure)
+     */
     public ICriterion getSubsettingClause() {
-        return subsettingClause;
+        ICriterion subsettingCrit = subsettingClause;
+        // Add datasource id restriction
+        if ((subsettingCrit == null) || (subsettingCrit == ICriterion.all())) {
+            subsettingCrit = ICriterion.eq(DATA_SOURCE_ID, plgConfDataSource.getId());
+        } else {
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.eq(DATA_SOURCE_ID, plgConfDataSource.getId()));
+        }
+        return subsettingCrit;
+    }
+
+    public ICriterion getSubsettingClausePartToCheck() {
+        return (subsettingClause == null) ? ICriterion.all() : subsettingClause;
     }
 
     public PluginConfiguration getDataSource() {
