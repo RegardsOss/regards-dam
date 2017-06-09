@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.Cacheable;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * Provider for {@link AttributeModel}s with caching facilities.
@@ -42,6 +43,6 @@ public interface IAttributeModelCache {
     * @return the attribute model
     * @throws EntityNotFoundException when no attribute model with passed name could be found
     */
-    AttributeModel findByName(String pName) throws EntityNotFoundException;
+    AttributeModel findByName(String pName) throws OpenSearchUnknownParameter;
 
 }
