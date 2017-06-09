@@ -436,7 +436,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             throws IOException, ModuleException {
         if ((pFile != null) && !pFile.isEmpty()) {
             // collections and dataset only have a description which is a url or a file
-            if (!isContentTypeAcceptable(pFile)) {
+            if (!isContentTypeAcceptable(pFile, pEntity)) {
                 throw new EntityDescriptionUnacceptableType(pFile.getContentType());
             }
             // 10MB
@@ -489,13 +489,17 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * Return true if file content type is acceptable (PDF or MARKDOWN)
      *
      * @param pFile file
+     * @param pEntity
      * @return true or false
      */
-    private static boolean isContentTypeAcceptable(MultipartFile pFile) {
-        String fileContentType = pFile.getContentType();
-        int charsetIdx = fileContentType.indexOf(";charset");
-        String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-        return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE) || contentType.equals("text/x-markdown");
+    private <T extends AbstractEntity> boolean isContentTypeAcceptable(MultipartFile pFile, T pEntity) {
+        if(pEntity instanceof AbstractDescEntity) {
+            String fileContentType = ((AbstractDescEntity) pEntity).getDescriptionFile().getType().toString();
+            int charsetIdx = fileContentType.indexOf(";charset");
+            String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+        }
+        return false;
     }
 
     /**
