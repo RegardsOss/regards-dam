@@ -3,7 +3,10 @@
  */
 package fr.cnes.regards.modules.opensearch.service.cache.attributemodel;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +21,15 @@ import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * In this implementation, we choose to repopulate (and not only evict) the cache for a tenant in response to "create" and "delete" events.<br>
@@ -55,6 +61,19 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
     /**
+     * Store static queryable properties by name
+     */
+    private final Map<String, AttributeModel> staticPropertyMap;
+
+    /**
+     * Store dynamic properties by tenant and name (including namespace or fragment name)
+     *
+     * AT THE MOMENT, WE USE default fragment for naming avoiding potential collision
+     * FIXME : we could use properties wrapper to avoid collision with static properties and not use default fragment
+     */
+    private final Map<String, Map<String, AttributeModel>> dynamicPropertyMap;
+
+    /**
      * Creates a new instance of the service with passed services/repos
      *
      * @param attributeModelClient Service returning the list of attribute models
@@ -62,11 +81,38 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      * @param pRuntimeTenantResolver the runtime tenant resolver
      */
     public AttributeModelCache(IAttributeModelClient attributeModelClient, ISubscriber pSubscriber,
-                               IRuntimeTenantResolver pRuntimeTenantResolver) {
+            IRuntimeTenantResolver pRuntimeTenantResolver) {
         super();
         this.attributeModelClient = attributeModelClient;
         subscriber = pSubscriber;
         runtimeTenantResolver = pRuntimeTenantResolver;
+        // Init static attributes
+        staticPropertyMap = new HashMap<>();
+        dynamicPropertyMap = new HashMap<>();
+        initStaticAttributes();
+    }
+
+    /**
+     * Initialize queryable static attributes
+     */
+    public void initStaticAttributes() {
+
+        staticPropertyMap.put(StaticProperties.LABEL,
+                              AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).get());
+        staticPropertyMap
+                .put(StaticProperties.MODEL_NAME,
+                     AttributeModelBuilder.build(StaticProperties.MODEL_NAME, AttributeType.STRING, null).get());
+        staticPropertyMap
+                .put(StaticProperties.LAST_UPDATE,
+                     AttributeModelBuilder.build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).get());
+        staticPropertyMap.put(StaticProperties.CREATION_DATE, AttributeModelBuilder
+                .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null).get());
+        staticPropertyMap.put(StaticProperties.TAGS,
+                              AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).get());
+        staticPropertyMap
+                .put(StaticProperties.ENTITY_TYPE,
+                     AttributeModelBuilder.build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null).get());
+
     }
 
     @Override
@@ -91,26 +137,72 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      * @return the list of user's access groups
      */
     private List<AttributeModel> doGetAttributeModels(String pTenant) {
-        // Enable system call as follow (thread safe action)
-        FeignSecurityManager.asSystem();
 
-        // Force tenant
-        runtimeTenantResolver.forceTenant(pTenant);
+        try {
+            // Enable system call as follow (thread safe action)
+            FeignSecurityManager.asSystem();
+            // Force tenant
+            // FIXME remove this unnecessary action / test will be impacted
+            runtimeTenantResolver.forceTenant(pTenant);
 
-        // Retrieve the list of attribute models
-        ResponseEntity<List<Resource<AttributeModel>>> respone = attributeModelClient.getAttributes(null, null);
+            // Retrieve the list of attribute models
+            ResponseEntity<List<Resource<AttributeModel>>> response = attributeModelClient.getAttributes(null, null);
+            List<AttributeModel> attModels = new ArrayList<>();
+            if (response != null) {
+                attModels = HateoasUtils.unwrapCollection(response.getBody());
+            }
 
-        // Disable system call if necessary after client request(s)
-        FeignSecurityManager.reset();
+            // Fill dynamic property mapping
+            Map<String, AttributeModel> tenantMap = dynamicPropertyMap.get(pTenant);
+            if (tenantMap == null) {
+                tenantMap = new HashMap<>();
+                dynamicPropertyMap.put(pTenant, tenantMap);
+            }
 
-        return HateoasUtils.unwrapCollection(respone.getBody());
+            for (AttributeModel attModel : attModels) {
+                // Tenant map will contain mapping between <fragmentName>.<attributeName> and the attribute model
+                String key = attModel.getFragment().getName() + "." + attModel.getName();
+                tenantMap.put(key, attModel);
+            }
+
+            return attModels;
+        } finally {
+            // Disable system call if necessary after client request(s)
+            FeignSecurityManager.reset();
+            runtimeTenantResolver.clearTenant();
+        }
+
     }
 
     @Override
-    public AttributeModel findByName(String pName) throws EntityNotFoundException {
+    public AttributeModel findByName(String pName) throws OpenSearchUnknownParameter {
+
+        // Check queryable static properties
+        AttributeModel attModel = staticPropertyMap.get(pName);
+        if (attModel != null) {
+            return attModel;
+        }
+
+        // Check dynamic properties
         String tenant = runtimeTenantResolver.getTenant();
-        return getAttributeModels(tenant).stream().filter(el -> el.getName().equals(pName)).findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(pName, AttributeModel.class));
+        Map<String, AttributeModel> tenantMap = dynamicPropertyMap.get(tenant);
+
+        if (tenantMap == null) {
+            String errorMessage = String.format("No property found for tenant %s. Unknown OpenSearch parameter %s",
+                                                tenant, pName);
+            LOGGER.error(errorMessage);
+            throw new OpenSearchUnknownParameter(errorMessage);
+        }
+
+        attModel = tenantMap.get(pName);
+
+        if (attModel == null) {
+            String errorMessage = String.format("Unknown OpenSearch parameter %s for tenant %s", pName, tenant);
+            LOGGER.error(errorMessage);
+            throw new OpenSearchUnknownParameter(errorMessage);
+        }
+
+        return attModel;
     }
 
     /**

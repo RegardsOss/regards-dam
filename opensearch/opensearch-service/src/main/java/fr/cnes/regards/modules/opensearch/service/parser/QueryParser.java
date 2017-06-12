@@ -12,14 +12,13 @@ import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfi
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler.ConfigurationKeys;
 import org.apache.lucene.queryparser.flexible.standard.parser.StandardSyntaxParser;
 import org.apache.lucene.queryparser.flexible.standard.processors.StandardQueryNodeProcessorPipeline;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.builder.RegardsQueryTreeBuilder;
-import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeModelCache;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
@@ -50,9 +49,9 @@ public class QueryParser extends QueryParserHelper implements IParser {
      * Constructor
      * @param pAttributeModelCache provides access to {@link AttributeModel}s with caching facilities
      */
-    public QueryParser(@Autowired IAttributeModelCache pAttributeModelCache) {
+    public QueryParser(IAttributeFinder finder) {
         super(new StandardQueryConfigHandler(), new StandardSyntaxParser(),
-              new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(pAttributeModelCache));
+              new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(finder));
         setEnablePositionIncrements(true);
         setAllowLeadingWildcard(true);
     }
@@ -72,7 +71,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
         try {
             return (ICriterion) super.parse(q, DEFAULT_FIELD);
         } catch (QueryNodeException e) {
-            throw new OpenSearchParseException(e);
+            throw new OpenSearchParseException(e.getMessage(), e);
         }
     }
 

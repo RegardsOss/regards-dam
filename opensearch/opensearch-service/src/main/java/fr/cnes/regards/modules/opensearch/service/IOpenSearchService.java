@@ -10,6 +10,4 @@ import fr.cnes.regards.modules.opensearch.service.parser.IParser;
  */
 public interface IOpenSearchService extends IParser {
 
-    // public OpenSearchDescription getOpenSearchDescriptor(EntityType searchOn, EntityType wanted);
-
 }
