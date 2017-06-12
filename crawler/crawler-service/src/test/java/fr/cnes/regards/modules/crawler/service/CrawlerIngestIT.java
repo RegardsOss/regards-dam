@@ -235,6 +235,7 @@ public class CrawlerIngestIT {
 
     @After
     public void clean() {
+        LOGGER.info("********************* clean CrawlerIngestIT ***********************************");
         // Don't use entity service to clean because events are published on RabbitMQ
         if (dataset != null) {
             Utils.execute(entityRepos::delete, dataset.getId());
@@ -253,6 +254,7 @@ public class CrawlerIngestIT {
         if (dataModel != null) {
             Utils.execute(modelService::deleteModel, dataModel.getId());
         }
+        LOGGER.info("***************************************************************************");
     }
 
     private PluginConfiguration getPostgresDataSource(final PluginConfiguration pluginConf) {
@@ -295,6 +297,7 @@ public class CrawlerIngestIT {
 
     @Test
     public void test() throws ModuleException, IOException, InterruptedException {
+        LOGGER.info("********************* test CrawlerIngestIT ***********************************");
         final String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
         indexerService.deleteIndex(tenant);
@@ -350,5 +353,6 @@ public class CrawlerIngestIT {
                 .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().isAfter(data.getCreationDate())).count());
+        LOGGER.info("***************************************************************************");
     }
 }
