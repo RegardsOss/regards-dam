@@ -16,7 +16,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -79,7 +78,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
+//@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
 public class CrawlerIngestIT {
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
 
@@ -317,6 +316,7 @@ public class CrawlerIngestIT {
         final UniformResourceName ipId = dataset.getIpId();
         dataset = searchService.get(ipId);
         if (dataset == null) {
+            Thread.sleep(3000L);
             esRepos.refresh(tenant);
             dataset = searchService.get(ipId);
         }

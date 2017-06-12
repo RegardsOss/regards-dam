@@ -262,6 +262,10 @@ public class CrawlerService implements ICrawlerService {
             if (!esRepos.indexExists(tenant)) {
                 createIndex(tenant);
             }
+            // Remove parameters of dataset datasource to avoid expose security values
+            if (entity instanceof Dataset) {
+                ((Dataset) entity).getDataSource().setParameters(null);
+            }
             // Then save entity
             esRepos.save(tenant, entity);
             if (entity instanceof Dataset) {
@@ -292,6 +296,8 @@ public class CrawlerService implements ICrawlerService {
             if (!esRepos.indexExists(tenant)) {
                 createIndex(tenant);
             }
+            // Remove pluginConf from datasets to avoid jsonify into Elasticsearch
+            entities.stream().filter(e -> e instanceof Dataset).forEach(dataset -> ((Dataset)dataset).getDataSource().setParameters(null));
             esRepos.saveBulk(tenant, entities);
             entities.stream().filter(e -> e instanceof Dataset)
                     .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate, updateDate));
