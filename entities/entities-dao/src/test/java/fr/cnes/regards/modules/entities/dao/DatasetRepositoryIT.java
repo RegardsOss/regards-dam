@@ -86,7 +86,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
         dataset.setSubsettingClause(getValidClause());
         dataset.setDataModel(srcModel.getId());
 
-        String stringCLause = gson.toJson(dataset.getSubsettingClause());
+        gson.toJson(dataset.getSubsettingClausePartToCheck());
 
         dataset = datasetRepo.save(dataset);
 
