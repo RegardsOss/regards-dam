@@ -15,6 +15,7 @@
 	<logger name="org.hibernate" level="INFO" />
  -->
 	<logger name="fr.cnes.regards.modules.datasources" level="INFO" />
+	<logger name="fr.cnes.regards.modules.crawler.service" level="INFO"/>
 
 	<root level="error">
 		<appender-ref ref="STDOUT" />
