@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
@@ -114,6 +115,9 @@ public class IngesterGeometryServiceIT {
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
+    private IDatasetRepository datasetRepos;
+
+    @Autowired
     private IPluginService pluginService;
 
     @Autowired
@@ -182,6 +186,7 @@ public class IngesterGeometryServiceIT {
 
         dsIngestionRepos.deleteAll();
 
+        datasetRepos.deleteAll();
         entityRepos.deleteAll();
         modelRepository.deleteAll();
 

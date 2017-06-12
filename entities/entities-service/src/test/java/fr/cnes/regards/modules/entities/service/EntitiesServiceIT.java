@@ -69,11 +69,8 @@ public class EntitiesServiceIT {
     @Before
     public void init() throws ModuleException {
         datasetRepository.deleteAll();
-        em.flush();
         modelRepository.deleteAll();
-        em.flush();
         pluginConfRepos.deleteAll();
-        em.flush();
 
         // first initialize the pluginConfiguration for the attributes
         jwtService.injectMockToken("PROJECT", "ADMIN");

@@ -19,6 +19,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
@@ -82,6 +85,12 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelAttrAssocService modelAttributeService;
 
+    @Autowired
+    private IDatasetRepository datasetRepository;
+
+    @Autowired
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+
     /**
      * Attribute endpoint
      */
@@ -94,6 +103,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
     @Before
     public void setUp() throws ModuleException {
+        datasetRepository.deleteAll();
+        entityRepos.deleteAll();
         modelAttributeRepository.deleteAll();
         attributeModelRepository.deleteAll();
         modelRepository.deleteAll();
