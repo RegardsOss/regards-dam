@@ -48,6 +48,7 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -130,6 +131,9 @@ public class CrawlerIngestIT {
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
+    private IDatasetRepository datasetRepos;
+
+    @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
     private DataSourceModelMapping dataSourceModelMapping;
@@ -189,6 +193,7 @@ public class CrawlerIngestIT {
 
         attrAssocRepos.deleteAll();
         entityRepos.deleteAll();
+        datasetRepos.deleteAll();
         pluginConfRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
