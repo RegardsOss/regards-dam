@@ -24,6 +24,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -102,6 +103,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(value = PARAM_TYPE, required = false) final AttributeType pType,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) final String pFragmentName) {
         final List<AttributeModel> attributes = attributeService.getAttributes(pType, pFragmentName);
+        // Build JSON path
+        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
     }
 
