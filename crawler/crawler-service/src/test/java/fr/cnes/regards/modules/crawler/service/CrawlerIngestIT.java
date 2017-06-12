@@ -192,8 +192,8 @@ public class CrawlerIngestIT {
         rabbitVhostAdmin.unbind();
 
         attrAssocRepos.deleteAll();
-        entityRepos.deleteAll();
         datasetRepos.deleteAll();
+        entityRepos.deleteAll();
         pluginConfRepos.deleteAll();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();

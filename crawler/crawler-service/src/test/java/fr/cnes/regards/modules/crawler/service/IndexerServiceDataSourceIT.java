@@ -72,6 +72,7 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -195,6 +196,9 @@ public class IndexerServiceDataSourceIT {
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
+    private IDatasetRepository datasetRepos;
+
+    @Autowired
     private IEsRepository esRepos;
 
     @Autowired
@@ -250,6 +254,7 @@ public class IndexerServiceDataSourceIT {
         amqpAdmin.purgeQueue(EntityEvent.class, false);
         rabbitVhostAdmin.unbind();
 
+        datasetRepos.deleteAll();
         entityRepos.deleteAll();
         modelAttrAssocRepo.deleteAll();
         pluginConfRepo.deleteAll();

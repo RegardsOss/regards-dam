@@ -22,6 +22,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -30,6 +31,7 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
 
+import fr.cnes.regards.framework.gson.utils.GSONConstants;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
@@ -161,14 +163,16 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private List<AttributeProperty> properties;
 
     /**
-     * Reference of a root attribute (i.e. in default fragment). Identical to name.
+     * Used in search request parsing only
      */
-    // @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name reference must conform to regular expression \""
-    // + Model.NAME_REGEXP + "\".")
-    // @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name reference must be between "
-    // + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
-    // @Column(name = "refname", length = Model.NAME_MAX_SIZE)
-    // private String ref;
+    @Transient
+    private boolean dynamic = true;
+
+    /**
+     * Used in search request. Define the JSON path to the related values in entities
+     */
+    @Transient
+    private String jsonPath;
 
     @Override
     public Long getId() {
@@ -389,19 +393,39 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         defaultValue = pDefaultValue;
     }
 
-    // public String getRef() {
-    // return ref;
-    // }
-    //
-    // public void setRef(String pRef) {
-    // ref = pRef;
-    // }
-
     public List<AttributeProperty> getProperties() {
         return properties;
     }
 
     public void setProperties(List<AttributeProperty> pProperties) {
         properties = pProperties;
+    }
+
+    public boolean isDynamic() {
+        return dynamic;
+    }
+
+    public void setDynamic(boolean pDynamic) {
+        dynamic = pDynamic;
+    }
+
+    public String getJsonPath() {
+        return jsonPath;
+    }
+
+    public void setJsonPath(String pJsonPath) {
+        jsonPath = pJsonPath;
+    }
+
+    public String buildJsonPath(String namespace) {
+        StringBuilder builder = new StringBuilder(namespace);
+        builder.append(GSONConstants.JSON_PATH_SEPARATOR);
+        if (!fragment.isDefaultFragment()) {
+            builder.append(fragment.getName());
+            builder.append(GSONConstants.JSON_PATH_SEPARATOR);
+        }
+        builder.append(name);
+        jsonPath = builder.toString();
+        return jsonPath;
     }
 }

@@ -21,6 +21,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
@@ -63,6 +64,9 @@ public class MultiTenantCrawlerIT {
     private ICollectionRepository collRepos;
 
     @Autowired
+    private IDatasetRepository datasetRepos;
+
+    @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
@@ -91,7 +95,9 @@ public class MultiTenantCrawlerIT {
         }
 
         tenantResolver.forceTenant(TENANT1);
+        datasetRepos.deleteAll();
         collRepos.deleteAll();
+        datasetRepos.deleteAll();
         modelRepos.deleteAll();
 
         tenantResolver.forceTenant(TENANT2);
