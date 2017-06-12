@@ -28,6 +28,7 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -79,7 +80,7 @@ public class CollectionDatasetGroupsIT {
     private IDatasetRepository datasetRepository;
 
     @Autowired
-    private IAbstractEntityRepository entityRepos;
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
     private IModelRepository modelRepository;
