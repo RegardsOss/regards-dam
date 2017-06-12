@@ -10,7 +10,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Iterables;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
-import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -55,12 +54,8 @@ public abstract class AbstractModelTest extends AbstractDaoTransactionalTest {
     @Autowired
     protected IModelAttrAssocRepository modelAttributeRepository;
 
-    @Autowired
-    protected IDatasetRepository datasetRepository;
-
     @Before
     public void cleanBefore() {
-        datasetRepository.deleteAll();
         modelAttributeRepository.deleteAll();
         attModelRepository.deleteAll();
         modelRepository.deleteAll();

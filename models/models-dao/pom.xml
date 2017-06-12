@@ -31,10 +31,5 @@
 			<artifactId>jpa-multitenant-regards-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-dao</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 </project>
