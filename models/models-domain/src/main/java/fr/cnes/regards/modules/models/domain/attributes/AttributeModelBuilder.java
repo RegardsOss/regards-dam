@@ -65,6 +65,11 @@ public final class AttributeModelBuilder {
         return this;
     }
 
+    public AttributeModelBuilder defaultFragment() {
+        attributeModel.setFragment(Fragment.buildDefault());
+        return this;
+    }
+
     public AttributeModelBuilder isStatic() {
         attributeModel.setDynamic(false);
         return this;
