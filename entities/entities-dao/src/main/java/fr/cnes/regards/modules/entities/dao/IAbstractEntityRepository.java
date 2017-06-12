@@ -88,5 +88,4 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
      * @return entities which contain given tag
      */
     List<T> findByTags(String pTagToSearch);
-
 }
