@@ -432,7 +432,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
-        if ((pFile != null) && !pFile.isEmpty()) {
+        if ((pFile != null) && !pFile.isEmpty() && (pEntity.getDescriptionFile() != null)) {
             // collections and dataset only have a description which is a url or a file
             if (!isContentTypeAcceptable(pFile, pEntity)) {
                 throw new EntityDescriptionUnacceptableType(pFile.getContentType());
@@ -492,9 +492,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param pEntity
      * @return true or false
      */
-    private <T extends AbstractEntity> boolean isContentTypeAcceptable(MultipartFile pFile, T pEntity) {
-        if (pEntity instanceof AbstractDescEntity) {
-            String fileContentType = ((AbstractDescEntity) pEntity).getDescriptionFile().getType().toString();
+    private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(MultipartFile pFile, T pEntity) {
+        if (pEntity.getDescriptionFile() != null) {
+            String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");
             String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
             return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
