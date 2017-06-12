@@ -86,6 +86,7 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
 
     @Override
     protected Consumer<DataObject> doCompute() {
+        super.result = 0;
         return object -> doSum(extractProperty(object));
     }
 

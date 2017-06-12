@@ -102,9 +102,10 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * @throws ModuleException
      */
     private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
-        final ICriterion subsettingCriterion = pDataset.getSubsettingClause();
-        if (subsettingCriterion != null) {
-
+        // getSubsettingClausePartToCheck() cannot be null
+        final ICriterion subsettingCriterion = pDataset.getSubsettingClausePartToCheck();
+        // To avoid loading models when not necessary
+        if (!subsettingCriterion.equals(ICriterion.all())) {
             final SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
                     modelService.getModel(pDataset.getDataModel()), attributeService, modelAttributeService);
             if (!subsettingCriterion.accept(criterionVisitor)) {

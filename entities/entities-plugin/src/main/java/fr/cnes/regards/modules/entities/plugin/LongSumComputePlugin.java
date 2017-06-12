@@ -86,6 +86,7 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
 
     @Override
     protected Consumer<DataObject> doCompute() {
+        super.result = 0L;
         return object -> doSum(extractProperty(object));
     }
 

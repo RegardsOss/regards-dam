@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -61,11 +63,17 @@ public class EntitiesServiceIT {
 
     private Dataset dataset;
 
+    @PersistenceContext
+    private EntityManager em;
+
     @Before
     public void init() throws ModuleException {
         datasetRepository.deleteAll();
+        em.flush();
         modelRepository.deleteAll();
+        em.flush();
         pluginConfRepos.deleteAll();
+        em.flush();
 
         // first initialize the pluginConfiguration for the attributes
         jwtService.injectMockToken("PROJECT", "ADMIN");

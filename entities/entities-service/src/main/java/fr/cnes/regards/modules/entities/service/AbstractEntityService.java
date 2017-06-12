@@ -111,13 +111,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
-
-
     public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<U> pRepository, EntityManager pEm,
-            IPublisher pPublisher,IRuntimeTenantResolver runtimeTenantResolver) {
+            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
@@ -127,7 +125,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         repository = pRepository;
         em = pEm;
         publisher = pPublisher;
-        this.runtimeTenantResolver=runtimeTenantResolver;
+        this.runtimeTenantResolver = runtimeTenantResolver;
     }
 
     @Override
@@ -172,8 +170,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty())
-                && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity.getProperties().isEmpty()))) {
+        if (((modAtts == null) || modAtts.isEmpty()) && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity
+                .getProperties().isEmpty()))) {
             pErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                 "No properties defined in corresponding model but trying to create.");
         }
@@ -242,14 +240,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, pErrors);
                 } else {
-                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
-                                                          validator.getClass().getName(), key);
+                    String defaultMessage = String
+                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
+                                    key);
                     pErrors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
         }
     }
-
 
     /**
      * Compute available validators
@@ -333,7 +331,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         U entity = checkCreation(pEntity);
 
         // Set IpId
-        if(entity.getIpId()==null) {
+        if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
                                                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
@@ -434,9 +432,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile)
             throws IOException, ModuleException {
-        if ((pFile != null) && !pFile.isEmpty()) {
+        if ((pFile != null) && !pFile.isEmpty() && (pEntity.getDescriptionFile() != null)) {
             // collections and dataset only have a description which is a url or a file
-            if (!isContentTypeAcceptable(pFile)) {
+            if (!isContentTypeAcceptable(pFile, pEntity)) {
                 throw new EntityDescriptionUnacceptableType(pFile.getContentType());
             }
             // 10MB
@@ -448,8 +446,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
             }
             // description or description file
-            pEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
-                    MediaType.valueOf(pFile.getContentType())));
+            pEntity.setDescriptionFile(
+                    new DescriptionFile(pFile.getBytes(), MediaType.valueOf(pFile.getContentType())));
         }
     }
 
@@ -486,16 +484,23 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * Return true if file content type is acceptable (PDF or MARKDOWN)
+     * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type sent into the
+     * entity and not the multipart file because markdown is not yet a standardized MIMEType and our front cannot change
+     * the content type of the corresponding part
      *
      * @param pFile file
+     * @param pEntity
      * @return true or false
      */
-    private static boolean isContentTypeAcceptable(MultipartFile pFile) {
-        String fileContentType = pFile.getContentType();
-        int charsetIdx = fileContentType.indexOf(";charset");
-        String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-        return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+    private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(MultipartFile pFile, T pEntity) {
+        if (pEntity.getDescriptionFile() != null) {
+            String fileContentType = pEntity.getDescriptionFile().getType().toString();
+            int charsetIdx = fileContentType.indexOf(";charset");
+            String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
+                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
+        }
+        return false;
     }
 
     /**
@@ -553,7 +558,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         U entityInDb = checkUpdate(pEntityId, pEntity);
         if (pEntity instanceof AbstractDescEntity) {
             // In all cases....
-            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity)entityInDb).getDescriptionFile());
+            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity) entityInDb).getDescriptionFile());
             // ...and eventually be overriden if file != null (see this.setDescription() method)
             this.setDescription((AbstractDescEntity) pEntity, file);
         }
@@ -571,7 +576,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         entityInDb = checkUpdate(entityInDb.getId(), pEntity);
         if (pEntity instanceof AbstractDescEntity) {
             // In all cases....
-            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity)entityInDb).getDescriptionFile());
+            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity) entityInDb).getDescriptionFile());
             // ...and eventually be overriden if file != null (see this.setDescription() method)
             this.setDescription((AbstractDescEntity) pEntity, file);
         }
