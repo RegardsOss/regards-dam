@@ -3,10 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -15,10 +11,12 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.annotations.Type;
 
-import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -56,7 +54,6 @@ public class Dataset extends AbstractDescEntity {
     @ManyToOne
     @JoinColumn(name = "ds_plugin_conf_id", foreignKey = @ForeignKey(name = "fk_ds_plugin_conf_id"), nullable = true,
             updatable = false)
-    @GsonIgnore
     private PluginConfiguration plgConfDataSource;
 
     /**
