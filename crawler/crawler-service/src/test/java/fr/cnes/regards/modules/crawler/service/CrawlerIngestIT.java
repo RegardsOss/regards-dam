@@ -201,7 +201,7 @@ public class CrawlerIngestIT {
 
         // Register model attributes
         dataModel = new Model();
-        dataModel.setName("model_1");
+        dataModel.setName("model_1" + System.currentTimeMillis());
         dataModel.setType(EntityType.DATA);
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
