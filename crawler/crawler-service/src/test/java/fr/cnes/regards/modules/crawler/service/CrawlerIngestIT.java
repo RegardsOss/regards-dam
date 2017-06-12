@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
@@ -20,6 +18,8 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -28,7 +28,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -80,6 +79,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 public class CrawlerIngestIT {
+    private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
@@ -173,12 +173,9 @@ public class CrawlerIngestIT {
     @Autowired
     private IModelAttrAssocRepository attrAssocRepos;
 
-    @PersistenceContext
-    private EntityManager em;
-
     @Before
     public void setUp() throws Exception {
-
+        LOGGER.info("********************* setUp CrawlerIngestIT ***********************************");
         // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
@@ -197,13 +194,9 @@ public class CrawlerIngestIT {
         rabbitVhostAdmin.unbind();
 
         attrAssocRepos.deleteAll();
-        em.flush();
         datasetRepos.deleteAll();
-        em.flush();
         entityRepos.deleteAll();
-        em.flush();
         pluginConfRepos.deleteAll();
-        em.flush();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
 
@@ -211,7 +204,7 @@ public class CrawlerIngestIT {
 
         // Register model attributes
         dataModel = new Model();
-        dataModel.setName("model_1");
+        dataModel.setName("model_1" + System.currentTimeMillis());
         dataModel.setType(EntityType.DATA);
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
@@ -237,10 +230,12 @@ public class CrawlerIngestIT {
         // DataSource PluginConf
         dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
+        LOGGER.info("***************************************************************************");
     }
 
     @After
     public void clean() {
+        LOGGER.info("********************* clean CrawlerIngestIT ***********************************");
         // Don't use entity service to clean because events are published on RabbitMQ
         if (dataset != null) {
             Utils.execute(entityRepos::delete, dataset.getId());
@@ -259,6 +254,7 @@ public class CrawlerIngestIT {
         if (dataModel != null) {
             Utils.execute(modelService::deleteModel, dataModel.getId());
         }
+        LOGGER.info("***************************************************************************");
     }
 
     private PluginConfiguration getPostgresDataSource(final PluginConfiguration pluginConf) {
@@ -301,6 +297,7 @@ public class CrawlerIngestIT {
 
     @Test
     public void test() throws ModuleException, IOException, InterruptedException {
+        LOGGER.info("********************* test CrawlerIngestIT ***********************************");
         final String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
         indexerService.deleteIndex(tenant);
@@ -356,5 +353,6 @@ public class CrawlerIngestIT {
                 .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().isAfter(data.getCreationDate())).count());
+        LOGGER.info("***************************************************************************");
     }
 }
