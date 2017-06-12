@@ -3,8 +3,6 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
@@ -28,7 +26,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -173,9 +170,6 @@ public class CrawlerIngestIT {
     @Autowired
     private IModelAttrAssocRepository attrAssocRepos;
 
-    @PersistenceContext
-    private EntityManager em;
-
     @Before
     public void setUp() throws Exception {
 
@@ -197,13 +191,9 @@ public class CrawlerIngestIT {
         rabbitVhostAdmin.unbind();
 
         attrAssocRepos.deleteAll();
-        em.flush();
         datasetRepos.deleteAll();
-        em.flush();
         entityRepos.deleteAll();
-        em.flush();
         pluginConfRepos.deleteAll();
-        em.flush();
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
 
