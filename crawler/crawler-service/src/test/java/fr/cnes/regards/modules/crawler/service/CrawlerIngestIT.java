@@ -18,6 +18,8 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -77,6 +79,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 public class CrawlerIngestIT {
+    private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
@@ -172,7 +175,7 @@ public class CrawlerIngestIT {
 
     @Before
     public void setUp() throws Exception {
-
+        LOGGER.info("********************* setUp CrawlerIngestIT ***********************************");
         // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
@@ -227,6 +230,7 @@ public class CrawlerIngestIT {
         // DataSource PluginConf
         dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
+        LOGGER.info("***************************************************************************");
     }
 
     @After
