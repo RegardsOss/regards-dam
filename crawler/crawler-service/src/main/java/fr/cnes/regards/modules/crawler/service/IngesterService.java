@@ -23,10 +23,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
@@ -252,7 +252,7 @@ public class IngesterService implements IIngesterService {
     }
 
     @Override
-    @Transactional
+    @MultitenantTransactional
     public void updateAndCleanTenantDatasourceIngestions(String tenant) {
         // First, check if all existing datasource plugins are managed
         Map<Long, DatasourceIngestion> dsIngestionsMap = dsIngestionRepos.findAll().stream()
@@ -303,7 +303,7 @@ public class IngesterService implements IIngesterService {
      * Find a Datasource ready to be ingested and mark it at "CREATED" in a transaction
      */
     @Override
-    @Transactional
+    @MultitenantTransactional
     public Optional<DatasourceIngestion> pickAndStartDatasourceIngestion(String pTenant) {
         Optional<DatasourceIngestion> dsIngestionOpt = dsIngestionRepos
                 .findTopByNextPlannedIngestDateLessThanAndStatusNot(OffsetDateTime.now()
