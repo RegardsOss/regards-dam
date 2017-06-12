@@ -236,24 +236,12 @@ public class CrawlerIngestIT {
     @After
     public void clean() {
         LOGGER.info("********************* clean CrawlerIngestIT ***********************************");
-        // Don't use entity service to clean because events are published on RabbitMQ
-        if (dataset != null) {
-            Utils.execute(entityRepos::delete, dataset.getId());
-        }
-
-        if (dataSourcePluginConf != null) {
-            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
-        }
-        if (dBConnectionConf != null) {
-            Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
-        }
-
-        if (datasetModel != null) {
-            Utils.execute(modelService::deleteModel, datasetModel.getId());
-        }
-        if (dataModel != null) {
-            Utils.execute(modelService::deleteModel, dataModel.getId());
-        }
+        attrAssocRepos.deleteAll();
+        datasetRepos.deleteAll();
+        entityRepos.deleteAll();
+        pluginConfRepos.deleteAll();
+        modelRepository.deleteAll();
+        extDataRepos.deleteAll();
         LOGGER.info("***************************************************************************");
     }
 
@@ -333,6 +321,9 @@ public class CrawlerIngestIT {
 
         final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
         // Search for DataObjects tagging dataset1
+        LOGGER.info("searchService : " + searchService);
+        LOGGER.info("dataset : " + dataset);
+        LOGGER.info("dataset.getIpId() : " + dataset.getIpId());
         Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
                                                             ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(1L, objectsPage.getTotalElements());
