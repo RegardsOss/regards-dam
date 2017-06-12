@@ -3,11 +3,12 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -165,8 +172,8 @@ public class DatasetController implements IResourceController<Dataset> {
             throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        DescriptionFile file=service.retrieveDescription(pDatasetId);
-        if(file!=null) {
+        DescriptionFile file = service.retrieveDescription(pDatasetId);
+        if (file != null) {
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
@@ -177,7 +184,6 @@ public class DatasetController implements IResourceController<Dataset> {
             response.setStatus(HttpStatus.NO_CONTENT.value());
         }
     }
-
 
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")
@@ -287,7 +293,6 @@ public class DatasetController implements IResourceController<Dataset> {
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_DATA_ATTRIBUTES_PATH)
-    @ResponseBody
     @ResourceAccess(description = "Retrieves data attributes of given datasets")
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveDataAttributes(
             @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> pUrns,
@@ -309,8 +314,7 @@ public class DatasetController implements IResourceController<Dataset> {
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Dataset.class),
-                                MethodParamFactory.build(MultipartFile.class),
+                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociateDataset", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),

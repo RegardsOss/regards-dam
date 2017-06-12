@@ -25,6 +25,10 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -67,13 +71,26 @@ public class CollectionDatasetGroupsIT {
     private ICollectionService collService;
 
     @Autowired
+    private ICollectionRepository collRepository;
+
+    @Autowired
     private IDatasetService dataSetService;
+
+    @Autowired
+    private IDatasetRepository datasetRepository;
+
+    @Autowired
+    private IAbstractEntityRepository<AbstractEntity> entityRepos;
 
     @Autowired
     private IModelRepository modelRepository;
 
     @Before
     public void setUp() throws Exception {
+        collRepository.deleteAll();
+        datasetRepository.deleteAll();
+        entityRepos.deleteAll();
+        modelRepository.deleteAll();
     }
 
     @After

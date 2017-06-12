@@ -66,10 +66,10 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
     private final Map<String, AttributeModel> staticPropertyMap;
 
     /**
-     * Store dynamic properties by tenant and name (including namespace or fragment name)
+     * Store dynamic properties by tenant and name (including namespace (i.e.) fragment name)
      *
-     * AT THE MOMENT, WE USE default fragment for naming avoiding potential collision
-     * FIXME : we could use properties wrapper to avoid collision with static properties and not use default fragment
+     * All dynamic properties is wrapped in <code>properties</code> namespace.
+     *
      */
     private final Map<String, Map<String, AttributeModel>> dynamicPropertyMap;
 
@@ -97,21 +97,20 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      */
     public void initStaticAttributes() {
 
-        staticPropertyMap.put(StaticProperties.LABEL,
-                              AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).get());
         staticPropertyMap
-                .put(StaticProperties.MODEL_NAME,
-                     AttributeModelBuilder.build(StaticProperties.MODEL_NAME, AttributeType.STRING, null).get());
-        staticPropertyMap
-                .put(StaticProperties.LAST_UPDATE,
-                     AttributeModelBuilder.build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).get());
+                .put(StaticProperties.LABEL,
+                     AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.MODEL_NAME, AttributeModelBuilder
+                .build(StaticProperties.MODEL_NAME, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.LAST_UPDATE, AttributeModelBuilder
+                .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic().get());
         staticPropertyMap.put(StaticProperties.CREATION_DATE, AttributeModelBuilder
-                .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null).get());
-        staticPropertyMap.put(StaticProperties.TAGS,
-                              AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).get());
+                .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null).isStatic().get());
         staticPropertyMap
-                .put(StaticProperties.ENTITY_TYPE,
-                     AttributeModelBuilder.build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null).get());
+                .put(StaticProperties.TAGS,
+                     AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.ENTITY_TYPE, AttributeModelBuilder
+                .build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null).isStatic().get());
 
     }
 
@@ -160,9 +159,8 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
             }
 
             for (AttributeModel attModel : attModels) {
-                // Tenant map will contain mapping between <fragmentName>.<attributeName> and the attribute model
-                String key = attModel.getFragment().getName() + "." + attModel.getName();
-                tenantMap.put(key, attModel);
+                // Tenant map will contain mapping between properties.[fragmentNameNotDefault.]<attributeName> and the attribute model
+                tenantMap.put(attModel.buildJsonPath(StaticProperties.PROPERTIES), attModel);
             }
 
             return attModels;

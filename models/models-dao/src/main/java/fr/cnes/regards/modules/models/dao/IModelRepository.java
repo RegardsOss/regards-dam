@@ -29,6 +29,6 @@ public interface IModelRepository extends CrudRepository<Model, Long> {
 
     @Override
     @Modifying
-    @Query(value = "TRUNCATE t_model CASCADE", nativeQuery = true)
+    @Query(value = "DELETE FROM t_model CASCADE", nativeQuery = true)
     void deleteAll();
 }

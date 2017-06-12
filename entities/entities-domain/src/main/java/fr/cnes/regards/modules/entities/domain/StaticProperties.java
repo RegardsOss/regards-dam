@@ -56,6 +56,9 @@ public final class StaticProperties {
     // Geometry
     public static final String GEOMETRY = "geometry";
 
+    // Wrappped dynamic properties
+    public static final String PROPERTIES = "properties";
+
     // ##########-AbstractDataEntity-##########
 
     // List of DataFile

@@ -16,15 +16,12 @@ import java.util.StringJoiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,31 +30,25 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.bind.annotation.RequestMethod;
 
-import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-
-import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.HttpConstants;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -211,6 +202,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Dataset dataSet21 = new Dataset(model1, DEFAULT_TENANT, "dataSet21");
         dataSet21.setLicence("licence");
         dataSet21.setCreationDate(OffsetDateTime.now());
+        dataSet21.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         dataSet21 = dsService.create(dataSet21, pdf);
@@ -247,7 +239,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    @Ignore("we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder. cf CollectionControlerIT")
     public void testUpdateDataset() {
         final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "dataset1clone");
         dataSetClone.setLicence("licence");
@@ -258,12 +249,19 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSetClone.setSipId(dataSet1.getSipId() + "new");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSetClone,
-                          expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
+
+        final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+                                                                gson(dataSetClone).getBytes());
+        List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(dataset);
+
+        performDefaultFileUpload(RequestMethod.POST, DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
+                                 parts, expectations, "Failed to update a specific dataset using its id",
+                                 dataSetClone.getId());
+
     }
 
     @Test
-    @Ignore("we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder. cf CollectionControlerIT")
     public void testFullUpdate() {
         final Dataset dataSetClone = new Dataset(dataSet1.getModel(), "", "collection1clone");
         dataSetClone.setLicence("licence");
@@ -275,8 +273,14 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
-        performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSetClone,
-                          expectations, "Failed to update a specific dataset using its id", dataSet1.getId());
+        final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
+                                                                gson(dataSetClone).getBytes());
+        List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(dataset);
+
+        performDefaultFileUpload(RequestMethod.POST, DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
+                                 parts, expectations, "Failed to update a specific dataset using its id",
+                                 dataSetClone.getId());
     }
 
     @Test
@@ -310,63 +314,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
         performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
-    }
-
-    /**
-     * Check that the system automatically converts an OpenSearch query string into a search criterion
-     *
-     * @throws ModuleException
-     */
-    @Test
-    @Purpose("Check that the system automatically converts an OpenSearch query string into a search criterion")
-    @Ignore("we need to find a workaround to set RequestMethod to PUT instead of POST which is forced by MockMultipartHttpServletRequestBuilder. cf CollectionControlerIT#fullUpdate for exemples")
-    public void testStringToICriterionConversion() throws ModuleException {
-        // Prepare test ecosystem
-        importModel("dataModel.xml");
-        importModel("datasetModel.xml");
-        final Model dataModel = modelService.getModelByName("dataModel");
-        final Model datasetModel = modelService.getModelByName("datasetModel");
-        // pre-created datasets do not use the same data model so we cannot use them for this test: we have to create
-        // one
-        final Dataset dataSet = new Dataset(datasetModel, DEFAULT_TENANT, "Base");
-        dataSet.setCreationDate(OffsetDateTime.now());
-        dataSet.setSipId("SipId1");
-        dataSet.setLabel("label");
-        dataSet.setDataModel(dataModel.getId());
-
-        final Dataset dataSetClone = new Dataset(datasetModel, "", "Coucou");
-        dataSetClone.setLicence("licence");
-        dataSetClone.setCreationDate(OffsetDateTime.now());
-        dataSetClone.setIpId(dataSet.getIpId());
-        dataSetClone.setId(datasetRepository.save(dataSet).getId());
-        dataSetClone.setTags(dataSet.getTags());
-        dataSetClone.setSipId(dataSet.getSipId() + "new");
-        dataSetClone.setDataModel(dataModel.getId());
-        dataSetClone.getProperties().add(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
-        dataSetClone.getProperties().add(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
-        dataSetClone.getProperties().add(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
-        dataSetClone.getProperties().add(AttributeBuilder.buildLong("count", 454L));
-
-        // Set test case
-        dataSetClone.setOpenSearchSubsettingClause("q=FILE_SIZE:10");
-        Mockito.when(attributeModelClient.getAttributes(Mockito.any(), Mockito.any())).thenReturn(ResponseEntity
-                                                                                                          .ok(HateoasUtils
-                                                                                                                      .wrapList(
-                                                                                                                              Lists.newArrayList(
-                                                                                                                                      AttributeModelBuilder
-                                                                                                                                              .build("FILE_SIZE",
-                                                                                                                                                     AttributeType.INTEGER,
-                                                                                                                                                     "ForTests")
-                                                                                                                                              .get()))));
-
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT + ".content", Matchers.notNullValue()));
-        expectations.add(MockMvcResultMatchers
-                                 .jsonPath(JSON_PATH_ROOT + ".content.subsettingClause", Matchers.notNullValue()));
-
-        performDefaultPut(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, dataSetClone,
-                          expectations, "Failed to update a specific dataset using its id", dataSet.getId());
     }
 
     /**

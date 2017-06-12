@@ -44,6 +44,7 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -136,6 +137,9 @@ public class IngesterServiceIT {
 
     @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
+
+    @Autowired
+    private IDatasetRepository datasetRepos;
 
     @Autowired
     private IPluginService pluginService;
@@ -235,6 +239,7 @@ public class IngesterServiceIT {
         extData2Repos.deleteAll();
         extData3Repos.deleteAll();
 
+        datasetRepos.deleteAll();
         entityRepos.deleteAll();
         modelAttrAssocRepos.deleteAll();
         modelRepository.deleteAll();

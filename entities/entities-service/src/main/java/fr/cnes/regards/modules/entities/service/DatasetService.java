@@ -3,17 +3,19 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Objects;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -32,6 +34,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -61,12 +64,13 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             IModelAttrAssocService pModelAttributeService, DataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository) {
+            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IDescriptionFileRepository descriptionFileRepository) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
-        this.descriptionFileRepository=descriptionFileRepository;
+        this.descriptionFileRepository = descriptionFileRepository;
     }
 
     /**
@@ -98,14 +102,16 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * @throws ModuleException
      */
     private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
-        // getSubsettingClause() cannot be null
+        // getSubsettingClausePartToCheck() cannot be null
         final ICriterion subsettingCriterion = pDataset.getSubsettingClausePartToCheck();
-        // ...But is an AndCriterion
-        final SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
-                modelService.getModel(pDataset.getDataModel()), attributeService, modelAttributeService);
-        if (!subsettingCriterion.accept(criterionVisitor)) {
-            throw new EntityInvalidException(
-                    "Given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
+        // To avoid loading models when not necessary
+        if (!subsettingCriterion.equals(ICriterion.all())) {
+            final SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
+                    modelService.getModel(pDataset.getDataModel()), attributeService, modelAttributeService);
+            if (!subsettingCriterion.accept(criterionVisitor)) {
+                throw new EntityInvalidException(
+                        "Given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
+            }
         }
         return pDataset;
     }
@@ -113,7 +119,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     protected void doCheck(final Dataset pEntity, final Dataset entityInDB) throws ModuleException {
         Dataset ds = checkDataSource(pEntity);
-        ds = checkSubsettingCriterion(ds);
+        checkSubsettingCriterion(ds);
         // check for updates on data model or datasource
         // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
         if (entityInDB != null) {
@@ -145,21 +151,20 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Override
     public DescriptionFile retrieveDescription(Long datasetId) throws EntityNotFoundException {
-        Dataset ds=datasetRepository.findOneDescriptionFile(datasetId);
-        if(ds==null) {
+        Dataset ds = datasetRepository.findOneDescriptionFile(datasetId);
+        if (ds == null) {
             throw new EntityNotFoundException(datasetId, Dataset.class);
         }
-        DescriptionFile desc=ds.getDescriptionFile();
-        return desc;
+        return ds.getDescriptionFile();
     }
 
     @Override
     public void removeDescription(Long datasetId) throws EntityNotFoundException {
-        Dataset ds=datasetRepository.findOneDescriptionFile(datasetId);
-        if(ds==null) {
+        Dataset ds = datasetRepository.findOneDescriptionFile(datasetId);
+        if (ds == null) {
             throw new EntityNotFoundException(datasetId, Dataset.class);
         }
-        DescriptionFile desc=ds.getDescriptionFile();
+        DescriptionFile desc = ds.getDescriptionFile();
         ds.setDescriptionFile(null);
         descriptionFileRepository.delete(desc);
     }
@@ -170,7 +175,10 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(final Collection<Dataset> datasets,
             final Pageable pPageable) throws ModuleException {
         final List<Long> modelIds = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
-        return modelAttributeService.getAttributeModels(modelIds, pPageable);
+        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelIds, pPageable);
+        // Build JSON path
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        return attModelPage;
     }
 
 }

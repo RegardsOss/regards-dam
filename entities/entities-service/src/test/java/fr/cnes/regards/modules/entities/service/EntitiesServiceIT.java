@@ -3,6 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -60,6 +62,9 @@ public class EntitiesServiceIT {
     private IModelRepository modelRepository;
 
     private Dataset dataset;
+
+    @PersistenceContext
+    private EntityManager em;
 
     @Before
     public void init() throws ModuleException {
