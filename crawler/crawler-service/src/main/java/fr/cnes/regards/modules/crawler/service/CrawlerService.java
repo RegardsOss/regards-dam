@@ -5,18 +5,9 @@ package fr.cnes.regards.modules.crawler.service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -36,6 +27,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -133,22 +125,22 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Boolean indicating that a work is scheduled
      */
-    private boolean scheduledWork = false;
+    private static boolean scheduledWork = false;
 
     /**
      * Boolean indicating that something has been done
      */
-    private boolean somethingDone = false;
+    private static boolean somethingDone = false;
 
     /**
      * Boolean indicating that something is currently in progress
      */
-    private boolean inProgress = false;
+    private static boolean inProgress = false;
 
     /**
      * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
      */
-    private boolean consumeOnlyMode = false;
+    private static boolean consumeOnlyMode = false;
 
     /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
@@ -214,24 +206,27 @@ public class CrawlerService implements ICrawlerService {
      * @return true if a poll has been done, false otherwise
      */
     @Override
-    @Transactional
+    @MultitenantTransactional
     public boolean doPoll() {
         boolean atLeastOnePoll = false;
         // Try to poll an EntityEvent
         TenantWrapper<EntityEvent> wrapper = poller.poll(EntityEvent.class);
         if (wrapper != null) {
             String tenant = wrapper.getTenant();
-            LOGGER.info("Received message from tenant {} created at {}", tenant, wrapper.getDate());
+            LOGGER.info("Received message from tenant {} created at {}...", tenant, wrapper.getDate());
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
+                LOGGER.info("IpIds received {}", Arrays.toString(ipIds));
                 atLeastOnePoll = true;
                 // Message consume only, nothing else to be done, returning...
                 if (consumeOnlyMode) {
+                    LOGGER.info("CONSUME ONLY MODE TRUE !!!!");
                     return atLeastOnePoll;
                 }
                 // Only one entity
                 if (ipIds.length == 1) {
                     inProgress = true;
+                    LOGGER.info("Update entity into Elasticsearch {}", ipIds[0]);
                     updateEntityIntoEs(tenant, ipIds[0], OffsetDateTime.now());
                 } else if (ipIds.length > 1) { // several entities at once
                     inProgress = true;
@@ -258,9 +253,11 @@ public class CrawlerService implements ICrawlerService {
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate) {
         LOGGER.info("received msg for {}", ipId.toString());
+        LOGGER.info("Loading entity {}", ipId);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
+            LOGGER.info("Entity null !!");
             if (ipId.getEntityType() == EntityType.DATASET) {
                 manageDatasetDelete(tenant, ipId.toString());
             }
@@ -275,7 +272,9 @@ public class CrawlerService implements ICrawlerService {
                 ((Dataset) entity).getDataSource().setParameters(null);
             }
             // Then save entity
-            esRepos.save(tenant, entity);
+            LOGGER.info("Saving entity {}", entity);
+            boolean created = esRepos.save(tenant, entity);
+            LOGGER.info("Elasticsearch saving result : {}", created);
             if (entity instanceof Dataset) {
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
@@ -582,7 +581,7 @@ public class CrawlerService implements ICrawlerService {
     }
 
     @Override
-    @Transactional
+    @MultitenantTransactional
     public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, OffsetDateTime lastUpdateDate) {
         if (dsDatasetsPage.getContent().size() == 1) {
             this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId(), lastUpdateDate);
