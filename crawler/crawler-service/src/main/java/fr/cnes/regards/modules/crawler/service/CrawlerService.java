@@ -125,22 +125,22 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Boolean indicating that a work is scheduled
      */
-    private boolean scheduledWork = false;
+    private static boolean scheduledWork = false;
 
     /**
      * Boolean indicating that something has been done
      */
-    private boolean somethingDone = false;
+    private static boolean somethingDone = false;
 
     /**
      * Boolean indicating that something is currently in progress
      */
-    private boolean inProgress = false;
+    private static boolean inProgress = false;
 
     /**
      * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
      */
-    private boolean consumeOnlyMode = false;
+    private static boolean consumeOnlyMode = false;
 
     /**
      * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
