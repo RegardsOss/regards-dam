@@ -80,6 +80,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 //@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
 public class CrawlerIngestIT {
+
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
 
     @Autowired
@@ -252,8 +253,7 @@ public class CrawlerIngestIT {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -279,7 +279,7 @@ public class CrawlerIngestIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                "date"));
+                                                  "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
@@ -289,7 +289,7 @@ public class CrawlerIngestIT {
         LOGGER.info("********************* test CrawlerIngestIT ***********************************");
         final String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
-        indexerService.deleteIndex(tenant);
+        //        indexerService.deleteIndex(tenant);
 
         // Fill the DB with an object from 2000/01/01
         extDataRepos.saveAndFlush(new ExternalData(LocalDate.of(2000, Month.JANUARY, 1)));
@@ -307,16 +307,21 @@ public class CrawlerIngestIT {
         dataset.setDataSource(dataSourcePluginConf);
         dataset.setTags(Sets.newHashSet("BULLSHIT"));
         dataset.setGroups(Sets.newHashSet("group0", "group11"));
+        LOGGER.info("Creating dataset....");
         dsService.create(dataset);
+        LOGGER.info("Dataset created in DB....");
 
+        LOGGER.info("Waiting for end of crawler work");
         crawlerService.waitForEndOfWork();
+        LOGGER.info("Sleeping 10 s....");
         Thread.sleep(10_000);
+        LOGGER.info("...Waking");
 
         // Retrieve dataset1 from ES
         final UniformResourceName ipId = dataset.getIpId();
         dataset = searchService.get(ipId);
         if (dataset == null) {
-            Thread.sleep(3000L);
+            Thread.sleep(10_000L);
             esRepos.refresh(tenant);
             dataset = searchService.get(ipId);
         }
@@ -326,21 +331,21 @@ public class CrawlerIngestIT {
         LOGGER.info("searchService : " + searchService);
         LOGGER.info("dataset : " + dataset);
         LOGGER.info("dataset.getIpId() : " + dataset.getIpId());
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.eq("tags", dataset.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(1L, objectsPage.getTotalElements());
 
         // Fill the Db with an object dated 2001/01/01
         extDataRepos.save(new ExternalData(LocalDate.of(2001, Month.JANUARY, 1)));
 
         // Ingest from 2000/01/01 (strictly after)
-        summary = crawlerService.ingest(dataSourcePluginConf,
-                                        OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
+        summary = crawlerService
+                .ingest(dataSourcePluginConf, OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, summary.getSavedObjectsCount());
 
         // Search for DataObjects tagging dataset1
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(2L, objectsPage.getTotalElements());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());
