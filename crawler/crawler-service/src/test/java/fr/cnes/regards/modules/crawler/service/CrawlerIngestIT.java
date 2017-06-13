@@ -16,7 +16,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -79,7 +78,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
+//@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
 public class CrawlerIngestIT {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
@@ -308,10 +307,15 @@ public class CrawlerIngestIT {
         dataset.setDataSource(dataSourcePluginConf);
         dataset.setTags(Sets.newHashSet("BULLSHIT"));
         dataset.setGroups(Sets.newHashSet("group0", "group11"));
+        LOGGER.info("Creating dataset....");
         dsService.create(dataset);
+        LOGGER.info("Dataset created in DB....");
 
+        LOGGER.info("Waiting for end of crawler work");
         crawlerService.waitForEndOfWork();
+        LOGGER.info("Sleeping 10 s....");
         Thread.sleep(10_000);
+        LOGGER.info("...Waking");
 
         // Retrieve dataset1 from ES
         final UniformResourceName ipId = dataset.getIpId();
