@@ -447,7 +447,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             }
             // description or description file
             pEntity.setDescriptionFile(
-                    new DescriptionFile(pFile.getBytes(), MediaType.valueOf(pFile.getContentType())));
+                    new DescriptionFile(pFile.getBytes(), pEntity.getDescriptionFile().getType()));
         }
     }
 

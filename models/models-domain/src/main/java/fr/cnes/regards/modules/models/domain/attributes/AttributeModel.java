@@ -3,10 +3,6 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -28,6 +24,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.validator.constraints.NotBlank;
 
