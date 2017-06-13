@@ -38,7 +38,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
     /**
      * The request parameter containing the OpenSearch query
      */
-    private static final String QUERY_PARAMETER = "q";
+    public static final String QUERY_PARAMETER = "q";
 
     /**
      * Default field. Use a random string because we want to disable the lucene's default field behaviour.

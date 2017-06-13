@@ -186,8 +186,7 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         Map<String, AttributeModel> tenantMap = dynamicPropertyMap.get(tenant);
 
         if (tenantMap == null) {
-            String errorMessage = String.format("No property found for tenant %s. Unknown OpenSearch parameter %s",
-                                                tenant, pName);
+            String errorMessage = String.format("No property found for tenant %s. Unknown parameter %s", tenant, pName);
             LOGGER.error(errorMessage);
             throw new OpenSearchUnknownParameter(errorMessage);
         }
@@ -195,7 +194,7 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         attModel = tenantMap.get(pName);
 
         if (attModel == null) {
-            String errorMessage = String.format("Unknown OpenSearch parameter %s for tenant %s", pName, tenant);
+            String errorMessage = String.format("Unknown parameter %s for tenant %s", pName, tenant);
             LOGGER.error(errorMessage);
             throw new OpenSearchUnknownParameter(errorMessage);
         }
