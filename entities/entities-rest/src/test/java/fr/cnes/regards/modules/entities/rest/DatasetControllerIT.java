@@ -17,11 +17,13 @@ import java.util.StringJoiner;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,6 +34,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.utils.HttpConstants;
@@ -314,6 +317,20 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(5)));
         performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_DATA_ATTRIBUTES_PATH + queryParams,
                           expectations, "failed to fetch the data attributes");
+    }
+
+    @Test
+    public void testSubsettingValidation() throws ModuleException {
+
+        Mockito.when(attributeModelClient.getAttributes(null,null)).thenReturn(
+                ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
+        importModel("dataModel.xml");
+        final Model dataModel = modelService.getModelByName("dataModel");
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo("true")));
+
+        DatasetController.Query query=new DatasetController.Query("properties.FILE_SIZE:10");
+        performDefaultPost(DatasetController.DATASET_PATH+DatasetController.DATA_SUB_SETTING_VALIDATION+"?dataModelId="+dataModel.getId(),query,expectations,"Could not validate that subsetting clause");
     }
 
     /**
