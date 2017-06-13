@@ -221,17 +221,20 @@ public class CrawlerService implements ICrawlerService {
         TenantWrapper<EntityEvent> wrapper = poller.poll(EntityEvent.class);
         if (wrapper != null) {
             String tenant = wrapper.getTenant();
-            LOGGER.info("Received message from tenant {} created at {}", tenant, wrapper.getDate());
+            LOGGER.info("Received message from tenant {} created at {}...", tenant, wrapper.getDate());
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
+                LOGGER.info("IpIds received {}", Arrays.toString(ipIds));
                 atLeastOnePoll = true;
                 // Message consume only, nothing else to be done, returning...
                 if (consumeOnlyMode) {
+                    LOGGER.info("CONSUME ONLY MODE TRUE !!!!");
                     return atLeastOnePoll;
                 }
                 // Only one entity
                 if (ipIds.length == 1) {
                     inProgress = true;
+                    LOGGER.info("Update entity into Elasticsearch {}", ipIds[0]);
                     updateEntityIntoEs(tenant, ipIds[0], OffsetDateTime.now());
                 } else if (ipIds.length > 1) { // several entities at once
                     inProgress = true;
@@ -258,9 +261,11 @@ public class CrawlerService implements ICrawlerService {
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate) {
         LOGGER.info("received msg for {}", ipId.toString());
+        LOGGER.info("Loading entity {}", ipId);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
+            LOGGER.info("Entity null !!");
             if (ipId.getEntityType() == EntityType.DATASET) {
                 manageDatasetDelete(tenant, ipId.toString());
             }
@@ -275,7 +280,9 @@ public class CrawlerService implements ICrawlerService {
                 ((Dataset) entity).getDataSource().setParameters(null);
             }
             // Then save entity
-            esRepos.save(tenant, entity);
+            LOGGER.info("Saving entity {}", entity);
+            boolean created = esRepos.save(tenant, entity);
+            LOGGER.info("Elasticsearch saving result : {}", created);
             if (entity instanceof Dataset) {
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
