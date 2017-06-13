@@ -45,6 +45,8 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * Rest controller managing {@link Dataset}s
@@ -311,9 +313,13 @@ public class DatasetController implements IResourceController<Dataset> {
     public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelId") Long dataModelId, @RequestBody Query query)
             throws ModuleException {
         // we have to add "q=" to be able to parse the query
-        ICriterion criterionToBeVisited=openSearchService.parse("q="+query.getQuery());
-        SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelId);
-        return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
+        try {
+            ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
+            SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelId);
+            return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
+        } catch (OpenSearchParseException e) {
+            return ResponseEntity.ok(new Validity(false));
+        }
     }
 
     @Override

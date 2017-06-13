@@ -322,14 +322,20 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testSubsettingValidation() throws ModuleException {
 
+        importModel("dataModel.xml");
         Mockito.when(attributeModelClient.getAttributes(null,null)).thenReturn(
                 ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
-        importModel("dataModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo("true")));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
         DatasetController.Query query=new DatasetController.Query("properties.FILE_SIZE:10");
+        performDefaultPost(DatasetController.DATASET_PATH+DatasetController.DATA_SUB_SETTING_VALIDATION+"?dataModelId="+dataModel.getId(),query,expectations,"Could not validate that subsetting clause");
+
+        query=new DatasetController.Query("properties.DO_NOT_EXIST:10");
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
         performDefaultPost(DatasetController.DATASET_PATH+DatasetController.DATA_SUB_SETTING_VALIDATION+"?dataModelId="+dataModel.getId(),query,expectations,"Could not validate that subsetting clause");
     }
 
