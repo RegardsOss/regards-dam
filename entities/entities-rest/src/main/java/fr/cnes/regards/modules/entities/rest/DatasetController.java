@@ -35,14 +35,18 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.utils.Validity;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
+import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
+import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * Rest controller managing {@link Dataset}s
@@ -80,6 +84,8 @@ public class DatasetController implements IResourceController<Dataset> {
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
     public static final String DATASET_ID_PATH_FILE = DATASET_ID_PATH + "/file";
+
+    public static final String DATA_SUB_SETTING_VALIDATION = "/isValidSubsetting";
 
     /**
      * Service handling hypermedia resources
@@ -225,7 +231,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") final Long pDatasetId,
             @Valid @RequestPart("dataset") final Dataset pDataset,
-            @RequestPart(value="file", required = false) final MultipartFile descriptionFile,
+            @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
             final BindingResult pResult) throws ModuleException, IOException {
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
@@ -302,6 +308,20 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(pAssembler.toResource(result), HttpStatus.OK);
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = DATA_SUB_SETTING_VALIDATION)
+    @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model")
+    public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelId") Long dataModelId, @RequestBody Query query)
+            throws ModuleException {
+        // we have to add "q=" to be able to parse the query
+        try {
+            ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
+            SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelId);
+            return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
+        } catch (OpenSearchParseException e) {
+            return ResponseEntity.ok(new Validity(false));
+        }
+    }
+
     @Override
     public Resource<Dataset> toResource(final Dataset pElement, final Object... pExtras) {
         final Resource<Dataset> resource = resourceService.toResource(pElement);
@@ -323,6 +343,28 @@ public class DatasetController implements IResourceController<Dataset> {
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
         return resource;
+    }
+
+    /**
+     * Query POJO sent by our front to be validated
+     */
+    public static class Query {
+
+        private String query;
+
+        private Query() {}
+
+        public Query(String query) {
+            this.query = query;
+        }
+
+        public String getQuery() {
+            return query;
+        }
+
+        public void setQuery(String query) {
+            this.query = query;
+        }
     }
 
 }

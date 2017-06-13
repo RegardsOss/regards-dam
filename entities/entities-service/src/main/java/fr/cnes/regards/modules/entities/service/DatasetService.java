@@ -106,14 +106,19 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         final ICriterion subsettingCriterion = pDataset.getSubsettingClausePartToCheck();
         // To avoid loading models when not necessary
         if (!subsettingCriterion.equals(ICriterion.all())) {
-            final SubsettingCoherenceVisitor criterionVisitor = new SubsettingCoherenceVisitor(
-                    modelService.getModel(pDataset.getDataModel()), attributeService, modelAttributeService);
+            final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(pDataset.getDataModel());
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
                         "Given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
             }
         }
         return pDataset;
+    }
+
+    @Override
+    public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(Long dataModelId) throws ModuleException {
+        return new SubsettingCoherenceVisitor(modelService.getModel(dataModelId), attributeService,
+                                              modelAttributeService);
     }
 
     @Override
