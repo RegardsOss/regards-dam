@@ -34,7 +34,7 @@ public class LongRangeRestriction extends AbstractRestriction {
 
     /**
      * Minimum possible value (included)
-     * PEGI 18 : sdlfkjhsdkjhf
+     * PEGI 18 : same column used for LongRangeRestriction and IntegerRangeRestriction
      */
     @Column(name = "mini")
     @NotNull

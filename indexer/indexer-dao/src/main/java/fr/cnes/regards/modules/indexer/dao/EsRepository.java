@@ -503,7 +503,8 @@ public class EsRepository implements IEsRepository {
     }
 
     /**
-     * SearchAll cache used by {@link EsRepository#searchAll} to avoid redo same ES request while changing page. SortedSet is necessary to be sure several consecutive calls return same ordered set
+     * SearchAll cache used by {@link EsRepository#searchAll} to avoid redo same ES request while changing page.
+     * SortedSet is necessary to be sure several consecutive calls return same ordered set
      */
     private final LoadingCache<CacheKey, SortedSet<Object>> searchAllCache = CacheBuilder.newBuilder()
             .expireAfterAccess(TARGET_FORWARDING_CACHE_MN, TimeUnit.MINUTES)

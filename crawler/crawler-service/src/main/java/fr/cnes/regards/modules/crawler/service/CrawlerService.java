@@ -216,11 +216,11 @@ public class CrawlerService implements ICrawlerService {
             LOGGER.info("Received message from tenant {} created at {}...", tenant, wrapper.getDate());
             UniformResourceName[] ipIds = wrapper.getContent().getIpIds();
             if ((ipIds != null) && (ipIds.length != 0)) {
-                LOGGER.info("IpIds received {}", Arrays.toString(ipIds));
+                LOGGER.debug("IpIds received {}", Arrays.toString(ipIds));
                 atLeastOnePoll = true;
                 // Message consume only, nothing else to be done, returning...
                 if (consumeOnlyMode) {
-                    LOGGER.info("CONSUME ONLY MODE TRUE !!!!");
+                    LOGGER.debug("CONSUME ONLY MODE TRUE !!!!");
                     return atLeastOnePoll;
                 }
                 // Only one entity
@@ -253,11 +253,11 @@ public class CrawlerService implements ICrawlerService {
     private void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate) {
         LOGGER.info("received msg for {}", ipId.toString());
-        LOGGER.info("Loading entity {}", ipId);
+        LOGGER.debug("Loading entity {}", ipId);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
-            LOGGER.info("Entity null !!");
+            LOGGER.debug("Entity is null !!");
             if (ipId.getEntityType() == EntityType.DATASET) {
                 manageDatasetDelete(tenant, ipId.toString());
             }
@@ -272,9 +272,9 @@ public class CrawlerService implements ICrawlerService {
                 ((Dataset) entity).getDataSource().setParameters(null);
             }
             // Then save entity
-            LOGGER.info("Saving entity {}", entity);
+            LOGGER.debug("Saving entity {}", entity);
             boolean created = esRepos.save(tenant, entity);
-            LOGGER.info("Elasticsearch saving result : {}", created);
+            LOGGER.debug("Elasticsearch saving result : {}", created);
             if (entity instanceof Dataset) {
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
@@ -387,18 +387,18 @@ public class CrawlerService implements ICrawlerService {
                 // Managing Dataset IpId tag
                 if (UniformResourceName.isValidUrn(tag)
                         && (UniformResourceName.fromString(tag).getEntityType() == EntityType.DATASET)) {
-                    Dataset ds = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
+                    Dataset dataset = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
                     // Must not occurs, this means a Dataset has been deleted from ES but not cleaned on all
                     // objects associated to it
-                    if (ds == null) {
+                    if (dataset == null) {
                         LOGGER.warn("Dataset {} no more exists, it will be removed from DataObject {} tags", tag,
                                     object.getDocId());
                         i.remove();
                         // In this case, this tag must be managed on all objects so it is not added nor on
                         // notDatasetIpIds nor on groupsMultimap
                     } else { // dataset found, retrieving its groups and add them on groupsMultimap
-                        groupsMultimap.putAll(tag, ds.getGroups());
-                        modelIdMap.put(tag, ds.getModel().getId());
+                        groupsMultimap.putAll(tag, dataset.getGroups());
+                        modelIdMap.put(tag, dataset.getModel().getId());
                     }
                 } else { // free tag or not dataset tag
                     notDatasetIpIds.add(tag);
