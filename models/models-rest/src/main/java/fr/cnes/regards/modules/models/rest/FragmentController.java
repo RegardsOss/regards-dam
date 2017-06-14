@@ -25,8 +25,10 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.FragmentService;
+import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IFragmentService;
 
 /**
@@ -69,9 +71,13 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     private final IResourceService resourceService;
 
-    public FragmentController(IFragmentService pFragmentService, IResourceService pResourceService) {
+    private final IAttributeModelService attributeModelService;
+
+    public FragmentController(IFragmentService pFragmentService, IResourceService pResourceService,
+            IAttributeModelService attributeModelService) {
         this.fragmentService = pFragmentService;
         this.resourceService = pResourceService;
+        this.attributeModelService = attributeModelService;
     }
 
     /**
@@ -178,8 +184,8 @@ public class FragmentController implements IResourceController<Fragment> {
             fragmentService.exportFragment(pFragmentId, pResponse.getOutputStream());
             pResponse.getOutputStream().flush();
         } catch (IOException e) {
-            final String message = String.format("Error with servlet output stream while exporting fragment %s.",
-                                                 fragment.getName());
+            final String message = String
+                    .format("Error with servlet output stream while exporting fragment %s.", fragment.getName());
             LOGGER.error(message, e);
             throw new ModuleException(e);
         }
@@ -196,9 +202,10 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     @ResourceAccess(description = "Import a fragment")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
-    public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile pFile) throws ModuleException {
+    public ResponseEntity<Resource<Fragment>> importFragment(@RequestParam("file") MultipartFile pFile)
+            throws ModuleException {
         try {
-            Fragment frag=fragmentService.importFragment(pFile.getInputStream());
+            Fragment frag = fragmentService.importFragment(pFile.getInputStream());
             return new ResponseEntity<>(toResource(frag), HttpStatus.CREATED);
         } catch (IOException e) {
             final String message = "Error with file stream while importing fragment.";
@@ -208,21 +215,34 @@ public class FragmentController implements IResourceController<Fragment> {
     }
 
     @Override
-    public Resource<Fragment> toResource(Fragment pElement, Object... pExtras) {
-        final Resource<Fragment> resource = resourceService.toResource(pElement);
+    public Resource<Fragment> toResource(Fragment fragment, Object... pExtras) {
+        final Resource<Fragment> resource = resourceService.toResource(fragment);
         resourceService.addLink(resource, this.getClass(), "getFragment", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(Long.class, fragment.getId()));
         resourceService.addLink(resource, this.getClass(), "updateFragment", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(Long.class, fragment.getId()),
                                 MethodParamFactory.build(Fragment.class));
-        resourceService.addLink(resource, this.getClass(), "deleteFragment", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+        if (isDeletable(fragment)) {
+            resourceService.addLink(resource, this.getClass(), "deleteFragment", LinkRels.DELETE,
+                                    MethodParamFactory.build(Long.class, fragment.getId()));
+        }
         resourceService.addLink(resource, this.getClass(), "getFragments", LinkRels.LIST);
         // Export
         resourceService.addLink(resource, this.getClass(), "exportFragment", "export",
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(Long.class, fragment.getId()));
         return resource;
+    }
+
+    private boolean isDeletable(Fragment fragment) {
+        try {
+            List<AttributeModel> fragmentAttributes = attributeModelService.findByFragmentId(fragment.getId());
+            return fragmentAttributes.isEmpty();
+        } catch (ModuleException e) {
+            // This exception cannot happens as we are using this method after this fragment has already been retrieve.
+            // Anyway, if the fragment doesn't exist, it is not deletable
+            return false;
+        }
     }
 }
