@@ -3,12 +3,11 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.io.IOException;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,7 +209,7 @@ public class ModelController implements IResourceController<Model> {
         final String exportedFilename = MODEL_FILE_PREFIX + model.getName() + MODEL_EXTENSION;
 
         // Produce octet stream to force navigator opening "save as" dialog
-        pResponse.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        pResponse.setContentType(MediaType.APPLICATION_XML_VALUE);
         pResponse.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
 
         try {

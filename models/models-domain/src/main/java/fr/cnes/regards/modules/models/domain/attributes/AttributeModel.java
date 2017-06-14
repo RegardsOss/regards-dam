@@ -323,7 +323,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
             xmlType.setPrecision(BigInteger.valueOf(precision));
         }
         xmlType.setUnit(unit);
-        xmlType.setValue(fr.cnes.regards.modules.models.schema.RestrictionType.valueOf(type.toString()));
+        xmlType.setValue(fr.cnes.regards.modules.models.schema.RestrictionType.fromValue(type.toString()));
         xmlAtt.setType(xmlType);
         xmlAtt.setGroup(group);
 
