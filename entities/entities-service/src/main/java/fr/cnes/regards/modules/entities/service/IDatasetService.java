@@ -13,6 +13,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
@@ -40,4 +41,13 @@ public interface IDatasetService extends IEntityService<Dataset> {
     DescriptionFile retrieveDescription(Long datasetId) throws EntityNotFoundException;
 
     void removeDescription(Long datasetId) throws EntityNotFoundException;
+
+    /**
+     * Build a criterion visitor allowing us to check if a criterion is valid or not
+     *
+     * @param dataModelId modelId towards which we should check coherence
+     * @return visitor to perform a coherence check
+     * @throws ModuleException if the model cannot be retrieve
+     */
+    SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(Long dataModelId) throws ModuleException;
 }
