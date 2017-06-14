@@ -137,7 +137,10 @@ public class AttributeModelController implements IResourceController<AttributeMo
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
     public ResponseEntity<Resource<AttributeModel>> getAttribute(@PathVariable final Long pAttributeId)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(attributeService.getAttribute(pAttributeId)));
+        AttributeModel attribute = attributeService.getAttribute(pAttributeId);
+
+        attribute.buildJsonPath(StaticProperties.PROPERTIES);
+        return ResponseEntity.ok(toResource(attribute));
     }
 
     /**
