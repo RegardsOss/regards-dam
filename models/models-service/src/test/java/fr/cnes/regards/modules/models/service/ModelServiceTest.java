@@ -227,9 +227,8 @@ public class ModelServiceTest {
 
         final Fragment frag = Fragment.buildFragment("FRAG", null);
         final Long attId = 10L;
-        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING,
-                                                                    "ForTests").fragment(frag)
-                .withId(attId).get();
+        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING, "ForTests")
+                .fragment(frag).withId(attId).get();
 
         final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
 
@@ -261,9 +260,8 @@ public class ModelServiceTest {
 
         final Fragment frag = Fragment.buildFragment("FR2AG", null);
         final Long attId = 10L;
-        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING,
-                                                                    "ForTests").fragment(frag)
-                .withId(attId).withPatternRestriction(".*");
+        final AttributeModel attModel = AttributeModelBuilder.build(ATT_MOD_NAME, AttributeType.STRING, "ForTests")
+                .fragment(frag).withId(attId).withPatternRestriction(".*");
 
         final Long modAttId = 10L;
         final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
@@ -301,8 +299,8 @@ public class ModelServiceTest {
         modAtts.add(modAtt);
 
         // Attribute #2 in default fragment
-        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests").fragment(Fragment.buildDefault())
-                .withoutRestriction();
+        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests")
+                .fragment(Fragment.buildDefault()).withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
@@ -321,6 +319,12 @@ public class ModelServiceTest {
         // Attribute #5 in contact fragment
         attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
+        modAtt = new ModelAttrAssoc(attMod, model);
+        modAtts.add(modAtt);
+
+        // Attribute #6 in contact fragment
+        attMod = AttributeModelBuilder.build("date", AttributeType.DATE_ISO8601, "ForTests").fragment(contact)
+                .withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
