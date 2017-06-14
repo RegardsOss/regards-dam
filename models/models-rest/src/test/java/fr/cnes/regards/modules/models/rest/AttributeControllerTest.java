@@ -67,10 +67,13 @@ public class AttributeControllerTest {
     @Test
     public void getAttributeTest() {
         final List<AttributeModel> attributes = new ArrayList<>();
-        attributes.add(AttributeModelBuilder.build("NAME", AttributeType.STRING, "ForTests").withId(1L).get());
-        attributes.add(AttributeModelBuilder.build("START_DATE", AttributeType.DATE_ISO8601, "ForTests").withId(2L).get());
+        attributes.add(AttributeModelBuilder.build("NAME", AttributeType.STRING, "ForTests").withId(1L)
+                .defaultFragment().get());
+        attributes.add(AttributeModelBuilder.build("START_DATE", AttributeType.DATE_ISO8601, "ForTests").withId(2L)
+                .defaultFragment().get());
         // CHECKSTYLE:OFF
-        attributes.add(AttributeModelBuilder.build("STOP_DATE", AttributeType.DATE_ISO8601, "ForTests").withId(3L).get());
+        attributes.add(AttributeModelBuilder.build("STOP_DATE", AttributeType.DATE_ISO8601, "ForTests").withId(3L)
+                .defaultFragment().get());
         // CHECKSTYLE:ON
         Mockito.when(attributeServiceMocked.getAttributes(null, null)).thenReturn(attributes);
         final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null);

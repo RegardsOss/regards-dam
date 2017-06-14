@@ -83,7 +83,6 @@ public class MultiTenantCrawlerIT {
 
     @Before
     public void init() {
-
         // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
@@ -99,6 +98,8 @@ public class MultiTenantCrawlerIT {
         collRepos.deleteAll();
         datasetRepos.deleteAll();
         modelRepos.deleteAll();
+
+        crawlerService.setConsumeOnlyMode(false);
 
         tenantResolver.forceTenant(TENANT2);
         collRepos.deleteAll();
