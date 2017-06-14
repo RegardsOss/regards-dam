@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.crawler.service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -106,6 +108,9 @@ public class CrawlerService implements ICrawlerService {
      */
     @Autowired
     private ApplicationContext applicationContext;
+
+    @PersistenceContext
+    private EntityManager em;
 
     /**
      * Self proxy
@@ -269,6 +274,8 @@ public class CrawlerService implements ICrawlerService {
             }
             // Remove parameters of dataset datasource to avoid expose security values
             if (entity instanceof Dataset) {
+                // entity must be detached else Hibernate tries to commit update
+                em.detach(entity);
                 ((Dataset) entity).getDataSource().setParameters(null);
             }
             // Then save entity
