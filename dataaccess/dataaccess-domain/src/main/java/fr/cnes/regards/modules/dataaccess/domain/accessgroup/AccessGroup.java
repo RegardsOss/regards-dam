@@ -20,6 +20,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
@@ -38,13 +40,31 @@ import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
         uniqueConstraints = @UniqueConstraint(name = "uk_access_group_name", columnNames = { "name" }))
 public class AccessGroup implements IIdentifiable<Long> {
 
+    /**
+     * Name regular expression
+     */
+    public static final String NAME_REGEXP = "[a-zA-Z_][0-9a-zA-Z_]*";
+
+    /**
+     * Name min size
+     */
+    public static final int NAME_MIN_SIZE = 3;
+
+    /**
+     * Name max size
+     */
+    public static final int NAME_MAX_SIZE = 32;
+
     @Id
     @SequenceGenerator(name = "AccessGroupSequence", initialValue = 1, sequenceName = "seq_access_group")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AccessGroupSequence")
     private Long id;
 
     @NotNull
-    @Column(length = 32, updatable = false)
+    @Pattern(regexp = NAME_REGEXP, message = "Group name must conform to regular expression \"" + NAME_REGEXP + "\".")
+    @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE,
+            message = "Group name must be between " + NAME_MIN_SIZE + " and " + NAME_MAX_SIZE + " length.")
+    @Column(length = NAME_MAX_SIZE, updatable = false)
     private String name;
 
     @NotNull
