@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRest
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionType;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
@@ -354,6 +355,8 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
                 restriction = new DoubleRangeRestriction();
             } else if (xmlRestriction.getIntegerRange() != null) {
                 restriction = new IntegerRangeRestriction();
+            } else if (xmlRestriction.getLongRange() != null) {
+                restriction = new LongRangeRestriction();
             } else if (xmlRestriction.getPattern() != null) {
                 restriction = new PatternRestriction();
             }
