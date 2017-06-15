@@ -5,9 +5,10 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
@@ -25,16 +26,24 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
 @Component
 public class GeometryParser implements IParser {
 
-    /* (non-Javadoc)
-     * @see fr.cnes.regards.modules.opensearch.service.parser.IParser#parse(java.util.Map)
+    /**
+     * Class logger
      */
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeometryParser.class);
+
     @Override
     public ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException {
-        Assert.notNull(pParameters.get("g"));
+
+        String geoParam = pParameters.get("g");
+
+        // Check required query parameter
+        if (geoParam == null) {
+            return null;
+        }
 
         try {
             WKTReader wkt = new WKTReader();
-            Geometry geometry = wkt.read(pParameters.get("g"));
+            Geometry geometry = wkt.read(geoParam);
 
             if ("Polygon".equals(geometry.getGeometryType())) {
                 Polygon polygon = (Polygon) geometry;
@@ -45,9 +54,9 @@ public class GeometryParser implements IParser {
                 // Only Polygons are handled for now
                 throw new OpenSearchParseException("The passed WKT string does not reference");
             }
-
         } catch (ParseException e) {
-            throw new OpenSearchParseException(e);
+            LOGGER.error("Geometry parsing error", e);
+            throw new OpenSearchParseException(e.getMessage(), e);
         }
     }
 
