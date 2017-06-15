@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model>
+    <name>LaPollioDesDatasets</name>
+    <description>LaPollioDesDatasets</description>
+    <type>DATASET</type>
+    <fragment>
+        <name>Cancer</name>
+        <description>Un fragment contentnat tous les  types d'attributs</description>
+        <attribute alterable="true" optional="false">
+            <label>Aaa</label>
+            <name>LeoAttrInteger</name>
+            <description>aaa</description>
+            <type>INTEGER</type>
+            <restriction>
+                <integer_range>
+                    <min excluded="false">15</min>
+                    <max excluded="false">30</max>
+                </integer_range>
+            </restriction>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>aa</label>
+            <name>LeoAttrDouble</name>
+            <description>bbb</description>
+            <type>DOUBLE</type>
+            <restriction>
+                <double_range>
+                    <min excluded="false">15.0</min>
+                    <max excluded="false">30.0</max>
+                </double_range>
+            </restriction>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>aaaa</label>
+            <name>LeoAttrURL</name>
+            <description>blbb</description>
+            <type>URL</type>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>aaa</label>
+            <name>LeoAttrDate</name>
+            <description>bbbb</description>
+            <type>DATE_ISO8601</type>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>aaaa</label>
+            <name>LeoAttrBoolean</name>
+            <description>blbb</description>
+            <type>BOOLEAN</type>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>dfdgdfg</label>
+            <name>LeoAttrStringArray</name>
+            <description>dfgsdfg</description>
+            <type>STRING_ARRAY</type>
+            <restriction>
+                <pattern>[a-z]+</pattern>
+            </restriction>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>aaaa</label>
+            <name>LeoAttrIntegerArray</name>
+            <description>bbb</description>
+            <type>INTEGER_ARRAY</type>
+            <restriction>
+                <integer_range>
+                    <min excluded="false">10</min>
+                    <max excluded="false">1000</max>
+                </integer_range>
+            </restriction>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>bbbbbbbbbbbbbbb</label>
+            <name>LeoAttrDoubleArray</name>
+            <description>aaaa</description>
+            <type>DOUBLE_ARRAY</type>
+            <restriction>
+                <double_range>
+                    <min excluded="false">17.0</min>
+                    <max excluded="false">99.0</max>
+                </double_range>
+            </restriction>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>LeoAttrDateArray</label>
+            <name>LeoAttrDateArray</name>
+            <description>LeoAttrDateArray</description>
+            <type>DATE_ARRAY</type>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>a</label>
+            <name>leoAttrLongInterval</name>
+            <description>b</description>
+            <type>LONG_INTERVAL</type>
+        </attribute>
+        <attribute alterable="true" optional="false">
+            <label>LeoAttrLongArray</label>
+            <name>LeoAttrLongArray</name>
+            <description>LeoAttrLongArray</description>
+            <type>LONG_ARRAY</type>
+            <restriction>
+                <long_range>
+                    <min excluded="false">45</min>
+                    <max excluded="false">99</max>
+                </long_range>
+            </restriction>
+        </attribute>
+    </fragment>
+</model>
