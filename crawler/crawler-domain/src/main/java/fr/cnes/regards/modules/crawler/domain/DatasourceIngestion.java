@@ -48,7 +48,7 @@ public class DatasourceIngestion {
      * Duration from Status.STARTED to Status.FINISHED with second representation format (for esample PT8H6M12.345S --
      * "8 hours 6 mn 12.345 s"
      */
-    @Column(name= "duration", length = 20)
+    @Column(name = "duration", length = 20)
     private String duration = null;
 
     /**
@@ -113,7 +113,7 @@ public class DatasourceIngestion {
     }
 
     public void setStatus(IngestionStatus pStatus) {
-        OffsetDateTime now =OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
+        OffsetDateTime now = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         if ((pStatus == IngestionStatus.FINISHED) && (statusDate != null)) {
             duration = Duration.between(statusDate, now).toString();
         } else {
