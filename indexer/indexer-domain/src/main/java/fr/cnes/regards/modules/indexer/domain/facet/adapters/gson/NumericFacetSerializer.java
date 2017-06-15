@@ -59,6 +59,8 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
      */
     private class AdaptedFacetValue {
 
+        private static final String OPENSEARCH_WILDCARD = "*";
+
         private final String lowerBound;
 
         private final String upperBound;
@@ -73,9 +75,21 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
          * @param pCount
          */
         public AdaptedFacetValue(Entry<Range<Double>, Long> pEntry, String pAttributeName) {
-            super();
-            lowerBound = pEntry.getKey().lowerEndpoint().toString();
-            upperBound = pEntry.getKey().upperEndpoint().toString();
+            Range<Double> key = pEntry.getKey();
+            if (key.hasLowerBound()) {
+                lowerBound = pEntry.getKey().lowerEndpoint().toString();
+            } else {
+                // lowerBound = String.valueOf(Double.NEGATIVE_INFINITY);
+                // Directly build openSearch lower bound
+                lowerBound = OPENSEARCH_WILDCARD;
+            }
+            if (key.hasUpperBound()) {
+                upperBound = pEntry.getKey().upperEndpoint().toString();
+            } else {
+                // upperBound = String.valueOf(Double.POSITIVE_INFINITY);
+                // Directly build openSearch lower bound
+                upperBound = OPENSEARCH_WILDCARD;
+            }
             count = pEntry.getValue();
             openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "]";
         }
