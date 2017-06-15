@@ -75,7 +75,6 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
          * @param pCount
          */
         public AdaptedFacetValue(Entry<Range<Double>, Long> pEntry, String pAttributeName) {
-            super();
             Range<Double> key = pEntry.getKey();
             if (key.hasLowerBound()) {
                 lowerBound = pEntry.getKey().lowerEndpoint().toString();
