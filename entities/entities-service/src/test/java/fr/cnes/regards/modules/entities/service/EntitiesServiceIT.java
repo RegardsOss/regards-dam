@@ -90,6 +90,11 @@ public class EntitiesServiceIT {
         }
     }
 
+    @Test
+    public void testImportModel() throws ModuleException {
+        importModel("model-LaPollioDesDatasets.xml");
+    }
+
     /**
      * Import model definition file from resources directory
      *
@@ -101,6 +106,7 @@ public class EntitiesServiceIT {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
         } catch (IOException e) {
+            e.printStackTrace();
             String errorMessage = "Cannot import " + pFilename;
             throw new AssertionError(errorMessage);
         }

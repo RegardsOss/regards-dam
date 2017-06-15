@@ -276,6 +276,7 @@ public class CrawlerService implements ICrawlerService {
             if (entity instanceof Dataset) {
                 // entity must be detached else Hibernate tries to commit update
                 em.detach(entity);
+                em.detach(((Dataset) entity).getDataSource());
                 ((Dataset) entity).getDataSource().setParameters(null);
             }
             // Then save entity

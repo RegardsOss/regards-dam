@@ -181,12 +181,12 @@ public class IngesterService implements IIngesterService {
     }
 
     /**
-     * By default, launched 15 mn after last one. BUT this method is also executed each time a datasource is created
+     * By default, launched 5 mn after last one. BUT this method is also executed each time a datasource is created
      */
     @Override
-    @Scheduled(fixedRateString = "${regards.ingester.rate.ms:900000}")
+    @Scheduled(fixedRateString = "${regards.ingester.rate.ms:300000}")
     public void manage() {
-        LOGGER.debug("IngesterService.manage() called...");
+        LOGGER.info("IngesterService.manage() called...");
         try {
             // if this method is called while currently been executed, doItAgain is set to true and nothing else is
             // done
@@ -248,7 +248,7 @@ public class IngesterService implements IIngesterService {
         } finally { // In all cases, set managing to false
             managing.set(false);
         }
-        LOGGER.debug("...IngesterService.manage() ended.");
+        LOGGER.info("...IngesterService.manage() ended.");
     }
 
     @Override
