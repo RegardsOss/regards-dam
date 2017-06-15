@@ -121,7 +121,7 @@ public class AttributeModelService implements IAttributeModelService {
     public Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException {
         if (pAttributeModels != null) {
             for (AttributeModel attModel : pAttributeModels) {
-                createAttribute(attModel);
+                addAttribute(attModel);
             }
         }
         return pAttributeModels;
