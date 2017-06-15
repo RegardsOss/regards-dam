@@ -1,8 +1,5 @@
 package fr.cnes.regards.modules.crawler.domain;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -10,6 +7,9 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import org.hibernate.annotations.Type;
 
@@ -43,6 +43,13 @@ public class DatasourceIngestion {
     @Column(name = "next_planned_ingest_date")
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime nextPlannedIngestDate;
+
+    /**
+     * Duration from Status.STARTED to Status.FINISHED with second representation format (for esample PT8H6M12.345S --
+     * "8 hours 6 mn 12.345 s"
+     */
+    @Column(name= "duration", length = 20)
+    private String duration = null;
 
     /**
      * Status of previous or current ingestion
@@ -106,8 +113,14 @@ public class DatasourceIngestion {
     }
 
     public void setStatus(IngestionStatus pStatus) {
+        OffsetDateTime now =OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
+        if ((pStatus == IngestionStatus.FINISHED) && (statusDate != null)) {
+            duration = Duration.between(statusDate, now).toString();
+        } else {
+            duration = null;
+        }
         status = pStatus;
-        statusDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
+        statusDate = now;
     }
 
     public OffsetDateTime getStatusDate() {
