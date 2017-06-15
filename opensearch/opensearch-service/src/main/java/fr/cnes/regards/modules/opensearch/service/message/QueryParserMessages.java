@@ -20,6 +20,8 @@ public class QueryParserMessages extends NLS {
 
     public static String UNSUPPORTED_ATTRIBUTE_TYPE; // NOSONAR
 
+    public static String UNSUPPORTED_ATTRIBUTE_TYPE_FOR_RANGE_QUERY; // NOSONAR
+
     public static String MIDDLE_WILDCARD_NOT_ALLOWED; // NOSONAR
 
     public static String RANGE_NUMERIC_CANNOT_BE_EMPTY; // NOSONAR
