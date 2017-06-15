@@ -30,4 +30,6 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
     Page<AttributeModel> findAllAttributeByModelIdIn(@Param("modelIds") List<Long> pModelIds, Pageable pPageable);
 
     Collection<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelsIds);
+
+    Collection<ModelAttrAssoc> findAllByAttributeId(Long attrId);
 }

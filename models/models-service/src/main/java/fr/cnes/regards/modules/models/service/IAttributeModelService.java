@@ -7,9 +7,12 @@ import java.util.List;
 
 import javax.transaction.Transactional;
 
+import org.springframework.context.ApplicationListener;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
@@ -74,9 +77,9 @@ public interface IAttributeModelService {
      */
     boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
 
-    List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException;
+    List<AttributeModel> findByFragmentId(Long pFragmentId);
 
-    List<AttributeModel> findByFragmentName(String pFragmentName) throws ModuleException;
+    List<AttributeModel> findByFragmentName(String pFragmentName);
 
     void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;
 

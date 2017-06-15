@@ -3,14 +3,14 @@
  */
 package fr.cnes.regards.modules.opensearch.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.opensearch.service.aggregator.AndParserAggregator;
-import fr.cnes.regards.modules.opensearch.service.aggregator.IParserAggregator;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import fr.cnes.regards.modules.opensearch.service.parser.CircleParser;
 import fr.cnes.regards.modules.opensearch.service.parser.GeometryParser;
@@ -26,30 +26,37 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 @Service
 public class OpenSearchService implements IOpenSearchService {
 
-    /**
-     * The aggregated parser
-     */
-    private static IParser parser;
+    private final List<IParser> parsers;
 
     /**
-     * The parsers aggregation strategy. This one generates a parsers wich makes a "AndCriterion".
+     * @param queryParser Parses the "q" part of an OpenSearch request. Autowired by Spring. Must not be null.
+     * @param geometryParser Parses the "g" part of an OpenSearch request. Autowired by Spring. Must not be null.
+     * @param circleParser Parses the "lat"/"lon"/"r" part of an OpenSearch request. Autowired by Spring. Must not be null.
      */
-    private static final IParserAggregator AGGREGATOR = new AndParserAggregator();
-
-    /**
-     * @param pQueryParser Parses the "q" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     * @param pGeometryParser Parses the "g" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     * @param pCircleParser Parses the "lat"/"lon"/"r" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     */
-    public OpenSearchService(@Autowired QueryParser pQueryParser, @Autowired GeometryParser pGeometryParser,
-            @Autowired CircleParser pCircleParser) {
-        super();
-        parser = AGGREGATOR.aggregate(pQueryParser, pGeometryParser, pCircleParser);
+    public OpenSearchService(@Autowired QueryParser queryParser, @Autowired GeometryParser geometryParser,
+            @Autowired CircleParser circleParser) {
+        parsers = new ArrayList<>();
+        parsers.add(queryParser);
+        parsers.add(geometryParser);
+        parsers.add(circleParser);
     }
 
     @Override
-    public ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException {
-        return parser.parse(pParameters);
+    public ICriterion parse(Map<String, String> queryParameters) throws OpenSearchParseException {
+
+        List<ICriterion> criteria = new ArrayList<>();
+        for (IParser parser : parsers) {
+            // Parse parameters ... may return null if parser required parameter(s) not set
+            ICriterion crit = parser.parse(queryParameters);
+            if (crit != null) {
+                criteria.add(crit);
+            }
+        }
+        if (criteria.isEmpty()) {
+            return null;
+        } else {
+            return ICriterion.and(criteria.toArray(new ICriterion[criteria.size()]));
+        }
     }
 
 }
