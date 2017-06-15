@@ -1,1 +1,1 @@
-create table t_datasource_ingestion (ds_id int8 not null, last_ingest_date timestamp, next_planned_ingest_date timestamp, saved_objects_count int4, stackTrace text, status varchar(10), status_date timestamp, primary key (ds_id));
+create table t_datasource_ingestion (ds_id int8 not null, last_ingest_date timestamp, next_planned_ingest_date timestamp, saved_objects_count int4, stackTrace text, status varchar(10), status_date timestamp, duration varchar(20), primary key (ds_id));
