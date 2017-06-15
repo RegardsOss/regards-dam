@@ -236,13 +236,7 @@ public class FragmentController implements IResourceController<Fragment> {
     }
 
     private boolean isDeletable(Fragment fragment) {
-        try {
             List<AttributeModel> fragmentAttributes = attributeModelService.findByFragmentId(fragment.getId());
             return fragmentAttributes.isEmpty();
-        } catch (ModuleException e) {
-            // This exception cannot happens as we are using this method after this fragment has already been retrieve.
-            // Anyway, if the fragment doesn't exist, it is not deletable
-            return false;
-        }
     }
 }
