@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+
+import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,6 +18,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
 
 /**
  * Model attribute association service description
@@ -23,7 +26,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  * @author Marc Sordi
  * @author oroussel
  */
-public interface IModelAttrAssocService {
+public interface IModelAttrAssocService extends ApplicationListener<NewFragmentAttributeEvent> {
 
     List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) throws ModuleException;
 
@@ -46,7 +49,7 @@ public interface IModelAttrAssocService {
      * @param pFragmentId fragment updated
      * @throws ModuleException if error occurs!
      */
-    void updateNSBind(Long pFragmentId) throws ModuleException;
+    void updateNSBind(AttributeModel added);
 
     void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
 

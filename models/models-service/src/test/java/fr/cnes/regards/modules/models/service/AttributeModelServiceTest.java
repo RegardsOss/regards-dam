@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -81,7 +82,7 @@ public class AttributeModelServiceTest {
         mockAttPropertyR = Mockito.mock(IAttributePropertyRepository.class);
         mockPublisher = Mockito.mock(IPublisher.class);
         attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
-                mockAttPropertyR, mockPublisher);
+                mockAttPropertyR, mockPublisher,Mockito.mock(ApplicationEventPublisher.class));
     }
 
     @Test
