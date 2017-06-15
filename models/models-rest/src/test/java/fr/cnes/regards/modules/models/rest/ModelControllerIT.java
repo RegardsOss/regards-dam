@@ -210,7 +210,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING + "/{pModelId}/export",
                                                               expectations, "Should return result", model.getId());
 
-        assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
+        assertMediaType(resultActions, MediaType.APPLICATION_XML);
         Assert.assertNotNull(payload(resultActions));
     }
 
