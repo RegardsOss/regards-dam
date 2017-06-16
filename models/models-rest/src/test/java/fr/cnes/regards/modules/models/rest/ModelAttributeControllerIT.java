@@ -124,7 +124,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
     private AttributeModel createAttribute(String pName) throws ModuleException {
         final AttributeModel att = AttributeModelBuilder.build("att" + pName, AttributeType.STRING, "ForTests").get();
-        return attributeModelService.addAttribute(att);
+        return attributeModelService.addAttribute(att, false);
     }
 
     private ModelAttrAssoc createModelAttribute(AttributeModel pAtt, Model pModel) {
@@ -354,8 +354,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, AttributeType.STRING,
                                                                 "ForTests").fragment(frag)
                 .get();
-        attributeModelService.addAttribute(att);
-        attributeModelService.addAttribute(att2);
+        attributeModelService.addAttribute(att, false);
+        attributeModelService.addAttribute(att2, false);
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -399,8 +399,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final AttributeModel att2 = AttributeModelBuilder.build("att2" + name, AttributeType.STRING,
                                                                 "ForTests").fragment(frag)
                 .get();
-        attributeModelService.addAttribute(att);
-        attributeModelService.addAttribute(att2);
+        attributeModelService.addAttribute(att, false);
+        attributeModelService.addAttribute(att2, false);
 
         modelAttributeService.bindNSAttributeToModel(mod.getId(), frag);
 

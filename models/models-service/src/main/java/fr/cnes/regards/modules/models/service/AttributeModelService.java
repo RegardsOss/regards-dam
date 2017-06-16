@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -116,11 +115,13 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public AttributeModel addAttribute(AttributeModel attributeModel) throws ModuleException {
-        AttributeModel created=createAttribute(attributeModel);
-         if (!created.getFragment().isDefaultFragment()) {
+    public AttributeModel addAttribute(AttributeModel attributeModel, boolean duringImport) throws ModuleException {
+        AttributeModel created = createAttribute(attributeModel);
+        // During imports all modelAttrAssoc are created by the importing methods so we have not to publish the event.
+        // Otherwise we will try to create duplicates into the DB and break the import
+        if (!duringImport && !created.getFragment().isDefaultFragment()) {
             eventPublisher.publishEvent(new NewFragmentAttributeEvent(attributeModel));
-         }
+        }
         // Publish attribute creation
         publisher.publish(new AttributeModelCreated(attributeModel));
         return attributeModel;
@@ -130,7 +131,7 @@ public class AttributeModelService implements IAttributeModelService {
     public Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException {
         if (pAttributeModels != null) {
             for (AttributeModel attModel : pAttributeModels) {
-                addAttribute(attModel);
+                addAttribute(attModel, false);
             }
         }
         return pAttributeModels;
@@ -301,6 +302,5 @@ public class AttributeModelService implements IAttributeModelService {
         }
         return attModelRepository.findByNameAndFragmentName(pAttributeName, pFragmentName);
     }
-
 
 }

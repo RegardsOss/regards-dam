@@ -440,7 +440,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 }
             } else {
                 // Create attribute
-                attributeModelService.addAttribute(modelAtt.getAttribute());
+                attributeModelService.addAttribute(modelAtt.getAttribute(),true);
             }
             // Bind attribute to model
             // but before lets check correctness because of PluginConfiguration
@@ -458,9 +458,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                                     + " in " + getClass().getName());
             }
             //we have to check if it already exists because of logic to add modelAttrAssocs when we are adding a new attribute to a fragment
-            if (!modelAttributeRepository.exists(Example.of(modelAtt))) {
-                modelAttributeRepository.save(modelAtt);
-            }
+            modelAttributeRepository.save(modelAtt);
 
             addToFragment(fragmentAttMap, modelAtt.getAttribute());
         }
