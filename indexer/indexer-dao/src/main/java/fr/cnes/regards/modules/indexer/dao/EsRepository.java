@@ -454,12 +454,11 @@ public class EsRepository implements IEsRepository {
                 response = getWithTimeouts(request);
             }
 
-            Set<IFacet<?>> facetResults = null;
-            if (pFacetsMap != null) {
+            Set<IFacet<?>> facetResults = new HashSet<>();
+            if (response.getAggregations() != null) {
                 // Get the new aggregations result map
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                // Create the facet map
-                facetResults = new HashSet<>();
+                // Fille the facet set
                 for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
                     FacetType facetType = entry.getValue();
                     String attributeName = entry.getKey();
@@ -471,12 +470,7 @@ public class EsRepository implements IEsRepository {
             for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
-            // If no facet, juste returns a "simple" Page
-            if (facetResults == null) {
-                return new FacetPage<>(results, new HashSet<>(), pPageRequest, response.getHits().getTotalHits());
-            } else { // else returns a FacetPage
-                return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
-            }
+            return new FacetPage<>(results, facetResults, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException e) {
             throw new RuntimeException(e); // NOSONAR
         }
