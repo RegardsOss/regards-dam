@@ -3,7 +3,7 @@
 <configuration>
 
 	<include resource="fr/cnes/regards/framework/logbackappender/defaults.xml" />
-
+	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
@@ -23,31 +23,9 @@
 		<suffixPattern>${SYSLOG_SECURITY_PATTERN}</suffixPattern>
 		<port>514</port>
 	</appender>
-
-	<appender name="regardsAmqpAppender"
-		class="ch.qos.logback.ext.spring.DelegatingLogbackAppender">
-		<filter
-			class="fr.cnes.regards.framework.logbackappender.RegardsAmqpAppenderFilter">
-			<level>INFO</level>
-		</filter>
-	</appender>
 	
-	<!-- Log the user request authentication -->
-	<logger name="fr.cnes.regards.framework.authentication" level="INFO">
-		<appender-ref ref="SYSLOG-SECU" />
-	</logger>
-
 	<logger name="fr.cnes.regards.framework.security" level="INFO">
 		<appender-ref ref="SYSLOG-SECU" />
-	</logger>
-
-	<logger name="fr.cnes.regards.framework.authentication.internal"
-		level="INFO">
-		<appender-ref ref="SYSLOG-SECU" />
-	</logger>
-
-	<logger name="fr.cnes.regards" level="INFO" additivity="true">
-		<appender-ref ref="regardsAmqpAppender" />
 	</logger>
 	
 	<root level="info">
