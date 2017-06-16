@@ -6,32 +6,12 @@
 	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
+			<pattern>%d{HH:mm:ss.SSS} [${springAppName}] [%thread] %-5level %logger{36} - %msg%n</pattern>
 		</encoder>
 	</appender>
-
-	<appender name="SYSLOG" class="ch.qos.logback.classic.net.SyslogAppender">
-		<syslogHost>localhost</syslogHost>
-		<facility>LOCAL0</facility>
-		<suffixPattern>${SYSLOG_PATTERN}</suffixPattern>
-		<port>514</port>
-	</appender>
-
-	<appender name="SYSLOG-SECU" class="ch.qos.logback.classic.net.SyslogAppender">
-		<syslogHost>localhost</syslogHost>
-		<facility>LOCAL1</facility>
-		<suffixPattern>${SYSLOG_SECURITY_PATTERN}</suffixPattern>
-		<port>514</port>
-	</appender>
-	
-	<logger name="fr.cnes.regards.framework.security" level="INFO">
-		<appender-ref ref="SYSLOG-SECU" />
-	</logger>
 	
 	<root level="info">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="SYSLOG" />
-		<appender-ref ref="SYSLOG-SECU" />
 	</root>
 	
 </configuration>
