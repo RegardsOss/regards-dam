@@ -73,7 +73,9 @@ public abstract class AbstractDataObjectMapping {
     /**
      * The PL/SQL key word AS
      */
-    private static final String AS = "as";
+    protected static final String AS = "as";
+    
+    private static final String BLANK = " ";
 
     /**
      * A comma used to build the select clause
@@ -131,25 +133,27 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Get {@link DateAttribute}.
      *
-     * @param pRs the {@link ResultSet}
-     * @param pAttrMapping the {@link AbstractAttributeMapping}
+     * @param rs the {@link ResultSet}
+     * @param attrName the attribute name
+     * àparam attrDSName the column name in the external data source
+     * @param colName the column name in the {@link ResultSet}
      * @return a new {@link DateAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
-    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
+    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
             throws SQLException;
 
     /**
      * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link AbstractAttributeMapping}.
      *
-     * @param pRs The {@link ResultSet} to read
-     * @param pAttrMapping The {@link AbstractAttributeMapping}
+     * @param rs The {@link ResultSet} to read
+     * @param colName the column name in the {@link ResultSet}
      * @return the {@link OffsetDateTime}
      * @throws SQLException An error occurred when try to read the {@link ResultSet}
      */
-    protected OffsetDateTime buildOffsetDateTime(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
+    protected OffsetDateTime buildOffsetDateTime(ResultSet rs, String colName)
             throws SQLException {
-        long n = pRs.getTimestamp(pAttrMapping.getNameDS()).getTime();
+        long n = rs.getTimestamp(colName).getTime();
         Instant instant = Instant.ofEpochMilli(n);
         return OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
     }
@@ -283,52 +287,52 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Get an attribute define in the mapping in a {@link ResultSet}
      *
-     * @param pRs the {@link ResultSet}
-     * @param pAttrMapping the {@link AbstractAttributeMapping}
+     * @param rs the {@link ResultSet}
+     * @param attrMapping the {@link AbstractAttributeMapping}
      * @return a new {@link AbstractAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
-    private AbstractAttribute<?> buildAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
+    private AbstractAttribute<?> buildAttribute(ResultSet rs, AbstractAttributeMapping attrMapping)
             throws SQLException {
         AbstractAttribute<?> attr = null;
-        final String colName = extractColumnName(pAttrMapping.getNameDS());
+        final String colName = extractColumnName(attrMapping.getNameDS(), attrMapping.getName());
 
-        switch (pAttrMapping.getType()) {
+        switch (attrMapping.getType()) {
             case STRING:
-                attr = AttributeBuilder.buildString(pAttrMapping.getName(), pRs.getString(colName));
+                attr = AttributeBuilder.buildString(attrMapping.getName(), rs.getString(colName));
                 break;
             case LONG:
-                attr = AttributeBuilder.buildLong(pAttrMapping.getName(), pRs.getLong(colName));
+                attr = AttributeBuilder.buildLong(attrMapping.getName(), rs.getLong(colName));
                 break;
             case INTEGER:
-                attr = AttributeBuilder.buildInteger(pAttrMapping.getName(), pRs.getInt(colName));
+                attr = AttributeBuilder.buildInteger(attrMapping.getName(), rs.getInt(colName));
                 break;
             case BOOLEAN:
-                attr = AttributeBuilder.buildBoolean(pAttrMapping.getName(), pRs.getBoolean(colName));
+                attr = AttributeBuilder.buildBoolean(attrMapping.getName(), rs.getBoolean(colName));
                 break;
             case DOUBLE:
-                attr = AttributeBuilder.buildDouble(pAttrMapping.getName(), pRs.getDouble(colName));
+                attr = AttributeBuilder.buildDouble(attrMapping.getName(), rs.getDouble(colName));
                 break;
             case DATE_ISO8601:
-                attr = buildDateAttribute(pRs, pAttrMapping);
+                attr = buildDateAttribute(rs, attrMapping.getName(),attrMapping.getNameDS(),colName);
                 break;
             default:
                 break;
         }
 
         // If value was null => no attribute value
-        if (pRs.wasNull()) {
+        if (rs.wasNull()) {
             return null;
         }
 
         if (LOG.isDebugEnabled() && (attr != null)) {
-            if ((pAttrMapping.getName() != null) && pAttrMapping.getName().equals(pAttrMapping.getNameDS())) {
-                LOG.debug("the value for <" + pAttrMapping.getName() + "> of type <" + pAttrMapping.getType() + "> is :"
+            if ((attrMapping.getName() != null) && attrMapping.getName().equals(attrMapping.getNameDS())) {
+                LOG.debug("the value for <" + attrMapping.getName() + "> of type <" + attrMapping.getType() + "> is :"
                         + attr.getValue());
 
             } else {
-                LOG.debug("the value for <" + pAttrMapping.getName() + "|" + pAttrMapping.getNameDS() + "> of type <"
-                        + pAttrMapping.getType() + "> is :" + attr.getValue());
+                LOG.debug("the value for <" + attrMapping.getName() + "|" + attrMapping.getNameDS() + "> of type <"
+                        + attrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -337,22 +341,27 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Extracts a column name from a PL/SQL expression.</br>
-     * The column label is placed after the word 'AS'.
+     * The column label can be placed after the word 'AS'.
+     * If 'AS' is not present the column name is the internal attribute name. 
      *
-     * @param pAttrMapping The PL/SQL expression to analyze
+     * @param attrDataSourceName The PL/SQL expression to analyze
+     * @param attrName The attribute name
      * @return the column label extracted from the PL/SQL
      */
-    protected String extractColumnName(String pAttrMapping) {
-        int pos = pAttrMapping.toLowerCase().lastIndexOf(AS);
+    protected String extractColumnName(String attrDataSourceName, String attrName) {
+        int pos = attrDataSourceName.toLowerCase().lastIndexOf(AS);
 
         if (pos > 0) {
-            String str = pAttrMapping.substring(pos + AS.length()).trim();
+            String str = attrDataSourceName.substring(pos + AS.length()).trim();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("the extracted column name is : <" + str + ">");
             }
             return str;
         } else {
-            return pAttrMapping;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("the extracted column name is : <" + attrDataSourceName + ">");
+            }
+            return attrName;
         }
     }
 
@@ -419,7 +428,7 @@ public abstract class AbstractDataObjectMapping {
         for (String col : pColumns) {
             clauseStr.append(col + COMMA);
         }
-        return clauseStr.substring(0, clauseStr.length() - 1) + " ";
+        return clauseStr.substring(0, clauseStr.length() - 1) + BLANK;
     }
 
     /**
@@ -494,7 +503,14 @@ public abstract class AbstractDataObjectMapping {
         }
 
         dataSourceMapping.getAttributesMapping().forEach(d -> {
-            columns.add(d.getNameDS());
+            
+            if (0 > d.getNameDS().toLowerCase().lastIndexOf(AS)) {
+                columns.add(d.getNameDS() + BLANK + AS + BLANK + d.getName());
+            }
+            else {
+                columns.add(d.getNameDS());    
+            }
+            
             if (d.isPrimaryKey()) {
                 orderByColumn = d.getNameDS();
             }
