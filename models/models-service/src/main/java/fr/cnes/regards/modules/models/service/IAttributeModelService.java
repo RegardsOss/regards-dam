@@ -27,11 +27,12 @@ public interface IAttributeModelService {
      *
      * @param pAttributeModel
      *            {@link AttributeModel} to add
+     * @param duringImport
      * @return {@link AttributeModel}
      * @throws ModuleException
      *             if error occurs!
      */
-    AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException;
+    AttributeModel addAttribute(AttributeModel pAttributeModel, boolean duringImport) throws ModuleException;
 
     /**
      * Add a list of attributes in a {@link Transactional} context
@@ -46,7 +47,7 @@ public interface IAttributeModelService {
 
     /**
      * Manage {@link AttributeModel} creation out of a {@link Transactional} context. This method is used by
-     * {@link IAttributeModelService#addAttribute(AttributeModel)} and
+     * {@link IAttributeModelService#addAttribute(AttributeModel, boolean)} and
      * {@link IAttributeModelService#addAllAttributes(Iterable)}.
      *
      * @param pAttributeModel
@@ -74,9 +75,9 @@ public interface IAttributeModelService {
      */
     boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
 
-    List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException;
+    List<AttributeModel> findByFragmentId(Long pFragmentId);
 
-    List<AttributeModel> findByFragmentName(String pFragmentName) throws ModuleException;
+    List<AttributeModel> findByFragmentName(String pFragmentName);
 
     void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;
 

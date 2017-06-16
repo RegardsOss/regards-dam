@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.indexer.domain.facet.adapters.gson;
 
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map.Entry;
@@ -57,6 +56,8 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
      */
     private class AdaptedFacetValue {
 
+        private static final String OPENSEARCH_WILDCARD = "*";
+
         private final String lowerBound;
 
         private final String upperBound;
@@ -66,9 +67,19 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
         private final String openSearchQuery;
 
         public AdaptedFacetValue(Entry<Range<OffsetDateTime>, Long> pEntry, String pAttributeName) {
-            super();
-            lowerBound = pEntry.getKey().lowerEndpoint().toString();
-            upperBound = pEntry.getKey().upperEndpoint().toString();
+            Range<OffsetDateTime> key = pEntry.getKey();
+            if (key.hasLowerBound()) {
+                lowerBound = pEntry.getKey().lowerEndpoint().toString();
+            } else {
+                // Directly build openSearch lower bound
+                lowerBound = OPENSEARCH_WILDCARD;
+            }
+            if (key.hasUpperBound()) {
+                upperBound = pEntry.getKey().upperEndpoint().toString();
+            } else {
+                // Directly build openSearch lower bound
+                upperBound = OPENSEARCH_WILDCARD;
+            }
             count = pEntry.getValue();
             openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "]";
         }

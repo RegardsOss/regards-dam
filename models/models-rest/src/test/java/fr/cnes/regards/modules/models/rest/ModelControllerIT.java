@@ -170,7 +170,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         // Attribute #1 in default fragment
         AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests").withoutRestriction();
-        attributeModelService.addAttribute(attMod);
+        attributeModelService.addAttribute(attMod, false);
 
         ModelAttrAssoc modAtt = new ModelAttrAssoc();
         modAtt.setAttribute(attMod);
@@ -178,7 +178,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         // Attribute #2 in default fragment
         attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests").isAlterable().withoutRestriction();
-        attributeModelService.addAttribute(attMod);
+        attributeModelService.addAttribute(attMod, false);
 
         modAtt = new ModelAttrAssoc();
         modAtt.setAttribute(attMod);
@@ -190,7 +190,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         // Attribute #3 in geo fragment
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
-        attributeModelService.addAttribute(attMod);
+        attributeModelService.addAttribute(attMod, false);
 
         modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment());
 
@@ -200,7 +200,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         // Attribute #5 in contact fragment
         attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
-        attributeModelService.addAttribute(attMod);
+        attributeModelService.addAttribute(attMod, false);
 
         modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment());
 
@@ -210,7 +210,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING + "/{pModelId}/export",
                                                               expectations, "Should return result", model.getId());
 
-        assertMediaType(resultActions, MediaType.APPLICATION_OCTET_STREAM);
+        assertMediaType(resultActions, MediaType.APPLICATION_XML);
         Assert.assertNotNull(payload(resultActions));
     }
 

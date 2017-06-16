@@ -323,6 +323,19 @@ public interface ICriterion {
         return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pUpperBound),
                               ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
     }
+
+    /**
+     * Criterion to test if given number range intersects given interval attribute name
+     * @param pAttName interval attribute name
+     * @param pLowerBound lower bound
+     * @param pUpperBound upper bound
+     * @return criterion
+     */
+    static <T extends Number & Comparable<T>> ICriterion intersects(String pAttName, T pLowerBound, T pUpperBound) {
+        return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pUpperBound),
+                              ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
+    }
+
     // CHECKSTYLE:ON
 
     /**

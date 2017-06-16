@@ -12,8 +12,9 @@ import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfi
 import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler.ConfigurationKeys;
 import org.apache.lucene.queryparser.flexible.standard.parser.StandardSyntaxParser;
 import org.apache.lucene.queryparser.flexible.standard.processors.StandardQueryNodeProcessorPipeline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -34,6 +35,11 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  */
 @Component
 public class QueryParser extends QueryParserHelper implements IParser {
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryParser.class);
 
     /**
      * The request parameter containing the OpenSearch query
@@ -66,11 +72,17 @@ public class QueryParser extends QueryParserHelper implements IParser {
      */
     @Override
     public ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException {
+
         String q = pParameters.get(QUERY_PARAMETER);
-        Assert.notNull(q);
+
+        // Check required query parameter
+        if (q == null) {
+            return null;
+        }
         try {
             return (ICriterion) super.parse(q, DEFAULT_FIELD);
         } catch (QueryNodeException e) {
+            LOGGER.error("q parsing error", e);
             throw new OpenSearchParseException(e.getMessage(), e);
         }
     }

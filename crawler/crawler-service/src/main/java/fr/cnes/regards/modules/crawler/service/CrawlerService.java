@@ -5,6 +5,8 @@ package fr.cnes.regards.modules.crawler.service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -106,6 +108,9 @@ public class CrawlerService implements ICrawlerService {
      */
     @Autowired
     private ApplicationContext applicationContext;
+
+    @PersistenceContext
+    private EntityManager em;
 
     /**
      * Self proxy
@@ -269,6 +274,8 @@ public class CrawlerService implements ICrawlerService {
             }
             // Remove parameters of dataset datasource to avoid expose security values
             if (entity instanceof Dataset) {
+                // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHed)
+                em.detach(entity);
                 ((Dataset) entity).getDataSource().setParameters(null);
             }
             // Then save entity
@@ -303,8 +310,12 @@ public class CrawlerService implements ICrawlerService {
             if (!esRepos.indexExists(tenant)) {
                 createIndex(tenant);
             }
-            // Remove pluginConf from datasets to avoid jsonify into Elasticsearch
-            entities.stream().filter(e -> e instanceof Dataset).forEach(dataset -> ((Dataset)dataset).getDataSource().setParameters(null));
+            // Remove pluginConf parameters from datasets to avoid jsonify into Elasticsearch
+            entities.stream().filter(e -> e instanceof Dataset).forEach(dataset -> {
+                // Don't forget to detach dataset in order to cascade.Detach datasource
+                em.detach(dataset);
+                ((Dataset) dataset).getDataSource().setParameters(null);
+            });
             esRepos.saveBulk(tenant, entities);
             entities.stream().filter(e -> e instanceof Dataset)
                     .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate, updateDate));
@@ -356,7 +367,7 @@ public class CrawlerService implements ICrawlerService {
         };
         // Apply updateTag function to all tagging objects
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
-                DataObject.class);
+                                                                      DataObject.class);
         esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
@@ -376,7 +387,7 @@ public class CrawlerService implements ICrawlerService {
     private void computeGroupsAndModelIdsFromTags(String tenant, Multimap<String, String> groupsMultimap,
             Map<String, Long> modelIdMap, Set<String> notDatasetIpIds, DataObject object) {
         // Compute groups from tags
-        for (Iterator<String> i = object.getTags().iterator(); i.hasNext();) {
+        for (Iterator<String> i = object.getTags().iterator(); i.hasNext(); ) {
             String tag = i.next();
             // already known free tag or other entity than Dataset ipId
             if (notDatasetIpIds.contains(tag)) {
@@ -385,8 +396,8 @@ public class CrawlerService implements ICrawlerService {
             // new tag encountered
             if (!groupsMultimap.containsKey(tag)) {
                 // Managing Dataset IpId tag
-                if (UniformResourceName.isValidUrn(tag)
-                        && (UniformResourceName.fromString(tag).getEntityType() == EntityType.DATASET)) {
+                if (UniformResourceName.isValidUrn(tag) && (UniformResourceName.fromString(tag).getEntityType()
+                        == EntityType.DATASET)) {
                     Dataset dataset = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
                     // Must not occurs, this means a Dataset has been deleted from ES but not cleaned on all
                     // objects associated to it
@@ -429,7 +440,7 @@ public class CrawlerService implements ICrawlerService {
         Long datasetModelId = dataset.getModel().getId();
 
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
-                DataObject.class);
+                                                                      DataObject.class);
         Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
         updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
 
@@ -457,9 +468,8 @@ public class CrawlerService implements ICrawlerService {
                 ObjectAttribute attrInFragment = (ObjectAttribute) attributeToAdd;
                 // the attribute is inside a fragment so lets find the right one to add the attribute inside it
                 Optional<AbstractAttribute<?>> candidate = dataset.getProperties().stream()
-                        .filter(attr -> (attr instanceof ObjectAttribute)
-                                && attr.getName().equals(attrInFragment.getName()))
-                        .findFirst();
+                        .filter(attr -> (attr instanceof ObjectAttribute) && attr.getName()
+                                .equals(attrInFragment.getName())).findFirst();
                 if (candidate.isPresent()) {
                     Set<AbstractAttribute<?>> properties = ((ObjectAttribute) candidate.get()).getValue();
                     // the fragment is already here, lets remove the old properties if they exist
@@ -543,9 +553,9 @@ public class CrawlerService implements ICrawlerService {
             // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
             // been updated (to update all associated data objects which have a lastUpdate date >= now)
             SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
-                    Dataset.class);
-            Page<Dataset> dsDatasetsPage = esRepos.search(searchKey, IEsRepository.BULK_SIZE,
-                                                          ICriterion.eq("plgConfDataSource.id", datasourceId));
+                                                                       Dataset.class);
+            Page<Dataset> dsDatasetsPage = esRepos
+                    .search(searchKey, IEsRepository.BULK_SIZE, ICriterion.eq("plgConfDataSource.id", datasourceId));
             if (!dsDatasetsPage.getContent().isEmpty()) {
                 // transactional method => use self, not this
                 self.updateDatasets(tenant, dsDatasetsPage, now);
@@ -577,7 +587,7 @@ public class CrawlerService implements ICrawlerService {
      */
     private static final UniformResourceName buildIpId(String tenant, String sipId, String datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
+                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
     }
 
     @Override

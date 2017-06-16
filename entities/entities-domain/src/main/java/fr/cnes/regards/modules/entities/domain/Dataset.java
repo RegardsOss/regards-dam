@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -51,7 +52,7 @@ public class Dataset extends AbstractDescEntity {
      * necessary because of single-table entity mapping (same table is used for all types of entities and other haven't
      * plugin configuration).
      */
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "ds_plugin_conf_id", foreignKey = @ForeignKey(name = "fk_ds_plugin_conf_id"), nullable = true,
             updatable = false)
     private PluginConfiguration plgConfDataSource;

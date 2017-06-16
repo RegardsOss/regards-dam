@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -33,6 +34,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRest
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IRestriction;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelCreated;
 import fr.cnes.regards.modules.models.domain.event.AttributeModelDeleted;
+import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
@@ -76,14 +78,21 @@ public class AttributeModelService implements IAttributeModelService {
      */
     private final IPublisher publisher;
 
+    /**
+     * Application Event publisher to publish event inside the microservice
+     */
+    private final ApplicationEventPublisher eventPublisher;
+
     public AttributeModelService(IAttributeModelRepository pAttModelRepository,
             IRestrictionRepository pRestrictionRepository, IFragmentRepository pFragmentRepository,
-            IAttributePropertyRepository pAttPropertyRepository, IPublisher pPublisher) {
+            IAttributePropertyRepository pAttPropertyRepository, IPublisher pPublisher,
+            ApplicationEventPublisher eventPublisher) {
         attModelRepository = pAttModelRepository;
         restrictionRepository = pRestrictionRepository;
         fragmentRepository = pFragmentRepository;
         attPropertyRepository = pAttPropertyRepository;
         publisher = pPublisher;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -106,22 +115,23 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException {
-        createAttribute(pAttributeModel);
-        // if (!fragment.isDefaultFragment()) {
-        // // TODO modelAttributeService.updateNSBind(fragment.getId());
-        // // Attention au référence cyclique entre service
-        // }
+    public AttributeModel addAttribute(AttributeModel attributeModel, boolean duringImport) throws ModuleException {
+        AttributeModel created = createAttribute(attributeModel);
+        // During imports all modelAttrAssoc are created by the importing methods so we have not to publish the event.
+        // Otherwise we will try to create duplicates into the DB and break the import
+        if (!duringImport && !created.getFragment().isDefaultFragment()) {
+            eventPublisher.publishEvent(new NewFragmentAttributeEvent(attributeModel));
+        }
         // Publish attribute creation
-        publisher.publish(new AttributeModelCreated(pAttributeModel));
-        return pAttributeModel;
+        publisher.publish(new AttributeModelCreated(attributeModel));
+        return attributeModel;
     }
 
     @Override
     public Iterable<AttributeModel> addAllAttributes(Iterable<AttributeModel> pAttributeModels) throws ModuleException {
         if (pAttributeModels != null) {
             for (AttributeModel attModel : pAttributeModels) {
-                createAttribute(attModel);
+                addAttribute(attModel, false);
             }
         }
         return pAttributeModels;
@@ -143,7 +153,7 @@ public class AttributeModelService implements IAttributeModelService {
         }
         if (!pAttributeId.equals(pAttributeModel.getId())) {
             throw new EntityInconsistentIdentifierException(pAttributeId, pAttributeModel.getId(),
-                    pAttributeModel.getClass());
+                                                            pAttributeModel.getClass());
         }
         if (!attModelRepository.exists(pAttributeId)) {
             throw new EntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
@@ -238,13 +248,13 @@ public class AttributeModelService implements IAttributeModelService {
             if (attributeModel != null) {
                 final String message;
                 if (pAttributeModel.getFragment().isDefaultFragment()) {
-                    message = MessageFormat.format("Attribute model with name \"{0}\" already exists.",
-                                                   pAttributeModel.getName());
+                    message = MessageFormat
+                            .format("Attribute model with name \"{0}\" already exists.", pAttributeModel.getName());
                 } else {
                     // CHECKSTYLE:OFF
-                    message = MessageFormat.format(
-                                                   "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
-                                                   pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                    message = MessageFormat
+                            .format("Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
+                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
                     // CHECKSTYLE:ON
                 }
                 LOGGER.error(message);
@@ -264,12 +274,12 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> findByFragmentId(Long pFragmentId) throws ModuleException {
+    public List<AttributeModel> findByFragmentId(Long pFragmentId) {
         return attModelRepository.findByFragmentId(pFragmentId);
     }
 
     @Override
-    public List<AttributeModel> findByFragmentName(String pFragmentName) throws ModuleException {
+    public List<AttributeModel> findByFragmentName(String pFragmentName) {
         return attModelRepository.findByFragmentName(pFragmentName);
     }
 
@@ -277,8 +287,9 @@ public class AttributeModelService implements IAttributeModelService {
     public void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException {
         final IRestriction restriction = pAttributeModel.getRestriction();
         if ((restriction != null) && !restriction.supports(pAttributeModel.getType())) {
-            final String message = String.format("Attribute of type %s does not support %s restriction",
-                                                 pAttributeModel.getType(), restriction.getType());
+            final String message = String
+                    .format("Attribute of type %s does not support %s restriction", pAttributeModel.getType(),
+                            restriction.getType());
             LOGGER.error(message);
             throw new UnsupportedRestrictionException(message);
         }
@@ -291,4 +302,5 @@ public class AttributeModelService implements IAttributeModelService {
         }
         return attModelRepository.findByNameAndFragmentName(pAttributeName, pFragmentName);
     }
+
 }

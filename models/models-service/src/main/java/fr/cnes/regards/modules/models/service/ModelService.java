@@ -17,12 +17,14 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -43,6 +45,7 @@ import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
 import fr.cnes.regards.modules.models.service.exception.FragmentAttributeException;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
@@ -302,8 +305,19 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public void updateNSBind(Long pFragmentId) throws ModuleException {
-        // FIXME update all model bound to this fragment if fragment attribute list is updated
+    public void updateNSBind(AttributeModel added) {
+        List<AttributeModel> attributes = attributeModelService.findByFragmentName(added.getFragment().getName());
+        Set<Model> modelsToBeUpdated = Sets.newHashSet();
+        for (AttributeModel attr : attributes) {
+            modelAttributeRepository.findAllByAttributeId(attr.getId())
+                    .forEach(modelAttrAssoc -> modelsToBeUpdated.add(modelAttrAssoc.getModel()));
+        }
+        for (Model model : modelsToBeUpdated) {
+            ModelAttrAssoc modelAtt = new ModelAttrAssoc();
+            modelAtt.setAttribute(added);
+            modelAtt.setModel(model);
+            modelAttributeRepository.save(modelAtt);
+        }
     }
 
     @Override
@@ -426,7 +440,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 }
             } else {
                 // Create attribute
-                attributeModelService.addAttribute(modelAtt.getAttribute());
+                attributeModelService.addAttribute(modelAtt.getAttribute(),true);
             }
             // Bind attribute to model
             // but before lets check correctness because of PluginConfiguration
@@ -443,6 +457,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                             modelAtt.getMode() + " is not a handled value of " + ComputationMode.class.getName()
                                     + " in " + getClass().getName());
             }
+            //we have to check if it already exists because of logic to add modelAttrAssocs when we are adding a new attribute to a fragment
             modelAttributeRepository.save(modelAtt);
 
             addToFragment(fragmentAttMap, modelAtt.getAttribute());
@@ -548,4 +563,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         }
     }
 
+    @Override
+    public void onApplicationEvent(NewFragmentAttributeEvent event) {
+        updateNSBind((AttributeModel) event.getSource());
+    }
 }
