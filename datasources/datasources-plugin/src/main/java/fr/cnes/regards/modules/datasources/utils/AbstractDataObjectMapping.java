@@ -179,8 +179,8 @@ public abstract class AbstractDataObjectMapping {
                 selectRequest = buildDateStatement(selectRequest, pDate);
                 countRequest = buildDateStatement(countRequest, pDate);
             }
-            LOG.debug("select request : " + selectRequest);
-            LOG.debug("count request : " + countRequest);
+            LOG.info("select request : " + selectRequest);
+            LOG.info("count request : " + countRequest);
 
             // Retrieve the model
             Model model = new Model();

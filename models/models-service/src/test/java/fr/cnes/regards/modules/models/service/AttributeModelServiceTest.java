@@ -130,7 +130,7 @@ public class AttributeModelServiceTest {
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName())).thenReturn(null);
         Mockito.when(mockAttModelR.save(expectedAttModel)).thenReturn(expectedAttModel);
 
-        attributeModelService.addAttribute(expectedAttModel);
+        attributeModelService.addAttribute(expectedAttModel, false);
         Assert.assertTrue(expectedAttModel.getFragment().isDefaultFragment());
         Assert.assertNull(expectedAttModel.getRestriction());
     }
@@ -156,7 +156,7 @@ public class AttributeModelServiceTest {
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName())).thenReturn(null);
         Mockito.when(mockAttModelR.save(expectedAttModel)).thenReturn(expectedAttModel);
 
-        attributeModelService.addAttribute(expectedAttModel);
+        attributeModelService.addAttribute(expectedAttModel, false);
         Assert.assertTrue(expectedAttModel.getFragment().equals(fragment));
         Assert.assertNull(expectedAttModel.getRestriction());
     }
@@ -177,7 +177,7 @@ public class AttributeModelServiceTest {
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName())).thenReturn(null);
         Mockito.when(mockAttModelR.save(expectedAttModel)).thenReturn(expectedAttModel);
 
-        attributeModelService.addAttribute(expectedAttModel);
+        attributeModelService.addAttribute(expectedAttModel, false);
     }
 
     /**
@@ -195,7 +195,7 @@ public class AttributeModelServiceTest {
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName()))
                 .thenReturn(expectedAttModel);
 
-        attributeModelService.addAttribute(expectedAttModel);
+        attributeModelService.addAttribute(expectedAttModel, false);
     }
 
     @Test(expected = EntityNotFoundException.class)

@@ -200,6 +200,6 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
 
         final AttributeModel attModel = AttributeModelBuilder.build("FIRST", AttributeType.BOOLEAN, "ForTests")
                 .withoutRestriction();
-        attributeModelService.addAttribute(attModel);
+        attributeModelService.addAttribute(attModel, false);
     }
 }
