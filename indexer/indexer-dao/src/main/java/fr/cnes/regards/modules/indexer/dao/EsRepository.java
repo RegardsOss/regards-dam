@@ -54,6 +54,7 @@ import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
@@ -78,9 +79,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -660,18 +662,18 @@ public class EsRepository implements IEsRepository {
             Map<String, Aggregation> aggsMap) {
         for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
             FacetType facetType = entry.getValue();
-            String attributeName = entry.getKey();
+            String attName = entry.getKey();
             // Replace percentiles aggregations by range aggregagtions
-            if (facetType == FacetType.NUMERIC) {
-                Percentiles percentiles = (Percentiles) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_POSTFIX);
-                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
-            } else if (facetType == FacetType.DATE) {
-                Percentiles percentiles = (Percentiles) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.DATE_FACET_POSTFIX);
-                request.addAggregation(FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles));
+            if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
+                attName = (facetType == FacetType.NUMERIC) ? attName + NUMERIC_FACET_SUFFIX : attName + DATE_FACET_SUFFIX;
+                Percentiles percentiles = (Percentiles) aggsMap.get(attName);
+                AggregationBuilder aggBuilder = FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attName, percentiles);
+                // In case range contains only one value, better remove facet
+                if (aggBuilder != null) {
+                    request.addAggregation(aggBuilder);
+                }
             } else { // Let it as upper
-                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
+                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attName));
             }
         }
     }
@@ -684,12 +686,13 @@ public class EsRepository implements IEsRepository {
      * @param facetType type of facet for given attribute
      * @param attributeName given attribute
      */
+
     private void fillFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, FacetType facetType,
             String attributeName) {
         switch (facetType) {
             case STRING: {
                 Terms terms = (Terms) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_POSTFIX);
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
                 if (terms.getBuckets().isEmpty()) {
                     return;
                 }
@@ -700,61 +703,65 @@ public class EsRepository implements IEsRepository {
             }
             case NUMERIC: {
                 org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
-                Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
-                for (Bucket bucket : numRange.getBuckets()) {
-                    // Case with no value : every bucket has a NaN value (as from, to or both)
-                    if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
-                        // If first bucket contains NaN value, it means there are no value at all
-                        return;
-                    }
-                    Range<Double> valueRange;
-                    // (-∞ -> ?
-                    if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
-                        // (-∞ -> +∞) (completely dumb but...who knows ?)
-                        if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
-                            valueRange = Range.all();
-                        } else { // (-∞ -> value]
-                            valueRange = Range.atMost((Double) bucket.getTo());
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
+                if (numRange != null) {
+                    Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
+                    for (Bucket bucket : numRange.getBuckets()) {
+                        // Case with no value : every bucket has a NaN value (as from, to or both)
+                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
+                            // If first bucket contains NaN value, it means there are no value at all
+                            return;
                         }
-                    } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
-                        valueRange = Range.greaterThan((Double) bucket.getFrom());
-                    } else { // [value -> value)
-                        valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                        Range<Double> valueRange;
+                        // (-∞ -> ?
+                        if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
+                            // (-∞ -> +∞) (completely dumb but...who knows ?)
+                            if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
+                                valueRange = Range.all();
+                            } else { // (-∞ -> value]
+                                valueRange = Range.atMost((Double) bucket.getTo());
+                            }
+                        } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
+                            valueRange = Range.greaterThan((Double) bucket.getFrom());
+                        } else { // [value -> value)
+                            valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                        }
+                        valueMap.put(valueRange, bucket.getDocCount());
                     }
-                    valueMap.put(valueRange, bucket.getDocCount());
+                    facets.add(new NumericFacet(attributeName, valueMap));
                 }
-                facets.add(new NumericFacet(attributeName, valueMap));
                 break;
             }
             case DATE: {
                 org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_POSTFIX);
-                Map<com.google.common.collect.Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
-                for (Bucket bucket : dateRange.getBuckets()) {
-                    Range<OffsetDateTime> valueRange;
-                    // Case with no value : every bucket has a NaN value (as from, to or both)
-                    if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
-                        // If first bucket contains NaN value, it means there are no value at all
-                        return;
-                    }
-                    // (-∞ -> ?
-                    if (bucket.getFromAsString() == null) {
-                        // (-∞ -> +∞) (completely dumb but...who knows ?)
-                        if (bucket.getToAsString() == null) {
-                            valueRange = Range.all();
-                        } else { // (-∞ -> value]
-                            valueRange = Range.atMost(OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
+                if (dateRange != null) {
+                    Map<com.google.common.collect.Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
+                    for (Bucket bucket : dateRange.getBuckets()) {
+                        Range<OffsetDateTime> valueRange;
+                        // Case with no value : every bucket has a NaN value (as from, to or both)
+                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
+                            // If first bucket contains NaN value, it means there are no value at all
+                            return;
                         }
-                    } else if (bucket.getToAsString() == null) { // ? -> +∞)
-                        valueRange = Range.greaterThan(OffsetDateTimeAdapter.parse(bucket.getFromAsString()));
-                    } else { // [value -> value)
-                        valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                      OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                        // (-∞ -> ?
+                        if (bucket.getFromAsString() == null) {
+                            // (-∞ -> +∞) (completely dumb but...who knows ?)
+                            if (bucket.getToAsString() == null) {
+                                valueRange = Range.all();
+                            } else { // (-∞ -> value]
+                                valueRange = Range.atMost(OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                            }
+                        } else if (bucket.getToAsString() == null) { // ? -> +∞)
+                            valueRange = Range.greaterThan(OffsetDateTimeAdapter.parse(bucket.getFromAsString()));
+                        } else { // [value -> value)
+                            valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                          OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                        }
+                        valueMap.put(valueRange, bucket.getDocCount());
                     }
-                    valueMap.put(valueRange, bucket.getDocCount());
+                    facets.add(new DateFacet(attributeName, valueMap));
                 }
-                facets.add(new DateFacet(attributeName, valueMap));
                 break;
             }
             default:

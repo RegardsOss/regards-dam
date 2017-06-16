@@ -254,10 +254,13 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource updateDataSource(DataSource pDataSource) throws ModuleException {
-        LOGGER.info("updateDataSource : " + pDataSource.getLabel());
+        LOGGER.info("updateDataSource : id = {}, [new] label = {}", pDataSource.getPluginConfigurationId(), pDataSource.getLabel());
 
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDataSource.getPluginConfigurationId());
+
+        // Manage the label change
+        plgConf.setLabel(pDataSource.getLabel());
 
         // Manage the change between a DataSource from a single table and a from clause
         PluginParameter paramTableName = plgConf.getParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM);
