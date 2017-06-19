@@ -9,7 +9,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -441,13 +449,23 @@ public class CrawlerService implements ICrawlerService {
 
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                                                                       DataObject.class);
-        Page<DataObject> page = esRepos.search(searchKey, IEsRepository.BULK_SIZE, subsettingCrit);
-        updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
-
-        while (page.hasNext()) {
-            page = esRepos.search(searchKey, page.nextPageable(), subsettingCrit);
-            updateDataObjectsFromDatasetUpdate(tenant, dsIpId, groups, updateDate, datasetModelId, page.getContent());
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        Consumer<DataObject> dataObjectUpdater = object -> {
+            object.getTags().add(dsIpId);
+            object.getGroups().addAll(groups);
+            object.setLastUpdate(updateDate);
+            object.getDatasetModelIds().add(datasetModelId);
+            toSaveObjects.add(object);
+            if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
+                esRepos.saveBulk(tenant, toSaveObjects);
+                toSaveObjects.clear();
+            }
+        };
+        esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
+        if (!toSaveObjects.isEmpty()) {
+            esRepos.saveBulk(tenant, toSaveObjects);
         }
+
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         computationPlugins.forEach(p -> p.compute(dataset));
@@ -487,28 +505,6 @@ public class CrawlerService implements ICrawlerService {
                 dataset.getProperties().add(attributeToAdd);
             }
         }
-    }
-
-    /**
-     * Update data objects following a Dataset update
-     *
-     * @param tenant tenant
-     * @param dsIpId Dataset IpId (String)
-     * @param groups Dataset groups (to add or update on all objects)
-     * @param updateDate lastUpdate date to put on all objects
-     * @param objects objects to update
-     */
-    private void updateDataObjectsFromDatasetUpdate(String tenant, String dsIpId, Set<String> groups,
-            OffsetDateTime updateDate, Long datasetModelId, List<DataObject> objects) {
-        Set<DataObject> toSaveObjects = new HashSet<>();
-        objects.forEach(o -> {
-            o.getTags().add(dsIpId);
-            o.getGroups().addAll(groups);
-            o.setLastUpdate(updateDate);
-            o.getDatasetModelIds().add(datasetModelId);
-            toSaveObjects.add(o);
-        });
-        esRepos.saveBulk(tenant, toSaveObjects);
     }
 
     /**
@@ -554,16 +550,11 @@ public class CrawlerService implements ICrawlerService {
             // been updated (to update all associated data objects which have a lastUpdate date >= now)
             SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
                                                                        Dataset.class);
-            Page<Dataset> dsDatasetsPage = esRepos
-                    .search(searchKey, IEsRepository.BULK_SIZE, ICriterion.eq("plgConfDataSource.id", datasourceId));
-            if (!dsDatasetsPage.getContent().isEmpty()) {
+            Set<Dataset> datasetsToUpdate = new HashSet<>();
+            esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
+            if (!datasetsToUpdate.isEmpty()) {
                 // transactional method => use self, not this
-                self.updateDatasets(tenant, dsDatasetsPage, now);
-                while (page.hasNext()) {
-                    dsDatasetsPage = esRepos.search(searchKey, dsDatasetsPage.nextPageable(),
-                                                    ICriterion.eq("plgConfDataSource.id", datasourceId));
-                    self.updateDatasets(tenant, dsDatasetsPage, now);
-                }
+                self.updateDatasets(tenant, datasetsToUpdate, now);
             }
         }
 
@@ -592,11 +583,11 @@ public class CrawlerService implements ICrawlerService {
 
     @Override
     @MultitenantTransactional
-    public void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, OffsetDateTime lastUpdateDate) {
-        if (dsDatasetsPage.getContent().size() == 1) {
-            this.updateEntityIntoEs(tenant, dsDatasetsPage.getContent().get(0).getIpId(), lastUpdateDate);
+    public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate) {
+        if (datasets.size() == 1) {
+            this.updateEntityIntoEs(tenant, datasets.iterator().next().getIpId(), lastUpdateDate);
         } else {
-            this.updateEntitiesIntoEs(tenant, dsDatasetsPage.getContent().stream().map(Dataset::getIpId)
+            this.updateEntitiesIntoEs(tenant, datasets.stream().map(Dataset::getIpId)
                     .toArray(size -> new UniformResourceName[size]), lastUpdateDate);
         }
     }
