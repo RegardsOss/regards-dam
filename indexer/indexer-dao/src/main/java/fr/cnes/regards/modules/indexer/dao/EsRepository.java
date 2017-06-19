@@ -656,18 +656,19 @@ public class EsRepository implements IEsRepository {
             Map<String, Aggregation> aggsMap) {
         for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
             FacetType facetType = entry.getValue();
-            String attName = entry.getKey();
+            String attributeName = entry.getKey();
+            String attName;
             // Replace percentiles aggregations by range aggregagtions
             if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
-                attName = (facetType == FacetType.NUMERIC) ? attName + NUMERIC_FACET_SUFFIX : attName + DATE_FACET_SUFFIX;
+                attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
-                AggregationBuilder aggBuilder = FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attName, percentiles);
+                AggregationBuilder aggBuilder = FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     request.addAggregation(aggBuilder);
                 }
             } else { // Let it as upper
-                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attName));
+                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
             }
         }
     }
