@@ -7,8 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import fr.cnes.regards.modules.models.domain.attributes.Fragment;
-
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +16,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
 
 /**

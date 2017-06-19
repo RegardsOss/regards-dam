@@ -13,22 +13,14 @@ import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeProperty;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.domain.attributes.Fragment;
+import fr.cnes.regards.modules.models.domain.attributes.*;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionFactory;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
@@ -82,7 +74,8 @@ public class AttributeModelServiceTest {
         mockAttPropertyR = Mockito.mock(IAttributePropertyRepository.class);
         mockPublisher = Mockito.mock(IPublisher.class);
         attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
-                mockAttPropertyR, mockPublisher,Mockito.mock(ApplicationEventPublisher.class));
+                                                          mockAttPropertyR, mockPublisher,
+                                                          Mockito.mock(ApplicationEventPublisher.class));
     }
 
     @Test
@@ -124,7 +117,8 @@ public class AttributeModelServiceTest {
     public void addAttributeTest() throws ModuleException {
         final String attName = "MISSION";
         final AttributeType attType = AttributeType.STRING;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests").withoutRestriction();
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+                .withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName())).thenReturn(null);
@@ -147,9 +141,8 @@ public class AttributeModelServiceTest {
         final AttributeType attType = AttributeType.STRING;
         final Fragment fragment = Fragment.buildFragment("GEO", "Coordinate + CRS");
 
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType,
-                                                                            "ForTests").fragment(fragment)
-                .withoutRestriction();
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+                .fragment(fragment).withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
         Mockito.when(mockFragmentR.save(fragment)).thenReturn(fragment);
@@ -168,7 +161,8 @@ public class AttributeModelServiceTest {
     public void addAttributeWithUnsupportedRestriction() throws ModuleException {
         final String attName = "RESTRICTED";
         final AttributeType attType = AttributeType.STRING;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests").withoutRestriction();
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+                .withoutRestriction();
         // Bypass builder to set a bad restriction
         // CHECKSTYLE:OFF
         expectedAttModel.setRestriction(RestrictionFactory.buildIntegerRangeRestriction(0, 10, false, false));
@@ -189,7 +183,8 @@ public class AttributeModelServiceTest {
     public void addConflictAttributeTest() throws ModuleException {
         final String attName = "CONFLICT";
         final AttributeType attType = AttributeType.STRING;
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests").withoutRestriction();
+        final AttributeModel expectedAttModel = AttributeModelBuilder.build(attName, attType, "ForTests")
+                .withoutRestriction();
 
         Mockito.when(mockFragmentR.findByName(Fragment.getDefaultName())).thenReturn(Fragment.buildDefault());
         Mockito.when(mockAttModelR.findByNameAndFragmentName(attName, Fragment.getDefaultName()))
@@ -210,9 +205,8 @@ public class AttributeModelServiceTest {
     public void getAttributeTest() throws ModuleException {
         final Long attributeId = 1L;
 
-        final AttributeModel expectedAttModel = AttributeModelBuilder.build("EXISTING", AttributeType.DOUBLE,
-                                                                            "ForTests")
-                .withoutRestriction();
+        final AttributeModel expectedAttModel = AttributeModelBuilder
+                .build("EXISTING", AttributeType.DOUBLE, "ForTests").withoutRestriction();
         Mockito.when(mockAttModelR.exists(attributeId)).thenReturn(Boolean.TRUE);
         Mockito.when(mockAttModelR.findOne(attributeId)).thenReturn(expectedAttModel);
 

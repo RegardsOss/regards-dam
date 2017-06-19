@@ -21,19 +21,11 @@ import org.xml.sax.SAXException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.modules.entities.plugin.CountPlugin;
-import fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin;
-import fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin;
-import fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin;
-import fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin;
+import fr.cnes.regards.modules.entities.plugin.*;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.schema.Attribute;
-import fr.cnes.regards.modules.models.schema.Computation;
-import fr.cnes.regards.modules.models.schema.Fragment;
-import fr.cnes.regards.modules.models.schema.Model;
-import fr.cnes.regards.modules.models.schema.ParamPluginType;
+import fr.cnes.regards.modules.models.schema.*;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.plugins.utils.PluginUtils;
 
@@ -99,7 +91,8 @@ public final class XmlImportHelper {
      * @throws ImportException
      *             if error occurs!
      */
-    public static List<ModelAttrAssoc> importModel(InputStream pInputStream, List<PluginConfiguration> plgConfigurations) throws ImportException {
+    public static List<ModelAttrAssoc> importModel(InputStream pInputStream,
+            List<PluginConfiguration> plgConfigurations) throws ImportException {
         final Model xmlModel = read(pInputStream, Model.class);
 
         if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {

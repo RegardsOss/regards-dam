@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fragment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
-	<name>fragmentName</name>
-	<description>Sample fragment</description>
-	<attribute alterable="false" optional="true">
+          xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
+    <name>fragmentName</name>
+    <description>Sample fragment</description>
+    <attribute alterable="false" optional="true">
         <label>forTests</label>
-		<name>NAME</name>
-		<type>BOOLEAN</type>
-	</attribute>
-	<attribute alterable="false" optional="false">
-		<label>forTests</label>
-		<name>PROFILE</name>
-		<type>STRING</type>
-		<restriction>
-			<enumeration>
-				<value>public</value>
-				<value>scientist</value>
-				<value>user</value>
-			</enumeration>
-		</restriction>
-	</attribute>
-	<attribute alterable="true" optional="false">
-		<label>forTests</label>
-		<name>DATA</name>
-		<description>physical data</description>
-		<type>DOUBLE_ARRAY</type>
-	</attribute>
+        <name>NAME</name>
+        <type>BOOLEAN</type>
+    </attribute>
+    <attribute alterable="false" optional="false">
+        <label>forTests</label>
+        <name>PROFILE</name>
+        <type>STRING</type>
+        <restriction>
+            <enumeration>
+                <value>public</value>
+                <value>scientist</value>
+                <value>user</value>
+            </enumeration>
+        </restriction>
+    </attribute>
+    <attribute alterable="true" optional="false">
+        <label>forTests</label>
+        <name>DATA</name>
+        <description>physical data</description>
+        <type>DOUBLE_ARRAY</type>
+    </attribute>
 </fragment>

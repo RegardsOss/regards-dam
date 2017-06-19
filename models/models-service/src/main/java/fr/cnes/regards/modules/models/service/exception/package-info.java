@@ -3,7 +3,7 @@
  */
 /**
  * Model specific exception package
- * 
+ *
  * @author Marc Sordi
  *
  */

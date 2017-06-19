@@ -3,10 +3,9 @@
  */
 package fr.cnes.regards.modules.models.service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.springframework.stereotype.Service;
 
