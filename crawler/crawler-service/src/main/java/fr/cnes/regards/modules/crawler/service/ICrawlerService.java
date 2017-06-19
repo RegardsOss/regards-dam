@@ -1,8 +1,7 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
-
-import org.springframework.data.domain.Page;
+import java.util.Set;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -52,7 +51,7 @@ public interface ICrawlerService {
      * Transactional method updating a page of datasets
      * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
      */
-    void updateDatasets(String tenant, Page<Dataset> dsDatasetsPage, OffsetDateTime lastUpdateDate);
+    void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate);
 
     /**
      * To be used by tests only.
