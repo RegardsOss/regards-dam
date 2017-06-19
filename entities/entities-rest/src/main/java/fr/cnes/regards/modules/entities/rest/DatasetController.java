@@ -3,12 +3,11 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,7 +45,6 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
-import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownParameter;
 
 /**
  * Rest controller managing {@link Dataset}s
@@ -257,11 +255,10 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
     @ResourceAccess(description = "Dissociate a list of entities from a dataset")
-    public ResponseEntity<Resource<Dataset>> dissociateDataset(@PathVariable("dataset_id") final Long pDatasetId,
+    public ResponseEntity<Resource<Dataset>> dissociate(@PathVariable("dataset_id") final Long pDatasetId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
-        final Dataset dataSet = service.dissociate(pDatasetId, pToBeDissociated);
-        final Resource<Dataset> resource = toResource(dataSet);
-        return new ResponseEntity<>(resource, HttpStatus.OK);
+        service.dissociate(pDatasetId, pToBeDissociated);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -277,11 +274,10 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
     @ResourceAccess(description = "associate the list of entities to the dataset")
-    public ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") final Long pDatasetId,
+    public ResponseEntity<Void> associate(@PathVariable("dataset_id") final Long pDatasetId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
-        final Dataset dataset = service.associate(pDatasetId, pToBeAssociatedWith);
-        final Resource<Dataset> resource = toResource(dataset);
-        return new ResponseEntity<>(resource, HttpStatus.OK);
+        service.associate(pDatasetId, pToBeAssociatedWith);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -336,10 +332,10 @@ public class DatasetController implements IResourceController<Dataset> {
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Dataset.class), MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
-        resourceService.addLink(resource, this.getClass(), "dissociateDataset", "dissociate",
+        resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
-        resourceService.addLink(resource, this.getClass(), "associateDataset", "associate",
+        resourceService.addLink(resource, this.getClass(), "associate", "associate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
         return resource;
