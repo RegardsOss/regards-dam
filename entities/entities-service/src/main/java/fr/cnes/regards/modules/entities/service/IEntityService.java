@@ -72,7 +72,7 @@ public interface IEntityService<U extends AbstractEntity> {
      * @param pToAssociates URNs of entities to be associated by source entity
      * @throws EntityNotFoundException
      */
-    U associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
+    void associate(Long pEntityId, Set<UniformResourceName> pToAssociates) throws EntityNotFoundException;
 
     /**
      * Dissociate a set of URNs from an entity. Depending on entity types, dissociation impacts tags, groups or nothing.
@@ -81,7 +81,7 @@ public interface IEntityService<U extends AbstractEntity> {
      * @param pToBeDissociated URNs of entities to be dissociated from source entity
      * @throws EntityNotFoundException
      */
-    U dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
+    void dissociate(Long pEntityId, Set<UniformResourceName> pToBeDissociated) throws EntityNotFoundException;
 
     /**
      * Create entity

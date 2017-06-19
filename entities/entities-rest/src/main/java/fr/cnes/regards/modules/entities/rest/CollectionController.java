@@ -209,12 +209,11 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
     @ResponseBody
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
-    public HttpEntity<Resource<Collection>> dissociateCollection(
+    public HttpEntity<Resource<Collection>> dissociate(
             @PathVariable("collection_id") final Long pCollectionId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
-        final Collection collection = collectionService.dissociate(pCollectionId, pToBeDissociated);
-        final Resource<Collection> resource = toResource(collection);
-        return new ResponseEntity<>(resource, HttpStatus.OK);
+        collectionService.dissociate(pCollectionId, pToBeDissociated);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -231,11 +230,10 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
     @ResponseBody
     @ResourceAccess(description = "Associate the collection of id collection_id to the list of entities in parameter")
-    public HttpEntity<Resource<Collection>> associateCollection(@PathVariable("collection_id") final Long pCollectionId,
+    public HttpEntity<Resource<Collection>> associate(@PathVariable("collection_id") final Long pCollectionId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
-        final Collection collection = collectionService.associate(pCollectionId, pToBeAssociatedWith);
-        final Resource<Collection> resource = toResource(collection);
-        return new ResponseEntity<>(resource, HttpStatus.OK);
+        collectionService.associate(pCollectionId, pToBeAssociatedWith);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Override
@@ -251,10 +249,10 @@ public class CollectionController implements IResourceController<Collection> {
                                 MethodParamFactory.build(Collection.class),
                                 MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
-        resourceService.addLink(resource, this.getClass(), "dissociateCollection", "dissociate",
+        resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
-        resourceService.addLink(resource, this.getClass(), "associateCollection", "associate",
+        resourceService.addLink(resource, this.getClass(), "associate", "associate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
         return resource;
