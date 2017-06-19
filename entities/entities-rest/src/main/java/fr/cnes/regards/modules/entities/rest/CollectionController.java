@@ -184,7 +184,7 @@ public class CollectionController implements IResourceController<Collection> {
     @ResourceAccess(description = "create a new collection according to what is passed as parameter")
     public ResponseEntity<Resource<Collection>> createCollection(
             @Valid @RequestPart(name = "collection") final Collection pCollection,
-            @RequestPart(name = "description", required = false) final MultipartFile descriptionFile,
+            @RequestPart(name = "file", required = false) final MultipartFile descriptionFile,
             final BindingResult pResult) throws ModuleException, IOException {
 
         // Validate dynamic model

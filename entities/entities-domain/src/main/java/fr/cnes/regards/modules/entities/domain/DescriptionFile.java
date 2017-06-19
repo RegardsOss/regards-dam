@@ -46,9 +46,9 @@ public class DescriptionFile {
     public DescriptionFile() {
     }
 
-    public DescriptionFile(String pDescription) {
+    public DescriptionFile(String url) {
         super();
-        this.url = pDescription;
+        this.url = url;
     }
 
     public DescriptionFile(byte[] pContent, MediaType pType) {
@@ -81,4 +81,11 @@ public class DescriptionFile {
         url = pDescription;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
