@@ -111,7 +111,8 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
                      AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).isStatic().get());
         staticPropertyMap.put(StaticProperties.ENTITY_TYPE, AttributeModelBuilder
                 .build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null).isStatic().get());
-
+        staticPropertyMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
+                .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.STRING, null).isStatic().get());
     }
 
     @Override
