@@ -22,7 +22,6 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -68,7 +67,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     /**
      * Ingestion refresh rate (in seconds)
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue="1800", optional=true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = "1800", optional = true)
     private Integer refreshRate;
 
     /**
@@ -83,11 +82,11 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
         initDataSourceMapping(modelJSon);
 
         initializePluginMapping(tableName);
-        
+
         try {
             initDataSourceColumns(getDBConnection());
         } catch (SQLException e) {
-            LOG.error(e.getMessage(),e);
+            LOG.error(e.getMessage(), e);
         }
     }
 
@@ -107,13 +106,13 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     }
 
     @Override
-    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
             throws SQLException {
         OffsetDateTime date;
-        Integer typeDS = getTypeDs(pAttrMapping.getNameDS());
+        Integer typeDS = getTypeDs(attrDSName);
 
         if (typeDS == null) {
-            date = buildOffsetDateTime(pRs, pAttrMapping);
+            date = buildOffsetDateTime(rs, attrName);
         } else {
             long n;
             Instant instant;
@@ -121,17 +120,17 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
             switch (typeDS) {
                 case Types.DECIMAL:
                 case Types.NUMERIC:
-                    n = pRs.getLong(pAttrMapping.getNameDS());
+                    n = rs.getLong(colName);
                     instant = Instant.ofEpochMilli(n);
                     date = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
                     break;
                 default:
-                    date = buildOffsetDateTime(pRs, pAttrMapping);
+                    date = buildOffsetDateTime(rs, colName);
                     break;
             }
         }
 
-        return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
+        return AttributeBuilder.buildDate(attrName, date);
     }
 
     @Override
@@ -143,4 +142,5 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     public int getRefreshRate() {
         return refreshRate;
     }
+
 }

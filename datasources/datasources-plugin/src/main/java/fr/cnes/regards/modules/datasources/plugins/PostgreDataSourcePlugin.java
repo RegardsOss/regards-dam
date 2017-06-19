@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -61,13 +60,13 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
     /**
      * Is this data source is a REGARDS internal data source
      */
-    @PluginParameter(name = IS_INTERNAL_PARAM, defaultValue="false", optional=true)
+    @PluginParameter(name = IS_INTERNAL_PARAM, defaultValue = "false", optional = true)
     private String internalDataSource;
-    
+
     /**
      * Ingestion refresh rate
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue="1800", optional=true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = "1800", optional = true)
     private Integer refreshRate;
 
     /**
@@ -83,13 +82,6 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
 
         // Converts the modelJson to a list of AbstractAttributeMapping
         initDataSourceMapping(modelJSon);
-    }
-
-    @Override
-    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
-            throws SQLException {
-        OffsetDateTime date = buildOffsetDateTime(pRs, pAttrMapping);
-        return AttributeBuilder.buildDate(pAttrMapping.getName(), date);
     }
 
     @Override
@@ -110,5 +102,12 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
     @Override
     public int getRefreshRate() {
         return refreshRate;
+    }
+
+    @Override
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
+            throws SQLException {
+        OffsetDateTime date = buildOffsetDateTime(rs, colName);
+        return AttributeBuilder.buildDate(attrName, date);
     }
 }

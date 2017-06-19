@@ -99,21 +99,42 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     protected Integer getTypeDs(String colName) {
-        LOG.debug("******************************************************************");
-        LOG.debug("Retrieving type for {}", colName);
-        String extractColumnName = extractColumnName(colName);
-        LOG.debug("Extracted type is {}", extractColumnName);
-        if (extractColumnName != null) {
-            Column col = columnsType.get(extractColumnName(colName));
-            if (col != null) {
-                LOG.debug("Column name {} mapped to {} / JAVA {} / SQL {}", extractColumnName, col.getName(),
-                          col.getJavaSqlType(), col.getSqlType());
-            } else {
-                LOG.debug("No column mapped to {}", extractColumnName);
+        String extractColumnName = extractDataSourceColumnName(colName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("******************************************************************");
+            LOG.debug("Retrieving type for {}", colName);
+            LOG.debug("Extracted type is {}", extractColumnName);
+            if (extractColumnName != null) {
+                Column col = columnsType.get(extractColumnName);
+                if (col != null) {
+                    LOG.debug("Column name {} mapped to {} / JAVA {} / SQL {}", extractColumnName, col.getName(),
+                              col.getJavaSqlType(), col.getSqlType());
+                } else {
+                    LOG.debug("No column mapped to {}", extractColumnName);
+                }
             }
+            LOG.debug("******************************************************************");
         }
-        LOG.debug("******************************************************************");
-        return columnsType.get(extractColumnName(colName)).getSqlType();
+
+        return columnsType.get(extractColumnName).getSqlType();
+    }
+
+    protected String extractDataSourceColumnName(String attrDataSourceName) {
+        int pos = attrDataSourceName.toLowerCase().lastIndexOf(AS);
+
+        if (pos > 0) {
+            String str = attrDataSourceName.substring(pos + AS.length()).trim();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("the extracted column name is : <" + str + ">");
+            }
+            return str;
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("the extracted column name is : <" + attrDataSourceName + ">");
+            }
+            return attrDataSourceName;
+        }
     }
 
     /**
@@ -148,7 +169,9 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
                         + selectRequest.substring(pos, selectRequest.length());
             } else {
                 // Add at the end of the request
-                selectRequest += WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
+                StringBuffer newRequest = new StringBuffer(selectRequest);
+                newRequest.append(WHERE).append(AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD);
+                selectRequest = newRequest.toString();
             }
         }
 
