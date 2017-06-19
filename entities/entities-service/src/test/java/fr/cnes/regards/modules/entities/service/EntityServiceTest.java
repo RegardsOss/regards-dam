@@ -22,6 +22,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
+import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.domain.*;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -105,7 +106,8 @@ public class EntityServiceTest {
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
-                null, null, entitiesRepositoryMocked, emMocked, publisherMocked, runtimeTenantResolver);
+                null, null, entitiesRepositoryMocked, emMocked, publisherMocked, runtimeTenantResolver, Mockito.mock(
+                IDescriptionFileRepository.class));
 
         //        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
         //                null, null, emMocked, publisherMocked);

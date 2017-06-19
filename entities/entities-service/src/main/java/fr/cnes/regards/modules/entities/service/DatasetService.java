@@ -59,8 +59,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IDataSourceService dataSourceService;
 
-    private final IDescriptionFileRepository descriptionFileRepository;
-
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttrAssocService pModelAttributeService, IDataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
@@ -68,10 +66,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
             IDescriptionFileRepository descriptionFileRepository) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
-              pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver);
+              pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
-        this.descriptionFileRepository = descriptionFileRepository;
     }
 
     /**

@@ -134,6 +134,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     @Column(length = 20)
     @NotBlank
+    @Size(max = 20)
     private String label;
 
     /**

@@ -44,6 +44,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
+import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -127,11 +128,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
+    protected final IDescriptionFileRepository descriptionFileRepository;
+
     public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<U> pRepository, EntityManager pEm,
-            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver) {
+            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
+            IDescriptionFileRepository descriptionFileRepository) {
         modelAttributeService = pModelAttributeService;
         entityRepository = pEntityRepository;
         modelService = pModelService;
@@ -142,6 +146,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         em = pEm;
         publisher = pPublisher;
         this.runtimeTenantResolver = runtimeTenantResolver;
+        this.descriptionFileRepository = descriptionFileRepository;
     }
 
     @Override
@@ -352,7 +357,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         }
         // Set description
         if (entity instanceof AbstractDescEntity) {
-            this.setDescription((AbstractDescEntity) entity, file);
+            this.setDescription((AbstractDescEntity) entity, file, null);
         }
 
         // IpIds of entities that will need an AMQP event publishing
@@ -441,27 +446,58 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
      * @param pEntity entity being created
      * @param pFile the description of the entity
+     * @param oldOne
      * @throws IOException if description cannot be read
      * @throws ModuleException if description not conform to REGARDS requirements
      */
-    private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile)
+    private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile, DescriptionFile oldOne)
             throws IOException, ModuleException {
-        if ((pFile != null) && !pFile.isEmpty() && (pEntity.getDescriptionFile() != null)) {
-            // collections and dataset only have a description which is a url or a file
-            if (!isContentTypeAcceptable(pFile, pEntity)) {
-                throw new EntityDescriptionUnacceptableType(pFile.getContentType());
+        // we are updating/creating a description
+        if (pEntity.getDescriptionFile() != null) {
+            // this is a description file
+            if ((pFile != null) && !pFile.isEmpty()) {
+                // collections and dataset only have a description which is a url or a file
+                if (!isContentTypeAcceptable(pFile, pEntity)) {
+                    throw new EntityDescriptionUnacceptableType(pFile.getContentType());
+                }
+                // 10MB
+                if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
+                    EntityDescriptionTooLargeException e = new EntityDescriptionTooLargeException(
+                            pFile.getOriginalFilename());
+                    LOGGER.error("DescriptionFile is too big", e);
+                    throw e;
+                }
+                String fileCharset = getCharset(pFile);
+                if ((fileCharset != null) && !fileCharset.equals(StandardCharsets.UTF_8.toString())) {
+                    throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
+                }
+                // description file, change the old one because if we don't we accumulate tones of description
+                if (oldOne != null) {
+                    oldOne.setType(pEntity.getDescriptionFile().getType());
+                    oldOne.setContent(pFile.getBytes());
+                    oldOne.setUrl(null);
+                    pEntity.setDescriptionFile(oldOne);
+                } else {
+                    //if there is no descriptionFile existing then lets create one
+                    pEntity.setDescriptionFile(
+                            new DescriptionFile(pFile.getBytes(), pEntity.getDescriptionFile().getType()));
+                }
+            } else {
+                //this is a url
+                if (oldOne != null) {
+                    oldOne.setType(null);
+                    oldOne.setContent(null);
+                    oldOne.setUrl(pEntity.getDescriptionFile().getUrl());
+                    pEntity.setDescriptionFile(oldOne);
+                } else {
+                    //if there is no description existing then lets create one
+                    pEntity.setDescriptionFile(new DescriptionFile(pEntity.getDescriptionFile().getUrl()));
+                }
             }
-            // 10MB
-            if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
-                throw new EntityDescriptionTooLargeException(pFile.getOriginalFilename());
-            }
-            String fileCharset = getCharset(pFile);
-            if ((fileCharset != null) && !fileCharset.equals(StandardCharsets.UTF_8.toString())) {
-                throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
-            }
-            // description or description file
-            pEntity.setDescriptionFile(
-                    new DescriptionFile(pFile.getBytes(), pEntity.getDescriptionFile().getType()));
+        }
+        //for updates: let set back the old one, if there isn't any provided
+        else {
+            pEntity.setDescriptionFile(oldOne);
         }
     }
 
@@ -474,6 +510,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param collectionsToUpdate
      * @param urn
      */
+
     private void manageGroup(String group, Set<Collection> collectionsToUpdate, UniformResourceName urn,
             AbstractEntity rootEntity, Set<UniformResourceName> pUpdatedIpIds) {
         for (AbstractEntity e : entityRepository.findByTags(urn.toString())) {
@@ -486,7 +523,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 }
                 // if adding a new group
                 if (e.getGroups().add(group)) {
-                    coll = entityRepository.save(coll);
+                    coll = collectionRepository.save(coll);
                     // add entity IpId to AMQP publishing events
                     pUpdatedIpIds.add(coll.getIpId());
                     collectionsToUpdate.add(coll);
@@ -571,10 +608,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // checks
         U entityInDb = checkUpdate(pEntityId, pEntity);
         if (pEntity instanceof AbstractDescEntity) {
-            // In all cases....
-            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity) entityInDb).getDescriptionFile());
-            // ...and eventually be overriden if file != null (see this.setDescription() method)
-            this.setDescription((AbstractDescEntity) pEntity, file);
+            // If the entity already has a descriptionFile lets get it ....
+            DescriptionFile descriptionFileFromDb = ((AbstractDescEntity) entityInDb).getDescriptionFile();
+            // ...and eventually override it if file != null (see this.setDescription() method)
+            this.setDescription((AbstractDescEntity) pEntity, file, descriptionFileFromDb);
         }
         return updateWithoutCheck(pEntity, entityInDb);
     }
@@ -589,10 +626,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // checks
         entityInDb = checkUpdate(entityInDb.getId(), pEntity);
         if (pEntity instanceof AbstractDescEntity) {
-            // In all cases....
-            ((AbstractDescEntity) pEntity).setDescriptionFile(((AbstractDescEntity) entityInDb).getDescriptionFile());
-            // ...and eventually be overriden if file != null (see this.setDescription() method)
-            this.setDescription((AbstractDescEntity) pEntity, file);
+            // If the entity already has a descriptionFile lets set it ....
+            DescriptionFile descriptionFileFromDb = ((AbstractDescEntity) entityInDb).getDescriptionFile();
+            // ...and eventually override it if file != null (see this.setDescription() method)
+            this.setDescription((AbstractDescEntity) pEntity, file, descriptionFileFromDb);
         }
 
         return updateWithoutCheck(pEntity, entityInDb);

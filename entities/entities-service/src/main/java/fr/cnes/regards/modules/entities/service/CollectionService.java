@@ -30,16 +30,13 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @Service
 public class CollectionService extends AbstractEntityService<Collection> implements ICollectionService {
 
-    private final IDescriptionFileRepository descriptionFileRepository;
-
     public CollectionService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IAbstractEntityRepository<Collection> pRepository, EntityManager pEm,
             IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
-              pDatasetRepository, pRepository, pEm, pPublisher, runtimeTenantResolver);
-        this.descriptionFileRepository=descriptionFileRepository;
+              pDatasetRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
     }
 
     @Override
