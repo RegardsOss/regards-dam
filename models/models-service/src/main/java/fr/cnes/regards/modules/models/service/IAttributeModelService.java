@@ -7,12 +7,9 @@ import java.util.List;
 
 import javax.transaction.Transactional;
 
-import org.springframework.context.ApplicationListener;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
 /**
@@ -30,11 +27,12 @@ public interface IAttributeModelService {
      *
      * @param pAttributeModel
      *            {@link AttributeModel} to add
+     * @param duringImport
      * @return {@link AttributeModel}
      * @throws ModuleException
      *             if error occurs!
      */
-    AttributeModel addAttribute(AttributeModel pAttributeModel) throws ModuleException;
+    AttributeModel addAttribute(AttributeModel pAttributeModel, boolean duringImport) throws ModuleException;
 
     /**
      * Add a list of attributes in a {@link Transactional} context
@@ -49,7 +47,7 @@ public interface IAttributeModelService {
 
     /**
      * Manage {@link AttributeModel} creation out of a {@link Transactional} context. This method is used by
-     * {@link IAttributeModelService#addAttribute(AttributeModel)} and
+     * {@link IAttributeModelService#addAttribute(AttributeModel, boolean)} and
      * {@link IAttributeModelService#addAllAttributes(Iterable)}.
      *
      * @param pAttributeModel

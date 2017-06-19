@@ -25,6 +25,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
+import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -56,12 +57,12 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IAttributeModelService attributeService;
 
-    private final DataSourceService dataSourceService;
+    private final IDataSourceService dataSourceService;
 
     private final IDescriptionFileRepository descriptionFileRepository;
 
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
-            IModelAttrAssocService pModelAttributeService, DataSourceService pDataSourceService,
+            IModelAttrAssocService pModelAttributeService, IDataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
             EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,

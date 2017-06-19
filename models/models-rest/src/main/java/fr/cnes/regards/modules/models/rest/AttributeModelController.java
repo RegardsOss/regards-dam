@@ -121,7 +121,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Resource<AttributeModel>> addAttribute(
             @Valid @RequestBody final AttributeModel pAttributeModel) throws ModuleException {
-        return ResponseEntity.ok(toResource(attributeService.addAttribute(pAttributeModel)));
+        return ResponseEntity.ok(toResource(attributeService.addAttribute(pAttributeModel, false)));
     }
 
     /**

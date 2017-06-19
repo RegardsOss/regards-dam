@@ -21,7 +21,6 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
@@ -68,13 +67,13 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     /**
      * Is this data source is a REGARDS internal data source
      */
-    @PluginParameter(name = IS_INTERNAL_PARAM, defaultValue="false", optional=true)
+    @PluginParameter(name = IS_INTERNAL_PARAM, defaultValue = "false", optional = true)
     private String internalDataSource;
 
     /**
      * Ingestion refresh rate
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue="1800", optional=true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = "1800", optional = true)
     private Integer refreshRate;
 
     /**
@@ -89,11 +88,11 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
         initDataSourceMapping(modelJSon);
 
         initializePluginMapping(tableName);
-        
+
         try {
             initDataSourceColumns(getDBConnection());
         } catch (SQLException e) {
-            LOG.error(e.getMessage(),e);
+            LOG.error(e.getMessage(), e);
         }
     }
 
@@ -116,35 +115,35 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     /**
      * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
      */
-    protected AbstractAttribute<?> buildDateAttribute(ResultSet pRs, AbstractAttributeMapping pAttrMapping)
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
             throws SQLException {
-        OffsetDateTime ldt;        
-        Integer typeDS = getTypeDs(pAttrMapping.getNameDS());
+        OffsetDateTime ldt;
+        Integer typeDS = getTypeDs(attrDSName);
 
         if (typeDS == null) {
-            ldt = buildOffsetDateTime(pRs, pAttrMapping);
+            ldt = buildOffsetDateTime(rs, colName);
         } else {
             long n;
             Instant instant;
 
             switch (typeDS) {
                 case Types.TIME:
-                    n = pRs.getTime(pAttrMapping.getNameDS()).getTime();
+                    n = rs.getTime(colName).getTime();
                     instant = Instant.ofEpochMilli(n);
                     ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
                     break;
                 case Types.DATE:
-                    n = pRs.getDate(pAttrMapping.getNameDS()).getTime();
+                    n = rs.getDate(colName).getTime();
                     instant = Instant.ofEpochMilli(n);
                     ldt = OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
                     break;
                 default:
-                    ldt = buildOffsetDateTime(pRs, pAttrMapping);
+                    ldt = buildOffsetDateTime(rs, colName);
                     break;
             }
         }
 
-        return AttributeBuilder.buildDate(pAttrMapping.getName(), ldt);
+        return AttributeBuilder.buildDate(attrName, ldt);
     }
 
     @Override

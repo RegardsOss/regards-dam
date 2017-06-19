@@ -28,7 +28,6 @@ import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
@@ -255,10 +254,13 @@ public class DataSourceService implements IDataSourceService {
 
     @Override
     public DataSource updateDataSource(DataSource pDataSource) throws ModuleException {
-        LOGGER.info("updateDataSource : " + pDataSource.getLabel());
+        LOGGER.info("updateDataSource : id = {}, [new] label = {}", pDataSource.getPluginConfigurationId(), pDataSource.getLabel());
 
         // Get the PluginConfiguration
         PluginConfiguration plgConf = service.getPluginConfiguration(pDataSource.getPluginConfigurationId());
+
+        // Manage the label change
+        plgConf.setLabel(pDataSource.getLabel());
 
         // Manage the change between a DataSource from a single table and a from clause
         PluginParameter paramTableName = plgConf.getParameter(IDataSourceFromSingleTablePlugin.TABLE_PARAM);
