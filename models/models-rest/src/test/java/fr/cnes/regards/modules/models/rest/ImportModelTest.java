@@ -31,6 +31,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
+import fr.cnes.regards.modules.models.service.exception.ImportException;
 
 /**
  * @author Marc Sordi
@@ -159,4 +160,8 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         importModel("model4.xml", MockMvcResultMatchers.status().isBadRequest());
     }
 
+    @Test(expected = ImportException.class)
+    public void importWrongModel() {
+        importModel("wrong_model.xml");
+    }
 }
