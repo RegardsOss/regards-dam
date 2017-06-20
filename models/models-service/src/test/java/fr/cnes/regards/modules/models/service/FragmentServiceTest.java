@@ -101,6 +101,8 @@ public class FragmentServiceTest {
         final Fragment expected = Fragment.buildFragment(TEST_FRAG_NAME, TEST_FRAG_DESC);
 
         Mockito.when(mockFragmentR.findByName(TEST_FRAG_NAME)).thenReturn(null);
+        //lets consider there is no attribute created yet
+        Mockito.when(mockAttModelS.isFragmentCreatable(TEST_FRAG_NAME)).thenReturn(true);
         Mockito.when(mockFragmentR.save(expected)).thenReturn(expected);
 
         final Fragment retrieved = fragmentService.addFragment(expected);
