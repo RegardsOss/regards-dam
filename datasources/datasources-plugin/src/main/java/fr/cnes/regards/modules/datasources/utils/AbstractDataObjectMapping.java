@@ -73,7 +73,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * The PL/SQL key word AS
      */
-    protected static final String AS = "as";
+    protected static final String AS = "as ";
 
     private static final String BLANK = " ";
 
@@ -242,30 +242,26 @@ public abstract class AbstractDataObjectMapping {
          */
         for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
-            try {
-                AbstractAttribute<?> attr = buildAttribute(resultSet, attrMapping);
+            AbstractAttribute<?> attr = buildAttribute(resultSet, attrMapping);
 
-                if (attr != null) {
+            if (attr != null) {
 
-                    if (attrMapping.isMappedToStaticProperty()) {
-                        // static attribute mapping
-                        processStaticAttributes(data, attr, attrMapping);
-                    } else {
-                        // dynamic attribute mapping
-                        if (!Strings.isNullOrEmpty(attrMapping.getNameSpace())) {
-                            if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
-                                // It is a new name space
-                                spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
-                            }
-                            // Add the attribute to the namespace
-                            spaceNames.get(attrMapping.getNameSpace()).add(attr);
-                        } else {
-                            attributes.add(attr);
+                if (attrMapping.isMappedToStaticProperty()) {
+                    // static attribute mapping
+                    processStaticAttributes(data, attr, attrMapping);
+                } else {
+                    // dynamic attribute mapping
+                    if (!Strings.isNullOrEmpty(attrMapping.getNameSpace())) {
+                        if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
+                            // It is a new name space
+                            spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
                         }
+                        // Add the attribute to the namespace
+                        spaceNames.get(attrMapping.getNameSpace()).add(attr);
+                    } else {
+                        attributes.add(attr);
                     }
                 }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
             }
         }
 
@@ -514,7 +510,7 @@ public abstract class AbstractDataObjectMapping {
         dataSourceMapping.getAttributesMapping().forEach(d -> {
 
             if (0 > d.getNameDS().toLowerCase().lastIndexOf(AS) && !d.isPrimaryKey()) {
-                columns.add(d.getNameDS() + BLANK + AS + BLANK + d.getName());
+                columns.add(d.getNameDS() + BLANK + AS + d.getName());
             } else {
                 columns.add(d.getNameDS());
             }
