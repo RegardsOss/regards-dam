@@ -6,11 +6,15 @@ package fr.cnes.regards.modules.indexer.domain.facet;
  */
 public interface IFacetTypeVisitor<T> {
 
-    T visitStringFacet(Object... pArgs);
+    T visitStringFacet(Object... args);
 
-    T visitDateFacet(Object... pArgs);
+    T visitDateFacet(Object... args);
 
-    T visitNumericFacet(Object... pArgs);
+    T visitNumericFacet(Object... args);
 
-    T visitRangeFacet(Object... pArgs);
+    T visitRangeFacet(Object... args);
+
+    T visitMinFacet(Object... args);
+
+    T visitMaxFacet(Object... args);
 }

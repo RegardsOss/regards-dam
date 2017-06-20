@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -521,6 +522,9 @@ public class CrawlerService implements ICrawlerService {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
+        if (!pluginConf.isActive()) {
+            throw new InactiveDatasourceException();
+        }
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
 
         int savedObjectsCount = 0;
