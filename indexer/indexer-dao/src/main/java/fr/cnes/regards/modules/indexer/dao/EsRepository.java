@@ -106,11 +106,12 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
+     * Set it to 10 minutes to avoid timeouts while scrolling.
      */
-    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 10000;
+    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 60000 * 10;
 
     /**
-     * Default number of hits retrieved by scrolling
+     * Default number of hits retrieved by scrolling (10 is the default value and according to doc is the best value)
      */
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
 
