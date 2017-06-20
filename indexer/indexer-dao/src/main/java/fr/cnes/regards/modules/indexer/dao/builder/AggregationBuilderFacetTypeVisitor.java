@@ -6,6 +6,8 @@ import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.max.MaxAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.min.MinAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentile;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesAggregationBuilder;
@@ -29,6 +31,10 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
 
     public static final String RANGE_FACET_SUFFIX = "_range";
 
+    public static final String MIN_FACET_SUFFIX = "_min";
+
+    public static final String MAX_FACET_SUFFIX = "_max";
+
     private int stringFacetSize;
 
     private int stringFacetMinDocCount;
@@ -40,41 +46,41 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
     }
 
     @Override
-    public AggregationBuilder visitStringFacet(Object... pArgs) {
-        String pAttributeName = (String) pArgs[0]; // Development error if ClassCast or null array
-        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(pAttributeName + STRING_FACET_SUFFIX);
-        termsAggBuilder.field(pAttributeName + ".keyword");
+    public AggregationBuilder visitStringFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
+        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(attributeName + STRING_FACET_SUFFIX);
+        termsAggBuilder.field(attributeName + ".keyword");
         termsAggBuilder.size(stringFacetSize);
         termsAggBuilder.minDocCount(stringFacetMinDocCount);
         return termsAggBuilder;
     }
 
     @Override
-    public AggregationBuilder visitDateFacet(Object... pArgs) {
-        String pAttributeName = (String) pArgs[0]; // Development error if ClassCast or null array
+    public AggregationBuilder visitDateFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
         PercentilesAggregationBuilder percentsAggsBuilder = AggregationBuilders
-                .percentiles(pAttributeName + DATE_FACET_SUFFIX);
-        percentsAggsBuilder.field(pAttributeName);
+                .percentiles(attributeName + DATE_FACET_SUFFIX);
+        percentsAggsBuilder.field(attributeName);
         percentsAggsBuilder.percentiles(10., 20., 30., 40., 50., 60., 70., 80., 90.);
         return percentsAggsBuilder;
     }
 
     @Override
-    public AggregationBuilder visitNumericFacet(Object... pArgs) {
-        String pAttributeName = (String) pArgs[0]; // Development error if ClassCast or null array
+    public AggregationBuilder visitNumericFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
         PercentilesAggregationBuilder percentsAggsBuilder = AggregationBuilders
-                .percentiles(pAttributeName + NUMERIC_FACET_SUFFIX);
-        percentsAggsBuilder.field(pAttributeName);
+                .percentiles(attributeName + NUMERIC_FACET_SUFFIX);
+        percentsAggsBuilder.field(attributeName);
         percentsAggsBuilder.percentiles(10., 20., 30., 40., 50., 60., 70., 80., 90.);
         return percentsAggsBuilder;
     }
 
     @Override
-    public AggregationBuilder visitRangeFacet(Object... pArgs) {
-        String pAttributeName = (String) pArgs[0]; // Development error if ClassCast or null array
-        Percentiles percentiles = (Percentiles) pArgs[1]; // Development error if ClassCast or null array
-        RangeAggregationBuilder rangeAggBuilder = AggregationBuilders.range(pAttributeName + RANGE_FACET_SUFFIX);
-        rangeAggBuilder.field(pAttributeName);
+    public AggregationBuilder visitRangeFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
+        Percentiles percentiles = (Percentiles) args[1]; // Development error if ClassCast or null array
+        RangeAggregationBuilder rangeAggBuilder = AggregationBuilders.range(attributeName + RANGE_FACET_SUFFIX);
+        rangeAggBuilder.field(attributeName);
         Double previousValue = null;
         // INFO : ES API range creation use closedOpened ranges ([a , b[)
         for (Iterator<Percentile> i = percentiles.iterator(); i.hasNext();) {
@@ -100,4 +106,19 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         return rangeAggBuilder;
     }
 
+    @Override
+    public AggregationBuilder visitMinFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
+        MinAggregationBuilder minAggBuilder = AggregationBuilders.min(attributeName + MIN_FACET_SUFFIX);
+        minAggBuilder.field(attributeName);
+        return minAggBuilder;
+    }
+
+    @Override
+    public AggregationBuilder visitMaxFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
+        MaxAggregationBuilder maxAggBuilder = AggregationBuilders.max(attributeName + MAX_FACET_SUFFIX);
+        maxAggBuilder.field(attributeName);
+        return maxAggBuilder;
+    }
 }
