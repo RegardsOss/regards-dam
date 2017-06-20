@@ -3,9 +3,8 @@
  */
 package fr.cnes.regards.modules.models.service;
 
-import java.util.List;
-
 import javax.transaction.Transactional;
+import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -82,4 +81,11 @@ public interface IAttributeModelService {
     void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;
 
     AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
+
+    /**
+     * Determines whether a fragment can be created without conflicting name with any existing attribute
+     * @param fragmentName
+     * @return
+     */
+    boolean isFragmentCreatable(String fragmentName);
 }

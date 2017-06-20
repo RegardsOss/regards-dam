@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.models.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.repository.CrudRepository;
@@ -30,4 +31,6 @@ public interface IAttributeModelRepository extends CrudRepository<AttributeModel
     AttributeModel findByNameAndFragmentName(String pAttributeName, String pFragmentName);
 
     List<AttributeModel> findByFragmentId(Long pFragmentId);
+
+    Collection<AttributeModel> findByName(String fragmentName);
 }

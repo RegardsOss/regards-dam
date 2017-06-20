@@ -24,14 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
@@ -96,7 +90,8 @@ public class FragmentServiceTest {
 
     @Before
     public void beforeTest() {
-        fragmentService = new FragmentService(mockFragmentR, mockAttModelR, mockAttModelS, Mockito.mock(IPublisher.class));
+        fragmentService = new FragmentService(mockFragmentR, mockAttModelR, mockAttModelS,
+                                              Mockito.mock(IPublisher.class));
     }
 
     @Test
@@ -106,6 +101,8 @@ public class FragmentServiceTest {
         final Fragment expected = Fragment.buildFragment(TEST_FRAG_NAME, TEST_FRAG_DESC);
 
         Mockito.when(mockFragmentR.findByName(TEST_FRAG_NAME)).thenReturn(null);
+        //lets consider there is no attribute created yet
+        Mockito.when(mockAttModelS.isFragmentCreatable(TEST_FRAG_NAME)).thenReturn(true);
         Mockito.when(mockFragmentR.save(expected)).thenReturn(expected);
 
         final Fragment retrieved = fragmentService.addFragment(expected);
@@ -193,10 +190,9 @@ public class FragmentServiceTest {
         // CHECKSTYLE:OFF
         attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN, "ForTests").withoutRestriction());
         attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING, "ForTests")
-                .withEnumerationRestriction("public", "scientist", "user"));
-        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.DOUBLE_ARRAY,
-                                                  "ForTests").description("physical data")
-                .withoutRestriction());
+                              .withEnumerationRestriction("public", "scientist", "user"));
+        attModels.add(AttributeModelBuilder.build("DATA", AttributeType.DOUBLE_ARRAY, "ForTests")
+                              .description("physical data").withoutRestriction());
         // CHECKSTYLE:ON
 
         Mockito.when(mockFragmentR.exists(fragmentId)).thenReturn(true);
@@ -244,28 +240,26 @@ public class FragmentServiceTest {
                     Assert.assertFalse(attModel.isAlterable());
                     Assert.assertTrue(attModel.isOptional());
                     Assert.assertNull(attModel.getRestriction());
-                } else
-                    if ("PROFILE".equals(name)) {
-                        Assert.assertNull(attModel.getDescription());
-                        Assert.assertEquals(AttributeType.STRING, attModel.getType());
-                        Assert.assertFalse(attModel.isAlterable());
-                        Assert.assertFalse(attModel.isOptional());
-                        Assert.assertNotNull(attModel.getRestriction());
-                        Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
-                        final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
-                        Assert.assertTrue(er.getAcceptableValues().contains("public"));
-                        Assert.assertTrue(er.getAcceptableValues().contains("scientist"));
-                        Assert.assertTrue(er.getAcceptableValues().contains("user"));
-                    } else
-                        if ("DATA".equals(name)) {
-                            Assert.assertEquals("physical data", attModel.getDescription());
-                            Assert.assertEquals(AttributeType.DOUBLE_ARRAY, attModel.getType());
-                            Assert.assertTrue(attModel.isAlterable());
-                            Assert.assertFalse(attModel.isOptional());
-                            Assert.assertNull(attModel.getRestriction());
-                        } else {
-                            Assert.fail("Unexpected attribute");
-                        }
+                } else if ("PROFILE".equals(name)) {
+                    Assert.assertNull(attModel.getDescription());
+                    Assert.assertEquals(AttributeType.STRING, attModel.getType());
+                    Assert.assertFalse(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isOptional());
+                    Assert.assertNotNull(attModel.getRestriction());
+                    Assert.assertTrue(attModel.getRestriction() instanceof EnumerationRestriction);
+                    final EnumerationRestriction er = (EnumerationRestriction) attModel.getRestriction();
+                    Assert.assertTrue(er.getAcceptableValues().contains("public"));
+                    Assert.assertTrue(er.getAcceptableValues().contains("scientist"));
+                    Assert.assertTrue(er.getAcceptableValues().contains("user"));
+                } else if ("DATA".equals(name)) {
+                    Assert.assertEquals("physical data", attModel.getDescription());
+                    Assert.assertEquals(AttributeType.DOUBLE_ARRAY, attModel.getType());
+                    Assert.assertTrue(attModel.isAlterable());
+                    Assert.assertFalse(attModel.isOptional());
+                    Assert.assertNull(attModel.getRestriction());
+                } else {
+                    Assert.fail("Unexpected attribute");
+                }
             }
         } catch (IOException e) {
             LOGGER.debug("Cannot import fragment");

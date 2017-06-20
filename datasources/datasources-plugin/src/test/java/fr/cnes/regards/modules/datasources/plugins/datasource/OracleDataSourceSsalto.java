@@ -4,8 +4,6 @@
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,7 +18,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -53,31 +50,25 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
 @Ignore
-public class OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest {
+public class OracleDataSourceSsalto {
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OracleDataSourceSsalto.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
-    private static final String TENANT = "ORA_TENANT";
+    private static final String TENANT = "SSALTO_TENANT";
 
-    @Value("${oracle.datasource.host}")
-    private String dbHost;
+    private String dbHost = "172.26.8.122";
 
-    @Value("${oracle.datasource.port}")
-    private String dbPort;
+    private String dbPort = "1521";
 
-    @Value("${oracle.datasource.name}")
-    private String dbName;
+    private String dbName = "SIPAD";
 
-    @Value("${oracle.datasource.username}")
-    private String dbUser;
+    private String dbUser = "ssalto_dba";
 
-    @Value("${oracle.datasource.password}")
-    private String dbPassword;
+    private String dbPassword = "ssalto_dba";
 
     private IDataSourceFromSingleTablePlugin plgDBDataSource;
 
@@ -126,9 +117,8 @@ public class OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest {
     @Requirement("REGARDS_DSL_DAM_SRC_110")
     @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system allows to create a plugin to get a subset of the datasource's data")
-    public void getDataSourceIntrospection() {
-        OffsetDateTime lastUpdateDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).minusYears(6);
-        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000), lastUpdateDate);
+    public void getDataSourceIntrospection() throws SQLException {
+        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
 
@@ -161,41 +151,43 @@ public class OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest {
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        PluginConfiguration plgConf = PluginUtils.getPluginConfiguration(parameters,
-                                                                         DefaultOracleConnectionPlugin.class,
-                                                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        pluginCacheMap.put(plgConf.getId(),
-                           PluginUtils.getPlugin(plgConf, plgConf.getPluginClassName(),
-                                                 Arrays.asList(PLUGIN_CURRENT_PACKAGE), pluginCacheMap));
-        return plgConf;
+        PluginConfiguration plgConfConn = PluginUtils
+                .getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+                                        Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        pluginCacheMap.put(plgConfConn.getId(), (Object)PluginUtils
+                .getPlugin(plgConfConn, plgConfConn.getPluginClassName(), Arrays.asList(PLUGIN_CURRENT_PACKAGE),
+                           pluginCacheMap));
+        return plgConfConn;
     }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                "DATA_OBJECT_ID"));
-
+                                                  "DATA_OBJECTS_ID"));
+        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "NODE_IDENTIFIER"));
+        attributes.add(new DynamicAttributeMapping("PHASE", AttributeType.STRING, "PHASE"));
+        attributes.add(new DynamicAttributeMapping("PRODUCT_OPTION", AttributeType.STRING, "PRODUCT_OPTION"));
+        attributes.add(new DynamicAttributeMapping("PARAMETER", AttributeType.STRING, "PARAMETER"));
+        attributes.add(new DynamicAttributeMapping("RADICAL", AttributeType.STRING, "RADICAL"));
+        attributes.add(new DynamicAttributeMapping("FILE_CREATION_DATE", AttributeType.DATE_ISO8601, "FILE_CREATION_DATE"));
+        attributes.add(new DynamicAttributeMapping("OBJECT_VERSION", AttributeType.STRING, "VERSION"));
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
-        attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
-        attributes.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
-
-        attributes.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
-        attributes.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
-        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
-        attributes.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
-
-        attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
-        attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE"));
-
-        attributes.add(new DynamicAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
-        attributes.add(new DynamicAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
-        attributes.add(new DynamicAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        attributes.add(new DynamicAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        attributes.add(new DynamicAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
-        attributes.add(new DynamicAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
-
+        
+        attributes.add(new DynamicAttributeMapping("START_DATE", "TIME_PERIOD", AttributeType.DATE_ISO8601, "START_DATE"));
+        attributes.add(new DynamicAttributeMapping("STOP_DATE", "TIME_PERIOD", AttributeType.DATE_ISO8601, "STOP_DATE"));
+        
+        attributes.add(new DynamicAttributeMapping("CYCLE_MAX", "CYCLE_RANGE", AttributeType.INTEGER, "CYCLE_MAX"));
+        attributes.add(new DynamicAttributeMapping("CYCLE_MIN", "CYCLE_RANGE", AttributeType.INTEGER, "CYCLE_MIN"));
+        
+        attributes.add(new DynamicAttributeMapping("ORBIT_MAX", "CYCLE_RANGE", AttributeType.INTEGER, "ORBIT_MAX"));
+        attributes.add(new DynamicAttributeMapping("ORBIT_MIN", "CYCLE_RANGE", AttributeType.INTEGER, "ORBIT_MIN"));
+        
+        attributes.add(new DynamicAttributeMapping("LATITUDE_MIN", "GEO_CORDINATES", AttributeType.INTEGER, "MIN_LATITUDE"));
+        attributes.add(new DynamicAttributeMapping("LATITUDE_MAX", "GEO_CORDINATES", AttributeType.INTEGER, "MAX_LATITUDE"));
+        attributes.add(new DynamicAttributeMapping("LONGITUDE_MIN", "GEO_CORDINATES", AttributeType.INTEGER, "MIN_LONGITUDE"));
+        attributes.add(new DynamicAttributeMapping("LONGITUDE_MAX", "GEO_CORDINATES", AttributeType.INTEGER, "MAX_LONGITUDE"));
+        
         dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 

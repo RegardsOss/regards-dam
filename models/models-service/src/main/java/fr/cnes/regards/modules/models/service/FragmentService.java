@@ -63,7 +63,7 @@ public class FragmentService implements IFragmentService {
         this.fragmentRepository = pFragmentRepository;
         this.attributeModelRepository = pAttributeModelRepository;
         this.attributeModelService = pAttributeModelService;
-        this.publisher=publisher;
+        this.publisher = publisher;
     }
 
     @Override
@@ -78,6 +78,11 @@ public class FragmentService implements IFragmentService {
         if (existing != null) {
             throw new EntityAlreadyExistsException(
                     String.format("Fragment with name \"%s\" already exists!", pFragment.getName()));
+        }
+        if (!attributeModelService.isFragmentCreatable(pFragment.getName())) {
+            throw new EntityAlreadyExistsException(String.format(
+                    "Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                    pFragment.getName()));
         }
         return fragmentRepository.save(pFragment);
     }
@@ -110,11 +115,11 @@ public class FragmentService implements IFragmentService {
     public void deleteFragment(Long pFragmentId) throws ModuleException {
         // Check if fragment is empty
         final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
-        if (attModels!=null && !Iterables.isEmpty(attModels)) {
+        if (attModels != null && !Iterables.isEmpty(attModels)) {
             throw new EntityNotEmptyException(pFragmentId, Fragment.class);
         }
         if (fragmentRepository.exists(pFragmentId)) {
-            Fragment toDelete=fragmentRepository.findOne(pFragmentId);
+            Fragment toDelete = fragmentRepository.findOne(pFragmentId);
             fragmentRepository.delete(toDelete);
             publisher.publish(new FragmentDeletedEvent(toDelete.getName()));
         }

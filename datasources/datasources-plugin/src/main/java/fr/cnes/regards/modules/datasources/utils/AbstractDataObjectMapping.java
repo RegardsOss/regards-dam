@@ -73,8 +73,8 @@ public abstract class AbstractDataObjectMapping {
     /**
      * The PL/SQL key word AS
      */
-    protected static final String AS = "as";
-    
+    protected static final String AS = "as ";
+
     private static final String BLANK = " ";
 
     /**
@@ -140,8 +140,8 @@ public abstract class AbstractDataObjectMapping {
      * @return a new {@link DateAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
-    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
-            throws SQLException;
+    protected abstract AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName,
+            String colName) throws SQLException;
 
     /**
      * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link AbstractAttributeMapping}.
@@ -151,8 +151,7 @@ public abstract class AbstractDataObjectMapping {
      * @return the {@link OffsetDateTime}
      * @throws SQLException An error occurred when try to read the {@link ResultSet}
      */
-    protected OffsetDateTime buildOffsetDateTime(ResultSet rs, String colName)
-            throws SQLException {
+    protected OffsetDateTime buildOffsetDateTime(ResultSet rs, String colName) throws SQLException {
         long n = rs.getTimestamp(colName).getTime();
         Instant instant = Instant.ofEpochMilli(n);
         return OffsetDateTime.ofInstant(instant, ZoneId.of("UTC"));
@@ -243,30 +242,26 @@ public abstract class AbstractDataObjectMapping {
          */
         for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
 
-            try {
-                AbstractAttribute<?> attr = buildAttribute(resultSet, attrMapping);
+            AbstractAttribute<?> attr = buildAttribute(resultSet, attrMapping);
 
-                if (attr != null) {
+            if (attr != null) {
 
-                    if (attrMapping.isMappedToStaticProperty()) {
-                        // static attribute mapping
-                        processStaticAttributes(data, attr, attrMapping);
-                    } else {
-                        // dynamic attribute mapping
-                        if (!Strings.isNullOrEmpty(attrMapping.getNameSpace())) {
-                            if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
-                                // It is a new name space
-                                spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
-                            }
-                            // Add the attribute to the namespace
-                            spaceNames.get(attrMapping.getNameSpace()).add(attr);
-                        } else {
-                            attributes.add(attr);
+                if (attrMapping.isMappedToStaticProperty()) {
+                    // static attribute mapping
+                    processStaticAttributes(data, attr, attrMapping);
+                } else {
+                    // dynamic attribute mapping
+                    if (!Strings.isNullOrEmpty(attrMapping.getNameSpace())) {
+                        if (!spaceNames.containsKey(attrMapping.getNameSpace())) {
+                            // It is a new name space
+                            spaceNames.put(attrMapping.getNameSpace(), new ArrayList<>());
                         }
+                        // Add the attribute to the namespace
+                        spaceNames.get(attrMapping.getNameSpace()).add(attr);
+                    } else {
+                        attributes.add(attr);
                     }
                 }
-            } catch (SQLException e) {
-                LOG.error(e.getMessage(), e);
             }
         }
 
@@ -295,7 +290,9 @@ public abstract class AbstractDataObjectMapping {
     private AbstractAttribute<?> buildAttribute(ResultSet rs, AbstractAttributeMapping attrMapping)
             throws SQLException {
         AbstractAttribute<?> attr = null;
-        final String colName = extractColumnName(attrMapping.getNameDS(), attrMapping.getName());
+
+        final String colName = extractColumnName(attrMapping.getNameDS(), attrMapping.getName(),
+                                                 attrMapping.isPrimaryKey());
 
         switch (attrMapping.getType()) {
             case STRING:
@@ -314,7 +311,7 @@ public abstract class AbstractDataObjectMapping {
                 attr = AttributeBuilder.buildDouble(attrMapping.getName(), rs.getDouble(colName));
                 break;
             case DATE_ISO8601:
-                attr = buildDateAttribute(rs, attrMapping.getName(),attrMapping.getNameDS(),colName);
+                attr = buildDateAttribute(rs, attrMapping.getName(), attrMapping.getNameDS(), colName);
                 break;
             default:
                 break;
@@ -348,7 +345,9 @@ public abstract class AbstractDataObjectMapping {
      * @param attrName The attribute name
      * @return the column label extracted from the PL/SQL
      */
-    protected String extractColumnName(String attrDataSourceName, String attrName) {
+    protected String extractColumnName(String attrDataSourceName, String attrName, boolean isPrimaryKey) {
+        String colName = "";
+
         int pos = attrDataSourceName.toLowerCase().lastIndexOf(AS);
 
         if (pos > 0) {
@@ -356,13 +355,19 @@ public abstract class AbstractDataObjectMapping {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("the extracted column name is : <" + str + ">");
             }
-            return str;
+            colName = str;
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("the extracted column name is : <" + attrDataSourceName + ">");
+                LOG.debug("the extracted column name is : <" + attrName + ">");
             }
-            return attrName;
+            if (isPrimaryKey) {
+                colName = attrDataSourceName;
+            } else {
+                colName = attrName;
+            }
         }
+
+        return colName;
     }
 
     /**
@@ -503,14 +508,13 @@ public abstract class AbstractDataObjectMapping {
         }
 
         dataSourceMapping.getAttributesMapping().forEach(d -> {
-            
-            if (0 > d.getNameDS().toLowerCase().lastIndexOf(AS)) {
-                columns.add(d.getNameDS() + BLANK + AS + BLANK + d.getName());
+
+            if (0 > d.getNameDS().toLowerCase().lastIndexOf(AS) && !d.isPrimaryKey()) {
+                columns.add(d.getNameDS() + BLANK + AS + d.getName());
+            } else {
+                columns.add(d.getNameDS());
             }
-            else {
-                columns.add(d.getNameDS());    
-            }
-            
+
             if (d.isPrimaryKey()) {
                 orderByColumn = d.getNameDS();
             }
@@ -523,7 +527,7 @@ public abstract class AbstractDataObjectMapping {
      */
     private void initMappingInternalAttributes() {
         mappingInternalAttributes = new HashMap<>();
-        
+
         for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
             if (attrMapping.isLabel()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);

@@ -17,12 +17,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotIdentifiableException;
-import fr.cnes.regards.framework.module.rest.exception.EntityUnexpectedIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;

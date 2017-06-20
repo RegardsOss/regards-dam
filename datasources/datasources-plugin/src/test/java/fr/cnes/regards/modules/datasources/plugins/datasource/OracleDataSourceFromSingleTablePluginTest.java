@@ -4,7 +4,6 @@
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -124,12 +123,11 @@ public class OracleDataSourceFromSingleTablePluginTest {
     @Requirement("REGARDS_DSL_DAM_SRC_110")
     @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system allows to create a plugin to get a subset of the datasource's data")
-    public void getDataSourceIntrospection() throws SQLException {
-        LocalDateTime ldt = LocalDateTime.now().minusMinutes(2);
+    public void getDataSourceIntrospection() {
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
-
+        
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
         ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));

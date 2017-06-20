@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- LICENSE_PLACEHOLDER -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.modules.models</groupId>
-	<artifactId>models-service</artifactId>
-	<packaging>jar</packaging>
+    <groupId>fr.cnes.regards.modules.models</groupId>
+    <artifactId>models-service</artifactId>
+    <packaging>jar</packaging>
 
 
-	<parent>
-		<groupId>fr.cnes.regards.modules</groupId>
-		<artifactId>models</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>fr.cnes.regards.modules</groupId>
+        <artifactId>models</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
 
-	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.models</groupId>
-			<artifactId>models-dao</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.entities</groupId>
-			<artifactId>entities-plugin</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>module-regards</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>gson-regards</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>amqp-regards</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>module-plugins-service</artifactId>
-		</dependency>
-		<!-- Test -->
-		<dependency>
-			<groupId>fr.cnes.regards.framework.test</groupId>
-			<artifactId>regards-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>plugins-regards-starter</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.models</groupId>
+            <artifactId>models-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.models</groupId>
+            <artifactId>models-dao</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.modules.entities</groupId>
+            <artifactId>entities-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>module-regards</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>gson-regards</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>amqp-regards</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+            <artifactId>module-plugins-service</artifactId>
+        </dependency>
+        <!-- Test -->
+        <dependency>
+            <groupId>fr.cnes.regards.framework.test</groupId>
+            <artifactId>regards-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>fr.cnes.regards.framework</groupId>
+            <artifactId>plugins-regards-starter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
