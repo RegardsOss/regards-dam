@@ -214,8 +214,7 @@ public interface IEsRepository {
     /**
      * Searching first page of elements from index giving page size with facets.
      *
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
      * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
@@ -247,8 +246,7 @@ public interface IEsRepository {
     /**
      * Searching first page of elements from index giving page size without facets.
      *
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
      * @param <T> document type
@@ -262,8 +260,7 @@ public interface IEsRepository {
     /**
      * Searching first page of elements from index giving page size without sort.
      *
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
      * @param <T> document type
@@ -277,8 +274,7 @@ public interface IEsRepository {
     /**
      * Searching first page of elements from index giving page size without facets nor sort
      *
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
      * @param <T> document type
@@ -293,8 +289,7 @@ public interface IEsRepository {
      * Searching specified page of elements from index (for first call use {@link #searchAllLimited(String, Class, int)} method) without facets nor sort. <b>This method fails if asked for offset
      * greater than 10000 (Elasticsearch limitation)</b>
      *
-     * @param pIndex index
-     * @param pClass class of document type
+     * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param <T> class of document type
@@ -324,7 +319,6 @@ public interface IEsRepository {
      * Searching first page of elements from index giving page size and facet map. The results are reduced to given inner property that's why no sorting can be done.
      *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
-     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the results documents
      * @param <T> class of inner sourceAttribute
@@ -363,10 +357,9 @@ public interface IEsRepository {
     }
 
     /**
-     * Searching specified page of elements from index giving page size (for first call us {@link #multiFieldsSearch(String, Class, int, Object, String...)} method
+     * Searching specified page of elements from index giving page size (for first call us {@link #multiFieldsSearch(SearchKey, int, Object, String...)} method
      *
      * @param searchKey the search key
-     * @param pClass class of document type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
      * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given
@@ -390,9 +383,7 @@ public interface IEsRepository {
      * Execute specified action for all search results<br/>
      * <b>No 10000 offset Elasticsearch limitation</b>
      *
-     * @param pIndex index
-     * @param pClass class of inner document source to be returned
-     * @param pAction action to be executed for each search result element
+     * @param searchKey the search key     * @param pAction action to be executed for each search result element
      * @param pAttributeSource inner attribute to be used as ES "_source" results
      */
     <T> void searchAll(SearchKey<?, T> searchKey, Consumer<T> pAction, ICriterion pCriterion, String pAttributeSource);
