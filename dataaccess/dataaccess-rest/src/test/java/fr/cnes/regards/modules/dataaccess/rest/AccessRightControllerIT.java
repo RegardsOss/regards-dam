@@ -24,6 +24,8 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
@@ -96,8 +98,12 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IAccessRightRepository arRepo;
 
+    @Autowired
+    private IRuntimeTenantResolver runtimetenantResolver;
+
     @Before
     public void init() {
+        runtimetenantResolver.forceTenant(DEFAULT_TENANT);
         OffsetDateTime now = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks

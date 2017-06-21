@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -30,6 +31,7 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
  * @author oroussel
  */
 @Service
+@MultitenantTransactional
 public class EntitiesService implements IEntitiesService {
 
     @Autowired

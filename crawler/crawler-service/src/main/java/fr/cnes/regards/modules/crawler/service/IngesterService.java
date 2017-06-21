@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
-@Service
+@Service// Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class IngesterService implements IIngesterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
