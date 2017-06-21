@@ -1,6 +1,9 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Iterator;
+import java.util.function.UnaryOperator;
 
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -23,6 +26,8 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacetTypeVisitor;
 @Component
 public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<AggregationBuilder> {
 
+    private static final int PRECISION = 3;
+
     public static final String STRING_FACET_SUFFIX = "_terms";
 
     public static final String DATE_FACET_SUFFIX = "_percents";
@@ -39,7 +44,8 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
 
     private int stringFacetMinDocCount;
 
-    public AggregationBuilderFacetTypeVisitor(@Value("${regards.elasticsearch.string.facet.size:10}") int stringFacetSize,
+    public AggregationBuilderFacetTypeVisitor(
+            @Value("${regards.elasticsearch.string.facet.size:10}") int stringFacetSize,
             @Value("${regards.elasticsearch.string.facet.min.doc.count:1}") int stringFacetMinDocCount) {
         this.stringFacetSize = stringFacetSize;
         this.stringFacetMinDocCount = stringFacetMinDocCount;
@@ -75,22 +81,49 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         return percentsAggsBuilder;
     }
 
+    /**
+     * Double range almost equals date range except that as doubles are compared, all values are scaled with {@link #PRECISION}.
+     */
     @Override
-    public AggregationBuilder visitRangeFacet(Object... args) {
+    public AggregationBuilder visitRangeDoubleFacet(Object... args) {
+        return visitRangeFacet(args, AggregationBuilderFacetTypeVisitor::scaled);
+    }
+
+    /**
+     * Date range almost equals double range except that as date is stored into double IT MUST NOT BE scaled !!!!
+     */
+    @Override
+    public AggregationBuilder visitRangeDateFacet(Object... args) {
+        return visitRangeFacet(args, UnaryOperator.identity());
+    }
+
+    private AggregationBuilder visitRangeFacet(Object[] args, UnaryOperator<Double> scalingFct) {
         String attributeName = (String) args[0]; // Development error if ClassCast or null array
         Percentiles percentiles = (Percentiles) args[1]; // Development error if ClassCast or null array
         RangeAggregationBuilder rangeAggBuilder = AggregationBuilders.range(attributeName + RANGE_FACET_SUFFIX);
         rangeAggBuilder.field(attributeName);
         Double previousValue = null;
         // INFO : ES API range creation use closedOpened ranges ([a , b[)
-        for (Iterator<Percentile> i = percentiles.iterator(); i.hasNext();) {
+        for (Iterator<Percentile> i = percentiles.iterator(); i.hasNext(); ) {
             if (previousValue == null) { // first value
-                previousValue = i.next().getValue();
+                previousValue = scalingFct.apply(i.next().getValue());
+                // Armor Elasticsearch bullshits
+                if (Double.isInfinite(previousValue)) {
+                    // If first value is -Infinity, skip it
+                    previousValue = null;
+                    continue;
+                }
                 rangeAggBuilder.addUnboundedTo(previousValue);
             } else {
-                double currentValue = i.next().getValue();
+                double currentValue = scalingFct.apply(i.next().getValue());
                 // Avoid creating [x, x[
                 if (currentValue != previousValue) {
+                    // Armor Elasticsearch bullshits
+                    if (Double.isInfinite(currentValue)) {
+                        // if +Infinity appears in percentiles value, we can skip it, this case will be treated by last
+                        // value
+                        continue;
+                    }
                     rangeAggBuilder.addRange(previousValue, currentValue);
                     previousValue = currentValue;
                 }
@@ -120,5 +153,14 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         MaxAggregationBuilder maxAggBuilder = AggregationBuilders.max(attributeName + MAX_FACET_SUFFIX);
         maxAggBuilder.field(attributeName);
         return maxAggBuilder;
+    }
+
+    private static final MathContext mathContext = new MathContext(PRECISION);
+
+    private static final double scaled(double n) {
+        if (!Double.isFinite(n)) {
+            return n;
+        }
+        return new BigDecimal(n).round(mathContext).doubleValue();
     }
 }

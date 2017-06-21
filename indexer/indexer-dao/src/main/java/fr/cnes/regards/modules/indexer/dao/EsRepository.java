@@ -669,7 +669,8 @@ public class EsRepository implements IEsRepository {
             if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
                 attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
-                AggregationBuilder aggBuilder = FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
+                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
+                        : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     request.addAggregation(aggBuilder);
