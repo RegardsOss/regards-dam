@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="model_V1.0.xsd">
+	<name>WRONG</name>
+	<description>This model has a bad attribute type. Its creation must me rolled back!</description>
+	<type>COLLECTION</type>	
+	<attribute>
+		<label>Level</label>
+		<name>WRONG_level</name>
+		<type>INTEGER</type>
+	</attribute>
+	<attribute>
+		<label>Wildcard</label>
+		<name>WRONG_wildcard</name>
+		<type>UNKNOWN</type>
+	</attribute>
+</model>
