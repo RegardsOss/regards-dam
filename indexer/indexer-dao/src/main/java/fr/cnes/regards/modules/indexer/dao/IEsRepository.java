@@ -1,5 +1,7 @@
 package fr.cnes.regards.modules.indexer.dao;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
