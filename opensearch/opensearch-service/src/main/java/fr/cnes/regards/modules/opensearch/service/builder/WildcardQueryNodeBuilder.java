@@ -11,6 +11,7 @@ import org.apache.lucene.queryparser.flexible.standard.nodes.WildcardQueryNode;
 import org.apache.lucene.queryparser.flexible.standard.parser.EscapeQuerySyntaxImpl;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.MatchType;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
 
 /**
@@ -37,9 +38,9 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
         if (value.endsWith(WILDCARD_STRING) && value.startsWith(WILDCARD_STRING)) {
             return ICriterion.contains(field, val);
         } else if (value.endsWith(WILDCARD_STRING)) {
-            return ICriterion.endsWith(field, val);
-        } else if (value.startsWith(WILDCARD_STRING)) {
             return ICriterion.startsWith(field, val);
+        } else if (value.startsWith(WILDCARD_STRING)) {
+            return ICriterion.endsWith(field, val);
         } else {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR,
                     pQueryNode.toQueryString(new EscapeQuerySyntaxImpl()), pQueryNode.getClass().getName()));
