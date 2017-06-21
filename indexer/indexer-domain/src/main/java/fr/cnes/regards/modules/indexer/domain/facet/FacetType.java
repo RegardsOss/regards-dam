@@ -22,11 +22,18 @@ public enum FacetType {
             return visitor.visitNumericFacet(args);
         }
     },
-    RANGE {
+    RANGE_DATE {
 
         @Override
         public <T> T accept(IFacetTypeVisitor<T> visitor, Object... args) {
-            return visitor.visitRangeFacet(args);
+            return visitor.visitRangeDateFacet(args);
+        }
+    },
+    RANGE_DOUBLE {
+
+        @Override
+        public <T> T accept(IFacetTypeVisitor<T> visitor, Object... args) {
+            return visitor.visitRangeDoubleFacet(args);
         }
     },
     STRING {
