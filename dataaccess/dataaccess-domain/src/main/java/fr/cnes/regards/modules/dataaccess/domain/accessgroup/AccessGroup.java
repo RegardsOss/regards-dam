@@ -6,19 +6,7 @@ package fr.cnes.regards.modules.dataaccess.domain.accessgroup;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -38,6 +26,7 @@ import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
 @Entity
 @Table(name = "t_access_group",
         uniqueConstraints = @UniqueConstraint(name = "uk_access_group_name", columnNames = { "name" }))
+@NamedEntityGraph(name = "graph.accessgroup.users", attributeNodes = @NamedAttributeNode(value="users"))
 public class AccessGroup implements IIdentifiable<Long> {
 
     /**
