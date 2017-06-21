@@ -140,6 +140,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(pModelType);
         List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
                 .collect(Collectors.toList());
+        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
 
     }
