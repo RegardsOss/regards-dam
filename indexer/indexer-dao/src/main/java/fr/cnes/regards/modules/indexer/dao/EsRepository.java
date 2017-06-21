@@ -57,6 +57,8 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.metrics.max.Max;
+import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
@@ -104,11 +106,12 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Scrolling keeping alive Time in ms when searching into Elasticsearch
+     * Set it to 10 minutes to avoid timeouts while scrolling.
      */
-    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 10000;
+    private static final int KEEP_ALIVE_SCROLLING_TIME_MS = 60000 * 10;
 
     /**
-     * Default number of hits retrieved by scrolling
+     * Default number of hits retrieved by scrolling (10 is the default value and according to doc is the best value)
      */
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
 
@@ -131,8 +134,7 @@ public class EsRepository implements IEsRepository {
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
      */
     @Autowired
-    private final AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;// = new
-    // AggregationBuilderFacetTypeVisitor();
+    private final AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor;
 
     /**
      * Empty JSon object
@@ -637,9 +639,14 @@ public class EsRepository implements IEsRepository {
             for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
                 FacetType facetType = entry.getValue();
                 if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
+                    // Add min aggregation and max aggregagtion when a range aggregagtion is asked for (NUMERIC and DATE
+                    // facets leed to range aggregagtion at second pass) to avoid ranges with Infinties values
+                    request.addAggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
+                    request.addAggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
                     twoPassRequestNeeded = true;
                 }
                 request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
+
             }
         }
         return twoPassRequestNeeded;
@@ -658,7 +665,7 @@ public class EsRepository implements IEsRepository {
             FacetType facetType = entry.getValue();
             String attributeName = entry.getKey();
             String attName;
-            // Replace percentiles aggregations by range aggregagtions
+            // Replace percentiles aggregations by range aggregations
             if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
                 attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
@@ -666,8 +673,11 @@ public class EsRepository implements IEsRepository {
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     request.addAggregation(aggBuilder);
+                    // And add max and min aggregagtions
+                    request.addAggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, attributeName));
+                    request.addAggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, attributeName));
                 }
-            } else { // Let it as upper
+            } else { // Let others as it
                 request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
             }
         }
@@ -700,6 +710,10 @@ public class EsRepository implements IEsRepository {
                 org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
                         .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
                 if (numRange != null) {
+                    // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
+                    Min min = (Min) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
+                    Max max = (Max) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
+                    // Parsing ranges
                     Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
                     for (Bucket bucket : numRange.getBuckets()) {
                         // Case with no value : every bucket has a NaN value (as from, to or both)
@@ -712,13 +726,16 @@ public class EsRepository implements IEsRepository {
                         if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
                             // (-∞ -> +∞) (completely dumb but...who knows ?)
                             if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
-                                valueRange = Range.all();
-                            } else { // (-∞ -> value]
-                                valueRange = Range.atMost((Double) bucket.getTo());
+                                // range is then [min, max]
+                                valueRange = Range.closed(min.getValue(), max.getValue());
+                            } else { // (-∞ -> value [
+                                // range is then [min -> value [
+                                valueRange = Range.closedOpen(min.getValue(), (Double) bucket.getTo());
                             }
-                        } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // ? -> +∞)
-                            valueRange = Range.greaterThan((Double) bucket.getFrom());
-                        } else { // [value -> value)
+                        } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
+                            // range is then [value, max]
+                            valueRange = Range.closed((Double) bucket.getFrom(), max.getValue());
+                        } else { // [value -> value [
                             valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
                         }
                         valueMap.put(valueRange, bucket.getDocCount());
@@ -733,6 +750,10 @@ public class EsRepository implements IEsRepository {
                 if (dateRange != null) {
                     Map<com.google.common.collect.Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
                     for (Bucket bucket : dateRange.getBuckets()) {
+                        // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
+                        Min min = (Min) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
+                        Max max = (Max) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
+                        // Parsing ranges
                         Range<OffsetDateTime> valueRange;
                         // Case with no value : every bucket has a NaN value (as from, to or both)
                         if (Objects.equals(bucket.getTo(), Double.NaN) || Objects.equals(bucket.getFrom(), Double.NaN)) {
@@ -743,13 +764,19 @@ public class EsRepository implements IEsRepository {
                         if (bucket.getFromAsString() == null) {
                             // (-∞ -> +∞) (completely dumb but...who knows ?)
                             if (bucket.getToAsString() == null) {
-                                valueRange = Range.all();
-                            } else { // (-∞ -> value]
-                                valueRange = Range.atMost(OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                                // range is then [min, max]
+                                valueRange = Range.closed(OffsetDateTimeAdapter.parse(min.getValueAsString()),
+                                                          OffsetDateTimeAdapter.parse(max.getValueAsString()));
+                            } else { // (-∞ -> value[
+                                // range is then [min, value[
+                                valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(min.getValueAsString()),
+                                                              OffsetDateTimeAdapter.parse(bucket.getToAsString()));
                             }
-                        } else if (bucket.getToAsString() == null) { // ? -> +∞)
-                            valueRange = Range.greaterThan(OffsetDateTimeAdapter.parse(bucket.getFromAsString()));
-                        } else { // [value -> value)
+                        } else if (bucket.getToAsString() == null) { // [value -> +∞)
+                            // range is then [value, max ]
+                            valueRange = Range.closed(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                      OffsetDateTimeAdapter.parse(max.getValueAsString()));
+                        } else { // [value -> value[
                             valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
                                                           OffsetDateTimeAdapter.parse(bucket.getToAsString()));
                         }

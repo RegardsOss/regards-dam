@@ -159,4 +159,8 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         importModel("model4.xml", MockMvcResultMatchers.status().isBadRequest());
     }
 
+    //    @Test(expected = ImportException.class)
+    //    public void importWrongModel() {
+    //        importModel("wrong_model.xml");
+    //    }
 }

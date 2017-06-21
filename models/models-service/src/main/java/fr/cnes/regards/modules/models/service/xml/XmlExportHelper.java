@@ -3,13 +3,6 @@
  */
 package fr.cnes.regards.modules.models.service.xml;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.SchemaFactory;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -17,11 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.xml.XMLConstants;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.SchemaFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.schema.Fragment;
@@ -188,7 +190,7 @@ public final class XmlExportHelper {
             // Marshall data
             jaxbMarshaller.marshal(pJaxbElement, pOutputStream);
         } catch (JAXBException | SAXException e) {
-            final String message = String.format("Error while exporting data of %s type", pClass);
+            final String message = String.format("Error while exporting data of %s type. %s", pClass, e.toString());
             LOGGER.error(message, e);
             throw new ExportException(message);
         }

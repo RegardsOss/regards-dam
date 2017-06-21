@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
@@ -226,6 +227,9 @@ public class IngesterService implements IIngesterService {
                                 dsIngestion.setStatus(IngestionStatus.FINISHED);
                                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
                                 dsIngestion.setLastIngestDate(summary.getDate());
+                            } catch (InactiveDatasourceException ide) {
+                                dsIngestion.setStatus(IngestionStatus.INACTIVE);
+                                dsIngestion.setStackTrace(ide.getMessage());
                             } catch (ModuleException | RuntimeException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);

@@ -109,12 +109,16 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      */
     public void initStaticAttributes() {
 
-        staticPropertyMap.put(StaticProperties.LABEL,
-                              AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).isStatic()
-                                      .get());
-        staticPropertyMap.put(StaticProperties.MODEL_NAME,
-                              AttributeModelBuilder.build(StaticProperties.MODEL_NAME, AttributeType.STRING, null)
-                                      .isStatic().get());
+        staticPropertyMap
+                .put(StaticProperties.IP_ID,
+                     AttributeModelBuilder.build(StaticProperties.IP_ID, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.GEOMETRY, AttributeModelBuilder
+                .build(StaticProperties.GEOMETRY, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap
+                .put(StaticProperties.LABEL,
+                     AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.MODEL_NAME, AttributeModelBuilder
+                .build(StaticProperties.MODEL_NAME, AttributeType.STRING, null).isStatic().get());
         staticPropertyMap.put(StaticProperties.LAST_UPDATE, AttributeModelBuilder
                 .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic().get());
         staticPropertyMap.put(StaticProperties.CREATION_DATE, AttributeModelBuilder
