@@ -56,6 +56,10 @@
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
 			<artifactId>crawler-service</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-monitoring-regards-starter</artifactId>
+		</dependency>
 	</dependencies>
 
 	<profiles>
