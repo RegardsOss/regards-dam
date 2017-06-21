@@ -65,7 +65,7 @@ import fr.cnes.regards.modules.models.domain.IComputedAttribute;
  * Crawler service. <b>This service need @EnableAsync at Configuration and is used in conjunction with
  * CrawlerInitializer</b>
  */
-@Service
+@Service// Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class CrawlerService implements ICrawlerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
