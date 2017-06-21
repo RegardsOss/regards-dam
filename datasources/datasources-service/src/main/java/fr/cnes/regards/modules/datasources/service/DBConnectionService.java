@@ -9,6 +9,7 @@ import java.util.function.UnaryOperator;
 
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -27,6 +28,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  *
  */
 @Service
+@MultitenantTransactional
 public class DBConnectionService implements IDBConnectionService {
 
     /**

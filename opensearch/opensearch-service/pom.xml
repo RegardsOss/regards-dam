@@ -56,6 +56,11 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>6.3.0</version>
 		</dependency>
+		<dependency>
+			<!-- this dependence is added here for a good management of amqp transactional in AttributeModelCache -->
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-multitenant-regards-starter</artifactId>
+		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

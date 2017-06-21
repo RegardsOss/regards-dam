@@ -12,7 +12,9 @@ public interface IFacetTypeVisitor<T> {
 
     T visitNumericFacet(Object... args);
 
-    T visitRangeFacet(Object... args);
+    T visitRangeDateFacet(Object... args);
+
+    T visitRangeDoubleFacet(Object... args);
 
     T visitMinFacet(Object... args);
 
