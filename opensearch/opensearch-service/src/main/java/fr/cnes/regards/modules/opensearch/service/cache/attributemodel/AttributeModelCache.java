@@ -15,12 +15,15 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
@@ -38,6 +41,7 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownPar
  * @author Xavier-Alexandre Brochard
  */
 @Service
+@MultitenantTransactional
 public class AttributeModelCache implements IAttributeModelCache, ApplicationListener<ApplicationReadyEvent> {
 
     /**
@@ -72,6 +76,14 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      *
      */
     private final Map<String, Map<String, AttributeModel>> dynamicPropertyMap;
+
+    @Override
+    //no transaction needed here, it is call out of context with no acces to DB and fails prevent the application from booting
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(AttributeModelCreated.class, new CreatedHandler());
+        subscriber.subscribeTo(AttributeModelDeleted.class, new DeletedHandler());
+    }
 
     /**
      * Creates a new instance of the service with passed services/repos
@@ -111,19 +123,14 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
                 .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic().get());
         staticPropertyMap.put(StaticProperties.CREATION_DATE, AttributeModelBuilder
                 .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null).isStatic().get());
-        staticPropertyMap
-                .put(StaticProperties.TAGS,
-                     AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).isStatic().get());
-        staticPropertyMap.put(StaticProperties.ENTITY_TYPE, AttributeModelBuilder
-                .build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.TAGS,
+                              AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).isStatic()
+                                      .get());
+        staticPropertyMap.put(StaticProperties.ENTITY_TYPE,
+                              AttributeModelBuilder.build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null)
+                                      .isStatic().get());
         staticPropertyMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
                 .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.STRING, null).isStatic().get());
-    }
-
-    @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        subscriber.subscribeTo(AttributeModelCreated.class, new CreatedHandler());
-        subscriber.subscribeTo(AttributeModelDeleted.class, new DeletedHandler());
     }
 
     @Override

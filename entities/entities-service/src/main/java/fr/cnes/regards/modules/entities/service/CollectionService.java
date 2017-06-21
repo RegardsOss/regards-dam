@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -28,6 +29,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @author oroussel
  */
 @Service
+@MultitenantTransactional
 public class CollectionService extends AbstractEntityService<Collection> implements ICollectionService {
 
     public CollectionService(IModelAttrAssocService pModelAttributeService,

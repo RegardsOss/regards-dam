@@ -12,8 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
@@ -52,7 +54,8 @@ public class AccessGroupServiceTest {
         dao = Mockito.mock(IAccessGroupRepository.class);
         projectUserClient = Mockito.mock(IProjectUsersClient.class);
         mockPublisher = Mockito.mock(IPublisher.class);
-        accessGroupService = new AccessGroupService(dao, projectUserClient, mockPublisher);
+        accessGroupService = new AccessGroupService(dao, projectUserClient, mockPublisher, Mockito.mock(ISubscriber.class), Mockito.mock(
+                IRuntimeTenantResolver.class));
         accessGroupService.setMicroserviceName("test");
         accessGroup1 = new AccessGroup(AG1_NAME);
         accessGroup1.setId(AG1_ID);
