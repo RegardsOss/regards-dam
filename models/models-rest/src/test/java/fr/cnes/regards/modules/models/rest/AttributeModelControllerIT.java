@@ -3,26 +3,38 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.dao.IFragmentRepository;
+import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -38,6 +50,7 @@ import fr.cnes.regards.modules.models.domain.attributes.restriction.LongRangeRes
  */
 @MultitenantTransactional
 public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
+
     /**
      * Logger
      */
@@ -59,6 +72,85 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @PersistenceContext
     protected EntityManager entityManager;
 
+    @Autowired
+    private IModelRepository modelRepository;
+
+    @Autowired
+    private IFragmentRepository FragmentRepository;
+
+    /**
+     * AttributeModel Repository
+     */
+    @Autowired
+    private IAttributeModelRepository attributeModelRepository;
+
+    /**
+     * ModelAttribute Repository
+     */
+    @Autowired
+    private IModelAttrAssocRepository modelAttributeRepository;
+
+    @Before
+    public void setUp() throws ModuleException {
+
+        Model model = new Model();
+        model.setName("DataModel");
+        model.setType(EntityType.DATA);
+        model.setDescription("Test");
+        model.setVersion("1.0");
+        modelRepository.save(model);
+
+        Model model2 = new Model();
+        model2.setName("DataSetModel");
+        model2.setType(EntityType.DATASET);
+        model2.setDescription("Test");
+        model2.setVersion("1.0");
+        modelRepository.save(model2);
+
+        Fragment fragment = new Fragment();
+        fragment.setDescription("Test");
+        fragment.setName("test");
+        fragment.setVersion("1.0");
+        FragmentRepository.save(fragment);
+
+        AttributeModel attribute = new AttributeModel();
+        attribute.setFragment(fragment);
+        attribute.setLabel("Attribute1");
+        attribute.setName("Attribute1");
+        attribute.setType(AttributeType.STRING);
+        attributeModelRepository.save(attribute);
+
+        AttributeModel attribute2 = new AttributeModel();
+        attribute2.setFragment(fragment);
+        attribute2.setLabel("Attribute2");
+        attribute2.setName("Attribute2");
+        attribute2.setType(AttributeType.INTEGER);
+        attributeModelRepository.save(attribute2);
+
+        AttributeModel attribute3 = new AttributeModel();
+        attribute3.setFragment(fragment);
+        attribute3.setLabel("Attribute3");
+        attribute3.setName("Attribute3");
+        attribute3.setType(AttributeType.DATE_ISO8601);
+        attributeModelRepository.save(attribute3);
+
+        ModelAttrAssoc modelAttr = new ModelAttrAssoc();
+        modelAttr.setAttribute(attribute);
+        modelAttr.setModel(model);
+        modelAttributeRepository.save(modelAttr);
+
+        modelAttr = new ModelAttrAssoc();
+        modelAttr.setAttribute(attribute2);
+        modelAttr.setModel(model2);
+        modelAttributeRepository.save(modelAttr);
+
+        modelAttr = new ModelAttrAssoc();
+        modelAttr.setAttribute(attribute3);
+        modelAttr.setModel(model2);
+        modelAttributeRepository.save(modelAttr);
+
+    }
+
     /**
      * Test get attributes
      */
@@ -69,11 +161,46 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     public void testGetAttributes() {
 
         // Define expectations
+        final Integer expectedSize = 3;
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
 
         // Perform test
         performDefaultGet(AttributeModelController.TYPE_MAPPING, expectations, "Cannot get all attributes");
+    }
+
+    @Test
+    public void testGetAttributesAssocToModelType() {
+
+        // Define expectations
+        // There must be only one attribute associated to models of type DATA
+        Integer expectedSize = 1;
+        List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+
+        // Perform test
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
+                          expectations, "Cannot get all attributes", EntityType.DATA.toString());
+
+        // There must be only two attributes associated to models of type DATASET
+        expectedSize = 2;
+        expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
+                          expectations, "Cannot get all attributes", EntityType.DATASET.toString());
+
+        // There must be no attribute associated to collection models
+        expectedSize = 0;
+        expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+
+        performDefaultGet(AttributeModelController.TYPE_MAPPING + AttributeModelController.ENTITY_TYPE_MAPPING,
+                          expectations, "Cannot get all attributes", EntityType.COLLECTION.toString());
     }
 
     @Test

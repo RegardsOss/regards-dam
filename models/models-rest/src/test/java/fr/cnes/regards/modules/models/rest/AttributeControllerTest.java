@@ -20,6 +20,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.RestrictionService;
 
 /**
@@ -43,6 +44,11 @@ public class AttributeControllerTest {
     private IAttributeModelService attributeServiceMocked;
 
     /**
+     * Model attribute association service
+     */
+    private IModelAttrAssocService modelAttrAssocService;
+
+    /**
      * Resource service
      */
     private IResourceService resourceServiceMocked;
@@ -58,10 +64,11 @@ public class AttributeControllerTest {
         attributeServiceMocked = Mockito.mock(IAttributeModelService.class);
         // Hateoas authorization
         resourceServiceMocked = Mockito.mock(IResourceService.class);
+        modelAttrAssocService = Mockito.mock(IModelAttrAssocService.class);
         final RestrictionService restrictionService = Mockito.mock(RestrictionService.class);
         // Init controller
         attributeController = new AttributeModelController(attributeServiceMocked, resourceServiceMocked,
-                restrictionService);
+                modelAttrAssocService, restrictionService);
     }
 
     @Test
