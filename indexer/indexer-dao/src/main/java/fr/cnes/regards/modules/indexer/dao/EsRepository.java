@@ -191,7 +191,7 @@ public class EsRepository implements IEsRepository {
             @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        LOGGER.info(String.format("host    : %s\naddress : %s\nport    : %s\ncluster : "), pEsHost, pEsAddress, pEsPort,
+        LOGGER.info(String.format("host    : %s\naddress : %s\nport    : %s\ncluster : %s"), pEsHost, pEsAddress, pEsPort,
                     pEsClusterName);
         gson = pGson;
         esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
