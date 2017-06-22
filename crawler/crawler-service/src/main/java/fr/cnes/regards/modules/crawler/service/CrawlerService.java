@@ -513,8 +513,10 @@ public class CrawlerService implements ICrawlerService {
      */
     private void createIndex(String tenant) {
         esRepos.createIndex(tenant);
-        esRepos.setGeometryMapping(tenant, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                .toArray(length -> new String[length]));
+        String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
+                .toArray(length -> new String[length]);
+        esRepos.setAutomaticDoubleMapping(tenant, types);
+        esRepos.setGeometryMapping(tenant, types);
     }
 
     @Override
