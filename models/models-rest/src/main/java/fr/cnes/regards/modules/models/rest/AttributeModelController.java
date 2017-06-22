@@ -4,7 +4,9 @@
 package fr.cnes.regards.modules.models.rest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -25,9 +27,13 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
+import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.RestrictionService;
 
 /**
@@ -47,6 +53,11 @@ public class AttributeModelController implements IResourceController<AttributeMo
     public static final String TYPE_MAPPING = "/models/attributes";
 
     /**
+     * Entity type mapping
+     */
+    public static final String ENTITY_TYPE_MAPPING = "/modeltype/{pModelType}";
+
+    /**
      * Request parameter : attribute type
      */
     public static final String PARAM_TYPE = "type";
@@ -60,6 +71,11 @@ public class AttributeModelController implements IResourceController<AttributeMo
      * Attribute service
      */
     private final IAttributeModelService attributeService;
+
+    /**
+     * Model attribute association service
+     */
+    private final IModelAttrAssocService modelAttrAssocService;
 
     /**
      * Restriction service
@@ -82,10 +98,12 @@ public class AttributeModelController implements IResourceController<AttributeMo
      *            Restriction service
      */
     public AttributeModelController(final IAttributeModelService pAttributeService,
-            final IResourceService pResourceService, final RestrictionService pRestrictionService) {
+            final IResourceService pResourceService, IModelAttrAssocService pModelAttrAssocService,
+            final RestrictionService pRestrictionService) {
         this.attributeService = pAttributeService;
         this.resourceService = pResourceService;
         this.restrictionService = pRestrictionService;
+        this.modelAttrAssocService = pModelAttrAssocService;
     }
 
     /**
@@ -106,6 +124,25 @@ public class AttributeModelController implements IResourceController<AttributeMo
         // Build JSON path
         attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
+    }
+
+    /**
+     * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
+     *
+     * @param pModelType
+     *            filter
+     * @return a list of {@link Model}
+     */
+    @ResourceAccess(description = "List all models", role = DefaultRole.PUBLIC)
+    @RequestMapping(method = RequestMethod.GET, value = ENTITY_TYPE_MAPPING)
+    public ResponseEntity<List<Resource<AttributeModel>>> getModelsAttributes(
+            @PathVariable final EntityType pModelType) {
+        Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(pModelType);
+        List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
+                .collect(Collectors.toList());
+        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        return ResponseEntity.ok(toResources(attributes));
+
     }
 
     /**
@@ -204,17 +241,25 @@ public class AttributeModelController implements IResourceController<AttributeMo
     }
 
     @Override
-    public Resource<AttributeModel> toResource(final AttributeModel pAttributeModel, final Object... pExtras) {
-        final Resource<AttributeModel> resource = resourceService.toResource(pAttributeModel);
+    public Resource<AttributeModel> toResource(final AttributeModel attributeModel, final Object... pExtras) {
+        final Resource<AttributeModel> resource = resourceService.toResource(attributeModel);
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()));
+                                MethodParamFactory.build(Long.class, attributeModel.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()),
+                                MethodParamFactory.build(Long.class, attributeModel.getId()),
                                 MethodParamFactory.build(AttributeModel.class));
-        resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()));
+        if(isDeletable(attributeModel)) {
+            resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
+                                    MethodParamFactory.build(Long.class, attributeModel.getId()));
+        }
         resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
                                 MethodParamFactory.build(AttributeType.class), MethodParamFactory.build(String.class));
         return resource;
+    }
+
+    private boolean isDeletable(AttributeModel attributeModel) {
+        //if there is no fragment, which is a degenerate case, it is assimiled to the default one
+        boolean isDefaultFragment=attributeModel.getFragment()==null || attributeModel.getFragment().isDefaultFragment();
+        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty() && isDefaultFragment;
     }
 }

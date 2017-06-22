@@ -673,8 +673,8 @@ public class EsRepository implements IEsRepository {
                 attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX
                         : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
-                AggregationBuilder aggBuilder = FacetType.RANGE.accept(aggBuilderFacetTypeVisitor, attributeName,
-                                                                       percentiles);
+                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
+                        : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     request.addAggregation(aggBuilder);
@@ -732,15 +732,14 @@ public class EsRepository implements IEsRepository {
                         if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
                             // (-∞ -> +∞) (completely dumb but...who knows ?)
                             if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
-                                // range is then [min, max]
-                                valueRange = Range.closed(min.getValue(), max.getValue());
-                            } else { // (-∞ -> value [
-                                // range is then [min -> value [
-                                valueRange = Range.closedOpen(min.getValue(), (Double) bucket.getTo());
-                            }
+                                // Better not return a facet
+                                return;
+                            }// (-∞ -> value [
+                            // range is then [min -> value [
+                            valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
                         } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
                             // range is then [value, max]
-                            valueRange = Range.closed((Double) bucket.getFrom(), max.getValue());
+                            valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaled(max.getValue()));
                         } else { // [value -> value [
                             valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
                         }

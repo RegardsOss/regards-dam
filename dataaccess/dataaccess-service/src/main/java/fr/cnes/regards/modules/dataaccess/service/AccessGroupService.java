@@ -6,28 +6,38 @@ package fr.cnes.regards.modules.dataaccess.service;
 import java.util.List;
 import java.util.Set;
 
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
+import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUserEvent;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
 
 /**
  *
@@ -37,8 +47,9 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
  *
  */
 @Service
+@MultitenantTransactional
 @EnableFeignClients(clients = IProjectUsersClient.class)
-public class AccessGroupService {
+public class AccessGroupService implements ApplicationListener<ApplicationReadyEvent> {
 
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
 
@@ -51,20 +62,22 @@ public class AccessGroupService {
      */
     private final IPublisher publisher;
 
+    private final ISubscriber subscriber;
+
     @Value("${spring.application.name}")
     private String microserviceName;
 
-    /**
-     * @param pAccessGroupDao
-     * @param pProjectUserClient
-     * @param pPublisher
-     */
+    private final IRuntimeTenantResolver runtimeTenantResolver;
+
     public AccessGroupService(final IAccessGroupRepository pAccessGroupDao,
-            final IProjectUsersClient pProjectUserClient, final IPublisher pPublisher) {
+            final IProjectUsersClient pProjectUserClient, final IPublisher pPublisher, final ISubscriber subscriber,
+            IRuntimeTenantResolver runtimeTenantResolver) {
         super();
         accessGroupDao = pAccessGroupDao;
         projectUserClient = pProjectUserClient;
         publisher = pPublisher;
+        this.subscriber = subscriber;
+        this.runtimeTenantResolver = runtimeTenantResolver;
     }
 
     /**
@@ -235,4 +248,39 @@ public class AccessGroupService {
         return accessGroupDao.save(group);
     }
 
+    private void removeUser(String email) {
+        User toRemove = new User(email);
+        Set<AccessGroup> groupsToProcess = accessGroupDao.findAllByUsers(toRemove);
+        for (AccessGroup toProcess : groupsToProcess) {
+            toProcess.removeUser(toRemove);
+            accessGroupDao.save(toProcess);
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NEVER)
+    // this method is called out of context on microservice initialization
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(ProjectUserEvent.class, new ProjectUserEventHandler());
+    }
+
+    private class ProjectUserEventHandler implements IHandler<ProjectUserEvent> {
+
+        @Override
+        public void handle(TenantWrapper<ProjectUserEvent> pWrapper) {
+            String tenant = pWrapper.getTenant();
+            runtimeTenantResolver.forceTenant(tenant);
+            ProjectUserEvent event = pWrapper.getContent();
+            switch (event.getAction()) {
+                case DELETION:
+                    removeUser(event.getEmail());
+                    break;
+                default:
+                    //nothing to do
+                    break;
+            }
+
+        }
+
+    }
 }
