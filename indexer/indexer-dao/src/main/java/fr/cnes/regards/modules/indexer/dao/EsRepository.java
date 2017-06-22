@@ -191,8 +191,8 @@ public class EsRepository implements IEsRepository {
             @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        LOGGER.info(String.format("host    : %s\naddress : %s\nport    : %s\ncluster : %s"), pEsHost, pEsAddress, pEsPort,
-                    pEsClusterName);
+        LOGGER.info(String.format("host    : %s - address : %s - port    : %d\ncluster : %s", pEsHost, pEsAddress,
+                                  pEsPort, pEsClusterName));
         gson = pGson;
         esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
@@ -673,7 +673,8 @@ public class EsRepository implements IEsRepository {
                 attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX
                         : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
-                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
+                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC)
+                        ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
                         : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
@@ -734,8 +735,8 @@ public class EsRepository implements IEsRepository {
                             if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
                                 // Better not return a facet
                                 return;
-                            }// (-∞ -> value [
-                            // range is then [min -> value [
+                            } // (-∞ -> value [
+                              // range is then [min -> value [
                             valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
                         } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
                             // range is then [value, max]
