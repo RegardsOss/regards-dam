@@ -90,6 +90,8 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelAttrAssocRepository modelAttributeRepository;
 
+    private Model modelTest;
+
     @Before
     public void setUp() throws ModuleException {
 
@@ -98,7 +100,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         model.setType(EntityType.DATA);
         model.setDescription("Test");
         model.setVersion("1.0");
-        modelRepository.save(model);
+        modelTest = modelRepository.save(model);
 
         Model model2 = new Model();
         model2.setName("DataSetModel");
@@ -148,6 +150,21 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         modelAttr.setAttribute(attribute3);
         modelAttr.setModel(model2);
         modelAttributeRepository.save(modelAttr);
+
+    }
+
+    @Test
+    public void testGetModelAttrAssoc() {
+        final Integer expectedSize = 1;
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$..content", Matchers.hasSize(expectedSize)));
+        expectations.add(MockMvcResultMatchers.jsonPath("$[0].content.model.id",
+                                                        Matchers.equalTo(modelTest.getId().intValue())));
+        expectations.add(MockMvcResultMatchers.jsonPath("$[0].content.attribute.jsonPath",
+                                                        Matchers.equalTo("properties.test.Attribute1")));
+        performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, expectations,
+                          "Cannot get all attributes assoc", modelTest.getId());
 
     }
 

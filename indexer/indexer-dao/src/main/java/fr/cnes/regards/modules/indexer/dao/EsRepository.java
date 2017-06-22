@@ -193,6 +193,8 @@ public class EsRepository implements IEsRepository {
             @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
+        LOGGER.info(String.format("host    : %s - address : %s - port    : %d\ncluster : %s", pEsHost, pEsAddress,
+                                  pEsPort, pEsClusterName));
         gson = pGson;
         esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
@@ -217,6 +219,19 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean createIndex(String pIndex) {
         return client.admin().indices().prepareCreate(pIndex.toLowerCase()).get().isAcknowledged();
+    }
+
+    @Override
+    public boolean setAutomaticDoubleMapping(String index, String... types) {
+        try {
+            XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates")
+                    .startObject().startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
+                    .field("type", "double").endObject().endObject().endObject().endArray().endObject();
+            return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index.toLowerCase())
+                    .setType(type).setSource(mapping).get().isAcknowledged()).allMatch(ack -> (ack == true));
+        } catch (IOException ioe) { // NOSONAR
+            throw new RuntimeException(ioe);
+        }
     }
 
     @Override
