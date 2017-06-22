@@ -52,6 +52,8 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
 
     void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
 
+    Collection<ModelAttrAssoc> retrieveModelAttrAssocsByAttributeId(AttributeModel attr);
+
     Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException;
 
     Set<ModelAttrAssoc> getComputedAttributes(Long pId);
