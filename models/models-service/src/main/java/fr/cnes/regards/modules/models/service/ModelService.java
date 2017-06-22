@@ -312,7 +312,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         List<AttributeModel> attributes = attributeModelService.findByFragmentName(added.getFragment().getName());
         Set<Model> modelsToBeUpdated = Sets.newHashSet();
         for (AttributeModel attr : attributes) {
-            modelAttributeRepository.findAllByAttributeId(attr.getId())
+            retrieveModelAttrAssocsByAttributeId(attr)
                     .forEach(modelAttrAssoc -> modelsToBeUpdated.add(modelAttrAssoc.getModel()));
         }
         for (Model model : modelsToBeUpdated) {
@@ -321,6 +321,11 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             modelAtt.setModel(model);
             modelAttributeRepository.save(modelAtt);
         }
+    }
+
+    @Override
+    public Collection<ModelAttrAssoc> retrieveModelAttrAssocsByAttributeId(AttributeModel attr) {
+        return modelAttributeRepository.findAllByAttributeId(attr.getId());
     }
 
     @Override
