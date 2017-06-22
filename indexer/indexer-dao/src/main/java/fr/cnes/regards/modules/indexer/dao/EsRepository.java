@@ -220,6 +220,19 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
+    public boolean setAutomaticDoubleMapping(String index, String... types) {
+        try {
+            XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates")
+                    .startObject().startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
+                    .field("type", "double").endObject().endObject().endObject().endArray().endObject();
+            return client.admin().indices().preparePutMapping(index).setType(types[0]).setSource(mapping).get()
+                    .isAcknowledged();
+        } catch (IOException ioe) { // NOSONAR
+            throw new RuntimeException(ioe);
+        }
+    }
+
+    @Override
     public boolean setGeometryMapping(String pIndex, String... types) {
         String index = pIndex.toLowerCase();
         return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index).setType(type)
@@ -670,12 +683,13 @@ public class EsRepository implements IEsRepository {
             String attName;
             // Replace percentiles aggregations by range aggregations
             if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
-                attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX
-                        : attributeName + DATE_FACET_SUFFIX;
+                attName = (facetType == FacetType.NUMERIC) ?
+                        attributeName + NUMERIC_FACET_SUFFIX :
+                        attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
-                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC)
-                        ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
-                        : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
+                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ?
+                        FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles) :
+                        FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     request.addAggregation(aggBuilder);
