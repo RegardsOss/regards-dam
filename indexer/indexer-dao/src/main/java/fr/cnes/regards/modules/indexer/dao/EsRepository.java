@@ -225,7 +225,7 @@ public class EsRepository implements IEsRepository {
             XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates")
                     .startObject().startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
                     .field("type", "double").endObject().endObject().endObject().endArray().endObject();
-            return client.admin().indices().preparePutMapping(index).setType(types[0]).setSource(mapping).get()
+            return client.admin().indices().preparePutMapping(index.toLowerCase()).setType(types[0]).setSource(mapping).get()
                     .isAcknowledged();
         } catch (IOException ioe) { // NOSONAR
             throw new RuntimeException(ioe);
