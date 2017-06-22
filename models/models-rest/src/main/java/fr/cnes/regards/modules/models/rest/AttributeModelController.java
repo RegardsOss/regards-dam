@@ -258,6 +258,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
     }
 
     private boolean isDeletable(AttributeModel attributeModel) {
-        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty() && attributeModel.getFragment().isDefaultFragment();
+        //if there is no fragment, which is a degenerate case, it is assimiled to the default one
+        boolean isDefaultFragment=attributeModel.getFragment()==null || attributeModel.getFragment().isDefaultFragment();
+        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty() && isDefaultFragment;
     }
 }
