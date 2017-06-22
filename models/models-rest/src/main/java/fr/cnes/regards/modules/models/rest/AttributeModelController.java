@@ -129,7 +129,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
     /**
      * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
      *
-     * @param pType
+     * @param pModelType
      *            filter
      * @return a list of {@link Model}
      */
@@ -241,17 +241,25 @@ public class AttributeModelController implements IResourceController<AttributeMo
     }
 
     @Override
-    public Resource<AttributeModel> toResource(final AttributeModel pAttributeModel, final Object... pExtras) {
-        final Resource<AttributeModel> resource = resourceService.toResource(pAttributeModel);
+    public Resource<AttributeModel> toResource(final AttributeModel attributeModel, final Object... pExtras) {
+        final Resource<AttributeModel> resource = resourceService.toResource(attributeModel);
         resourceService.addLink(resource, this.getClass(), "getAttribute", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()));
+                                MethodParamFactory.build(Long.class, attributeModel.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()),
+                                MethodParamFactory.build(Long.class, attributeModel.getId()),
                                 MethodParamFactory.build(AttributeModel.class));
-        resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pAttributeModel.getId()));
+        if(isDeletable(attributeModel)) {
+            resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
+                                    MethodParamFactory.build(Long.class, attributeModel.getId()));
+        }
         resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
                                 MethodParamFactory.build(AttributeType.class), MethodParamFactory.build(String.class));
         return resource;
+    }
+
+    private boolean isDeletable(AttributeModel attributeModel) {
+        //if there is no fragment, which is a degenerate case, it is assimiled to the default one
+        boolean isDefaultFragment=attributeModel.getFragment()==null || attributeModel.getFragment().isDefaultFragment();
+        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty() && isDefaultFragment;
     }
 }
