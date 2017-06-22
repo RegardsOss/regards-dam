@@ -1,7 +1,5 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.Iterator;
 import java.util.function.UnaryOperator;
 
@@ -17,6 +15,7 @@ import org.elasticsearch.search.aggregations.metrics.percentiles.PercentilesAggr
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import fr.cnes.regards.modules.indexer.dao.EsHelper;
 import fr.cnes.regards.modules.indexer.domain.facet.IFacetTypeVisitor;
 
 /**
@@ -26,7 +25,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacetTypeVisitor;
 @Component
 public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<AggregationBuilder> {
 
-    private static final int PRECISION = 3;
 
     public static final String STRING_FACET_SUFFIX = "_terms";
 
@@ -82,11 +80,11 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
     }
 
     /**
-     * Double range almost equals date range except that as doubles are compared, all values are scaled with {@link #PRECISION}.
+     * Double range almost equals date range except that as doubles are compared, all values are scaled with {@link EsHelper#PRECISION}.
      */
     @Override
     public AggregationBuilder visitRangeDoubleFacet(Object... args) {
-        return visitRangeFacet(args, AggregationBuilderFacetTypeVisitor::scaled);
+        return visitRangeFacet(args, EsHelper::scaled);
     }
 
     /**
@@ -111,25 +109,24 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
                 if (Double.isInfinite(previousValue)) {
                     // If first value is -Infinity, skip it
                     previousValue = null;
-                    continue;
+                } else {
+                    rangeAggBuilder.addUnboundedTo(previousValue);
                 }
-                rangeAggBuilder.addUnboundedTo(previousValue);
             } else {
                 double currentValue = scalingFct.apply(i.next().getValue());
                 // Avoid creating [x, x[
                 if (currentValue != previousValue) {
                     // Armor Elasticsearch bullshits
-                    if (Double.isInfinite(currentValue)) {
+                    if (!Double.isInfinite(currentValue)) {
                         // if +Infinity appears in percentiles value, we can skip it, this case will be treated by last
                         // value
-                        continue;
+                        rangeAggBuilder.addRange(previousValue, currentValue);
+                        previousValue = currentValue;
                     }
-                    rangeAggBuilder.addRange(previousValue, currentValue);
-                    previousValue = currentValue;
                 }
             }
             if (!i.hasNext()) { // last value
-                if (rangeAggBuilder.ranges().size() == 1) {
+                if (rangeAggBuilder.ranges().size() <= 1) {
                     // Only one range (-∞, previousValue) => only one value => facet is useless
                     return null;
                 }
@@ -155,12 +152,5 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         return maxAggBuilder;
     }
 
-    private static final MathContext mathContext = new MathContext(PRECISION);
 
-    private static final double scaled(double n) {
-        if (!Double.isFinite(n)) {
-            return n;
-        }
-        return new BigDecimal(n).round(mathContext).doubleValue();
-    }
 }

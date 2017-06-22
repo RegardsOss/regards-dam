@@ -3,11 +3,12 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,7 +178,7 @@ public class ModelController implements IResourceController<Model> {
      * @param pModelId
      *            {@link Model} to duplicate
      * @param pModel
-     *            new model to create with its own name and description (other informations are skipped)
+     *            new model to create with its own name, description and type
      * @return a new model based on actual one
      * @throws ModuleException
      *             if error occurs!
