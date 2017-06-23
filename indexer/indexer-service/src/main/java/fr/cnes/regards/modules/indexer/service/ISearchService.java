@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.indexer.service;
 
 import java.util.Map;
@@ -6,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -35,6 +39,20 @@ public interface ISearchService {
      */
     <T extends IIndexable> FacetPage<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest, ICriterion criterion,
             Map<String, FacetType> facetsMap);
+
+    /**
+     * Search documents as usual ({@link #search(SearchKey, int, ICriterion)} BUT return joined entity whom type is specified into searchKey
+     *
+     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
+     * @param pageRequest pagination information ({@link PageRequest}
+     * @param criterion search criterion on document
+     * @param threshold max authorized result count for searched entities (not joined ones)
+     * @param <T> Joined entity class
+     * @return a page of joined entities
+     * @throws TooManyResultsException if join search cannot be done due to threshold
+     */
+    <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
+            ICriterion pCriterion, Long threshold) throws TooManyResultsException;
 
     /**
      * Search documents as usual ({@link #search(SearchKey, int, ICriterion)} BUT return joined entity whom type is specified into searchKey
