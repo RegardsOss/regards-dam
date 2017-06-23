@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Search key to be used with all search methods of IndexerService.
- * A SearchKey object identifies the tenant (ie ES index), the type(s) of documents to be searched for and eventualy
+ * A SearchKey object identifies the tenant (ie ES index), the type(s) of documents to be searched for and eventually
  * the class of result object if this one is specified (different from type(s) of searched documents)
  * @param <S> search type
  * @param <R> result type

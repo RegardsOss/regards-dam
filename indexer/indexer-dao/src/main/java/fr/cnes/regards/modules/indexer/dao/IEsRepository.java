@@ -351,6 +351,14 @@ public interface IEsRepository {
             Predicate<T> filterPredicate, Function<T, U> transformFct);
 
     /**
+     * Count result
+     * @param searchKey the search key
+     * @param criterion search criterion
+     * @return
+     */
+    <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion criterion);
+
+    /**
      * Searching first page of elements from index giving page size
      *
      * @param searchKey the search key
