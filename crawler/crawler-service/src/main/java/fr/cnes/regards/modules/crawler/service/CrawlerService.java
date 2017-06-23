@@ -458,22 +458,30 @@ public class CrawlerService implements ICrawlerService {
             object.getDatasetModelIds().add(datasetModelId);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
+                LOGGER.info("Saving {} data objects...", toSaveObjects.size());
                 esRepos.saveBulk(tenant, toSaveObjects);
+                LOGGER.info("...data objects saved");
                 toSaveObjects.clear();
             }
         };
         esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
         if (!toSaveObjects.isEmpty()) {
+            LOGGER.info("Saving {} data objects...", toSaveObjects.size());
             esRepos.saveBulk(tenant, toSaveObjects);
+            LOGGER.info("...data objects saved");
         }
 
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
+        LOGGER.info("Starting computing...");
         computationPlugins.forEach(p -> p.compute(dataset));
+        LOGGER.info("...computing OK");
         // Once computations has been done, associated attributes are created or updated
+        LOGGER.info("Creating computed attributes...");
         createComputedAttributes(dataset, computationPlugins);
 
         esRepos.save(tenant, dataset);
+        LOGGER.info("Datatset {} updated", dataset);
     }
 
     /**
