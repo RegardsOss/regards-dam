@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -267,6 +268,9 @@ public class EsRepositoryTest {
         repository.searchAll(searchKey, h -> i.getAndIncrement(), ICriterion.all());
         System.out.println((System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(count, i.get());
+
+        Assert.assertEquals(Long.valueOf(count), repository.count(searchKey, null));
+        Assert.assertTrue(repository.count(searchKey, ICriterion.between("price", 1000, 2000)) < Long.valueOf(count));
     }
 
     @Test

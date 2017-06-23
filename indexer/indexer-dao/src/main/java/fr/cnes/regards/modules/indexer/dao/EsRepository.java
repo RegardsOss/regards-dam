@@ -3,6 +3,9 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -81,10 +84,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -220,6 +222,19 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
+    public boolean setAutomaticDoubleMapping(String index, String... types) {
+        try {
+            XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates")
+                    .startObject().startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
+                    .field("type", "double").endObject().endObject().endObject().endArray().endObject();
+            return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index.toLowerCase())
+                    .setType(type).setSource(mapping).get().isAcknowledged()).allMatch(ack -> (ack == true));
+        } catch (IOException ioe) { // NOSONAR
+            throw new RuntimeException(ioe);
+        }
+    }
+
+    @Override
     public boolean setGeometryMapping(String pIndex, String... types) {
         String index = pIndex.toLowerCase();
         return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index).setType(type)
@@ -232,6 +247,7 @@ public class EsRepository implements IEsRepository {
         return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
     }
 
+    @Override
     public long deleteAll(String pIndex) {
         BulkIndexByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
                 .filter(QueryBuilders.matchAllQuery()).source(pIndex.toLowerCase()).get();
@@ -480,6 +496,23 @@ public class EsRepository implements IEsRepository {
         } catch (final JsonSyntaxException e) {
             throw new RuntimeException(e); // NOSONAR
         }
+    }
+
+    @Override
+    public <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion pCrit) {
+        String index = searchKey.getSearchIndex().toLowerCase();
+
+        // Use filter instead of "direct" query (in theory, quickest because no score is computed)
+        ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
+        QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
+                .filter(crit.accept(CRITERION_VISITOR));
+        SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
+        // Only return hits information
+        request = request.setQuery(critBuilder).setSize(0);
+        // Launch the request
+        SearchResponse response = getWithTimeouts(request);
+
+        return response.getHits().getTotalHits();
     }
 
     /**

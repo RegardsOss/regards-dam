@@ -1,3 +1,6 @@
+/*
+ * LICENSE_PLACEHOLDER
+ */
 package fr.cnes.regards.modules.indexer.service;
 
 import java.util.HashSet;
@@ -6,11 +9,14 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
@@ -26,6 +32,11 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 
 @Service
 public class SearchService implements ISearchService {
+
+    /**
+     * Class logger
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
     @Autowired
     private IEsRepository repository;
@@ -62,6 +73,7 @@ public class SearchService implements ISearchService {
     @Override
     public <S, T extends IIndexable> FacetPage<T> search(final JoinEntitySearchKey<S, T> searchKey,
             final Pageable pageRequest, final ICriterion pCriterion) {
+
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         final SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(),
                 searchKey.getSearchTypeMap(), String[].class);
@@ -79,6 +91,21 @@ public class SearchService implements ISearchService {
                                       Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
         }
         return new FacetPage<>(objects, new HashSet<>(), pageRequest, total);
+    }
+
+    @Override
+    public <S, T extends IIndexable> FacetPage<T> search(final JoinEntitySearchKey<S, T> searchKey,
+            final Pageable pageRequest, final ICriterion criterion, final Long threshold)
+            throws TooManyResultsException {
+
+        // Check threshold precondition
+        // If total hits exceeds threshold, throw exception
+        if ((threshold != null) && (repository.count(searchKey, criterion) > threshold)) {
+            String errorMessage = "Too many results. Request is cancelled. Please restrict your search!";
+            LOGGER.error(errorMessage);
+            throw new TooManyResultsException(errorMessage);
+        }
+        return search(searchKey, pageRequest, criterion);
     }
 
     @Override

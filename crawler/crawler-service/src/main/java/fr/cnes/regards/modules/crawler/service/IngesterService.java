@@ -116,13 +116,13 @@ public class IngesterService implements IIngesterService {
      * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it
      * in parallel)
      */
-    private final AtomicBoolean managing = new AtomicBoolean(false);
+    private static final AtomicBoolean managing = new AtomicBoolean(false);
 
     /**
      * An atomic boolean permitting to take into account a new datasource creation or update while managing current ones
      * (or inverse)
      */
-    private AtomicBoolean doItAgain = new AtomicBoolean(false);
+    private static AtomicBoolean doItAgain = new AtomicBoolean(false);
 
     /**
      * Boolean indicating wether or not crawler service is in "consume only" mode (to be used by tests only)
@@ -185,7 +185,7 @@ public class IngesterService implements IIngesterService {
      * By default, launched 5 mn after last one. BUT this method is also executed each time a datasource is created
      */
     @Override
-    @Scheduled(fixedRateString = "${regards.ingester.rate.ms:300000}")
+    @Scheduled(fixedDelayString = "${regards.ingester.rate.ms:300000}")
     public void manage() {
         LOGGER.info("IngesterService.manage() called...");
         try {
