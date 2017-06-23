@@ -431,9 +431,7 @@ public class EsQueryTest {
         Assert.assertEquals(1, repository.search(searchKey, 10, startsWithCrit).getContent().size());
 
         ICriterion endsWithCrit = ICriterion.endsWith("properties.text", "t");
-        // Assert.assertEquals(5, repository.search(searchKey, 10, endsWithCrit).getContent().size());
-        // FIXME : By now, search regexp is applied on each word instead of whole phrase
-        Assert.assertEquals(6, repository.search(searchKey, 10, endsWithCrit).getContent().size());
+         Assert.assertEquals(5, repository.search(searchKey, 10, endsWithCrit).getContent().size());
 
         // On Dates
         ICriterion gtDateCriterion = ICriterion
@@ -450,7 +448,7 @@ public class EsQueryTest {
 
         // On strings array
         ICriterion containsStringCrit = ICriterion.contains("properties.tags", "dolor");
-        Assert.assertEquals(3, repository.search(searchKey, 10, containsStringCrit).getContent().size());
+        Assert.assertEquals(6, repository.search(searchKey, 10, containsStringCrit).getContent().size());
         // On int array
         ICriterion containsIntCrit = ICriterion.contains("properties.ints", 3);
         Assert.assertEquals(3, repository.search(searchKey, 10, containsIntCrit).getContent().size());
