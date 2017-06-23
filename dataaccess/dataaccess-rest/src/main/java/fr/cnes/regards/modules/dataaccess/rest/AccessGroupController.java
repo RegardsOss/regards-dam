@@ -95,7 +95,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     @ResponseBody
     @ResourceAccess(description = "only used to modify the privacy of the group")
     public ResponseEntity<Resource<AccessGroup>> updateAccessGroup(
-            @Valid @PathVariable("name") final String pAccessGroupName, @Valid final AccessGroup pAccessGroup)
+            @Valid @PathVariable("name") final String pAccessGroupName, @Valid @RequestBody final AccessGroup pAccessGroup)
             throws ModuleException {
         final AccessGroup ag = accessGroupService.update(pAccessGroupName, pAccessGroup);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
