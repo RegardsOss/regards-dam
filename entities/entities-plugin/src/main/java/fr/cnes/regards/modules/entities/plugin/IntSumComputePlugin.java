@@ -70,9 +70,8 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
     }
 
     private void doSum(Optional<AbstractAttribute<?>> propertyOpt) {
-        if (propertyOpt.isPresent() && (propertyOpt.get() instanceof IntegerAttribute)) {
-            IntegerAttribute property = (IntegerAttribute) propertyOpt.get();
-            Integer value = property.getValue();
+        if (propertyOpt.isPresent()) {
+            Integer value = ((Number) propertyOpt.get().getValue()).intValue();
             if (value != null) {
                 super.result += value;
             }
