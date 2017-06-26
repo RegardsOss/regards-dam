@@ -14,6 +14,7 @@ import com.google.common.base.Strings;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -90,6 +91,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
+        parameterAttribute.buildJsonPath(StaticProperties.PROPERTIES);
 
     }
 
