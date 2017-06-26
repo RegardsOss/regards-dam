@@ -26,6 +26,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.models.domain.TypeMetadataConfMapping;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
@@ -55,6 +56,8 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
 
     public static final String ASSOCS_MAPPING = "/assocs";
 
+    public static final String COMPUTATION_TYPE_MAPPING = ASSOCS_MAPPING +"/computation/types";
+
     /**
      * Model attribute association service
      */
@@ -82,6 +85,13 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
             @RequestParam(name = "type", required = false) EntityType type) {
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(type);
         return ResponseEntity.ok(assocs);
+    }
+
+    @ResourceAccess(
+            description = "endpoint allowing to retrieve which plugin configuration can be used for which attribute type with which possible metadata")
+    @RequestMapping(path = COMPUTATION_TYPE_MAPPING, method = RequestMethod.GET)
+    public ResponseEntity<List<TypeMetadataConfMapping>> getMappingForComputedAttribute() {
+        return ResponseEntity.ok(modelAttrAssocService.retrievePossibleMappingsForComputed());
     }
 
     /**
