@@ -3,18 +3,7 @@
  */
 package fr.cnes.regards.modules.models.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
@@ -80,7 +69,8 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         super();
     }
 
-    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition,
+            Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
         model = pModel;
         pos = pPosition;
@@ -188,36 +178,31 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             computation.setLabel(computationConf.getLabel());
             // Cyclic dependency between entities plugin and models-domain
             // TODO : Find a good idea to avoid this shit
+
+            // For plugins which are calculated according to a data object property, lets set the parameters and then the type
+            ParamPluginType paramPluginType = new ParamPluginType();
+            paramPluginType
+                    .setParameterAttributeName(computationConf.getParameter("parameterAttributeName").getValue());
+            String parameterAttributeFragmentName = computationConf.getParameter("parameterAttributeFragmentName")
+                    .getValue();
+            if (parameterAttributeFragmentName != null) {
+                paramPluginType.setParameterAttributeFragmentName(parameterAttributeFragmentName);
+            }
             switch (computationConf.getPluginClassName()) {
                 case "fr.cnes.regards.modules.entities.plugin.CountPlugin":
                     computation.setCount(new NoParamPluginType());
-                    break;
                 case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
                 case "fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin":
-                    ParamPluginType paramPluginType1 = new ParamPluginType();
-                    paramPluginType1.setParameterAttributeName(attribute.getName());
-                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
-                        paramPluginType1.setParameterAttributeFragmentName(attribute.getFragment().getName());
-                    }
-                    computation.setSumCompute(paramPluginType1);
+                    computation.setSumCompute(paramPluginType);
                     break;
                 case "fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin":
-                    ParamPluginType paramPluginType2 = new ParamPluginType();
-                    paramPluginType2.setParameterAttributeName(attribute.getName());
-                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
-                        paramPluginType2.setParameterAttributeFragmentName(attribute.getFragment().getName());
-                    }
-                    computation.setMinCompute(paramPluginType2);
+                    computation.setMinCompute(paramPluginType);
                     break;
                 case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
-                    ParamPluginType paramPluginType3 = new ParamPluginType();
-                    paramPluginType3.setParameterAttributeName(attribute.getName());
-                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
-                        paramPluginType3.setParameterAttributeFragmentName(attribute.getFragment().getName());
-                    }
-                    computation.setMaxCompute(paramPluginType3);
+                    computation.setMaxCompute(paramPluginType);
                     break;
             }
+
             xmlAtt.setComputation(computation);
         }
         return xmlAtt;

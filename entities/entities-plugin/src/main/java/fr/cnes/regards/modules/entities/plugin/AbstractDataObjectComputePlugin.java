@@ -31,6 +31,9 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  */
 public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAttribute<Dataset, R> {
 
+    public static final String PARAMETER_ATTRIBUTE_NAME="parameterAttributeName";
+    public static final String PARAMETER_FRAGMENT_NAME="parameterAttributeFragmentName";
+
     private static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
 
     private IEsRepository esRepo;
