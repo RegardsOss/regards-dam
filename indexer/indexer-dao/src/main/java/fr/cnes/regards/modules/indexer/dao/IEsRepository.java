@@ -1,5 +1,6 @@
 package fr.cnes.regards.modules.indexer.dao;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -357,6 +358,33 @@ public interface IEsRepository {
      * @return
      */
     <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion criterion);
+
+    /**
+     * Retrieve sum of given attribute
+     * @param searchKey the search key
+     * @param pCrit search criterion
+     * @param attName complete attribute path
+     * @return the sum
+     */
+    <T extends IIndexable> double sum(SearchKey<?, T> searchKey, ICriterion pCrit, String attName);
+
+    /**
+     * Retrieve minimum date of given date attribute
+     * @param searchKey the search key
+     * @param pCrit search criterion
+     * @param attName complete attribute path
+     * @return the min
+     */
+    <T extends IIndexable> OffsetDateTime minDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName);
+
+    /**
+     * Retrieve maximum date of given date attribute
+     * @param searchKey the search key
+     * @param pCrit search criterion
+     * @param attName complete attribute path
+     * @return the max
+     */
+    <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName);
 
     /**
      * Searching first page of elements from index giving page size
