@@ -197,7 +197,7 @@ public class CrawlerService implements ICrawlerService {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
                     atLeastOnePoll |= self.doPoll();
-                } catch (RuntimeException t) {
+                } catch (Throwable t) {
                     LOGGER.error("Cannot manage entity event message", t);
                 }
                 // Reset inProgress AFTER transaction
