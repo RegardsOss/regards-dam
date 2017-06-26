@@ -520,6 +520,15 @@ public class EsQueryTest {
 
         // No criterion
         Assert.assertEquals(10, repository.search(searchKey, 10, ICriterion.all()).getContent().size());
+
+        OffsetDateTime minDate = repository.minDate(searchKey, ICriterion.all(), "properties.date");
+        Assert.assertNotNull(minDate);
+        Assert.assertNull(repository.minDate(searchKey, ICriterion.all(), "properties.prout"));
+
+        OffsetDateTime maxDate = repository.maxDate(searchKey, ICriterion.all(), "properties.date");
+        Assert.assertNotNull(maxDate);
+        Assert.assertNull(repository.maxDate(searchKey, ICriterion.all(), "properties.prout"));
+        Assert.assertTrue(maxDate.isAfter(minDate));
     }
 
     @Test

@@ -13,10 +13,13 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -40,20 +43,20 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
     @Autowired
     private IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = "resultAttributeName",
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME,
             description = "Name of the attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
-    @PluginParameter(name = "resultAttributeFragmentName",
+    @PluginParameter(name = RESULT_FRAGMENT_NAME,
             description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.",
             optional = true)
     private String attributeToComputeFragmentName;
 
-    @PluginParameter(name = "parameterAttributeName",
+    @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME,
             description = "Name of the parameter attribute used to compute result attribute.")
     private String parameterAttributeName;
 
-    @PluginParameter(name = "parameterAttributeFragmentName",
+    @PluginParameter(name = PARAMETER_FRAGMENT_NAME,
             description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.",
             optional = true)
     private String parameterAttributeFragmentName;
@@ -81,6 +84,22 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
     @Override
     public AttributeType getSupported() {
         return AttributeType.INTEGER;
+    }
+
+    /**
+     * @param dataset dataset on which the attribute, once computed, will be added. This allows us to know which
+     * DataObject should be used.
+     */
+    @Override
+    public void compute(Dataset dataset) {
+        result = null;
+        // create the search
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
+                                                                      EntityType.DATA.toString(), DataObject.class);
+        Double doubleResult = esRepo.sum(searchKey, dataset.getSubsettingClause(), parameterAttribute.getJsonPath());
+        result = doubleResult.intValue();
+        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+                  dataset.getIpId().toString(), result);
     }
 
     @Override

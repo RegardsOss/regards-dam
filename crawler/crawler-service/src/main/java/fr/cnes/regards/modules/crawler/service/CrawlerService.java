@@ -570,6 +570,7 @@ public class CrawlerService implements ICrawlerService {
         public Void call() throws Exception {
             if ((set != null) && !set.isEmpty()) {
                 LOGGER.info("Saving {} data objects...", set.size());
+                runtimeTenantResolver.forceTenant(tenant);
                 esRepos.saveBulk(tenant, set);
                 LOGGER.info("...data objects saved");
             }

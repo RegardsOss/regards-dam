@@ -188,35 +188,31 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             computation.setLabel(computationConf.getLabel());
             // Cyclic dependency between entities plugin and models-domain
             // TODO : Find a good idea to avoid this shit
-            switch (computationConf.getPluginClassName()) {
-                case "fr.cnes.regards.modules.entities.plugin.CountPlugin":
-                    computation.setCount(new NoParamPluginType());
-                    break;
-                case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
-                case "fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin":
-                    ParamPluginType paramPluginType1 = new ParamPluginType();
-                    paramPluginType1.setParameterAttributeName(attribute.getName());
-                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
-                        paramPluginType1.setParameterAttributeFragmentName(attribute.getFragment().getName());
-                    }
-                    computation.setSumCompute(paramPluginType1);
-                    break;
-                case "fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin":
-                    ParamPluginType paramPluginType2 = new ParamPluginType();
-                    paramPluginType2.setParameterAttributeName(attribute.getName());
-                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
-                        paramPluginType2.setParameterAttributeFragmentName(attribute.getFragment().getName());
-                    }
-                    computation.setMinCompute(paramPluginType2);
-                    break;
-                case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
-                    ParamPluginType paramPluginType3 = new ParamPluginType();
-                    paramPluginType3.setParameterAttributeName(attribute.getName());
-                    if ((attribute.getFragment() != null) && !attribute.getFragment().isDefaultFragment()) {
-                        paramPluginType3.setParameterAttributeFragmentName(attribute.getFragment().getName());
-                    }
-                    computation.setMaxCompute(paramPluginType3);
-                    break;
+            // Count plugin are really something different from others, lets treat them apart
+            String pluginClassName=computationConf.getPluginClassName();
+            if(pluginClassName.equals("fr.cnes.regards.modules.entities.plugin.CountPlugin")) {
+                computation.setCount(new NoParamPluginType());
+            } else {
+                // For plugins which are calculated according to a data object property, lets set the parameters and then the type
+                ParamPluginType paramPluginType = new ParamPluginType();
+                paramPluginType.setParameterAttributeName(
+                        computationConf.getParameter("parameterAttributeName").getValue());
+                String parameterAttributeFragmentName = computationConf.getParameter("parameterAttributeFragmentName").getValue();
+                if (parameterAttributeFragmentName != null) {
+                    paramPluginType.setParameterAttributeFragmentName(parameterAttributeFragmentName);
+                }
+                switch (pluginClassName) {
+                    case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
+                    case "fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin":
+                        computation.setSumCompute(paramPluginType);
+                        break;
+                    case "fr.cnes.regards.modules.entities.plugin.MaxDateComputePlugin":
+                        computation.setMinCompute(paramPluginType);
+                        break;
+                    case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
+                        computation.setMaxCompute(paramPluginType);
+                        break;
+                }
             }
             xmlAtt.setComputation(computation);
         }

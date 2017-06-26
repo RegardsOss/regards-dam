@@ -62,7 +62,7 @@ public class EsRepositoryTest {
             gson = new GsonBuilder().create();
             // FIXME valeurs en dur pour l'instant
             repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards",
-                    new AggregationBuilderFacetTypeVisitor(10, 1));
+                                          new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -206,7 +206,7 @@ public class EsRepositoryTest {
         try {
             repository.saveBulk("bulktest", list);
             Assert.fail("saveBulk should have thrown an IllegalArgumentException (last item does not provide id nor "
-                    + "type ");
+                                + "type ");
         } catch (IllegalArgumentException e) {
         }
 
@@ -238,8 +238,9 @@ public class EsRepositoryTest {
         final List<Item> items = new ArrayList<>();
         for (int i = 0; i < pCount; i++) {
             final Item item = new Item(Integer.toString(i),
-                    Stream.generate(() -> words[(int) (Math.random() * words.length)]).limit((int) (Math.random() * 10))
-                            .collect(Collectors.toSet()).toArray(new String[0]));
+                                       Stream.generate(() -> words[(int) (Math.random() * words.length)])
+                                               .limit((int) (Math.random() * 10)).collect(Collectors.toSet())
+                                               .toArray(new String[0]));
             item.setName(words[(int) (Math.random() * words.length)]);
             item.setHeight((int) (Math.random() * 1000));
             item.setPrice(Math.random() * 10000.);
@@ -271,6 +272,9 @@ public class EsRepositoryTest {
 
         Assert.assertEquals(Long.valueOf(count), repository.count(searchKey, null));
         Assert.assertTrue(repository.count(searchKey, ICriterion.between("price", 1000, 2000)) < Long.valueOf(count));
+
+        Assert.assertEquals(500902683.6326989, repository.sum(searchKey, ICriterion.all(), "price"), 1e7);
+        Assert.assertEquals(49871257., repository.sum(searchKey, ICriterion.all(), "height"), 1e6);
     }
 
     @Test
