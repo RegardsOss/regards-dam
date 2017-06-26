@@ -476,7 +476,10 @@ public class CrawlerService implements ICrawlerService {
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         LOGGER.info("Starting parallel computing of {} attributes...", computationPlugins.size());
-        computationPlugins.parallelStream().forEach(p -> p.compute(dataset));
+        computationPlugins.parallelStream().forEach(p -> {
+            runtimeTenantResolver.forceTenant(tenant);
+            p.compute(dataset);
+        });
         LOGGER.info("...computing OK");
         // Once computations has been done, associated attributes are created or updated
         LOGGER.info("Creating computed attributes...");
@@ -559,7 +562,6 @@ public class CrawlerService implements ICrawlerService {
 
         public SaveDataObjectsCallable(String tenant) {
             this.tenant = tenant;
-            runtimeTenantResolver.forceTenant(tenant);
         }
 
         public void setSet(Set<DataObject> set) {
@@ -570,6 +572,7 @@ public class CrawlerService implements ICrawlerService {
         public Void call() throws Exception {
             if ((set != null) && !set.isEmpty()) {
                 LOGGER.info("Saving {} data objects...", set.size());
+                runtimeTenantResolver.forceTenant(tenant);
                 esRepos.saveBulk(tenant, set);
                 LOGGER.info("...data objects saved");
             }
