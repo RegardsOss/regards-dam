@@ -559,6 +559,7 @@ public class CrawlerService implements ICrawlerService {
 
         public SaveDataObjectsCallable(String tenant) {
             this.tenant = tenant;
+            runtimeTenantResolver.forceTenant(tenant);
         }
 
         public void setSet(Set<DataObject> set) {
