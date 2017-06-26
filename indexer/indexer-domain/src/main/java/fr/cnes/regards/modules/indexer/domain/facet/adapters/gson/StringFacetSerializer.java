@@ -30,7 +30,7 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacet {
+    class AdaptedFacet {
 
         private final String attributeName;
 
@@ -48,6 +48,20 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
                     .collect(Collectors.toList());
         }
 
+        /**
+         * @return the attributeName
+         */
+        public String getAttributeName() {
+            return attributeName;
+        }
+
+        /**
+         * @return the values
+         */
+        public List<AdaptedFacetValue> getValues() {
+            return values;
+        }
+
     }
 
     /**
@@ -55,7 +69,7 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacetValue {
+    class AdaptedFacetValue {
 
         private final String word;
 
@@ -71,7 +85,18 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
             super();
             word = pWord;
             count = pCount;
-            openSearchQuery = pAttributeName + ":" + pWord;
+            if (pWord.contains(" ")) {
+                openSearchQuery = pAttributeName + ":" + "\"" + pWord + "\"";
+            } else {
+                openSearchQuery = pAttributeName + ":" + pWord;
+            }
+        }
+
+        /**
+         * @return the openSearchQuery
+         */
+        public String getOpenSearchQuery() {
+            return openSearchQuery;
         }
 
     }
