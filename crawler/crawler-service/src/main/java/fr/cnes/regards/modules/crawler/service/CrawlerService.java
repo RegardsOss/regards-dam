@@ -18,6 +18,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -450,7 +455,16 @@ public class CrawlerService implements ICrawlerService {
 
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                                                                       DataObject.class);
-        Set<DataObject> toSaveObjects = new HashSet<>();
+        HashSet<DataObject> toSaveObjects = new HashSet<>();
+        // Create a one thread pool
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        // Create a callable which bulk save into ES a set of data objects
+        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(tenant);
+        // Create a task with this callable
+        FutureTask<Void> saveBulkTask = new FutureTask<>(saveDataObjectsCallable);
+        // Add task to thread pool executor
+        executor.execute(saveBulkTask);
+        // Lambda to be executed on each data object of dataset subsetting criteria results
         Consumer<DataObject> dataObjectUpdater = object -> {
             object.getTags().add(dsIpId);
             object.getGroups().addAll(groups);
@@ -458,14 +472,29 @@ public class CrawlerService implements ICrawlerService {
             object.getDatasetModelIds().add(datasetModelId);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
-                LOGGER.info("Saving {} data objects...", toSaveObjects.size());
-                esRepos.saveBulk(tenant, toSaveObjects);
-                LOGGER.info("...data objects saved");
+                LOGGER.info("Waiting for previous task to end...");
+                try {
+                    saveBulkTask.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    LOGGER.error("Unable to save data objects", e);
+                }
+                LOGGER.info("Launching Saving of {} data objects task...", toSaveObjects.size());
+                // Give a clone of data objects to save set
+                saveDataObjectsCallable.setSet((Set<DataObject>) toSaveObjects.clone());
+                // Clear data objects to save set
                 toSaveObjects.clear();
+                // Add task to thread pool executor
+                executor.execute(saveBulkTask);
             }
         };
         esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
         if (!toSaveObjects.isEmpty()) {
+            LOGGER.info("Waiting for previous task to end...");
+            try {
+                saveBulkTask.get();
+            } catch (InterruptedException | ExecutionException e) {
+                LOGGER.error("Unable to save data objects", e);
+            }
             LOGGER.info("Saving {} data objects...", toSaveObjects.size());
             esRepos.saveBulk(tenant, toSaveObjects);
             LOGGER.info("...data objects saved");
@@ -473,8 +502,8 @@ public class CrawlerService implements ICrawlerService {
 
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
-        LOGGER.info("Starting computing...");
-        computationPlugins.forEach(p -> p.compute(dataset));
+        LOGGER.info("Starting parallel computing of {} attributes...", computationPlugins.size());
+        computationPlugins.parallelStream().forEach(p -> p.compute(dataset));
         LOGGER.info("...computing OK");
         // Once computations has been done, associated attributes are created or updated
         LOGGER.info("Creating computed attributes...");
@@ -482,6 +511,33 @@ public class CrawlerService implements ICrawlerService {
 
         esRepos.save(tenant, dataset);
         LOGGER.info("Datatset {} updated", dataset);
+    }
+
+    /**
+     * Callable used to parallelize data objects bulk save into Elasticsearch
+     */
+    private class SaveDataObjectsCallable implements Callable<Void> {
+        private String tenant;
+
+        private Set<DataObject> set;
+
+        public SaveDataObjectsCallable(String tenant) {
+            this.tenant = tenant;
+        }
+
+        public void setSet(Set<DataObject> set) {
+            this.set = set;
+        }
+
+        @Override
+        public Void call() throws Exception {
+            if ((set != null) && !set.isEmpty()) {
+                LOGGER.info("Saving {} data objects...", set.size());
+                esRepos.saveBulk(tenant, set);
+                LOGGER.info("...data objects saved");
+            }
+            return null;
+        }
     }
 
     /**
