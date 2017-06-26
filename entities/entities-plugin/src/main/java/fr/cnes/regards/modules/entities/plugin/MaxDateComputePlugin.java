@@ -41,20 +41,20 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
     @Autowired
     private IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = "resultAttributeName",
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME,
             description = "Name of the attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
-    @PluginParameter(name = "resultAttributeFragmentName",
+    @PluginParameter(name = RESULT_FRAGMENT_NAME,
             description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.",
             optional = true)
     private String attributeToComputeFragmentName;
 
-    @PluginParameter(name = "parameterAttributeName",
+    @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME,
             description = "Name of the parameter attribute used to compute result attribute.")
     private String parameterAttributeName;
 
-    @PluginParameter(name = "parameterAttributeFragmentName",
+    @PluginParameter(name = PARAMETER_FRAGMENT_NAME,
             description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.",
             optional = true)
     private String parameterAttributeFragmentName;
