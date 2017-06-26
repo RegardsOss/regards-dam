@@ -243,7 +243,7 @@ public final class XmlImportHelper {
             if (xmlParamPluginType != null) {
                 parameters.add(new PluginParameter("parameterAttributeName",
                         xmlParamPluginType.getParameterAttributeName()));
-                parameters.add(new PluginParameter("parameterAttributeName",
+                parameters.add(new PluginParameter("parameterAttributeFragmentName",
                         xmlParamPluginType.getParameterAttributeFragmentName()));
             }
             compConf.setParameters(parameters);

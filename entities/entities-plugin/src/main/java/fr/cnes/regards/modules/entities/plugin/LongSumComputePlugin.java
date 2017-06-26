@@ -70,9 +70,8 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
     }
 
     private void doSum(Optional<AbstractAttribute<?>> propertyOpt) {
-        if (propertyOpt.isPresent() && (propertyOpt.get() instanceof LongAttribute)) {
-            LongAttribute property = (LongAttribute) propertyOpt.get();
-            Long value = property.getValue();
+        if (propertyOpt.isPresent()) {
+            Long value = ((Number) propertyOpt.get().getValue()).longValue();
             if (value != null) {
                 super.result += value;
             }

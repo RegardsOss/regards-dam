@@ -70,12 +70,11 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
     }
 
     private void getMaxDate(Optional<AbstractAttribute<?>> parameterOpt) {
-        if (parameterOpt.isPresent() && (parameterOpt.get() instanceof DateAttribute)) {
-            DateAttribute parameter = (DateAttribute) parameterOpt.get();
-            OffsetDateTime value = parameter.getValue();
+        if (parameterOpt.isPresent()) {
+            OffsetDateTime value = (OffsetDateTime) parameterOpt.get().getValue();
             if (value != null) {
                 if (result != null) {
-                    result = value.isAfter(result) ? parameter.getValue() : result;
+                    result = value.isAfter(result) ? value : result;
                 } else {
                     result = value;
                 }

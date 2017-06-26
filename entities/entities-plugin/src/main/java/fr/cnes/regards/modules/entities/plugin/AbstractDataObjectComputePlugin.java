@@ -7,6 +7,9 @@ import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -27,6 +30,8 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  * @author Sylvain Vissiere-Guerinet
  */
 public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAttribute<Dataset, R> {
+
+    private static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
 
     private IEsRepository esRepo;
 
@@ -96,6 +101,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
                                                                       EntityType.DATA.toString(), DataObject.class);
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
+        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(), dataset.getIpId().toString(), result);
     }
 
     @Override
