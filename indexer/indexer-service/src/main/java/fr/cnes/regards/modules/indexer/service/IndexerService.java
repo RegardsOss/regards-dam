@@ -24,8 +24,10 @@ public class IndexerService implements IIndexerService {
         if (!repository.indexExists(pIndex)) {
             boolean created = repository.createIndex(pIndex);
             if (created) {
-                repository.setGeometryMapping(pIndex, Arrays.stream(EntityType.values()).map(EntityType::toString)
-                        .toArray(length -> new String[length]));
+                String[] types = Arrays.stream(EntityType.values()).map(EntityType::toString)
+                        .toArray(length -> new String[length]);
+                repository.setAutomaticDoubleMapping(pIndex, types);
+                repository.setGeometryMapping(pIndex, types);
             }
             return created;
         }

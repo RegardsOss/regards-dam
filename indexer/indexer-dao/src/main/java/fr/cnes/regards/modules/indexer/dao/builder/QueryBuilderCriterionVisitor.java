@@ -1,7 +1,6 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
@@ -13,7 +12,6 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import com.google.common.base.Joiner;
 import com.vividsolutions.jts.geom.Coordinate;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
@@ -38,6 +36,11 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ValueComparison;
  * @author oroussel
  */
 public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuilder> {
+
+    /**
+     * Text subfield mapping used for string search criterions
+     */
+    private static final String KEYWORD = ".keyword";
 
     @Override
     public QueryBuilder visitEmptyCriterion(EmptyCriterion pCriterion) {
@@ -77,9 +80,9 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             case STARTS_WITH:
                 return QueryBuilders.matchPhrasePrefixQuery(attName, searchValue);
             case ENDS_WITH:
-                return QueryBuilders.regexpQuery(attName, ".*" + searchValue);
+                return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue);
             case CONTAINS:
-                return QueryBuilders.matchQuery(attName, searchValue);
+                return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue + ".*");
             default:
                 return null;
         }

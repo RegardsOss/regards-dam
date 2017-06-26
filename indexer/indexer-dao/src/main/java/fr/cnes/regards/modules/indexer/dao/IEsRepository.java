@@ -1,7 +1,5 @@
 package fr.cnes.regards.modules.indexer.dao;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,11 +36,20 @@ public interface IEsRepository {
     boolean createIndex(String pIndex);
 
     /**
+     * Put dynamic mapping on specified types of specified index for floating point values (force "double" mapping
+     * type instead of float)
+     * @param index index
+     * @param types all types needing automatic double mapping
+     * @return true if acknowledged by Elasticsearch, false otherwise
+     */
+    boolean setAutomaticDoubleMapping(String index, String... types);
+
+    /**
      * Put geometry mapping on specified types of specified index (ie a "geo_shape" type "geometry" property)
      *
      * @param pIndex index
      * @param types all types with geometry mapping
-     * @return true if acknowledged by Elasticsearch, false otherwise. returns
+     * @return true if acknowledged by Elasticsearch, false otherwise.
      */
     boolean setGeometryMapping(String pIndex, String... types);
 
@@ -342,6 +349,14 @@ public interface IEsRepository {
      */
     <T, U> List<U> search(SearchKey<?, T[]> searchKey, ICriterion criterion, String sourceAttribute,
             Predicate<T> filterPredicate, Function<T, U> transformFct);
+
+    /**
+     * Count result
+     * @param searchKey the search key
+     * @param criterion search criterion
+     * @return
+     */
+    <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion criterion);
 
     /**
      * Searching first page of elements from index giving page size
