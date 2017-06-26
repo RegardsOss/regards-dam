@@ -13,10 +13,13 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -76,6 +79,22 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
                 super.result += value;
             }
         }
+    }
+
+    /**
+     * @param dataset dataset on which the attribute, once computed, will be added. This allows us to know which
+     * DataObject should be used.
+     */
+    @Override
+    public void compute(Dataset dataset) {
+        result = null;
+        // create the search
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
+                                                                      EntityType.DATA.toString(), DataObject.class);
+        Double doubleResult = esRepo.sum(searchKey, dataset.getSubsettingClause(), parameterAttribute.getJsonPath());
+        result = doubleResult.longValue();
+        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+                  dataset.getIpId().toString(), result);
     }
 
     @Override

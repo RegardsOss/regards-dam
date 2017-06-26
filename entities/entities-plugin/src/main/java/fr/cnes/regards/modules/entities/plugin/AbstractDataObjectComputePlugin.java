@@ -31,7 +31,7 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  */
 public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAttribute<Dataset, R> {
 
-    private static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
+    protected static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
 
     private IEsRepository esRepo;
 
@@ -39,7 +39,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
 
     private IRuntimeTenantResolver tenantResolver;
 
-    private AttributeModel parameterAttribute;
+    protected AttributeModel parameterAttribute;
 
     private AttributeModel attributeToCompute;
 
