@@ -248,7 +248,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
         resourceService.addLink(resource, this.getClass(), "updateAttribute", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, attributeModel.getId()),
                                 MethodParamFactory.build(AttributeModel.class));
-        if(isDeletable(attributeModel)) {
+        if (isDeletable(attributeModel)) {
             resourceService.addLink(resource, this.getClass(), "deleteAttribute", LinkRels.DELETE,
                                     MethodParamFactory.build(Long.class, attributeModel.getId()));
         }
@@ -258,8 +258,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
     }
 
     private boolean isDeletable(AttributeModel attributeModel) {
-        //if there is no fragment, which is a degenerate case, it is assimiled to the default one
-        boolean isDefaultFragment=attributeModel.getFragment()==null || attributeModel.getFragment().isDefaultFragment();
-        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty() && isDefaultFragment;
+        // Allows deletion for given attribute if it is not linked to any model.
+        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty();
     }
 }
