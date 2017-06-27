@@ -15,6 +15,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
+import fr.cnes.regards.modules.models.domain.TypeMetadataConfMapping;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
@@ -62,4 +63,5 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
 
     Collection<ModelAttrAssoc> getModelAttrAssocsFor(EntityType pType);
 
+    List<TypeMetadataConfMapping> retrievePossibleMappingsForComputed();
 }
