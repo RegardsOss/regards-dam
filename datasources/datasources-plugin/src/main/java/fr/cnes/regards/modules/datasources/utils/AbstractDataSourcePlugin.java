@@ -45,11 +45,10 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
     /**
-     * By default, the refresh rate is set to 30 minutes (in ms)
+     * By default, the refresh rate is set to 1 day (in ms)
      */
     public int getRefreshRate() {
-        // in seconds, 30 minutes
-        return 1800;
+        return 86400;
     }
 
     protected abstract String getFromClause();
