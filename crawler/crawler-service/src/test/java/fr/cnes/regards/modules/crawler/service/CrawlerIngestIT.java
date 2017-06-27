@@ -16,6 +16,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -53,7 +54,8 @@ import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
+import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
+import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -78,7 +80,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-//@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
+@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
 public class CrawlerIngestIT {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
@@ -192,7 +194,8 @@ public class CrawlerIngestIT {
         ingesterService.setConsumeOnlyMode(true);
 
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
-        amqpAdmin.purgeQueue(EntityEvent.class, false);
+        amqpAdmin.purgeQueue(DatasetEvent.class, false);
+        amqpAdmin.purgeQueue(NotDatasetEntityEvent.class, false);
         rabbitVhostAdmin.unbind();
 
         attrAssocRepos.deleteAll();

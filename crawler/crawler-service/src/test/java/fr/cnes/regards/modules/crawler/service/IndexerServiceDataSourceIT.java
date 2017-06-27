@@ -49,7 +49,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -78,7 +77,8 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
+import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
+import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
@@ -251,7 +251,8 @@ public class IndexerServiceDataSourceIT {
         ingesterService.setConsumeOnlyMode(true);
 
         rabbitVhostAdmin.bind(tenantResolver.getTenant());
-        amqpAdmin.purgeQueue(EntityEvent.class, false);
+        amqpAdmin.purgeQueue(DatasetEvent.class, false);
+        amqpAdmin.purgeQueue(NotDatasetEntityEvent.class, false);
         rabbitVhostAdmin.unbind();
 
         datasetRepos.deleteAll();
