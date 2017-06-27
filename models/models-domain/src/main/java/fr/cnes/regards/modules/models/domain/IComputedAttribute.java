@@ -19,6 +19,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
         description = "Plugins of type ICalculationModel are plugins allowing to calculate the value of an AttributeModel thanks to a ModelAttrAssoc")
 public interface IComputedAttribute<P, R> {
 
+    static final String RESULT_ATTRIBUTE_NAME="resultAttributeName";
+    static final String RESULT_FRAGMENT_NAME="resultAttributeFragmentName";
+
     /**
      * @return the value computed by the implementation.
      */

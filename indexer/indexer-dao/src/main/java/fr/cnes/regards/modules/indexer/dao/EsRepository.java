@@ -3,9 +3,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -58,11 +55,13 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
+import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
@@ -84,9 +83,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -498,8 +498,8 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    @Override
-    public <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion pCrit) {
+    private <T extends IIndexable> SearchRequestBuilder createRequestBuilderForAgg(SearchKey<?, T> searchKey,
+            ICriterion pCrit) {
         String index = searchKey.getSearchIndex().toLowerCase();
 
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
@@ -509,10 +509,52 @@ public class EsRepository implements IEsRepository {
         SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
         // Only return hits information
         request = request.setQuery(critBuilder).setSize(0);
+        return request;
+    }
+
+
+    @Override
+    public <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion pCrit) {
+        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
         // Launch the request
         SearchResponse response = getWithTimeouts(request);
 
         return response.getHits().getTotalHits();
+    }
+
+    @Override
+    public <T extends IIndexable> double sum(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
+        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
+        request = request.addAggregation(AggregationBuilders.sum(attName).field(attName));
+        // Launch the request
+        SearchResponse response = getWithTimeouts(request);
+        return ((Sum)response.getAggregations().get(attName)).getValue();
+    }
+
+    @Override
+    public <T extends IIndexable> OffsetDateTime minDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
+        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
+        request = request.addAggregation(AggregationBuilders.min(attName).field(attName));
+        // Launch the request
+        SearchResponse response = getWithTimeouts(request);
+        Min min = response.getAggregations().get(attName);
+        if ((min == null) || !Double.isFinite(min.getValue())) {
+            return null;
+        }
+        return OffsetDateTimeAdapter.parse(min.getValueAsString());
+    }
+
+    @Override
+    public <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
+        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
+        request = request.addAggregation(AggregationBuilders.min(attName).field(attName));
+        // Launch the request
+        SearchResponse response = getWithTimeouts(request);
+        Max max = response.getAggregations().get(attName);
+        if ((max == null) || !Double.isFinite(max.getValue())) {
+            return null;
+        }
+        return OffsetDateTimeAdapter.parse(max.getValueAsString());
     }
 
     /**

@@ -14,6 +14,7 @@ import com.google.common.base.Strings;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -31,7 +32,10 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  */
 public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAttribute<Dataset, R> {
 
-    private static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
+    public static final String PARAMETER_ATTRIBUTE_NAME="parameterAttributeName";
+    public static final String PARAMETER_FRAGMENT_NAME="parameterAttributeFragmentName";
+
+    protected static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
 
     private IEsRepository esRepo;
 
@@ -39,7 +43,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
 
     private IRuntimeTenantResolver tenantResolver;
 
-    private AttributeModel parameterAttribute;
+    protected AttributeModel parameterAttribute;
 
     private AttributeModel attributeToCompute;
 
@@ -87,6 +91,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
+        parameterAttribute.buildJsonPath(StaticProperties.PROPERTIES);
 
     }
 
