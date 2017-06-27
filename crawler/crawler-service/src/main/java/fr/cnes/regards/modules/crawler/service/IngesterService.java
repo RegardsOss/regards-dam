@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -130,8 +129,9 @@ public class IngesterService implements IIngesterService {
     private boolean consumeOnlyMode = false;
 
     @Override
-    @Async
+    @Scheduled(fixedDelay = 1L) // Better than @Async, will be relaunched if stopped (who knows...)
     public void listenToPluginConfChange() {
+
         delay.set(INITIAL_DELAY_MS);
         // Infinite loop
         while (true) {
