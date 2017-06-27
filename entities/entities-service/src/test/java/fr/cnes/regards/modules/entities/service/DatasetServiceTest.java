@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.event.EntityEvent;
+import fr.cnes.regards.modules.entities.domain.event.AbstractEntityEvent;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -299,7 +299,7 @@ public class DatasetServiceTest {
 
         dataSetServiceMocked.update(dataSet1);
 
-        Mockito.verify(publisherMocked).publish(Mockito.any(EntityEvent.class));
+        Mockito.verify(publisherMocked).publish(Mockito.any(AbstractEntityEvent.class));
     }
 
     private PluginConfiguration getPostgreConnectionConfiguration() {

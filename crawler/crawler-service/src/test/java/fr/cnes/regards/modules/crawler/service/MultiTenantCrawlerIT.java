@@ -11,12 +11,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
@@ -38,7 +36,6 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { MultitenantConfiguration.class })
-@ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 public class MultiTenantCrawlerIT {
 
     private static final String TENANT1 = "MICKEY";

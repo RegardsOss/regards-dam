@@ -193,7 +193,7 @@ public class ValidationIT {
         crawlerService.setConsumeOnlyMode(true);
 
         // rabbitVhostAdmin.bind(tenantResolver.getTenant());
-        // amqpAdmin.purgeQueue(EntityEvent.class, false);
+        // amqpAdmin.purgeQueue(AbstractEntityEvent.class, false);
         // rabbitVhostAdmin.unbind();
 
         entityRepos.deleteAll();
