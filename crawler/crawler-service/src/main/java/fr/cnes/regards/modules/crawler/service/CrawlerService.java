@@ -33,7 +33,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -68,8 +68,7 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
 /**
- * Crawler service. <b>This service need @EnableAsync at Configuration and is used in conjunction with
- * CrawlerInitializer</b>
+ * Crawler service. <b>This service need @EnableSchedule at Configuration
  */
 @Service// Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class CrawlerService implements ICrawlerService {
@@ -180,7 +179,7 @@ public class CrawlerService implements ICrawlerService {
     /**
      * Daemon process. Poll entity events on all tenants and update Elasticsearch to reflect Postgres database
      */
-    @Async
+    @Scheduled(fixedDelay = 1L) // Better than @Async if the daemon stop, it is automatically relaunched
     @Override
     public void crawl() {
         delay.set(INITIAL_DELAY_MS);
