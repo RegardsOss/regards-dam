@@ -547,7 +547,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
         SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
-        request = request.addAggregation(AggregationBuilders.min(attName).field(attName));
+        request = request.addAggregation(AggregationBuilders.max(attName).field(attName));
         // Launch the request
         SearchResponse response = getWithTimeouts(request);
         Max max = response.getAggregations().get(attName);
