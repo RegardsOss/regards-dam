@@ -457,7 +457,7 @@ public class CrawlerService implements ICrawlerService {
                                                                       DataObject.class);
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         // Create a callable which bulk save into ES a set of data objects
-        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(tenant);
+        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(tenant, dataset.getId());
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dsIpId, groups, updateDate, datasetModelId,
                                                                     toSaveObjects, saveDataObjectsCallable,
