@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -18,6 +17,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -30,6 +31,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
@@ -184,6 +186,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         Assert.notNull(pAbstractEntity, "Entity must not be null.");
 
         Model model = pAbstractEntity.getModel();
+        // Load model by name if id not specified
+        if ((model.getId() == null) && (model.getName() != null)) {
+            model = modelService.getModelByName(model.getName());
+            pAbstractEntity.setModel(model);
+        }
+
         Assert.notNull(model, "Model must be set on entity in order to be validated.");
         Assert.notNull(model.getId(), "Model identifier must be specified.");
 
@@ -191,8 +199,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty()) && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity
-                .getProperties().isEmpty()))) {
+        if (((modAtts == null) || modAtts.isEmpty())
+                && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity.getProperties().isEmpty()))) {
             pErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                 "No properties defined in corresponding model but trying to create.");
         }
@@ -264,9 +272,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, pErrors);
                 } else {
-                    String defaultMessage = String
-                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
-                                    key);
+                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                          validator.getClass().getName(), key);
                     pErrors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
@@ -356,7 +363,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
         // Set description
         if (entity instanceof AbstractDescEntity) {
@@ -482,8 +489,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     pEntity.setDescriptionFile(oldOne);
                 } else {
                     //if there is no descriptionFile existing then lets create one
-                    pEntity.setDescriptionFile(
-                            new DescriptionFile(pFile.getBytes(), pEntity.getDescriptionFile().getType()));
+                    pEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+                            pEntity.getDescriptionFile().getType()));
                 }
             } else {
                 //this is a url
@@ -551,8 +558,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");
             String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
-                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
+                    || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
         }
         return false;
     }

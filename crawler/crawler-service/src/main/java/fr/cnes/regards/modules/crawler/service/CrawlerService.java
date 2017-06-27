@@ -456,37 +456,34 @@ public class CrawlerService implements ICrawlerService {
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                                                                       DataObject.class);
         HashSet<DataObject> toSaveObjects = new HashSet<>();
-        // Create a one thread pool
-        ExecutorService executor = Executors.newFixedThreadPool(1);
         // Create a callable which bulk save into ES a set of data objects
-        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(tenant);
-        // Add callable to thread pool executor
-        Future<Void> saveBulkTask = executor.submit(saveDataObjectsCallable);
-        // Lambda to be executed on each data object of dataset subsetting criteria results
+        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(tenant, dataset.getId());
+        // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dsIpId, groups, updateDate, datasetModelId,
-                                                                    toSaveObjects, saveDataObjectsCallable);
+                                                                    toSaveObjects, saveDataObjectsCallable,
+                                                                    dataset.getId());
         esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
         if (!toSaveObjects.isEmpty()) {
             dataObjectUpdater.waitForEndOfTask();
-            LOGGER.info("Saving {} data objects...", toSaveObjects.size());
+            LOGGER.info("Saving {} data objects (dataset {})...", toSaveObjects.size(), dataset.getId());
             esRepos.saveBulk(tenant, toSaveObjects);
             LOGGER.info("...data objects saved");
         }
 
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
-        LOGGER.info("Starting parallel computing of {} attributes...", computationPlugins.size());
+        LOGGER.info("Starting parallel computing of {} attributes (dataset {})...", computationPlugins.size(),
+                    dataset.getId());
         computationPlugins.parallelStream().forEach(p -> {
             runtimeTenantResolver.forceTenant(tenant);
             p.compute(dataset);
         });
-        LOGGER.info("...computing OK");
         // Once computations has been done, associated attributes are created or updated
-        LOGGER.info("Creating computed attributes...");
         createComputedAttributes(dataset, computationPlugins);
+        LOGGER.info("...computing OK");
 
         esRepos.save(tenant, dataset);
-        LOGGER.info("Datatset {} updated", dataset);
+        LOGGER.info("Datatset {} updated", dataset.getId());
     }
 
     /**
@@ -506,18 +503,21 @@ public class CrawlerService implements ICrawlerService {
 
         private SaveDataObjectsCallable saveDataObjectsCallable;
 
+        private long datasetId;
+
         private Future<Void> saveBulkTask = null;
 
         private ExecutorService executor = Executors.newFixedThreadPool(1);
 
         public DataObjectUpdater(String dsIpId, Set<String> groups, OffsetDateTime updateDate, Long datasetModelId,
-                HashSet<DataObject> toSaveObjects, SaveDataObjectsCallable saveDataObjectsCallable) {
+                HashSet<DataObject> toSaveObjects, SaveDataObjectsCallable saveDataObjectsCallable, long datasetId) {
             this.dsIpId = dsIpId;
             this.groups = groups;
             this.updateDate = updateDate;
             this.datasetModelId = datasetModelId;
             this.toSaveObjects = toSaveObjects;
             this.saveDataObjectsCallable = saveDataObjectsCallable;
+            this.datasetId = datasetId;
         }
 
         @Override
@@ -529,7 +529,8 @@ public class CrawlerService implements ICrawlerService {
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
                 this.waitForEndOfTask();
-                LOGGER.info("Launching Saving of {} data objects task...", toSaveObjects.size());
+                LOGGER.info("Launching Saving of {} data objects task (dataset {})...", toSaveObjects.size(),
+                            datasetId);
                 // Give a clone of data objects to save set
                 saveDataObjectsCallable.setSet((Set<DataObject>) toSaveObjects.clone());
                 // Clear data objects to save set
@@ -541,11 +542,11 @@ public class CrawlerService implements ICrawlerService {
 
         public void waitForEndOfTask() {
             if (saveBulkTask != null) {
-                LOGGER.info("Waiting for previous task to end...");
+                LOGGER.info("Waiting for previous task to end (dataset {})...", datasetId);
                 try {
                     saveBulkTask.get();
                 } catch (InterruptedException | ExecutionException e) {
-                    LOGGER.error("Unable to save data objects", e);
+                    LOGGER.error(String.format("Unable to save data objects (dataset %d)", datasetId), e);
                 }
             }
         }
@@ -560,8 +561,11 @@ public class CrawlerService implements ICrawlerService {
 
         private Set<DataObject> set;
 
-        public SaveDataObjectsCallable(String tenant) {
+        private long datasetId;
+
+        public SaveDataObjectsCallable(String tenant, long datasetId) {
             this.tenant = tenant;
+            this.datasetId = datasetId;
         }
 
         public void setSet(Set<DataObject> set) {
@@ -571,7 +575,7 @@ public class CrawlerService implements ICrawlerService {
         @Override
         public Void call() throws Exception {
             if ((set != null) && !set.isEmpty()) {
-                LOGGER.info("Saving {} data objects...", set.size());
+                LOGGER.info("Saving {} data objects (dataset {})...", set.size(), datasetId);
                 runtimeTenantResolver.forceTenant(tenant);
                 esRepos.saveBulk(tenant, set);
                 LOGGER.info("...data objects saved");
