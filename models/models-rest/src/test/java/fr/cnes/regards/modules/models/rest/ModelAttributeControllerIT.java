@@ -244,7 +244,9 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testGetMappingForComputedAttribute() {
+        //lets add a package where we know there is plugin to get some results
         pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
+        //TODO: create some plugin confs, or not.....
         List<ResultMatcher> expectations= Lists.newArrayList();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(AttributeType.values().length)));

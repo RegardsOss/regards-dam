@@ -7,6 +7,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
+ * POJO allowing us to map which plugin configurations and plugin metadata can be mapped to which attribute type
+ *
  * @author Sylvain VISSIERE-GUERINET
  */
 public class TypeMetadataConfMapping {
@@ -15,7 +17,7 @@ public class TypeMetadataConfMapping {
 
     private Set<PluginConfiguration> pluginConfigurations;
 
-    private Set<PluginMetaData> pluginMetaData;
+    private Set<PluginMetaData> pluginMetaDatas;
 
     public TypeMetadataConfMapping() {
     }
@@ -24,7 +26,7 @@ public class TypeMetadataConfMapping {
             Set<PluginMetaData> pluginMetaData) {
         this.attrType = attrType;
         this.pluginConfigurations = pluginConfigurations;
-        this.pluginMetaData = pluginMetaData;
+        this.pluginMetaDatas = pluginMetaData;
     }
 
     public AttributeType getAttrType() {
@@ -43,11 +45,11 @@ public class TypeMetadataConfMapping {
         this.pluginConfigurations = pluginConfigurations;
     }
 
-    public Set<PluginMetaData> getPluginMetaData() {
-        return pluginMetaData;
+    public Set<PluginMetaData> getPluginMetaDatas() {
+        return pluginMetaDatas;
     }
 
-    public void setPluginMetaData(Set<PluginMetaData> pluginMetaData) {
-        this.pluginMetaData = pluginMetaData;
+    public void setPluginMetaDatas(Set<PluginMetaData> pluginMetaDatas) {
+        this.pluginMetaDatas = pluginMetaDatas;
     }
 }
