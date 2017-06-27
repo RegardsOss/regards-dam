@@ -372,7 +372,9 @@ public class DataSourceService implements IDataSourceService {
         dataSource.setPluginClassName(pPluginConf.getPluginClassName());
         dataSource.setFromClause(pPluginConf.getParameterValue(IDataSourcePlugin.FROM_CLAUSE));
         dataSource.setTableName(pPluginConf.getParameterValue(IDataSourceFromSingleTablePlugin.TABLE_PARAM));
-        dataSource.setRefreshRate(Integer.parseInt(pPluginConf.getParameterValue(IDataSourcePlugin.REFRESH_RATE)));
+        if(pPluginConf.getParameterValue(IDataSourcePlugin.REFRESH_RATE)!=null) {
+            dataSource.setRefreshRate(Integer.parseInt(pPluginConf.getParameterValue(IDataSourcePlugin.REFRESH_RATE)));
+        }
 
         String mapping = pPluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM);
         if (mapping != null) {

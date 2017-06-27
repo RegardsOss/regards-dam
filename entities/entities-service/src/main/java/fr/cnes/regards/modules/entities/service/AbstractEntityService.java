@@ -329,6 +329,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 } else {
                     // Compute key
                     String key = att.getName();
+                    if(!pNamespace.equals(Fragment.getDefaultName())) {
+                        key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(key);
+                    }
                     LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     pAttMap.put(key, att);
                 }
