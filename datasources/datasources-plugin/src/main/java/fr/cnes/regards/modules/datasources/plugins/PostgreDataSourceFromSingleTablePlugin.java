@@ -73,7 +73,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDataSourceFr
     /**
      * Ingestion refresh rate
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = "1800", optional = true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true)
     private Integer refreshRate;
 
     /**

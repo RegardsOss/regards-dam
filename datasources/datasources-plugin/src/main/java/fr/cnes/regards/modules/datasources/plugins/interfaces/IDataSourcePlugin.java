@@ -55,6 +55,11 @@ public interface IDataSourcePlugin {
     public static final String REFRESH_RATE = "refreshRate";
 
     /**
+     * Ingestion refresh rate default value in seconds
+     */
+    public static final String REFRESH_RATE_DEFAULT_VALUE = "86400";
+
+    /**
      * Retrieve the {@link DBConnection} used by the {@link Plugin}
      *
      * @return Retrieve a {@link DBConnection}

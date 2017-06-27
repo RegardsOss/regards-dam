@@ -70,8 +70,9 @@ public class PatternValidator extends AbstractAttributeValidator {
     }
 
     private void reject(Errors pErrors) {
-        pErrors.rejectValue(attributeKey, "error.value.not.conform.to.pattern",
-                            String.format("Value not conform to pattern %s.", restriction.getPattern()));
+        pErrors.reject("error.value.not.conform.to.pattern",
+                            String.format("Value of attribute %s is not conform to pattern %s.", attributeKey, restriction.getPattern()));
+
     }
 
 }

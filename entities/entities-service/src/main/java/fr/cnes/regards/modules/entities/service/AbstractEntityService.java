@@ -241,7 +241,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // missing and is added during the crawling process
         if (ComputationMode.GIVEN.equals(pModelAttribute.getMode())) {
             AttributeModel attModel = pModelAttribute.getAttribute();
-            String key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(attModel.getName());
+            String key = attModel.getName();
+            if(!attModel.getFragment().isDefaultFragment()) {
+                key=attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(key);
+            }
             LOGGER.debug(String.format("Computed key : \"%s\"", key));
 
             // Retrieve attribute
@@ -324,7 +327,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     buildAttributeMap(pAttMap, att.getName(), o.getValue());
                 } else {
                     // Compute key
-                    String key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(att.getName());
+                    String key = att.getName();
+                    if(!pNamespace.equals(Fragment.getDefaultName())) {
+                        key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(key);
+                    }
                     LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     pAttMap.put(key, att);
                 }
