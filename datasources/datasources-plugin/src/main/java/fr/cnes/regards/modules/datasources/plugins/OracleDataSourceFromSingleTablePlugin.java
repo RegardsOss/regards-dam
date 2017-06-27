@@ -67,7 +67,7 @@ public class OracleDataSourceFromSingleTablePlugin extends AbstractDataSourceFro
     /**
      * Ingestion refresh rate (in seconds)
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = "1800", optional = true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true)
     private Integer refreshRate;
 
     /**

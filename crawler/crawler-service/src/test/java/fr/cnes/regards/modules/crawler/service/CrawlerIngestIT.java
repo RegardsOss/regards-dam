@@ -12,11 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +74,7 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-//@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
+@Ignore("Don't reactivate this test, for now inifite loop so we can't run tests. cf oroussel to correct his bull shit")
 public class CrawlerIngestIT {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);

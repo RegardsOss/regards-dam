@@ -39,7 +39,7 @@ public class DataSource {
 
     private DataSourceModelMapping mapping;
 
-    private int refreshRate;
+    private Integer refreshRate;
 
     public Long getPluginConfigurationId() {
         return pluginConfigurationId;
@@ -97,11 +97,11 @@ public class DataSource {
         this.label = pLabel;
     }
 
-    public void setRefreshRate(int refreshRate) {
+    public void setRefreshRate(Integer refreshRate) {
         this.refreshRate = refreshRate;
     }
 
-    public int getRefreshRate() {
+    public Integer getRefreshRate() {
         return refreshRate;
     }
 }
