@@ -189,6 +189,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Load model by name if id not specified
         if ((model.getId() == null) && (model.getName() != null)) {
             model = modelService.getModelByName(model.getName());
+            pAbstractEntity.setModel(model);
         }
 
         Assert.notNull(model, "Model must be set on entity in order to be validated.");
