@@ -136,7 +136,10 @@ public class ValidationIT {
     private ISearchService searchService;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService datasetCrawlerService;
+
+    @Autowired
+    private IDatasetCrawlerService crawlerService;
 
     @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
@@ -191,6 +194,7 @@ public class ValidationIT {
         }
 
         crawlerService.setConsumeOnlyMode(true);
+        datasetCrawlerService.setConsumeOnlyMode(true);
 
         // rabbitVhostAdmin.bind(tenantResolver.getTenant());
         // amqpAdmin.purgeQueue(AbstractEntityEvent.class, false);

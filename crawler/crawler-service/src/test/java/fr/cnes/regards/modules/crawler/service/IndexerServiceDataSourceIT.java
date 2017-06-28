@@ -190,7 +190,7 @@ public class IndexerServiceDataSourceIT {
     private IIngesterService ingesterService;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService crawlerService;
 
     @Autowired
     private IAbstractEntityRepository<AbstractEntity> entityRepos;
