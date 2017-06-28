@@ -234,9 +234,6 @@ public class DatasetController implements IResourceController<Dataset> {
         // Validate dynamic model
         service.validate(pDataset, pResult, false);
 
-        // Convert OpenSearch subsetting clause
-        pDataset.setSubsettingClause(openSearchService.parse(pDataset.getOpenSearchSubsettingClause()));
-
         final Dataset dataSet = service.update(pDatasetId, pDataset, descriptionFile);
         final Resource<Dataset> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
