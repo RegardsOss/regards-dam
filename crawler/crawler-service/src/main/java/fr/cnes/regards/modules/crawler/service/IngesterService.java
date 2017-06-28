@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +75,7 @@ public class IngesterService implements IIngesterService {
     private IDatasourceIngestionRepository dsIngestionRepos;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private IDatasourceIngesterService datasourceIngester;
 
     @Autowired
     private IPluginService pluginService;
@@ -129,7 +130,8 @@ public class IngesterService implements IIngesterService {
     private boolean consumeOnlyMode = false;
 
     @Override
-    @Scheduled(fixedDelay = 1L) // Better than @Async, will be relaunched if stopped (who knows...)
+//    @Scheduled(fixedDelay = 1L) // Better than @Async, will be relaunched if stopped (who knows...)
+    @Async
     public void listenToPluginConfChange() {
 
         delay.set(INITIAL_DELAY_MS);
@@ -221,7 +223,7 @@ public class IngesterService implements IIngesterService {
                             dsIngestion.setSavedObjectsCount(0);
                             try {
                                 // Launch datasource ingestion
-                                IngestionResult summary = crawlerService
+                                IngestionResult summary = datasourceIngester
                                         .ingest(pluginService.loadPluginConfiguration(dsIngestion.getId()),
                                                 dsIngestion.getLastIngestDate());
                                 dsIngestion.setStatus(IngestionStatus.FINISHED);

@@ -100,7 +100,10 @@ public class IngesterGeometryServiceIT {
     private PluginConfiguration dBConnectionConf;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService crawlerService;
+
+    @Autowired
+    private IDatasetCrawlerService datasetCrawlerService;
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
@@ -182,6 +185,7 @@ public class IngesterGeometryServiceIT {
             esRepository.createIndex(TENANT);
         }
         crawlerService.setConsumeOnlyMode(true);
+        datasetCrawlerService.setConsumeOnlyMode(true);
         ingesterService.setConsumeOnlyMode(true);
 
         dsIngestionRepos.deleteAll();
