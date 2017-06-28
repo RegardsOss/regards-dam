@@ -128,7 +128,7 @@ public class CrawlerIngestIT {
     private ISearchService searchService;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService crawlerService;
 
     @Autowired
     private IIngesterService ingesterService;

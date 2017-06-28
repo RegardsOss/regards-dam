@@ -121,7 +121,10 @@ public class IngesterServiceIT {
     private ExternalData3Repository extData3Repos;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService crawlerService;
+
+    @Autowired
+    private IDatasetCrawlerService datasetCrawlerService;
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
@@ -232,6 +235,7 @@ public class IngesterServiceIT {
         }
 
         crawlerService.setConsumeOnlyMode(true);
+        datasetCrawlerService.setConsumeOnlyMode(true);
         ingesterService.setConsumeOnlyMode(true);
 
         dsIngestionRepos.deleteAll();

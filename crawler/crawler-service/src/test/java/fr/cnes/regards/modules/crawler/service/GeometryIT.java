@@ -52,7 +52,7 @@ public class GeometryIT {
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService crawlerService;
 
     private Model collectionModel;
 
