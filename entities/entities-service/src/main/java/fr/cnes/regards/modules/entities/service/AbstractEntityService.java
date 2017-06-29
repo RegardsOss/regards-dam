@@ -8,14 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -28,6 +21,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Attr;
 
 import com.google.common.collect.ImmutableSet;
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -46,11 +40,8 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.*;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -212,7 +203,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
         // Loop over model attributes ... to validate each attribute
         for (ModelAttrAssoc modelAtt : modAtts) {
-            checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable);
+            checkModelAttribute(attMap, modelAtt, pErrors, pManageAlterable, pAbstractEntity);
         }
 
         if (pErrors.hasErrors()) {
@@ -235,7 +226,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param pManageAlterable manage update or not
      */
     protected void checkModelAttribute(Map<String, AbstractAttribute<?>> pAttMap, ModelAttrAssoc pModelAttribute,
-            Errors pErrors, boolean pManageAlterable) {
+            Errors pErrors, boolean pManageAlterable, AbstractEntity abstractEntity) {
 
         // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
         // missing and is added during the crawling process
@@ -254,20 +245,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             if (att == null) {
                 String messageKey = "error.missing.required.attribute.message";
                 String defaultMessage = String.format("Missing required attribute \"%s\".", key);
-                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+//                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                if (!attModel.isOptional()) {
                     pErrors.reject(messageKey, defaultMessage);
                     return;
                 }
-                if (!pManageAlterable && !attModel.isOptional()) {
-                    pErrors.reject(messageKey, defaultMessage);
-                    return;
-                }
+//                if (!pManageAlterable && !attModel.isOptional()) {
+//                    pErrors.reject(messageKey, defaultMessage);
+//                    return;
+//                }
                 LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
                 return;
             }
 
             // Do validation
-            for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable)) {
+            for (Validator validator : getValidators(pModelAttribute, key, pManageAlterable, abstractEntity)) {
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, pErrors);
                 } else {
@@ -288,7 +280,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @return {@link Validator} list
      */
     protected List<Validator> getValidators(ModelAttrAssoc pModelAttribute, String pAttributeKey,
-            boolean pManageAlterable) {
+            boolean pManageAlterable, AbstractEntity abstractEntity) {
 
         AttributeModel attModel = pModelAttribute.getAttribute();
 
@@ -297,9 +289,13 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         validators.add(new ComputationModeValidator(pModelAttribute.getMode(), pAttributeKey));
         // Check alterable attribute
         // Update mode only :
-        // FIXME retrieve not alterable attribute from database before update
         if (pManageAlterable && !attModel.isAlterable()) {
-            validators.add(new NotAlterableAttributeValidator(pAttributeKey));
+            // lets retrieve the value of the property from db and check if its the same value.
+            AbstractEntity fromDb=entityRepository.findByIpId(abstractEntity.getIpId());
+            Optional<AbstractAttribute<?>> propertyFromDb = extractProperty(fromDb, attModel);
+            Optional<AbstractAttribute<?>> property = extractProperty(abstractEntity, attModel);
+            // retrieve entity from db, and then update the new one, but i do not have the entity here....
+             validators.add(new NotAlterableAttributeValidator(pAttributeKey, attModel, propertyFromDb, property));
         }
         // Check attribute type
         validators.add(new AttributeTypeValidator(attModel.getType(), pAttributeKey));
@@ -308,6 +304,20 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             validators.add(RestrictionValidatorFactory.getValidator(attModel.getRestriction(), pAttributeKey));
         }
         return validators;
+    }
+
+    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity,AttributeModel attribute) { //NOSONAR
+        if (attribute.getFragment().isDefaultFragment()) {
+            // the attribute is in the default fragment so it has at the root level of properties
+            return entity.getProperties().stream().filter(p -> p.getName().equals(attribute.getName()))
+                    .findFirst();
+        }
+        // the attribute is in a fragment so :
+        // filter the fragment property then filter the right property on fragment properties
+        return entity.getProperties().stream().filter(p -> (p instanceof ObjectAttribute) && p.getName()
+                .equals(attribute.getFragment().getName())).limit(1) // Only one fragment with searched name
+                .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
+                .filter(p -> p.getName().equals(attribute.getName())).findFirst();
     }
 
     /**

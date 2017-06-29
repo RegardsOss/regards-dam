@@ -124,7 +124,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Whether this attribute can be alterate by users
      */
     @Column
-    private boolean alterable;
+    private boolean alterable=true;
 
     /**
      * Whether this attribute is optional

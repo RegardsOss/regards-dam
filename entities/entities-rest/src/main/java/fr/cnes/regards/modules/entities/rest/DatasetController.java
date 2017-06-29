@@ -232,7 +232,7 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
             final BindingResult pResult) throws ModuleException, IOException {
         // Validate dynamic model
-        service.validate(pDataset, pResult, false);
+        service.validate(pDataset, pResult, true);
 
         final Dataset dataSet = service.update(pDatasetId, pDataset, descriptionFile);
         final Resource<Dataset> resource = toResource(dataSet);

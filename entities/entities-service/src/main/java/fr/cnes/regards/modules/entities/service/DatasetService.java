@@ -18,6 +18,7 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 
+import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -108,7 +109,12 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
         // getSubsettingClausePartToCheck() cannot be null
         try {
-            pDataset.setSubsettingClause(openSearchService.parse("q="+ UriUtils.encode(pDataset.getOpenSearchSubsettingClause(), "UTF-8")));
+            String stringClause=pDataset.getOpenSearchSubsettingClause();
+            if(Strings.isNullOrEmpty(stringClause)) {
+                pDataset.setSubsettingClause(ICriterion.all());
+            } else {
+                pDataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
+            }
         } catch (UnsupportedEncodingException e) {
             //if this exception happens its really an issue as the whole system relys on the fact UTF-8 is handled
             throw new RuntimeException(e);

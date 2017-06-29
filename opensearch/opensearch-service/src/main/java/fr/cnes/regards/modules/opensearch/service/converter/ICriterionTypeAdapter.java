@@ -12,6 +12,7 @@ import com.google.gson.stream.JsonWriter;
 
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.OpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
@@ -25,7 +26,7 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
     /**
      * The OpenSearch service building {@link ICriterion} from a request string. Autowired by Spring.
      */
-    private final OpenSearchService openSearchService;
+    private final IOpenSearchService openSearchService;
 
     /**
      * Gson. Autowired by Spring.
@@ -36,7 +37,7 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
      * @param pOpenSearchService The OpenSearch service building {@link ICriterion} from a request string. Autowired by Spring. Must not be null.
      * @param pGson Gson. Autowired by Spring. Must not be null.
      */
-    public ICriterionTypeAdapter(OpenSearchService pOpenSearchService, Gson pGson) {
+    public ICriterionTypeAdapter(IOpenSearchService pOpenSearchService, Gson pGson) {
         super();
         Assert.notNull(pOpenSearchService);
         Assert.notNull(pGson);
