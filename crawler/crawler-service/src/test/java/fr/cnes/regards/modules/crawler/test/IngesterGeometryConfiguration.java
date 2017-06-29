@@ -2,16 +2,17 @@ package fr.cnes.regards.modules.crawler.test;
 
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 @Configuration
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler.service", "fr.cnes.regards.modules.indexer",
@@ -23,6 +24,27 @@ import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfigura
 @PropertySource(value = { "classpath:test3.properties", "classpath:test3_${user.name}.properties" },
         ignoreResourceNotFound = true)
 public class IngesterGeometryConfiguration {
+
+    @Bean
+    public IAttributeModelClient attributeModelClient() {
+        return Mockito.mock(IAttributeModelClient.class);
+    }
+
+    @Bean
+    @Primary
+    public IOpenSearchService openSearchService() {
+        return Mockito.mock(IOpenSearchService.class);
+    }
+
+    @Bean
+    public IProjectsClient projectsClient() {
+        return Mockito.mock(IProjectsClient.class);
+    }
+
+    @Bean
+    public IModelAttrAssocClient modelAttrAssocClient() {
+        return Mockito.mock(IModelAttrAssocClient.class);
+    }
 
     @Bean
     public IResourceService getResourceService() {
