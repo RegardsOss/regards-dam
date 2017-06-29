@@ -45,10 +45,11 @@ import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 
 /**
- * Created by oroussel on 28/06/17.
+ * @author oroussel
  */
 @Service
 public class EntityIndexerService implements IEntityIndexerService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityIndexerService.class);
 
     /**
@@ -66,9 +67,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     @PersistenceContext
     private EntityManager em;
 
-
-
-
     /**
      * Load given entity from database and update Elasticsearch
      *
@@ -76,10 +74,12 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param ipId concerned entity IpId
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
      * into account
+     * @param forceDataObjectsUpdate in case of dataset update, if set to true, force update of all associated data
+     * objects else do it only when necessary (subCriteria, datasource, ... change)
      */
     @Override
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate) {
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate) {
         LOGGER.info("received msg for {}", ipId.toString());
         LOGGER.debug("Loading entity {}", ipId);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
@@ -103,26 +103,41 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
+            boolean needAssociatedDataObjectsUpdate = forceDataObjectsUpdate;
+            if (entity instanceof Dataset) {
+                Dataset dataset = (Dataset) entity;
+                needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
+                                                                                   esRepos.get(tenant, dataset));
+            }
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
-            if (entity instanceof Dataset) {
+            if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
         }
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
     }
 
-
+    /**
+     * Compare new dataset and current indexed one and determine if an update of all associated data objects is needed
+     * or no
+     */
+    private boolean needAssociatedDataObjectsUpdate(Dataset newDataset, Dataset curDataset) {
+        return !newDataset.getSubsettingClause().equals(curDataset.getSubsettingClause())
+                      || !newDataset.getGroups().equals(curDataset.getGroups());
+    }
 
     /**
      * Load given entities from database and update Elasticsearch
      *
      * @param tenant concerned tenant (also index intoES)
      * @param ipIds concerned entity IpIds
+     * @param forceDataObjectsUpdate in case of dataset update, if set to true, force update of all associated data
+     * objects else do it only when necessary (subCriteria, datasource, ... change)
      */
     @Override
     public void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate) {
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate) {
         LOGGER.info("received msg for " + Arrays.toString(ipIds));
         Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
         List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
@@ -138,9 +153,19 @@ public class EntityIndexerService implements IEntityIndexerService {
                 em.detach(dataset);
                 ((Dataset) dataset).getDataSource().setParameters(null);
             });
-            esRepos.saveBulk(tenant, entities);
-            entities.stream().filter(e -> e instanceof Dataset)
-                    .forEach(e -> manageDatasetUpdate((Dataset) e, lastUpdateDate, updateDate));
+            //esRepos.saveBulk(tenant, entities);
+            entities.stream().forEach(e -> {
+                boolean needAssociatedDataObjectsUpdate = forceDataObjectsUpdate;
+                if (e instanceof Dataset) {
+                    Dataset dataset = (Dataset) e;
+                    needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
+                                                                                       esRepos.get(tenant, dataset));
+                }
+                esRepos.save(tenant, e);
+                if ((e instanceof Dataset) && needAssociatedDataObjectsUpdate) {
+                    manageDatasetUpdate((Dataset) e, lastUpdateDate, updateDate);
+                }
+            });
         }
         // Entities to remove
         if (!toDeleteIpIds.isEmpty()) {
@@ -441,13 +466,17 @@ public class EntityIndexerService implements IEntityIndexerService {
         return true;
     }
 
+    @Override
     @MultitenantTransactional
-    public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate) {
+    public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
+            boolean forceDataObjectsUpdate) {
         if (datasets.size() == 1) {
-            this.updateEntityIntoEs(tenant, datasets.iterator().next().getIpId(), lastUpdateDate);
+            updateEntityIntoEs(tenant, datasets.iterator().next().getIpId(), lastUpdateDate, null,
+                               forceDataObjectsUpdate);
         } else {
-            this.updateEntitiesIntoEs(tenant, datasets.stream().map(Dataset::getIpId)
-                    .toArray(size -> new UniformResourceName[size]), lastUpdateDate);
+            updateEntitiesIntoEs(tenant,
+                                 datasets.stream().map(Dataset::getIpId).toArray(size -> new UniformResourceName[size]),
+                                 lastUpdateDate, null, forceDataObjectsUpdate);
         }
     }
 

@@ -14,27 +14,30 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 public interface IEntityIndexerService {
 
-    void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate);
-
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate) {
-        this.updateEntityIntoEs(tenant, ipId, null, updateDate);
+        this.updateEntityIntoEs(tenant, ipId, null, updateDate, false);
     }
 
+    void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate);
+
+
     default void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime updateDate) {
-        this.updateEntitiesIntoEs(tenant, ipIds, null, updateDate);
+        this.updateEntitiesIntoEs(tenant, ipIds, null, updateDate, false);
     }
 
     void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate);
+            OffsetDateTime updateDate, boolean forceDataObjectsUpdate);
 
     boolean createIndexIfNeeded(String tenant);
 
     /**
      * Transactional method updating a set of datasets
      * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
+     * @param forceDataObjectsUpdate true to force all associated data objects update
      */
-    void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate);
+    void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
+            boolean forceDataObjectsUpdate);
 
     int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
