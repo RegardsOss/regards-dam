@@ -49,7 +49,6 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
     @Configuration
     static class Conf {
 
-        public Conf() {}
         @Bean
         public IAttributeModelClient attributeModelClient() {
             return Mockito.mock(IAttributeModelClient.class);
