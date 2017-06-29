@@ -62,7 +62,6 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-//    @Scheduled(fixedDelay = 1L) // Better than @Async if the daemon stop, it is automatically relaunched
     @Async
     public void crawl() {
         super.crawl(self::doPoll);
@@ -107,7 +106,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
             if (!datasetsToUpdate.isEmpty()) {
                 // transactional method => use self, not this
-                entityIndexerService.updateDatasets(tenant, datasetsToUpdate, now);
+                entityIndexerService.updateDatasets(tenant, datasetsToUpdate, now, true);
             }
         }
 
