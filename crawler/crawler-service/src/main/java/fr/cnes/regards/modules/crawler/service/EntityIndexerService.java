@@ -316,7 +316,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         LOGGER.info("...computing OK");
 
         esRepos.save(tenant, dataset);
-        LOGGER.info("Datatset {} updated", dataset.getId());
+        LOGGER.info("Dataset {} updated", dataset.getId());
     }
 
     /**

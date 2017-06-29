@@ -139,7 +139,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {
             // transactional method => use self, not this
-            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, now, true);
+            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, date, true);
         }
 
         return new IngestionResult(now, savedObjectsCount);
