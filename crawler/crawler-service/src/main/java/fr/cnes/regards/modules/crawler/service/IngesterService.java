@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -232,7 +233,7 @@ public class IngesterService implements IIngesterService {
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (ModuleException | RuntimeException e) {
+                            } catch (ModuleException | RuntimeException | InterruptedException | ExecutionException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database

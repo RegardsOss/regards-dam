@@ -11,6 +11,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -288,7 +289,7 @@ public class CrawlerIngestIT {
     }
 
     @Test
-    public void test() throws ModuleException, IOException, InterruptedException {
+    public void test() throws ModuleException, IOException, InterruptedException, ExecutionException {
         LOGGER.info("********************* test CrawlerIngestIT ***********************************");
         final String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
