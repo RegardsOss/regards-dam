@@ -374,7 +374,7 @@ public class IndexerServiceDataSourceIT {
     @Requirement("REGARDS_DSL_DAM_COL_420")
     @Purpose("Requirement is for collection. Multi search field is used here on data objects but the code is the same")
     @Test
-    public void test() throws ModuleException, IOException, InterruptedException {
+    public void test() throws Exception {
         final String tenant = tenantResolver.getTenant();
 
         // Creation

@@ -6,8 +6,13 @@ package fr.cnes.regards.modules.crawler.service;
 import javax.annotation.PostConstruct;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -62,14 +67,14 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-//    @Scheduled(fixedDelay = 1L) // Better than @Async if the daemon stop, it is automatically relaunched
     @Async
     public void crawl() {
         super.crawl(self::doPoll);
     }
 
     @Override
-    public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime date) throws ModuleException {
+    public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime date)
+            throws ModuleException, InterruptedException, ExecutionException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
@@ -80,35 +85,61 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
         int savedObjectsCount = 0;
         OffsetDateTime now = OffsetDateTime.now();
+        ExecutorService executor = Executors.newFixedThreadPool(1);
         // If index doesn't exist, just create all data objects
-        if (!entityIndexerService.createIndexIfNeeded(tenant)) {
+        if (entityIndexerService.createIndexIfNeeded(tenant)) {
             Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
                                                           new PageRequest(0, IEsRepository.BULK_SIZE));
-            savedObjectsCount += entityIndexerService.createDataObjects(tenant, datasourceId, now, page.getContent());
+            final List<DataObject> list = page.getContent();
+            Future<Integer> task = executor
+                    .submit(() -> {
+                        runtimeTenantResolver.forceTenant(tenant);
+                        return entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+                    });
 
             while (page.hasNext()) {
                 page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
-                savedObjectsCount += entityIndexerService.createDataObjects(tenant, datasourceId, now, page.getContent());
+                savedObjectsCount += task.get();
+                final List<DataObject> otherList = page.getContent();
+                task = executor
+                        .submit(() -> {
+                            runtimeTenantResolver.forceTenant(tenant);
+                            return entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
+                        });
             }
+            savedObjectsCount += task.get();
         } else { // index exists, data objects may also exist
             Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
                                                           new PageRequest(0, IEsRepository.BULK_SIZE));
-            savedObjectsCount += entityIndexerService.mergeDataObjects(tenant, datasourceId, now, page.getContent());
+            final List<DataObject> list = page.getContent();
+            Future<Integer> task = executor
+                    .submit(() -> {
+                        runtimeTenantResolver.forceTenant(tenant);
+                        return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+                    });
 
             while (page.hasNext()) {
                 page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
-                savedObjectsCount += entityIndexerService.mergeDataObjects(tenant, datasourceId, now, page.getContent());
+                savedObjectsCount += task.get();
+                final List<DataObject> otherList = page.getContent();
+                task = executor
+                        .submit(() -> {
+                            runtimeTenantResolver.forceTenant(tenant);
+                            return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
+                        });
             }
-            // In case Dataset associated with datasourceId already exists, we must search for it and do as it has
-            // been updated (to update all associated data objects which have a lastUpdate date >= now)
-            SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
-                                                                       Dataset.class);
-            Set<Dataset> datasetsToUpdate = new HashSet<>();
-            esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
-            if (!datasetsToUpdate.isEmpty()) {
-                // transactional method => use self, not this
-                entityIndexerService.updateDatasets(tenant, datasetsToUpdate, now);
-            }
+            savedObjectsCount += task.get();
+        }
+        // In case Dataset associated with datasourceId already exists (or had been created between datasrouyce creation and its ingestion
+        // , we must search for it and do as it has
+        // been updated (to update all associated data objects which have a lastUpdate date >= now)
+        SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
+                                                                   Dataset.class);
+        Set<Dataset> datasetsToUpdate = new HashSet<>();
+        esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
+        if (!datasetsToUpdate.isEmpty()) {
+            // transactional method => use self, not this
+            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, now, true);
         }
 
         return new IngestionResult(now, savedObjectsCount);

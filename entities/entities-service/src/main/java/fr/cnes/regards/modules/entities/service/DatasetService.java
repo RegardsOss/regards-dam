@@ -4,12 +4,11 @@
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.UnsupportedEncodingException;
+import javax.persistence.EntityManager;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,6 @@ import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenE
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
@@ -89,6 +87,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         if (pDataset.getDataSource() == null) {
             // If any DataSource, set the default DataSource
             pDataset.setDataSource(dataSourceService.getInternalDataSource());
+            // TODO ? which data model ?
         } else {
             // Verify the existence of the DataSource associated to the Dataset
             final DataSource src = dataSourceService.getDataSource(pDataset.getDataSource().getId());

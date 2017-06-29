@@ -7,7 +7,7 @@ import java.util.List;
  * ICriterion aggregator
  * @author oroussel
  */
-public abstract class AbstractMultiCriterion {
+public abstract class AbstractMultiCriterion implements ICriterion {
 
     /**
      * Criterions
@@ -16,10 +16,6 @@ public abstract class AbstractMultiCriterion {
 
     protected AbstractMultiCriterion() {
         super();
-    }
-
-    public void addCriterion(ICriterion pCriterion) {
-        this.criterions.add(pCriterion);
     }
 
     public List<ICriterion> getCriterions() {
