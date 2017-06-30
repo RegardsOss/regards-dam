@@ -214,13 +214,13 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH_FILE, expectations,
-                          "Could not fetch dataset description file", dataSet21.getId());
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
+                          "Could not fetch dataset description file", dataSet21.getIpId());
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH_FILE, expectations,
-                             "Could not delete dataset description file", dataSet21.getId());
+        performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
+                             "Could not delete dataset description file", dataSet21.getIpId());
     }
 
     protected MockHttpServletRequestBuilder getRequestBuilder(final String pAuthToken, final HttpMethod pHttpMethod,

@@ -101,7 +101,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
     @Test
     public void testFindOneDescription() {
         LOG.info("START OF find one DescriptionFile");
-        Dataset result = datasetRepo.findOneDescriptionFile(dsDescription.getId());
+        Dataset result = datasetRepo.findOneDescriptionFile(dsDescription.getIpId());
         LOG.info("END OF find one DescriptionFile");
         Assert.assertNotNull(result.getDescriptionFile());
         Assert.assertArrayEquals(description.getBytes(Charset.forName("utf-8")),

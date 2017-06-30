@@ -181,15 +181,9 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                     LOGGER.debug("CONSUME ONLY MODE TRUE !!!!");
                     return atLeastOnePoll;
                 }
-                // Only one entity
-                if (ipIds.length == 1) {
-                    inProgress = true;
-                    LOGGER.info("Update entity into Elasticsearch {}", ipIds[0]);
-                    entityIndexerService.updateEntityIntoEs(tenant, ipIds[0], OffsetDateTime.now());
-                } else if (ipIds.length > 1) { // several entities at once
-                    inProgress = true;
-                    entityIndexerService.updateEntitiesIntoEs(tenant, ipIds, OffsetDateTime.now());
-                }
+                inProgress = true;
+                OffsetDateTime now = OffsetDateTime.now();
+                Arrays.stream(ipIds).forEach(ipId -> entityIndexerService.updateEntityIntoEs(tenant, ipId, now));
                 somethingDone = true;
             }
         }
@@ -197,33 +191,26 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     }
 
 
-//    @Override
     public boolean working() { // NOSONAR : test purpose
         return delay.get() < MAX_DELAY_MS;
     }
 
-//    @Override
     public boolean workingHard() { // NOSONAR : test purpose
         return delay.get() == INITIAL_DELAY_MS;
     }
 
-//    @Override
     public boolean strolling() { // NOSONAR : test purpose
         return delay.get() == MAX_DELAY_MS;
     }
 
-//    @Override
     public void startWork() { // NOSONAR : test purpose
         // If crawler is busy, wait for it
-        while (working()) {
-            ;
-        }
+        while (working());
         scheduledWork = true;
         somethingDone = false;
         LOGGER.info("start working...");
     }
 
-//    @Override
     public void waitForEndOfWork() throws InterruptedException { // NOSONAR : test purpose
         if (!scheduledWork) {
             throw new IllegalStateException("Before waiting, startWork() must be called");
@@ -239,7 +226,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
         scheduledWork = false;
     }
 
-//    @Override
     public void setConsumeOnlyMode(boolean b) {
         consumeOnlyMode = b;
     }

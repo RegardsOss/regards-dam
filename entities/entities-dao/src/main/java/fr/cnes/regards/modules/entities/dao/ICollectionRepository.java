@@ -25,8 +25,8 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
     List<Collection> findByGroups(String group);
 
 
-    @Query("from Collection col left join fetch col.descriptionFile where col.id=:id")
-    Collection findOneWithDescriptionFile(@Param("id") Long collectionId);
+    @Query("from Collection col left join fetch col.descriptionFile where col.ipId=:ipId")
+    Collection findOneWithDescriptionFile(@Param("ipId") UniformResourceName collectionIpId);
 
 
     /**

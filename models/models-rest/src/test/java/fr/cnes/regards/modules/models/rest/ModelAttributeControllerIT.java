@@ -249,7 +249,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         //TODO: create some plugin confs, or not.....
         List<ResultMatcher> expectations= Lists.newArrayList();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(AttributeType.values().length)));
+        expectations.add(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(AttributeType.values().length)));
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.COMPUTATION_TYPE_MAPPING,
                           expectations, "Should return mappings possible for computed attribute");
     }
