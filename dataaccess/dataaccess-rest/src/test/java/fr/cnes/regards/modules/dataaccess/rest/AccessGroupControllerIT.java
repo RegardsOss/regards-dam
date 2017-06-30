@@ -13,6 +13,9 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,10 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * REST module controller
@@ -38,6 +45,31 @@ import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 @MultitenantTransactional
 @TestPropertySource("classpath:test.properties")
 public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
+
+    @Configuration
+    static class Conf {
+
+        @Bean
+        public IAttributeModelClient attributeModelClient() {
+            return Mockito.mock(IAttributeModelClient.class);
+        }
+
+        @Bean
+        @Primary
+        public IOpenSearchService openSearchService() {
+            return Mockito.mock(IOpenSearchService.class);
+        }
+
+        @Bean
+        public IProjectsClient projectsClient() {
+            return Mockito.mock(IProjectsClient.class);
+        }
+
+        @Bean
+        public IModelAttrAssocClient modelAttrAssocClient() {
+            return Mockito.mock(IModelAttrAssocClient.class);
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessGroupControllerIT.class);
 

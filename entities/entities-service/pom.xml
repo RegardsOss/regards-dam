@@ -50,6 +50,10 @@
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-domain</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.opensearch</groupId>
+			<artifactId>opensearch-service</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
@@ -71,5 +75,5 @@
 			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+    </dependencies>
 </project>

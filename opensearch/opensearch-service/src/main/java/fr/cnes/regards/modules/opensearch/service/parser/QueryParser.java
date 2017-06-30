@@ -49,7 +49,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
     /**
      * Default field. Use a random string because we want to disable the lucene's default field behaviour.
      */
-    private static final String DEFAULT_FIELD = "defaultField";
+    private static final String DEFAULT_FIELD = "label";
 
     /**
      * Constructor

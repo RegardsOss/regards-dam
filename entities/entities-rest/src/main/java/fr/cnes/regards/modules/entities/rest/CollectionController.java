@@ -142,7 +142,7 @@ public class CollectionController implements IResourceController<Collection> {
             final BindingResult pResult) throws ModuleException, IOException {
 
         // Validate dynamic model
-        collectionService.validate(pCollection, pResult, false);
+        collectionService.validate(pCollection, pResult, true);
 
         final Collection collection = collectionService.update(pCollectionId, pCollection, descriptionFile);
         final Resource<Collection> resource = toResource(collection);

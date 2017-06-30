@@ -3,6 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.UnsupportedEncodingException;
 import javax.persistence.EntityManager;
 import java.util.Collection;
 import java.util.List;
@@ -12,8 +13,11 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
+
+import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -41,6 +45,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
  * Specific EntityService for Datasets
@@ -56,16 +61,19 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IDataSourceService dataSourceService;
 
+    private final IOpenSearchService openSearchService;
+
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
             IModelAttrAssocService pModelAttributeService, IDataSourceService pDataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
             EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IDescriptionFileRepository descriptionFileRepository) {
+            IDescriptionFileRepository descriptionFileRepository,IOpenSearchService openSearchService) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
+        this.openSearchService=openSearchService;
     }
 
     /**
@@ -99,6 +107,17 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      */
     private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
         // getSubsettingClausePartToCheck() cannot be null
+        try {
+            String stringClause=pDataset.getOpenSearchSubsettingClause();
+            if(Strings.isNullOrEmpty(stringClause)) {
+                pDataset.setSubsettingClause(ICriterion.all());
+            } else {
+                pDataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
+            }
+        } catch (UnsupportedEncodingException e) {
+            //if this exception happens its really an issue as the whole system relys on the fact UTF-8 is handled
+            throw new RuntimeException(e);
+        }
         final ICriterion subsettingCriterion = pDataset.getSubsettingClausePartToCheck();
         // To avoid loading models when not necessary
         if (!subsettingCriterion.equals(ICriterion.all())) {
