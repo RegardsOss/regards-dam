@@ -185,13 +185,13 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_ID_PATH_FILE,
-                          expectations, "Could not fetch collection description file", collection.getId());
+        performDefaultGet(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE,
+                          expectations, "Could not fetch collection description file", collection.getIpId());
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultDelete(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_ID_PATH_FILE,
-                             expectations, "Could not delete collection description file", collection.getId());
+        performDefaultDelete(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE,
+                             expectations, "Could not delete collection description file", collection.getIpId());
 
     }
 

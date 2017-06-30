@@ -170,19 +170,19 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    public DescriptionFile retrieveDescription(Long datasetId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetId);
+    public DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
+        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
         if (ds == null) {
-            throw new EntityNotFoundException(datasetId, Dataset.class);
+            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
         }
         return ds.getDescriptionFile();
     }
 
     @Override
-    public void removeDescription(Long datasetId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetId);
+    public void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
+        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
         if (ds == null) {
-            throw new EntityNotFoundException(datasetId, Dataset.class);
+            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
         }
         DescriptionFile desc = ds.getDescriptionFile();
         ds.setDescriptionFile(null);

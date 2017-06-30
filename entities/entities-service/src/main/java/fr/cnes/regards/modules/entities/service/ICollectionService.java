@@ -6,6 +6,7 @@ package fr.cnes.regards.modules.entities.service;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Qualified interface for Collection entity service
@@ -13,7 +14,7 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
  */
 public interface ICollectionService extends IEntityService<Collection> {
 
-    DescriptionFile retrieveDescription(Long pCollectionId) throws EntityNotFoundException;
+    DescriptionFile retrieveDescription(UniformResourceName collectionIpId) throws EntityNotFoundException;
 
-    void removeDescription(Long collectionId) throws EntityNotFoundException;
+    void removeDescription(UniformResourceName collectionIpId) throws EntityNotFoundException;
 }

@@ -20,6 +20,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -42,20 +43,20 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
     }
 
     @Override
-    public DescriptionFile retrieveDescription(Long collectionId) throws EntityNotFoundException {
-        Collection col=collectionRepository.findOneWithDescriptionFile(collectionId);
+    public DescriptionFile retrieveDescription(UniformResourceName collectionIpId) throws EntityNotFoundException {
+        Collection col=collectionRepository.findOneWithDescriptionFile(collectionIpId);
         if(col==null) {
-            throw new EntityNotFoundException(collectionId, Dataset.class);
+            throw new EntityNotFoundException(collectionIpId.toString(), Dataset.class);
         }
         DescriptionFile desc=col.getDescriptionFile();
         return desc;
     }
 
     @Override
-    public void removeDescription(Long collectionId) throws EntityNotFoundException {
-        Collection col=collectionRepository.findOneWithDescriptionFile(collectionId);
+    public void removeDescription(UniformResourceName collectionIpId) throws EntityNotFoundException {
+        Collection col=collectionRepository.findOneWithDescriptionFile(collectionIpId);
         if(col==null) {
-            throw new EntityNotFoundException(collectionId, Dataset.class);
+            throw new EntityNotFoundException(collectionIpId.toString(), Dataset.class);
         }
         DescriptionFile desc=col.getDescriptionFile();
         col.setDescriptionFile(null);
