@@ -17,6 +17,9 @@ public class User {
     @NotNull
     private String email;
 
+    public User() { // NOSONAR - Deserialization
+    }
+
     /**
      * @param pDbData
      */
