@@ -68,7 +68,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
             case LONG:
             case LONG_ARRAY:
                 Long asLong = Long.parseLong(value);
-                return ICriterion.eq(field, asLong, asLong - Math.nextDown(asLong));
+                return ICriterion.eq(field, asLong);
             case STRING:
                 return ICriterion.eq(field, value);
             case STRING_ARRAY:
