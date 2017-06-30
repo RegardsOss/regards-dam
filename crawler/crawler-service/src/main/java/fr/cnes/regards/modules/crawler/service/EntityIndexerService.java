@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -74,14 +73,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param ipId concerned entity IpId
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
      * into account
-     * @param forceDataObjectsUpdate in case of dataset update, if set to true, force update of all associated data
-     * objects else do it only when necessary (subCriteria, datasource, ... change)
      */
     @Override
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceDataObjectsUpdate) {
-        LOGGER.info("received msg for {}", ipId.toString());
-        LOGGER.debug("Loading entity {}", ipId);
+            OffsetDateTime updateDate) {
+        LOGGER.info("Updating {}", ipId.toString());
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
@@ -91,20 +87,23 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
         } else { // entity has been created or updated, it must be saved into ES
-            // First, check if index exists
-            if (!esRepos.indexExists(tenant)) {
-                createIndexIfNeeded(tenant);
-            }
+            createIndexIfNeeded(tenant);
             // Remove parameters of dataset datasource to avoid expose security values
             if (entity instanceof Dataset) {
+                Dataset dataset = (Dataset) entity;
                 // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHed)
                 em.detach(entity);
-                ((Dataset) entity).getDataSource().setParameters(null);
+                if (dataset.getDataSource() != null) {
+                    ((Dataset) entity).getDataSource().setParameters(null);
+                }
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
-            boolean needAssociatedDataObjectsUpdate = forceDataObjectsUpdate;
-            if (entity instanceof Dataset) {
+            // If lastUpdateDate is provided, this means that update comes from an ingestion, in this case all data
+            // objects must be updated
+            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null);
+            // A dataset change may need associated data objects update
+            if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
                 Dataset dataset = (Dataset) entity;
                 needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
                                                                                    esRepos.get(tenant, dataset));
@@ -123,55 +122,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      * or no
      */
     private boolean needAssociatedDataObjectsUpdate(Dataset newDataset, Dataset curDataset) {
-        return !newDataset.getSubsettingClause().equals(curDataset.getSubsettingClause())
-                      || !newDataset.getGroups().equals(curDataset.getGroups());
-    }
-
-    /**
-     * Load given entities from database and update Elasticsearch
-     *
-     * @param tenant concerned tenant (also index intoES)
-     * @param ipIds concerned entity IpIds
-     * @param forceDataObjectsUpdate in case of dataset update, if set to true, force update of all associated data
-     * objects else do it only when necessary (subCriteria, datasource, ... change)
-     */
-    @Override
-    public void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceDataObjectsUpdate) {
-        LOGGER.info("received msg for " + Arrays.toString(ipIds));
-        Set<UniformResourceName> toDeleteIpIds = Sets.newHashSet(ipIds);
-        List<AbstractEntity> entities = entitiesService.loadAllWithRelations(ipIds);
-        entities.forEach(e -> toDeleteIpIds.remove(e.getIpId()));
-        // Entities to save
-        if (!entities.isEmpty()) {
-            if (!esRepos.indexExists(tenant)) {
-                createIndexIfNeeded(tenant);
-            }
-            // Remove pluginConf parameters from datasets to avoid jsonify into Elasticsearch
-            entities.stream().filter(e -> e instanceof Dataset).forEach(dataset -> {
-                // Don't forget to detach dataset in order to cascade.Detach datasource
-                em.detach(dataset);
-                ((Dataset) dataset).getDataSource().setParameters(null);
-            });
-            //esRepos.saveBulk(tenant, entities);
-            entities.stream().forEach(e -> {
-                boolean needAssociatedDataObjectsUpdate = forceDataObjectsUpdate;
-                if (e instanceof Dataset) {
-                    Dataset dataset = (Dataset) e;
-                    needAssociatedDataObjectsUpdate |= needAssociatedDataObjectsUpdate(dataset,
-                                                                                       esRepos.get(tenant, dataset));
-                }
-                esRepos.save(tenant, e);
-                if ((e instanceof Dataset) && needAssociatedDataObjectsUpdate) {
-                    manageDatasetUpdate((Dataset) e, lastUpdateDate, updateDate);
-                }
-            });
-        }
-        // Entities to remove
-        if (!toDeleteIpIds.isEmpty()) {
-            toDeleteIpIds.forEach(ipId -> esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString()));
-        }
-        LOGGER.info(Arrays.toString(ipIds) + " managed into Elasticsearch");
+        return !newDataset.getSubsettingClause().equals(curDataset.getSubsettingClause()) || !newDataset.getGroups()
+                .equals(curDataset.getGroups());
     }
 
     /**
@@ -470,14 +422,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     @MultitenantTransactional
     public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate) {
-        if (datasets.size() == 1) {
-            updateEntityIntoEs(tenant, datasets.iterator().next().getIpId(), lastUpdateDate, null,
-                               forceDataObjectsUpdate);
-        } else {
-            updateEntitiesIntoEs(tenant,
-                                 datasets.stream().map(Dataset::getIpId).toArray(size -> new UniformResourceName[size]),
-                                 lastUpdateDate, null, forceDataObjectsUpdate);
-        }
+        OffsetDateTime now = OffsetDateTime.now();
+        datasets.forEach(
+                dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now));
     }
 
     @Override
