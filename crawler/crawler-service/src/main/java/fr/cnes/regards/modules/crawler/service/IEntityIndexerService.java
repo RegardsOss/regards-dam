@@ -14,21 +14,31 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 public interface IEntityIndexerService {
 
+    /**
+     * Update entity into Elasticsearch
+     * @param tenant concerned tenant
+     * @param ipId concerned entity id
+     * @param updateDate current update date (usually now)
+     */
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate) {
-        this.updateEntityIntoEs(tenant, ipId, null, updateDate, false);
+        this.updateEntityIntoEs(tenant, ipId, null, updateDate);
     }
 
+    /**
+     * Update entity into Elasticsearch
+     * @param tenant concerned tenant
+     * @param ipId concerned entity id
+     * @param lastUpdateDate last ingestion update date
+     * @param updateDate current update date (usually now)
+     */
     void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceDataObjectsUpdate);
+            OffsetDateTime updateDate);
 
-
-    default void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime updateDate) {
-        this.updateEntitiesIntoEs(tenant, ipIds, null, updateDate, false);
-    }
-
-    void updateEntitiesIntoEs(String tenant, UniformResourceName[] ipIds, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceDataObjectsUpdate);
-
+    /**
+     * Create index it doesn't exist
+     * @param tenant concerned tenant
+     * @return true if a creation has been done
+     */
     boolean createIndexIfNeeded(String tenant);
 
     /**
@@ -39,7 +49,23 @@ public interface IEntityIndexerService {
     void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate);
 
+    /**
+     * Create given data objects into Elasticsearch
+     * @param tenant concerned tenant
+     * @param datasourceId id of data source from where data objects come
+     * @param now update date (usually now)
+     * @param objects objects to save
+     * @return number of objects effectively created
+     */
     int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
+    /**
+     * Merge given data objects into Elasticsearch
+     * @param tenant concerned tenant
+     * @param datasourceId id of data source from where data objects come
+     * @param now update date (usually now)
+     * @param objects objects to save
+     * @return number of objects effectively saved
+     */
     int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 }

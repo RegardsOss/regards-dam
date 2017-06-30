@@ -73,7 +73,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime date)
+    public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime lastUpdateDate)
             throws ModuleException, InterruptedException, ExecutionException {
         String tenant = runtimeTenantResolver.getTenant();
 
@@ -88,7 +88,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         ExecutorService executor = Executors.newFixedThreadPool(1);
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
-            Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
+            Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                           new PageRequest(0, IEsRepository.BULK_SIZE));
             final List<DataObject> list = page.getContent();
             Future<Integer> task = executor
@@ -98,7 +98,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     });
 
             while (page.hasNext()) {
-                page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
+                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
                 savedObjectsCount += task.get();
                 final List<DataObject> otherList = page.getContent();
                 task = executor
@@ -109,7 +109,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             }
             savedObjectsCount += task.get();
         } else { // index exists, data objects may also exist
-            Page<DataObject> page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId,
+            Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                           new PageRequest(0, IEsRepository.BULK_SIZE));
             final List<DataObject> list = page.getContent();
             Future<Integer> task = executor
@@ -119,7 +119,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
                     });
 
             while (page.hasNext()) {
-                page = findAllFromDatasource(date, tenant, dsPlugin, datasourceId, page.nextPageable());
+                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
                 savedObjectsCount += task.get();
                 final List<DataObject> otherList = page.getContent();
                 task = executor
@@ -139,7 +139,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {
             // transactional method => use self, not this
-            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, date, true);
+            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true);
         }
 
         return new IngestionResult(now, savedObjectsCount);
