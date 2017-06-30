@@ -26,7 +26,10 @@ public class DataObject extends AbstractDataEntity {
      */
     private String dataSourceId;
 
-    private Set<Long> datasetModelIds = new HashSet<>();
+    /**
+     * Denormalization : allows to retrieve dataobjects related to models (i.e. types) of dataset
+     */
+    private final Set<Long> datasetModelIds = new HashSet<>();
 
     public DataObject(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant, UUID.randomUUID(), 1),
