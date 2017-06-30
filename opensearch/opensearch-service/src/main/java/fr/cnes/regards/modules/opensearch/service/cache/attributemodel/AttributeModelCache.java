@@ -209,7 +209,7 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         if (attModel == null) {
             String errorMessage = String.format("Unknown parameter %s for tenant %s", pName, tenant);
             LOGGER.error(errorMessage);
-            throw new OpenSearchUnknownParameter(errorMessage);
+             throw new OpenSearchUnknownParameter(errorMessage);
         }
 
         return attModel;

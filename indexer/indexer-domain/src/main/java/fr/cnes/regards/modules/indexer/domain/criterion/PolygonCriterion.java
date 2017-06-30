@@ -1,5 +1,7 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
+import java.util.Arrays;
+
 /**
  * Geometric polygon criterion.
  * @author oroussel
@@ -24,4 +26,20 @@ public class PolygonCriterion implements ICriterion {
         return pVisitor.visitPolygonCriterion(this);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        PolygonCriterion that = (PolygonCriterion) o;
+        return Arrays.deepEquals(coordinates, that.coordinates);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(coordinates);
+    }
 }

@@ -6,10 +6,14 @@ package fr.cnes.regards.modules.dataaccess.client;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,10 @@ import fr.cnes.regards.framework.feign.TokenClientProvider;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  *
@@ -34,6 +42,31 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 @TestPropertySource("classpath:test.properties")
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
 public class IAccessGroupClientIT extends AbstractRegardsWebIT {
+
+    @Configuration
+    static class Conf {
+
+        @Bean
+        public IAttributeModelClient attributeModelClient() {
+            return Mockito.mock(IAttributeModelClient.class);
+        }
+
+        @Bean
+        @Primary
+        public IOpenSearchService openSearchService() {
+            return Mockito.mock(IOpenSearchService.class);
+        }
+
+        @Bean
+        public IProjectsClient projectsClient() {
+            return Mockito.mock(IProjectsClient.class);
+        }
+
+        @Bean
+        public IModelAttrAssocClient modelAttrAssocClient() {
+            return Mockito.mock(IModelAttrAssocClient.class);
+        }
+    }
 
     /**
      * Class logger

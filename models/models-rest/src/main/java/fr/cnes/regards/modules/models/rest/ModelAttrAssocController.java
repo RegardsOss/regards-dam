@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.cnes.regards.framework.hateoas.IResourceController;
-import fr.cnes.regards.framework.hateoas.IResourceService;
-import fr.cnes.regards.framework.hateoas.LinkRels;
-import fr.cnes.regards.framework.hateoas.MethodParamFactory;
+import fr.cnes.regards.framework.hateoas.*;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.EntityType;
@@ -90,8 +87,8 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @ResourceAccess(
             description = "endpoint allowing to retrieve which plugin configuration can be used for which attribute type with which possible metadata")
     @RequestMapping(path = COMPUTATION_TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<TypeMetadataConfMapping>> getMappingForComputedAttribute() {
-        return ResponseEntity.ok(modelAttrAssocService.retrievePossibleMappingsForComputed());
+    public ResponseEntity<List<Resource<TypeMetadataConfMapping>>> getMappingForComputedAttribute() {
+        return ResponseEntity.ok(HateoasUtils.wrapList(modelAttrAssocService.retrievePossibleMappingsForComputed()));
     }
 
     /**
@@ -184,7 +181,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * space, not default one).
      *
      * @param pModelId model identifier
-     * @param pFragmentId fragment identifier
+     * @param pFragment fragment
      * @return linked model attributes
      * @throws ModuleException if binding cannot be done
      */

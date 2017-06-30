@@ -49,17 +49,18 @@ public class QueryParser extends QueryParserHelper implements IParser {
     /**
      * Default field. Use a random string because we want to disable the lucene's default field behaviour.
      */
-    private static final String DEFAULT_FIELD = "defaultField";
+    private static final String DEFAULT_FIELD = "label";
 
     /**
      * Constructor
-     * @param pAttributeModelCache provides access to {@link AttributeModel}s with caching facilities
+     * @param finder provides access to {@link AttributeModel}s with caching facilities
      */
     public QueryParser(IAttributeFinder finder) {
         super(new StandardQueryConfigHandler(), new StandardSyntaxParser(),
               new StandardQueryNodeProcessorPipeline(null), new RegardsQueryTreeBuilder(finder));
         setEnablePositionIncrements(true);
         setAllowLeadingWildcard(true);
+        setLowercaseExpandedTerms(false);
     }
 
     @Override
@@ -97,6 +98,13 @@ public class QueryParser extends QueryParserHelper implements IParser {
      */
     public void setAllowLeadingWildcard(final boolean allowLeadingWildcard) {
         getQueryConfigHandler().set(ConfigurationKeys.ALLOW_LEADING_WILDCARD, allowLeadingWildcard);
+    }
+
+    /**
+     * Enable or disable lowercase regexp transformation
+     */
+    public void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
+        getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
     }
 
     /**

@@ -407,8 +407,8 @@ public interface IEsRepository {
      * @param searchKey the search key
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
-     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given
-     *            value type</b>
+     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too
+     *                (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */

@@ -49,7 +49,7 @@ import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
-@Ignore("Baltringue inside !")
+@Ignore
 public class QueryParserTest {
 
     /**
@@ -190,7 +190,7 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, crit.getName());
-        Assert.assertEquals(MatchType.STARTS_WITH, crit.getType());
+        Assert.assertEquals(MatchType.ENDS_WITH, crit.getType());
         Assert.assertEquals("potter", crit.getValue());
     }
 
@@ -208,16 +208,16 @@ public class QueryParserTest {
 
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, crit.getName());
-        Assert.assertEquals(MatchType.ENDS_WITH, crit.getType());
+        Assert.assertEquals(MatchType.STARTS_WITH, crit.getType());
         Assert.assertEquals("harry", crit.getValue());
     }
 
     @Test
     @Purpose("Tests queries like title:*rry*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
-    public void wildcardsAound() throws OpenSearchParseException {
+    public void wildcardsAround() throws OpenSearchParseException {
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
-        final String val = "*rry*";
+        final String val = "*RRY*";
         final String term = key + ":" + val;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
@@ -227,7 +227,7 @@ public class QueryParserTest {
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(key, crit.getName());
         Assert.assertEquals(MatchType.CONTAINS, crit.getType());
-        Assert.assertEquals("rry", crit.getValue());
+        Assert.assertEquals("RRY", crit.getValue());
     }
 
     @Test(expected = OpenSearchParseException.class)

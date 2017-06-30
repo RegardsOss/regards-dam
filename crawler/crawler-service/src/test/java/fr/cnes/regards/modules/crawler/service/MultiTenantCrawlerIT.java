@@ -67,7 +67,7 @@ public class MultiTenantCrawlerIT {
     private IRuntimeTenantResolver tenantResolver;
 
     @Autowired
-    private ICrawlerService crawlerService;
+    private ICrawlerAndIngesterService crawlerService;
 
     @Autowired
     private EsRepository esRepos;

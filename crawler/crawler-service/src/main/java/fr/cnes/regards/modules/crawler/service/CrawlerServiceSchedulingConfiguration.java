@@ -5,6 +5,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -15,7 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
+@EnableAsync
 @Profile("!noschedule")
 public class CrawlerServiceSchedulingConfiguration {
-
 }
