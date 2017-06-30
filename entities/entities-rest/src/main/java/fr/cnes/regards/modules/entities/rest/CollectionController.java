@@ -46,7 +46,7 @@ public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
 
-    public static final String COLLECTION_ID_PATH_FILE = "/{collection_id}/file";
+    public static final String COLLECTION_IPID_PATH_FILE = "/{collection_ipId}/file";
 
     /**
      * Service
@@ -93,13 +93,13 @@ public class CollectionController implements IResourceController<Collection> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = COLLECTION_ID_PATH_FILE)
+    @RequestMapping(method = RequestMethod.GET, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a collection description file content")
-    public void retrieveCollectionDescription(@PathVariable("collection_id") Long pCollectionId,
+    public void retrieveCollectionDescription(@PathVariable("collection_ipId") String collectionIpId,
             HttpServletResponse response) throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        DescriptionFile file = collectionService.retrieveDescription(pCollectionId);
+        DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
@@ -112,11 +112,11 @@ public class CollectionController implements IResourceController<Collection> {
         }
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_ID_PATH_FILE)
+    @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")
-    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("collection_id") Long pDatasetId)
+    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("collection_ipId") String collectionIpId)
             throws EntityNotFoundException {
-        collectionService.removeDescription(pDatasetId);
+        collectionService.removeDescription(UniformResourceName.fromString(collectionIpId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -142,7 +142,7 @@ public class CollectionController implements IResourceController<Collection> {
             final BindingResult pResult) throws ModuleException, IOException {
 
         // Validate dynamic model
-        collectionService.validate(pCollection, pResult, false);
+        collectionService.validate(pCollection, pResult, true);
 
         final Collection collection = collectionService.update(pCollectionId, pCollection, descriptionFile);
         final Resource<Collection> resource = toResource(collection);

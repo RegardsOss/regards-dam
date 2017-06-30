@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.google.common.net.HttpHeaders;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -81,7 +82,7 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
-    public static final String DATASET_ID_PATH_FILE = DATASET_ID_PATH + "/file";
+    public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
 
     public static final String DATA_SUB_SETTING_VALIDATION = "/isValidSubsetting";
 
@@ -170,31 +171,32 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH_FILE)
+    @RequestMapping(method = RequestMethod.DELETE, value = DATASET_IPID_PATH_FILE)
+    @ResourceAccess(description = "remove a dataset description file content")
+    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
+            throws EntityNotFoundException {
+        service.removeDescription(UniformResourceName.fromString(datasetIpId));
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public void retrieveDatasetDescription(@PathVariable("dataset_id") Long pDatasetId, HttpServletResponse response)
+    public void retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId, HttpServletResponse response)
             throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        DescriptionFile file = service.retrieveDescription(pDatasetId);
+        DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         if (file != null) {
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
+            response.setHeader(HttpHeaders.X_FORWARDED_FOR, "ALLOW-FROM *");
             response.getOutputStream().write(out.toByteArray());
             response.getOutputStream().flush();
             response.setStatus(HttpStatus.OK.value());
         } else {
             response.setStatus(HttpStatus.NO_CONTENT.value());
         }
-    }
-
-    @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH_FILE)
-    @ResourceAccess(description = "remove a dataset description file content")
-    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("dataset_id") Long pDatasetId)
-            throws EntityNotFoundException {
-        service.removeDescription(pDatasetId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -232,10 +234,7 @@ public class DatasetController implements IResourceController<Dataset> {
             @RequestPart(value = "file", required = false) final MultipartFile descriptionFile,
             final BindingResult pResult) throws ModuleException, IOException {
         // Validate dynamic model
-        service.validate(pDataset, pResult, false);
-
-        // Convert OpenSearch subsetting clause
-        pDataset.setSubsettingClause(openSearchService.parse(pDataset.getOpenSearchSubsettingClause()));
+        service.validate(pDataset, pResult, true);
 
         final Dataset dataSet = service.update(pDatasetId, pDataset, descriptionFile);
         final Resource<Dataset> resource = toResource(dataSet);

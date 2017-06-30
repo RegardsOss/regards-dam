@@ -4,12 +4,12 @@
     <name>sample</name>
     <description>Sample mission</description>
     <type>COLLECTION</type>
-    <attribute optional="true">
+    <attribute optional="true" alterable="false">
         <label>forTests</label>
         <name>att_string</name>
         <type>STRING</type>
     </attribute>
-    <attribute alterable="true">
+    <attribute>
         <label>forTests</label>
         <name>att_boolean</name>
         <type>BOOLEAN</type>
@@ -17,7 +17,7 @@
     <fragment>
         <name>GEO</name>
         <description>Geographic information</description>
-        <attribute>
+        <attribute alterable="false">
             <label>forTests</label>
             <name>CRS</name>
             <type>STRING</type>

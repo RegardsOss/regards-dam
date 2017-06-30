@@ -32,11 +32,15 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
+import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.rest.ModelController;
+import fr.cnes.regards.modules.models.schema.Attribute;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
 /**
  * Test collection validation
@@ -54,11 +58,17 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(CollectionValidation2IT.class);
 
+    @Autowired
+    private ICollectionService collectionService;
+
     /**
      * Model Repository
      */
     @Autowired
     private IModelRepository modelRepository;
+
+    @Autowired
+    private IModelAttrAssocService modelAttrAssocService;
 
     /**
      * Attribute Adapter Factory
@@ -199,10 +209,10 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         // Collection
         // final Collection collection = new Collection(sipId, model1, missionDesc, missionName);
-        final Collection collection = new Collection(model1, null, COLLECTION_LABEL);
+        Collection collection = new Collection(model1, DEFAULT_TENANT, COLLECTION_LABEL);
         collection.setSipId(sipId);
         collection.setCreationDate(OffsetDateTime.now());
-        final Set<AbstractAttribute<?>> atts = new HashSet<>();
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
 
         atts.add(AttributeBuilder.buildString(refAtt, refValue));
         atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
@@ -211,18 +221,165 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         collection.setProperties(atts);
 
-        final List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
+        List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
 
         expectations.add(MockMvcResultMatchers.status().isCreated());
 
         tenantResolver.forceTenant(DEFAULT_TENANT);
-        final String collectionStr = gson.toJson(collection);
-        final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
-        final List<MockMultipartFile> parts = new ArrayList<>();
+        String collectionStr = gson.toJson(collection);
+        MockMultipartFile collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                                                 collectionStr.getBytes());
+        List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
                                      "Failed to create a new collection");
+
+        //lets test update without altering the non alterable attribute(active)
+
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        collection = collectionService.load(collection.getIpId());
+        atts = new HashSet<>();
+
+        atts.add(AttributeBuilder.buildString(refAtt, refValue + "new"));
+        atts.add(AttributeBuilder.buildBoolean(actAtt, actValue));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
+        collection.setProperties(atts);
+
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        collectionStr = gson.toJson(collection);
+        collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                               collectionStr.getBytes());
+        parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
+                                     "Failed to update a collection", collection.getId());
+
+        //lets change the non alterable
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        atts = new HashSet<>();
+        Collection newCollection = new Collection();
+        newCollection.setDescriptionFile(collection.getDescriptionFile());
+        newCollection.setCreationDate(collection.getCreationDate());
+        newCollection.setGeometry(collection.getGeometry());
+        newCollection.setGroups(collection.getGroups());
+        newCollection.setId(collection.getId());
+        newCollection.setIpId(collection.getIpId());
+        newCollection.setLabel(collection.getLabel());
+        newCollection.setLastUpdate(collection.getLastUpdate());
+        newCollection.setModel(collection.getModel());
+
+        atts.add(AttributeBuilder.buildString(refAtt, refValue + "new"));
+        atts.add(AttributeBuilder.buildBoolean(actAtt, !actValue));
+        atts.add(AttributeBuilder.buildObject(geo, AttributeBuilder.buildString(crsAtt, crsValue)));
+        newCollection.setProperties(atts);
+
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
+        collectionStr = gson.toJson(newCollection);
+        collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                               collectionStr.getBytes());
+        parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
+                                     "Failed to update a collection", collection.getId());
+    }
+
+    @Test
+    public void testOptionalNonAlterable() throws ModuleException {
+        importModel("simpleCollectionOptional.xml");
+        Model model=modelRepository.findByName("TestOptionalNonAlterable");
+        //lets first create a collection with the optional non alterable attribute given.
+        Collection optionalNonAlterable=new Collection(model, DEFAULT_TENANT, "optionalNonAlterable");
+        optionalNonAlterable.setSipId(sipId);
+        optionalNonAlterable.setCreationDate(OffsetDateTime.now());
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
+        atts.add(AttributeBuilder.buildString(refAtt, "ref"));
+        optionalNonAlterable.setProperties(atts);
+
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        String collectionStr = gson.toJson(optionalNonAlterable);
+        MockMultipartFile collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                                                 collectionStr.getBytes());
+        List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collectionPart);
+
+        List<ResultMatcher> expectations = new ArrayList<ResultMatcher>();
+        expectations.add(MockMvcResultMatchers.status().isCreated());
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
+                                     "Failed to create a new collection");
+        // now lets try to update this collection and get an error
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        optionalNonAlterable = collectionService.load(optionalNonAlterable.getIpId());
+        atts = new HashSet<>();
+        Collection optionalAltered = new Collection();
+        optionalAltered.setDescriptionFile(optionalNonAlterable.getDescriptionFile());
+        optionalAltered.setCreationDate(optionalNonAlterable.getCreationDate());
+        optionalAltered.setGeometry(optionalNonAlterable.getGeometry());
+        optionalAltered.setGroups(optionalNonAlterable.getGroups());
+        optionalAltered.setId(optionalNonAlterable.getId());
+        optionalAltered.setIpId(optionalNonAlterable.getIpId());
+        optionalAltered.setLabel(optionalNonAlterable.getLabel());
+        optionalAltered.setLastUpdate(optionalNonAlterable.getLastUpdate());
+        optionalAltered.setModel(optionalNonAlterable.getModel());
+
+        atts.add(AttributeBuilder.buildString(refAtt, "other"));
+        optionalAltered.setProperties(atts);
+
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
+        collectionStr = gson.toJson(optionalAltered);
+        collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                               collectionStr.getBytes());
+        parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
+                                     "Failed to update a collection", optionalNonAlterable.getId());
+
+        //now lets try again without giving the value on the creation
+
+        Collection optionalNotGivenNonAlterable=new Collection(model, DEFAULT_TENANT, "optionalNotGivenNonAlterable");
+        optionalNonAlterable.setSipId(sipId);
+        optionalNonAlterable.setCreationDate(OffsetDateTime.now());
+
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        String collectionNotGivenStr = gson.toJson(optionalNotGivenNonAlterable);
+        MockMultipartFile collectionNotGivenPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                                                 collectionNotGivenStr.getBytes());
+        List<MockMultipartFile> partsNotGiven = new ArrayList<>();
+        partsNotGiven.add(collectionNotGivenPart);
+
+        List<ResultMatcher> expectationsNotGiven = new ArrayList<ResultMatcher>();
+        expectationsNotGiven.add(MockMvcResultMatchers.status().isCreated());
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, partsNotGiven, expectationsNotGiven,
+                                     "Failed to create a new collection");
+        // now lets try to update this collection and give the optional value and be a success
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+        optionalNotGivenNonAlterable = collectionService.load(optionalNotGivenNonAlterable.getIpId());
+        atts = new HashSet<>();
+        Collection optionalAlteredNotGiven = new Collection();
+        optionalAlteredNotGiven.setDescriptionFile(optionalNotGivenNonAlterable.getDescriptionFile());
+        optionalAlteredNotGiven.setCreationDate(optionalNotGivenNonAlterable.getCreationDate());
+        optionalAlteredNotGiven.setGeometry(optionalNotGivenNonAlterable.getGeometry());
+        optionalAlteredNotGiven.setGroups(optionalNotGivenNonAlterable.getGroups());
+        optionalAlteredNotGiven.setId(optionalNotGivenNonAlterable.getId());
+        optionalAlteredNotGiven.setIpId(optionalNotGivenNonAlterable.getIpId());
+        optionalAlteredNotGiven.setLabel(optionalNotGivenNonAlterable.getLabel());
+        optionalAlteredNotGiven.setLastUpdate(optionalNotGivenNonAlterable.getLastUpdate());
+        optionalAlteredNotGiven.setModel(optionalNotGivenNonAlterable.getModel());
+
+        atts.add(AttributeBuilder.buildString(refAtt, "other"));
+        optionalAltered.setProperties(atts);
+
+        expectationsNotGiven.clear();
+        expectationsNotGiven.add(MockMvcResultMatchers.status().isOk());
+        collectionNotGivenStr = gson.toJson(optionalAlteredNotGiven);
+        collectionNotGivenPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                                               collectionNotGivenStr.getBytes());
+        partsNotGiven = new ArrayList<>();
+        partsNotGiven.add(collectionNotGivenPart);
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING + "/{collection_id}", partsNotGiven, expectationsNotGiven,
+                                     "Failed to update a collection", optionalNotGivenNonAlterable.getId());
     }
 
     /**
@@ -262,7 +419,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+                                                                       MediaType.APPLICATION_JSON_VALUE,
+                                                                       collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
@@ -302,7 +460,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+                                                                       MediaType.APPLICATION_JSON_VALUE,
+                                                                       collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
@@ -343,7 +502,8 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
+                                                                       MediaType.APPLICATION_JSON_VALUE,
+                                                                       collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,

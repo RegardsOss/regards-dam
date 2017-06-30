@@ -121,10 +121,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     private Fragment fragment;
 
     /**
-     * Whether this attribute can be alterate by users
+     * Whether this attribute can be altered by users
      */
     @Column
-    private boolean alterable;
+    private boolean alterable=true;
 
     /**
      * Whether this attribute is optional
@@ -134,7 +134,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     @Column(length = 20)
     @NotBlank
-    @Size(max = 20)
+    @Size(max = 20, message = "Label must be between 1 and 20 characters.")
     private String label;
 
     /**

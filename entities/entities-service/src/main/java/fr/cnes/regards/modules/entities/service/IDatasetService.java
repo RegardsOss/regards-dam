@@ -38,9 +38,9 @@ public interface IDatasetService extends IEntityService<Dataset> {
     Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
 
-    DescriptionFile retrieveDescription(Long datasetId) throws EntityNotFoundException;
+    DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException;
 
-    void removeDescription(Long datasetId) throws EntityNotFoundException;
+    void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException;
 
     /**
      * Build a criterion visitor allowing us to check if a criterion is valid or not
