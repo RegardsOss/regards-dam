@@ -5,18 +5,12 @@ import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -25,10 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
+import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -88,14 +83,18 @@ public class EntityIndexerService implements IEntityIndexerService {
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
         } else { // entity has been created or updated, it must be saved into ES
             createIndexIfNeeded(tenant);
+            ICriterion savedSubsettingClause = null;
             // Remove parameters of dataset datasource to avoid expose security values
             if (entity instanceof Dataset) {
                 Dataset dataset = (Dataset) entity;
                 // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHed)
                 em.detach(entity);
                 if (dataset.getDataSource() != null) {
-                    ((Dataset) entity).getDataSource().setParameters(null);
+                    dataset.getDataSource().setParameters(null);
                 }
+                // Subsetting clause must not be jsonify into Elasticsearch
+                savedSubsettingClause = dataset.getSubsettingClause();
+                dataset.setSubsettingClause(null);
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
@@ -111,6 +110,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
             if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
+                // Subsetting clause is needed by many things
+                ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
         }
@@ -125,8 +126,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (curDataset == null) {
             return true;
         }
-        return !newDataset.getSubsettingClause().equals(curDataset.getSubsettingClause()) || !newDataset.getGroups()
-                .equals(curDataset.getGroups());
+        return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
+                || !newDataset.getGroups().equals(curDataset.getGroups());
     }
 
     /**
@@ -139,27 +140,19 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
         ICriterion taggingObjectsCrit = ICriterion.eq("tags", ipId);
-        // Groups must also be managed so for all objects they have to be completely recomputed (a group can be
-        // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
-        // datasets associated to an object
-        Multimap<String, String> groupsMultimap = HashMultimap.create();
-        // Same thing with dataset modelId (several datasets can have same model)
-        Map<String, Long> modelIdMap = new HashMap<>();
-        // A set containing already known not dataset ipId (to avoid creating UniformResourceName object for all tags
-        // each time an object is encountered)
-        Set<String> notDatasetIpIds = new HashSet<>();
 
         Set<DataObject> toSaveObjects = new HashSet<>();
         OffsetDateTime updateDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
         // Function to update an object (tags, groups, lastUpdate, ...)
         Consumer<DataObject> updateDataObject = object -> {
             object.getTags().remove(ipId);
-            // reset groups
-            object.getGroups().clear();
             // reset datasetModelIds
             object.getDatasetModelIds().clear();
-            // Search on all tags which ones are datasets and retrieve their groups and modelIds
-            computeGroupsAndModelIdsFromTags(tenant, groupsMultimap, modelIdMap, notDatasetIpIds, object);
+            // Remove dataset ipId from metadata.groups
+            object.getMetadata().removeDatasetIpId(ipId);
+            // And update groups
+            object.setGroups(object.getMetadata().getGroups());
+            object.setDatasetModelIds(object.getMetadata().getModelIds());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
@@ -178,85 +171,25 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     /**
-     * Compute groups and model ids from tags
-     *
-     * @param tenant tenant
-     * @param groupsMultimap a multimap of { dataset IpId, groups }
-     * @param modelIdMap a map of { dataset IpId, dataset model Id }
-     * @param notDatasetIpIds a set containing already known not dataset ipIds
-     * @param object DataObject to update
-     */
-    private void computeGroupsAndModelIdsFromTags(String tenant, Multimap<String, String> groupsMultimap,
-            Map<String, Long> modelIdMap, Set<String> notDatasetIpIds, DataObject object) {
-        // Compute groups from tags
-        for (Iterator<String> i = object.getTags().iterator(); i.hasNext(); ) {
-            String tag = i.next();
-            // already known free tag or other entity than Dataset ipId
-            if (notDatasetIpIds.contains(tag)) {
-                continue;
-            }
-            // new tag encountered
-            if (!groupsMultimap.containsKey(tag)) {
-                // Managing Dataset IpId tag
-                if (UniformResourceName.isValidUrn(tag) && (UniformResourceName.fromString(tag).getEntityType()
-                        == EntityType.DATASET)) {
-                    Dataset dataset = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
-                    // Must not occurs, this means a Dataset has been deleted from ES but not cleaned on all
-                    // objects associated to it
-                    if (dataset == null) {
-                        LOGGER.warn("Dataset {} no more exists, it will be removed from DataObject {} tags", tag,
-                                    object.getDocId());
-                        i.remove();
-                        // In this case, this tag must be managed on all objects so it is not added nor on
-                        // notDatasetIpIds nor on groupsMultimap
-                    } else { // dataset found, retrieving its groups and add them on groupsMultimap
-                        groupsMultimap.putAll(tag, dataset.getGroups());
-                        modelIdMap.put(tag, dataset.getModel().getId());
-                    }
-                } else { // free tag or not dataset tag
-                    notDatasetIpIds.add(tag);
-                }
-            }
-            object.getGroups().addAll(groupsMultimap.get(tag));
-            object.getDatasetModelIds().add(modelIdMap.get(tag));
-        }
-    }
-
-    /**
      * Search and update associated dataset data objects (ie add dataset IpId into tags)
      *
      * @param dataset concerned dataset
      */
     private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate) {
-        ICriterion subsettingCrit = dataset.getSubsettingClause();
-
-        // Add lastUpdate restriction if a date is provided
-        if (lastUpdateDate != null) {
-            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(Dataset.LAST_UPDATE, lastUpdateDate));
-        }
-
         String tenant = runtimeTenantResolver.getTenant();
-        // To avoid losing time doing same stuf on all objects
-        String dsIpId = dataset.getIpId().toString();
-        Set<String> groups = dataset.getGroups();
-        Long datasetModelId = dataset.getModel().getId();
-
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                                                                       DataObject.class);
+        // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+
         // Create a callable which bulk save into ES a set of data objects
-        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(tenant, dataset.getId());
-        // Create an updater to be executed on each data object of dataset subsetting criteria results
-        DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dsIpId, groups, updateDate, datasetModelId,
-                                                                    toSaveObjects, saveDataObjectsCallable,
-                                                                    dataset.getId());
-        esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
-        if (!toSaveObjects.isEmpty()) {
-            dataObjectUpdater.waitForEndOfTask();
-            LOGGER.info("Saving {} data objects (dataset {})...", toSaveObjects.size(), dataset.getId());
-            esRepos.saveBulk(tenant, toSaveObjects);
-            LOGGER.info("...data objects saved");
-        }
+        SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
+                                                                                      tenant, dataset.getId());
+        removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
+                                         saveDataObjectsCallable);
+        addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
+                                           saveDataObjectsCallable);
 
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
@@ -275,101 +208,41 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     /**
-     * Data object accumulator and multi thread Elasticsearch bulk saver
+     * Add or update association between dataset and data objects that are into subsetting clause
      */
-    private class DataObjectUpdater implements Consumer<DataObject> {
-
-        private String dsIpId;
-
-        private Set<String> groups;
-
-        private OffsetDateTime updateDate;
-
-        private Long datasetModelId;
-
-        private HashSet<DataObject> toSaveObjects;
-
-        private SaveDataObjectsCallable saveDataObjectsCallable;
-
-        private long datasetId;
-
-        private Future<Void> saveBulkTask = null;
-
-        private ExecutorService executor = Executors.newFixedThreadPool(1);
-
-        public DataObjectUpdater(String dsIpId, Set<String> groups, OffsetDateTime updateDate, Long datasetModelId,
-                HashSet<DataObject> toSaveObjects, SaveDataObjectsCallable saveDataObjectsCallable, long datasetId) {
-            this.dsIpId = dsIpId;
-            this.groups = groups;
-            this.updateDate = updateDate;
-            this.datasetModelId = datasetModelId;
-            this.toSaveObjects = toSaveObjects;
-            this.saveDataObjectsCallable = saveDataObjectsCallable;
-            this.datasetId = datasetId;
+    private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
+            OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
+            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable) {
+        // Create an updater to be executed on each data object of dataset subsetting criteria results
+        DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
+                                                                    saveDataObjectsCallable, executor);
+        ICriterion subsettingCrit = dataset.getSubsettingClause();
+        // Add lastUpdate restriction if a date is provided
+        if (lastUpdateDate != null) {
+            subsettingCrit = ICriterion.and(subsettingCrit, ICriterion.gt(Dataset.LAST_UPDATE, lastUpdateDate));
         }
-
-        @Override
-        public void accept(DataObject object) {
-            object.getTags().add(dsIpId);
-            object.getGroups().addAll(groups);
-            object.setLastUpdate(updateDate);
-            object.getDatasetModelIds().add(datasetModelId);
-            toSaveObjects.add(object);
-            if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
-                this.waitForEndOfTask();
-                LOGGER.info("Launching Saving of {} data objects task (dataset {})...", toSaveObjects.size(),
-                            datasetId);
-                // Give a clone of data objects to save set
-                saveDataObjectsCallable.setSet((Set<DataObject>) toSaveObjects.clone());
-                // Clear data objects to save set
-                toSaveObjects.clear();
-                // Add task to thread pool executor
-                saveBulkTask = executor.submit(saveDataObjectsCallable);
-            }
-        }
-
-        public void waitForEndOfTask() {
-            if (saveBulkTask != null) {
-                LOGGER.info("Waiting for previous task to end (dataset {})...", datasetId);
-                try {
-                    saveBulkTask.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    LOGGER.error(String.format("Unable to save data objects (dataset %d)", datasetId), e);
-                }
-            }
-        }
+        esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
+        // Saving remaining objects...
+        dataObjectUpdater.finalSave();
     }
 
     /**
-     * Callable used to parallelize data objects bulk save into Elasticsearch
+     * Remove association between dataset and data objects that are no more into subsetting clause
      */
-    private class SaveDataObjectsCallable implements Callable<Void> {
-
-        private String tenant;
-
-        private Set<DataObject> set;
-
-        private long datasetId;
-
-        public SaveDataObjectsCallable(String tenant, long datasetId) {
-            this.tenant = tenant;
-            this.datasetId = datasetId;
-        }
-
-        public void setSet(Set<DataObject> set) {
-            this.set = set;
-        }
-
-        @Override
-        public Void call() throws Exception {
-            if ((set != null) && !set.isEmpty()) {
-                LOGGER.info("Saving {} data objects (dataset {})...", set.size(), datasetId);
-                runtimeTenantResolver.forceTenant(tenant);
-                esRepos.saveBulk(tenant, set);
-                LOGGER.info("...data objects saved");
-            }
-            return null;
-        }
+    private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
+            SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
+            SaveDataObjectsCallable saveDataObjectsCallable) {
+        // First : remove association between dataset and data objects for data objects that are no more associated to
+        // new subsetting clause so search data objects that are tagged with dataset IPID and with NOT(user subsetting
+        // clause)
+        ICriterion oldAssociatedObjectsCrit = ICriterion.and(ICriterion.eq("tags", dataset.getIpId().toString()),
+                                                             ICriterion.not(dataset.getUserSubsettingClause()));
+        // Create a Consumer to be executed on each data object of dataset subsetting criteria results
+        DataObjectAssocRemover dataObjectAssocRemover = new DataObjectAssocRemover(dataset, updateDate, toSaveObjects,
+                                                                                   saveDataObjectsCallable, executor);
+        esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
+        // Saving remaining objects...
+        dataObjectAssocRemover.finalSave();
     }
 
     /**
@@ -426,8 +299,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate) {
         OffsetDateTime now = OffsetDateTime.now();
-        datasets.forEach(
-                dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now));
+        datasets.forEach(dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now));
     }
 
     @Override

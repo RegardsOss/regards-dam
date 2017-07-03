@@ -29,7 +29,12 @@ public class DataObject extends AbstractDataEntity {
     /**
      * Denormalization : allows to retrieve dataobjects related to models (i.e. types) of dataset
      */
-    private final Set<Long> datasetModelIds = new HashSet<>();
+    private Set<Long> datasetModelIds = new HashSet<>();
+
+    /**
+     * These metadata are used only by elasticsearch to add useful informations needed by catalog
+     */
+    private Metadata metadata = new Metadata();
 
     public DataObject(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant, UUID.randomUUID(), 1),
@@ -50,6 +55,14 @@ public class DataObject extends AbstractDataEntity {
 
     public Set<Long> getDatasetModelIds() {
         return datasetModelIds;
+    }
+
+    public void setDatasetModelIds(Set<Long> datasetModelIds) {
+        this.datasetModelIds = datasetModelIds;
+    }
+
+    public Metadata getMetadata() {
+        return metadata;
     }
 
     @Override
