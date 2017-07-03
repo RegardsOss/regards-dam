@@ -74,7 +74,6 @@ public class Dataset extends AbstractDescEntity {
 
     /**
      * Representation of the above subsetting clause as an OpenSearch string request
-     * FIXME do not index
      */
     @Type(type = "text")
     @Column
@@ -133,7 +132,7 @@ public class Dataset extends AbstractDescEntity {
         return subsettingCrit;
     }
 
-    public ICriterion getSubsettingClausePartToCheck() {
+    public ICriterion getUserSubsettingClause() {
         return (subsettingClause == null) ? ICriterion.all() : subsettingClause;
     }
 

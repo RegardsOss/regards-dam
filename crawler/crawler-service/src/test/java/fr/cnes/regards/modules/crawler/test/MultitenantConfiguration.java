@@ -12,6 +12,7 @@ import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServi
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
  * Multitenant test configuration
@@ -27,6 +28,10 @@ import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfigura
 @PropertySource(value = { "classpath:multitenant.properties", "classpath:multitenant_${user.name}.properties" },
         ignoreResourceNotFound = true)
 public class MultitenantConfiguration {
+    @Bean
+    public IOpenSearchService getOpenSearchService() {
+        return Mockito.mock(IOpenSearchService.class);
+    }
 
     @Bean
     public IResourceService getResourceService() {

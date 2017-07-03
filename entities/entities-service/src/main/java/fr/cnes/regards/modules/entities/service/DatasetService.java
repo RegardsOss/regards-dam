@@ -3,8 +3,8 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.io.UnsupportedEncodingException;
 import javax.persistence.EntityManager;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
-
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -68,12 +67,12 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
             EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IDescriptionFileRepository descriptionFileRepository,IOpenSearchService openSearchService) {
+            IDescriptionFileRepository descriptionFileRepository, IOpenSearchService openSearchService) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
         attributeService = pAttributeService;
         dataSourceService = pDataSourceService;
-        this.openSearchService=openSearchService;
+        this.openSearchService = openSearchService;
     }
 
     /**
@@ -106,10 +105,10 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * @throws ModuleException
      */
     private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
-        // getSubsettingClausePartToCheck() cannot be null
+        // getUserSubsettingClause() cannot be null
         try {
-            String stringClause=pDataset.getOpenSearchSubsettingClause();
-            if(Strings.isNullOrEmpty(stringClause)) {
+            String stringClause = pDataset.getOpenSearchSubsettingClause();
+            if (Strings.isNullOrEmpty(stringClause)) {
                 pDataset.setSubsettingClause(ICriterion.all());
             } else {
                 pDataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
@@ -118,7 +117,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             //if this exception happens its really an issue as the whole system relys on the fact UTF-8 is handled
             throw new RuntimeException(e);
         }
-        final ICriterion subsettingCriterion = pDataset.getSubsettingClausePartToCheck();
+        final ICriterion subsettingCriterion = pDataset.getUserSubsettingClause();
         // To avoid loading models when not necessary
         if (!subsettingCriterion.equals(ICriterion.all())) {
             final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(pDataset.getDataModel());
