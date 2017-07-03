@@ -5,11 +5,8 @@ import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -22,8 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
@@ -88,14 +83,18 @@ public class EntityIndexerService implements IEntityIndexerService {
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
         } else { // entity has been created or updated, it must be saved into ES
             createIndexIfNeeded(tenant);
+            ICriterion savedSubsettingClause = null;
             // Remove parameters of dataset datasource to avoid expose security values
             if (entity instanceof Dataset) {
                 Dataset dataset = (Dataset) entity;
                 // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHed)
                 em.detach(entity);
                 if (dataset.getDataSource() != null) {
-                    ((Dataset) entity).getDataSource().setParameters(null);
+                    dataset.getDataSource().setParameters(null);
                 }
+                // Subsetting clause must not be jsonify into Elasticsearch
+                savedSubsettingClause = dataset.getSubsettingClause();
+                dataset.setSubsettingClause(null);
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
@@ -111,6 +110,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             boolean created = esRepos.save(tenant, entity);
             LOGGER.debug("Elasticsearch saving result : {}", created);
             if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
+                // Subsetting clause is needed by many things
+                ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
                 manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
             }
         }
@@ -125,8 +126,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (curDataset == null) {
             return true;
         }
-        return !newDataset.getSubsettingClause().equals(curDataset.getSubsettingClause()) || !newDataset.getGroups()
-                .equals(curDataset.getGroups());
+        return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
+                || !newDataset.getGroups().equals(curDataset.getGroups());
     }
 
     /**
@@ -139,15 +140,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
         ICriterion taggingObjectsCrit = ICriterion.eq("tags", ipId);
-        // Groups must also be managed so for all objects they have to be completely recomputed (a group can be
-        // associated to several datasets). A Multimap { IpId -> groups } is used to avoid calling ES for all
-        // datasets associated to an object
-        Multimap<String, String> groupsMultimap = HashMultimap.create();
-        // Same thing with dataset modelId (several datasets can have same model)
-        Map<String, Long> modelIdMap = new HashMap<>();
-        // A set containing already known not dataset ipId (to avoid creating UniformResourceName object for all tags
-        // each time an object is encountered)
-        Set<String> notDatasetIpIds = new HashSet<>();
 
         Set<DataObject> toSaveObjects = new HashSet<>();
         OffsetDateTime updateDate = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
@@ -160,6 +152,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             object.getMetadata().removeDatasetIpId(ipId);
             // And update groups
             object.setGroups(object.getMetadata().getGroups());
+            object.setDatasetModelIds(object.getMetadata().getModelIds());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
@@ -174,51 +167,6 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
             esRepos.saveBulk(tenant, toSaveObjects);
-        }
-    }
-
-    /**
-     * Compute groups and model ids from tags
-     *
-     * @param tenant tenant
-     * @param groupsMultimap a multimap of { dataset IpId, groups }
-     * @param modelIdMap a map of { dataset IpId, dataset model Id }
-     * @param notDatasetIpIds a set containing already known not dataset ipIds
-     * @param object DataObject to update
-     */
-    private void computeGroupsAndModelIdsFromTags(String tenant, Multimap<String, String> groupsMultimap,
-            Map<String, Long> modelIdMap, Set<String> notDatasetIpIds, DataObject object) {
-        // Compute groups from tags
-        for (Iterator<String> i = object.getTags().iterator(); i.hasNext(); ) {
-            String tag = i.next();
-            // already known free tag or other entity than Dataset ipId
-            if (notDatasetIpIds.contains(tag)) {
-                continue;
-            }
-            // new tag encountered
-            if (!groupsMultimap.containsKey(tag)) {
-                // Managing Dataset IpId tag
-                if (UniformResourceName.isValidUrn(tag) && (UniformResourceName.fromString(tag).getEntityType()
-                        == EntityType.DATASET)) {
-                    Dataset dataset = esRepos.get(tenant, EntityType.DATASET.toString(), tag, Dataset.class);
-                    // Must not occurs, this means a Dataset has been deleted from ES but not cleaned on all
-                    // objects associated to it
-                    if (dataset == null) {
-                        LOGGER.warn("Dataset {} no more exists, it will be removed from DataObject {} tags", tag,
-                                    object.getDocId());
-                        i.remove();
-                        // In this case, this tag must be managed on all objects so it is not added nor on
-                        // notDatasetIpIds nor on groupsMultimap
-                    } else { // dataset found, retrieving its groups and add them on groupsMultimap
-                        groupsMultimap.putAll(tag, dataset.getGroups());
-                        modelIdMap.put(tag, dataset.getModel().getId());
-                    }
-                } else { // free tag or not dataset tag
-                    notDatasetIpIds.add(tag);
-                }
-            }
-            object.getGroups().addAll(groupsMultimap.get(tag));
-            object.getDatasetModelIds().add(modelIdMap.get(tag));
         }
     }
 
