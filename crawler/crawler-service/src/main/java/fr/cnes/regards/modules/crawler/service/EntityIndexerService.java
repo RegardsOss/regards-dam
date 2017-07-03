@@ -122,6 +122,9 @@ public class EntityIndexerService implements IEntityIndexerService {
      * or no
      */
     private boolean needAssociatedDataObjectsUpdate(Dataset newDataset, Dataset curDataset) {
+        if (curDataset == null) {
+            return true;
+        }
         return !newDataset.getSubsettingClause().equals(curDataset.getSubsettingClause()) || !newDataset.getGroups()
                 .equals(curDataset.getGroups());
     }

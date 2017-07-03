@@ -37,6 +37,8 @@ import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUserEvent;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAssociationEvent;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
 
 /**
@@ -130,23 +132,17 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         }
     }
 
-    /**
-     * @param pUserEmail
-     * @param pAccessGroupName
-     * @return
-     * @throws EntityNotFoundException
-     */
-    public AccessGroup associateUserToAccessGroup(final String pUserEmail, final String pAccessGroupName)
+    public AccessGroup associateUserToAccessGroup(final String userEmail, final String accessGroupName)
             throws EntityNotFoundException {
-        final User user = getUser(pUserEmail);
+        final User user = getUser(userEmail);
         if (user == null) {
-            throw new EntityNotFoundException(pUserEmail, ProjectUser.class);
+            throw new EntityNotFoundException(userEmail, ProjectUser.class);
         }
-        final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
+        final AccessGroup ag = accessGroupDao.findOneByName(accessGroupName);
         ag.addUser(user);
         final AccessGroup updated = accessGroupDao.save(ag);
         // Publish
-        publisher.publish(new AccessGroupEvent(updated));
+        publisher.publish(new AccessGroupAssociationEvent(updated, userEmail));
         return updated;
     }
 
@@ -166,22 +162,17 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         }
     }
 
-    /**
-     * @param pUserEmail
-     * @param pAccessGroupName
-     * @throws EntityNotFoundException
-     */
-    public AccessGroup dissociateUserFromAccessGroup(final String pUserEmail, final String pAccessGroupName)
+    public AccessGroup dissociateUserFromAccessGroup(final String userEmail, final String accessGroupName)
             throws EntityNotFoundException {
-        final User user = getUser(pUserEmail);
+        final User user = getUser(userEmail);
         if (user == null) {
-            throw new EntityNotFoundException(pUserEmail, ProjectUser.class);
+            throw new EntityNotFoundException(userEmail, ProjectUser.class);
         }
-        final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
+        final AccessGroup ag = accessGroupDao.findOneByName(accessGroupName);
         ag.removeUser(user);
         final AccessGroup updated = accessGroupDao.save(ag);
         // Publish
-        publisher.publish(new AccessGroupEvent(updated));
+        publisher.publish(new AccessGroupDissociationEvent(updated, userEmail));
         return updated;
     }
 

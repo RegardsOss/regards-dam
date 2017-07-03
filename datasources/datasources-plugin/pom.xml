@@ -43,14 +43,15 @@
 		<dependency>
 			<groupId>com.oracle</groupId>
 			<artifactId>ojdbc6</artifactId>
-			<version>12.1.0.1-atlassian-hosted</version>
+			<version>11.2.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.oracle</groupId>
 			<artifactId>orai18n</artifactId>
-			<version>11.2.0.3</version>
+			<version>11.2.0.4</version>
 		</dependency>
 		<!-- Oracle driver -->
+		
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
