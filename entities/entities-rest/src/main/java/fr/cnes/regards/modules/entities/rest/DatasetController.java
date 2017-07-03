@@ -54,7 +54,7 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * @author Xavier-Alexandre Brochard
  */
 @RestController
-@RequestMapping(value = DatasetController.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = DatasetController.DATASET_PATH)
 public class DatasetController implements IResourceController<Dataset> {
 
     /**
@@ -187,10 +187,10 @@ public class DatasetController implements IResourceController<Dataset> {
 
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         if (file != null) {
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
-            response.setHeader(HttpHeaders.X_FORWARDED_FOR, "ALLOW-FROM *");
             response.getOutputStream().write(out.toByteArray());
             response.getOutputStream().flush();
             response.setStatus(HttpStatus.OK.value());

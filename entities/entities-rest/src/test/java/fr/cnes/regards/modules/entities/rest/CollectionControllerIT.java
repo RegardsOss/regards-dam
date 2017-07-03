@@ -22,6 +22,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -238,6 +240,20 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(RequestMethod.POST, COLLECTIONS_COLLECTION_ID, parts, expectations,
                                  "Failed to update a specific collection using its id", collection1.getId());
 
+    }
+
+    @Override
+    protected MockMultipartHttpServletRequestBuilder getMultipartRequestBuilder(final String pAuthToken,
+            final List<MockMultipartFile> pFiles, final String pUrlTemplate, final Object... pUrlVars) {
+
+        final MockMultipartHttpServletRequestBuilder multipartRequestBuilder = MockMvcRequestBuilders
+                .fileUpload(pUrlTemplate, pUrlVars);
+        for (final MockMultipartFile file : pFiles) {
+            multipartRequestBuilder.file(file);
+        }
+        multipartRequestBuilder.accept(MediaType.APPLICATION_JSON_UTF8);
+        addSecurityHeader(multipartRequestBuilder, pAuthToken);
+        return multipartRequestBuilder;
     }
 
     // TODO: add delete by ip id
