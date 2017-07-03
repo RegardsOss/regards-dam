@@ -134,7 +134,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
-//                    atLeastOnePoll |= self.doPoll();
                     atLeastOnePoll |= pollMethod.get();
                 } catch (Throwable t) {
                     LOGGER.error("Cannot manage entity event message", t);
@@ -163,7 +162,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
      *
      * @return true if a poll has been done, false otherwise
      */
-//    @Override
     @MultitenantTransactional
     public boolean doPoll() {
         boolean atLeastOnePoll = false;

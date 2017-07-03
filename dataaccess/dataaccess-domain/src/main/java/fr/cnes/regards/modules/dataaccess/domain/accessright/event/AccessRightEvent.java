@@ -3,24 +3,31 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessright.event;
 
-import javax.validation.constraints.NotNull;
-
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
- * Abstract Event about {@link AccessRight}.
+ * Access right event.
  *
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author oroussel
  */
 public class AccessRightEvent implements ISubscribable {
 
-    @NotNull
-    private final Long accessRightId;
+    private final UniformResourceName datasetIpId;
 
-    public AccessRightEvent(Long pAccessRightId) {
-        accessRightId = pAccessRightId;
+    private final AccessRightEventType eventType;
+
+    public AccessRightEvent(UniformResourceName datasetIpId, AccessRightEventType eventType) {
+        this.datasetIpId = datasetIpId;
+        this.eventType = eventType;
     }
 
+    public UniformResourceName getDatasetIpId() {
+        return datasetIpId;
+    }
+
+    public AccessRightEventType getEventType() {
+        return eventType;
+    }
 }

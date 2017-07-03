@@ -6,7 +6,7 @@ import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.gson.adapters.MultimapAdapter;
-import fr.cnes.regards.modules.entities.domain.Metadata;
+import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 
 /**
  * Created by oroussel on 30/06/17.
@@ -16,7 +16,7 @@ public class MetadataGsonTest {
 
     @Test
     public void test() {
-        Metadata metadata = new Metadata();
+        DataObjectMetadata metadata = new DataObjectMetadata();
         metadata.addGroup("pouet", "ipId1");
         metadata.addGroup("pouet", "ipId2");
 

@@ -3,9 +3,13 @@
  */
 package fr.cnes.regards.modules.dataaccess.service;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +20,10 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightCreated;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightDeleted;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightUpdated;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEventType;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
@@ -30,18 +34,18 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 @Service
 @MultitenantTransactional
-public class AccessRightService {
+public class AccessRightService implements IAccessRightService {
 
     private final IAccessRightRepository repository;
 
-    private final AccessGroupService accessGroupService;
+    private final IAccessGroupService accessGroupService;
 
     private final IDatasetService datasetService;
 
     private final IPublisher eventPublisher;
 
     public AccessRightService(final IAccessRightRepository pAccessRightRepository,
-            final AccessGroupService pAccessGroupService, final IDatasetService pDatasetService,
+            final IAccessGroupService pAccessGroupService, final IDatasetService pDatasetService,
             final IPublisher pEventPublisher) {
         repository = pAccessRightRepository;
         accessGroupService = pAccessGroupService;
@@ -49,6 +53,7 @@ public class AccessRightService {
         eventPublisher = pEventPublisher;
     }
 
+    @Override
     public Page<AccessRight> retrieveAccessRights(final String pAccessGroupName, final UniformResourceName pDatasetIpId,
             final Pageable pPageable) throws EntityNotFoundException {
         if (pAccessGroupName != null) {
@@ -70,6 +75,24 @@ public class AccessRightService {
         return repository.findAll(pPageable);
     }
 
+    /**
+     * Retrieve groups access levels of a specified dataset
+     * @param datasetIpId concerned datasetIpId, must not be null
+     * @return a map { groupName, accessLevel }
+     * @throws EntityNotFoundException if dataset doesn't exist
+     */
+    @Override
+    public Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId) {
+        if (datasetIpId == null) {
+            throw new IllegalArgumentException("datasetIpId must not be null");
+        }
+        try {
+            return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream().collect(Collectors.toMap(r -> r.getAccessGroup().getName(), AccessRight::getAccessLevel));
+        } catch (EntityNotFoundException e) {
+            return Collections.emptyMap();
+        }
+    }
+
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(final UniformResourceName pDatasetIpId,
             final String pAccessGroupName, final Pageable pPageable) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
@@ -88,6 +111,7 @@ public class AccessRightService {
         }
     }
 
+    @Override
     public AccessRight createAccessRight(final AccessRight pAccessRight) throws ModuleException {
         final Dataset dataset = datasetService.load(pAccessRight.getDataset().getId());
         if (dataset == null) {
@@ -106,10 +130,11 @@ public class AccessRightService {
         pAccessRight.setDataset(dataset);
 
         final AccessRight created = repository.save(pAccessRight);
-        eventPublisher.publish(new AccessRightCreated(created.getId()));
+        eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.CREATE));
         return created;
     }
 
+    @Override
     public AccessRight retrieveAccessRight(final Long pId) throws EntityNotFoundException {
         final AccessRight result = repository.findById(pId);
         if (result == null) {
@@ -118,6 +143,7 @@ public class AccessRightService {
         return result;
     }
 
+    @Override
     public AccessRight updateAccessRight(final Long pId, final AccessRight pToBe) throws ModuleException {
         final AccessRight toBeUpdated = repository.findById(pId);
         if (toBeUpdated == null) {
@@ -142,10 +168,11 @@ public class AccessRightService {
 
         }
         final AccessRight updated = repository.save(pToBe);
-        eventPublisher.publish(new AccessRightUpdated(pId));
+        eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
         return updated;
     }
 
+    @Override
     public void deleteAccessRight(final Long pId) throws ModuleException {
         final AccessRight accessRight = repository.findById(pId);
         // Remove current group from dataset if accessRight is a GroupAccessRight
@@ -155,7 +182,7 @@ public class AccessRightService {
             datasetService.update(dataset);
         }
         repository.delete(pId);
-        eventPublisher.publish(new AccessRightDeleted(pId));
+        eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
     }
 
 }
