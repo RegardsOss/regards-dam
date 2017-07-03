@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -103,11 +102,11 @@ public class CollectionController implements IResourceController<Collection> {
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
             out.write(file.getContent());
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
             response.getOutputStream().write(out.toByteArray());
             response.getOutputStream().flush();
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             response.setStatus(HttpStatus.OK.value());
         } else {
             response.setStatus(HttpStatus.NO_CONTENT.value());
@@ -116,7 +115,7 @@ public class CollectionController implements IResourceController<Collection> {
 
     @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")
-    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("collection_ipId") String collectionIpId)
+    public ResponseEntity<Void> removeCollectionDescription(@PathVariable("collection_ipId") String collectionIpId)
             throws EntityNotFoundException {
         collectionService.removeDescription(UniformResourceName.fromString(collectionIpId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -211,8 +210,7 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
     @ResponseBody
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
-    public HttpEntity<Resource<Collection>> dissociate(
-            @PathVariable("collection_id") final Long pCollectionId,
+    public HttpEntity<Resource<Collection>> dissociate(@PathVariable("collection_id") final Long pCollectionId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
         collectionService.dissociate(pCollectionId, pToBeDissociated);
         return new ResponseEntity<>(HttpStatus.OK);

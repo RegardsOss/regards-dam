@@ -16,16 +16,9 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.net.HttpHeaders;
@@ -181,18 +174,18 @@ public class DatasetController implements IResourceController<Dataset> {
 
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public void retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId, HttpServletResponse response)
-            throws EntityNotFoundException, IOException {
+    public void retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId,
+            HttpServletResponse response) throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         if (file != null) {
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
             response.getOutputStream().write(out.toByteArray());
             response.getOutputStream().flush();
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             response.setStatus(HttpStatus.OK.value());
         } else {
             response.setStatus(HttpStatus.NO_CONTENT.value());
@@ -305,8 +298,8 @@ public class DatasetController implements IResourceController<Dataset> {
 
     @RequestMapping(method = RequestMethod.POST, value = DATA_SUB_SETTING_VALIDATION)
     @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model")
-    public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelId") Long dataModelId, @RequestBody Query query)
-            throws ModuleException {
+    public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelId") Long dataModelId,
+            @RequestBody Query query) throws ModuleException {
         // we have to add "q=" to be able to parse the query
         try {
             ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
@@ -347,7 +340,8 @@ public class DatasetController implements IResourceController<Dataset> {
 
         private String query;
 
-        private Query() {}
+        private Query() {
+        }
 
         public Query(String query) {
             this.query = query;
