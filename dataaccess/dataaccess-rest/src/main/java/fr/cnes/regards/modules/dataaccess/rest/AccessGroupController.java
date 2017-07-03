@@ -30,7 +30,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 
 /**
  * Controller REST handling requests about {@link AccessGroup}s to the data
@@ -54,7 +54,7 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     private IResourceService resourceService;
 
     @Autowired
-    private AccessGroupService accessGroupService;
+    private IAccessGroupService accessGroupService;
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody

@@ -16,6 +16,14 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.crawler</groupId>
+			<artifactId>crawler-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.crawler</groupId>
+			<artifactId>crawler-dao</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>multitenant-regards-starter</artifactId>
 		</dependency>
@@ -31,6 +39,35 @@
 			<groupId>fr.cnes.regards.modules.entities</groupId>
 			<artifactId>entities-dao</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
+			<artifactId>dataaccess-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.dataaccess</groupId>
+			<artifactId>dataaccess-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-plugin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>amqp-regards</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>module-plugins-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-domain</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-dao</artifactId>
+		</dependency>
+
 
 		<!-- TODO : slf4j -->
 		<dependency>
@@ -52,10 +89,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-plugin</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.oracle</groupId>
 			<artifactId>ojdbc6</artifactId>
 			<version>11.2.0.4</version>
@@ -69,29 +102,13 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>amqp-regards</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards-starter</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>module-plugins-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-dao</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
@@ -105,13 +122,6 @@
 			<artifactId>spatial4j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.crawler</groupId>
-			<artifactId>crawler-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.crawler</groupId>
-			<artifactId>crawler-dao</artifactId>
-		</dependency>
+
 	</dependencies>
 </project>

@@ -24,7 +24,8 @@ import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfigura
 @Configuration
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler.service", "fr.cnes.regards.modules.indexer",
         "fr.cnes.regards.modules.entities", "fr.cnes.regards.modules.models", "fr.cnes.regards.modules.datasources",
-        "fr.cnes.regards.modules.search", "fr.cnes.regards.framework.modules.plugins.service" })
+        "fr.cnes.regards.modules.dataaccess", "fr.cnes.regards.modules.search",
+        "fr.cnes.regards.framework.modules.plugins.service" })
 @EnableAutoConfiguration(
         exclude = { MethodAuthorizationServiceAutoConfiguration.class, MethodSecurityAutoConfiguration.class,
                 SecurityVoterAutoConfiguration.class, WebSecurityAutoConfiguration.class })

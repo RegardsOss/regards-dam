@@ -28,7 +28,7 @@ import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -43,7 +43,7 @@ public class UserController implements IResourceController<AccessGroup> {
     public static final String GROUP_NAME_PATH = "/{name}";
 
     @Autowired
-    private AccessGroupService accessGroupService;
+    private IAccessGroupService accessGroupService;
 
     @Autowired
     private IResourceService resourceService;

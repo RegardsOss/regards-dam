@@ -31,7 +31,7 @@ import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
@@ -87,7 +87,7 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
     private IAccessGroupRepository dao;
 
     @Autowired
-    private AccessGroupService agService;
+    private IAccessGroupService agService;
 
     @Before
     public void init() {

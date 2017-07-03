@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.entities.domain;
+package fr.cnes.regards.modules.entities.domain.metadata;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -10,7 +10,7 @@ import com.google.common.collect.Multimap;
  * DataObject metadata. This object is only used by Elasticsearch
  * @author oroussel
  */
-public class Metadata {
+public class DataObjectMetadata {
 
     /**
      * Multimap { groupName, (datasetIpIds) }

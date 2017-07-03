@@ -7,11 +7,13 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,8 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -57,6 +61,9 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     protected IEsRepository esRepos;
+
+    @Autowired
+    private IAccessRightService accessRightService;
 
     @PersistenceContext
     private EntityManager em;
@@ -95,6 +102,12 @@ public class EntityIndexerService implements IEntityIndexerService {
                 // Subsetting clause must not be jsonify into Elasticsearch
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
+                // Compute groups for associated data objects
+                Map<String, AccessLevel> map = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
+                dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
+                                                                   .filter(group -> map.containsKey(group)
+                                                                           && map.get(group) == AccessLevel.FULL_ACCESS)
+                                                                   .collect(Collectors.toSet()));
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
@@ -127,7 +140,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             return true;
         }
         return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
-                || !newDataset.getGroups().equals(curDataset.getGroups());
+                || !newDataset.getMetadata().getDataObjectsGroups()
+                .equals(curDataset.getMetadata().getDataObjectsGroups());
     }
 
     /**
