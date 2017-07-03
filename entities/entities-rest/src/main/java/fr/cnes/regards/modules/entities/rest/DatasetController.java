@@ -187,7 +187,7 @@ public class DatasetController implements IResourceController<Dataset> {
 
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         if (file != null) {
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
+//            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());

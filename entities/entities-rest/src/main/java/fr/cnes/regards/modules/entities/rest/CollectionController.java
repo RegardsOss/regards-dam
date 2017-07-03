@@ -103,7 +103,7 @@ public class CollectionController implements IResourceController<Collection> {
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
             out.write(file.getContent());
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
+//            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
             response.getOutputStream().write(out.toByteArray());
@@ -116,7 +116,7 @@ public class CollectionController implements IResourceController<Collection> {
 
     @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")
-    public ResponseEntity<Void> removeDatasetDescription(@PathVariable("collection_ipId") String collectionIpId)
+    public ResponseEntity<Void> removeCollectionDescription(@PathVariable("collection_ipId") String collectionIpId)
             throws EntityNotFoundException {
         collectionService.removeDescription(UniformResourceName.fromString(collectionIpId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
