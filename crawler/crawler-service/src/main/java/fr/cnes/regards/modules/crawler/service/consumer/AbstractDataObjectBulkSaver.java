@@ -93,10 +93,11 @@ public abstract class AbstractDataObjectBulkSaver {
      * To directly save remaining data objects
      */
     public void finalSave() {
+        this.waitForEndOfTask();
         if (!toSaveObjects.isEmpty()) {
-            this.waitForEndOfTask();
             try {
-                // Directly call on current thread
+                // Directly call on current thread without doing a clone
+                saveDataObjectsCallable.setSet(toSaveObjects);
                 saveDataObjectsCallable.call();
             } catch (Exception e) {
                 LOGGER.error(String.format("Unable to save data objects (dataset %d)", datasetId), e);
