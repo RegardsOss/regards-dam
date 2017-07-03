@@ -228,7 +228,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         dataSet21 = dsService.create(dataSet21, pdf);
         expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
-//        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *"));
+        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
         performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,

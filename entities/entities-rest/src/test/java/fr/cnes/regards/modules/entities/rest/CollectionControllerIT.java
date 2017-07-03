@@ -186,7 +186,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         collection = collectionService.create(collection, pdf);
         expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
-        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "SAMEORIGIN"));
+        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
         performDefaultGet(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE,
