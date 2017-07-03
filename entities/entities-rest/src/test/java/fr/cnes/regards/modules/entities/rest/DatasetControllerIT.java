@@ -30,6 +30,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -201,6 +202,20 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
                                      "Failed to create a new dataset");
     }
 
+    @Override
+    protected MockMultipartHttpServletRequestBuilder getMultipartRequestBuilder(final String pAuthToken,
+            final List<MockMultipartFile> pFiles, final String pUrlTemplate, final Object... pUrlVars) {
+
+        final MockMultipartHttpServletRequestBuilder multipartRequestBuilder = MockMvcRequestBuilders
+                .fileUpload(pUrlTemplate, pUrlVars);
+        for (final MockMultipartFile file : pFiles) {
+            multipartRequestBuilder.file(file);
+        }
+        multipartRequestBuilder.accept(MediaType.APPLICATION_JSON_UTF8);
+        addSecurityHeader(multipartRequestBuilder, pAuthToken);
+        return multipartRequestBuilder;
+    }
+
     @Test
     public void testDatasetDescriptionFile() throws IOException, ModuleException {
 
@@ -221,18 +236,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
                              "Could not delete dataset description file", dataSet21.getIpId());
-    }
-
-    protected MockHttpServletRequestBuilder getRequestBuilder(final String pAuthToken, final HttpMethod pHttpMethod,
-            final String pUrlTemplate, final Object... pUrlVars) {
-
-        final MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .request(pHttpMethod, pUrlTemplate, pUrlVars);
-        addSecurityHeader(requestBuilder, pAuthToken);
-
-        requestBuilder.header(HttpConstants.CONTENT_TYPE, "application/json");
-
-        return requestBuilder;
     }
 
     @Test

@@ -20,6 +20,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.google.common.net.HttpHeaders;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -41,7 +42,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
         documentation = "http://test")
 // CHECKSTYLE:ON
-@RequestMapping(path = CollectionController.ROOT_MAPPING, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(path = CollectionController.ROOT_MAPPING)
 public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
@@ -102,6 +103,7 @@ public class CollectionController implements IResourceController<Collection> {
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
             out.write(file.getContent());
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
             response.getOutputStream().write(out.toByteArray());
