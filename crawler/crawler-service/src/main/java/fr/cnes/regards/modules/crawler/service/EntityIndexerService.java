@@ -103,12 +103,22 @@ public class EntityIndexerService implements IEntityIndexerService {
                 // Subsetting clause must not be jsonify into Elasticsearch
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
-                // Compute groups for associated data objects
+                // Retrieve map of { group, AccessLevel }
                 Map<String, AccessLevel> map = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
+                // Compute groups for associated data objects
                 dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
                                                                    .filter(group -> map.containsKey(group)
                                                                            && map.get(group) == AccessLevel.FULL_ACCESS)
                                                                    .collect(Collectors.toSet()));
+                // update dataset groups
+                for (Map.Entry<String, AccessLevel> entry : map.entrySet()) {
+                    // remove group if no access
+                    if (entry.getValue() == AccessLevel.NO_ACCESS) {
+                        dataset.getGroups().remove(entry.getKey());
+                    } else { // add (or let) group if FULL_ACCESS or RESTRICTED_ACCESS
+                        dataset.getGroups().add(entry.getKey());
+                    }
+                }
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
@@ -163,10 +173,11 @@ public class EntityIndexerService implements IEntityIndexerService {
             object.getTags().remove(ipId);
             // reset datasetModelIds
             object.getDatasetModelIds().clear();
-            // Remove dataset ipId from metadata.groups
+            // Remove dataset ipId from metadata.groups dans modelIds
             object.getMetadata().removeDatasetIpId(ipId);
-            // And update groups
+            // update groups
             object.setGroups(object.getMetadata().getGroups());
+            // update modelIds
             object.setDatasetModelIds(object.getMetadata().getModelIds());
             object.setLastUpdate(updateDate);
             toSaveObjects.add(object);
