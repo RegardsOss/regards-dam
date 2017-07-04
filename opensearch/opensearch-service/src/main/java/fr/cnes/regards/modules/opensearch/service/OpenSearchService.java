@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import fr.cnes.regards.modules.opensearch.service.parser.CircleParser;
 import fr.cnes.regards.modules.opensearch.service.parser.GeometryParser;
@@ -26,26 +26,32 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 @Service
 public class OpenSearchService implements IOpenSearchService {
 
-    private final List<IParser> parsers;
+    // Thread safe parsers holder
+    private static final ThreadLocal<List<IParser>> parsersHolder = new ThreadLocal<>();
 
-    /**
-     * @param queryParser Parses the "q" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     * @param geometryParser Parses the "g" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     * @param circleParser Parses the "lat"/"lon"/"r" part of an OpenSearch request. Autowired by Spring. Must not be null.
-     */
-    public OpenSearchService(@Autowired QueryParser queryParser, @Autowired GeometryParser geometryParser,
-            @Autowired CircleParser circleParser) {
-        parsers = new ArrayList<>();
-        parsers.add(queryParser);
-        parsers.add(geometryParser);
-        parsers.add(circleParser);
+    private final IAttributeFinder finder;
+
+    public OpenSearchService(IAttributeFinder finder) {
+        this.finder = finder;
+    }
+
+    private List<IParser> getParsers() {
+        List<IParser> threadSafeParsers = parsersHolder.get();
+        if (threadSafeParsers == null) {
+            threadSafeParsers = new ArrayList<>();
+            threadSafeParsers.add(new QueryParser(finder));
+            threadSafeParsers.add(new GeometryParser());
+            threadSafeParsers.add(new CircleParser());
+            parsersHolder.set(threadSafeParsers);
+        }
+        return threadSafeParsers;
     }
 
     @Override
     public ICriterion parse(Map<String, String> queryParameters) throws OpenSearchParseException {
 
         List<ICriterion> criteria = new ArrayList<>();
-        for (IParser parser : parsers) {
+        for (IParser parser : getParsers()) {
             // Parse parameters ... may return null if parser required parameter(s) not set
             ICriterion crit = parser.parse(queryParameters);
             if (crit != null) {

@@ -14,7 +14,6 @@ import org.apache.lucene.queryparser.flexible.standard.parser.StandardSyntaxPars
 import org.apache.lucene.queryparser.flexible.standard.processors.StandardQueryNodeProcessorPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -33,7 +32,6 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
-@Component
 public class QueryParser extends QueryParserHelper implements IParser {
 
     /**
