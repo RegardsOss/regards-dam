@@ -3,7 +3,9 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessright.event;
 
+import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
+import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -12,6 +14,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
+@Event(target = Target.ALL)
 public class AccessRightEvent implements ISubscribable {
 
     private final UniformResourceName datasetIpId;
