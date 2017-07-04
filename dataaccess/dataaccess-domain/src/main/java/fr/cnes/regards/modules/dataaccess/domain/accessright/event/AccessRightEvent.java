@@ -17,9 +17,14 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @Event(target = Target.ALL)
 public class AccessRightEvent implements ISubscribable {
 
-    private final UniformResourceName datasetIpId;
+    private UniformResourceName datasetIpId;
 
-    private final AccessRightEventType eventType;
+    private AccessRightEventType eventType;
+
+    @SuppressWarnings("unused")
+    private AccessRightEvent() {
+        super();
+    }
 
     public AccessRightEvent(UniformResourceName datasetIpId, AccessRightEventType eventType) {
         this.datasetIpId = datasetIpId;
