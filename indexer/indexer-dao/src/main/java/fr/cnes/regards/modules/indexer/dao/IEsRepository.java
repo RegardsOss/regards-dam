@@ -162,6 +162,14 @@ public interface IEsRepository {
     long deleteAll(String index);
 
     /**
+     * Delete all documents from index following criterion
+     * @param index index
+     * @param criterion criterion
+     * @return number of deleted elements
+     */
+    long deleteByQuery(String index, ICriterion criterion);
+
+    /**
      * Same as {@link #delete(String, String, String)} using docId and type of provided document
      *
      * @param pIndex index
