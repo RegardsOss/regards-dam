@@ -80,6 +80,7 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate) {
         LOGGER.info("Updating {}", ipId.toString());
+        runtimeTenantResolver.forceTenant(tenant);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
         // If entity does no more exist in database, it must be deleted from ES
         if (entity == null) {
