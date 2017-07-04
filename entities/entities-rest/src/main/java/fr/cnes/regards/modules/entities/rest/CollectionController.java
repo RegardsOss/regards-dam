@@ -101,12 +101,13 @@ public class CollectionController implements IResourceController<Collection> {
 
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
+
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
             response.getOutputStream().write(out.toByteArray());
             response.getOutputStream().flush();
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
             response.setStatus(HttpStatus.OK.value());
         } else {
             response.setStatus(HttpStatus.NO_CONTENT.value());
