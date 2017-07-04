@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.modules.entities.domain.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -74,7 +76,6 @@ public class Dataset extends AbstractDescEntity {
 
     /**
      * Representation of the above subsetting clause as an OpenSearch string request
-     * FIXME do not index
      */
     @Type(type = "text")
     @Column
@@ -94,6 +95,12 @@ public class Dataset extends AbstractDescEntity {
     @Type(type = "text")
     @Column
     private String licence;
+
+    /**
+     * Metadata, only used by Elasticsearch
+     */
+    @Transient
+    private DatasetMetadata metadata = new DatasetMetadata();
 
     public Dataset() {
         // we use super and not this because at deserialization we need a ipId null at the object creation which is then replaced by the attribute if present or added by creation method
@@ -133,7 +140,7 @@ public class Dataset extends AbstractDescEntity {
         return subsettingCrit;
     }
 
-    public ICriterion getSubsettingClausePartToCheck() {
+    public ICriterion getUserSubsettingClause() {
         return (subsettingClause == null) ? ICriterion.all() : subsettingClause;
     }
 
@@ -175,6 +182,14 @@ public class Dataset extends AbstractDescEntity {
 
     public void setLicence(String pLicence) {
         licence = pLicence;
+    }
+
+    public DatasetMetadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(DatasetMetadata metadata) {
+        this.metadata = metadata;
     }
 
     @Override

@@ -51,7 +51,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEv
 @Service
 @MultitenantTransactional
 @EnableFeignClients(clients = IProjectUsersClient.class)
-public class AccessGroupService implements ApplicationListener<ApplicationReadyEvent> {
+public class AccessGroupService implements ApplicationListener<ApplicationReadyEvent>, IAccessGroupService {
 
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
 
@@ -87,14 +87,17 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      *
      * @param pMicroserviceName
      */
+    @Override
     public void setMicroserviceName(final String pMicroserviceName) {
         microserviceName = pMicroserviceName;
     }
 
+    @Override
     public Page<AccessGroup> retrieveAccessGroups(final Pageable pPageable) {
         return accessGroupDao.findAll(pPageable);
     }
 
+    @Override
     public AccessGroup createAccessGroup(final AccessGroup pToBeCreated) throws EntityAlreadyExistsException {
         final AccessGroup alreadyExisting = accessGroupDao.findOneByName(pToBeCreated.getName());
         if (alreadyExisting != null) {
@@ -112,6 +115,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      * @return
      * @throws EntityNotFoundException
      */
+    @Override
     public AccessGroup retrieveAccessGroup(final String pAccessGroupName) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
         if (ag == null) {
@@ -123,6 +127,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     /**
      * @param pAccessGroupName
      */
+    @Override
     public void deleteAccessGroup(final String pAccessGroupName) {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
         if (toDelete != null) {
@@ -132,6 +137,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         }
     }
 
+    @Override
     public AccessGroup associateUserToAccessGroup(final String userEmail, final String accessGroupName)
             throws EntityNotFoundException {
         final User user = getUser(userEmail);
@@ -162,6 +168,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         }
     }
 
+    @Override
     public AccessGroup dissociateUserFromAccessGroup(final String userEmail, final String accessGroupName)
             throws EntityNotFoundException {
         final User user = getUser(userEmail);
@@ -181,6 +188,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      * @param pPageable
      * @return
      */
+    @Override
     public Page<AccessGroup> retrieveAccessGroupsOfUser(final String pUserEmail, final Pageable pPageable) {
         return accessGroupDao.findAllByUsersOrIsPublic(new User(pUserEmail), Boolean.TRUE, pPageable);
     }
@@ -191,6 +199,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      * @return
      * @throws EntityNotFoundException
      */
+    @Override
     public void setAccessGroupsOfUser(final String pUserEmail, final List<AccessGroup> pNewAcessGroups)
             throws EntityNotFoundException {
         final Set<AccessGroup> actualAccessGroups = accessGroupDao.findAllByUsers(new User(pUserEmail));
@@ -206,6 +215,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      * @param pId
      * @return
      */
+    @Override
     public boolean existGroup(final Long pId) {
         return accessGroupDao.exists(pId);
     }
@@ -214,6 +224,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      * @param pUser
      * @return
      */
+    @Override
     public boolean existUser(final User pUser) {
         final User user = getUser(pUser.getEmail());
         return user != null;
@@ -227,6 +238,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      * @return updated accessGroup
      * @throws ModuleException
      */
+    @Override
     public AccessGroup update(final String pAccessGroupName, final AccessGroup pAccessGroup) throws ModuleException {
         final AccessGroup group = accessGroupDao.findOneByName(pAccessGroupName);
         if (group == null) {

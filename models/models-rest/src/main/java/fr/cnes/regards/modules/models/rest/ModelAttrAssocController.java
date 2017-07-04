@@ -3,28 +3,26 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.validation.Valid;
-
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import fr.cnes.regards.framework.hateoas.*;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.TypeMetadataConfMapping;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
@@ -53,7 +51,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
 
     public static final String ASSOCS_MAPPING = "/assocs";
 
-    public static final String COMPUTATION_TYPE_MAPPING = ASSOCS_MAPPING +"/computation/types";
+    public static final String COMPUTATION_TYPE_MAPPING = ASSOCS_MAPPING + "/computation/types";
 
     /**
      * Model attribute association service
@@ -87,8 +85,18 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     @ResourceAccess(
             description = "endpoint allowing to retrieve which plugin configuration can be used for which attribute type with which possible metadata")
     @RequestMapping(path = COMPUTATION_TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<TypeMetadataConfMapping>>> getMappingForComputedAttribute() {
-        return ResponseEntity.ok(HateoasUtils.wrapList(modelAttrAssocService.retrievePossibleMappingsForComputed()));
+    public ResponseEntity<List<Resource<TypeMetadataResourceConfMapping>>> getMappingForComputedAttribute() {
+        return ResponseEntity.ok(HateoasUtils.wrapList(transformToTypeMetadataResourceConfMapping(
+                modelAttrAssocService.retrievePossibleMappingsForComputed())));
+    }
+
+    private List<TypeMetadataResourceConfMapping> transformToTypeMetadataResourceConfMapping(
+            List<TypeMetadataConfMapping> typeMetadataConfMappings) {
+        List<TypeMetadataResourceConfMapping> shit = new ArrayList();
+        for (TypeMetadataConfMapping typeMetadataConfMapping : typeMetadataConfMappings) {
+            shit.add(new TypeMetadataResourceConfMapping(typeMetadataConfMapping));
+        }
+        return shit;
     }
 
     /**
@@ -231,5 +239,47 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
         resourceService.addLink(resource, this.getClass(), "getModelAttrAssocs", LinkRels.LIST,
                                 MethodParamFactory.build(Long.class, modelId));
         return resource;
+    }
+
+    /**
+     * transform {@link TypeMetadataConfMapping} pluginConfigurations and pluginMetaDatas into Collection of resources
+     */
+    private class TypeMetadataResourceConfMapping {
+
+        private AttributeType attrType;
+
+        private Collection<Resource<PluginConfiguration>> pluginConfigurations;
+
+        private Collection<Resource<PluginMetaData>> pluginMetaDatas;
+
+        public TypeMetadataResourceConfMapping(TypeMetadataConfMapping mapping) {
+            this.attrType = mapping.getAttrType();
+            this.pluginConfigurations = HateoasUtils.wrapCollection(mapping.getPluginConfigurations());
+            this.pluginMetaDatas = HateoasUtils.wrapCollection(mapping.getPluginMetaDatas());
+        }
+
+        public AttributeType getAttrType() {
+            return attrType;
+        }
+
+        public void setAttrType(AttributeType attrType) {
+            this.attrType = attrType;
+        }
+
+        public Collection<Resource<PluginConfiguration>> getPluginConfigurations() {
+            return pluginConfigurations;
+        }
+
+        public void setPluginConfigurations(Collection<Resource<PluginConfiguration>> pluginConfigurations) {
+            this.pluginConfigurations = pluginConfigurations;
+        }
+
+        public Collection<Resource<PluginMetaData>> getPluginMetaDatas() {
+            return pluginMetaDatas;
+        }
+
+        public void setPluginMetaDatas(Collection<Resource<PluginMetaData>> pluginMetaDatas) {
+            this.pluginMetaDatas = pluginMetaDatas;
+        }
     }
 }

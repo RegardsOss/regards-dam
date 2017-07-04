@@ -41,11 +41,11 @@ public class AccessRightServiceTest {
 
     private static final String DESC = "Desc";
 
-    private AccessRightService service;
+    private IAccessRightService service;
 
     private IAccessRightRepository arRepo;
 
-    private AccessGroupService agService;
+    private IAccessGroupService agService;
 
     private IDatasetService dsService;
 

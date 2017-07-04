@@ -34,7 +34,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
-import fr.cnes.regards.modules.dataaccess.service.AccessRightService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
@@ -53,7 +53,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     private IResourceService resourceService;
 
     @Autowired
-    private AccessRightService accessRightService;
+    private IAccessRightService accessRightService;
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody

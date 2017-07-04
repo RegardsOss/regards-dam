@@ -32,7 +32,7 @@ public class AccessGroupServiceTest {
      */
     private static final long AG1_ID = 1L;
 
-    private AccessGroupService accessGroupService;
+    private IAccessGroupService accessGroupService;
 
     private AccessGroup accessGroup1;
 
