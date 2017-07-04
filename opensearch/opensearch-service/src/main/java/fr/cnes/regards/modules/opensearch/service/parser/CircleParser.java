@@ -5,8 +5,6 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
-
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
@@ -14,7 +12,6 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * This {@link IParser} implementation only handles the the "lat"/"lon"/"r" part of the OpenSearch request, and returns an {@link ICriterion} describing a circle intersection.<br>
  * @author Xavier-Alexandre Brochard
  */
-@Component
 public class CircleParser implements IParser {
 
     private static final String CENTER_LAT = "lat";
