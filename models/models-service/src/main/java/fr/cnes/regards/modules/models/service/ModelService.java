@@ -373,7 +373,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             if (pluginService.existsByLabel(plgConf.getLabel())) {
                 // New one must be consistent with existing one
                 PluginConfiguration currentPlgConf = pluginService.getPluginConfigurationByLabel(plgConf.getLabel());
-                // Most of plugin configuration attributes come from plugin Metadata which have been retrieved from database
+                // Most of plugin configuration attributes come from plugin DataObjectMetadata which have been retrieved from database
                 // so only plugin parameters should be consistently checked
                 for (PluginParameter param : plgConf.getParameters()) {
                     String curValue = currentPlgConf.getParameterValue(param.getName());
