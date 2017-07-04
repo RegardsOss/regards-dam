@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -22,7 +23,7 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
  * It is coded so that you can add as many parsers as you want, each handling a specific part of the request. You just need to implement a new {@link IParser}, and register it in the <code>aggregate</code> method.
  * @author Xavier-Alexandre Brochard
  */
-//@Service
+@Service
 public class OpenSearchService implements IOpenSearchService {
 
     private final List<IParser> parsers;
