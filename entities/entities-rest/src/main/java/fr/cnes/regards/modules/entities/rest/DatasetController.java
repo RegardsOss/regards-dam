@@ -192,14 +192,16 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public void retrieveDatasetDescription(@RequestParam("origin") String origin,
+    public void retrieveDatasetDescription(@RequestParam(name = "origin", required = false) String origin,
             @PathVariable("dataset_ipId") String datasetIpId, HttpServletResponse response)
             throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         if (file != null) {
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
+            if (origin != null) {
+                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
+            }
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
