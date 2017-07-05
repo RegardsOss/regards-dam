@@ -187,15 +187,19 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Retrieves a dataset description and set the X-Frame-Options header value to ALLOW-FROM origin
+     */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public void retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId,
-            HttpServletResponse response) throws EntityNotFoundException, IOException {
+    public void retrieveDatasetDescription(@RequestParam("origin") String origin,
+            @PathVariable("dataset_ipId") String datasetIpId, HttpServletResponse response)
+            throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         if (file != null) {
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
