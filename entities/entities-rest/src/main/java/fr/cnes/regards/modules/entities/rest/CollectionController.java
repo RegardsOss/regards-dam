@@ -95,14 +95,15 @@ public class CollectionController implements IResourceController<Collection> {
 
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a collection description file content")
-    public void retrieveCollectionDescription(@PathVariable("collection_ipId") String collectionIpId,
-            HttpServletResponse response) throws EntityNotFoundException, IOException {
+    public void retrieveCollectionDescription(@RequestParam("origin") String origin,
+            @PathVariable("collection_ipId") String collectionIpId, HttpServletResponse response)
+            throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
 
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM *");
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM "+origin);
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
