@@ -259,6 +259,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     private boolean isDeletable(AttributeModel attributeModel) {
         // Allows deletion for given attribute if it is not linked to any model.
-        return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty();
+        // FIXME : Remove delete attributes functionality for V1. How to delete an attribute already indexed in elasticsearch ?
+        // Problem is caused by the MultinantAtributeAdapterFactory during mapping between elasticsearch results and attributes models.
+        // return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty();
+        return false;
     }
 }
