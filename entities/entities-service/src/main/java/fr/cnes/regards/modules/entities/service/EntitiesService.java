@@ -3,9 +3,14 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -107,6 +112,7 @@ public class EntitiesService implements IEntitiesService {
                     // this is a normal exception in the logic of the method: to know if we have an
                     // IComputedAttribute<Dataset, ?> we check if a method compute(Dataset) is defined, if not then we
                     // just don't consider this plugin
+                    // FIXME trace something!
                 }
             }
         } catch (ModuleException e) {
