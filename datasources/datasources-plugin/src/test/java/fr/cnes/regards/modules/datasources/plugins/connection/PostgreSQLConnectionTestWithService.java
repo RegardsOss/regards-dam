@@ -28,6 +28,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.plugins.utils.PluginUtils;
@@ -62,12 +63,18 @@ public class PostgreSQLConnectionTestWithService {
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
 
     private IPluginService pluginServiceMocked;
-    
+
+    private IRuntimeTenantResolver runtimeTenantResolver;
+
     @Before
     public void setUp() {
+        runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
+        Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("tenant");
+
         // create a mock repository
         pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
-        pluginServiceMocked = new PluginService(pluginConfRepositoryMocked, Mockito.mock(IPublisher.class));
+        pluginServiceMocked = new PluginService(pluginConfRepositoryMocked, Mockito.mock(IPublisher.class),
+                runtimeTenantResolver);
         pluginServiceMocked.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
     }
 
