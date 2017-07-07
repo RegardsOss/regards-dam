@@ -9,7 +9,7 @@ import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 
 /**
- * Publish when a group is associated to a user
+ * Published when a group is associated to a user
  *
  * @author Marc Sordi
  */

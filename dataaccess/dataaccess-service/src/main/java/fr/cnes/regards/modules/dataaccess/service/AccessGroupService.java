@@ -40,6 +40,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAssociationEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupPublicEvent;
 
 /**
  *
@@ -82,11 +83,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         this.runtimeTenantResolver = runtimeTenantResolver;
     }
 
-    /**
-     * setter only used for unit testing purpose without spring context
-     *
-     * @param pMicroserviceName
-     */
     @Override
     public void setMicroserviceName(final String pMicroserviceName) {
         microserviceName = pMicroserviceName;
@@ -105,16 +101,15 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
                     String.format(ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE, pToBeCreated.getName()));
         }
         final AccessGroup created = accessGroupDao.save(pToBeCreated);
-        // Publish attribute creation
+        // Publish group creation
         publisher.publish(new AccessGroupEvent(created));
+        // Publish public group event
+        if (created.isPublic()) {
+            publisher.publish(new AccessGroupPublicEvent(created));
+        }
         return created;
     }
 
-    /**
-     * @param pAccessGroupName
-     * @return
-     * @throws EntityNotFoundException
-     */
     @Override
     public AccessGroup retrieveAccessGroup(final String pAccessGroupName) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupDao.findOneByName(pAccessGroupName);
@@ -124,9 +119,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         return ag;
     }
 
-    /**
-     * @param pAccessGroupName
-     */
     @Override
     public void deleteAccessGroup(final String pAccessGroupName) {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
@@ -134,6 +126,10 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
             accessGroupDao.delete(toDelete.getId());
             // Publish attribute deletion
             publisher.publish(new AccessGroupEvent(toDelete));
+            // Publish public group event
+            if (toDelete.isPublic()) {
+                publisher.publish(new AccessGroupPublicEvent(toDelete));
+            }
         }
     }
 
@@ -247,8 +243,14 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         if (!group.getId().equals(pAccessGroup.getId())) {
             throw new EntityInconsistentIdentifierException(group.getId(), pAccessGroup.getId(), AccessGroup.class);
         }
+        // Update public visibility
         group.setPublic(pAccessGroup.isPublic());
-        return accessGroupDao.save(group);
+        accessGroupDao.save(group);
+
+        // Publish public group event
+        publisher.publish(new AccessGroupPublicEvent(group));
+
+        return group;
     }
 
     private void removeUser(String email) {

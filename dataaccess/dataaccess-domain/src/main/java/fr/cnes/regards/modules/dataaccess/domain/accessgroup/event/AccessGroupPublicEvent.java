@@ -9,27 +9,24 @@ import fr.cnes.regards.framework.amqp.event.Target;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 
 /**
- * Published when a group is dissociated from a user
- *
+ * Published when a public group is defined or removed
  * @author Marc Sordi
+ *
  */
 @Event(target = Target.ALL)
-public class AccessGroupDissociationEvent implements ISubscribable {
+public class AccessGroupPublicEvent implements ISubscribable {
 
     /**
      * The source of the event
      */
     private AccessGroup accessGroup;
 
-    private String userEmail;
-
-    public AccessGroupDissociationEvent() {
+    public AccessGroupPublicEvent() {
         // Deserialization constructor
     }
 
-    public AccessGroupDissociationEvent(AccessGroup accessGroup, String userEmail) {
-        this.accessGroup = accessGroup;
-        this.setUserEmail(userEmail);
+    public AccessGroupPublicEvent(AccessGroup pAccessGroup) {
+        accessGroup = pAccessGroup;
     }
 
     public AccessGroup getAccessGroup() {
@@ -40,11 +37,4 @@ public class AccessGroupDissociationEvent implements ISubscribable {
         accessGroup = pAccessGroup;
     }
 
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String pUserEmail) {
-        userEmail = pUserEmail;
-    }
 }
