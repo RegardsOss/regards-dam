@@ -30,34 +30,34 @@ public interface IDataSourcePlugin {
     /**
      * The from clause to apply to the SQL request parameter name
      */
-    public static final String FROM_CLAUSE = "fromClause";
+    String FROM_CLAUSE = "fromClause";
 
     /**
      * The model parameter name
      */
-    public static final String MODEL_PARAM = "model";
+    String MODEL_PARAM = "model";
 
     /**
      * The connection parameter name
      */
-    public static final String CONNECTION_PARAM = "connection";
+    String CONNECTION_PARAM = "connection";
 
     /**
      * The connection parameter name
      */
-    public static final String IS_INTERNAL_PARAM = "internalDataSource";
+    String IS_INTERNAL_PARAM = "internalDataSource";
 
-    public static final String TRUE_INTERNAL_DATASOURCE = "true";
+    String TRUE_INTERNAL_DATASOURCE = "true";
 
     /**
      * Ingestion refresh rate parameter name
      */
-    public static final String REFRESH_RATE = "refreshRate";
+    String REFRESH_RATE = "refreshRate";
 
     /**
      * Ingestion refresh rate default value in seconds
      */
-    public static final String REFRESH_RATE_DEFAULT_VALUE = "86400";
+    String REFRESH_RATE_DEFAULT_VALUE = "86400";
 
     /**
      * Retrieve the {@link DBConnection} used by the {@link Plugin}
