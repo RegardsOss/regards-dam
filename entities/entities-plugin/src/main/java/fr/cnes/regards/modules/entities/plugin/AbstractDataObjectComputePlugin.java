@@ -68,7 +68,7 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     }
 
     protected void init(String attributeToComputeName, String attributeToComputeFragmentName,
-            String parameterAttributeName, String parameterAttributeFragmentName) throws InvocationTargetException {
+            String parameterAttributeName, String parameterAttributeFragmentName) {
         attributeToCompute = attModelRepos.findByNameAndFragmentName(attributeToComputeName, (Strings.isNullOrEmpty(
                 attributeToComputeFragmentName) ? Fragment.getDefaultName() : attributeToComputeFragmentName));
         if (attributeToCompute == null) {

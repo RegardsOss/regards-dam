@@ -67,7 +67,7 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
      * Plugin initialization method
      */
     @PluginInit
-    public void init() throws InvocationTargetException {
+    public void init() {
         super.initAbstract(esRepo, attModelRepos, tenantResolver);
         super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
                    parameterAttributeFragmentName);

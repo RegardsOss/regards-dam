@@ -68,7 +68,7 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
      * Plugin initialization method
      */
     @PluginInit
-    public void init() throws InvocationTargetException {
+    public void init() {
         initAbstract(esRepo, attModelRepos, tenantResolver);
         super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
                    parameterAttributeFragmentName);

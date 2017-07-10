@@ -581,13 +581,12 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 .getPluginConfigurationsByType(IComputedAttribute.class);
         for (PluginConfiguration conf : computationConfs) {
             try {
-                IComputedAttribute plugin = pluginService.getPlugin(conf.getId());
-                typeConfMappings.put(plugin.getSupported(), conf);
+                if(pluginService.canInstantiate(conf.getId())) {
+                    IComputedAttribute plugin = pluginService.getPlugin(conf.getId());
+                    typeConfMappings.put(plugin.getSupported(), conf);
+                }
             } catch (ModuleException e) {
                 // thrown if no configuration with id: conf.getId() exists: CANNOT BE THE CASE FOR US. And even if it happens we don't care here
-            } catch(PluginUtilsRuntimeException re) {
-                LOGGER.warn("A computation plugin couldn't be instanciated",re);
-                // we basically could not initialize the plugin so we just ignore it for now.
             }
         }
 
