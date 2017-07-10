@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
@@ -101,6 +102,7 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
         ag1 = new AccessGroup(AG1_NAME);
         ag1 = dao.save(ag1);
         AccessGroup ag2 = new AccessGroup(AG2_NAME);
+        ag2.setPublic(true);
         ag2 = dao.save(ag2);
     }
 
@@ -111,6 +113,16 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS, expectations, ACCESS_GROUPS_ERROR_MSG);
+    }
+
+    @Test
+    @Requirement("REGARDS_DSL_DAM_SET_810")
+    public void testRetrievePublicAccessGroupsList() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        performDefaultGet(AccessGroupController.PATH_ACCESS_GROUPS, expectations, ACCESS_GROUPS_ERROR_MSG,
+                          RequestParamBuilder.build().param("public", "true"));
     }
 
     @Test
