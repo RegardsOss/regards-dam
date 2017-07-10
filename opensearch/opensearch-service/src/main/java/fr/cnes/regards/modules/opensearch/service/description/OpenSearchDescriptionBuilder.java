@@ -77,6 +77,8 @@ public class OpenSearchDescriptionBuilder {
         UrlType url = new UrlType();
         StringJoiner sj = new StringJoiner("/");
         sj.add(project.getHost());
+        //FIXME: do not fix the gateway prefix with a constant, we should find a way to retrieve it
+        sj.add("api/v1");
         // UriUtils.encode give back the string in US-ASCII encoding, so let create a new String that will then reencode
         // the string however the jvm wants
         sj.add(new String(UriUtils.encode(microserviceName, Charset.defaultCharset().name()).getBytes(),

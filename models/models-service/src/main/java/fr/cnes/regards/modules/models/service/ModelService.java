@@ -35,6 +35,7 @@ import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
 import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
+import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Manage model lifecycle
@@ -419,9 +420,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
             AttributeModel imported = modelAtt.getAttribute();
 
-            // Check if attribute already exists
             final AttributeModel existing = attributeModelService
                     .findByNameAndFragmentName(imported.getName(), imported.getFragment().getName());
+            // Check if attribute already exists
 
             if (existing != null) {
                 // Check compatibility if attribute already exists
@@ -584,6 +585,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 typeConfMappings.put(plugin.getSupported(), conf);
             } catch (ModuleException e) {
                 // thrown if no configuration with id: conf.getId() exists: CANNOT BE THE CASE FOR US. And even if it happens we don't care here
+            } catch(PluginUtilsRuntimeException re) {
+                LOGGER.warn("A computation plugin couldn't be instanciated",re);
+                // we basically could not initialize the plugin so we just ignore it for now.
             }
         }
 

@@ -3,7 +3,7 @@
  */
 package fr.cnes.regards.modules.entities.plugin;
 
-import javax.persistence.EntityNotFoundException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -32,10 +33,11 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  */
 public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAttribute<Dataset, R> {
 
-    public static final String PARAMETER_ATTRIBUTE_NAME="parameterAttributeName";
-    public static final String PARAMETER_FRAGMENT_NAME="parameterAttributeFragmentName";
+    public static final String PARAMETER_ATTRIBUTE_NAME = "parameterAttributeName";
 
-    protected static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
+    public static final String PARAMETER_FRAGMENT_NAME = "parameterAttributeFragmentName";
+
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
 
     private IEsRepository esRepo;
 
@@ -66,16 +68,16 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     }
 
     protected void init(String attributeToComputeName, String attributeToComputeFragmentName,
-            String parameterAttributeName, String parameterAttributeFragmentName) {
+            String parameterAttributeName, String parameterAttributeFragmentName) throws InvocationTargetException {
         attributeToCompute = attModelRepos.findByNameAndFragmentName(attributeToComputeName, (Strings.isNullOrEmpty(
                 attributeToComputeFragmentName) ? Fragment.getDefaultName() : attributeToComputeFragmentName));
         if (attributeToCompute == null) {
             if (!Strings.isNullOrEmpty(attributeToComputeFragmentName)) {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find computed attribute '%s'.'%s'", attributeToComputeFragmentName,
                                       attributeToComputeName));
             } else {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find computed attribute '%s'", attributeToComputeName));
             }
         }
@@ -83,11 +85,11 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                 parameterAttributeFragmentName) ? Fragment.getDefaultName() : parameterAttributeFragmentName));
         if (parameterAttribute == null) {
             if (!Strings.isNullOrEmpty(parameterAttributeFragmentName)) {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find parameter attribute '%s'.'%s'", parameterAttributeFragmentName,
                                       parameterAttributeName));
             } else {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
@@ -106,7 +108,8 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
                                                                       EntityType.DATA.toString(), DataObject.class);
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
-        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(), dataset.getIpId().toString(), result);
+        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+                  dataset.getIpId().toString(), result);
     }
 
     @Override

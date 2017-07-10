@@ -3,11 +3,13 @@
  */
 package fr.cnes.regards.modules.entities.plugin;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
@@ -65,7 +67,7 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
      * Plugin initialization method
      */
     @PluginInit
-    public void init() {
+    public void init() throws InvocationTargetException {
         super.initAbstract(esRepo, attModelRepos, tenantResolver);
         super.init(attributeToComputeName, attributeToComputeFragmentName, parameterAttributeName,
                    parameterAttributeFragmentName);
