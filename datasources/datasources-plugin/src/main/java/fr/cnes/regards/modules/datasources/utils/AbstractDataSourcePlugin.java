@@ -40,13 +40,12 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     protected static final String SELECT_COUNT = "SELECT COUNT(*) ";
 
-    protected static final String AS = "as";
-
     protected static final String LIMIT_CLAUSE = " ORDER BY %s LIMIT %d OFFSET %d";
 
     /**
      * By default, the refresh rate is set to 1 day (in ms)
      */
+    @Override
     public int getRefreshRate() {
         return 86400;
     }
@@ -54,7 +53,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     protected abstract String getFromClause();
 
     protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
-        if (pDate != null) {
+        if ((pDate != null) && !getLastUpdateAttributeName().isEmpty()) {
             return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + WHERE
                     + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + buildLimitPart(pPageable);
         } else {
@@ -64,7 +63,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     }
 
     protected String getCountRequest(OffsetDateTime pDate) {
-        if (pDate != null) {
+        if ((pDate == null) || !getLastUpdateAttributeName().isEmpty()) {
             return SELECT_COUNT + getFromClause() + WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
 
         } else {
@@ -80,6 +79,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      * @param pDate can be null
      * @return
      */
+    @Override
     public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) {
         final String selectRequest = getSelectRequest(pPageable, pDate);
         final String countRequest = getCountRequest(pDate);
