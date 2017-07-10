@@ -593,7 +593,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         SetMultimap<AttributeType, PluginMetaData> typeMetadataMappings = HashMultimap.create();
         List<PluginMetaData> pluginMetadata = pluginService.getPluginsByType(IComputedAttribute.class);
-        // Now let worry about metadata
+        // Now lets worry about metadata
         // We want to return possible mappings for all types even if there is none
         for (AttributeType type : attributeTypes) {
             typeMetadataMappings.putAll(type, Sets.newHashSet());
