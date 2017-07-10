@@ -18,7 +18,7 @@ public interface IAccessGroupService {
 
     void setMicroserviceName(String pMicroserviceName);
 
-    Page<AccessGroup> retrieveAccessGroups(Pageable pPageable);
+    Page<AccessGroup> retrieveAccessGroups(Boolean isPublic, Pageable pPageable);
 
     AccessGroup createAccessGroup(AccessGroup pToBeCreated) throws EntityAlreadyExistsException;
 
@@ -26,16 +26,15 @@ public interface IAccessGroupService {
 
     void deleteAccessGroup(String pAccessGroupName);
 
-    AccessGroup associateUserToAccessGroup(String userEmail, String accessGroupName)
-            throws EntityNotFoundException;
+    AccessGroup associateUserToAccessGroup(String userEmail, String accessGroupName) throws EntityNotFoundException;
 
-    AccessGroup dissociateUserFromAccessGroup(String userEmail, String accessGroupName)
-                    throws EntityNotFoundException;
+    AccessGroup dissociateUserFromAccessGroup(String userEmail, String accessGroupName) throws EntityNotFoundException;
 
-    Page<AccessGroup> retrieveAccessGroupsOfUser(String pUserEmail, Pageable pPageable);
+    Page<AccessGroup> retrieveUserAccessGroupsAndPublic(String pUserEmail, Pageable pPageable);
 
-    void setAccessGroupsOfUser(String pUserEmail, List<AccessGroup> pNewAcessGroups)
-            throws EntityNotFoundException;
+    Page<AccessGroup> retrieveUserAccessGroups(String pUserEmail, Pageable pPageable);
+
+    void setAccessGroupsOfUser(String pUserEmail, List<AccessGroup> pNewAcessGroups) throws EntityNotFoundException;
 
     boolean existGroup(Long pId);
 

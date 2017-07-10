@@ -103,8 +103,8 @@ public class IAccessGroupClientIT extends AbstractRegardsWebIT {
      */
     @Test
     public void testRetrieveAccessGroupsList() {
-        final ResponseEntity<PagedResources<Resource<AccessGroup>>> accessGroups = client.retrieveAccessGroupsList(0,
-                                                                                                                   10);
+        final ResponseEntity<PagedResources<Resource<AccessGroup>>> accessGroups = client
+                .retrieveAccessGroupsList(null, 0, 10);
         Assert.assertTrue(accessGroups.getStatusCode().equals(HttpStatus.OK));
     }
 

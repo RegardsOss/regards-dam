@@ -3,7 +3,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
-import javax.persistence.NamedEntityGraph;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -25,11 +24,24 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
 
     AccessGroup findOneByName(String pName);
 
+    /**
+     * Retrieve all groups explicitly associated to the user
+     * @param pUser user
+     * @param pPageable pageable
+     * @return list of groups
+     */
     Page<AccessGroup> findAllByUsers(User pUser, Pageable pPageable);
 
     @EntityGraph(value = "graph.accessgroup.users")
     Set<AccessGroup> findAllByUsers(User pUser);
 
     Page<AccessGroup> findAllByUsersOrIsPublic(User pUser, Boolean pTrue, Pageable pPageable);
+
+    /**
+     * Find all public or non public group
+     * @param isPublic whether we have to select public or non public groups
+     * @return list of public or non public groups
+     */
+    Page<AccessGroup> findAllByIsPublic(Boolean isPublic, Pageable pPageable);
 
 }

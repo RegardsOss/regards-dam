@@ -54,7 +54,7 @@ public class UserController implements IResourceController<AccessGroup> {
     public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsOfUser(
             @Valid @PathVariable("email") final String pUserEmail, final Pageable pPageable,
             final PagedResourcesAssembler<AccessGroup> pAssembler) {
-        Page<AccessGroup> accessGroups = accessGroupService.retrieveAccessGroupsOfUser(pUserEmail, pPageable);
+        Page<AccessGroup> accessGroups = accessGroupService.retrieveUserAccessGroups(pUserEmail, pPageable);
         return new ResponseEntity<>(toPagedResources(accessGroups, pAssembler), HttpStatus.OK);
     }
 

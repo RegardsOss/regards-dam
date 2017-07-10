@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -57,16 +57,15 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     private IAccessGroupService accessGroupService;
 
     @RequestMapping(method = RequestMethod.GET)
-    @ResponseBody
     @ResourceAccess(description = "send the whole list of accessGroups")
-    public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(final Pageable pPageable,
+    public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(
+            @RequestParam(name = "public", required = false) Boolean isPublic, final Pageable pPageable,
             final PagedResourcesAssembler<AccessGroup> pAssembler) {
-        final Page<AccessGroup> accessGroups = accessGroupService.retrieveAccessGroups(pPageable);
+        final Page<AccessGroup> accessGroups = accessGroupService.retrieveAccessGroups(isPublic, pPageable);
         return new ResponseEntity<>(toPagedResources(accessGroups, pAssembler), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    @ResponseBody
     @ResourceAccess(description = "create an access group according to the parameter")
     public ResponseEntity<Resource<AccessGroup>> createAccessGroup(@Valid @RequestBody final AccessGroup pToBeCreated)
             throws EntityAlreadyExistsException {
@@ -75,7 +74,6 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_GROUPS_NAME)
-    @ResponseBody
     @ResourceAccess(description = "send the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(
             @Valid @PathVariable("name") final String pAccessGroupName) throws EntityNotFoundException {
@@ -84,7 +82,6 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME)
-    @ResponseBody
     @ResourceAccess(description = "delete the access group of name requested")
     public ResponseEntity<Void> deleteAccessGroup(@Valid @PathVariable("name") final String pAccessGroupName) {
         accessGroupService.deleteAccessGroup(pAccessGroupName);
@@ -92,17 +89,15 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME)
-    @ResponseBody
     @ResourceAccess(description = "only used to modify the privacy of the group")
     public ResponseEntity<Resource<AccessGroup>> updateAccessGroup(
-            @Valid @PathVariable("name") final String pAccessGroupName, @Valid @RequestBody final AccessGroup pAccessGroup)
-            throws ModuleException {
+            @Valid @PathVariable("name") final String pAccessGroupName,
+            @Valid @RequestBody final AccessGroup pAccessGroup) throws ModuleException {
         final AccessGroup ag = accessGroupService.update(pAccessGroupName, pAccessGroup);
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
-    @ResponseBody
     @ResourceAccess(description = "associated the user of email specified to the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(
             @Valid @PathVariable("name") final String pAccessGroupName,
@@ -112,7 +107,6 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
-    @ResponseBody
     @ResourceAccess(description = "dissociated the user of email specified from the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(
             @Valid @PathVariable("name") final String pAccessGroupName,
