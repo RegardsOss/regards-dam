@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Crawler initializer.
- * This component is used to launch crawler services and ingester service as a daemons.
+ * This component is used to launch crawler services and ingester service as daemons.
  * @author oroussel
  */
 @Component
