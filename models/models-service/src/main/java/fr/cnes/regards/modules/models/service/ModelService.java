@@ -35,6 +35,7 @@ import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
 import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
+import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Manage model lifecycle
@@ -419,9 +420,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
             AttributeModel imported = modelAtt.getAttribute();
 
-            // Check if attribute already exists
             final AttributeModel existing = attributeModelService
                     .findByNameAndFragmentName(imported.getName(), imported.getFragment().getName());
+            // Check if attribute already exists
 
             if (existing != null) {
                 // Check compatibility if attribute already exists
@@ -580,8 +581,10 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 .getPluginConfigurationsByType(IComputedAttribute.class);
         for (PluginConfiguration conf : computationConfs) {
             try {
-                IComputedAttribute plugin = pluginService.getPlugin(conf.getId());
-                typeConfMappings.put(plugin.getSupported(), conf);
+                if(pluginService.canInstantiate(conf.getId())) {
+                    IComputedAttribute plugin = pluginService.getPlugin(conf.getId());
+                    typeConfMappings.put(plugin.getSupported(), conf);
+                }
             } catch (ModuleException e) {
                 // thrown if no configuration with id: conf.getId() exists: CANNOT BE THE CASE FOR US. And even if it happens we don't care here
             }
@@ -589,7 +592,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         SetMultimap<AttributeType, PluginMetaData> typeMetadataMappings = HashMultimap.create();
         List<PluginMetaData> pluginMetadata = pluginService.getPluginsByType(IComputedAttribute.class);
-        // Now let worry about metadata
+        // Now lets worry about metadata
         // We want to return possible mappings for all types even if there is none
         for (AttributeType type : attributeTypes) {
             typeMetadataMappings.putAll(type, Sets.newHashSet());
