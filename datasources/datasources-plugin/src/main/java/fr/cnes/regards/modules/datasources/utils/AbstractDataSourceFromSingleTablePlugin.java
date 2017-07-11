@@ -20,6 +20,7 @@ import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -188,15 +189,15 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable) throws DataSourceException {
         return findAll(pTenant, pPageable, null);
     }
 
     @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) throws
+            DataSourceException {
         if (sqlGenerator == null) {
-            LOG.error("the sqlGenerator is null");
-            return null;
+            throw new DataSourceException("sqlGenerator is null");
         }
         final String selectRequest = getSelectRequest(pPageable, pDate);
         final String countRequest = getCountRequest(pDate);
@@ -207,8 +208,10 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
 
             return pages;
         } catch (SQLException e) {
+            // This exception can only be thrown from getDBConnection(), others have already been transformed into
+            // DataSourceException
             LOG.error("Unable to obtain a database connection.", e);
-            return null;
+            throw new DataSourceException("Unable to obtain a database connection.", e);
         }
 
     }

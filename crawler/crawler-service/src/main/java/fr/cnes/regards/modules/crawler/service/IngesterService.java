@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -228,9 +227,7 @@ public class IngesterService implements IIngesterService {
                         if (dsIngestionOpt.isPresent()) {
                             atLeastOneIngestionDone = true;
                             DatasourceIngestion dsIngestion = dsIngestionOpt.get();
-                            // Reinit old DatasourceIngestion properties
-                            dsIngestion.setStackTrace(null);
-                            dsIngestion.setSavedObjectsCount(0);
+
                             try {
                                 // Launch datasource ingestion
                                 IngestionResult summary = datasourceIngester
@@ -242,7 +239,7 @@ public class IngesterService implements IIngesterService {
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (ModuleException | RuntimeException | InterruptedException | ExecutionException e) {
+                            } catch (Exception e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
@@ -337,6 +334,9 @@ public class IngesterService implements IIngesterService {
                         OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), IngestionStatus.STARTED);
         if (dsIngestionOpt.isPresent()) {
             DatasourceIngestion dsIngestion = dsIngestionOpt.get();
+            // Reinit old DatasourceIngestion properties
+            dsIngestion.setStackTrace(null);
+            dsIngestion.setSavedObjectsCount(0);
             dsIngestion.setStatus(IngestionStatus.STARTED);
             dsIngestionRepos.save(dsIngestion);
         }

@@ -68,7 +68,6 @@ public class Dataset extends AbstractDescEntity {
     /**
      * Request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
      * DataSource has been given to the catalog
-     * FIXME do not index
      */
     @Type(type = "jsonb")
     @Column(name = "sub_setting_clause", columnDefinition = "jsonb")

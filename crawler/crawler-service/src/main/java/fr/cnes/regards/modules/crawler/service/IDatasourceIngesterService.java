@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutionException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 
 /**
  * @author oroussel
@@ -18,7 +19,7 @@ public interface IDatasourceIngesterService {
      * @return a summary containing the count of DataObjects ingested from given datasource and the ingestion date
      */
     default IngestionResult ingest(PluginConfiguration pluginConfiguration)
-            throws ModuleException, InterruptedException, ExecutionException {
+            throws ModuleException, InterruptedException, ExecutionException, DataSourceException {
         return this.ingest(pluginConfiguration, null);
     }
 
@@ -29,5 +30,5 @@ public interface IDatasourceIngesterService {
      * @return a summary containing the count of DataObjects ingested from given datasource and the ingestion date
      */
     IngestionResult ingest(PluginConfiguration pluginConfiguration, OffsetDateTime date)
-            throws ModuleException, InterruptedException, ExecutionException;
+            throws ModuleException, InterruptedException, ExecutionException, DataSourceException;
 }

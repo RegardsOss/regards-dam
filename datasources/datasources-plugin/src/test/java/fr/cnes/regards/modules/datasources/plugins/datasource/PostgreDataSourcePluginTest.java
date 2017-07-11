@@ -43,6 +43,7 @@ import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
@@ -157,7 +158,7 @@ public class PostgreDataSourcePluginTest {
     @Requirement("REGARDS_DSL_DAM_PLG_200")
     @Purpose(
             "The system has a plugin that enables to define a datasource to a PostreSql database by setting a SQL request")
-    public void getDataSourceIntrospection() throws SQLException {
+    public void getDataSourceIntrospection() throws SQLException, DataSourceException {
         Assert.assertEquals(nbElements, repository.count());
 
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 10));
@@ -183,7 +184,7 @@ public class PostgreDataSourcePluginTest {
     @Requirement("REGARDS_DSL_DAM_ARC_120")
     @Requirement("REGARDS_DSL_DAM_ARC_130")
     @Purpose("The system allows to define a request to a data source to get a subset of the data")
-    public void getDataSourceIntrospectionFromPastDate() throws SQLException {
+    public void getDataSourceIntrospectionFromPastDate() throws SQLException, DataSourceException {
         Assert.assertEquals(nbElements, repository.count());
 
         OffsetDateTime date = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).minusMinutes(2);
@@ -207,7 +208,7 @@ public class PostgreDataSourcePluginTest {
     }
 
     @Test
-    public void getDataSourceIntrospectionFromFutureDate() throws SQLException {
+    public void getDataSourceIntrospectionFromFutureDate() throws SQLException, DataSourceException {
         Assert.assertEquals(nbElements, repository.count());
 
         OffsetDateTime ldt = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).plusSeconds(10);

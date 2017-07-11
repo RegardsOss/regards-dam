@@ -42,6 +42,7 @@ import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
@@ -154,7 +155,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
     @Test
     @Requirement("REGARDS_DSL_DAM_ARC_140")
     @Purpose("The system allows to define a mapping between the datasource's attributes and an internal model")
-    public void getDataSourceIntrospectionFromPastDate() throws SQLException {
+    public void getDataSourceIntrospectionFromPastDate() throws SQLException, DataSourceException {
         Assert.assertEquals(nbElements, repository.count());
 
         OffsetDateTime date = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC).minusMinutes(2);

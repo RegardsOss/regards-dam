@@ -20,9 +20,6 @@ public class User {
     public User() { // NOSONAR - Deserialization
     }
 
-    /**
-     * @param pDbData
-     */
     public User(String pEmail) {
         email = pEmail;
     }
