@@ -11,6 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.PolygonCriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -27,6 +28,7 @@ public class GeometryParserTest {
     private static final GeometryParser PARSER = new GeometryParser();
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_PLG_250")
     @Purpose("Test queries like g=POLYGON((1 1,5 1,5 5,1 5,1 1),(2 2,2 3,3 3,3 2,2 2))")
     public final void testParse_shouldParseGeometry() throws OpenSearchParseException, UnsupportedEncodingException {
         String request = URLEncoder.encode("POLYGON((1 2,3 4,5 6,7 8,1 2),(9 8,7 6,5 4,3 2,9 8))", "UTF-8");
@@ -69,6 +71,7 @@ public class GeometryParserTest {
     }
 
     @Test(expected = OpenSearchParseException.class)
+    @Requirement("REGARDS_DSL_DAM_PLG_250")
     @Purpose("Test queries like g=MULTILINESTRING((3 4,10 50,20 25),(-5 -8,-10 -8,-15 -4))")
     public final void testParse_shouldFailIfNotPolygon() throws OpenSearchParseException, UnsupportedEncodingException {
         String request = URLEncoder.encode("MULTILINESTRING((3 4,10 50,20 25),(-5 -8,-10 -8,-15 -4))", "UTF-8");
