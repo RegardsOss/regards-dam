@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -79,8 +80,8 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
      * @param pDate can be null
      * @return
      */
-    @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) {
+    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) throws
+            DataSourceException {
         final String selectRequest = getSelectRequest(pPageable, pDate);
         final String countRequest = getCountRequest(pDate);
 
@@ -93,7 +94,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
         } catch (SQLException e) {
             LOG.error("Unable to obtain a database connection.", e);
-            return null;
+            throw new DataSourceException("Unable to obtain a database connection.", e);
         }
     }
 

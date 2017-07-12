@@ -37,6 +37,7 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -117,7 +118,7 @@ public class OracleDataSourceSsalto {
     @Requirement("REGARDS_DSL_DAM_SRC_110")
     @Requirement("REGARDS_DSL_DAM_SRC_140")
     @Purpose("The system allows to create a plugin to get a subset of the datasource's data")
-    public void getDataSourceIntrospection() throws SQLException {
+    public void getDataSourceIntrospection() throws SQLException, DataSourceException {
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());

@@ -26,6 +26,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -74,7 +75,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     @Override
     public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime lastUpdateDate)
-            throws ModuleException, InterruptedException, ExecutionException {
+            throws ModuleException, InterruptedException, ExecutionException, DataSourceException {
         String tenant = runtimeTenantResolver.getTenant();
 
         String datasourceId = pluginConf.getId().toString();
@@ -146,7 +147,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
-            String datasourceId, Pageable pageable) {
+            String datasourceId, Pageable pageable) throws DataSourceException {
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
         page.forEach(dataObject -> dataObject.setIpId(buildIpId(tenant, dataObject.getSipId(), datasourceId)));
         return page;

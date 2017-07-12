@@ -41,6 +41,7 @@ import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.Table;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.entities.domain.DataFile;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.DataType;
@@ -170,7 +171,7 @@ public abstract class AbstractDataObjectMapping {
      * @return a page of {@link DataObject}
      */
     protected Page<DataObject> findAll(String pTenant, Connection pConn, String pSelectRequest, String pCountRequest,
-            Pageable pPageable, OffsetDateTime pDate) {
+            Pageable pPageable, OffsetDateTime pDate) throws DataSourceException {
         List<DataObject> dataObjects = new ArrayList<>();
 
         try (Statement statement = pConn.createStatement()) {
@@ -200,7 +201,8 @@ public abstract class AbstractDataObjectMapping {
 
             statement.close();
         } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
+            LOG.error("Error while retrieving or counting datasource elements", e);
+            throw new DataSourceException("Error while retrieving or counting datasource elements", e);
         }
 
         return new PageImpl<>(dataObjects, pPageable, nbItems);
