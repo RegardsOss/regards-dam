@@ -3,20 +3,31 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import fr.cnes.regards.framework.hateoas.*;
+import fr.cnes.regards.framework.hateoas.HateoasUtils;
+import fr.cnes.regards.framework.hateoas.IResourceController;
+import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
+import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -86,8 +97,8 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
             description = "endpoint allowing to retrieve which plugin configuration can be used for which attribute type with which possible metadata")
     @RequestMapping(path = COMPUTATION_TYPE_MAPPING, method = RequestMethod.GET)
     public ResponseEntity<List<Resource<TypeMetadataResourceConfMapping>>> getMappingForComputedAttribute() {
-        return ResponseEntity.ok(HateoasUtils.wrapList(transformToTypeMetadataResourceConfMapping(
-                modelAttrAssocService.retrievePossibleMappingsForComputed())));
+        return ResponseEntity.ok(HateoasUtils.wrapList(transformToTypeMetadataResourceConfMapping(modelAttrAssocService
+                .retrievePossibleMappingsForComputed())));
     }
 
     private List<TypeMetadataResourceConfMapping> transformToTypeMetadataResourceConfMapping(
@@ -106,7 +117,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      * @return list of linked {@link ModelAttrAssoc}
      * @throws ModuleException if model unknown
      */
-    @ResourceAccess(description = "List all model attributes")
+    @ResourceAccess(description = "List all model attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
     public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId)
             throws ModuleException {

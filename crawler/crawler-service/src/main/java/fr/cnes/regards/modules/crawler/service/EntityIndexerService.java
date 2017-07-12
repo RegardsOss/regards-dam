@@ -350,10 +350,12 @@ public class EntityIndexerService implements IEntityIndexerService {
         for (DataObject dataObject : objects) {
             DataObject curObject = esRepos.get(tenant, dataObject);
             // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
-            // current creationDate, groups and tags.
+            // current creationDate, groups, tags and modelIds
             if (curObject != null) {
                 dataObject.setCreationDate(curObject.getCreationDate());
-                dataObject.setGroups(curObject.getGroups());
+                dataObject.setMetadata(curObject.getMetadata());
+                dataObject.setGroups(dataObject.getMetadata().getGroups());
+                dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
                 dataObject.setTags(curObject.getTags());
             } else { // else it must be created
                 dataObject.setCreationDate(now);

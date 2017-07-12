@@ -624,6 +624,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     private U checkUpdate(Long pEntityId, U pEntity) throws ModuleException {
         U entityInDb = repository.findById(pEntityId);
+        em.detach(entityInDb);
         if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
             throw new EntityNotFoundException(pEntityId);
         }
@@ -676,6 +677,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     private U updateWithoutCheck(U pEntity, U entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
+        Set<String> oldGroups=entityInDb.getGroups();
+        Set<String> newGroups=pEntity.getGroups();
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put pEntity into the DB.
@@ -683,7 +686,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         U updated = repository.save(pEntity);
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
-        if (!oldLinks.equals(newLinks)) {
+        if (!oldLinks.equals(newLinks) || !oldGroups.equals(newGroups)) {
             Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
             // For all previously tagged entities, retrieve all groups...
             Set<String> groupsToRemove = new HashSet<>();

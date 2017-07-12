@@ -6,24 +6,21 @@ package fr.cnes.regards.modules.entities.service;
 import java.io.IOException;
 import java.util.List;
 
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -32,12 +29,7 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.entities.domain.*;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -48,7 +40,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 @MultitenantTransactional
 @ActiveProfiles({ "default", "test" })
 public class CollectionDatasetGroupsIT {
-
 
     private static final Logger LOG = LoggerFactory.getLogger(CollectionDatasetGroupsIT.class);
 
@@ -325,13 +316,51 @@ public class CollectionDatasetGroupsIT {
 
         coll4 = collService.load(coll4.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
+
+        //lets test when we add group G4 to DS1 so we can check it has been propagated to C1(direct tag), C2(indirect tag through C1->DS1), C4(indirect tag through C2->C1->DS1)
+        // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and the logic are respected
+        Dataset dataset1Updated = new Dataset();
+        dataset1Updated.setGroups(Sets.newHashSet("G1"));
+        dataset1Updated.setDescriptionFile(dataset1.getDescriptionFile());
+        dataset1Updated.setDataModel(dataset1.getDataModel());
+        dataset1Updated.setCreationDate(dataset1.getCreationDate());
+        dataset1Updated.setDataSource(dataset1.getDataSource());
+        dataset1Updated.setLicence(dataset1.getLicence());
+        dataset1Updated.setMetadata(dataset1.getMetadata());
+        dataset1Updated.setOpenSearchSubsettingClause(dataset1.getOpenSearchSubsettingClause());
+        dataset1Updated.setQuotations(dataset1.getQuotations());
+        dataset1Updated.setScore(dataset1.getScore());
+        dataset1Updated.setGeometry(dataset1.getGeometry());
+        dataset1Updated.setId(dataset1.getId());
+        dataset1Updated.setIpId(dataset1.getIpId());
+        dataset1Updated.setLabel(dataset1.getLabel());
+        dataset1Updated.setLastUpdate(dataset1.getLastUpdate());
+        dataset1Updated.setModel(dataset1.getModel());
+        dataset1Updated.setProperties(dataset1.getProperties());
+        dataset1Updated.setSipId(dataset1.getSipId());
+        dataset1Updated.setTags(dataset1.getTags());
+        dataset1Updated.getGroups().add("G4");
+        dataset1 = dataSetService.update(dataset1Updated);
+        // we now should have:
+        // DS1 => (G1, G4)
+        // C1 => DS1 & DS2 => (G1, G2, G4)
+        // C2 => DS3 & C1 => (G1, G2, G3, G4)
+        // C4 => C2 => (G1, G2, G3, G4)
+        Assert.assertTrue(dataset1.getGroups().contains("G4"));
+        coll1 = collService.load(coll1.getId());
+        Assert.assertEquals(Sets.newHashSet("G1", "G2", "G4"), coll1.getGroups());
+        coll2 = collService.load(coll2.getId());
+        Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3", "G4"), coll2.getGroups());
+        coll4 = collService.load(coll4.getId());
+        Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3", "G4"), coll4.getGroups());
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_220")
     @Requirement("REGARDS_DSL_DAM_COL_040")
-    @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour."
-            + "Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
-            + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
+    @Purpose(
+            "Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour."
+                    + "Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
+                    + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Test
     public void testUpdate() throws ModuleException, IOException {
@@ -383,7 +412,8 @@ public class CollectionDatasetGroupsIT {
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_120")
-    @Purpose("Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
+    @Purpose(
+            "Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
     public void testDelete() throws ModuleException, IOException {
         buildData1();

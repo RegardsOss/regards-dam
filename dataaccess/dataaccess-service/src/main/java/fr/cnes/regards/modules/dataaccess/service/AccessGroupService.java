@@ -89,7 +89,10 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     }
 
     @Override
-    public Page<AccessGroup> retrieveAccessGroups(final Pageable pPageable) {
+    public Page<AccessGroup> retrieveAccessGroups(Boolean isPublic, final Pageable pPageable) {
+        if ((isPublic != null) && isPublic) {
+            return accessGroupDao.findAllByIsPublic(isPublic, pPageable);
+        }
         return accessGroupDao.findAll(pPageable);
     }
 
@@ -179,22 +182,16 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         return updated;
     }
 
-    /**
-     * @param pUserEmail
-     * @param pPageable
-     * @return
-     */
     @Override
-    public Page<AccessGroup> retrieveAccessGroupsOfUser(final String pUserEmail, final Pageable pPageable) {
+    public Page<AccessGroup> retrieveUserAccessGroupsAndPublic(final String pUserEmail, final Pageable pPageable) {
         return accessGroupDao.findAllByUsersOrIsPublic(new User(pUserEmail), Boolean.TRUE, pPageable);
     }
 
-    /**
-     * @param pUserEmail
-     * @param pNewAcessGroups
-     * @return
-     * @throws EntityNotFoundException
-     */
+    @Override
+    public Page<AccessGroup> retrieveUserAccessGroups(String pUserEmail, Pageable pPageable) {
+        return accessGroupDao.findAllByUsers(new User(pUserEmail), pPageable);
+    }
+
     @Override
     public void setAccessGroupsOfUser(final String pUserEmail, final List<AccessGroup> pNewAcessGroups)
             throws EntityNotFoundException {
@@ -207,33 +204,17 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         }
     }
 
-    /**
-     * @param pId
-     * @return
-     */
     @Override
     public boolean existGroup(final Long pId) {
         return accessGroupDao.exists(pId);
     }
 
-    /**
-     * @param pUser
-     * @return
-     */
     @Override
     public boolean existUser(final User pUser) {
         final User user = getUser(pUser.getEmail());
         return user != null;
     }
 
-    /**
-     * only update the privacy of the group
-     *
-     * @param pAccessGroupName
-     * @param pAccessGroup
-     * @return updated accessGroup
-     * @throws ModuleException
-     */
     @Override
     public AccessGroup update(final String pAccessGroupName, final AccessGroup pAccessGroup) throws ModuleException {
         final AccessGroup group = accessGroupDao.findOneByName(pAccessGroupName);

@@ -66,6 +66,10 @@ public class DataObject extends AbstractDataEntity {
         return metadata;
     }
 
+    public void setMetadata(DataObjectMetadata metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public String getType() {
         return EntityType.DATA.toString();

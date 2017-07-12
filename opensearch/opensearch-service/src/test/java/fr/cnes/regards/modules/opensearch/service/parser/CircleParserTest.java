@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -24,6 +25,7 @@ public class CircleParserTest {
     private static final CircleParser PARSER = new CircleParser();
 
     @Test
+    @Requirement("REGARDS_DSL_DAM_PLG_250")
     @Purpose("Test queries like lat=11&lon=22&r=33")
     public final void testParse_shouldParseLatLonRadius() throws OpenSearchParseException {
         ICriterion criterion = PARSER.parse("lat=11&lon=22&r=33");

@@ -16,15 +16,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Propagation;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.plugin.AbstractDataObjectComputePlugin;
 import fr.cnes.regards.modules.entities.plugin.CountPlugin;
+import fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
@@ -38,6 +44,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
+import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Test {@link ModelAttrAssoc} API
@@ -243,11 +250,15 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void testGetMappingForComputedAttribute() {
+    public void testGetMappingForComputedAttribute() throws ModuleException {
         //lets add a package where we know there is plugin to get some results
         pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
-        //TODO: create some plugin confs, or not.....
-        List<ResultMatcher> expectations= Lists.newArrayList();
+        List<PluginParameter> params = PluginParametersFactory.build()
+                .addParameter(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto").getParameters();
+        PluginConfiguration confWithUnknownParameter = PluginUtils.getPluginConfiguration(params, IntSumComputePlugin.class,
+                                                                                          Lists.newArrayList(IntSumComputePlugin.class.getPackage().getName()));
+        pluginService.savePluginConfiguration(confWithUnknownParameter);
+        List<ResultMatcher> expectations = Lists.newArrayList();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(AttributeType.values().length)));
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.COMPUTATION_TYPE_MAPPING,

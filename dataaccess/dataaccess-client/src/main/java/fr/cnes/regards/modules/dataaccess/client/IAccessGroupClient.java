@@ -24,7 +24,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
  *
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = IAccessGroupClient.PATH_ACCESS_GROUPS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAccessGroupClient.PATH_ACCESS_GROUPS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessGroupClient { // NOSONAR
 
     public static final String PATH_ACCESS_GROUPS = "/accessgroups";
@@ -36,7 +37,8 @@ public interface IAccessGroupClient { // NOSONAR
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<PagedResources<Resource<AccessGroup>>> retrieveAccessGroupsList(
-            @RequestParam("page") int pPage, @RequestParam("size") int pSize);
+            @RequestParam(name = "public", required = false) Boolean isPublic, @RequestParam("page") int pPage,
+            @RequestParam("size") int pSize);
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
