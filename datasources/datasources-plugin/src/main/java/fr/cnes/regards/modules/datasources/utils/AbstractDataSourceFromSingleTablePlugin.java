@@ -80,7 +80,7 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
         // reset the number of data element hosted by the datasource
         this.reset();
 
-        tableDescription = new TableDescription(pTable, null, columns.toArray(new String[0]));
+        tableDescription = new TableDescription(pTable, null, orderByColumn);
 
         if (columns.isEmpty()) {
             sqlGenerator = buildSqlGenerator();
