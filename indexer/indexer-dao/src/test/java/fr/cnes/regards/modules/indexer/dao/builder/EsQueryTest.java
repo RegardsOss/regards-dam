@@ -654,11 +654,11 @@ public class EsQueryTest {
         SearchKey<Item, Properties> searchKey1 = new SearchKey<>(INDEX2, Maps.newHashMap(TYPE1, Item.class),
                                                                  Properties.class);
         List<Properties> propertieses = repository
-                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties");
+                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
         long start2 = System.currentTimeMillis();
         List<Properties> propertieses2 = repository
-                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties");
+                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start2) + " ms");
 
         Object[] array1 = propertieses.toArray();

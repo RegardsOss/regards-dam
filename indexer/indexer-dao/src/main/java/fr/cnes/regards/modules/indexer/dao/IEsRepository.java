@@ -26,6 +26,9 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
  */
 public interface IEsRepository {
 
+    /**
+     * Preferred bulk size recommended by Elasticsearch
+     */
     int BULK_SIZE = 10_000;
 
     /**
@@ -431,15 +434,6 @@ public interface IEsRepository {
      * @param pCriterion search criterion
      */
     <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCriterion);
-
-    /**
-     * Execute specified action for all search results<br/>
-     * <b>No 10000 offset Elasticsearch limitation</b>
-     *
-     * @param searchKey the search key     * @param pAction action to be executed for each search result element
-     * @param pAttributeSource inner attribute to be used as ES "_source" results
-     */
-    <T> void searchAll(SearchKey<?, T> searchKey, Consumer<T> pAction, ICriterion pCriterion, String pAttributeSource);
 
     /**
      * Close Client
