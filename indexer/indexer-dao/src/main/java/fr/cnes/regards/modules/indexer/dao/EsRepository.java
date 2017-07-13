@@ -492,6 +492,9 @@ public class EsRepository implements IEsRepository {
                 request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
                 request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                         .setSize(pPageRequest.getPageSize());
+                if (pPageRequest.getSort() != null) {
+                    manageSortRequest(index, request, pPageRequest.getSort());
+                }
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
                 // Relaunch the request with replaced facets
