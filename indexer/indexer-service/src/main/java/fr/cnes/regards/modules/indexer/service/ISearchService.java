@@ -24,7 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -36,7 +35,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 
 /**
  * Elasticsearch search service. This service contains all search and get methods. For other methods, check crawler-service and IndexerService class.
- *
  * @author oroussel
  */
 public interface ISearchService {
@@ -45,7 +43,6 @@ public interface ISearchService {
 
     /**
      * Search ordered documents into index following criterion. Some facets are asked for.
-     *
      * @param searchKey identity search key
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion
@@ -56,40 +53,24 @@ public interface ISearchService {
             Map<String, FacetType> facetsMap);
 
     /**
-     * Search documents as usual ({@link #search(SearchKey, int, ICriterion)} BUT return joined entity whom type is specified into searchKey
-     *
+     * Search documents as usual BUT return joined entity whom type is specified into searchKey
      * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
-     * @param threshold max authorized result count for searched entities (not joined ones)
-     * @param <T> Joined entity class
-     * @return a page of joined entities
-     * @throws TooManyResultsException if join search cannot be done due to threshold
-     */
-    <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
-            ICriterion pCriterion, Long threshold) throws TooManyResultsException;
-
-    /**
-     * Search documents as usual ({@link #search(SearchKey, int, ICriterion)} BUT return joined entity whom type is specified into searchKey
-     *
-     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
-     * @param pageRequest pagination information ({@link PageRequest}
-     * @param criterion search criterion on document
-     * @param <T> Joined entity class
+     * @param <S> entity class on which request is done
+     * @param <R> Joined entity class ("result" type)
      * @return a page of joined entities
      */
     <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
-            ICriterion pCriterion);
+            ICriterion criterion);
 
     /**
-     * Searching specified page of elements from index giving page size (for first call us {@link #multiFieldsSearch(String, Class, int, Object, String...)} method
-     *
+     * Searching specified page of elements from index giving page size
      * @param searchKey the search key
-     * @param pClass class of document type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
      * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given
-     *            value type</b>
+     * value type</b>
      * @param <T> document type
      * @return specified result page
      */

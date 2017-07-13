@@ -109,21 +109,6 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public <S, T extends IIndexable> FacetPage<T> search(final JoinEntitySearchKey<S, T> searchKey,
-            final Pageable pageRequest, final ICriterion criterion, final Long threshold)
-            throws TooManyResultsException {
-
-        // Check threshold precondition
-        // If total hits exceeds threshold, throw exception
-        if ((threshold != null) && (repository.count(searchKey, criterion) > threshold)) {
-            String errorMessage = "Too many results. Request is cancelled. Please restrict your search!";
-            LOGGER.error(errorMessage);
-            throw new TooManyResultsException(errorMessage);
-        }
-        return search(searchKey, pageRequest, criterion);
-    }
-
-    @Override
     public <T> Page<T> multiFieldsSearch(final SearchKey<T, T> pSearchKey, final Pageable pPageRequest,
             final Object pValue, final String... pFields) {
         return repository.multiFieldsSearch(pSearchKey, pPageRequest, pValue, pFields);
