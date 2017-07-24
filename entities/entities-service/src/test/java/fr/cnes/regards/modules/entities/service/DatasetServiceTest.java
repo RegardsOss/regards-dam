@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -121,6 +122,8 @@ public class DatasetServiceTest {
 
     private IPublisher publisherMocked;
 
+    private EntityManager emMocked;
+
     /**
      * initialize the repo before each test
      *
@@ -138,6 +141,7 @@ public class DatasetServiceTest {
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
         dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
         pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
+        emMocked = Mockito.mock(EntityManager.class);
 
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
@@ -183,7 +187,7 @@ public class DatasetServiceTest {
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                                                   pModelAttributeService, dataSourceServiceMocked,
                                                   entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked,
-                                                  null, null, publisherMocked, runtimeTenantResolver, null,
+                                                  null, emMocked, publisherMocked, runtimeTenantResolver, null,
                                                   Mockito.mock(IOpenSearchService.class));
 
         buildModelAttributes();
