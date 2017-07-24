@@ -79,7 +79,7 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
     }
 
     protected String getCountRequest(OffsetDateTime pDate) {
-        if ((pDate == null) || !getLastUpdateAttributeName().isEmpty()) {
+        if ((pDate != null) && !getLastUpdateAttributeName().isEmpty()) {
             return SELECT_COUNT + getFromClause() + WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
 
         } else {
