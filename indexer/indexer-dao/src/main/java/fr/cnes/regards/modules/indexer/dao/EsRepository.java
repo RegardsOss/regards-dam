@@ -393,7 +393,7 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
-        SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
+        SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex());
         requestBuilder = requestBuilder.setTypes(searchKey.getSearchTypes());
         ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
         SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
@@ -447,7 +447,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> FacetPage<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest,
             ICriterion pCrit, Map<String, FacetType> pFacetsMap) {
-        String index = searchKey.getSearchIndex().toLowerCase();
+        String index = searchKey.getSearchIndex();
         try {
             final List<T> results = new ArrayList<>();
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
@@ -505,9 +505,8 @@ public class EsRepository implements IEsRepository {
     /**
      * Build a SearchRequestBuilder following given ICriterion on searchKey with a result size of 0
      */
-    private <T> SearchRequestBuilder createRequestBuilderForAgg(SearchKey<?, T> searchKey,
-            ICriterion pCrit) {
-        String index = searchKey.getSearchIndex().toLowerCase();
+    private <T> SearchRequestBuilder createRequestBuilderForAgg(SearchKey<?, T> searchKey, ICriterion pCrit) {
+        String index = searchKey.getSearchIndex();
 
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
         ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
@@ -654,7 +653,7 @@ public class EsRepository implements IEsRepository {
         try {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
-            return objects.stream().flatMap(o -> Arrays.stream((R[]) o)).distinct().filter(filterPredicate)
+            return objects.stream().map(o -> (R)o).distinct().filter(filterPredicate)
                     .map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw new RuntimeException(e); // NOSONAR
@@ -669,9 +668,9 @@ public class EsRepository implements IEsRepository {
      * @return true or false
      */
     private boolean isTextMapping(String index, String type, String attribute) {
-        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(index).setFields(attribute)
-                .get();
-        FieldMappingMetaData fieldMapping = response.fieldMappings(index, type, attribute);
+        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(index.toLowerCase())
+                .setFields(attribute).get();
+        FieldMappingMetaData fieldMapping = response.fieldMappings(index.toLowerCase(), type, attribute);
 
         if (fieldMapping != null) {
             Map<String, Object> metaDataMap = fieldMapping.sourceAsMap();
@@ -934,7 +933,7 @@ public class EsRepository implements IEsRepository {
                     pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
-            SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
+            SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex());
             request = request.setTypes(searchKey.getSearchTypes());
             request = request.setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
                     .setSize(pPageRequest.getPageSize());
