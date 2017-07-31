@@ -45,7 +45,6 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @Service
 @MultitenantTransactional
@@ -102,7 +101,8 @@ public class AccessRightService implements IAccessRightService {
             throw new IllegalArgumentException("datasetIpId must not be null");
         }
         try {
-            return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream().collect(Collectors.toMap(r -> r.getAccessGroup().getName(), AccessRight::getAccessLevel));
+            return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent()
+                    .stream().collect(Collectors.toMap(r -> r.getAccessGroup().getName(), AccessRight::getAccessLevel));
         } catch (EntityNotFoundException e) {
             return Collections.emptyMap();
         }

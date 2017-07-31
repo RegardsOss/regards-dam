@@ -115,6 +115,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**
  * Elasticsearch repository implementation
+ * @author oroussel
  */
 @Repository
 public class EsRepository implements IEsRepository {
