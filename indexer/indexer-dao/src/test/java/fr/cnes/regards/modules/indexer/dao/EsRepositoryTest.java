@@ -2,11 +2,9 @@ package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -14,18 +12,14 @@ import java.util.stream.Stream;
 
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -57,11 +51,17 @@ public class EsRepositoryTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
+        Map<String, String> propMap = Maps.newHashMap();
         boolean repositoryOK = true;
+        Stream<String> props = Files.lines(Paths.get("src/test/resources"));
+        props.forEach(l -> {
+            String[] keyVal = l.split("=");
+            propMap.put(keyVal[0], keyVal[1]);
+        });
         try {
             gson = new GsonBuilder().create();
             // FIXME valeurs en dur pour l'instant
-            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards",
+            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"), Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")), propMap.get("regards.elasticsearch.cluster.name"),
                                           new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
