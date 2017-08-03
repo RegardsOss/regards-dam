@@ -32,7 +32,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
  * EsRepository test
  * @author oroussel
  */
-public class EsRepositoryIT {
+public class EsRepositoryTest {
 
     /**
      * Class to test
@@ -46,9 +46,7 @@ public class EsRepositoryIT {
 
     /**
      * Befor class setting up method
-     *
-     * @throws Exception
-     *             exception
+     * @throws Exception exception
      */
     @BeforeClass
     public static void setUp() throws Exception {
@@ -56,14 +54,16 @@ public class EsRepositoryIT {
         boolean repositoryOK = true;
         // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
         Stream<String> props = Files.lines(Paths.get("target/test-classes/test.properties"));
-        props.forEach(l -> {
-            String[] keyVal = l.split("=");
+        props.filter(line -> !(line.startsWith("#") || line.trim().isEmpty())).forEach(line -> {
+            String[] keyVal = line.split("=");
             propMap.put(keyVal[0], keyVal[1]);
         });
         try {
             gson = new GsonBuilder().create();
             // FIXME valeurs en dur pour l'instant
-            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"), Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")), propMap.get("regards.elasticsearch.cluster.name"),
+            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
+                                          Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
+                                          propMap.get("regards.elasticsearch.cluster.name"),
                                           new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
@@ -227,9 +227,7 @@ public class EsRepositoryIT {
 
     /**
      * Load generated data into Elsaticsearch
-     *
-     * @param pCount
-     *            number of documents to insert
+     * @param pCount number of documents to insert
      */
     private void loadItemsBulk(int pCount) {
         repository.createIndex("loading");
