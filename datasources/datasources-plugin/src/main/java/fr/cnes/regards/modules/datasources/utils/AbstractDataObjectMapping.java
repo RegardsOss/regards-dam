@@ -411,14 +411,13 @@ public abstract class AbstractDataObjectMapping {
         if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
             String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
-                pData.setFiles(new ArrayList<>());
+                pData.setFiles(new HashMap<>());
             }
             try {
                 DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
-                dataFile.setDataType(type);
                 dataFile.setFileRef(new URI(str));
-                pData.getFiles().add(dataFile);
+                pData.getFiles().put(type, dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }

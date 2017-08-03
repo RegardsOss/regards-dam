@@ -18,9 +18,8 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.net.URI;
-
 import javax.validation.Valid;
+import java.net.URI;
 
 import org.springframework.util.MimeType;
 
@@ -32,16 +31,11 @@ import fr.cnes.regards.framework.jpa.IIdentifiable;
  * @author lmieulet
  *
  */
-//@Entity
-//@Table(name = "t_data_file")
 public class DataFile implements IIdentifiable<Long> {
 
     /**
      * Entity identifier
      */
-    //    @Id
-    //    @SequenceGenerator(name = "DataFileSequence", initialValue = 1, sequenceName = "seq_data_file")
-    //    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DataFileSequence")
     private Long id;
 
     /**
@@ -52,18 +46,12 @@ public class DataFile implements IIdentifiable<Long> {
     /**
      * File size
      */
-    private Integer fileSize;
+    private Long fileSize;
 
     /**
      * {@link MimeType}
      */
     private MimeType mimeType;
-
-    /**
-     * {@link DataType}
-     */
-    @Valid
-    private DataType dataType;
 
     /**
      * File reference
@@ -88,11 +76,11 @@ public class DataFile implements IIdentifiable<Long> {
         checksum = pChecksum;
     }
 
-    public Integer getFileSize() {
+    public Long getFileSize() {
         return fileSize;
     }
 
-    public void setFileSize(Integer pFileSize) {
+    public void setFileSize(Long pFileSize) {
         fileSize = pFileSize;
     }
 
@@ -102,14 +90,6 @@ public class DataFile implements IIdentifiable<Long> {
 
     public void setMimeType(MimeType pMimeType) {
         mimeType = pMimeType;
-    }
-
-    public DataType getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(DataType pDataType) {
-        dataType = pDataType;
     }
 
     public URI getFileRef() {
