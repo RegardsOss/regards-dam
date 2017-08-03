@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.indexer.service;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -61,8 +62,24 @@ public interface ISearchService {
      * @param <R> Joined entity class ("result" type)
      * @return a page of joined entities
      */
+    default <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
+            ICriterion criterion) {
+        return search(searchKey, pageRequest, criterion, null);
+    }
+
+    /**
+     * Search documents as usual BUT return joined entity whom type is specified into searchKey
+     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
+     * @param pageRequest pagination information ({@link PageRequest}
+     * @param criterion search criterion on document
+     * @param searchResultFilter a result filter to be used before result pagination. Can be null.
+     * @param <S> entity class on which request is done
+     * @param <R> Joined entity class ("result" type)
+     * @return a page of joined entities
+     */
     <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
-            ICriterion criterion);
+            ICriterion criterion, Predicate<R> searchResultFilter);
+
 
     /**
      * Searching specified page of elements from index giving page size

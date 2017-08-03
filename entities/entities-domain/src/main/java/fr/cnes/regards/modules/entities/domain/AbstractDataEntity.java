@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.List;
+import java.util.Map;
 
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -28,14 +28,14 @@ import fr.cnes.regards.modules.models.domain.Model;
  *
  * @author lmieulet
  * @author Marc Sordi
- *
+ * @author oroussel
  */
 public abstract class AbstractDataEntity extends AbstractEntity {
 
     /**
      * Physical data file references
      */
-    private List<DataFile> files;
+    private Map<DataType, DataFile> files;
 
     protected AbstractDataEntity() {
         this(null, null, null);
@@ -45,11 +45,11 @@ public abstract class AbstractDataEntity extends AbstractEntity {
         super(pModel, pIpId, pLabel);
     }
 
-    public List<DataFile> getFiles() {
+    public Map<DataType, DataFile> getFiles() {
         return files;
     }
 
-    public void setFiles(List<DataFile> pFiles) {
+    public void setFiles(Map<DataType, DataFile> pFiles) {
         files = pFiles;
     }
 

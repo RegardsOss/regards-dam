@@ -44,15 +44,15 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 @RequestMapping(value = IDatasetClient.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IDatasetClient {
 
-    public static final String DATASET_PATH = "/datasets";
+    String DATASET_PATH = "/datasets";
 
-    public static final String DATASET_ID_PATH = "/{dataset_id}";
+    String DATASET_ID_PATH = "/{dataset_id}";
 
-    public static final String DATASET_ID_ASSOCIATE_PATH = DATASET_ID_PATH + "/associate";
+    String DATASET_ID_ASSOCIATE_PATH = DATASET_ID_PATH + "/associate";
 
-    public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
+    String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
-    public static final String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
+    String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
 
     // FIXME
     /*    @RequestMapping(method = RequestMethod.POST)

@@ -30,8 +30,9 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 
 /**
  * EsRepository test
+ * @author oroussel
  */
-public class EsRepositoryTest {
+public class EsRepositoryIT {
 
     /**
      * Class to test
@@ -53,7 +54,7 @@ public class EsRepositoryTest {
     public static void setUp() throws Exception {
         Map<String, String> propMap = Maps.newHashMap();
         boolean repositoryOK = true;
-        Stream<String> props = Files.lines(Paths.get("src/test/resources"));
+        Stream<String> props = Files.lines(Paths.get("src/test/resources/test.properties"));
         props.forEach(l -> {
             String[] keyVal = l.split("=");
             propMap.put(keyVal[0], keyVal[1]);

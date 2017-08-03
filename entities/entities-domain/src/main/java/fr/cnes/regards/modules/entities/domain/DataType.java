@@ -29,7 +29,7 @@ public enum DataType {
     /**
      * Available data types
      */
-    RAWDATA, QUICKLOOK, DOCUMENT, THUMBNAIL, OTHER;
+    RAWDATA, QUICKLOOK_SD, QUICKLOOK_MD, QUICKLOOK_HD, DOCUMENT, THUMBNAIL, OTHER;
 
     @Override
     public String toString() {

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
@@ -87,7 +87,7 @@ public class SearchService implements ISearchService {
 
     @Override
     public <S, T extends IIndexable> FacetPage<T> search(final JoinEntitySearchKey<S, T> searchKey,
-            final Pageable pageRequest, final ICriterion pCriterion) {
+            final Pageable pageRequest, final ICriterion pCriterion, Predicate<T> searchResultFilter) {
 
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         final SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(),
@@ -100,6 +100,9 @@ public class SearchService implements ISearchService {
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
                      tag, searchKey.getResultClass());
         List<T> objects = repository.search(tagSearchKey, pCriterion, "tags", askedTypePredicate, toAskedEntityFct);
+        if (searchResultFilter != null) {
+            objects = objects.stream().filter(searchResultFilter).collect(Collectors.toList());
+        }
         final int total = objects.size();
         if (!objects.isEmpty()) {
             objects = objects.subList(pageRequest.getOffset(),
