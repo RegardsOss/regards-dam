@@ -122,12 +122,8 @@ public class CollectionServiceTest {
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
+                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null,
                 publisherMocked, runtimeTenantResolver, null);
-
-        // collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-        // pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
-
     }
 
     @Test
