@@ -16,7 +16,7 @@ services:
           - regards_IT_network
 
   rs_elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.1.1
     environment:
       - cluster.name=regards
       - bootstrap.memory_lock=true
