@@ -44,9 +44,24 @@ pipeline {
         }
     }
     post {
+        error {
+            echo 'The build FAILED, we print all COTS logs'
+            echo '########################################'
+            echo '#### ELASTICSEARCH'
+            echo '########################################'
+            sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_elasticsearch '
+            echo '########################################'
+            echo '#### POSTGRES'
+            echo '########################################'
+            sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_postgres '
+            echo '########################################'
+            echo '#### RABBITMQ'
+            echo '########################################'
+            sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_rabbitmq '
+        }
         always {
             echo 'lets clean up the mess!'
-            sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_elasticsearch && docker-compose -p ${OLDPWD##*/} down'
+            sh 'cd test && docker-compose -p ${OLDPWD##*/} down'
         }
     }
 }
