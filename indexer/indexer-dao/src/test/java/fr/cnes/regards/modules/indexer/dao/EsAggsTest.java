@@ -37,7 +37,6 @@ public class EsAggsTest {
         boolean repositoryOK = true;
         try {
             gson = new GsonBuilder().create();
-            // FIXME valeurs en dur pour l'instant
             repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards",
                                           new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
