@@ -44,7 +44,7 @@ pipeline {
         }
     }
     post {
-        error {
+        failure {
             echo 'The build FAILED, we print all COTS logs'
             echo '########################################'
             echo '#### ELASTICSEARCH'
