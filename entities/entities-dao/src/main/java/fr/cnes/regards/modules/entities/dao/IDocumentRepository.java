@@ -18,89 +18,83 @@
  */
 package fr.cnes.regards.modules.entities.dao;
 
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-
 /**
- * Common requests on entities
+ * Specific requests on Dataset
  *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
+ * @author lmieulet
  */
-public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
+@Repository
+public interface IDocumentRepository extends IAbstractEntityRepository<Document> {
+
+
+    List<Document> findByGroups(String group);
 
     /**
-     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
+     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
      *
      * @param pId
      *            id of entity
      * @return entity
      */
+    @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    T findById(Long pId);
+    Document findById(Long pId);
 
     /**
-     * Find all entities of which ipId belongs to given set (eagerly loading all relations)
+     * Find all datasets of which ipId belongs to given set (eagerly loading all relations)
      *
      * @param pIpIds
      *            set of ipId
      * @return found entities
      */
+    @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    List<T> findByIpIdIn(Set<UniformResourceName> pIpIds);
+    List<Document> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
-     * Find entity of given ipId
+     * Find entity of given IpId eagerly loading all common relations (except pluginConfigurationIds)
      *
      * @param pIpId
      *            ipId of which entity
      * @return found entity
      */
-    T findOneByIpId(UniformResourceName pIpId);
-
-    /**
-     * Find entity of given IpId eagerly loading all common relations
-     *
-     * @param pIpId
-     *            ipId of which entity
-     * @return found entity
-     */
+    @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    T findByIpId(UniformResourceName pIpId);
+    Document findByIpId(UniformResourceName pIpId);
 
     /**
      * Find all entities complient with the given modelName
      *
      * @param pModelName
      *            name of the model we want to be complient with
-     * @return entities complient with the given model
+     * @return documents complient with the given model
      */
+    @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<T> findAllByModelName(String pModelName);
+    Set<Document> findAllByModelName(String pModelName);
 
     /**
      * Find all entities complient with the given modelName
      *
-     * @param pModelName
-     *            name of the model we want to be complient with
-     * @return entities complient with the given model
+     * @param pModelIds
+     *            model ids we want to be complient with
+     * @return documents complient with the given model
      */
+    @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<T> findAllByModelId(Set<Long> pModelIds);
+    Set<Document> findAllByModelId(Set<Long> pModelIds);
 
-    /**
-     * Find all entities containing given tag
-     *
-     * @param pTagToSearch
-     *            tag to search entities for
-     * @return entities which contain given tag
-     */
-    List<T> findByTags(String pTagToSearch);
 }
