@@ -46,7 +46,7 @@ pipeline {
     post {
         always {
             echo 'lets clean up the mess!'
-            sh 'cd test && docker-compose -p ${OLDPWD##*/} down'
+            sh 'cd test && docker-compose logs rs_elasticsearch > rs_elasticsearch.log && docker-compose -p ${OLDPWD##*/} down'
         }
     }
 }
