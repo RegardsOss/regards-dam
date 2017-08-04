@@ -39,7 +39,6 @@ pipeline {
                 }
             }
             steps {
-                sh 'echo ${BRANCH_NAME##*/}'
                 sh 'cd test && docker-compose -p ${OLDPWD##*/} up --exit-code-from rs_build_verify rs_build_verify'
             }
         }
