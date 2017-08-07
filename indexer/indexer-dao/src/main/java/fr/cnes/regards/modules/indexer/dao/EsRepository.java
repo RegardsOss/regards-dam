@@ -223,7 +223,7 @@ public class EsRepository implements IEsRepository {
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
-            throw new NoNodeAvailableException("Elasticsearch is down");
+            throw new NoNodeAvailableException(String.format("Elasticsearch is down. Connection properties: host: %s, adress: %s, port: %d", esHost, esAddress, esPort));
         }
     }
 
