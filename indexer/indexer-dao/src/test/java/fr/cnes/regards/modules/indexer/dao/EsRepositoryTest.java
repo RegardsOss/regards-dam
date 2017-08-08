@@ -59,7 +59,6 @@ public class EsRepositoryTest {
         });
         try {
             gson = new GsonBuilder().create();
-            // FIXME valeurs en dur pour l'instant
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
                                           Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
                                           propMap.get("regards.elasticsearch.cluster.name"),

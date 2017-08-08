@@ -72,12 +72,15 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.range.Range.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.netty.handler.timeout.TimeoutException;
@@ -104,6 +107,9 @@ import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFace
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
+import fr.cnes.regards.modules.indexer.domain.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -654,8 +660,8 @@ public class EsRepository implements IEsRepository {
         try {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
-            return objects.stream().map(o -> (R)o).distinct().filter(filterPredicate)
-                    .map(transformFct).collect(Collectors.toList());
+            return objects.stream().map(o -> (R) o).distinct().filter(filterPredicate).map(transformFct)
+                    .collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw new RuntimeException(e); // NOSONAR
         }
@@ -947,6 +953,80 @@ public class EsRepository implements IEsRepository {
         } catch (final JsonSyntaxException e) {
             throw new RuntimeException(e); // NOSONAR
         }
+    }
+
+    @Override
+    public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, String... fileTypes) {
+        if ((fileTypes == null) || (fileTypes.length == 0)) {
+            throw new IllegalArgumentException("At least on file type must be provided");
+        }
+        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, crit);
+        // Add aggregations to manage compute summary
+        // First "global" aggregations on each asked file types
+        for (String fileType : fileTypes) {
+            // file count
+            request.addAggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
+                                           .field("files." + fileType + ".fileRef.keyword"));
+            // file size sum
+            request.addAggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
+                                           .field("files." + fileType + ".fileSize"));
+        }
+        // Then bucket aggregation by discriminants
+        String termsFieldProperty = discriminantProperty;
+        if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
+            termsFieldProperty += ".keyword";
+        }
+        // Discriminant distribution aggregator
+        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
+                .field(termsFieldProperty).size(Integer.MAX_VALUE);
+        // and "total" aggregagtions on each asked file types
+        for (String fileType : fileTypes) {
+            // files count
+            termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
+                                                   .field("files." + fileType + ".fileRef.keyword"));
+            // file size sum
+            termsAggBuilder.subAggregation(
+                    AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".fileSize"));
+        }
+        request.addAggregation(termsAggBuilder);
+
+        // Launch the request
+        SearchResponse response = getWithTimeouts(request);
+        DocFilesSummary summary = new DocFilesSummary();
+        // First "global" aggregations results
+        summary.setTotalDocumentsCount(response.getHits().getTotalHits());
+        Aggregations aggs = response.getAggregations();
+        long totalFileCount = 0;
+        long totalFileSize = 0;
+        for (String fileType : fileTypes) {
+            ValueCount valueCount = aggs.get("total_" + fileType + "_files_count");
+            totalFileCount += valueCount.getValue();
+            Sum sum = aggs.get("total_" + fileType + "_files_size");
+            totalFileSize += sum.getValue();
+        }
+        summary.setTotalFilesCount(totalFileCount);
+        summary.setTotalFilesSize(totalFileSize);
+        // Then disciminants buckets aggregations results
+        Terms buckets = aggs.get(discriminantProperty);
+        for (Terms.Bucket bucket : buckets.getBuckets()) {
+            String discriminant = bucket.getKeyAsString();
+            DocFilesSubSummary discSummary = new DocFilesSubSummary();
+            discSummary.setDocumentsCount(bucket.getDocCount());
+            Aggregations discAggs = bucket.getAggregations();
+            long filesCount = 0;
+            long filesSize = 0;
+            for (String fileType : fileTypes) {
+                ValueCount valueCount = discAggs.get(fileType + "_files_count");
+                filesCount += valueCount.getValue();
+                Sum sum = discAggs.get(fileType + "_files_size");
+                filesSize += sum.getValue();
+            }
+            discSummary.setFilesCount(filesCount);
+            discSummary.setFilesSize(filesSize);
+            summary.getSubSummariesMap().put(discriminant, discSummary);
+        }
+        return summary;
     }
 
     /**
