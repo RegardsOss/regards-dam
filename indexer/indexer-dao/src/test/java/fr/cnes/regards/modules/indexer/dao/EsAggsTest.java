@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -66,9 +67,8 @@ public class EsAggsTest {
         try {
             gson = new GsonBuilder().create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                                          Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
-                                          propMap.get("regards.elasticsearch.cluster.name"),
-                                          new AggregationBuilderFacetTypeVisitor(10, 1));
+                    Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
+                    propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -95,15 +95,17 @@ public class EsAggsTest {
             return Sets.newHashSet(TAGS);
         }
         for (int i = 0; i < size; i++) {
-            while (!randomSet.add(TAGS[random.nextInt(TAGS.length)]))
+            while (!randomSet.add(TAGS[random.nextInt(TAGS.length)])) {
                 ;
+            }
         }
         return randomSet;
     }
 
     private void createData() {
-        repository.deleteIndex(INDEX);
-        if (!repository.indexExists(INDEX)) {
+        if (repository.indexExists(INDEX)) {
+            repository.deleteAll(INDEX);
+        } else {
             repository.createIndex(INDEX);
         }
 
@@ -124,13 +126,12 @@ public class EsAggsTest {
     @Test
     public void test() {
         createData();
-        DocFilesSummary summary = repository
-                .computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class), null, "tags", "RAWDATA",
-                                         "QUICKLOOK_HD");
+        DocFilesSummary summary = repository.computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class),
+                                                                     null, "tags", "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getTotalDocumentsCount());
         Assert.assertEquals(24, summary.getTotalFilesCount());
-        Assert.assertEquals(236071754, summary.getTotalFilesSize()); // 2 * 118 Mb
+        Assert.assertEquals(236071586, summary.getTotalFilesSize()); // 2 * 118 Mb
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("RIRI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("LOULOU"));
@@ -175,6 +176,7 @@ public class EsAggsTest {
             this.tags = tags;
         }
 
+        @Override
         public Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
             return files;
         }
@@ -185,6 +187,7 @@ public class EsAggsTest {
     }
 
     private static class DataFile extends fr.cnes.regards.modules.indexer.domain.DataFile {
+
         public DataFile() {
         }
 
@@ -208,6 +211,12 @@ public class EsAggsTest {
     }
 
     private static enum DataType {
-        RAWDATA, QUICKLOOK_SD, QUICKLOOK_MD, QUICKLOOK_HD, DOCUMENT, THUMBNAIL, OTHER;
+        RAWDATA,
+        QUICKLOOK_SD,
+        QUICKLOOK_MD,
+        QUICKLOOK_HD,
+        DOCUMENT,
+        THUMBNAIL,
+        OTHER;
     }
 }
