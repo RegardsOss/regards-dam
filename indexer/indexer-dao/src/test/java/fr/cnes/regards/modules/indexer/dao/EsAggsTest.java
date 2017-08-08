@@ -130,7 +130,6 @@ public class EsAggsTest {
                                                                      null, "tags", "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getTotalDocumentsCount());
-        Assert.assertEquals(236071586, summary.getTotalFilesSize()); // 2 * 118 Mb
         Assert.assertEquals(24, summary.getTotalFilesCount());
         Assert.assertEquals(236071586, summary.getTotalFilesSize()); // 2 * 118 Mb
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
