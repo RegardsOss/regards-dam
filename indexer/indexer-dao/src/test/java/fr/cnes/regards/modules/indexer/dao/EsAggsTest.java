@@ -56,7 +56,9 @@ public class EsAggsTest {
     public static void setUp() throws Exception {
         Map<String, String> propMap = Maps.newHashMap();
         boolean repositoryOK = true;
-        Stream<String> props = Files.lines(Paths.get("src/test/resources/test.properties"));
+        // we get the properties into target/test-classes because this is where maven will put the filtered file(with
+        // real values and not placeholder)
+        Stream<String> props = Files.lines(Paths.get("target/test-classes/test.properties"));
         props.filter(line -> !(line.startsWith("#") || line.trim().isEmpty())).forEach(line -> {
             String[] keyVal = line.split("=");
             propMap.put(keyVal[0], keyVal[1]);
