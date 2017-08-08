@@ -27,6 +27,8 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
+import fr.cnes.regards.modules.indexer.domain.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -113,4 +115,12 @@ public interface ISearchService {
         return search(searchKey, pPageRequest, criterion, null);
     }
 
+    /**
+     * Compute a DocFilesSummary for given request distributing results based on disciminantProperty for given file
+     * types
+     * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     * @return the compmuted summary
+     */
+    <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, String... fileTypes);
 }

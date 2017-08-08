@@ -21,6 +21,8 @@ package fr.cnes.regards.modules.entities.domain;
 import java.util.Map;
 
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -30,7 +32,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Marc Sordi
  * @author oroussel
  */
-public abstract class AbstractDataEntity extends AbstractEntity {
+public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
 
     /**
      * Physical data file references

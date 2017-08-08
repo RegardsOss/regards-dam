@@ -38,6 +38,8 @@ import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -115,5 +117,11 @@ public class SearchService implements ISearchService {
     public <T> Page<T> multiFieldsSearch(final SearchKey<T, T> pSearchKey, final Pageable pPageRequest,
             final Object pValue, final String... pFields) {
         return repository.multiFieldsSearch(pSearchKey, pPageRequest, pValue, pFields);
+    }
+
+    @Override
+    public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, String... fileTypes) {
+        return repository.computeDataFilesSummary(searchKey, crit, discriminantProperty, fileTypes);
     }
 }
