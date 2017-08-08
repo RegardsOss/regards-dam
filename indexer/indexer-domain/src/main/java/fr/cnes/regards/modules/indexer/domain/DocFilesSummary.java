@@ -10,11 +10,11 @@ import java.util.Map;
  * @author oroussel
  */
 public class DocFilesSummary {
-    private long totalDocumentsCount;
+    private long totalDocumentsCount = 0;
 
-    private long totalFilesCount;
+    private long totalFilesCount = 0;
 
-    private long totalFilesSize;
+    private long totalFilesSize = 0;
 
     /**
      * Map of sub-summaries distributed by disciminant value
