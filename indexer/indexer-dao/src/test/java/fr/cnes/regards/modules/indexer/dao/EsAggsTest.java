@@ -16,6 +16,7 @@ import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -33,6 +34,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  * Test on complex aggs
  * @author oroussel
  */
+@Ignore
 public class EsAggsTest {
 
     /**
