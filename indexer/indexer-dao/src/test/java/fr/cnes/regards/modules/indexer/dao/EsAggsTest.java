@@ -16,8 +16,9 @@ import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -34,8 +35,9 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  * Test on complex aggs
  * @author oroussel
  */
-@Ignore
 public class EsAggsTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EsAggsTest.class);
 
     /**
      * Class to test
@@ -72,6 +74,7 @@ public class EsAggsTest {
                     Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
                     propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
+            LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
         }
         // Do not launch tests is Elasticsearch is not available
