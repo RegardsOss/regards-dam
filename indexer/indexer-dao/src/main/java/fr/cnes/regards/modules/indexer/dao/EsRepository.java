@@ -213,8 +213,7 @@ public class EsRepository implements IEsRepository {
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
 
         gson = pGson;
-        // FIXME esHost = Strings.isEmpty(pEsHost) ? pEsAddress : pEsHost;
-        esHost = "localhost";
+        esHost = Strings.isEmpty(pEsHost) ? pEsAddress : pEsHost;
         esPort = pEsPort;
         esClusterName = pEsClusterName;
         aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
