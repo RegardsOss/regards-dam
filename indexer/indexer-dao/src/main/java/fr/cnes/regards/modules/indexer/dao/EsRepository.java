@@ -188,11 +188,6 @@ public class EsRepository implements IEsRepository {
     private final String esHost;
 
     /**
-     * Elasticsearch address
-     */
-    private final String esAddress;
-
-    /**
      * Elasticsearch TCP port
      */
     private int esPort = 9300;
@@ -216,28 +211,31 @@ public class EsRepository implements IEsRepository {
             @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        LOGGER.info(String.format("host    : %s - address : %s - port    : %d\ncluster : %s", pEsHost, pEsAddress,
-                                  pEsPort, pEsClusterName));
+
         gson = pGson;
-        esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
-        esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
+        // FIXME esHost = Strings.isEmpty(pEsHost) ? pEsAddress : pEsHost;
+        esHost = "localhost";
         esPort = pEsPort;
         esClusterName = pEsClusterName;
         aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
+
+        String connectionInfoMessage = String.format(
+                                                     "Elastic search connection properties : host \"%s\", port \"%d\", cluster \"%s\"",
+                                                     esHost, esPort, esClusterName);
+        LOGGER.info(connectionInfoMessage);
+
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        client.addTransportAddress(new InetSocketTransportAddress(
-                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
+        client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(esHost), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
-            throw new NoNodeAvailableException(
-                    String.format("Elasticsearch is down. Connection properties: host: %s, adress: %s, port: %d",
-                                  esHost, esAddress, esPort));
+            throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
         }
     }
 
     @Override
     public void close() {
+        LOGGER.info("Closing connection");
         client.close();
     }
 
