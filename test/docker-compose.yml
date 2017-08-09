@@ -22,6 +22,8 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms2500m -Xmx2500m"
       - xpack.security.enabled=false
+    ports:
+      - 9200:9200
     ulimits:
       memlock:
         soft: -1
