@@ -223,7 +223,8 @@ public class EsRepository implements IEsRepository {
                                                      esHost, esPort, esClusterName);
         LOGGER.info(connectionInfoMessage);
 
-        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
+        client = new PreBuiltTransportClient(
+                Settings.builder().put("cluster.name", esClusterName).put("client.transport.sniff", true).build());
         client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(esHost), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
