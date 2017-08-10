@@ -4,9 +4,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Entity domain indexer service interface. This is on top of indexerService to manage domain specific objects.

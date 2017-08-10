@@ -46,7 +46,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 
 /**
  * @author lmieulet

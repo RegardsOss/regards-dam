@@ -1,19 +1,11 @@
 package fr.cnes.regards.modules.entities.domain.deleted;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
+import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.converters.UrnConverter;
 
 /**
  * Deleted entity (collection, dataset, ...).

@@ -18,12 +18,10 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 import com.google.common.collect.Range;
 import com.google.gson.annotations.JsonAdapter;
-
 import fr.cnes.regards.modules.entities.domain.attribute.adapter.DateIntervalAttributeAdapter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 

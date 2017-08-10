@@ -23,25 +23,7 @@ import java.time.OffsetDateTime;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DoubleArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DoubleAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DoubleIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongIntervalAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.UrlAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.*;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -105,8 +87,9 @@ public final class AttributeBuilder {
             case URL:
                 return (T) buildUrl(pName, (URL) pValue);
             default:
-                throw new IllegalArgumentException(pAttributeType + " is not a handled value of "
-                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(
+                        pAttributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
+                                + AttributeBuilder.class.getName());
         }
     }
 

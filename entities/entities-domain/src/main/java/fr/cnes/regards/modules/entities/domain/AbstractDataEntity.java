@@ -20,7 +20,7 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.Map;
 
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;

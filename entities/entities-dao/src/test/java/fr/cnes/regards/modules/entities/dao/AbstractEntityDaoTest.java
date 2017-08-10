@@ -32,10 +32,10 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.jpa.multitenant.test.AbstractDaoTransactionalTest;
 import fr.cnes.regards.modules.entities.dao.domain.TestEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.OAISIdentifier;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**

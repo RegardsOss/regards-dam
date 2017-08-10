@@ -23,11 +23,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -57,6 +53,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
@@ -65,7 +62,6 @@ import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapte
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -352,17 +348,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
         DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10");
-        performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
-                + "?dataModelId=" + dataModel.getId(), query, expectations,
-                           "Could not validate that subsetting clause");
+        performDefaultPost(
+                DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION + "?dataModelId="
+                        + dataModel.getId(), query, expectations, "Could not validate that subsetting clause");
 
         query = new DatasetController.Query("properties.DO_NOT_EXIST:10");
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
-        performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
-                + "?dataModelId=" + dataModel.getId(), query, expectations,
-                           "Could not validate that subsetting clause");
+        performDefaultPost(
+                DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION + "?dataModelId="
+                        + dataModel.getId(), query, expectations, "Could not validate that subsetting clause");
     }
 
     /**

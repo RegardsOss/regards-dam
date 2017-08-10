@@ -41,7 +41,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEv
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEventType;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 
 /**
  * @author Sylvain Vissiere-Guerinet

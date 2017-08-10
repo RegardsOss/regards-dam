@@ -45,7 +45,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**

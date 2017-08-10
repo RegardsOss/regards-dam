@@ -1,7 +1,6 @@
 package fr.cnes.regards.modules.entities.domain.attribute;
 
 import com.google.common.collect.Range;
-
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**

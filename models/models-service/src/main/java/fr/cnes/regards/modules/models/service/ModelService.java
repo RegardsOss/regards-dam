@@ -37,6 +37,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -50,7 +51,6 @@ import fr.cnes.regards.modules.models.service.exception.ImportException;
 import fr.cnes.regards.modules.models.service.exception.UnexpectedModelAttributeException;
 import fr.cnes.regards.modules.models.service.xml.XmlExportHelper;
 import fr.cnes.regards.modules.models.service.xml.XmlImportHelper;
-import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Manage model lifecycle

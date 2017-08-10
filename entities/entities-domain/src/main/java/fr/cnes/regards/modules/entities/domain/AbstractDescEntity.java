@@ -22,7 +22,7 @@ import javax.persistence.*;
 
 import com.google.gson.annotations.JsonAdapter;
 import fr.cnes.regards.modules.entities.domain.converter.DescriptionFileAdapter;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**

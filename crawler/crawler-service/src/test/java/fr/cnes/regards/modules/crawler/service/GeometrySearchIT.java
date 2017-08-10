@@ -14,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -23,7 +24,6 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.Searches;
-import fr.cnes.regards.modules.models.domain.EntityType;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
@@ -38,8 +38,8 @@ public class GeometrySearchIT {
 
     private static final String TENANT = "GEOM";
 
-    private static final SimpleSearchKey<Collection> SEARCH_KEY = Searches.onSingleEntity(TENANT,
-                                                                                          EntityType.COLLECTION);
+    private static final SimpleSearchKey<Collection> SEARCH_KEY = Searches
+            .onSingleEntity(TENANT, EntityType.COLLECTION);
 
     @PostConstruct
     public void setUp() {
@@ -132,9 +132,10 @@ public class GeometrySearchIT {
     @Test
     public void testPolygonSearch() throws ModuleException, IOException {
         final Double[] b202 = new Double[] { 1.4948514103889465, 43.577530672197476 };
-        final Double[][][] cs = new Double[][][] { { { 1.4946448802947996, 43.57797369862905 },
-                { 1.4946502447128296, 43.57727223860706 }, { 1.4948782324790955, 43.57727418172091 },
-                { 1.4948728680610657, 43.57797952790247 }, { 1.4946448802947996, 43.57797369862905 } } };
+        final Double[][][] cs = new Double[][][] {
+                { { 1.4946448802947996, 43.57797369862905 }, { 1.4946502447128296, 43.57727223860706 },
+                        { 1.4948782324790955, 43.57727418172091 }, { 1.4948728680610657, 43.57797952790247 },
+                        { 1.4946448802947996, 43.57797369862905 } } };
         // Setting a geometry onto collection
         final Collection collectionOnB202 = new Collection(null, TENANT, "collection on b202 office room");
         collectionOnB202.setGeometry(new Geometry.Point(b202));
@@ -147,10 +148,11 @@ public class GeometrySearchIT {
         Assert.assertEquals(collectionOnB202, results.get(0));
 
         // Concave with B202 office room on it
-        final Double[][][] concaveCs = new Double[][][] { { { 1.4946475625038147, 43.57797369862905 },
-                { 1.4947816729545593, 43.577894031835676 }, { 1.4947521686553955, 43.577721096238555 },
-                { 1.4946582913398743, 43.57727418172091 }, { 1.4948809146881101, 43.57727223860706 },
-                { 1.4948675036430359, 43.57797758481139 }, { 1.4946475625038147, 43.57797369862905 } } };
+        final Double[][][] concaveCs = new Double[][][] {
+                { { 1.4946475625038147, 43.57797369862905 }, { 1.4947816729545593, 43.577894031835676 },
+                        { 1.4947521686553955, 43.577721096238555 }, { 1.4946582913398743, 43.57727418172091 },
+                        { 1.4948809146881101, 43.57727223860706 }, { 1.4948675036430359, 43.57797758481139 },
+                        { 1.4946475625038147, 43.57797369862905 } } };
         // on B202
         results = this.search(ICriterion.intersectsPolygon(concaveCs));
         Assert.assertEquals(1, results.size());
