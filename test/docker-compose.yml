@@ -13,7 +13,7 @@ services:
     volumes:
       - ./postgres:/docker-entrypoint-initdb.d
     networks:
-          - regards_IT_network
+      - regards_IT_network
 
   rs_elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.4.0
@@ -32,9 +32,9 @@ services:
     cap_add:
       - IPC_LOCK
     networks:
-          - regards_IT_network
+      - regards_IT_network
 
-  rs_build_deploy:
+  rs_build:
     image: 172.26.47.52:5000/rs-maven
     environment:
       - BRANCH_NAME
@@ -42,7 +42,7 @@ services:
       - MODE=Deploy
     volumes:
       - /opt/maven-multibranch-repository:/localRepository
-      - /usr/bin/docker:/bin/docker #only link host docker on rs_build_deploy because he is hte only one that needs it
+      - /usr/bin/docker:/bin/docker # link docker - only useful for deploy MODE
       - /var/run/docker.sock:/var/run/docker.sock
       - ../.:/app_to_build
     links:
@@ -50,23 +50,7 @@ services:
       - rs_postgres
       - rs_elasticsearch
     networks:
-          - regards_IT_network
-
-  rs_build_verify:
-    image: 172.26.47.52:5000/rs-maven
-    environment:
-      - BRANCH_NAME
-      - WORKSPACE
-      - MODE=Verify
-    volumes:
-      - /opt/maven-multibranch-repository:/localRepository
-      - ../.:/app_to_build
-    links:
-      - rs_rabbitmq
-      - rs_postgres
-      - rs_elasticsearch
-    networks:
-          - regards_IT_network
+      - regards_IT_network
 
 networks:
   regards_IT_network:
