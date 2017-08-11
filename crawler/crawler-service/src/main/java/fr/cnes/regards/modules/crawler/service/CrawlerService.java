@@ -40,18 +40,18 @@ import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceExcepti
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.OAISIdentifier;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * Crawler service for other entity than Dataset. <b>This service need @EnableSchedule at Configuration</b>
@@ -107,42 +107,38 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                           new PageRequest(0, IEsRepository.BULK_SIZE));
             final List<DataObject> list = page.getContent();
-            Future<Integer> task = executor
-                    .submit(() -> {
-                        runtimeTenantResolver.forceTenant(tenant);
-                        return entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
-                    });
+            Future<Integer> task = executor.submit(() -> {
+                runtimeTenantResolver.forceTenant(tenant);
+                return entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            });
 
             while (page.hasNext()) {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
                 savedObjectsCount += task.get();
                 final List<DataObject> otherList = page.getContent();
-                task = executor
-                        .submit(() -> {
-                            runtimeTenantResolver.forceTenant(tenant);
-                            return entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
-                        });
+                task = executor.submit(() -> {
+                    runtimeTenantResolver.forceTenant(tenant);
+                    return entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
+                });
             }
             savedObjectsCount += task.get();
         } else { // index exists, data objects may also exist
             Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                           new PageRequest(0, IEsRepository.BULK_SIZE));
             final List<DataObject> list = page.getContent();
-            Future<Integer> task = executor
-                    .submit(() -> {
-                        runtimeTenantResolver.forceTenant(tenant);
-                        return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
-                    });
+            Future<Integer> task = executor.submit(() -> {
+                runtimeTenantResolver.forceTenant(tenant);
+                return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+            });
 
             while (page.hasNext()) {
                 page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
                 savedObjectsCount += task.get();
                 final List<DataObject> otherList = page.getContent();
-                task = executor
-                        .submit(() -> {
-                            runtimeTenantResolver.forceTenant(tenant);
-                            return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
-                        });
+                task = executor.submit(() -> {
+                    runtimeTenantResolver.forceTenant(tenant);
+                    return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
+                });
             }
             savedObjectsCount += task.get();
         }

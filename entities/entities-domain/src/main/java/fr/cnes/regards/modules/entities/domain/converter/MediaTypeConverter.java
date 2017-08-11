@@ -18,10 +18,9 @@
  */
 package fr.cnes.regards.modules.entities.domain.converter;
 
-import java.util.Collections;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
+import java.util.Collections;
 
 import org.springframework.http.MediaType;
 

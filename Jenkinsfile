@@ -29,6 +29,23 @@ pipeline {
                 // ${OLDPWD##*/} is the name of docker-compose.yml parent dir, -p allows us to specify container name prefix
                 sh 'cd test && docker-compose -p ${OLDPWD##*/} up --exit-code-from rs_build_deploy rs_build_deploy'
             }
+            post {
+                failure {
+                    echo 'The build FAILED, we print all COTS logs'
+                    echo '########################################'
+                    echo '#### ELASTICSEARCH'
+                    echo '########################################'
+                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_elasticsearch '
+                    echo '########################################'
+                    echo '#### POSTGRES'
+                    echo '########################################'
+                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_postgres '
+                    echo '########################################'
+                    echo '#### RABBITMQ'
+                    echo '########################################'
+                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_rabbitmq '
+                }
+            }
         }
         stage('Verify') {
             when {
@@ -41,7 +58,6 @@ pipeline {
             steps {
                 sh 'cd test && docker-compose -p ${OLDPWD##*/} up --exit-code-from rs_build_verify rs_build_verify'
             }
-
             post {
                 failure {
                     echo 'The build FAILED, we print all COTS logs'
@@ -64,7 +80,7 @@ pipeline {
     post {
         always {
             echo 'lets clean up the mess!'
-            // sh 'cd test && docker-compose -p ${OLDPWD##*/} down'
+            sh 'cd test && docker-compose -p ${OLDPWD##*/} down'
         }
     }
 }

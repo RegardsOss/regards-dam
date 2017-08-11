@@ -51,13 +51,13 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -207,8 +207,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM test"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE
-                + "?origin=test", expectations, "Could not fetch collection description file", collection.getIpId());
+        performDefaultGet(
+                CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE + "?origin=test",
+                expectations, "Could not fetch collection description file", collection.getIpId());
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isNoContent());

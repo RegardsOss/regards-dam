@@ -5,18 +5,12 @@ package fr.cnes.regards.modules.entities.domain.geometry;
  * @author oroussel
  */
 public enum Crs {
-    EARTH("WGS84"),
-    MARS("IAU2000:49900");
+    EARTH("WGS84"), MARS("IAU2000:49900");
 
     private final String systemName;
 
     private Crs(String systemName) {
         this.systemName = systemName;
-    }
-
-    @Override
-    public String toString() {
-        return this.systemName;
     }
 
     public static Crs fromString(String systemName) {
@@ -26,5 +20,10 @@ public enum Crs {
             }
         }
         throw new IllegalArgumentException(String.format("No enum constant for system name %s", systemName));
+    }
+
+    @Override
+    public String toString() {
+        return this.systemName;
     }
 }

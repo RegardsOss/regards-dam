@@ -31,19 +31,18 @@ import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
  *
  */
 @Entity
-@Table(name="t_description_file")
+@Table(name = "t_description_file")
 public class DescriptionFile {
-
-
-    @Id
-    @SequenceGenerator(name = "DescriptionFileSequence", initialValue = 1, sequenceName = "seq_description_file")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DescriptionFileSequence")
-    protected Long id;
 
     /**
      * Description URL
      */
     private static final String URL_REGEXP = "^https?://.*$";
+
+    @Id
+    @SequenceGenerator(name = "DescriptionFileSequence", initialValue = 1, sequenceName = "seq_description_file")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DescriptionFileSequence")
+    protected Long id;
 
     @Column
     @Type(type = "text")
