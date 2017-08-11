@@ -107,8 +107,8 @@ import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFace
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
-import fr.cnes.regards.modules.indexer.domain.DocFilesSubSummary;
-import fr.cnes.regards.modules.indexer.domain.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -118,6 +118,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
 
 /**
  * Elasticsearch repository implementation
@@ -995,7 +996,7 @@ public class EsRepository implements IEsRepository {
         SearchResponse response = getWithTimeouts(request);
         DocFilesSummary summary = new DocFilesSummary();
         // First "global" aggregations results
-        summary.setTotalDocumentsCount(response.getHits().getTotalHits());
+        summary.setDocumentsCount(response.getHits().getTotalHits());
         Aggregations aggs = response.getAggregations();
         long totalFileCount = 0;
         long totalFileSize = 0;
@@ -1005,8 +1006,8 @@ public class EsRepository implements IEsRepository {
             Sum sum = aggs.get("total_" + fileType + "_files_size");
             totalFileSize += sum.getValue();
         }
-        summary.setTotalFilesCount(totalFileCount);
-        summary.setTotalFilesSize(totalFileSize);
+        summary.setFilesCount(totalFileCount);
+        summary.setFilesSize(totalFileSize);
         // Then disciminants buckets aggregations results
         Terms buckets = aggs.get(discriminantProperty);
         for (Terms.Bucket bucket : buckets.getBuckets()) {
@@ -1021,6 +1022,7 @@ public class EsRepository implements IEsRepository {
                 filesCount += valueCount.getValue();
                 Sum sum = discAggs.get(fileType + "_files_size");
                 filesSize += sum.getValue();
+                discSummary.getFileTypesSummaryMap().put(fileType, new FilesSummary(valueCount.getValue(), (long)sum.getValue()));
             }
             discSummary.setFilesCount(filesCount);
             discSummary.setFilesSize(filesSize);

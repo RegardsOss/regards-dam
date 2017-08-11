@@ -24,7 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.domain.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -129,9 +129,9 @@ public class EsAggsTest {
         DocFilesSummary summary = repository.computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class),
                                                                      null, "tags", "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
-        Assert.assertEquals(12, summary.getTotalDocumentsCount());
-        Assert.assertEquals(24, summary.getTotalFilesCount());
-        Assert.assertEquals(236071586, summary.getTotalFilesSize()); // 2 * 118 Mb
+        Assert.assertEquals(12, summary.getDocumentsCount());
+        Assert.assertEquals(24, summary.getFilesCount());
+        Assert.assertEquals(236071586, summary.getFilesSize()); // 2 * 118 Mb
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("RIRI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("LOULOU"));
