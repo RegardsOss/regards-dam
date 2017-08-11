@@ -61,7 +61,7 @@ services:
     volumes:
       - /opt/maven-multibranch-repository:/localRepository
       - ../.:/app_to_build
-    depends_on:
+    links:
       - rs_rabbitmq
       - rs_postgres
       - rs_elasticsearch
