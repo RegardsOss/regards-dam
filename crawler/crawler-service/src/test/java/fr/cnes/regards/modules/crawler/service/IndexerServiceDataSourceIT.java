@@ -44,12 +44,7 @@ import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,13 +70,10 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.*;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -108,7 +100,6 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -347,7 +338,7 @@ public class IndexerServiceDataSourceIT {
         final List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                "DATA_OBJECTS_ID"));
+                                                  "DATA_OBJECTS_ID"));
 
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -361,7 +352,7 @@ public class IndexerServiceDataSourceIT {
         attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE"));
         attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE"));
+                                                   "DATA_CREATION_DATE"));
 
         attributes.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
@@ -448,8 +439,8 @@ public class IndexerServiceDataSourceIT {
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // All data are associated with the 3 datasets so they must all have the 4 groups
@@ -469,8 +460,8 @@ public class IndexerServiceDataSourceIT {
         crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset1.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
         objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
@@ -479,8 +470,8 @@ public class IndexerServiceDataSourceIT {
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset2.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)
@@ -521,9 +512,9 @@ public class IndexerServiceDataSourceIT {
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        objectsPage = searchService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
-                                                      "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
-                                                      "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
+        objectsPage = searchService
+                .multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13, "properties.DATA_OBJECTS_ID",
+                                   "properties.FILE_SIZE", "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
         Assert.assertFalse(objectsPage.getContent().isEmpty());
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }

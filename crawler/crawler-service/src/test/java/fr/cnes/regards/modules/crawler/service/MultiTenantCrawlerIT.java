@@ -3,11 +3,7 @@ package fr.cnes.regards.modules.crawler.service;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +13,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.MultitenantConfiguration;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -25,7 +22,6 @@ import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapte
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -74,8 +70,9 @@ public class MultiTenantCrawlerIT {
 
     @BeforeClass
     public static void toBeOrNotToBe() throws URISyntaxException {
-        Assume.assumeTrue(ClassLoader
-                .getSystemResource("multitenant_" + System.getProperty("user.name") + ".properties") != null);
+        Assume.assumeTrue(
+                ClassLoader.getSystemResource("multitenant_" + System.getProperty("user.name") + ".properties")
+                        != null);
     }
 
     @Before

@@ -17,8 +17,8 @@ import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.event.AbstractEntityEvent;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Abstract crawler service.
@@ -70,7 +70,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
      */
     @Autowired
     protected ApplicationContext applicationContext;
-
 
     /**
      * Indicate that daemon stop has been asked
@@ -188,7 +187,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
         return atLeastOnePoll;
     }
 
-
     public boolean working() { // NOSONAR : test purpose
         return delay.get() < MAX_DELAY_MS;
     }
@@ -203,7 +201,8 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
 
     public void startWork() { // NOSONAR : test purpose
         // If crawler is busy, wait for it
-        while (working());
+        while (working())
+            ;
         scheduledWork = true;
         somethingDone = false;
         LOGGER.info("start working...");

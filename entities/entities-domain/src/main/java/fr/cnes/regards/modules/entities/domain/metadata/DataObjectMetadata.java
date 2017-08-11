@@ -59,7 +59,6 @@ public class DataObjectMetadata {
         modelIds.remove(modelId, datasetIpId);
     }
 
-
     public Set<Long> getModelIds() {
         return modelIds.keySet();
     }

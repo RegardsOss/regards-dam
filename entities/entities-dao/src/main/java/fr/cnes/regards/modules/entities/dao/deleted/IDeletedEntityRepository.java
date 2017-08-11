@@ -1,11 +1,11 @@
 package fr.cnes.regards.modules.entities.dao.deleted;
 
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
 
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
-
-import java.util.Optional;
 
 /**
  * Repository for deleted entities

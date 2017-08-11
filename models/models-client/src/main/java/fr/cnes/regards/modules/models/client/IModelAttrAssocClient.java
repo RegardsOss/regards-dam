@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 
 /**

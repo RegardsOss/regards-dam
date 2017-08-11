@@ -37,7 +37,7 @@ import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;

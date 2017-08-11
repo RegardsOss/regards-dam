@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.transaction.annotation.Propagation;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -40,6 +39,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -50,7 +50,6 @@ import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -270,8 +269,9 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
         List<PluginParameter> params = PluginParametersFactory.build()
                 .addParameter(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto").getParameters();
-        PluginConfiguration confWithUnknownParameter = PluginUtils.getPluginConfiguration(params, IntSumComputePlugin.class,
-                                                                                          Lists.newArrayList(IntSumComputePlugin.class.getPackage().getName()));
+        PluginConfiguration confWithUnknownParameter = PluginUtils
+                .getPluginConfiguration(params, IntSumComputePlugin.class,
+                                        Lists.newArrayList(IntSumComputePlugin.class.getPackage().getName()));
         pluginService.savePluginConfiguration(confWithUnknownParameter);
         List<ResultMatcher> expectations = Lists.newArrayList();
         expectations.add(MockMvcResultMatchers.status().isOk());

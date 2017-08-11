@@ -36,20 +36,16 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.Attr;
 
 import com.google.common.collect.ImmutableSet;
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.urn.OAISIdentifier;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -68,10 +64,7 @@ import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -204,8 +197,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty())
-                && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity.getProperties().isEmpty()))) {
+        if (((modAtts == null) || modAtts.isEmpty()) && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity
+                .getProperties().isEmpty()))) {
             pErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                 "No properties defined in corresponding model but trying to create.");
         }
@@ -248,8 +241,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         if (ComputationMode.GIVEN.equals(pModelAttribute.getMode())) {
             AttributeModel attModel = pModelAttribute.getAttribute();
             String key = attModel.getName();
-            if(!attModel.getFragment().isDefaultFragment()) {
-                key=attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(key);
+            if (!attModel.getFragment().isDefaultFragment()) {
+                key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(key);
             }
             LOGGER.debug(String.format("Computed key : \"%s\"", key));
 
@@ -260,15 +253,15 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             if (att == null) {
                 String messageKey = "error.missing.required.attribute.message";
                 String defaultMessage = String.format("Missing required attribute \"%s\".", key);
-//                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                //                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
                 if (!attModel.isOptional()) {
                     pErrors.reject(messageKey, defaultMessage);
                     return;
                 }
-//                if (!pManageAlterable && !attModel.isOptional()) {
-//                    pErrors.reject(messageKey, defaultMessage);
-//                    return;
-//                }
+                //                if (!pManageAlterable && !attModel.isOptional()) {
+                //                    pErrors.reject(messageKey, defaultMessage);
+                //                    return;
+                //                }
                 LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
                 return;
             }
@@ -278,8 +271,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, pErrors);
                 } else {
-                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
-                                                          validator.getClass().getName(), key);
+                    String defaultMessage = String
+                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
+                                    key);
                     pErrors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
@@ -306,11 +300,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Update mode only :
         if (pManageAlterable && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
-            AbstractEntity fromDb=entityRepository.findByIpId(abstractEntity.getIpId());
+            AbstractEntity fromDb = entityRepository.findByIpId(abstractEntity.getIpId());
             Optional<AbstractAttribute<?>> propertyFromDb = extractProperty(fromDb, attModel);
             Optional<AbstractAttribute<?>> property = extractProperty(abstractEntity, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
-             validators.add(new NotAlterableAttributeValidator(pAttributeKey, attModel, propertyFromDb, property));
+            validators.add(new NotAlterableAttributeValidator(pAttributeKey, attModel, propertyFromDb, property));
         }
         // Check attribute type
         validators.add(new AttributeTypeValidator(attModel.getType(), pAttributeKey));
@@ -321,16 +315,17 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return validators;
     }
 
-    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity,AttributeModel attribute) { //NOSONAR
+    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity,
+            AttributeModel attribute) { //NOSONAR
         if (attribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
-            return entity.getProperties().stream().filter(p -> p.getName().equals(attribute.getName()))
-                    .findFirst();
+            return entity.getProperties().stream().filter(p -> p.getName().equals(attribute.getName())).findFirst();
         }
         // the attribute is in a fragment so :
         // filter the fragment property then filter the right property on fragment properties
-        return entity.getProperties().stream().filter(p -> (p instanceof ObjectAttribute) && p.getName()
-                .equals(attribute.getFragment().getName())).limit(1) // Only one fragment with searched name
+        return entity.getProperties().stream()
+                .filter(p -> (p instanceof ObjectAttribute) && p.getName().equals(attribute.getFragment().getName()))
+                .limit(1) // Only one fragment with searched name
                 .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
                 .filter(p -> p.getName().equals(attribute.getName())).findFirst();
     }
@@ -353,7 +348,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 } else {
                     // Compute key
                     String key = att.getName();
-                    if(!pNamespace.equals(Fragment.getDefaultName())) {
+                    if (!pNamespace.equals(Fragment.getDefaultName())) {
                         key = pNamespace.concat(NAMESPACE_SEPARATOR).concat(key);
                     }
                     LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
@@ -390,7 +385,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
         // Set description
         if (entity instanceof AbstractDescEntity) {
@@ -436,8 +431,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         if (datasetsIpIds.length > 0) {
             publisher.publish(new DatasetEvent(datasetsIpIds));
         }
-        UniformResourceName[] notDatasetsIpIds = pIpIds.stream().filter(ipId -> ipId.getEntityType() != EntityType.DATASET)
-                .toArray(n -> new UniformResourceName[n]);
+        UniformResourceName[] notDatasetsIpIds = pIpIds.stream()
+                .filter(ipId -> ipId.getEntityType() != EntityType.DATASET).toArray(n -> new UniformResourceName[n]);
         if (notDatasetsIpIds.length > 0) {
             publisher.publish(new NotDatasetEntityEvent(notDatasetsIpIds));
         }
@@ -525,8 +520,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     pEntity.setDescriptionFile(oldOne);
                 } else {
                     //if there is no descriptionFile existing then lets create one
-                    pEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
-                            pEntity.getDescriptionFile().getType()));
+                    pEntity.setDescriptionFile(
+                            new DescriptionFile(pFile.getBytes(), pEntity.getDescriptionFile().getType()));
                 }
             } else {
                 //this is a url
@@ -594,8 +589,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");
             String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-            return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
-                    || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
+                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
         }
         return false;
     }
@@ -692,8 +687,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     private U updateWithoutCheck(U pEntity, U entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
         Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
-        Set<String> oldGroups=entityInDb.getGroups();
-        Set<String> newGroups=pEntity.getGroups();
+        Set<String> oldGroups = entityInDb.getGroups();
+        Set<String> newGroups = pEntity.getGroups();
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put pEntity into the DB.

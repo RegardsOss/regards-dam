@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 
 /**
  *

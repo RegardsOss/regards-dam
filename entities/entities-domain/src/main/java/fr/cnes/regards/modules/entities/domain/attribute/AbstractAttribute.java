@@ -89,10 +89,9 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
             if (other.name != null) {
                 return false;
             }
-        } else
-            if (!name.equals(other.name)) {
-                return false;
-            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
         return true;
     }
 
