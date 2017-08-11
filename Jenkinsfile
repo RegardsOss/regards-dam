@@ -11,76 +11,9 @@
  * To fully support multibranch builds without issues, we are using docker-compose to setup cots for each build.
  *
  * @author Sylvain VISSIERE-GUERINET
+ * @author Marc SORDI
  * @see https://jenkins.io/doc/book/pipeline/jenkinsfile/
  */
-pipeline {
-    agent any
-
-    stages {
-        stage('Deploy & Analyze') {
-            when {
-                anyOf {
-                    branch 'master'; branch 'develop'; branch 'develop_V1.1.0'
-                }
-            }
-            steps {
-                // use --exit-code-from SERVICE SERVICE to bind docker-compose return code to the one of SERVICE
-                // and only launch SERVICE and its dependencies if needed
-                // ${OLDPWD##*/} is the name of docker-compose.yml parent dir, -p allows us to specify container name prefix
-                sh 'cd test && docker-compose -p ${OLDPWD##*/} up --exit-code-from rs_build_deploy rs_build_deploy'
-            }
-            post {
-                failure {
-                    echo 'The build FAILED, we print all COTS logs'
-                    echo '########################################'
-                    echo '#### ELASTICSEARCH'
-                    echo '########################################'
-                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_elasticsearch '
-                    echo '########################################'
-                    echo '#### POSTGRES'
-                    echo '########################################'
-                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_postgres '
-                    echo '########################################'
-                    echo '#### RABBITMQ'
-                    echo '########################################'
-                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_rabbitmq '
-                }
-            }
-        }
-        stage('Verify') {
-            when {
-                not {
-                    anyOf {
-                        branch 'master'; branch 'develop'; branch 'develop_V1.1.0'
-                    }
-                }
-            }
-            steps {
-                sh 'cd test && docker-compose -p ${OLDPWD##*/} up --exit-code-from rs_build_verify rs_build_verify'
-            }
-            post {
-                failure {
-                    echo 'The build FAILED, we print all COTS logs'
-                    echo '########################################'
-                    echo '#### ELASTICSEARCH'
-                    echo '########################################'
-                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_elasticsearch '
-                    echo '########################################'
-                    echo '#### POSTGRES'
-                    echo '########################################'
-                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_postgres '
-                    echo '########################################'
-                    echo '#### RABBITMQ'
-                    echo '########################################'
-                    sh 'cd test && docker-compose -p ${OLDPWD##*/} logs rs_rabbitmq '
-                }
-            }
-        }
-    }
-    post {
-        always {
-            echo 'lets clean up the mess!'
-            sh 'cd test && docker-compose -p ${OLDPWD##*/} down'
-        }
-    }
+@Library('regards/standardPipeline') _
+standardPipeline {
 }
