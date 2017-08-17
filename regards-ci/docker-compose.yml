@@ -1,0 +1,59 @@
+version: '2'
+services:
+  rs_rabbitmq:
+    image: rabbitmq:3.6.5-management
+    networks:
+      - regards_IT_network
+
+  rs_postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_PASSWORD=azertyuiop123456789
+      - POSTGRES_USER=azertyuiop123456789
+    volumes:
+      - ./postgres:/docker-entrypoint-initdb.d
+    networks:
+      - regards_IT_network
+
+  rs_elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.0
+    environment:
+      - cluster.name=regards
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2500m -Xmx2500m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - regards_IT_network
+
+  rs_build:
+    image: 172.26.46.158/rs-maven
+    environment:
+      - BRANCH_NAME
+      - WORKSPACE
+      - CI_DIR
+      - MODE
+    volumes:
+      - /opt/maven-multibranch-repository:/localRepository
+      - /usr/bin/docker:/bin/docker # link docker - only useful for deploy MODE
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../.:/app_to_build
+    links:
+      - rs_rabbitmq
+      - rs_postgres
+      - rs_elasticsearch
+    networks:
+      - regards_IT_network
+
+networks:
+  regards_IT_network:
+    external:
+      name: regards_IT_network
