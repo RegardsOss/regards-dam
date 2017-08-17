@@ -35,11 +35,12 @@ services:
       - regards_IT_network
 
   rs_build:
-    image: 172.26.47.52:5000/rs-maven
+    image: 172.26.46.158/rs-maven
     environment:
       - BRANCH_NAME
       - WORKSPACE
-      - MODE=Deploy
+      - CI_DIR
+      - MODE
     volumes:
       - /opt/maven-multibranch-repository:/localRepository
       - /usr/bin/docker:/bin/docker # link docker - only useful for deploy MODE
