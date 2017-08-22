@@ -22,7 +22,6 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Qualified interface for Document entity service

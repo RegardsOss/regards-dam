@@ -18,9 +18,9 @@
  */
 package fr.cnes.regards.modules.entities.dao;
 
+import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
