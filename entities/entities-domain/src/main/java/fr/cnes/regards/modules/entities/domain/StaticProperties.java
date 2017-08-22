@@ -27,13 +27,10 @@ package fr.cnes.regards.modules.entities.domain;
  */
 public final class StaticProperties {
 
-    private StaticProperties() {
-    }
-
-    // ##########-AbstractEntity-##########
-
     // URN
     public static final String IP_ID = "ipId";
+
+    // ##########-AbstractEntity-##########
 
     // String
     public static final String LABEL = "label";
@@ -74,29 +71,29 @@ public final class StaticProperties {
     // Wrappped dynamic properties
     public static final String PROPERTIES = "properties";
 
-    // ##########-AbstractDataEntity-##########
-
     // List of DataFile
     public static final String FILES = "files";
 
-    // ##########-AbstractDescEntity-##########
+    // ##########-AbstractDataEntity-##########
 
     // DescriptionFile
     public static final String DESCRIPTION_FILE = "descriptionFile";
+
+    // ##########-AbstractDescEntity-##########
+
+    public static final String DATASOURCE_ID = "dataSourceId";
 
     // ##########-Collection-##########
 
     // ##########-DataObject-##########
 
-    public static final String DATASOURCE_ID = "dataSourceId";
-
     // Long list
     public static final String DATASET_MODEL_IDS = "datasetModelIds";
 
-    // ##########-Dataset-##########
-
     // int
     public static final String SCORE = "score";
+
+    // ##########-Dataset-##########
 
     // Long
     public static final String DATA_MODEL = "dataModel";
@@ -107,10 +104,13 @@ public final class StaticProperties {
     // String
     public static final String LICENCE = "licence";
 
+    public static final String ENTITY_TYPE = "entityType";
+
     // ##########-Document-##########
 
     // ##########-From GSON factory EntityAdapterFactory-##########
 
-    public static final String ENTITY_TYPE = "entityType";
+    private StaticProperties() {
+    }
 
 }

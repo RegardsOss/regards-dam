@@ -3,7 +3,7 @@ package fr.cnes.regards.modules.entities.domain.event;
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.urn.UniformResourceName;
 
 /**
  * Broadcast entity event to be sent to all microservices
@@ -11,6 +11,7 @@ import fr.cnes.regards.modules.entities.urn.UniformResourceName;
  */
 @Event(target = Target.ALL)
 public class BroadcastEntityEvent implements ISubscribable {
+
     /**
      * Business id identifying an entity
      */

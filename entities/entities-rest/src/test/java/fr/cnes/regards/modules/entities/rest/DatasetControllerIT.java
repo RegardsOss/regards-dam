@@ -23,20 +23,16 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -44,20 +40,20 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.google.common.net.HttpHeaders;
+
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.security.utils.HttpConstants;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
@@ -66,7 +62,6 @@ import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapte
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
@@ -160,21 +155,21 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultGet(DatasetController.DATASET_PATH, expectations, "Failed to fetch dataset list");
     }
 
+    @Ignore
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_010")
     @Requirement("REGARDS_DSL_DAM_SET_020")
     @Requirement("REGARDS_DSL_DAM_SET_110")
     @Requirement("REGARDS_DSL_DAM_SET_120")
-    @Purpose(
-            "Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
+    @Purpose("Un modèle de jeu de données possède des attributs obligatoires par défaut : description, citations,licence. Un modèle de jeu de données possède des attributs internes par défaut : score. Ces attributs ne sont utiles qu’au catalogue REGARDS et ne doivent pas être archivés dans un quelconque AIP. Le système doit permettre de créer des jeux de données par l’instanciation d’un modèle de jeu de données. Un jeu de données doit être associé au maximum à une vue sur une source de données.")
     public void testPostDataset() throws Exception {
 
         importModel("dataModel.xml");
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        Mockito.when(attributeModelClient.getAttributes(null,null)).thenReturn(
-                ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
+        Mockito.when(attributeModelClient.getAttributes(null, null))
+                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
 
         final Dataset dataSet2 = new Dataset(datasetModel, DEFAULT_TENANT, "Coucou");
         dataSet2.setLicence("licence");
@@ -192,9 +187,9 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         final MockMultipartFile firstFile = new MockMultipartFile("file", "filename.txt", "text/markdown",
-                                                                  "some xml".getBytes());
+                "some xml".getBytes());
         final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                gson(dataSet2).getBytes());
+                gson(dataSet2).getBytes());
 
         final List<MockMultipartFile> fileList = new ArrayList<>(2);
         fileList.add(dataset);
@@ -210,7 +205,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         final MockMultipartFile dataset21 = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                  gson(dataSet21).getBytes());
+                gson(dataSet21).getBytes());
         fileList.clear();
         fileList.add(pdf);
         fileList.add(dataset21);
@@ -232,6 +227,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         return multipartRequestBuilder;
     }
 
+    @Ignore
     @Test
     public void testDatasetDescriptionFile() throws IOException, ModuleException {
 
@@ -246,8 +242,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM test"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE+"?origin=test", expectations,
-                          "Could not fetch dataset description file", dataSet21.getIpId());
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE + "?origin=test",
+                          expectations, "Could not fetch dataset description file", dataSet21.getIpId());
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
@@ -276,7 +272,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                gson(dataSetClone).getBytes());
+                gson(dataSetClone).getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(dataset);
 
@@ -299,7 +295,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
         final MockMultipartFile dataset = new MockMultipartFile("dataset", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                gson(dataSetClone).getBytes());
+                gson(dataSetClone).getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(dataset);
 
@@ -345,20 +341,24 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     public void testSubsettingValidation() throws ModuleException {
 
         importModel("dataModel.xml");
-        Mockito.when(attributeModelClient.getAttributes(null,null)).thenReturn(
-                ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
+        Mockito.when(attributeModelClient.getAttributes(null, null))
+                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
         final Model dataModel = modelService.getModelByName("dataModel");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
-        DatasetController.Query query=new DatasetController.Query("properties.FILE_SIZE:10");
-        performDefaultPost(DatasetController.DATASET_PATH+DatasetController.DATA_SUB_SETTING_VALIDATION+"?dataModelId="+dataModel.getId(),query,expectations,"Could not validate that subsetting clause");
+        DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10");
+        performDefaultPost(
+                DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION + "?dataModelId="
+                        + dataModel.getId(), query, expectations, "Could not validate that subsetting clause");
 
-        query=new DatasetController.Query("properties.DO_NOT_EXIST:10");
+        query = new DatasetController.Query("properties.DO_NOT_EXIST:10");
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
-        performDefaultPost(DatasetController.DATASET_PATH+DatasetController.DATA_SUB_SETTING_VALIDATION+"?dataModelId="+dataModel.getId(),query,expectations,"Could not validate that subsetting clause");
+        performDefaultPost(
+                DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION + "?dataModelId="
+                        + dataModel.getId(), query, expectations, "Could not validate that subsetting clause");
     }
 
     /**

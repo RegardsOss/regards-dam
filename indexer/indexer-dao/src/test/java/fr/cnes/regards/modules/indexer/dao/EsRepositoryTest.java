@@ -29,6 +29,8 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
@@ -40,7 +42,6 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource("classpath:test.properties")
-@DirtiesContext
 public class EsRepositoryTest {
 
     /**
@@ -66,22 +67,10 @@ public class EsRepositoryTest {
      */
     @Before
     public void setUp() throws Exception {
-//        Map<String, String> propMap = Maps.newHashMap();
         boolean repositoryOK = true;
         // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
-//        Stream<String> props = Files.lines(Paths.get("target/test-classes/test.properties"));
-//        props.filter(line -> !(line.startsWith("#") || line.trim().isEmpty())).forEach(line -> {
-//            String[] keyVal = line.split("=");
-//            propMap.put(keyVal[0], keyVal[1]);
-//        });
         try {
             gson = new GsonBuilder().create();
-            // FIXME valeurs en dur pour l'instant
-//            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-//                                          Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
-//                                          propMap.get("regards.elasticsearch.cluster.name"),
-//                                          new AggregationBuilderFacetTypeVisitor(10, 1));
-
             repository = new EsRepository(gson, null, elasticHost,
                     elasticPort,
                     elasticName,

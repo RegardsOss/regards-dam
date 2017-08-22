@@ -14,6 +14,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.modules.indexer.dao.converter.LinkedHashMapToSort;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -21,7 +23,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 
 /**
  * Elasticsearch DAO interface
- *
  * @author oroussel
  */
 public interface IEsRepository {
@@ -33,7 +34,6 @@ public interface IEsRepository {
 
     /**
      * Create specified index
-     *
      * @param pIndex index
      * @return true if acknowledged by Elasticsearch, false otherwise. returns
      */
@@ -50,7 +50,6 @@ public interface IEsRepository {
 
     /**
      * Put geometry mapping on specified types of specified index (ie a "geo_shape" type "geometry" property)
-     *
      * @param pIndex index
      * @param types all types with geometry mapping
      * @return true if acknowledged by Elasticsearch, false otherwise.
@@ -59,7 +58,6 @@ public interface IEsRepository {
 
     /**
      * Delete specified index
-     *
      * @param pIndex index
      * @return true if acknowledged by Elasticsearch, false otherwise.
      */
@@ -67,14 +65,12 @@ public interface IEsRepository {
 
     /**
      * Find all indices
-     *
      * @return all indices <b>lowercase</b>
      */
     String[] findIndices();
 
     /**
      * Does specified index exist ?
-     *
      * @param pName index name
      * @return true or false
      */
@@ -82,7 +78,6 @@ public interface IEsRepository {
 
     /**
      * Create or update a document index specifying index.
-     *
      * @param pIndex index
      * @param pDocument object implementing IIndexable thus needs to provide id and type
      * @return true if created, false otherwise
@@ -92,30 +87,27 @@ public interface IEsRepository {
     /**
      * Method only used for tests. Elasticsearch performs refreshes every second. So, il a search is called just after a save, the document will not be available. A manual refresh is necessary (on
      * saveBulkEntities, it is automaticaly called)
-     *
      * @param pIndex index to refresh
      */
     void refresh(String pIndex);
 
     /**
      * Create or update several documents into same index. Errors are logged.
-     *
      * @param pIndex index
      * @param pDocuments documents to save (docId and type are mandatory for all of them)
      * @param <T> parameterized type to avoid array inheritance restriction type definition
      * @return the number of effectively saved documents
-     * @exception IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
      */
     @SuppressWarnings("unchecked")
     <T extends IIndexable> int saveBulk(String pIndex, T... pDocuments) throws IllegalArgumentException;
 
     /**
      * {@link #saveBulk(String, IIndexable...)}
-     *
      * @param pIndex index
      * @param pDocuments documents to save (docId and type are mandatory for all of them)
      * @return the number of effectively saved documents
-     * @exception IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
+     * @throws IllegalArgumentException If at least one document hasn't its two mandatory properties (docId and type).
      */
     default int saveBulk(final String pIndex, final Collection<? extends IIndexable> pDocuments)
             throws IllegalArgumentException {
@@ -124,7 +116,6 @@ public interface IEsRepository {
 
     /**
      * Retrieve a Document from its id
-     *
      * @param pIndex index
      * @param pDocType document type
      * @param pDocId document id
@@ -136,7 +127,6 @@ public interface IEsRepository {
 
     /**
      * Utility method to avoid using Class<T> and passing directly id and type
-     *
      * @param pIndex index
      * @param pDocument IIndexable object specifying docId and type
      * @param <T> document type
@@ -149,7 +139,6 @@ public interface IEsRepository {
 
     /**
      * Delete specified document
-     *
      * @param pIndex index
      * @param pType document type
      * @param pId document id
@@ -174,7 +163,6 @@ public interface IEsRepository {
 
     /**
      * Same as {@link #delete(String, String, String)} using docId and type of provided document
-     *
      * @param pIndex index
      * @param pDocument IIndexable object specifying docId and type
      * @return true if document no more exists, false otherwise
@@ -185,7 +173,6 @@ public interface IEsRepository {
 
     /**
      * Merge partial document with existing one.
-     *
      * @param pIndex index
      * @param pType document type
      * @param pId document id
@@ -196,7 +183,6 @@ public interface IEsRepository {
 
     /**
      * {@link #merge(String, String, String, Map)}
-     *
      * @param pIndex index
      * @param pDocument IIndexable object specifying docId and type
      * @param pMergedPropertiesMap map { name -> value } of properties to merge. Name can be one level sub-property dot identifier (ie. "toto.tata")
@@ -209,7 +195,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of all elements from index giving page size.
-     *
      * @param pIndex index
      * @param pClass class of document type
      * @param pPageSize page size
@@ -223,7 +208,6 @@ public interface IEsRepository {
     /**
      * Searching specified page of all elements from index (for first call use {@link #searchAllLimited(String, Class, int)} method) <b>This method fails if asked for offset greater than 10000
      * (Elasticsearch limitation)</b>
-     *
      * @param pIndex index
      * @param pClass class of document type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
@@ -234,7 +218,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size with facets.
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
@@ -253,7 +236,6 @@ public interface IEsRepository {
     /**
      * Searching specified page of elements from index (for first call use {@link #searchAllLimited(String, Class, int)} method) with facets. <b>This method fails if asked for offset greater than
      * 10000 (Elasticsearch limitation)</b>
-     *
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
      * @param pFacetsMap map of (attribute name - facet type). Can be null if no facet asked for.
@@ -266,7 +248,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size without facets.
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
@@ -280,7 +261,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size without sort.
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
@@ -294,7 +274,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size without facets nor sort
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
@@ -309,7 +288,6 @@ public interface IEsRepository {
     /**
      * Searching specified page of elements from index (for first call use {@link #searchAllLimited(String, Class, int)} method) without facets nor sort. <b>This method fails if asked for offset
      * greater than 10000 (Elasticsearch limitation)</b>
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pCriterion search criterion
@@ -323,7 +301,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size. The results are reduced to given inner property that's why no sorting can be done.
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pPageSize page size
      * @param pCriterion search criterion
@@ -338,7 +315,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size and facet map. The results are reduced to given inner property that's why no sorting can be done.
-     *
      * @param searchKey the search key specifying on which index and type the search must be applied and the class of return objects type
      * @param pCriterion search criterion
      * @param pSourceAttribute if the search is on a document but the result shoult be an inner property of the results documents
@@ -349,7 +325,6 @@ public interface IEsRepository {
 
     /**
      * Same as {@link #search(SearchKey, ICriterion, String)} providing a transform function to apply on all results
-     *
      * @param <T> class of inner sourceAttribute
      * @param <U> result class of transform function
      */
@@ -366,7 +341,6 @@ public interface IEsRepository {
      * Count result
      * @param searchKey the search key
      * @param criterion search criterion
-     * @return
      */
     <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion criterion);
 
@@ -399,7 +373,6 @@ public interface IEsRepository {
 
     /**
      * Searching first page of elements from index giving page size
-     *
      * @param searchKey the search key
      * @param pPageSize page size
      * @param pValue value to search
@@ -414,12 +387,11 @@ public interface IEsRepository {
 
     /**
      * Searching specified page of elements from index giving page size (for first call us {@link #multiFieldsSearch(SearchKey, int, Object, String...)} method
-     *
      * @param searchKey the search key
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
      * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too
-     *                (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
+     * (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */
@@ -428,12 +400,20 @@ public interface IEsRepository {
     /**
      * Execute specified action for all search results<br/>
      * <b>No 10000 offset Elasticsearch limitation</b>
-     *
      * @param searchKey the search key specifying the index and type to search and the result class used
      * @param pAction action to be executed for each search result element
      * @param pCriterion search criterion
      */
     <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCriterion);
+
+    /**
+     * Compute a DocFilesSummary for given request distributing results based on disciminantProperty for given file
+     * types
+     * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     * @return the compmuted summary
+     */
+    <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, String... fileTypes);
 
     /**
      * Close Client

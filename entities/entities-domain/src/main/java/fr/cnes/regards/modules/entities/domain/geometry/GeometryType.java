@@ -5,22 +5,13 @@ package fr.cnes.regards.modules.entities.domain.geometry;
  * @author oroussel
  */
 public enum GeometryType {
-    POINT("Point"),
-    LINE_STRING("LineString"),
-    MULTI_LINE_STRING("MultiLineString"),
-    MULTI_POINT("MultiPoint"),
-    MULTI_POLYGON("MultiPolygon"),
-    POLYGON("Polygon");
+    POINT("Point"), LINE_STRING("LineString"), MULTI_LINE_STRING("MultiLineString"), MULTI_POINT(
+            "MultiPoint"), MULTI_POLYGON("MultiPolygon"), POLYGON("Polygon");
 
     private final String geoJson;
 
     private GeometryType(String geoJson) {
         this.geoJson = geoJson;
-    }
-
-    @Override
-    public String toString() {
-        return this.geoJson;
     }
 
     public static GeometryType fromString(String geoJson) {
@@ -30,5 +21,10 @@ public enum GeometryType {
             }
         }
         throw new IllegalArgumentException(String.format("No enum constant for geoJson type %s", geoJson));
+    }
+
+    @Override
+    public String toString() {
+        return this.geoJson;
     }
 }

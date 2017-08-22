@@ -19,7 +19,7 @@
 package fr.cnes.regards.modules.entities.gson;
 
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 
 /**
  * @author Marc Sordi

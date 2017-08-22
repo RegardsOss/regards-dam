@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.urn.EntityType;
 
 @Service
 public class IndexerService implements IIndexerService {
