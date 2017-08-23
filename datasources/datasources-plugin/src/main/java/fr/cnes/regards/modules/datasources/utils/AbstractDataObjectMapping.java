@@ -59,13 +59,14 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.DataType;
+import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.models.domain.Model;
+import org.springframework.util.LinkedMultiValueMap;
 
 /**
  * This class allows to process a SQL request to a SQL Database.</br>
@@ -411,13 +412,13 @@ public abstract class AbstractDataObjectMapping {
         if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
             String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
-                pData.setFiles(new HashMap<>());
+                pData.setFiles(new ArrayList<>());
             }
             try {
                 DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setFileRef(new URI(str));
-                pData.getFiles().put(type, dataFile);
+                pData.getFiles().add(dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }

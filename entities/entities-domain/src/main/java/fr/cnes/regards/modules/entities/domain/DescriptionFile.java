@@ -21,10 +21,10 @@ package fr.cnes.regards.modules.entities.domain;
 import javax.persistence.*;
 import javax.validation.constraints.Pattern;
 
+import fr.cnes.regards.framework.jpa.converter.MediaTypeConverter;
 import org.hibernate.annotations.Type;
 import org.springframework.http.MediaType;
 
-import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
 
 /**
  * @author Sylvain Vissiere-Guerinet

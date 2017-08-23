@@ -3,14 +3,11 @@ package fr.cnes.regards.modules.indexer.dao;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import fr.cnes.regards.modules.indexer.domain.*;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.Assert;
@@ -27,9 +24,8 @@ import com.google.gson.GsonBuilder;
 
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
-import fr.cnes.regards.modules.indexer.domain.IDocFiles;
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
-import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 /**
  * Test on complex aggs
@@ -121,8 +117,8 @@ public class EsAggsTest {
             Data data = new Data();
             data.setDocId(file.getName());
             data.setTags(randomTags());
-            data.getFiles().put(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA));
-            data.getFiles().put(DataType.QUICKLOOK_HD, new DataFile(file, DataType.QUICKLOOK_HD));
+            data.getFiles().add(new DataFile(file, DataType.RAWDATA));
+            data.getFiles().add(new DataFile(file, DataType.QUICKLOOK_HD));
             datas.add(data);
         }
         repository.saveBulk(INDEX, datas);
@@ -149,7 +145,7 @@ public class EsAggsTest {
 
         private Set<String> tags = new HashSet<>();
 
-        private Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = new HashMap<>();
+        private List<fr.cnes.regards.modules.indexer.domain.DataFile> files = new ArrayList<>();
 
         public Data() {
         }
@@ -182,12 +178,12 @@ public class EsAggsTest {
         }
 
         @Override
-        public Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
+        public List<fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
             return files;
         }
 
-        public void setFiles(Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
-            this.files = files;
+        public void setFiles(List<fr.cnes.regards.modules.indexer.domain.DataFile> pFiles) {
+            this.files = pFiles;
         }
     }
 
@@ -215,13 +211,4 @@ public class EsAggsTest {
         }
     }
 
-    private static enum DataType {
-        RAWDATA,
-        QUICKLOOK_SD,
-        QUICKLOOK_MD,
-        QUICKLOOK_HD,
-        DOCUMENT,
-        THUMBNAIL,
-        OTHER;
-    }
 }

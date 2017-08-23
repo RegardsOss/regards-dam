@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.entities.service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.*;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -28,8 +27,10 @@ import fr.cnes.regards.modules.entities.domain.*;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
+import java.util.List;
 
 /**
  * Specific EntityService for documents
@@ -47,5 +48,15 @@ public class DocumentService extends AbstractEntityService<Document> implements 
                            IDescriptionFileRepository descriptionFileRepository) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
                 pDatasetRepository, pDocumentRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
+    }
+
+    @Override
+    public Document addFiles(Long pDocumentId, List<MultipartFile> files) {
+        return null;
+    }
+
+    @Override
+    public void deleteFile(Long pDocumentId, Long pFileId) {
+
     }
 }

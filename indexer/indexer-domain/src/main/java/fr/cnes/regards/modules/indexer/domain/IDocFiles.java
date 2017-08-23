@@ -1,6 +1,6 @@
 package fr.cnes.regards.modules.indexer.domain;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * The unique intend of this interface is to avoid calling IEsRepository.computeDataFilesSummary() on data that do not
@@ -9,5 +9,5 @@ import java.util.Map;
  * @author oroussel
  */
 public interface IDocFiles {
-    Map<?, DataFile> getFiles();
+    List<DataFile> getFiles();
 }

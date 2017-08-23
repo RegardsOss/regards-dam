@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.domain;
+package fr.cnes.regards.modules.indexer.domain;
 
 /**
  * {@link AbstractEntity} types
@@ -30,9 +30,4 @@ public enum DataType {
      * Available data types
      */
     RAWDATA, QUICKLOOK_SD, QUICKLOOK_MD, QUICKLOOK_HD, DOCUMENT, THUMBNAIL, OTHER;
-
-    @Override
-    public String toString() {
-        return this.name();
-    }
 }

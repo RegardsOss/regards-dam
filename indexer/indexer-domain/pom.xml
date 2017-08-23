@@ -11,6 +11,10 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>regards-core-jpa-common</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>

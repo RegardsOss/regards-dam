@@ -65,6 +65,16 @@ public class DocumentController implements IResourceController<Document> {
 
     public static final String DOCUMENT_MAPPING = "/{document_id}";
 
+    public static final String DOCUMENT_ASSOCIATE_MAPPING = DOCUMENT_MAPPING + "/associate";
+
+    public static final String DOCUMENT_DISSOCIATE_MAPPING = DOCUMENT_MAPPING + "/dissociate";
+
+    public static final String DOCUMENT_FILES_MAPPING = DOCUMENT_MAPPING + "/files";
+
+    public static final String DOCUMENT_FILES_DELETE_MAPPING = DOCUMENT_FILES_MAPPING + "/{file_id}";
+
+
+
     /**
      * Service
      */
@@ -191,7 +201,7 @@ public class DocumentController implements IResourceController<Document> {
      * @throws ModuleException
      *             if error occurs
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/{document_id}/dissociate")
+    @RequestMapping(method = RequestMethod.PUT, value = DOCUMENT_DISSOCIATE_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Dissociate a document from  a list of entities")
     public HttpEntity<Void> dissociate(@PathVariable("document_id") final Long pDocumentId,
@@ -211,12 +221,51 @@ public class DocumentController implements IResourceController<Document> {
      * @throws ModuleException
      *             if error occurs
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/{document_id}/associate")
+    @RequestMapping(method = RequestMethod.PUT, value = DOCUMENT_ASSOCIATE_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Associate the document of id document_id to the list of entities in parameter")
     public HttpEntity<Void> associate(@PathVariable("document_id") final Long pDocumentId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
         documentService.associate(pDocumentId, pToBeAssociatedWith);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+
+
+    /**
+     * Add files to document of given id
+     * @param pDocumentId the id of the document
+     * @param pResult for validation of entites' properties
+     * @return the updated dataset wrapped in an HTTP response
+     */
+    @RequestMapping(method = RequestMethod.POST, value = DOCUMENT_FILES_MAPPING)
+    @ResourceAccess(description = "Updates a Dataset")
+    public ResponseEntity<Resource<Document>> addFiles(@PathVariable("document_id") final Long pDocumentId,
+                                                           @RequestParam("files")  final  List<MultipartFile> files) throws ModuleException, IOException {
+        for (MultipartFile file : files) {
+            System.out.println(file.getOriginalFilename());
+        }
+        final Document dataSet = documentService.addFiles(pDocumentId, files);
+        final Resource<Document> resource = toResource(dataSet);
+        return new ResponseEntity<>(resource, HttpStatus.OK);
+    }
+
+    /**
+     * Entry point to delete a file from a document
+     *
+     * @param pDocumentId
+     *            {@link Document} id
+     * @return nothing
+     * @throws EntityNotFoundException
+     * @
+     */
+    @RequestMapping(method = RequestMethod.DELETE, value = DocumentController.DOCUMENT_FILES_DELETE_MAPPING)
+    @ResponseBody
+    @ResourceAccess(description = "delete the document using its id")
+    public HttpEntity<Void> deleteDocumentFile(@PathVariable("document_id") final Long pDocumentId,
+                                               @PathVariable("file_id") final Long pFileId)
+            throws EntityNotFoundException {
+        documentService.deleteFile(pDocumentId, pFileId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
