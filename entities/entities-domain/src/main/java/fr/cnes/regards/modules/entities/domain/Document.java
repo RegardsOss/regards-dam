@@ -53,7 +53,7 @@ public class Document extends AbstractDataEntity {
     }
 
     public Document() {
-        this(null, null, null);
+        super(null, null, null);
     }
 
     @Override
