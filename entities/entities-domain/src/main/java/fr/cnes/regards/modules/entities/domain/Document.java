@@ -18,14 +18,17 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import java.util.UUID;
-
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.urn.OAISIdentifier;
 import fr.cnes.regards.framework.urn.UniformResourceName;
-import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.models.domain.Model;
+
+import javax.persistence.*;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -36,6 +39,13 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Entity
 @DiscriminatorValue("DOCUMENT")
 public class Document extends AbstractDataEntity {
+
+    /**
+     * Physical data file references
+     */
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "fk_entity_data_files"))
+    private List<DataFile> files;
 
     public Document(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, pTenant, UUID.randomUUID(), 1),
@@ -49,5 +59,21 @@ public class Document extends AbstractDataEntity {
     @Override
     public String getType() {
         return EntityType.DOCUMENT.toString();
+    }
+
+    @Override
+    public List<DataFile> getFiles(DataType dataType) {
+        return this.getFiles().stream()
+                .filter(file -> dataType.equals(file.getDataType()))
+                .collect(Collectors.toList());
+    }
+
+
+    public List<DataFile> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<DataFile> pFiles) {
+        files = pFiles;
     }
 }

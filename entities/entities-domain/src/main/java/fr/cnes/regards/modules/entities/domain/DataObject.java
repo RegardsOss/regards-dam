@@ -18,15 +18,15 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
+import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.urn.OAISIdentifier;
 import fr.cnes.regards.framework.urn.UniformResourceName;
-import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.models.domain.Model;
+
+import java.util.*;
 
 /**
  * A DataObject is created by a DataSource when an external database is ingested.
@@ -52,6 +52,10 @@ public class DataObject extends AbstractDataEntity {
      */
     private DataObjectMetadata metadata = new DataObjectMetadata();
 
+
+    private Map<DataType, List<DataFile>> files;
+
+
     public DataObject(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant, UUID.randomUUID(), 1),
               pLabel);
@@ -59,6 +63,13 @@ public class DataObject extends AbstractDataEntity {
 
     public DataObject() {
         this(null, null, null);
+    }
+
+    public void addFile(DataFile file) {
+        if (this.getFiles(file.getDataType()) == null) {
+            this.files.put(file.getDataType(), new ArrayList<>());
+        }
+        this.files.get(file.getDataType()).add(file);
     }
 
     public String getDataSourceId() {
@@ -99,4 +110,10 @@ public class DataObject extends AbstractDataEntity {
     public boolean equals(Object pObject) {
         return super.equals(pObject);
     }
+
+    @Override
+    public List<DataFile> getFiles(DataType dataType) {
+        return files.get(dataType);
+    }
+
 }

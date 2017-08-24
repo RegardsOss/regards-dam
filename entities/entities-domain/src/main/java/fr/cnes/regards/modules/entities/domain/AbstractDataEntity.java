@@ -19,14 +19,12 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import fr.cnes.regards.framework.urn.UniformResourceName;
-import fr.cnes.regards.modules.indexer.domain.DataFile;
-import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;
-import org.springframework.util.MultiValueMap;
 
-import javax.persistence.*;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 /**
  * Abstraction for entities managing data files
@@ -39,27 +37,12 @@ import java.util.List;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
 
-    /**
-     * Physical data file references
-     */
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "fk_entity_data_files"))
-    private List<DataFile> files;
-
     protected AbstractDataEntity() {
         this(null, null, null);
     }
 
     protected AbstractDataEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
         super(pModel, pIpId, pLabel);
-    }
-
-    public List<DataFile> getFiles() {
-        return files;
-    }
-
-    public void setFiles(List<DataFile> pFiles) {
-        files = pFiles;
     }
 
     @Override
