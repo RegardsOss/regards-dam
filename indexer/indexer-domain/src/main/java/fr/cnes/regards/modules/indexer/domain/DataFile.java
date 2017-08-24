@@ -116,4 +116,12 @@ public class DataFile {
     public void setMimeType(MimeType pMimeType) {
         mimeType = pMimeType;
     }
+
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
+    }
+
+    public DataType getDataType() {
+        return dataType;
+    }
 }
