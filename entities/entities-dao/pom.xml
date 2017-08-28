@@ -40,11 +40,6 @@
 			<groupId>fr.cnes.regards.modules.entities</groupId>
 			<artifactId>entities-domain</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-
 		<!-- Tests -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
