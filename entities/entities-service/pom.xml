@@ -64,10 +64,6 @@
 			<artifactId>entities-plugin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.modules.opensearch</groupId>
 			<artifactId>opensearch-service</artifactId>
 		</dependency>
