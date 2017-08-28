@@ -24,6 +24,7 @@ import fr.cnes.regards.framework.urn.OAISIdentifier;
 import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;
 
 import java.util.*;
@@ -59,10 +60,6 @@ public class DataObject extends AbstractDataEntity {
 
     public DataObject() {
         this(null, null, null);
-    }
-
-    public void addFile(DataFile file) {
-        this.files.put(file.getDataType(), file);
     }
 
     public String getDataSourceId() {

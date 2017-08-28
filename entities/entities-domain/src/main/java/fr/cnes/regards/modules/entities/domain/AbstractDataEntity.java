@@ -28,13 +28,13 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Abstraction for entities managing data files
+ * (legacy)
  *
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
  */
-public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
-
+public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles  {
     /**
      * Physical data file references
      */
@@ -56,6 +56,10 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         files = pFiles;
     }
 
+    public void putFile(DataType type, DataFile dataFile) {
+        files.put(type, dataFile);
+    }
+
     @Override
     public boolean equals(Object pObj) {
         return super.equals(pObj);
@@ -65,4 +69,5 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
     public int hashCode() {
         return super.hashCode();
     }
+
 }

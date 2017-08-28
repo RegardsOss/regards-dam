@@ -46,7 +46,7 @@ public class Document extends AbstractEntity {
      */
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "fk_entity_data_files"))
-    private List<DataFile> files;
+    private List<DataFile> documents;
 
     public Document(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, pTenant, UUID.randomUUID(), 1),
@@ -62,18 +62,11 @@ public class Document extends AbstractEntity {
         return EntityType.DOCUMENT.toString();
     }
 
-    public List<DataFile> getFiles(DataType dataType) {
-        return this.getFiles().stream()
-                .filter(file -> dataType.equals(file.getDataType()))
-                .collect(Collectors.toList());
+    public void setDocuments(List<DataFile> documents) {
+        this.documents = documents;
     }
 
-
-    public List<DataFile> getFiles() {
-        return files;
-    }
-
-    public void setFiles(List<DataFile> pFiles) {
-        files = pFiles;
+    public List<DataFile> getDocuments() {
+        return documents;
     }
 }

@@ -71,13 +71,6 @@ public class DataFile {
     @Convert(converter = MimeTypeConverter.class)
     private MimeType mimeType;
 
-
-    /**
-     * Data type
-     */
-    @Column(name = "data_file_type")
-    private DataType dataType;
-
     public URI getFileRef() {
         return fileRef;
     }
@@ -116,13 +109,5 @@ public class DataFile {
 
     public void setMimeType(MimeType pMimeType) {
         mimeType = pMimeType;
-    }
-
-    public void setDataType(DataType dataType) {
-        this.dataType = dataType;
-    }
-
-    public DataType getDataType() {
-        return dataType;
     }
 }

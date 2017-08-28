@@ -193,7 +193,6 @@ public class EsAggsTest {
 
         public DataFile(File file, DataType type) {
             this.setFileSize(file.length());
-            this.setDataType(type);
             switch (type) {
                 case RAWDATA:
                     super.setFileRef(file.toURI());
