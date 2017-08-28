@@ -4,8 +4,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -116,8 +116,8 @@ public class EsAggsTest {
             Data data = new Data();
             data.setDocId(file.getName());
             data.setTags(randomTags());
-            data.addFile(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA));
-            data.addFile(DataType.QUICKLOOK_HD, new DataFile(file, DataType.QUICKLOOK_HD));
+            data.getFiles().put(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA));
+            data.getFiles().put(DataType.QUICKLOOK_HD, new DataFile(file, DataType.QUICKLOOK_HD));
             datas.add(data);
         }
         repository.saveBulk(INDEX, datas);
@@ -144,7 +144,7 @@ public class EsAggsTest {
 
         private Set<String> tags = new HashSet<>();
 
-        private Map<DataType, List<fr.cnes.regards.modules.indexer.domain.DataFile>> files = new HashMap<>();
+        private Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = new HashMap<>();
 
         public Data() {
         }
@@ -177,19 +177,19 @@ public class EsAggsTest {
         }
 
         @Override
-        public List<fr.cnes.regards.modules.indexer.domain.DataFile> getFiles(DataType dataType) {
-            return files.get(dataType);
+        public Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
+            return files;
         }
 
-        public void addFile(DataType dataType, fr.cnes.regards.modules.indexer.domain.DataFile pFile) {
-            if (this.files.get(dataType) == null) {
-                this.files.put(dataType, new ArrayList<>());
-            }
-            this.files.get(dataType).add(pFile);
+        public void setFiles(Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
+            this.files = files;
         }
     }
 
     private static class DataFile extends fr.cnes.regards.modules.indexer.domain.DataFile {
+
+        public DataFile() {
+        }
 
         public DataFile(File file, DataType type) {
             this.setFileSize(file.length());

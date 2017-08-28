@@ -22,12 +22,9 @@ import java.util.Map;
 
 import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;
-
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 
 /**
  * Abstraction for entities managing data files
@@ -36,9 +33,12 @@ import javax.persistence.InheritanceType;
  * @author Marc Sordi
  * @author oroussel
  */
-@Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
+
+    /**
+     * Physical data file references
+     */
+    private Map<DataType, DataFile> files;
 
     protected AbstractDataEntity() {
         this(null, null, null);
@@ -46,6 +46,14 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
 
     protected AbstractDataEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
         super(pModel, pIpId, pLabel);
+    }
+
+    public Map<DataType, DataFile> getFiles() {
+        return files;
+    }
+
+    public void setFiles(Map<DataType, DataFile> pFiles) {
+        files = pFiles;
     }
 
     @Override

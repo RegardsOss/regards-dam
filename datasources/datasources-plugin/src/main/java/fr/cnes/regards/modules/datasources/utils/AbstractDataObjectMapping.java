@@ -36,7 +36,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
-import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.models.domain.Model;
 import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;

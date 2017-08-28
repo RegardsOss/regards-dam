@@ -23,6 +23,7 @@ import javax.validation.Valid;
 import java.net.URI;
 
 import fr.cnes.regards.framework.jpa.converter.MimeTypeConverter;
+import fr.cnes.regards.framework.urn.DataType;
 import org.springframework.util.MimeType;
 
 /**

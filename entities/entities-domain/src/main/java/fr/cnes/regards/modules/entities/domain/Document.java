@@ -18,11 +18,11 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.urn.OAISIdentifier;
 import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
-import fr.cnes.regards.modules.indexer.domain.DataType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 import javax.persistence.*;
@@ -34,11 +34,12 @@ import java.util.stream.Collectors;
  *
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
+ * @author Léo Mieulet
  *
  */
 @Entity
 @DiscriminatorValue("DOCUMENT")
-public class Document extends AbstractDataEntity {
+public class Document extends AbstractEntity {
 
     /**
      * Physical data file references
@@ -61,7 +62,6 @@ public class Document extends AbstractDataEntity {
         return EntityType.DOCUMENT.toString();
     }
 
-    @Override
     public List<DataFile> getFiles(DataType dataType) {
         return this.getFiles().stream()
                 .filter(file -> dataType.equals(file.getDataType()))
