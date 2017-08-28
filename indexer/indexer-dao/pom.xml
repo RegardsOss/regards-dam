@@ -68,6 +68,10 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.indexer</groupId>
+			<artifactId>indexer-domain</artifactId>
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>
@@ -81,9 +85,6 @@
 			<version>1.0</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
-		</dependency>
+
 	</dependencies>
 </project>
