@@ -32,10 +32,6 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
-
 /**
  * EsRepository test
  * @author oroussel

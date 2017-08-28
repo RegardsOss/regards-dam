@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.framework.urn.OAISIdentifier;
 import fr.cnes.regards.framework.urn.UniformResourceName;
@@ -28,7 +27,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import javax.persistence.*;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  *

@@ -86,10 +86,5 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>oais-starter</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 </project>

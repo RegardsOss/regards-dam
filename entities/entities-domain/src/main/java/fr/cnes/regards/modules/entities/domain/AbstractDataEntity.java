@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import fr.cnes.regards.framework.urn.DataType;
@@ -35,6 +36,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author oroussel
  */
 public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles  {
+
     /**
      * Physical data file references
      */
@@ -56,8 +58,11 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         files = pFiles;
     }
 
-    public void putFile(DataType type, DataFile dataFile) {
-        files.put(type, dataFile);
+    public void putFile (DataType dataType, DataFile dataFile) {
+        if (this.files == null) {
+            files = new HashMap<>();
+        }
+        this.files.put(dataType, dataFile);
     }
 
     @Override
@@ -69,5 +74,4 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
     public int hashCode() {
         return super.hashCode();
     }
-
 }

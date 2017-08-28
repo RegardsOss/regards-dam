@@ -43,18 +43,18 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
     List<Document> findByGroups(String group);
 
     /**
-     * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
+     * Find document giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
      *
      * @param pId
-     *            id of entity
-     * @return entity
+     *            document id
+     * @return document
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Document findById(Long pId);
 
     /**
-     * Find all datasets of which ipId belongs to given set (eagerly loading all relations)
+     * Find all documents of which ipId belongs to given set (eagerly loading all relations)
      *
      * @param pIpIds
      *            set of ipId
@@ -65,11 +65,11 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
     List<Document> findByIpIdIn(Set<UniformResourceName> pIpIds);
 
     /**
-     * Find entity of given IpId eagerly loading all common relations (except pluginConfigurationIds)
+     * Find document of given IpId eagerly loading all common relations (except pluginConfigurationIds)
      *
      * @param pIpId
-     *            ipId of which entity
-     * @return found entity
+     *            document ipId
+     * @return found document
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
