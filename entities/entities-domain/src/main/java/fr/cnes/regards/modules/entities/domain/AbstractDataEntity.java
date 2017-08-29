@@ -18,8 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.Map;
-
+import com.google.common.collect.Multimap;
 import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
@@ -38,7 +37,7 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
     /**
      * Physical data file references
      */
-    private Map<DataType, DataFile> files;
+    private Multimap<DataType, DataFile> files;
 
     protected AbstractDataEntity() {
         this(null, null, null);
@@ -48,11 +47,11 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         super(pModel, pIpId, pLabel);
     }
 
-    public Map<DataType, DataFile> getFiles() {
+    public Multimap<DataType, DataFile> getFiles() {
         return files;
     }
 
-    public void setFiles(Map<DataType, DataFile> pFiles) {
+    public void setFiles(Multimap<DataType, DataFile> pFiles) {
         files = pFiles;
     }
 

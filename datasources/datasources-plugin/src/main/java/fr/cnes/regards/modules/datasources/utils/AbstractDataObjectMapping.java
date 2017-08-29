@@ -47,6 +47,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
 
@@ -411,7 +412,7 @@ public abstract class AbstractDataObjectMapping {
         if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
             String str = ((StringAttribute) pAttr).getValue();
             if (pData.getFiles() == null) {
-                pData.setFiles(new HashMap<>());
+                pData.setFiles(HashMultimap.create());
             }
             try {
                 DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
