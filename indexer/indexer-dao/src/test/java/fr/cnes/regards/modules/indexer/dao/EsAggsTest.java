@@ -3,7 +3,6 @@ package fr.cnes.regards.modules.indexer.dao;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -20,16 +19,18 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import fr.cnes.regards.framework.gson.adapters.MultimapAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 /**
  * Test on complex aggs
@@ -69,7 +70,7 @@ public class EsAggsTest {
             propMap.put(keyVal[0], keyVal[1]);
         });
         try {
-            gson = new GsonBuilder().create();
+            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter<>()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
                     Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
                     propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));
@@ -122,6 +123,7 @@ public class EsAggsTest {
             data.setDocId(file.getName());
             data.setTags(randomTags());
             data.getFiles().put(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA));
+            data.getFiles().put(DataType.RAWDATA, new DataFile(file, DataType.RAWDATA2));
             data.getFiles().put(DataType.QUICKLOOK_HD, new DataFile(file, DataType.QUICKLOOK_HD));
             datas.add(data);
         }
@@ -135,8 +137,9 @@ public class EsAggsTest {
                                                                      null, "tags", "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
-        Assert.assertEquals(24, summary.getFilesCount());
-        Assert.assertEquals(236071586, summary.getFilesSize()); // 2 * 118 Mb
+        // 36 because 24 RAWDATA (each RAWDATA is doubled with same name and "2" at the end) and 12 QUICKLOOKS
+        Assert.assertEquals(36, summary.getFilesCount());
+        Assert.assertEquals(354107379, summary.getFilesSize()); // 3 * 118 Mb
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("FIFI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("RIRI"));
         Assert.assertTrue(summary.getSubSummariesMap().containsKey("LOULOU"));
@@ -149,7 +152,7 @@ public class EsAggsTest {
 
         private Set<String> tags = new HashSet<>();
 
-        private Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = new HashMap<>();
+        private Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files = HashMultimap.create();
 
         public Data() {
         }
@@ -182,11 +185,11 @@ public class EsAggsTest {
         }
 
         @Override
-        public Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
+        public Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> getFiles() {
             return files;
         }
 
-        public void setFiles(Map<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
+        public void setFiles(Multimap<DataType, fr.cnes.regards.modules.indexer.domain.DataFile> files) {
             this.files = files;
         }
     }
@@ -201,6 +204,9 @@ public class EsAggsTest {
             switch (type) {
                 case RAWDATA:
                     super.setFileRef(file.toURI());
+                    break;
+                case RAWDATA2:
+                    super.setFileRef(new File(file.getParentFile(), file.getName() + "_2").toURI());
                     break;
                 case QUICKLOOK_HD:
                     super.setFileRef(new File(file.getParentFile(), file.getName() + "_QL_HD").toURI());
@@ -217,6 +223,7 @@ public class EsAggsTest {
 
     private static enum DataType {
         RAWDATA,
+        RAWDATA2, // To permit add fil in double with a different name (for testing multimap of rawdata)
         QUICKLOOK_SD,
         QUICKLOOK_MD,
         QUICKLOOK_HD,
