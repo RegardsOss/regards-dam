@@ -241,7 +241,7 @@ public class DocumentController implements IResourceController<Document> {
     @RequestMapping(method = RequestMethod.POST, value = DOCUMENT_FILES_MAPPING)
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Document>> addFiles(@PathVariable("document_id") final Long pDocumentId,
-                                                           @RequestParam("files")  final MultipartFile[] files) throws ModuleException, IOException {
+                                                           @RequestPart("files")  final MultipartFile[] files) throws ModuleException, IOException {
         for (MultipartFile file : files) {
             System.out.println(file.getOriginalFilename());
         }
