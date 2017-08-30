@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import fr.cnes.regards.framework.urn.DataType;
 import fr.cnes.regards.framework.urn.UniformResourceName;
@@ -58,7 +59,7 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
 
     public void putFile (DataType dataType, DataFile dataFile) {
         if (this.files == null) {
-            files = new HashMap<>();
+            this.setFiles(HashMultimap.create());
         }
         this.files.put(dataType, dataFile);
     }
