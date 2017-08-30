@@ -29,7 +29,7 @@ import java.util.List;
  */
 public interface IDocumentService extends IEntityService<Document> {
 
-    Document addFiles(Long pDocumentId, List<MultipartFile> files);
+    Document addFiles(Long pDocumentId, MultipartFile [] files);
 
     void deleteFile(Long pDocumentId, Long pFileId);
 }

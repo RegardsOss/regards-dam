@@ -51,7 +51,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     }
 
     @Override
-    public Document addFiles(Long pDocumentId, List<MultipartFile> files) {
+    public Document addFiles(Long pDocumentId, MultipartFile [] files) {
         return null;
     }
 
