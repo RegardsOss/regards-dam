@@ -18,21 +18,15 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import com.google.common.net.HttpHeaders;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -47,11 +41,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -241,13 +233,12 @@ public class DocumentController implements IResourceController<Document> {
     @RequestMapping(method = RequestMethod.POST, value = DOCUMENT_FILES_MAPPING)
     @ResourceAccess(description = "Updates a Dataset")
     public ResponseEntity<Resource<Document>> addFiles(@PathVariable("document_id") final Long pDocumentId,
-           @RequestPart(required = false)  final MultipartFile[] files
-           /*@RequestParam(value = "files", required = false) final MultipartFile[] files2,
-           @RequestBody(required = false)  final List<MultipartFile> files3*/) throws ModuleException, IOException {
-        for (MultipartFile file : files) {
+           @RequestPart final Map<String, MultipartFile> files) throws ModuleException, IOException {
+        for (String partName : files.keySet()) {
+            MultipartFile file = files.get(partName);
             System.out.println(file.getOriginalFilename());
         }
-        final Document dataSet = documentService.addFiles(pDocumentId, files);
+        final Document dataSet = null;//documentService.addFiles(pDocumentId, files);
         final Resource<Document> resource = toResource(dataSet);
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
