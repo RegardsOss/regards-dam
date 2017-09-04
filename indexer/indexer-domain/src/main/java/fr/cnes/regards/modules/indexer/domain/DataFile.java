@@ -33,7 +33,7 @@ public class DataFile {
      * File reference
      */
     @Valid
-    private URI fileRef;
+    private URI uri;
 
     /**
      * File checksum
@@ -48,19 +48,29 @@ public class DataFile {
     /**
      * File size
      */
-    private Long fileSize;
+    private Long size;
+
+    /**
+     * File name
+     */
+    private String name;
+
+    /**
+     * Is the file online ?
+     */
+    private Boolean online;
 
     /**
      * {@link MimeType}
      */
     private MimeType mimeType;
 
-    public URI getFileRef() {
-        return fileRef;
+    public URI getUri() {
+        return uri;
     }
 
-    public void setFileRef(URI pFileRef) {
-        fileRef = pFileRef;
+    public void setUri(URI pFileRef) {
+        uri = pFileRef;
     }
 
     public String getDigestAlgorithm() {
@@ -79,12 +89,12 @@ public class DataFile {
         checksum = pChecksum;
     }
 
-    public Long getFileSize() {
-        return fileSize;
+    public Long getSize() {
+        return size;
     }
 
-    public void setFileSize(Long pFileSize) {
-        fileSize = pFileSize;
+    public void setSize(Long pFileSize) {
+        size = pFileSize;
     }
 
     public MimeType getMimeType() {
@@ -93,5 +103,40 @@ public class DataFile {
 
     public void setMimeType(MimeType pMimeType) {
         mimeType = pMimeType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Boolean getOnline() {
+        return online;
+    }
+
+    public void setOnline(Boolean online) {
+        this.online = online;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        DataFile dataFile = (DataFile) o;
+
+        return uri.equals(dataFile.uri);
+    }
+
+    @Override
+    public int hashCode() {
+        return uri.hashCode();
     }
 }

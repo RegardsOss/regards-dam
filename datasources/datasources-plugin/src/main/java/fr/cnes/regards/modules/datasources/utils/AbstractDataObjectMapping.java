@@ -417,7 +417,7 @@ public abstract class AbstractDataObjectMapping {
             try {
                 DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
-                dataFile.setFileRef(new URI(str));
+                dataFile.setUri(new URI(str));
                 pData.getFiles().put(type, dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);

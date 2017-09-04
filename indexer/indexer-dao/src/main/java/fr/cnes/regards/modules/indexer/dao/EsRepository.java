@@ -18,9 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -104,13 +101,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
-import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
@@ -120,6 +116,8 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSubSummary;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 import fr.cnes.regards.modules.indexer.domain.summary.FilesSummary;
 
 /**
@@ -964,10 +962,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             request.addAggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("files." + fileType + ".fileRef.keyword"));
+                    .field("files." + fileType + ".uri.keyword"));
             // file size sum
             request.addAggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
-                    .field("files." + fileType + ".fileSize"));
+                    .field("files." + fileType + ".size"));
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -981,10 +979,10 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files count
             termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("files." + fileType + ".fileRef.keyword"));
+                    .field("files." + fileType + ".uri.keyword"));
             // file size sum
             termsAggBuilder.subAggregation(AggregationBuilders.sum(fileType + "_files_size")
-                    .field("files." + fileType + ".fileSize"));
+                    .field("files." + fileType + ".size"));
         }
         request.addAggregation(termsAggBuilder);
 
