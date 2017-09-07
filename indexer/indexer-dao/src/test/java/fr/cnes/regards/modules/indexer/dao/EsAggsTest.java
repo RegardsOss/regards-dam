@@ -200,22 +200,22 @@ public class EsAggsTest {
         }
 
         public DataFile(File file, DataType type) {
-            this.setFileSize(file.length());
+            this.setSize(file.length());
             switch (type) {
                 case RAWDATA:
-                    super.setFileRef(file.toURI());
+                    super.setUri(file.toURI());
                     break;
                 case RAWDATA2:
-                    super.setFileRef(new File(file.getParentFile(), file.getName() + "_2").toURI());
+                    super.setUri(new File(file.getParentFile(), file.getName() + "_2").toURI());
                     break;
                 case QUICKLOOK_HD:
-                    super.setFileRef(new File(file.getParentFile(), file.getName() + "_QL_HD").toURI());
+                    super.setUri(new File(file.getParentFile(), file.getName() + "_QL_HD").toURI());
                     break;
                 case QUICKLOOK_MD:
-                    super.setFileRef(new File(file.getParentFile(), file.getName() + "_QL_MD").toURI());
+                    super.setUri(new File(file.getParentFile(), file.getName() + "_QL_MD").toURI());
                     break;
                 case QUICKLOOK_SD:
-                    super.setFileRef(new File(file.getParentFile(), file.getName() + "_QL_SD").toURI());
+                    super.setUri(new File(file.getParentFile(), file.getName() + "_QL_SD").toURI());
                     break;
             }
         }
