@@ -18,25 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.util.Assert;
-import org.springframework.validation.Errors;
-import org.springframework.validation.ObjectError;
-import org.springframework.validation.Validator;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.google.common.collect.ImmutableSet;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.*;
@@ -72,6 +53,24 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.util.Assert;
+import org.springframework.validation.Errors;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.Validator;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Abstract parameterized entity service
@@ -485,20 +484,20 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
-     * @param pEntity entity being created
+     * @param updatedEntity entity being created/updated
      * @param pFile the description of the entity
-     * @param oldOne
+     * @param oldOne previous description file of updatedEntity
      * @throws IOException if description cannot be read
      * @throws ModuleException if description not conform to REGARDS requirements
      */
-    private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile, DescriptionFile oldOne)
+    private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile, DescriptionFile oldOne)
             throws IOException, ModuleException {
         // we are updating/creating a description
-        if (pEntity.getDescriptionFile() != null) {
+        if (updatedEntity.getDescriptionFile() != null) {
             // this is a description file
             if ((pFile != null) && !pFile.isEmpty()) {
                 // collections and dataset only have a description which is a url or a file
-                if (!isContentTypeAcceptable(pFile, pEntity)) {
+                if (!isContentTypeAcceptable(updatedEntity)) {
                     throw new EntityDescriptionUnacceptableType(pFile.getContentType());
                 }
                 // 10MB
@@ -514,31 +513,31 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 }
                 // description file, change the old one because if we don't we accumulate tones of description
                 if (oldOne != null) {
-                    oldOne.setType(pEntity.getDescriptionFile().getType());
+                    oldOne.setType(updatedEntity.getDescriptionFile().getType());
                     oldOne.setContent(pFile.getBytes());
                     oldOne.setUrl(null);
-                    pEntity.setDescriptionFile(oldOne);
+                    updatedEntity.setDescriptionFile(oldOne);
                 } else {
                     //if there is no descriptionFile existing then lets create one
-                    pEntity.setDescriptionFile(
-                            new DescriptionFile(pFile.getBytes(), pEntity.getDescriptionFile().getType()));
+                    updatedEntity.setDescriptionFile(
+                            new DescriptionFile(pFile.getBytes(), updatedEntity.getDescriptionFile().getType()));
                 }
             } else {
                 //this is a url
                 if (oldOne != null) {
                     oldOne.setType(null);
                     oldOne.setContent(null);
-                    oldOne.setUrl(pEntity.getDescriptionFile().getUrl());
-                    pEntity.setDescriptionFile(oldOne);
+                    oldOne.setUrl(updatedEntity.getDescriptionFile().getUrl());
+                    updatedEntity.setDescriptionFile(oldOne);
                 } else {
                     //if there is no description existing then lets create one
-                    pEntity.setDescriptionFile(new DescriptionFile(pEntity.getDescriptionFile().getUrl()));
+                    updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
                 }
             }
         }
         //for updates: let set back the old one, if there isn't any provided
         else {
-            pEntity.setDescriptionFile(oldOne);
+            updatedEntity.setDescriptionFile(oldOne);
         }
     }
 
@@ -576,15 +575,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type sent into the
-     * entity and not the multipart file because markdown is not yet a standardized MIMEType and our front cannot change
-     * the content type of the corresponding part
+     * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type saved in the
+     * entity and not the multipart file content type because markdown is not yet a standardized MIMEType and
+     * our front cannot modify the content type of the corresponding part
      *
-     * @param pFile file
      * @param pEntity
      * @return true or false
      */
-    private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(MultipartFile pFile, T pEntity) {
+    private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(T pEntity) {
         if (pEntity.getDescriptionFile() != null) {
             String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");

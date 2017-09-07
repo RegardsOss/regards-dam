@@ -20,16 +20,6 @@
  */
 package fr.cnes.regards.modules.datasources.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.UnaryOperator;
-
-import org.elasticsearch.common.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -46,6 +36,15 @@ import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import org.elasticsearch.common.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.UnaryOperator;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -352,6 +351,7 @@ public class DataSourceService implements IDataSourceService {
                 pPlgParam.setValue(pDataSource.getRefreshRate() == null ?
                                            IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE :
                                            pDataSource.getRefreshRate().toString());
+                break;
             default:
                 break;
         }

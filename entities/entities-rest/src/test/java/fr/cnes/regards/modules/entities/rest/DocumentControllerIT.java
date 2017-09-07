@@ -18,12 +18,11 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import com.google.common.net.HttpHeaders;
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.urn.EntityType;
@@ -31,13 +30,14 @@ import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
+import org.assertj.core.util.Lists;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -49,19 +49,13 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author lmieulet
@@ -74,12 +68,14 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     /**
      *
      */
-    private static final String DOCUMENTS_DOCUMENT_ID = "/documents/{document_id}";
+    private static final String DOCUMENTS = "/documents";
+
+    private static final String DOCUMENTS_DOCUMENT_IS_READY_TO_HANDLE_FILES = DOCUMENTS + "/isReadyToHandleFile";
 
     /**
      *
      */
-    private static final String DOCUMENTS = "/documents";
+    private static final String DOCUMENTS_DOCUMENT_ID = DOCUMENTS + "/{document_id}";
 
     /**
      *
@@ -87,6 +83,10 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     private static final String DOCUMENTS_DOCUMENT_ID_ASSOCIATE = DOCUMENTS_DOCUMENT_ID + "/associate";
 
     private static final String DOCUMENTS_DOCUMENT_ID_DISSOCIATE = DOCUMENTS_DOCUMENT_ID + "/dissociate";
+
+
+    private static final String DOCUMENTS_DOCUMENT_ID_FILES = DOCUMENTS_DOCUMENT_ID + "/files";
+
 
     /**
      * Logger
@@ -187,7 +187,6 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
-        final String collectionStr = gsonBuilder.create().toJson(document3);
         performDefaultPost(DOCUMENTS, document3, expectations, "Failed to create a new document");
     }
 
@@ -237,7 +236,7 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         toDissociate.add(collection1.getIpId());
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultPut(DOCUMENTS_DOCUMENT_ID_DISSOCIATE, toDissociate, expectations,
-                "Failed to dissociate collections from one collection using its id", document2.getId());
+                "Failed to dissociate collections from one document using its id", document2.getId());
     }
 
 
@@ -249,7 +248,38 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         toAssociate.add(collection2.getIpId());
         expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultPut(DOCUMENTS_DOCUMENT_ID_ASSOCIATE, toAssociate, expectations,
-                "Failed to associate collections from one collection using its id", document1.getId());
+                "Failed to associate collections from one document using its id", document1.getId());
+    }
+
+    @Requirement("TODO")
+    @Purpose("Shall associate and dissociate files to the document")
+    @Test
+    public void testAddAndDeleteFiles() throws IOException, ModuleException {
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
+
+        List<MockMultipartFile> pFileList = new ArrayList<>();
+        pFileList.add(new MockMultipartFile("files", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input));
+        pFileList.add(new MockMultipartFile("files", "other-file-name.data", "text/plain", "some other type".getBytes()));
+        // Upload files
+        performDefaultFileUploadPost(DOCUMENTS_DOCUMENT_ID_FILES, pFileList, expectations,
+                "Failed to associate files to a document using its id", document1.getId());
+
+        // Check if everything is ok
+        document1 = documentRepository.findById(document1.getId());
+        Assert.assertEquals(document1.getDocuments().size(),2);
+        Optional<DataFile> first = document1.getDocuments().stream().findFirst();
+        DataFile dataFile = first.get();
+
+        expectations.clear();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        // Upload files
+        performDefaultDelete(DocumentController.ROOT_MAPPING + DocumentController.DOCUMENT_FILES_SINGLE_MAPPING, expectations,
+               "Failed to associate files to a document using its id", document1.getId(), dataFile.getChecksum());
+
+        // Check if everything is ok
+        document1 = documentRepository.findById(document1.getId());
+        Assert.assertEquals(document1.getDocuments().size(),1);
     }
 
     @Override

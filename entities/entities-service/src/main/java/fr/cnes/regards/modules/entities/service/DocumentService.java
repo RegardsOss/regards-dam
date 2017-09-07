@@ -20,43 +20,117 @@ package fr.cnes.regards.modules.entities.service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.entities.dao.*;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.*;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
-import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Specific EntityService for documents
- * @author lmieulet
+ * @author Léo Mieulet
  */
 @Service
 @MultitenantTransactional
 public class DocumentService extends AbstractEntityService<Document> implements IDocumentService {
+
+
+    private final Logger LOGGER = LoggerFactory.getLogger(DocumentService.class);
+
+
+    /**
+     * Attribute {@link PluginService}
+     */
+    private final IDocumentLSService documentFilesService;
+
 
     public DocumentService(IModelAttrAssocService pModelAttributeService,
                            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
                            IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
                            IDatasetRepository pDatasetRepository, IDocumentRepository pDocumentRepository,
                            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
-                           IDescriptionFileRepository descriptionFileRepository) {
+                           IDescriptionFileRepository descriptionFileRepository, IDocumentLSService documentFilesService) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
                 pDatasetRepository, pDocumentRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
+        this.documentFilesService = documentFilesService;
     }
 
+    /**
+     *
+     * @param documentId the document id that you are editing
+     * @param files the list of new file to attach to the document
+     * @param fileLsUriTemplate Template of the file's uri
+     * @return
+     * @throws ModuleException
+     */
     @Override
-    public Document addFiles(Long pDocumentId, MultipartFile [] files) {
-        return null;
+    public Document addFiles(Long documentId, MultipartFile [] files, String fileLsUriTemplate) throws ModuleException {
+        Document doc = this.load(documentId);
+        if (doc == null) {
+            throw new EntityNotFoundException(documentId.toString(), Document.class);
+        }
+        Set<DataFile> docFiles = documentFilesService.handleFiles(doc, files, fileLsUriTemplate);
+        if (!doc.getDocuments().isEmpty()) {
+            docFiles.addAll(doc.getDocuments());
+        }
+        doc.setDocuments(docFiles);
+        this.update(doc);
+        return doc;
     }
 
+    /**
+     * Allows to remove a single file from a document, then save the entity
+     * @param documentId the document id
+     * @param fileChecksum the checksum of the file
+     * @throws ModuleException
+     */
     @Override
-    public void deleteFile(Long pDocumentId, Long pFileId) {
+    public Document deleteFile(Long documentId, String fileChecksum) throws ModuleException {
+        Document doc = this.load(documentId);
+        if (doc == null) {
+             throw new EntityNotFoundException(documentId.toString(), Document.class);
+        }
+        Set<DataFile> docFiles = doc.getDocuments();
+        Optional<DataFile> dataFileToRemove = docFiles.stream().filter(dataFile -> fileChecksum.equals(dataFile.getChecksum())).findFirst();
+        if (!dataFileToRemove.isPresent()) {
+            throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);
+        }
+        DataFile dataFile = dataFileToRemove.get();
+        documentFilesService.removeFile(dataFile);
+        doc.getDocuments().remove(dataFile);
+        this.update(doc);
+        return doc;
+    }
 
+    /**
+     * Ensure that all files that refers the document from DocumentLS have been removed before removing the entity
+     * @param documentId
+     * @throws ModuleException
+     */
+    @Override
+    public void deleteDocumentAndFiles(Long documentId) throws EntityNotFoundException {
+        Document doc = this.load(documentId);
+        if (doc == null) {
+            throw new EntityNotFoundException(documentId.toString(), Document.class);
+        }
+        Set<DataFile> docFiles = doc.getDocuments();
+        for (DataFile docFile : docFiles) {
+            documentFilesService.removeFile(docFile);
+        }
+        this.delete(documentId);
     }
 }
