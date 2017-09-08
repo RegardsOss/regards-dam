@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -94,14 +93,10 @@ public class IngesterService implements IIngesterService {
     private IPoller poller;
 
     /**
-     * To retrieve IIngesterService (self) proxy
-     */
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    /**
      * Proxied version of this service
      */
+    @Autowired
+    @Lazy
     private IIngesterService self;
 
     /**
@@ -113,14 +108,6 @@ public class IngesterService implements IIngesterService {
      * Current delay between all tenants poll check
      */
     private final AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
-
-    /**
-     * Once IIngesterService bean has been initialized, retrieve self proxy to permit transactional calls.
-     */
-    @PostConstruct
-    private void init() {
-        self = applicationContext.getBean(IIngesterService.class);
-    }
 
     /**
      * An atomic boolean used to determine wether manage() method is currently executing (and avoid launching it

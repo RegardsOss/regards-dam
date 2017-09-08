@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
@@ -64,12 +63,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
      */
     @Autowired
     private IPoller poller;
-
-    /**
-     * To retrieve ICrawlerService (self) proxy
-     */
-    @Autowired
-    protected ApplicationContext applicationContext;
 
     /**
      * Indicate that daemon stop has been asked
