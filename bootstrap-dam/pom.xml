@@ -59,8 +59,6 @@
 		<fr.cnes.regards.docker.image.name>rs-dam</fr.cnes.regards.docker.image.name>
 	</properties>
 
-	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-
 	<dependencies>
 		<!-- Spring dependencies -->
 		<dependency>
