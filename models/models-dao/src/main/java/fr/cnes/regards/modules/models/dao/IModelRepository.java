@@ -25,7 +25,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**

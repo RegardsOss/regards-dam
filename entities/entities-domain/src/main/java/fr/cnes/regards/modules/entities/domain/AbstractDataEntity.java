@@ -19,8 +19,9 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import com.google.common.collect.Multimap;
-import fr.cnes.regards.framework.urn.DataType;
-import fr.cnes.regards.framework.urn.UniformResourceName;
+
+import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;

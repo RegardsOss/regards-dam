@@ -2,7 +2,7 @@ package fr.cnes.regards.modules.entities.domain.event;
 
 import fr.cnes.regards.framework.amqp.event.Event;
 import fr.cnes.regards.framework.amqp.event.Target;
-import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 
 /**
  * AbstractEntityEvent specialization for AbstractEntity other than Dataset

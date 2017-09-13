@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 
 /**

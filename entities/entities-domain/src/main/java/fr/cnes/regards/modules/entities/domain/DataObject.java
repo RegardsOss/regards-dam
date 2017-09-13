@@ -22,10 +22,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
-import fr.cnes.regards.framework.urn.OAISIdentifier;
-import fr.cnes.regards.framework.urn.UniformResourceName;
-import fr.cnes.regards.framework.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
