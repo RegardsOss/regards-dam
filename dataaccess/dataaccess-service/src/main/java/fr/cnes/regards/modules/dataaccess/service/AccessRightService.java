@@ -33,6 +33,7 @@ import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransa
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
@@ -41,7 +42,6 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEv
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEventType;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.framework.urn.UniformResourceName;
 
 /**
  * @author Sylvain Vissiere-Guerinet

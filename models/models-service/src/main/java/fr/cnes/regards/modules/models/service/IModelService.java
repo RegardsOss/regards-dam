@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**

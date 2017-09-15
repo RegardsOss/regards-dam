@@ -36,11 +36,11 @@ import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
-import fr.cnes.regards.framework.urn.UniformResourceName;
-import fr.cnes.regards.framework.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -57,19 +57,16 @@ import fr.cnes.regards.modules.models.domain.Model;
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
-
-    private static final int MAX_IPID_SIZE = 128;
-
     /**
      * Information Package ID for REST request
      */
-    @Column(nullable = false, length = MAX_IPID_SIZE)
+    @Column(nullable = false, length = UniformResourceName.MAX_SIZE)
     @Convert(converter = UrnConverter.class)
     @Valid
     protected UniformResourceName ipId;
 
     @NotNull
-    @Column(length = MAX_IPID_SIZE, nullable = false)
+    @Column(length = 128, nullable = false)
     protected String label;
 
     /**

@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PostConstruct;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,9 +40,9 @@ import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceExcepti
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.urn.EntityType;
-import fr.cnes.regards.framework.urn.OAISIdentifier;
-import fr.cnes.regards.framework.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
@@ -72,15 +72,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Self proxy
      */
+    @Autowired
+    @Lazy
     private ICrawlerAndIngesterService self;
-
-    /**
-     * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
-     */
-    @PostConstruct
-    private void init() {
-        self = applicationContext.getBean(ICrawlerAndIngesterService.class);
-    }
 
     @Override
     @Async

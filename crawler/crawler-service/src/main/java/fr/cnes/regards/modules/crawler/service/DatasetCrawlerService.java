@@ -1,12 +1,11 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PostConstruct;
-
 import java.time.OffsetDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -30,19 +29,13 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
     /**
      * Self proxy
      */
+    @Autowired
+    @Lazy
     private IDatasetCrawlerService self;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         subscriber.subscribeTo(AccessRightEvent.class, this);
-    }
-
-    /**
-     * Once ICrawlerService bean has been initialized, retrieve self proxy to permit transactional call of doPoll.
-     */
-    @PostConstruct
-    private void init() {
-        self = applicationContext.getBean(IDatasetCrawlerService.class);
     }
 
     @Override

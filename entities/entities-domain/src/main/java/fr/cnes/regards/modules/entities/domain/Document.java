@@ -37,6 +37,11 @@ import javax.persistence.Entity;
 import java.util.Set;
 import java.util.UUID;
 
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.models.domain.Model;
+
 /**
  *
  * @author Sylvain Vissiere-Guerinet

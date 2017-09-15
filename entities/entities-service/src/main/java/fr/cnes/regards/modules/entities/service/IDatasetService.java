@@ -25,11 +25,11 @@ import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
-import fr.cnes.regards.framework.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
