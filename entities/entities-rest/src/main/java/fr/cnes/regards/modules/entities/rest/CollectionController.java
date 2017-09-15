@@ -228,10 +228,10 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
     @ResponseBody
     @ResourceAccess(description = "Dissociate a collection from  a list of entities")
-    public HttpEntity<Resource<Collection>> dissociate(@PathVariable("collection_id") final Long pCollectionId,
+    public HttpEntity<Void> dissociate(@PathVariable("collection_id") final Long pCollectionId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
         collectionService.dissociate(pCollectionId, pToBeDissociated);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -248,10 +248,10 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
     @ResponseBody
     @ResourceAccess(description = "Associate the collection of id collection_id to the list of entities in parameter")
-    public HttpEntity<Resource<Collection>> associate(@PathVariable("collection_id") final Long pCollectionId,
+    public HttpEntity<Void> associate(@PathVariable("collection_id") final Long pCollectionId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
         collectionService.associate(pCollectionId, pToBeAssociatedWith);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Override

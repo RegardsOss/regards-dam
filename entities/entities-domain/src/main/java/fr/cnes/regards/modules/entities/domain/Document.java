@@ -18,24 +18,45 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import java.util.UUID;
-
+import com.google.common.collect.Sets;
+import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
+import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
+
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  *
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
+ * @author Léo Mieulet
  *
  */
 @Entity
 @DiscriminatorValue("DOCUMENT")
-public class Document extends AbstractDataEntity {
+@TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+public class Document extends AbstractEntity {
+
+    /**
+     * Physical data file references
+     */
+
+    @Type(type = "jsonb", parameters = { @Parameter(name = JsonTypeDescriptor.ARG_TYPE,
+            value = "fr.cnes.regards.modules.indexer.domain.DataFile") })
+    @Column(columnDefinition = "jsonb")
+    private Set<DataFile> documents = Sets.newHashSet();
 
     public Document(Model pModel, String pTenant, String pLabel) {
         super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, pTenant, UUID.randomUUID(), 1),
@@ -43,11 +64,19 @@ public class Document extends AbstractDataEntity {
     }
 
     public Document() {
-        this(null, null, null);
+        super(null, null, null);
     }
 
     @Override
     public String getType() {
         return EntityType.DOCUMENT.toString();
+    }
+
+    public void setDocuments(Set<DataFile> documents) {
+        this.documents = documents;
+    }
+
+    public Set<DataFile> getDocuments() {
+        return documents;
     }
 }

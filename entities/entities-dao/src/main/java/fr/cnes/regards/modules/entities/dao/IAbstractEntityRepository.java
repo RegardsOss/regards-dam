@@ -80,7 +80,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
      *
      * @param pModelName
      *            name of the model we want to be complient with
-     * @return datasets complient with the given model
+     * @return entities complient with the given model
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Set<T> findAllByModelName(String pModelName);
@@ -90,10 +90,10 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
      *
      * @param pModelName
      *            name of the model we want to be complient with
-     * @return datasets complient with the given model
+     * @return entities complient with the given model
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<Dataset> findAllByModelId(Set<Long> pModelIds);
+    Set<T> findAllByModelId(Set<Long> pModelIds);
 
     /**
      * Find all entities containing given tag

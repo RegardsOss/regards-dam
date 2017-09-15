@@ -264,10 +264,10 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
     @ResourceAccess(description = "Dissociate a list of entities from a dataset")
-    public ResponseEntity<Resource<Dataset>> dissociate(@PathVariable("dataset_id") final Long pDatasetId,
+    public ResponseEntity<Void> dissociate(@PathVariable("dataset_id") final Long pDatasetId,
             @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
         service.dissociate(pDatasetId, pToBeDissociated);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**

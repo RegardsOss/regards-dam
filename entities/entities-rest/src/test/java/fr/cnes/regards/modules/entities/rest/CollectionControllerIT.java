@@ -290,7 +290,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testDissociateCollections() {
         final List<UniformResourceName> toDissociate = new ArrayList<>();
         toDissociate.add(collection3.getIpId());
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultPut(COLLECTIONS_COLLECTION_ID_DISSOCIATE, toDissociate, expectations,
                           "Failed to dissociate collections from one collection using its id", collection1.getId());
     }
@@ -299,7 +299,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testAssociateCollections() {
         final List<UniformResourceName> toAssociate = new ArrayList<>();
         toAssociate.add(collection4.getIpId());
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultPut(COLLECTIONS_COLLECTION_ID_ASSOCIATE, toAssociate, expectations,
                           "Failed to associate collections from one collection using its id", collection1.getId());
     }

@@ -352,6 +352,7 @@ public class DataSourceService implements IDataSourceService {
                 pPlgParam.setValue(pDataSource.getRefreshRate() == null ?
                                            IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE :
                                            pDataSource.getRefreshRate().toString());
+                break;
             default:
                 break;
         }
