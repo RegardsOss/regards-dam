@@ -48,6 +48,9 @@ public class DocumentLSService implements IDocumentLSService {
     @Autowired
     private IDocumentLSRepository documentFileLocalStorageRepo;
 
+    /**
+     * Folder where this service will store all document files
+     */
     @Value("${regards.dam.local_storage.path:/tmp/rs-dam-ls}")
     private String localStoragePath;
 
