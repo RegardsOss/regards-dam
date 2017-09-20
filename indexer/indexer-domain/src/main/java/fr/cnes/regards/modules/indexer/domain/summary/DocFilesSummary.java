@@ -12,7 +12,7 @@ import java.util.Map;
 public class DocFilesSummary extends AbstractDocSummary {
 
     /**
-     * Map of sub-summaries distributed by disciminant value
+     * Map of sub-summaries distributed by discriminant value
      */
     private Map<String, DocFilesSubSummary> subSummariesMap = new HashMap<>();
 
