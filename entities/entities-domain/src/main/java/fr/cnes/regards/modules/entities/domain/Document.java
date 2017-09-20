@@ -19,7 +19,6 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import com.google.common.collect.Sets;
-import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
@@ -28,8 +27,6 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
@@ -46,7 +43,6 @@ import java.util.UUID;
  */
 @Entity
 @DiscriminatorValue("DOCUMENT")
-@TypeDefs({ @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 public class Document extends AbstractEntity {
 
     /**
