@@ -57,7 +57,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>module-plugins-service</artifactId>
+			<artifactId>plugins-service</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
