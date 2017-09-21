@@ -11,11 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.MimeType;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
@@ -77,16 +80,21 @@ public class DocumentLSService implements IDocumentLSService {
             Files.createDirectory(path);
         }
 
-        file.getBytes();
-
         String fullPathToFile = storageLocation + "/" + checksum;
-        File dest = new File(fullPathToFile);
-        file.transferTo(dest);
+        saveFileOnDisk(file, fullPathToFile);
 
         DocumentLS documentLS = new DocumentLS();
         documentLS.setDocument(document);
         documentLS.setFileChecksum(checksum);
         documentFileLocalStorageRepo.save(documentLS);
+    }
+
+    private void saveFileOnDisk(MultipartFile file, String fullPathToFile) throws IOException {
+        File dest = new File(fullPathToFile);
+        try(FileOutputStream fos = new FileOutputStream(dest)) {
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            FileCopyUtils.copy(file.getInputStream(), bos);
+        }
     }
 
     private String getChecksum(MultipartFile file) throws NoSuchAlgorithmException, IOException {
