@@ -21,7 +21,10 @@ package fr.cnes.regards.modules.entities.service;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * Qualified interface for Document entity service
@@ -31,8 +34,11 @@ public interface IDocumentService extends IEntityService<Document> {
 
     Document addFiles(Long pDocumentId, MultipartFile [] files, String fileLsUriTemplate) throws ModuleException;
 
-    Document deleteFile(Long pDocumentId, String fileChecksum) throws ModuleException;
+    Document deleteFile(Long pDocumentId, String fileChecksum) throws ModuleException, IOException;
 
-    void deleteDocumentAndFiles(Long pDocumentId) throws EntityNotFoundException;
+    void deleteDocumentAndFiles(Long pDocumentId) throws EntityNotFoundException, IOException;
 
+    byte[] retrieveFileContent(Long pDocumentId, String fileChecksum) throws IOException;
+
+    DataFile retrieveDataFile(Long pDocumentId, String fileChecksum);
 }

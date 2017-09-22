@@ -28,9 +28,11 @@ import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
+import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.service.IDocumentLSService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
@@ -123,6 +125,9 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
 
     @Autowired
     private IDocumentService documentService;
+
+    @Autowired
+    private IDocumentLSRepository documentLSRepository;
 
     @Before
     public void initRepos() {
@@ -263,11 +268,12 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         pFileList.add(new MockMultipartFile("files", "other-file-name.data", "text/plain", "some other type".getBytes()));
         // Upload files
         performDefaultFileUploadPost(DOCUMENTS_DOCUMENT_ID_FILES, pFileList, expectations,
-                "Failed to associate files to a document using its id", document1.getId());
+                "Failed to upload files to a document", document1.getId());
 
         // Check if everything is ok
         document1 = documentRepository.findById(document1.getId());
         Assert.assertEquals(document1.getDocuments().size(),2);
+        Assert.assertEquals(documentLSRepository.findAll().size(),2);
         Optional<DataFile> first = document1.getDocuments().stream().findFirst();
         DataFile dataFile = first.get();
 
@@ -275,11 +281,12 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         // Upload files
         performDefaultDelete(DocumentController.ROOT_MAPPING + DocumentController.DOCUMENT_FILES_SINGLE_MAPPING, expectations,
-               "Failed to associate files to a document using its id", document1.getId(), dataFile.getChecksum());
+               "Failed to remove a file from a document", document1.getId(), dataFile.getChecksum());
 
         // Check if everything is ok
         document1 = documentRepository.findById(document1.getId());
         Assert.assertEquals(document1.getDocuments().size(),1);
+        Assert.assertEquals(documentLSRepository.findAll().size(),1);
     }
 
     @Override

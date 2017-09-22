@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import com.google.common.net.HttpHeaders;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -27,7 +28,9 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.service.DocumentLSService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -149,7 +152,7 @@ public class DocumentController implements IResourceController<Document> {
     @ResponseBody
     @ResourceAccess(description = "delete the document using its id")
     public ResponseEntity<Void> deleteDocument(@PathVariable("document_id") final Long pDocumentId)
-            throws EntityNotFoundException {
+            throws EntityNotFoundException, IOException {
         documentService.deleteDocumentAndFiles(pDocumentId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -231,7 +234,7 @@ public class DocumentController implements IResourceController<Document> {
     @ResourceAccess(description = "Add files to a document using its id")
     public ResponseEntity<Resource<Document>> addFiles(@PathVariable("document_id") final Long pDocumentId,
                                                        @RequestPart final MultipartFile[] files) throws ModuleException, IOException, NoSuchMethodException {
-        ControllerLinkBuilder controllerLinkBuilder = ControllerLinkBuilder.linkTo(ControllerLinkBuilder.methodOn(this.getClass()).retrieveDocumentFile(pDocumentId, null, null));
+        ControllerLinkBuilder controllerLinkBuilder = ControllerLinkBuilder.linkTo(this.getClass(), this.getClass().getMethod("retrieveDocumentFile", String.class, Long.class, String.class, HttpServletResponse.class), pDocumentId, DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE);
         Link link = controllerLinkBuilder.withSelfRel();
         String fileLsUriTemplate = link.getHref();
 
@@ -253,12 +256,23 @@ public class DocumentController implements IResourceController<Document> {
     @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_FILES_SINGLE_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Retrieve the file in given document with given checksum")
-    public ResponseEntity<Resource<Document>> retrieveDocumentFile(@PathVariable("document_id") final Long pDocumentId,
-                                                             @PathVariable("file_checksum") final String fileChecksum, HttpServletResponse response)
-            throws ModuleException {
-        //final Document document = documentService.deleteFile(pDocumentId, fileChecksum);
-        //final Resource<Document> resource = toResource(document);
-        return new ResponseEntity<>(toResource(null), HttpStatus.OK);
+    public void retrieveDocumentFile(@RequestParam(name = "origin", required = false) String origin,
+           @PathVariable("document_id") final Long pDocumentId, @PathVariable("file_checksum") final String fileChecksum,
+           HttpServletResponse response) throws ModuleException, IOException {
+        byte[] fileContent = documentService.retrieveFileContent(pDocumentId, fileChecksum);
+        DataFile dataFile = documentService.retrieveDataFile(pDocumentId, fileChecksum);
+        if (fileContent != null) {
+            if (origin != null) {
+                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
+            }
+            response.setContentType(dataFile.getMimeType().toString());
+            response.setContentLength(fileContent.length);
+            response.getOutputStream().write(fileContent);
+            response.getOutputStream().flush();
+            response.setStatus(HttpStatus.OK.value());
+        } else {
+            response.setStatus(HttpStatus.NO_CONTENT.value());
+        }
     }
 
     /**
@@ -273,7 +287,7 @@ public class DocumentController implements IResourceController<Document> {
     @ResourceAccess(description = "delete the document using its id")
     public HttpEntity<Resource<Document>> deleteDocumentFile(@PathVariable("document_id") final Long pDocumentId,
                                                @PathVariable("file_checksum") final String fileChecksum)
-            throws ModuleException {
+            throws ModuleException, IOException {
         final Document document = documentService.deleteFile(pDocumentId, fileChecksum);
         final Resource<Document> resource = toResource(document);
         return new ResponseEntity<>(resource, HttpStatus.OK);

@@ -28,11 +28,10 @@ public class DocumentLS {
     private Document document;
 
     /**
-     * Related document
+     * File checksum
      */
     @Column(name = "file_checksum", nullable = false, updatable = false)
     private String fileChecksum;
-
 
     public Long getId() {
         return id;
@@ -57,4 +56,5 @@ public class DocumentLS {
     public void setFileChecksum(String fileChecksum) {
         this.fileChecksum = fileChecksum;
     }
+
 }

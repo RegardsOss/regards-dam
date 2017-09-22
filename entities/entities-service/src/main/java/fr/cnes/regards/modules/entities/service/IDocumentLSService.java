@@ -1,10 +1,12 @@
 package fr.cnes.regards.modules.entities.service;
 
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -25,5 +27,7 @@ public interface IDocumentLSService {
      */
     Set<DataFile> handleFiles(Document document, MultipartFile[] files, String fileLsUriTemplate) throws ModuleException;
 
-    void removeFile(DataFile dataFile);
+    void removeFile(Document document, DataFile dataFile) throws IOException, EntityNotFoundException;
+
+    boolean isFileLocallyStored (Document document, DataFile dataFile);
 }

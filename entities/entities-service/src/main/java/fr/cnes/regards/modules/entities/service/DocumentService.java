@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import com.google.common.io.Files;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -37,6 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
+import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -56,7 +59,6 @@ public class DocumentService extends AbstractEntityService<Document> implements 
      * Attribute {@link PluginService}
      */
     private final IDocumentLSService documentFilesService;
-
 
     public DocumentService(IModelAttrAssocService pModelAttributeService,
                            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
@@ -99,7 +101,8 @@ public class DocumentService extends AbstractEntityService<Document> implements 
      * @throws ModuleException
      */
     @Override
-    public Document deleteFile(Long documentId, String fileChecksum) throws ModuleException {
+    public Document deleteFile(Long documentId, String fileChecksum) throws ModuleException, IOException {
+        // Check if the query is valid
         Document doc = this.load(documentId);
         if (doc == null) {
              throw new EntityNotFoundException(documentId.toString(), Document.class);
@@ -110,7 +113,10 @@ public class DocumentService extends AbstractEntityService<Document> implements 
             throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);
         }
         DataFile dataFile = dataFileToRemove.get();
-        documentFilesService.removeFile(dataFile);
+        // Try to remove the file if locally stored, otherwise the file is not stored on this microservice
+        if (documentFilesService.isFileLocallyStored(doc, dataFile)) {
+            documentFilesService.removeFile(doc, dataFile);
+        }
         doc.getDocuments().remove(dataFile);
         this.update(doc);
         return doc;
@@ -122,15 +128,25 @@ public class DocumentService extends AbstractEntityService<Document> implements 
      * @throws ModuleException
      */
     @Override
-    public void deleteDocumentAndFiles(Long documentId) throws EntityNotFoundException {
+    public void deleteDocumentAndFiles(Long documentId) throws EntityNotFoundException, IOException {
         Document doc = this.load(documentId);
         if (doc == null) {
             throw new EntityNotFoundException(documentId.toString(), Document.class);
         }
         Set<DataFile> docFiles = doc.getDocuments();
         for (DataFile docFile : docFiles) {
-            documentFilesService.removeFile(docFile);
+            documentFilesService.removeFile(doc, docFile);
         }
         this.delete(documentId);
+    }
+
+    @Override
+    public byte[] retrieveFileContent(Long pDocumentId, String fileChecksum) throws IOException {
+        return Files.asByteSource(new File("dfgsdfg")).read();
+    }
+
+    @Override
+    public DataFile retrieveDataFile(Long pDocumentId, String fileChecksum) {
+        return null;
     }
 }
