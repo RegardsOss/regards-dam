@@ -28,7 +28,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +45,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -51,6 +57,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
@@ -84,7 +91,6 @@ import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Crawler ingestion tests
@@ -268,7 +274,8 @@ public class CrawlerIngestIT {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping)).getParameters();
+                              adapter.toJson(dataSourceModelMapping))
+                .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -294,7 +301,7 @@ public class CrawlerIngestIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                                                  "date"));
+                "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
@@ -305,7 +312,7 @@ public class CrawlerIngestIT {
         LOGGER.info("********************* test CrawlerIngestIT ***********************************");
         final String tenant = tenantResolver.getTenant();
         // First delete index if it already exists
-        //        indexerService.deleteIndex(tenant);
+        // indexerService.deleteIndex(tenant);
 
         // Fill the DB with an object from 2000/01/01
         extDataRepos.saveAndFlush(new ExternalData(LocalDate.of(2000, Month.JANUARY, 1)));
@@ -347,21 +354,21 @@ public class CrawlerIngestIT {
         LOGGER.info("searchService : " + searchService);
         LOGGER.info("dataset : " + dataset);
         LOGGER.info("dataset.getIpId() : " + dataset.getIpId());
-        Page<DataObject> objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                                            ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(1L, objectsPage.getTotalElements());
 
         // Fill the Db with an object dated 2001/01/01
         extDataRepos.save(new ExternalData(LocalDate.of(2001, Month.JANUARY, 1)));
 
         // Ingest from 2000/01/01 (strictly after)
-        summary = crawlerService
-                .ingest(dataSourcePluginConf, OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
+        summary = crawlerService.ingest(dataSourcePluginConf,
+                                        OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, summary.getSavedObjectsCount());
 
         // Search for DataObjects tagging dataset1
-        objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(2L, objectsPage.getTotalElements());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());

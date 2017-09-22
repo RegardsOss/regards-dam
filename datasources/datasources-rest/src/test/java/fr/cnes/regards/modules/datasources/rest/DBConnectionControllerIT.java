@@ -41,10 +41,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Test DBConnnection controller
@@ -155,13 +155,13 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultPost(DBConnectionController.TYPE_MAPPING, dbConnection, expectations,
                            "DBConnection creation request error");
     }
-    
+
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_010")
     @Purpose("The system allows to create a connection by the configuration of a plugin's type IDBConnectionPlugin")
     public void createDBConnectionWithJson() {
         String dbConnectionRequest = readJsonContract("request-dbconnection.json");
-        
+
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());

@@ -37,6 +37,7 @@ import org.xml.sax.SAXException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.plugin.CountPlugin;
 import fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin;
 import fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin;
@@ -51,7 +52,6 @@ import fr.cnes.regards.modules.models.schema.Fragment;
 import fr.cnes.regards.modules.models.schema.Model;
 import fr.cnes.regards.modules.models.schema.ParamPluginType;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Help to manage model XML import based on XML schema definition

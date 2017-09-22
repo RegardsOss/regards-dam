@@ -45,6 +45,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
@@ -58,7 +59,6 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSin
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * @author Christophe Mertz
@@ -98,7 +98,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
-    private Map<Long, Object> pluginCacheMap = new HashMap<>();
+    private final Map<Long, Object> pluginCacheMap = new HashMap<>();
 
     /**
      * Initialize the plugin's parameter
@@ -143,7 +143,7 @@ public class OracleDataSourceFromSingleTablePluginTest {
         Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 1000));
         Assert.assertNotNull(ll);
         Assert.assertEquals(1000, ll.getContent().size());
-        
+
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
         ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
         ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
@@ -173,18 +173,18 @@ public class OracleDataSourceFromSingleTablePluginTest {
                 .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        PluginConfiguration plgConfConn = PluginUtils
-                .getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-                                        Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        pluginCacheMap.put(plgConfConn.getId(), (Object)PluginUtils
-                .getPlugin(plgConfConn, plgConfConn.getPluginClassName(), Arrays.asList(PLUGIN_CURRENT_PACKAGE),
-                           pluginCacheMap));
+        PluginConfiguration plgConfConn = PluginUtils.getPluginConfiguration(parameters,
+                                                                             DefaultOracleConnectionPlugin.class,
+                                                                             Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        pluginCacheMap.put(plgConfConn.getId(),
+                           (Object) PluginUtils.getPlugin(plgConfConn, plgConfConn.getPluginClassName(),
+                                                          Arrays.asList(PLUGIN_CURRENT_PACKAGE), pluginCacheMap));
         return plgConfConn;
     }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
-        
+
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
         attributes.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
@@ -197,18 +197,18 @@ public class OracleDataSourceFromSingleTablePluginTest {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, "START_DATE"));
         attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                                                   "DATA_CREATION_DATE"));
+                "DATA_CREATION_DATE"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
                 "DATA_OBJECT_ID"));
-        
+
         attributes.add(new DynamicAttributeMapping("MIN_LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MIN_LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
         attributes.add(new DynamicAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
-        
+
         dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
     }
 

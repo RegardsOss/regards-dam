@@ -47,6 +47,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
@@ -60,7 +61,6 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSin
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * @author Christophe Mertz
@@ -101,7 +101,7 @@ public class OracleDataSourceFromSingleTablePluginWithoutLastUpdateTest {
 
     private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
-    private Map<Long, Object> pluginCacheMap = new HashMap<>();
+    private final Map<Long, Object> pluginCacheMap = new HashMap<>();
 
     /**
      * Initialize the plugin's parameter
