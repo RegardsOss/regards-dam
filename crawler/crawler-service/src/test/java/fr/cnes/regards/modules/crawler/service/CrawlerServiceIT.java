@@ -25,7 +25,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +40,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -46,6 +51,8 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.test.util.Beans;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -67,8 +74,6 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Crawler service integration tests
@@ -220,9 +225,9 @@ public class CrawlerServiceIT {
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), Collections.singletonList(
-                new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                                           "DATA_OBJECTS_ID")));
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(),
+                Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
+                        AttributeType.INTEGER, "DATA_OBJECTS_ID")));
 
         pluginConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(pluginConf);

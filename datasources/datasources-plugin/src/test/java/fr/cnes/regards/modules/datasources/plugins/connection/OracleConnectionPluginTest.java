@@ -39,10 +39,10 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * @author Christophe Mertz
@@ -74,9 +74,8 @@ public class OracleConnectionPluginTest {
     public void setUp() throws DataSourcesPluginException, SQLException {
         IDBConnectionPlugin plgConn;
 
-        plgConn = PluginUtils
-                .getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
-                           new HashMap<>());
+        plgConn = PluginUtils.getPlugin(getOracleParameters(), DefaultOracleConnectionPlugin.class,
+                                        Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(plgConn.testConnection());

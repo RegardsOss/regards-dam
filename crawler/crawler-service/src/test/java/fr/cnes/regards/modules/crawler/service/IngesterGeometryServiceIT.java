@@ -22,7 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +42,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
@@ -61,7 +66,6 @@ import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterGeometryConfiguration.class })
@@ -149,7 +153,8 @@ public class IngesterGeometryServiceIT {
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_VIEW)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping)).getParameters();
+                              adapter.toJson(dataSourceModelMapping))
+                .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -173,10 +178,10 @@ public class IngesterGeometryServiceIT {
         final List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                                                  "line_id"));
+                "line_id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.GEOMETRY, AttributeType.STRING,
-                                                  "polygon_geojson"));
+                "polygon_geojson"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
@@ -266,8 +271,8 @@ public class IngesterGeometryServiceIT {
         Assert.assertTrue(dsIngestions.stream().allMatch(dsIngest -> dsIngest.getSavedObjectsCount() == 20_362));
         Assert.assertTrue(dsIngestions.stream().allMatch(dsIngest -> dsIngest.getLastIngestDate() != null));
 
-        final Page<DataObject> page = esRepository
-                .search(Searches.onSingleEntity(TENANT, EntityType.DATA), 10, ICriterion.all());
+        final Page<DataObject> page = esRepository.search(Searches.onSingleEntity(TENANT, EntityType.DATA), 10,
+                                                          ICriterion.all());
         final List<DataObject> objects = page.getContent();
         Assert.assertTrue(objects.stream().allMatch(o -> o.getGeometry() != null));
         Assert.assertTrue(objects.stream().allMatch(o -> o.getGeometry() instanceof Geometry.Polygon));

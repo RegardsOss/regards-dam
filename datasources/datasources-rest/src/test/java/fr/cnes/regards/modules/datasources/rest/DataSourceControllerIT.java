@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,15 +48,19 @@ import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.datasources.domain.*;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DataSource;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.plugins.utils.PluginUtils;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test {@link DataSource} controller

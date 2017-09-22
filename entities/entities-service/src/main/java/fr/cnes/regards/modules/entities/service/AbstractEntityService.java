@@ -18,13 +18,22 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,21 +47,32 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.*;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
+import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.*;
+import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -71,7 +91,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Abstract parameterized entity service
@@ -197,8 +216,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty()) && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity
-                .getProperties().isEmpty()))) {
+        if (((modAtts == null) || modAtts.isEmpty())
+                && ((pAbstractEntity.getProperties() != null) && (!pAbstractEntity.getProperties().isEmpty()))) {
             pErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                 "No properties defined in corresponding model but trying to create.");
         }
@@ -253,15 +272,15 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             if (att == null) {
                 String messageKey = "error.missing.required.attribute.message";
                 String defaultMessage = String.format("Missing required attribute \"%s\".", key);
-                //                if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
+                // if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
                 if (!attModel.isOptional()) {
                     pErrors.reject(messageKey, defaultMessage);
                     return;
                 }
-                //                if (!pManageAlterable && !attModel.isOptional()) {
-                //                    pErrors.reject(messageKey, defaultMessage);
-                //                    return;
-                //                }
+                // if (!pManageAlterable && !attModel.isOptional()) {
+                // pErrors.reject(messageKey, defaultMessage);
+                // return;
+                // }
                 LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
                 return;
             }
@@ -271,9 +290,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, pErrors);
                 } else {
-                    String defaultMessage = String
-                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
-                                    key);
+                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                          validator.getClass().getName(), key);
                     pErrors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
@@ -315,8 +333,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return validators;
     }
 
-    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity,
-            AttributeModel attribute) { //NOSONAR
+    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity, AttributeModel attribute) { // NOSONAR
         if (attribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
             return entity.getProperties().stream().filter(p -> p.getName().equals(attribute.getName())).findFirst();
@@ -385,7 +402,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
         // Set description
         if (entity instanceof AbstractDescEntity) {
@@ -491,8 +508,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @throws IOException if description cannot be read
      * @throws ModuleException if description not conform to REGARDS requirements
      */
-    private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile, DescriptionFile oldOne)
-            throws IOException, ModuleException {
+    private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,
+            DescriptionFile oldOne) throws IOException, ModuleException {
         // we are updating/creating a description
         if (updatedEntity.getDescriptionFile() != null) {
             // this is a description file
@@ -519,24 +536,24 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     oldOne.setUrl(null);
                     updatedEntity.setDescriptionFile(oldOne);
                 } else {
-                    //if there is no descriptionFile existing then lets create one
-                    updatedEntity.setDescriptionFile(
-                            new DescriptionFile(pFile.getBytes(), updatedEntity.getDescriptionFile().getType()));
+                    // if there is no descriptionFile existing then lets create one
+                    updatedEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+                            updatedEntity.getDescriptionFile().getType()));
                 }
             } else {
-                //this is a url
+                // this is a url
                 if (oldOne != null) {
                     oldOne.setType(null);
                     oldOne.setContent(null);
                     oldOne.setUrl(updatedEntity.getDescriptionFile().getUrl());
                     updatedEntity.setDescriptionFile(oldOne);
                 } else {
-                    //if there is no description existing then lets create one
+                    // if there is no description existing then lets create one
                     updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
                 }
             }
         }
-        //for updates: let set back the old one, if there isn't any provided
+        // for updates: let set back the old one, if there isn't any provided
         else {
             updatedEntity.setDescriptionFile(oldOne);
         }
@@ -588,8 +605,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");
             String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
-                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
+                    || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
         }
         return false;
     }
@@ -690,7 +707,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         Set<String> newGroups = pEntity.getGroups();
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
-        // Update entity, checks already assures us that everything which is updated can be updated so we can just put pEntity into the DB.
+        // Update entity, checks already assures us that everything which is updated can be updated so we can just put
+        // pEntity into the DB.
         pEntity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         U updated = repository.save(pEntity);
         updatedIpIds.add(updated.getIpId());

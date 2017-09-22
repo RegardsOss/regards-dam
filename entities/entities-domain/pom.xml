@@ -34,7 +34,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>regards-core-jpa-common</artifactId>
+			<artifactId>jpa-commons-regards</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>

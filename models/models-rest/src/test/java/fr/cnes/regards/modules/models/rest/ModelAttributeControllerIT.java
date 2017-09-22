@@ -40,6 +40,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -58,7 +59,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * Test {@link ModelAttrAssoc} API
@@ -265,7 +265,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
     @Test
     public void testGetMappingForComputedAttribute() throws ModuleException {
-        //lets add a package where we know there is plugin to get some results
+        // lets add a package where we know there is plugin to get some results
         pluginService.addPluginPackage(CountPlugin.class.getPackage().getName());
         List<PluginParameter> params = PluginParametersFactory.build()
                 .addParameter(AbstractDataObjectComputePlugin.PARAMETER_ATTRIBUTE_NAME, "toto").getParameters();
@@ -300,7 +300,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().json(gson(shouldBeCollections), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
-                                  + EntityType.COLLECTION, expectations, "Should return model attribute association");
+                + EntityType.COLLECTION, expectations, "Should return model attribute association");
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -309,7 +309,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().json(gson(shouldBeData), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
-                                  + EntityType.DATA, expectations, "Should return model attribute association");
+                + EntityType.DATA, expectations, "Should return model attribute association");
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -376,9 +376,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
-        performDefaultDelete(
-                ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                expectations, "Model should be deleted", mod.getId(), modAtt.getId());
+        performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                + apiAttribute, expectations, "Model should be deleted", mod.getId(), modAtt.getId());
     }
 
     /**
@@ -421,8 +420,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
 
         performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                   + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, expectations,
-                           "Should bind fragment", mod.getId());
+                + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, expectations, "Should bind fragment",
+                           mod.getId());
     }
 
     /**
@@ -453,16 +452,16 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                     + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, expectations,
+                + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, expectations,
                              "Fragment's attributes should be deleted", mod.getId(), frag.getId());
 
         expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNotFound());
 
         for (ModelAttrAssoc modAtt : modelAttributes) {
-            performDefaultGet(
-                    ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                    expectations, "ModelAttribute shouldn't exist anymore", mod.getId(), modAtt.getId());
+            performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                    + apiAttribute, expectations, "ModelAttribute shouldn't exist anymore", mod.getId(),
+                              modAtt.getId());
         }
     }
 }
