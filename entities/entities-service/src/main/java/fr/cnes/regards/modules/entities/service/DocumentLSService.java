@@ -141,6 +141,12 @@ public class DocumentLSService implements IDocumentLSService {
         return documentFileLS.isPresent();
     }
 
+    @Override
+    public byte[] getDocumentLSContent(Document document, DataFile dataFile) throws EntityNotFoundException, IOException {
+        DocumentLS documentLS = getDocumentLS(document, dataFile);
+        String pathToFile = getDataFilePath(documentLS.getFileChecksum());
+        return com.google.common.io.Files.asByteSource(new File(pathToFile)).read();
+    }
 
     private DocumentLS getDocumentLS(Document document, DataFile dataFile) throws EntityNotFoundException {
         Optional<DocumentLS> documentFileLS = documentFileLocalStorageRepo.findOneByDocumentAndFileChecksum(document, dataFile.getChecksum());

@@ -81,10 +81,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
      */
     @Override
     public Document addFiles(Long documentId, MultipartFile [] files, String fileLsUriTemplate) throws ModuleException {
-        Document doc = this.load(documentId);
-        if (doc == null) {
-            throw new EntityNotFoundException(documentId.toString(), Document.class);
-        }
+        Document doc = getDocument(documentId);
         Set<DataFile> docFiles = documentFilesService.handleFiles(doc, files, fileLsUriTemplate);
         if (!doc.getDocuments().isEmpty()) {
             docFiles.addAll(doc.getDocuments());
@@ -103,10 +100,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     @Override
     public Document deleteFile(Long documentId, String fileChecksum) throws ModuleException, IOException {
         // Check if the query is valid
-        Document doc = this.load(documentId);
-        if (doc == null) {
-             throw new EntityNotFoundException(documentId.toString(), Document.class);
-        }
+        Document doc = getDocument(documentId);
         Set<DataFile> docFiles = doc.getDocuments();
         Optional<DataFile> dataFileToRemove = docFiles.stream().filter(dataFile -> fileChecksum.equals(dataFile.getChecksum())).findFirst();
         if (!dataFileToRemove.isPresent()) {
@@ -129,10 +123,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
      */
     @Override
     public void deleteDocumentAndFiles(Long documentId) throws EntityNotFoundException, IOException {
-        Document doc = this.load(documentId);
-        if (doc == null) {
-            throw new EntityNotFoundException(documentId.toString(), Document.class);
-        }
+        Document doc = getDocument(documentId);
         Set<DataFile> docFiles = doc.getDocuments();
         for (DataFile docFile : docFiles) {
             documentFilesService.removeFile(doc, docFile);
@@ -141,12 +132,35 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     }
 
     @Override
-    public byte[] retrieveFileContent(Long pDocumentId, String fileChecksum) throws IOException {
-        return Files.asByteSource(new File("dfgsdfg")).read();
+    public byte[] retrieveFileContent(Long documentId, String fileChecksum) throws IOException, EntityNotFoundException {
+        // Check if the query is valid
+        Document doc = getDocument(documentId);
+        DataFile dataFile = retrieveDataFile(doc, fileChecksum);
+        return documentFilesService.getDocumentLSContent(doc, dataFile);
     }
 
     @Override
-    public DataFile retrieveDataFile(Long pDocumentId, String fileChecksum) {
-        return null;
+    public DataFile retrieveDataFile(Long documentId, String fileChecksum) throws EntityNotFoundException {
+        Document doc = getDocument(documentId);
+        return retrieveDataFile(doc, fileChecksum);
+    }
+
+    private DataFile retrieveDataFile(Document doc, String fileChecksum) throws EntityNotFoundException {
+        Set<DataFile> docFiles = doc.getDocuments();
+        Optional<DataFile> dataFileToRemove = docFiles.stream().filter(dataFile -> fileChecksum.equals(dataFile.getChecksum())).findFirst();
+        if (!dataFileToRemove.isPresent()) {
+            throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);
+        }
+        return dataFileToRemove.get();
+
+    }
+
+    private Document getDocument(Long documentId) throws EntityNotFoundException {
+        // Check if the query is valid
+        Document doc = this.load(documentId);
+        if (doc == null) {
+            throw new EntityNotFoundException(documentId.toString(), Document.class);
+        }
+        return doc;
     }
 }

@@ -38,7 +38,7 @@ public interface IDocumentService extends IEntityService<Document> {
 
     void deleteDocumentAndFiles(Long pDocumentId) throws EntityNotFoundException, IOException;
 
-    byte[] retrieveFileContent(Long pDocumentId, String fileChecksum) throws IOException;
+    byte[] retrieveFileContent(Long pDocumentId, String fileChecksum) throws IOException, EntityNotFoundException;
 
-    DataFile retrieveDataFile(Long pDocumentId, String fileChecksum);
+    DataFile retrieveDataFile(Long pDocumentId, String fileChecksum) throws EntityNotFoundException;
 }
