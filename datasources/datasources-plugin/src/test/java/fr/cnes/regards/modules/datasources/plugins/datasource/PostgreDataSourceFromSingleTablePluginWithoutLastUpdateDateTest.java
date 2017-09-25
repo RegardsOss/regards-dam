@@ -50,6 +50,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
@@ -65,7 +66,6 @@ import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConf
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
-import fr.cnes.regards.plugins.utils.PluginUtils;
 
 /**
  * @author Christophe Mertz
@@ -111,7 +111,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
 
     private static int nbElements;
 
-    private Map<Long, Object> pluginCacheMap = new HashMap<>();
+    private final Map<Long, Object> pluginCacheMap = new HashMap<>();
 
     /**
      * JPA Repository
@@ -132,16 +132,14 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
          */
         repository.deleteAll();
         repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
-                                             LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
-                                             LocalDateTime.now(), OffsetDateTime.now().minusMinutes(33), true));
+                LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
+                OffsetDateTime.now().minusMinutes(33), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
-                                             LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10),
-                                             LocalDateTime.now().plusHours(33), OffsetDateTime.now().minusSeconds(22),
-                                             true));
+                LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10), LocalDateTime.now().plusHours(33),
+                OffsetDateTime.now().minusSeconds(22), true));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
-                                             25.565465465454564654654654, LocalDate.now().minusDays(10),
-                                             LocalTime.now().minusHours(9), LocalDateTime.now().minusMonths(2),
-                                             OffsetDateTime.now().minusHours(7), false));
+                25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
+                LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7), false));
         nbElements = 3;
 
         /*
@@ -209,28 +207,27 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        PluginConfiguration plgConf = PluginUtils
-                .getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
-                                        Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        pluginCacheMap.put(plgConf.getId(), PluginUtils
-                .getPlugin(plgConf, plgConf.getPluginClassName(), Arrays.asList(PLUGIN_CURRENT_PACKAGE),
-                           pluginCacheMap));
+        PluginConfiguration plgConf = PluginUtils.getPluginConfiguration(parameters,
+                                                                         DefaultPostgreConnectionPlugin.class,
+                                                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        pluginCacheMap.put(plgConf.getId(),
+                           PluginUtils.getPlugin(plgConf, plgConf.getPluginClassName(),
+                                                 Arrays.asList(PLUGIN_CURRENT_PACKAGE), pluginCacheMap));
         return plgConf;
     }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
-
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'" + HELLO + "- '||label as label"));
         attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
-                                                   "timestampwithouttimezone"));
+                "timestampwithouttimezone"));
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
         attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
-                                                   "timestampwithouttimezone"));
+                "timestampwithouttimezone"));
         attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 

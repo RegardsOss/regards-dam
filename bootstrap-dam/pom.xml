@@ -39,10 +39,9 @@
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 
 	<dependencies>
-		<!-- Spring dependencies -->
 		<dependency>
-			<groupId>fr.cnes.regards.microservices</groupId>
-			<artifactId>microservice-core</artifactId>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>microservice-core-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>

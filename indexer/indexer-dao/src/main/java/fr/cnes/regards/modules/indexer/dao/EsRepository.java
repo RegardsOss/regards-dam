@@ -1002,7 +1002,7 @@ public class EsRepository implements IEsRepository {
         }
         summary.setFilesCount(totalFileCount);
         summary.setFilesSize(totalFileSize);
-        // Then disciminants buckets aggregations results
+        // Then discriminants buckets aggregations results
         Terms buckets = aggs.get(discriminantProperty);
         for (Terms.Bucket bucket : buckets.getBuckets()) {
             String discriminant = bucket.getKeyAsString();
