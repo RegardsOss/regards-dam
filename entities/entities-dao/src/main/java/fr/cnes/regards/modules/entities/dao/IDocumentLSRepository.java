@@ -10,4 +10,5 @@ public interface IDocumentLSRepository extends JpaRepository<DocumentLS, Long> {
 
     Optional<DocumentLS> findOneByDocumentAndFileChecksum(Document document, String fileChecksum);
 
+    Long countByFileChecksum(String fileChecksum);
 }

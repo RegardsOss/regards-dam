@@ -29,13 +29,12 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Abstraction for entities managing data files
- * (legacy)
  *
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
  */
-public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles  {
+public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
 
     /**
      * Physical data file references

@@ -7,7 +7,8 @@ import javax.persistence.*;
  * @author Léo Mieulet
  */
 @Entity
-@Table(name = "t_document_file_locally_stored")
+@Table(name = "t_document_file_locally_stored",
+        uniqueConstraints = @UniqueConstraint(columnNames = { "document_id", "file_checksum" }, name = "uk_t_document_file_locally_stored_document_file_checksum"))
 @SequenceGenerator(name = "documentLSSequence", initialValue = 1, sequenceName = "documentLS_Sequence")
 public class DocumentLS {
 

@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -44,8 +42,6 @@ public class DocumentLSService implements IDocumentLSService {
 
     private final Logger LOGGER = LoggerFactory.getLogger(DocumentLSService.class);
 
-
-    private static final Charset STORAGE_ENCODING = StandardCharsets.UTF_8;
 
     private static final String DIGEST_ALGORITHM = "MD5";
 
@@ -119,12 +115,19 @@ public class DocumentLSService implements IDocumentLSService {
             if (!dataFileOnDisk.canWrite()) {
                 throw new IOException(String.format("Failed to remove the file %s : Permission refused", dataFilePath));
             }
-            boolean isDeleted = dataFileOnDisk.delete();
-            if (isDeleted) {
-                LOGGER.info("File %s removed for document %d", dataFilePath, document.getId());
-                documentFileLocalStorageRepo.delete(documentFileLS.getId());
+            // Do not remove the file if its used by another document
+            Long countFileUsedByDocuments = documentFileLocalStorageRepo.countByFileChecksum(dataFile.getChecksum());
+            if (countFileUsedByDocuments == 1) {
+                boolean isDeleted = dataFileOnDisk.delete();
+                if (isDeleted) {
+                    LOGGER.info("File %s removed for document %d", dataFilePath, document.getId());
+                    documentFileLocalStorageRepo.delete(documentFileLS.getId());
+                } else {
+                    throw new IOException(String.format("File %s not removed for document %d", dataFilePath, document.getId()));
+                }
             } else {
-                throw new IOException(String.format("File %s not removed for document %d", dataFilePath, document.getId()));
+                LOGGER.info("File %s was removed on filedisk since another document uses it", dataFilePath);
+                documentFileLocalStorageRepo.delete(documentFileLS.getId());
             }
         }
     }
@@ -217,7 +220,7 @@ public class DocumentLSService implements IDocumentLSService {
      */
     private String getChecksum(MultipartFile file) throws NoSuchAlgorithmException, IOException {
         byte[] uploadBytes = file.getBytes();
-        MessageDigest md5 = MessageDigest.getInstance(this.DIGEST_ALGORITHM);
+        MessageDigest md5 = MessageDigest.getInstance(DIGEST_ALGORITHM);
         byte[] digest = md5.digest(uploadBytes);
         return new BigInteger(1, digest).toString(16);
     }

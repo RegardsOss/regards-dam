@@ -18,9 +18,9 @@
  */
 package fr.cnes.regards.modules.models.client;
 
-import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,8 +28,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Collection;
-import java.util.List;
+import fr.cnes.regards.framework.feign.annotation.RestClient;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 
 /**
  * @author Sylvain Vissiere-Guerinet

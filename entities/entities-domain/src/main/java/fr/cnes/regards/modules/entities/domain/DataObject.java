@@ -18,10 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;

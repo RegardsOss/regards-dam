@@ -32,10 +32,32 @@ import java.io.IOException;
  */
 public interface IDocumentService extends IEntityService<Document> {
 
+    /**
+     * Saves several files in the document
+     * @param pDocumentId document id
+     * @param files list of MultipartFile files
+     * @param fileLsUriTemplate the template of files locally stored
+     * @return updated document
+     * @throws ModuleException
+     */
     Document addFiles(Long pDocumentId, MultipartFile [] files, String fileLsUriTemplate) throws ModuleException;
 
+    /**
+     * Delete one file of the Document. If the file is locally stored, remove it
+     * @param pDocumentId document id
+     * @param fileChecksum document file checksum
+     * @return updated document
+     * @throws ModuleException
+     * @throws IOException
+     */
     Document deleteFile(Long pDocumentId, String fileChecksum) throws ModuleException, IOException;
 
+    /**
+     * Delete everything related to the document
+     * @param pDocumentId document id
+     * @throws EntityNotFoundException
+     * @throws IOException
+     */
     void deleteDocumentAndFiles(Long pDocumentId) throws EntityNotFoundException, IOException;
 
     byte[] retrieveFileContent(Long pDocumentId, String fileChecksum) throws IOException, EntityNotFoundException;
