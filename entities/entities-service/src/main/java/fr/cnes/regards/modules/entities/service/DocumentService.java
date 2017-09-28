@@ -18,13 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import com.google.common.io.Files;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.entities.dao.*;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -38,13 +38,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
-import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Specific EntityService for documents
+ *
  * @author Léo Mieulet
  */
 @Service
@@ -72,28 +72,29 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     }
 
     /**
-     *
-     * @param documentId the document id that you are editing
-     * @param files the list of new file to attach to the document
+     * @param documentId        the document id that you are editing
+     * @param files             the list of new file to attach to the document
      * @param fileLsUriTemplate Template of the file's uri
      * @return
      * @throws ModuleException
      */
     @Override
-    public Document addFiles(Long documentId, MultipartFile [] files, String fileLsUriTemplate) throws ModuleException {
+    public Document addFiles(Long documentId, MultipartFile[] files, String fileLsUriTemplate) throws ModuleException {
         Document doc = getDocument(documentId);
-        Set<DataFile> docFiles = documentFilesService.handleFiles(doc, files, fileLsUriTemplate);
-        if (!doc.getDocuments().isEmpty()) {
-            docFiles.addAll(doc.getDocuments());
+        Collection<DataFile> docFiles = documentFilesService.handleFiles(doc, files, fileLsUriTemplate);
+        // Merge previous files with new ones
+        if (doc.getDocumentFiles() != null && !doc.getDocumentFiles().isEmpty()) {
+            docFiles.addAll(doc.getDocumentFiles());
         }
-        doc.setDocuments(docFiles);
-        this.update(doc);
+        doc.getFiles().putAll(DataType.DOCUMENT, docFiles);
+        doc = this.update(doc);
         return doc;
     }
 
     /**
      * Allows to remove a single file from a document, then save the entity
-     * @param documentId the document id
+     *
+     * @param documentId   the document id
      * @param fileChecksum the checksum of the file
      * @throws ModuleException
      */
@@ -101,7 +102,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     public Document deleteFile(Long documentId, String fileChecksum) throws ModuleException, IOException {
         // Check if the query is valid
         Document doc = getDocument(documentId);
-        Set<DataFile> docFiles = doc.getDocuments();
+        Collection<DataFile> docFiles = doc.getDocumentFiles();
         Optional<DataFile> dataFileToRemove = docFiles.stream().filter(dataFile -> fileChecksum.equals(dataFile.getChecksum())).findFirst();
         if (!dataFileToRemove.isPresent()) {
             throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);
@@ -111,22 +112,25 @@ public class DocumentService extends AbstractEntityService<Document> implements 
         if (documentFilesService.isFileLocallyStored(doc, dataFile)) {
             documentFilesService.removeFile(doc, dataFile);
         }
-        doc.getDocuments().remove(dataFile);
+        doc.getDocumentFiles().remove(dataFile);
         this.update(doc);
         return doc;
     }
 
     /**
      * Ensure that all files that refers the document from DocumentLS have been removed before removing the entity
+     *
      * @param documentId
      * @throws ModuleException
      */
     @Override
     public void deleteDocumentAndFiles(Long documentId) throws EntityNotFoundException, IOException {
         Document doc = getDocument(documentId);
-        Set<DataFile> docFiles = doc.getDocuments();
-        for (DataFile docFile : docFiles) {
-            documentFilesService.removeFile(doc, docFile);
+        if (doc.getDocumentFiles() != null) {
+            Collection<DataFile> docFiles = doc.getDocumentFiles();
+            for (DataFile docFile : docFiles) {
+                documentFilesService.removeFile(doc, docFile);
+            }
         }
         this.delete(documentId);
     }
@@ -146,7 +150,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     }
 
     private DataFile retrieveDataFile(Document doc, String fileChecksum) throws EntityNotFoundException {
-        Set<DataFile> docFiles = doc.getDocuments();
+        Collection<DataFile> docFiles = doc.getDocumentFiles();
         Optional<DataFile> dataFileToRemove = docFiles.stream().filter(dataFile -> fileChecksum.equals(dataFile.getChecksum())).findFirst();
         if (!dataFileToRemove.isPresent()) {
             throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);

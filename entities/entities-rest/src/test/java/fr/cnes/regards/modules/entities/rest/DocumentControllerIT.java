@@ -24,7 +24,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
@@ -32,12 +31,10 @@ import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.service.IDocumentLSService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import org.assertj.core.util.Lists;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -62,9 +58,9 @@ import java.util.*;
 /**
  * @author lmieulet
  */
-@TestPropertySource(locations = { "classpath:test.properties" })
+@TestPropertySource(locations = {"classpath:test.properties"})
 @MultitenantTransactional
-@ContextConfiguration(classes = { ControllerITConfig.class })
+@ContextConfiguration(classes = {ControllerITConfig.class})
 public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
 
     /**
@@ -168,7 +164,6 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     }
 
 
-
     @Requirement("REGARDS_DSL_DAM_COL_510")
     @Purpose("Shall retrieve all documents")
     @Test
@@ -177,7 +172,6 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         performDefaultGet(DOCUMENTS, expectations, "Failed to fetch document list");
     }
-
 
 
     @Requirement("REGARDS_DSL_DAM_DOC_010")
@@ -232,7 +226,6 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     }
 
 
-
     @Requirement("REGARDS_DSL_DAM_DOC_230")
     @Purpose("Shall dissociate tag from the document")
     @Test
@@ -272,21 +265,21 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
 
         // Check if everything is ok
         document1 = documentRepository.findById(document1.getId());
-        Assert.assertEquals(document1.getDocuments().size(),2);
-        Assert.assertEquals(documentLSRepository.findAll().size(),2);
-        Optional<DataFile> first = document1.getDocuments().stream().findFirst();
+        Assert.assertEquals(document1.getDocumentFiles().size(), 2);
+        Assert.assertEquals(documentLSRepository.findAll().size(), 2);
+        Optional<DataFile> first = document1.getDocumentFiles().stream().findFirst();
         DataFile dataFile = first.get();
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         // Upload files
         performDefaultDelete(DocumentController.ROOT_MAPPING + DocumentController.DOCUMENT_FILES_SINGLE_MAPPING, expectations,
-               "Failed to remove a file from a document", document1.getId(), dataFile.getChecksum());
+                "Failed to remove a file from a document", document1.getId(), dataFile.getChecksum());
 
         // Check if everything is ok
         document1 = documentRepository.findById(document1.getId());
-        Assert.assertEquals(document1.getDocuments().size(),1);
-        Assert.assertEquals(documentLSRepository.findAll().size(),1);
+        Assert.assertEquals(document1.getDocumentFiles().size(), 1);
+        Assert.assertEquals(documentLSRepository.findAll().size(), 1);
     }
 
     @Override

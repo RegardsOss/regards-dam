@@ -7,28 +7,29 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Document LS (Local Storage)
  * Aims at providing a local storage for Document files before rs-archival-storage
  * saves it permently
+ *
  * @author Léo Mieulet
  */
 public interface IDocumentLSService {
 
     /**
      * Save several files on disk
-     * @param document the document which we are editing
-     * @param files the files to attach to the document
+     *
+     * @param document          the document which we are editing
+     * @param files             the files to attach to the document
      * @param fileLsUriTemplate the file's uri template in order to generate each file's uri
      * @return the set of files
      * @throws ModuleException
      */
-    Set<DataFile> handleFiles(Document document, MultipartFile[] files, String fileLsUriTemplate) throws ModuleException;
+    Collection<DataFile> handleFiles(Document document, MultipartFile[] files, String fileLsUriTemplate) throws ModuleException;
 
     /**
-     *
      * @param document the document which we are editing
      * @param dataFile the file we're removing
      * @throws IOException
@@ -38,15 +39,17 @@ public interface IDocumentLSService {
 
     /**
      * Return
+     *
      * @param document
      * @param dataFile
      * @return true when the database knows this entity
      */
-    boolean isFileLocallyStored (Document document, DataFile dataFile);
+    boolean isFileLocallyStored(Document document, DataFile dataFile);
 
     /**
      * Read the content of the file and returns it
-     * @param doc document containing the file
+     *
+     * @param doc      document containing the file
      * @param dataFile DataFile concerned
      * @return the file content
      * @throws EntityNotFoundException

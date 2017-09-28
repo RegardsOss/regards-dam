@@ -90,7 +90,7 @@ public class DocumentController implements IResourceController<Document> {
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all documents")
     public ResponseEntity<PagedResources<Resource<Document>>> retrieveDocuments(final Pageable pPageable,
-                            final PagedResourcesAssembler<Document> pAssembler) {
+                                                                                final PagedResourcesAssembler<Document> pAssembler) {
         final Page<Document> documents = documentService.findAll(pPageable);
         final PagedResources<Resource<Document>> resources = toPagedResources(documents, pAssembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
@@ -99,8 +99,7 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to retrieve a document using its id
      *
-     * @param pDocumentId
-     *            {@link Document} id
+     * @param pDocumentId {@link Document} id
      * @return {@link Document} as a {@link Resource}
      */
     @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_MAPPING)
@@ -115,22 +114,18 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to update a document using its id
      *
-     * @param pDocumentId
-     *            {@link Document} id
-     * @param pDocument
-     *            {@link Document}
-     * @param pResult
-     *            for validation of entites' properties
+     * @param pDocumentId {@link Document} id
+     * @param pDocument   {@link Document}
+     * @param pResult     for validation of entites' properties
      * @return update {@link Document} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @RequestMapping(method = RequestMethod.PUT, value = DocumentController.DOCUMENT_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Update a document")
     public ResponseEntity<Resource<Document>> updateDocument(@PathVariable("document_id") final Long pDocumentId,
-                                                           @Valid @RequestBody Document pDocument,
-                                                           final BindingResult pResult) throws ModuleException, IOException {
+                                                             @Valid @RequestBody Document pDocument,
+                                                             final BindingResult pResult) throws ModuleException, IOException {
 
         // Validate dynamic model
         documentService.validate(pDocument, pResult, true);
@@ -142,8 +137,7 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to delete a document using its id
      *
-     * @param pDocumentId
-     *            {@link Document} id
+     * @param pDocumentId {@link Document} id
      * @return nothing
      * @throws EntityNotFoundException
      * @
@@ -160,13 +154,10 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to create a document
      *
-     * @param pDocument
-     *            {@link Document} to create
-     * @param pResult
-     *            validation errors
+     * @param pDocument {@link Document} to create
+     * @param pResult   validation errors
      * @return {@link Document} as a {@link Resource}
-     * @throws ModuleException
-     *             if validation fails
+     * @throws ModuleException if validation fails
      * @throws IOException
      * @
      */
@@ -187,19 +178,16 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to handle dissociation of {@link Document} specified by its id to other entities
      *
-     * @param pDocumentId
-     *            {@link Document} id
-     * @param pToBeDissociated
-     *            entity to dissociate
+     * @param pDocumentId      {@link Document} id
+     * @param pToBeDissociated entity to dissociate
      * @return {@link Document} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DOCUMENT_DISSOCIATE_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Dissociate a document from  a list of entities")
     public ResponseEntity<Void> dissociate(@PathVariable("document_id") final Long pDocumentId,
-            @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
+                                           @Valid @RequestBody final Set<UniformResourceName> pToBeDissociated) throws ModuleException {
         documentService.dissociate(pDocumentId, pToBeDissociated);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -207,28 +195,26 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to handle association of {@link Document} specified by its id to other entities
      *
-     * @param pDocumentId
-     *            {@link Document} id
-     * @param pToBeAssociatedWith
-     *            entities to be associated
+     * @param pDocumentId         {@link Document} id
+     * @param pToBeAssociatedWith entities to be associated
      * @return {@link Document} as a {@link Resource}
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DOCUMENT_ASSOCIATE_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Associate the document of id document_id to the list of entities in parameter")
     public ResponseEntity<Void> associate(@PathVariable("document_id") final Long pDocumentId,
-            @Valid @RequestBody final Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
+                                          @Valid @RequestBody final Set<UniformResourceName> pToBeAssociatedWith) throws ModuleException {
         documentService.associate(pDocumentId, pToBeAssociatedWith);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
      * Add files to document of given id
+     *
      * @param pDocumentId the id of the document
-     * @param files The list of files
-     * @return the updated dataset wrapped in an HTTP response
+     * @param files       The list of files
+     * @return the updated document wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.POST, value = DOCUMENT_FILES_MAPPING)
     @ResourceAccess(description = "Add files to a document using its id")
@@ -246,10 +232,9 @@ public class DocumentController implements IResourceController<Document> {
     /**
      * Entry point to retrieve a file from a document with given checksum
      *
-     * @param pDocumentId
-     *            {@link Document} id
+     * @param pDocumentId  {@link Document} id
      * @param fileChecksum {String} the checksum of the file to retrieve
-     * @param response {@link HttpServletResponse} inject the response in order to manually set headers and stuff
+     * @param response     {@link HttpServletResponse} inject the response in order to manually set headers and stuff
      * @return the requested file
      * @throws ModuleException
      */
@@ -257,8 +242,8 @@ public class DocumentController implements IResourceController<Document> {
     @ResponseBody
     @ResourceAccess(description = "Retrieve the file in given document with given checksum")
     public void retrieveDocumentFile(@RequestParam(name = "origin", required = false) String origin,
-           @PathVariable("document_id") final Long pDocumentId, @PathVariable("file_checksum") final String fileChecksum,
-           HttpServletResponse response) throws ModuleException, IOException {
+                                     @PathVariable("document_id") final Long pDocumentId, @PathVariable("file_checksum") final String fileChecksum,
+                                     HttpServletResponse response) throws ModuleException, IOException {
         byte[] fileContent = documentService.retrieveFileContent(pDocumentId, fileChecksum);
         DataFile dataFile = documentService.retrieveDataFile(pDocumentId, fileChecksum);
         if (fileContent != null) {
@@ -286,7 +271,7 @@ public class DocumentController implements IResourceController<Document> {
     @ResponseBody
     @ResourceAccess(description = "delete the document using its id")
     public HttpEntity<Resource<Document>> deleteDocumentFile(@PathVariable("document_id") final Long pDocumentId,
-                                               @PathVariable("file_checksum") final String fileChecksum)
+                                                             @PathVariable("file_checksum") final String fileChecksum)
             throws ModuleException, IOException {
         final Document document = documentService.deleteFile(pDocumentId, fileChecksum);
         final Resource<Document> resource = toResource(document);
@@ -297,21 +282,21 @@ public class DocumentController implements IResourceController<Document> {
     public Resource<Document> toResource(final Document pElement, final Object... pExtras) {
         final Resource<Document> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "retrieveDocument", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "retrieveDocuments", LinkRels.LIST,
                 MethodParamFactory.build(Pageable.class), MethodParamFactory.build(PagedResourcesAssembler.class));
         resourceService.addLink(resource, this.getClass(), "deleteDocument", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDocument", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Document.class),
-                                MethodParamFactory.build(BindingResult.class));
+                MethodParamFactory.build(Long.class, pElement.getId()),
+                MethodParamFactory.build(Document.class),
+                MethodParamFactory.build(BindingResult.class));
         resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
-                                MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Set.class));
+                MethodParamFactory.build(Long.class, pElement.getId()),
+                MethodParamFactory.build(Set.class));
         resourceService.addLink(resource, this.getClass(), "associate", "associate",
-                                MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Set.class));
+                MethodParamFactory.build(Long.class, pElement.getId()),
+                MethodParamFactory.build(Set.class));
         return resource;
     }
 }
