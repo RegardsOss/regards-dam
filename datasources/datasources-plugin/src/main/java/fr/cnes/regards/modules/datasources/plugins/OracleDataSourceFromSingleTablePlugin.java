@@ -44,8 +44,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilde
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * Class OracleDataSourceFromSingleTablePlugin A {@link Plugin} to discover the tables, columns and indexes to a
- * PostgreSQL Database.<br>
+ * A {@link Plugin} to discover the tables, columns and indexes to an Oracle Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
  *
  * @author Christophe Mertz
