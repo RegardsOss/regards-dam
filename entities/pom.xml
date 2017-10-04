@@ -25,6 +25,29 @@
 	<artifactId>entities</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	
+	<name>Entities</name>
+	<description>Module managing the entities, that is to say the representation of data in the system</description>
+	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
+	<inceptionYear>2016</inceptionYear>
+	<licenses>
+		<license>
+			<name>GNU General Public License (GNU GPL)</name>
+			<url>http://www.gnu.org/licenses/gpl.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<organization>
+		<name>CNES</name>
+		<url>https://cnes.fr/fr</url>
+	</organization>
+	<developers>
+		<developer>
+			<name>REGARDS Team</name>
+			<organization>CS Systèmes d'Information</organization>
+			<organizationUrl>http://www.c-s.fr</organizationUrl>
+		</developer>
+	</developers>
 
 	<parent>
 		<groupId>fr.cnes.regards</groupId>
@@ -32,8 +55,6 @@
 		<version>2.0.0-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
-
-	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 
 	<modules>
 		<module>entities-domain</module>

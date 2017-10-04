@@ -29,8 +29,8 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 /**
  * A default {@link Plugin} of type {@link IDBConnectionPlugin}.</br>
  * For the test of the connection :
- *
  * @see http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most
+ * 
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
