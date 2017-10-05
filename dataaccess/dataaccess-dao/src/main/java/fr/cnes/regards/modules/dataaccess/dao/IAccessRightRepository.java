@@ -18,14 +18,15 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
-import fr.cnes.regards.modules.entities.domain.Dataset;
+import java.util.Optional;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -60,7 +61,9 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
     @EntityGraph(value = "graph.accessright.dataset.and.accesgroup")
     Page<AccessRight> findAllByAccessGroup(AccessGroup pAg1, Pageable pPageable);
 
+
     /**
+     * This method returns zero or one AccessRight
      * @param pAg1
      * @param pDs1
      * @param pPageable
@@ -68,4 +71,12 @@ public interface IAccessRightRepository extends JpaRepository<AccessRight, Long>
      */
     Page<AccessRight> findAllByAccessGroupAndDataset(AccessGroup pAg1, Dataset pDs1, Pageable pPageable);
 
+
+    /**
+     * This methods return only zero or one AccessRight
+     * @param pAg1
+     * @param pDs1
+     * @return
+     */
+    Optional<AccessRight> findAccessRightByAccessGroupAndDataset(AccessGroup pAg1, Dataset pDs1);
 }

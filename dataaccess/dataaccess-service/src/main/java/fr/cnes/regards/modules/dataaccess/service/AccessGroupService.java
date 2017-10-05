@@ -18,22 +18,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.service;
 
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.context.ApplicationListener;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -56,6 +40,21 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAs
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupPublicEvent;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.context.ApplicationListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -198,8 +197,8 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     }
 
     @Override
-    public Page<AccessGroup> retrieveUserAccessGroupsAndPublic(final String pUserEmail, final Pageable pPageable) {
-        return accessGroupDao.findAllByUsersOrIsPublic(new User(pUserEmail), Boolean.TRUE, pPageable);
+    public Set<AccessGroup> retrieveAllUserAccessGroupsOrPublicAccessGroups(final String pUserEmail) {
+        return accessGroupDao.findAllByUsersOrIsPublic(new User(pUserEmail), Boolean.TRUE);
     }
 
     @Override
@@ -222,12 +221,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     @Override
     public boolean existGroup(final Long pId) {
         return accessGroupDao.exists(pId);
-    }
-
-    @Override
-    public boolean existUser(final User pUser) {
-        final User user = getUser(pUser.getEmail());
-        return user != null;
     }
 
     @Override

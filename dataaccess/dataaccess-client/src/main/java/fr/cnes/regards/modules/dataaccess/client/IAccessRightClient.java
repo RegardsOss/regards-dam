@@ -18,26 +18,19 @@
  */
 package fr.cnes.regards.modules.dataaccess.client;
 
-import javax.validation.Valid;
-
+import fr.cnes.regards.framework.feign.annotation.RestClient;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import javax.validation.Valid;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @RestClient(name = "rs-dam")
 @RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -46,6 +39,8 @@ public interface IAccessRightClient { // NOSONAR
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
     public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
+
+    public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
@@ -74,4 +69,8 @@ public interface IAccessRightClient { // NOSONAR
     @ResponseBody
     public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
+    @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
+    @ResponseBody
+    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(@RequestParam(name = "dataset") UniformResourceName datasetIpId,
+                                                                  @RequestParam(name = "user") String userEMail);
 }

@@ -18,25 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.google.common.net.HttpHeaders;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -54,6 +35,24 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Set;
 
 /**
  * Rest controller managing {@link Dataset}s
@@ -188,29 +187,18 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     /**
-     * Retrieves a dataset description and set the X-Frame-Options header value to ALLOW-FROM origin
+     * Retrieves a dataset description - only for rs-catalog because permissions not checked right here
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public void retrieveDatasetDescription(@RequestParam(name = "origin", required = false) String origin,
-            @PathVariable("dataset_ipId") String datasetIpId, HttpServletResponse response)
+    public ResponseEntity<InputStreamResource> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
             throws EntityNotFoundException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
-        if (file != null) {
-            if (origin != null) {
-                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
-            }
-            out.write(file.getContent());
-            response.setContentType(file.getType().toString());
-            response.setContentLength(out.size());
-            response.getOutputStream().write(out.toByteArray());
-            response.getOutputStream().flush();
-            response.setStatus(HttpStatus.OK.value());
-        } else {
-            response.setStatus(HttpStatus.NO_CONTENT.value());
-        }
+        InputStreamResource isr = new InputStreamResource(new ByteArrayInputStream(file.getContent()));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentLength(file.getContent().length);
+        headers.setContentType(file.getType());
+        return new ResponseEntity<>(isr, headers, HttpStatus.OK);
     }
 
     /**
