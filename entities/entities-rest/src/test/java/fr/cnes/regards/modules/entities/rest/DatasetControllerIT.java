@@ -243,10 +243,10 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         dataSet21 = dsService.create(dataSet21, pdf);
         expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
-        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM test"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
-        expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE+"?origin=test", expectations,
+        expectations.add(MockMvcResultMatchers.jsonPath("$.inputStream.buf", Matchers.hasSize(pdf.getBytes().length)));
+
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
                           "Could not fetch dataset description file", dataSet21.getIpId());
 
         expectations.clear();

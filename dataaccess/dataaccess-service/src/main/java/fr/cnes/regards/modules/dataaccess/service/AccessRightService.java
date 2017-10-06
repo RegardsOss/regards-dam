@@ -18,16 +18,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.service;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -35,6 +25,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
@@ -42,10 +33,16 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEv
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @Service
 @MultitenantTransactional
@@ -60,8 +57,8 @@ public class AccessRightService implements IAccessRightService {
     private final IPublisher eventPublisher;
 
     public AccessRightService(final IAccessRightRepository pAccessRightRepository,
-            final IAccessGroupService pAccessGroupService, final IDatasetService pDatasetService,
-            final IPublisher pEventPublisher) {
+                              final IAccessGroupService pAccessGroupService, final IDatasetService pDatasetService,
+                              final IPublisher pEventPublisher) {
         repository = pAccessRightRepository;
         accessGroupService = pAccessGroupService;
         datasetService = pDatasetService;
@@ -70,7 +67,7 @@ public class AccessRightService implements IAccessRightService {
 
     @Override
     public Page<AccessRight> retrieveAccessRights(final String pAccessGroupName, final UniformResourceName pDatasetIpId,
-            final Pageable pPageable) throws EntityNotFoundException {
+                                                  final Pageable pPageable) throws EntityNotFoundException {
         if (pAccessGroupName != null) {
             return retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
         }
@@ -78,7 +75,7 @@ public class AccessRightService implements IAccessRightService {
     }
 
     private Page<AccessRight> retrieveAccessRightsByDataset(final UniformResourceName pDatasetIpId,
-            final Pageable pPageable) throws EntityNotFoundException {
+                                                            final Pageable pPageable) throws EntityNotFoundException {
         if (pDatasetIpId != null) {
             final Dataset ds = datasetService.load(pDatasetIpId);
             if (ds == null) {
@@ -92,6 +89,7 @@ public class AccessRightService implements IAccessRightService {
 
     /**
      * Retrieve groups access levels of a specified dataset
+     *
      * @param datasetIpId concerned datasetIpId, must not be null
      * @return a map { groupName, accessLevel }
      * @throws EntityNotFoundException if dataset doesn't exist
@@ -109,7 +107,7 @@ public class AccessRightService implements IAccessRightService {
     }
 
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(final UniformResourceName pDatasetIpId,
-            final String pAccessGroupName, final Pageable pPageable) throws EntityNotFoundException {
+                                                                final String pAccessGroupName, final Pageable pPageable) throws EntityNotFoundException {
         final AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         if (ag == null) {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
@@ -198,6 +196,31 @@ public class AccessRightService implements IAccessRightService {
         }
         repository.delete(pId);
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
+    }
+
+    @Override
+    public Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail) throws EntityNotFoundException {
+        User user = new User(userEMail);
+
+        final Dataset ds = datasetService.load(datasetIpId);
+        if (ds == null) {
+            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
+        }
+        Set<AccessGroup> accessGroups = accessGroupService.retrieveAllUserAccessGroupsOrPublicAccessGroups(userEMail);
+        Boolean isAutorised = false;
+        for (AccessGroup accessGroup : accessGroups) {
+            // Check if the user is concerned by the accessGroup
+            if (accessGroup.isPublic() || accessGroup.getUsers().contains(user)) {
+                Optional<AccessRight> accessRightOptional = repository.findAccessRightByAccessGroupAndDataset(accessGroup, ds);
+                // Check if the accessRight allows to access to that dataset
+                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
+                    isAutorised = true;
+                    // Stop loop iteration
+                    break;
+                }
+            }
+        }
+        return isAutorised;
     }
 
 }

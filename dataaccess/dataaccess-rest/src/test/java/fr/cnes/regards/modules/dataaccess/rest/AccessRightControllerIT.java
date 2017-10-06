@@ -23,6 +23,8 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -64,7 +66,7 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author Léo Mieulet
  */
 @MultitenantTransactional
 @TestPropertySource("classpath:test.properties")
@@ -137,6 +139,12 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private AccessRight ar3;
 
+    private ProjectUser projectUser;
+
+    private User user;
+
+    private String email = "test@email.com";
+
     @Autowired
     private IAccessGroupService agService;
 
@@ -153,11 +161,15 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         IProjectUsersClient projectUserClientMock = Mockito.mock(IProjectUsersClient.class);
         // Replace stubs by mocks
         ReflectionTestUtils.setField(agService, "projectUserClient", projectUserClientMock, IProjectUsersClient.class);
+        projectUser = new ProjectUser();
+        projectUser.setEmail(email);
         Mockito.when(projectUserClientMock.retrieveProjectUser(Matchers.any()))
-                .thenReturn(new ResponseEntity<>(new Resource<>(new ProjectUser()), HttpStatus.OK));
+                .thenReturn(new ResponseEntity<>(new Resource<>(projectUser), HttpStatus.OK));
 
         qf = new QualityFilter(10, 0, QualityLevel.ACCEPTED);
         dar = new DataAccessRight(DataAccessLevel.NO_ACCESS);
+        user = new User();
+        user.setEmail(email);
 
         Model model = Model.build("model1", "desc", EntityType.DATASET);
         model = modelRepo.save(model);
@@ -172,6 +184,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         ds2 = dsRepo.save(ds2);
 
         ag1 = new AccessGroup(ag1Name);
+        ag1.addUser(user);
         ag1 = agRepo.save(ag1);
         ar1 = new AccessRight(qf, al, ds1, ag1);
         ar1.setDataAccessRight(dar);
@@ -280,6 +293,34 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultDelete(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_ACCESS_RIGHTS_ID,
                              expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
+
+
+
+    @Test
+    public void testIsUserAutorisedToAccessDataset() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().string("true"));
+        RequestParamBuilder requestParamBuilder = RequestParamBuilder.build()
+                .param("dataset", ds1.getIpId().toString())
+                .param("user", email);
+
+        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
+                expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+
+        expectations.clear();
+
+        String notExistingUser = "not.existing" + email;
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.content().string("false"));
+        requestParamBuilder = RequestParamBuilder.build()
+                .param("dataset", ds1.getIpId().toString())
+                .param("user", notExistingUser);
+
+        performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
+                expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+    }
+
 
     @Override
     protected Logger getLogger() {

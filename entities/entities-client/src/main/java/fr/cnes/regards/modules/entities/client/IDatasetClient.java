@@ -18,23 +18,21 @@
  */
 package fr.cnes.regards.modules.entities.client;
 
-import java.util.Set;
-
+import fr.cnes.regards.framework.feign.annotation.RestClient;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
-import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import java.io.IOException;
+import java.util.Set;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -52,7 +50,7 @@ public interface IDatasetClient {
 
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
-    public static final String DATASET_ID_DESCRIPTION_PATH = DATASET_ID_PATH + "/description";
+    public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
 
     // FIXME
     /*    @RequestMapping(method = RequestMethod.POST)
@@ -109,5 +107,18 @@ public interface IDatasetClient {
     @ResponseBody
     public ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long pDatasetId,
             @RequestBody Set<UniformResourceName> pToBeAssociatedWith);
+
+
+    /**
+     * Returns the dataset description file
+     * @param origin
+     * @param datasetIpId
+     * @return
+     * @throws EntityNotFoundException
+     * @throws IOException
+     */
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
+    public ResponseEntity<InputStreamResource> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
+            throws EntityNotFoundException, IOException;
 
 }

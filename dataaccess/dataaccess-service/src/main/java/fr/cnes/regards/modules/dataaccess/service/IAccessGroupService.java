@@ -1,15 +1,14 @@
 package fr.cnes.regards.modules.dataaccess.service;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by oroussel on 03/07/17.
@@ -30,15 +29,13 @@ public interface IAccessGroupService {
 
     AccessGroup dissociateUserFromAccessGroup(String userEmail, String accessGroupName) throws EntityNotFoundException;
 
-    Page<AccessGroup> retrieveUserAccessGroupsAndPublic(String pUserEmail, Pageable pPageable);
+    Set<AccessGroup> retrieveAllUserAccessGroupsOrPublicAccessGroups(String pUserEmail);
 
     Page<AccessGroup> retrieveUserAccessGroups(String pUserEmail, Pageable pPageable);
 
     void setAccessGroupsOfUser(String pUserEmail, List<AccessGroup> pNewAcessGroups) throws EntityNotFoundException;
 
     boolean existGroup(Long pId);
-
-    boolean existUser(User pUser);
 
     AccessGroup update(String pAccessGroupName, AccessGroup pAccessGroup) throws ModuleException;
 }
