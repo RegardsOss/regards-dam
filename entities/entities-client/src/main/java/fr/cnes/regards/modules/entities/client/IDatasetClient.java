@@ -28,9 +28,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
 
@@ -108,15 +106,16 @@ public interface IDatasetClient {
 
 
     /**
-     * Returns the dataset description file²
+     * Returns the dataset description file
      *
      * @param datasetIpId
      * @return
      * @throws EntityNotFoundException
      * @throws IOException
      */
-    @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
-    ResponseEntity<StreamingResponseBody> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE,
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    Response retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
             throws EntityNotFoundException, IOException;
 
 }
