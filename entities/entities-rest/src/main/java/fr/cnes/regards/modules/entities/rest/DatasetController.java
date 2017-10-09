@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import com.google.common.io.ByteStreams;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -36,22 +37,24 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Set;
 
 /**
@@ -192,14 +195,21 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
     @ResponseBody
-    public ResponseEntity<InputStreamResource> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
+    public ResponseEntity<StreamingResponseBody> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId,
+                                                                            HttpServletResponse response)
             throws EntityNotFoundException, IOException {
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
-        InputStreamResource isr = new InputStreamResource(new ByteArrayInputStream(file.getContent()));
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentLength(file.getContent().length);
-        headers.setContentType(file.getType());
-        return new ResponseEntity<>(isr, headers, HttpStatus.OK);
+        final ByteArrayInputStream inputStream = new ByteArrayInputStream(file.getContent());
+        response.setContentLength(file.getContent().length);
+        response.setContentType(file.getType().getType());
+        response.addHeader("Content-disposition", "attachment;filename=" + datasetIpId);
+
+        return new ResponseEntity<>((OutputStream os) -> {
+            try (InputStream is = inputStream) {
+                ByteStreams.copy(is, os);
+                os.close();
+            }
+        }, HttpStatus.OK);
     }
 
     /**

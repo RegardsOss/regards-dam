@@ -116,7 +116,8 @@ public interface IDatasetClient {
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResponseBody
-    ResponseEntity<InputStreamResource> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
+    ResponseEntity<StreamingResponseBody> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId,
+                                                                     HttpServletResponse response)
             throws EntityNotFoundException, IOException;
 
 }
