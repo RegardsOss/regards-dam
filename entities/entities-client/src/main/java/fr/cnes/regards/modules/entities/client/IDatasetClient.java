@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.client;
 
+import feign.Response;
 import fr.cnes.regards.framework.feign.annotation.RestClient;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
