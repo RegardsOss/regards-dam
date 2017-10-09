@@ -194,7 +194,6 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    @ResponseBody
     public ResponseEntity<StreamingResponseBody> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId,
                                                                             HttpServletResponse response)
             throws EntityNotFoundException, IOException {
