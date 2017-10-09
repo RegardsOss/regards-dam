@@ -191,6 +191,7 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
+    @ResponseBody
     public ResponseEntity<InputStreamResource> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
             throws EntityNotFoundException, IOException {
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
