@@ -202,7 +202,7 @@ public class DatasetController implements IResourceController<Dataset> {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentLength(file.getContent().length);
         headers.setContentType(file.getType());
-        headers.add("Content-disposition", "attachment;filename="+datasetIpId);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename="+datasetIpId);
 
         return new ResponseEntity<>((OutputStream os) -> {
             try (InputStream is = inputStream) {
