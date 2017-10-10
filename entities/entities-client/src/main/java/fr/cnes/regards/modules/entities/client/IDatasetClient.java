@@ -57,6 +57,7 @@ public interface IDatasetClient {
 
     /**
      * Retrieve a dataset using its id
+     *
      * @param pDatasetId
      * @return
      */
@@ -65,6 +66,7 @@ public interface IDatasetClient {
 
     /**
      * Delete dataset
+     *
      * @param pDatasetId
      * @return
      */
@@ -73,6 +75,7 @@ public interface IDatasetClient {
 
     /**
      * Update dataset
+     *
      * @param pDatasetId
      * @param pDataset
      * @return

@@ -42,6 +42,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -49,7 +50,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -194,21 +194,22 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public ResponseEntity<StreamingResponseBody> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId,
-                                                                            HttpServletResponse response)
+    public ResponseEntity<StreamingResponseBody> retrieveDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
             throws EntityNotFoundException, IOException {
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
         final ByteArrayInputStream inputStream = new ByteArrayInputStream(file.getContent());
-        response.setContentLength(file.getContent().length);
-        response.setContentType(file.getType().getType());
-        response.addHeader("Content-disposition", "attachment;filename=" + datasetIpId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentLength(file.getContent().length);
+        headers.setContentType(file.getType());
+        headers.add("Content-disposition", "attachment;filename="+datasetIpId);
 
         return new ResponseEntity<>((OutputStream os) -> {
             try (InputStream is = inputStream) {
                 ByteStreams.copy(is, os);
                 os.close();
             }
-        }, HttpStatus.OK);
+        }, headers, HttpStatus.OK);
     }
 
     /**
