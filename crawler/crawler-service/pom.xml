@@ -24,6 +24,29 @@
 	<groupId>fr.cnes.regards.modules.crawler</groupId>
 	<artifactId>crawler-service</artifactId>
 	<packaging>jar</packaging>
+	
+	<name>Crawler Service</name>
+	<description>Service layer of Crawler module</description>
+	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
+	<inceptionYear>2016</inceptionYear>
+	<licenses>
+		<license>
+			<name>GNU General Public License (GNU GPL)</name>
+			<url>http://www.gnu.org/licenses/gpl.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<organization>
+		<name>CNES</name>
+		<url>https://cnes.fr/fr</url>
+	</organization>
+	<developers>
+		<developer>
+			<name>REGARDS Team</name>
+			<organization>CS Systèmes d'Information</organization>
+			<organizationUrl>http://www.c-s.fr</organizationUrl>
+		</developer>
+	</developers>
 
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
@@ -103,18 +126,6 @@
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<version>11.2.0.4</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>orai18n</artifactId>
-			<version>11.2.0.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

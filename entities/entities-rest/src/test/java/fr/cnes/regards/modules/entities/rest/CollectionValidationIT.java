@@ -21,21 +21,30 @@ package fr.cnes.regards.modules.entities.rest;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -78,6 +87,12 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory attributeAdapterFactory;
 
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
+
+    @Autowired
+    private Gson gson;
+
     /**
      * Import a model
      *
@@ -116,13 +131,41 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
-        performDefaultPost("/collections", mission1, expectations, "...");
+        performDefaultPost(CollectionController.ROOT_MAPPING, mission1, expectations, "...");
     }
 
     @Test
     public void test1CollectionWith() {
         importModel("modelTest1.xml");
 
+    }
+
+    @Test
+    public void testPropertyCase() throws ModuleException {
+        importModel("simple-model-label.xml");
+
+        Model model = modelService.getModelByName("MISSION_WITH_LABEL");
+
+        Collection collection = new Collection(model, DEFAULT_TENANT, "mission");
+        Set<AbstractAttribute<?>> atts = new HashSet<>();
+        atts.add(AttributeBuilder.buildString("LABEL", "uppercaselabel"));
+        collection.setProperties(atts);
+
+        // Set multitenant factory tenant
+        tenantResolver.forceTenant(DEFAULT_TENANT);
+
+        String collectionStr = gson.toJson(collection);
+        MockMultipartFile collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
+                collectionStr.getBytes());
+
+        // Define expectations
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isCreated());
+
+        List<MockMultipartFile> parts = new ArrayList<>();
+        parts.add(collectionPart);
+        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
+                                     "Failed to create a new collection");
     }
 
     @Override
