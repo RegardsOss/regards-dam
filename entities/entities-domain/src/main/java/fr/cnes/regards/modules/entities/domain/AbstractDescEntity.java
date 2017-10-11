@@ -36,7 +36,7 @@ public abstract class AbstractDescEntity extends AbstractEntity {
     /**
      * Description file
      */
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "description_file_id", foreignKey = @ForeignKey(name = "fk_entity_description_file"))
     @JsonAdapter(value = DescriptionFileAdapter.class)
     private DescriptionFile descriptionFile;
