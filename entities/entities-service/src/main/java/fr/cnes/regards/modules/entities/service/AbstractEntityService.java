@@ -18,35 +18,9 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.util.Assert;
-import org.springframework.validation.Errors;
-import org.springframework.validation.ObjectError;
-import org.springframework.validation.Validator;
-import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.Attr;
-
 import com.google.common.collect.ImmutableSet;
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -79,6 +53,24 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.plugins.utils.PluginUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.util.Assert;
+import org.springframework.validation.Errors;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.Validator;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Abstract parameterized entity service
@@ -499,7 +491,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     private <T extends AbstractDescEntity> void setDescription(T pEntity, MultipartFile pFile, DescriptionFile oldOne)
             throws IOException, ModuleException {
         // we are updating/creating a description
-        if (pEntity.getDescriptionFile() != null) {
+        if (pEntity.getDescriptionFile() != null && !pEntity.getDescriptionFile().equals(oldOne)) {
             // this is a description file
             if ((pFile != null) && !pFile.isEmpty()) {
                 // collections and dataset only have a description which is a url or a file
