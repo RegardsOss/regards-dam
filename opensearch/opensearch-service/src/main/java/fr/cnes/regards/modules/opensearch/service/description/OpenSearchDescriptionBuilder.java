@@ -100,7 +100,7 @@ public class OpenSearchDescriptionBuilder {
                 StandardCharsets.US_ASCII));
         sj.add(endpointPath);
         String urlTemplate = sj.toString();
-        // urlTemplate can contains double slashes on the part part which is valid but ugly so let make the worlkd a bit
+        // urlTemplate can contain double slashes on the part which is valid but ugly so let make the world a bit
         // prettier. We choose project.getHost().length()-1 because Project.getHost() can finish by a "/" so we would
         // have a double "/" with the joiner and we admit that what the administrator entered as host is valid
         int incorrectDoubleSlashIndex = project.getHost().length() - 1;
