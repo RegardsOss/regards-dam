@@ -121,6 +121,8 @@ public class CollectionController implements IResourceController<Collection> {
             // Because Chrome doesn't support ALLOW-FROM origin
             // If you don't use a reverse proxy behind the gateway AND the front, this feature may not work
             response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "SAMEORIGIN");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + collectionIpId);
+
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());

@@ -199,7 +199,7 @@ public class DatasetController implements IResourceController<Dataset> {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentLength(file.getContent().length);
         headers.setContentType(file.getType());
-        headers.setContentDispositionFormData("attachment", datasetIpId);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + datasetIpId);
 
         return new ResponseEntity<>(new InputStreamResource(inputStream), headers, HttpStatus.OK);
     }
