@@ -18,6 +18,9 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -98,10 +101,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -208,9 +210,8 @@ public class EsRepository implements IEsRepository {
             @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        LOGGER.info(
-                String.format("host    : %s - address : %s - port    : %d\ncluster : %s", pEsHost, pEsAddress, pEsPort,
-                              pEsClusterName));
+        LOGGER.info(String.format("host    : %s - address : %s - port    : %d\ncluster : %s", pEsHost, pEsAddress,
+                                  pEsPort, pEsClusterName));
         gson = pGson;
         esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
@@ -218,8 +219,8 @@ public class EsRepository implements IEsRepository {
         esClusterName = pEsClusterName;
         aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        client.addTransportAddress(
-                new InetSocketTransportAddress(InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
+        client.addTransportAddress(new InetSocketTransportAddress(
+                InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
@@ -243,9 +244,8 @@ public class EsRepository implements IEsRepository {
             XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates")
                     .startObject().startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
                     .field("type", "double").endObject().endObject().endObject().endArray().endObject();
-            return Arrays.stream(types)
-                    .map(type -> client.admin().indices().preparePutMapping(index.toLowerCase()).setType(type)
-                            .setSource(mapping).get().isAcknowledged()).allMatch(ack -> (ack == true));
+            return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index.toLowerCase())
+                    .setType(type).setSource(mapping).get().isAcknowledged()).allMatch(ack -> (ack == true));
         } catch (IOException ioe) { // NOSONAR
             throw new RuntimeException(ioe);
         }
@@ -287,9 +287,10 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public String[] findIndices() {
-        return Iterables.toArray(Iterables.transform(
-                client.admin().indices().prepareGetSettings().get().getIndexToSettings(), (pSetting) -> pSetting.key),
-                                 String.class);
+        return Iterables
+                .toArray(Iterables.transform(client.admin().indices().prepareGetSettings().get().getIndexToSettings(),
+                                             (pSetting) -> pSetting.key),
+                         String.class);
     }
 
     @Override
@@ -382,7 +383,8 @@ public class EsRepository implements IEsRepository {
         for (final BulkItemResponse itemResponse : response.getItems()) {
             if (itemResponse.isFailed()) {
                 LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                          itemResponse.getId()), itemResponse.getFailure().getCause());
+                                          itemResponse.getId()),
+                            itemResponse.getFailure().getCause());
             } else {
                 savedDocCount++;
             }
@@ -492,6 +494,9 @@ public class EsRepository implements IEsRepository {
                 request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
                 request = request.setQuery(critBuilder).setFrom(pPageRequest.getOffset())
                         .setSize(pPageRequest.getPageSize());
+                if (pPageRequest.getSort() != null) {
+                    manageSortRequest(index, request, pPageRequest.getSort());
+                }
                 Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                 manageSecondPassRequestAggregations(pFacetsMap, request, aggsMap);
                 // Relaunch the request with replaced facets
@@ -616,8 +621,6 @@ public class EsRepository implements IEsRepository {
                     searchAll(key.getV1(), results::add, key.getV2(), key.getV3());
                     return results;
                 }
-
-                ;
             });
 
     @SuppressWarnings("unchecked")
@@ -682,9 +685,8 @@ public class EsRepository implements IEsRepository {
         for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
             String attributeName = sortEntry.getKey();
             // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
-            String lastPathAttName = attributeName.contains(".") ?
-                    attributeName.substring(attributeName.lastIndexOf('.') + 1) :
-                    attributeName;
+            String lastPathAttName = attributeName.contains(".")
+                    ? attributeName.substring(attributeName.lastIndexOf('.') + 1) : attributeName;
             // For all type mappings
             boolean typeText = false;
             for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
@@ -693,8 +695,8 @@ public class EsRepository implements IEsRepository {
                     FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
                     // If field type is String, we must add ".keyword" to attribute name
                     Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
-                    if ((metaDataMap.get(lastPathAttName) != null) && (metaDataMap
-                            .get(lastPathAttName) instanceof Map)) {
+                    if ((metaDataMap.get(lastPathAttName) != null)
+                            && (metaDataMap.get(lastPathAttName) instanceof Map)) {
                         Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
                         // Should contains "type" field but...
                         if (mappingMap.containsKey("type")) {
@@ -767,13 +769,12 @@ public class EsRepository implements IEsRepository {
             String attName;
             // Replace percentiles aggregations by range aggregations
             if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
-                attName = (facetType == FacetType.NUMERIC) ?
-                        attributeName + NUMERIC_FACET_SUFFIX :
-                        attributeName + DATE_FACET_SUFFIX;
+                attName = (facetType == FacetType.NUMERIC) ? attributeName + NUMERIC_FACET_SUFFIX
+                        : attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
-                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ?
-                        FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles) :
-                        FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
+                AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC)
+                        ? FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles)
+                        : FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
                     request.addAggregation(aggBuilder);
@@ -821,8 +822,8 @@ public class EsRepository implements IEsRepository {
                     Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
                     for (Bucket bucket : numRange.getBuckets()) {
                         // Case with no value : every bucket has a NaN value (as from, to or both)
-                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
-                                .equals(bucket.getFrom(), Double.NaN)) {
+                        if (Objects.equals(bucket.getTo(), Double.NaN)
+                                || Objects.equals(bucket.getFrom(), Double.NaN)) {
                             // If first bucket contains NaN value, it means there are no value at all
                             return;
                         }
@@ -834,7 +835,7 @@ public class EsRepository implements IEsRepository {
                                 // Better not return a facet
                                 return;
                             } // (-∞ -> value [
-                            // range is then [min -> value [
+                              // range is then [min -> value [
                             valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
                         } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
                             // range is then [value, max]
@@ -862,8 +863,8 @@ public class EsRepository implements IEsRepository {
                         // Parsing ranges
                         Range<OffsetDateTime> valueRange;
                         // Case with no value : every bucket has a NaN value (as from, to or both)
-                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
-                                .equals(bucket.getFrom(), Double.NaN)) {
+                        if (Objects.equals(bucket.getTo(), Double.NaN)
+                                || Objects.equals(bucket.getFrom(), Double.NaN)) {
                             // If first bucket contains NaN value, it means there are no value at all
                             return;
                         }
@@ -904,9 +905,8 @@ public class EsRepository implements IEsRepository {
         try {
             final List<T> results = new ArrayList<>();
             // OffsetDateTime must be formatted to be correctly used following Gson mapping
-            Object value = (pValue instanceof OffsetDateTime) ?
-                    OffsetDateTimeAdapter.format((OffsetDateTime) pValue) :
-                    pValue;
+            Object value = (pValue instanceof OffsetDateTime) ? OffsetDateTimeAdapter.format((OffsetDateTime) pValue)
+                    : pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
             SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
