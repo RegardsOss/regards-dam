@@ -110,16 +110,17 @@ public class CollectionController implements IResourceController<Collection> {
 
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a collection description file content", role = DefaultRole.PUBLIC)
-    public void retrieveCollectionDescription(@RequestParam(name = "origin", required = false) String origin,
-            @PathVariable("collection_ipId") String collectionIpId, HttpServletResponse response)
+    public void retrieveCollectionDescription(@PathVariable("collection_ipId") String collectionIpId,
+                                              HttpServletResponse response)
             throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
-            if (origin != null) {
-                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
-            }
+            // set the X-Frame-Options header value to SAMEORIGIN
+            // Because Chrome doesn't support ALLOW-FROM origin
+            // If you don't use a reverse proxy behind the gateway AND the front, this feature may not work
+            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "SAMEORIGIN");
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
             response.setContentLength(out.size());
