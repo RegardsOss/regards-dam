@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -110,18 +111,21 @@ public class CollectionController implements IResourceController<Collection> {
 
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a collection description file content", role = DefaultRole.PUBLIC)
-    public void retrieveCollectionDescription(@PathVariable("collection_ipId") String collectionIpId,
-                                              HttpServletResponse response)
+    public void retrieveCollectionDescription(@RequestParam(name = "origin", required = false) String origin,
+            @PathVariable("collection_ipId") String collectionIpId, HttpServletResponse response)
             throws EntityNotFoundException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
         if (file != null) {
-            // set the X-Frame-Options header value to SAMEORIGIN
-            // Because Chrome doesn't support ALLOW-FROM origin
-            // If you don't use a reverse proxy behind the gateway AND the front, this feature may not work
-            response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "SAMEORIGIN");
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + collectionIpId);
+            if (origin != null) {
+                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
+            }
+            String filename = collectionIpId;
+            if (MediaType.APPLICATION_PDF.equals(file.getType())) {
+                filename += ".pdf";
+            }
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + filename);
 
             out.write(file.getContent());
             response.setContentType(file.getType().toString());
