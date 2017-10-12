@@ -26,7 +26,6 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,7 +45,6 @@ import fr.cnes.regards.plugins.utils.PluginUtils;
  * @author Christophe Mertz
  *
  */
-@Ignore
 @RunWith(SpringRunner.class)
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 public class OracleConnectionPluginIntrospectionTest {
