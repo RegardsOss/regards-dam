@@ -20,12 +20,16 @@ package fr.cnes.regards.modules.entities.domain;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 /**
  * Abstraction for entities managing data files
@@ -34,12 +38,15 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Marc Sordi
  * @author oroussel
  */
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
 
     /**
      * Physical data file references
      */
-    private Multimap<DataType, DataFile> files;
+    @Column(name="files", columnDefinition = "text")
+    private Multimap<DataType, DataFile> files = HashMultimap.create();
 
     protected AbstractDataEntity() {
         this(null, null, null);
@@ -53,15 +60,8 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         return files;
     }
 
-    public void setFiles(Multimap<DataType, DataFile> pFiles) {
-        files = pFiles;
-    }
-
-    public void putFile (DataType dataType, DataFile dataFile) {
-        if (this.files == null) {
-            this.setFiles(HashMultimap.create());
-        }
-        this.files.put(dataType, dataFile);
+    public void setFiles(Multimap<DataType, DataFile> files) {
+        this.files = files;
     }
 
     @Override

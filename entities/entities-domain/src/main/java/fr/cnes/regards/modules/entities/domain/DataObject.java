@@ -18,15 +18,15 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.models.domain.Model;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * A DataObject is created by a DataSource when an external database is ingested.
