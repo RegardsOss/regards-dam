@@ -163,5 +163,10 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-oracle-plugins</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
