@@ -1,13 +1,8 @@
 package fr.cnes.regards.modules.entities.service;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
-import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
-import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.Model;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,13 +11,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.time.OffsetDateTime;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
+import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.models.dao.IModelRepository;
+import fr.cnes.regards.modules.models.domain.Model;
 
 @TestPropertySource(locations = {"classpath:test.properties"})
 @RunWith(SpringRunner.class)
@@ -64,6 +66,7 @@ public class DocumentServiceTest {
 
 
     @Test
+    @Commit
     public void testAddFiles() throws ModuleException, IOException {
         String fileLsUriTemplate = "/documents/" + document1.getId() + "/files/" + DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE;
         MockMultipartFile mockMultipartFile = new MockMultipartFile("document1.xml", "document1.xml", "doc/xml", "content of my file".getBytes());
