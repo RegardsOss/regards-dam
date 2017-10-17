@@ -117,7 +117,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-oracle-plugins</artifactId>
+			<artifactId>datasource-oracle-plugins</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
