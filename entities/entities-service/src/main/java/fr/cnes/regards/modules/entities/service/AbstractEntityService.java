@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -33,8 +34,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -47,7 +46,6 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
@@ -540,8 +538,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     updatedEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
                             updatedEntity.getDescriptionFile().getType()));
                 }
-            } else {
-                // this is a url
+            } else { // pFile is null
+                // this is an url
                 if (oldOne != null) {
                     oldOne.setType(null);
                     oldOne.setContent(null);
@@ -552,9 +550,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
                 }
             }
-        }
-        // for updates: let set back the old one, if there isn't any provided
-        else {
+        } else {  // No description file provided on entity to update : keep the current one
             updatedEntity.setDescriptionFile(oldOne);
         }
     }
