@@ -41,7 +41,6 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.DBConnection;
-import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
@@ -99,14 +98,15 @@ public class DBConnectionServiceTest {
 
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameter();
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataOracle(), "first configuration", parameters));
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre(), "second configuration", parameters,
-                5));
+        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
+                parameters));
+        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre("plugin-id-2"),
+                "second configuration", parameters, 5));
     }
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_060")
-    @Purpose("The system allows to list all the connections")    
+    @Purpose("The system allows to list all the connections")
     public void getAllDBConnection() {
         Mockito.when(pluginServiceMock.getPluginConfigurationsByType(IDBConnectionPlugin.class)).thenReturn(plgConfs);
         List<PluginConfiguration> connections = dbConnectionServiceMock.getAllDBConnections();
@@ -130,7 +130,7 @@ public class DBConnectionServiceTest {
         dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
-                .thenReturn(initializePluginMetaDataPostGre());
+                .thenReturn(initializePluginMetaDataPostGre("plugin-id-2"));
         dbConnectionServiceMock.createDBConnection(dbConnection);
         Assert.assertTrue(true);
     }
@@ -155,20 +155,10 @@ public class DBConnectionServiceTest {
         Assert.fail();
     }
 
-    private PluginMetaData initializePluginMetaDataOracle() {
-        final PluginMetaData pluginMetaData = new PluginMetaData();
-        pluginMetaData.setPluginClassName(DefaultOracleConnectionPlugin.class.getCanonicalName());
-        pluginMetaData.setPluginId("plugin-id");
-        pluginMetaData.setAuthor("CS-SI");
-        pluginMetaData.setVersion("1.0");
-        pluginMetaData.setParameters(initializePluginParameterType());
-        return pluginMetaData;
-    }
-
-    private PluginMetaData initializePluginMetaDataPostGre() {
+    private PluginMetaData initializePluginMetaDataPostGre(String pluginId) {
         final PluginMetaData pluginMetaData = new PluginMetaData();
         pluginMetaData.setPluginClassName(DefaultPostgreConnectionPlugin.class.getCanonicalName());
-        pluginMetaData.setPluginId("plugin-id-01");
+        pluginMetaData.setPluginId(pluginId);
         pluginMetaData.setAuthor("CS-SI");
         pluginMetaData.setVersion("1.1");
         pluginMetaData.setParameters(initializePluginParameterType());

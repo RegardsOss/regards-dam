@@ -96,5 +96,10 @@
 			<artifactId>amqp-monitoring-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency> 
+			<groupId>fr.cnes.regards.modules.datasources</groupId> 
+			<artifactId>datasource-oracle-plugins</artifactId> 
+			<scope>test</scope> 
+		</dependency> 
 	</dependencies>
 </project>

@@ -143,6 +143,11 @@
 			<artifactId>indexer-service</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasource-oracle-plugins</artifactId>
+			<scope>test</scope>
+		</dependency>
 		
 		<!-- Runtime dependencies -->
 		<dependency>

@@ -77,5 +77,10 @@
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>
 		</dependency>
+		<dependency> 
+			<groupId>fr.cnes.regards.modules.datasources</groupId> 
+			<artifactId>datasource-oracle-plugins</artifactId> 
+			<scope>test</scope> 
+		</dependency> 
 	</dependencies>
 </project>
