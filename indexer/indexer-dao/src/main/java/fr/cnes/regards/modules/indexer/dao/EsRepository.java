@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,7 +94,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -117,6 +117,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**
  * Elasticsearch repository implementation
+ * @author oroussel
  */
 @Repository
 public class EsRepository implements IEsRepository {
@@ -210,26 +211,31 @@ public class EsRepository implements IEsRepository {
             @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
             @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
             AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
-        LOGGER.info(String.format("host    : %s - address : %s - port    : %d\ncluster : %s", pEsHost, pEsAddress,
-                                  pEsPort, pEsClusterName));
         gson = pGson;
         esHost = Strings.isEmpty(pEsHost) ? null : pEsHost;
         esAddress = Strings.isEmpty(pEsAddress) ? null : pEsAddress;
         esPort = pEsPort;
         esClusterName = pEsClusterName;
         aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
+
+        String connectionInfoMessage = String.format(
+                                                     "Elastic search connection properties : host \"%s\", port \"%d\", cluster \"%s\"",
+                                                     esHost, esPort, esClusterName);
+        LOGGER.info(connectionInfoMessage);
+
         client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
         client.addTransportAddress(new InetSocketTransportAddress(
                 InetAddress.getByName((esHost != null) ? esHost : esAddress), esPort));
         // Testinf availability of ES
         List<DiscoveryNode> nodes = client.connectedNodes();
         if (nodes.isEmpty()) {
-            throw new NoNodeAvailableException("Elasticsearch is down");
+            throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
         }
     }
 
     @Override
     public void close() {
+        LOGGER.info("Closing connection");
         client.close();
     }
 
@@ -396,7 +402,7 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
-        SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
+        SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex());
         requestBuilder = requestBuilder.setTypes(searchKey.getSearchTypes());
         ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
         SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
@@ -413,41 +419,20 @@ public class EsRepository implements IEsRepository {
         // loop.
     }
 
-    @Override
-    public <R> void searchAll(SearchKey<?, R> searchKey, Consumer<R> action, ICriterion pCrit, String attributeSource) {
-        // If attribute source is 'toto.titi.tutu', result from ES is '{"toto":{"titi":{"tutu":{...}}}}'
-        // We just want "{...}"
-        String startJsonResultStr = attributeSource;
-        // BY default, if attributeSource does not contain '.', only one closing brace exists
-        int closingBracesCount = 1;
-        if (startJsonResultStr.contains(".")) {
-            String[] terms = startJsonResultStr.split("\\.");
-            startJsonResultStr = Joiner.on("\":{\"").join(terms);
-            closingBracesCount = terms.length;
-        }
-        startJsonResultStr = "{\"" + startJsonResultStr + "\":";
-
-        SearchRequestBuilder searchRequest = client.prepareSearch(searchKey.getSearchIndex().toLowerCase());
-        searchRequest = searchRequest.setTypes(searchKey.getSearchTypes());
-        ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
-        SearchResponse scrollResp = searchRequest.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
-                .setQuery(crit.accept(CRITERION_VISITOR)).setFetchSource(attributeSource, null)
-                .setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
-        int startIdx = startJsonResultStr.length();
-        // Scroll until no hits are returned
-        do {
-            for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                String source = hit.getSourceAsString();
-                if (!source.equals(EMPTY_JSON)) {
-                    action.accept(gson.fromJson(source.substring(startIdx, source.length() - closingBracesCount),
-                                                searchKey.getResultClass()));
-                }
-            }
-
-            scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
-                    .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
-        } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
-        // loop.
+    /**
+     * Returns a set of attribute values from search documents
+     * @param searchKey search key for documents of type R
+     * @param pCrit search criterion on documents of type R
+     * @param attributeSource document attribute to return
+     * @param <R> Type of document to apply search
+     * @return a set of unique attribute values
+     */
+    private <R> Set<Object> searchJoined(SearchKey<?, R> searchKey, ICriterion pCrit, String attributeSource) {
+        // Only first type is chosen, this case is too complex to permit a mutli-type search
+        // Add ".keyword" if attribute mapping type is of type text
+        String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], attributeSource)
+                ? attributeSource + ".keyword" : attributeSource;
+        return this.unique(searchKey, pCrit, attribute);
     }
 
     @Override
@@ -470,7 +455,7 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable> FacetPage<T> search(SearchKey<T, T> searchKey, Pageable pPageRequest,
             ICriterion pCrit, Map<String, FacetType> pFacetsMap) {
-        String index = searchKey.getSearchIndex().toLowerCase();
+        String index = searchKey.getSearchIndex();
         try {
             final List<T> results = new ArrayList<>();
             // Use filter instead of "direct" query (in theory, quickest because no score is computed)
@@ -525,8 +510,10 @@ public class EsRepository implements IEsRepository {
         }
     }
 
-    private <T extends IIndexable> SearchRequestBuilder createRequestBuilderForAgg(SearchKey<?, T> searchKey,
-            ICriterion pCrit) {
+    /**
+    * Build a SearchRequestBuilder following given ICriterion on searchKey with a result size of 0
+    */
+    private <T> SearchRequestBuilder createRequestBuilderForAgg(SearchKey<?, T> searchKey, ICriterion pCrit) {
         String index = searchKey.getSearchIndex().toLowerCase();
 
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
@@ -583,6 +570,23 @@ public class EsRepository implements IEsRepository {
         return OffsetDateTimeAdapter.parse(max.getValueAsString());
     }
 
+    public <T> Set<Object> unique(SearchKey<?, T> searchKey, ICriterion crit, String attName) {
+        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, crit);
+        // Assuming no mor than Integer.MAX_SIZE results will be returned
+        request = request.addAggregation(AggregationBuilders.terms(attName).field(attName).size(Integer.MAX_VALUE));
+        // Launch the request
+        SearchResponse response = getWithTimeouts(request);
+        Terms terms = response.getAggregations().get(attName);
+        if (terms == null) {
+            return Collections.emptySet();
+        }
+        Set<Object> results = new HashSet<>();
+        for (Terms.Bucket bucket : terms.getBuckets()) {
+            results.add(bucket.getKey());
+        }
+        return results;
+    }
+
     /**
      * Utility class to create a quadruple key (a pair of pairs) used by loading cache mechanism
      */
@@ -618,7 +622,7 @@ public class EsRepository implements IEsRepository {
                     // Using method Objects.hashCode(Object) to compare to be sure that the set will always be returned
                     // with same order
                     SortedSet<Object> results = new TreeSet<>(Comparator.comparing(Objects::hashCode));
-                    searchAll(key.getV1(), results::add, key.getV2(), key.getV3());
+                    results.addAll(searchJoined(key.getV1(), key.getV2(), key.getV3()));
                     return results;
                 }
             });
@@ -655,16 +659,41 @@ public class EsRepository implements IEsRepository {
         try {
             SortedSet<Object> objects = searchAllCache
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
-            return objects.stream().flatMap(o -> Arrays.stream((R[]) o)).distinct().filter(filterPredicate)
-                    .map(transformFct).collect(Collectors.toList());
+            return objects.stream().map(o -> (R) o).distinct().filter(filterPredicate).map(transformFct)
+                    .collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
             throw new RuntimeException(e); // NOSONAR
         }
     }
 
     /**
+     * Is given attribute (can be a composite attribute like toto.titi) of type text from ES mapping ?
+     * @param index concerned index
+     * @param type concerned type
+     * @param attribute attribute from type
+     * @return true or false
+     */
+    private boolean isTextMapping(String index, String type, String attribute) {
+        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(index.toLowerCase())
+                .setFields(attribute).get();
+        FieldMappingMetaData fieldMapping = response.fieldMappings(index.toLowerCase(), type, attribute);
+
+        if (fieldMapping != null) {
+            Map<String, Object> metaDataMap = fieldMapping.sourceAsMap();
+            String lastPathAtt = (attribute.contains(".") ? attribute.substring(attribute.lastIndexOf('.') + 1)
+                    : attribute);
+            if ((metaDataMap != null) && (metaDataMap.get(lastPathAtt) instanceof Map)) {
+                Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAtt);
+                if (mappingMap.containsKey("type")) {
+                    return mappingMap.get("type").equals("text");
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Add sort to the request
-     *
      * @param request search request
      * @param pSort map(attribute name, true if ascending)
      */
@@ -724,7 +753,6 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add aggregations to the search request.
-     *
      * @param pFacetsMap asked facets
      * @param request search request
      * @return true if a second pass is needed (managing range facets)
@@ -756,7 +784,6 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first pass request results) to create range aggregagtions.
-     *
      * @param pFacetsMap asked facets
      * @param request search request
      * @param aggsMap first pass aggregagtions results
@@ -790,7 +817,6 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Compute aggregations results to fill results facet map of an attribute
-     *
      * @param aggsMap aggregation resuls map
      * @param facets map of results facets
      * @param facetType type of facet for given attribute
@@ -926,9 +952,6 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Call specified request at least MAX_TIMEOUT_RETRIES
-     *
-     * @param request
-     * @return
      */
     private SearchResponse getWithTimeouts(SearchRequestBuilder request) {
         SearchResponse response;
