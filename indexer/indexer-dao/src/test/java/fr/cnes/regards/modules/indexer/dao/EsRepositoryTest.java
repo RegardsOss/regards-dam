@@ -235,9 +235,7 @@ public class EsRepositoryTest {
 
     /**
      * Load generated data into Elsaticsearch
-     *
-     * @param pCount
-     *            number of documents to insert
+     * @param pCount number of documents to insert
      */
     private void loadItemsBulk(int pCount) {
         repository.createIndex("loading");

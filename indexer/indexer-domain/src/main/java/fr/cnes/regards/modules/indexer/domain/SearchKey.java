@@ -45,7 +45,7 @@ public class SearchKey<S, R> {
         Assert.notNull(pSearchIndex);
         Assert.notNull(pSearchTypeMap);
         Assert.notEmpty(pSearchTypeMap);
-        searchIndex = pSearchIndex;
+        searchIndex = pSearchIndex.toLowerCase();
         searchTypeMap = pSearchTypeMap;
         searchTypes = searchTypeMap.keySet().toArray(new String[searchTypeMap.size()]);
     }
