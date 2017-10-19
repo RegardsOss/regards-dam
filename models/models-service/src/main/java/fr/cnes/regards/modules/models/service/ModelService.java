@@ -641,6 +641,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 // ClassNotFound is already covered by the getPluginsByType method
                 LOGGER.warn("Plugin class with name {} couldn't be instantiated", metaData.getPluginClassName());
+                LOGGER.debug(e.getMessage(), e);
             }
         }
 

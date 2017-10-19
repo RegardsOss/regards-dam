@@ -260,7 +260,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     /**
      * transform {@link TypeMetadataConfMapping} pluginConfigurations and pluginMetaDatas into Collection of resources
      */
-    private class TypeMetadataResourceConfMapping {
+    private static class TypeMetadataResourceConfMapping {
 
         private AttributeType attrType;
 
