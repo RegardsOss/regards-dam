@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -34,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -46,10 +47,8 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionTooLargeException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableCharsetException;
-import fr.cnes.regards.framework.module.rest.exception.EntityDescriptionUnacceptableType;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -78,6 +77,9 @@ import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
 import fr.cnes.regards.modules.entities.domain.event.EventType;
 import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
+import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionTooLargeException;
+import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableCharsetException;
+import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableType;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
@@ -382,7 +384,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     public void associate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
         final U entity = repository.findById(pEntityId);
         if (entity == null) {
-            throw new EntityNotFoundException(pEntityId);
+            throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         // Adding new tags to detached entity
         em.detach(entity);
@@ -423,7 +425,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     public void dissociate(Long pEntityId, Set<UniformResourceName> pIpIds) throws EntityNotFoundException {
         final U entity = repository.findById(pEntityId);
         if (entity == null) {
-            throw new EntityNotFoundException(pEntityId);
+            throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         // Removing tags to detached entity
         em.detach(entity);
@@ -550,7 +552,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
                 }
             }
-        } else {  // No description file provided on entity to update : keep the current one
+        } else { // No description file provided on entity to update : keep the current one
             updatedEntity.setDescriptionFile(oldOne);
         }
     }
@@ -648,7 +650,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         U entityInDb = repository.findById(pEntityId);
         em.detach(entityInDb);
         if ((entityInDb == null) || !entityInDb.getClass().equals(pEntity.getClass())) {
-            throw new EntityNotFoundException(pEntityId);
+            throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         if (!pEntityId.equals(pEntity.getId())) {
             throw new EntityInconsistentIdentifierException(pEntityId, pEntity.getId(), pEntity.getClass());
@@ -743,7 +745,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         Assert.notNull(pEntityId);
         final U toDelete = repository.findById(pEntityId);
         if (toDelete == null) {
-            throw new EntityNotFoundException(pEntityId);
+            throw new EntityNotFoundException(pEntityId, this.getClass());
         }
         getStorageService().deleteAIP(toDelete);
         return delete(toDelete);

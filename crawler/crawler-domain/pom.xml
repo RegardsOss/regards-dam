@@ -25,7 +25,6 @@
 	<artifactId>crawler-domain</artifactId>
 	<packaging>jar</packaging>
 	
-	<name>Crawler Domain</name>
 	<description>Model layer of Crawler module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>

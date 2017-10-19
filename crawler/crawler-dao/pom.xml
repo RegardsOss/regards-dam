@@ -25,7 +25,6 @@
 	<artifactId>crawler-dao</artifactId>
 	<packaging>jar</packaging>
 	
-	<name>Crawler DAO</name>
 	<description>DAO layer of Crawler module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>

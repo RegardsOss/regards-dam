@@ -29,6 +29,7 @@ import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
 import fr.cnes.regards.modules.models.service.exception.ImportException;
 
 /**
+ * Advice for specific model exceptions
  * @author Marc Sordi
  *
  */

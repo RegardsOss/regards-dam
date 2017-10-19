@@ -32,7 +32,10 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.cnes.regards.framework.module.rest.exception.*;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -98,7 +101,7 @@ public class ModelServiceTest {
         modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService);
     }
 
-    @Test(expected = EntityUnexpectedIdentifierException.class)
+    @Test(expected = EntityNotFoundException.class)
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test unexpected model creation")
     public void createUnexpectedModelTest() throws ModuleException {
@@ -158,7 +161,7 @@ public class ModelServiceTest {
         Assert.assertNotNull(modelService.getModel(modelId));
     }
 
-    @Test(expected = EntityNotIdentifiableException.class)
+    @Test(expected = EntityNotFoundException.class)
     public void updateUnexpectedModelTest() throws ModuleException {
         final Long modelId = 1L;
         final Model model = new Model();

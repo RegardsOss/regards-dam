@@ -29,9 +29,14 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.*;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -95,9 +100,9 @@ public class FragmentService implements IFragmentService {
                     String.format("Fragment with name \"%s\" already exists!", pFragment.getName()));
         }
         if (!attributeModelService.isFragmentCreatable(pFragment.getName())) {
-            throw new EntityAlreadyExistsException(String.format(
-                    "Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                    pFragment.getName()));
+            throw new EntityAlreadyExistsException(
+                    String.format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                                  pFragment.getName()));
         }
         return fragmentRepository.save(pFragment);
     }
@@ -114,7 +119,7 @@ public class FragmentService implements IFragmentService {
     @Override
     public Fragment updateFragment(Long pFragmentId, Fragment pFragment) throws ModuleException {
         if (!pFragment.isIdentifiable()) {
-            throw new EntityNotIdentifiableException(
+            throw new EntityNotFoundException(
                     String.format("Unknown identifier for fragment \"%s\"", pFragment.getName()));
         }
         if (!pFragmentId.equals(pFragment.getId())) {
@@ -130,7 +135,7 @@ public class FragmentService implements IFragmentService {
     public void deleteFragment(Long pFragmentId) throws ModuleException {
         // Check if fragment is empty
         final Iterable<AttributeModel> attModels = attributeModelRepository.findByFragmentId(pFragmentId);
-        if (attModels != null && !Iterables.isEmpty(attModels)) {
+        if ((attModels != null) && !Iterables.isEmpty(attModels)) {
             throw new EntityNotEmptyException(pFragmentId, Fragment.class);
         }
         if (fragmentRepository.exists(pFragmentId)) {
