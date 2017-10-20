@@ -46,6 +46,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.MatchType;
+import fr.cnes.regards.modules.indexer.domain.criterion.NotCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.OrCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.StringMatchCriterion;
@@ -64,7 +65,6 @@ import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
-@Ignore
 public class QueryParserTest {
 
     /**
@@ -315,6 +315,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{90 TO 120}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void integerRangeExclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final String lowerInclusion = "{";
@@ -339,6 +340,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:[90 TO 120]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void integerRangeInclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final String lowerInclusion = "[";
@@ -363,6 +365,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like bpm:{128.0 TO 145]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void doubleRangeSemiInclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.DOUBLE_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final String lowerInclusion = "{";
@@ -387,6 +390,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like distance:{0 TO 88]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void longRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LONG_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final String lowerInclusion = "{";
@@ -410,6 +414,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:[2007-12-03T10:15:30 TO 2007-12-03T11:15:30]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void OffsetDateTimeRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
                 .buildJsonPath(StaticProperties.PROPERTIES);
@@ -435,6 +440,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{* TO 2007-12-03T10:15:30}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void OffsetDateTimeLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
                 .buildJsonPath(StaticProperties.PROPERTIES);
@@ -456,6 +462,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{* TO 2007-12-03T10:15:30]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void OffsetDateTimeLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
                 .buildJsonPath(StaticProperties.PROPERTIES);
@@ -477,6 +484,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:{2007-12-03T10:15:30 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void OffsetDateTimeGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
                 .buildJsonPath(StaticProperties.PROPERTIES);
@@ -498,6 +506,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like date:[2007-12-03T10:15:30 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void OffsetDateTimeGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
                 .buildJsonPath(StaticProperties.PROPERTIES);
@@ -520,6 +529,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{* TO 1}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void integerLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final Integer upperValue = 1;
@@ -540,6 +550,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{* TO 1]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void integerLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final Integer upperValue = 1;
@@ -560,6 +571,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:{1 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void integerGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final Integer lowerValue = 1;
@@ -580,6 +592,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like altitude:[1 TO *}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void integerGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final Integer lowerValue = 1;
@@ -684,6 +697,7 @@ public class QueryParserTest {
     @Test
     @Purpose("Tests queries like releases:[2001-11-04T00:00:00 TO 2001-11-16T23:59:59]")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
     public void containsDateBetweenTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_ARRAY_ATTRIBUTE_MODEL
                 .buildJsonPath(StaticProperties.PROPERTIES);
@@ -733,5 +747,17 @@ public class QueryParserTest {
         final StringMatchCriterion crit = (StringMatchCriterion) criterion;
         Assert.assertEquals(MatchType.EQUALS, crit.getType());
         Assert.assertEquals("texte avec:des caractères+spéciaux", crit.getValue());
+    }
+
+    @Test
+    public void notMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
+
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String val = "harrypotter";
+        final ICriterion criterion = parser.parse(QUERY_PREFIX
+                + URLEncoder.encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof NotCriterion);
+
     }
 }

@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.opensearch.service.builder;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.builders.QueryTreeBuilder;
 import org.apache.lucene.queryparser.flexible.core.nodes.AndQueryNode;
+import org.apache.lucene.queryparser.flexible.core.nodes.BooleanQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.FieldQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.FuzzyQueryNode;
 import org.apache.lucene.queryparser.flexible.core.nodes.GroupQueryNode;
@@ -56,6 +57,7 @@ public class RegardsQueryTreeBuilder extends QueryTreeBuilder implements ICriter
         setBuilder(WildcardQueryNode.class, new WildcardQueryNodeBuilder());
         setBuilder(GroupQueryNode.class, new GroupQueryNodeBuilder());
         setBuilder(FuzzyQueryNode.class, new UnsupportedQueryNodeBuilder());
+        setBuilder(BooleanQueryNode.class, new BooleanNodeQueryBuilder());
     }
 
     @Override
