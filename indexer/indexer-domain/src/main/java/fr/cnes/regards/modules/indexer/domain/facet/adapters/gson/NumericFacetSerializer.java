@@ -106,7 +106,7 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
                 upperBound = OPENSEARCH_WILDCARD;
             }
             count = pEntry.getValue();
-            openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "]";
+            openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "}";
         }
 
     }
