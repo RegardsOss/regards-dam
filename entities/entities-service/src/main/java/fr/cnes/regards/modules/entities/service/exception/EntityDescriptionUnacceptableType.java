@@ -16,35 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.domain.converter;
+package fr.cnes.regards.modules.entities.service.exception;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import java.util.Collections;
-
-import org.springframework.http.MediaType;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@Converter(autoApply = true)
-public class MediaTypeConverter implements AttributeConverter<MediaType, String> {
+public class EntityDescriptionUnacceptableType extends ModuleException {
 
-    @Override
-    public String convertToDatabaseColumn(MediaType pAttribute) {
-        if (pAttribute == null) {
-            return null;
-        }
-        return MediaType.toString(Collections.singletonList(pAttribute));
-    }
+    private static final String UNACCEPTABLE_TYPE = "The system only accept description that are PDFs or Markdown. Not %s.";
 
-    @Override
-    public MediaType convertToEntityAttribute(String pDbData) {
-        if (pDbData == null) {
-            return null;
-        }
-        return MediaType.valueOf(pDbData);
+    /**
+     * @param pErrorMessage
+     */
+    public EntityDescriptionUnacceptableType(String pDescriptionType) {
+        super(String.format(UNACCEPTABLE_TYPE, pDescriptionType));
     }
 
 }

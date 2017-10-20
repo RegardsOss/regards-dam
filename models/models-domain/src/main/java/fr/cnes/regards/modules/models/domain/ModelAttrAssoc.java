@@ -205,7 +205,7 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             // TODO : Find a good idea to avoid this shit
             // Count plugin are really something different from others, lets treat them apart
             String pluginClassName=computationConf.getPluginClassName();
-            if(pluginClassName.equals("fr.cnes.regards.modules.entities.plugin.CountPlugin")) {
+            if("fr.cnes.regards.modules.entities.plugin.CountPlugin".equals(pluginClassName)) {
                 computation.setCount(new NoParamPluginType());
             } else {
                 // For plugins which are calculated according to a data object property, lets set the parameters and then the type

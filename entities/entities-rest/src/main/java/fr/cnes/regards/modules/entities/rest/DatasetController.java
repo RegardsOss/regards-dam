@@ -18,11 +18,12 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,10 +34,17 @@ import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.net.HttpHeaders;
+
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -163,7 +171,7 @@ public class DatasetController implements IResourceController<Dataset> {
             throws EntityNotFoundException {
         final Dataset dataset = service.load(pDatasetId);
         if (dataset == null) {
-            throw new EntityNotFoundException(pDatasetId);
+            throw new EntityNotFoundException(pDatasetId, Dataset.class);
         }
         final Resource<Dataset> resource = toResource(dataset);
         return new ResponseEntity<>(resource, HttpStatus.OK);
@@ -185,7 +193,6 @@ public class DatasetController implements IResourceController<Dataset> {
         }
         return new ResponseEntity<>(dataset, HttpStatus.OK);
     }
-
 
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")

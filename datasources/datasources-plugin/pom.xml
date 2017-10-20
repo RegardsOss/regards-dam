@@ -106,6 +106,7 @@
 			<artifactId>plugins-service</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

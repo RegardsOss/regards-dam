@@ -111,5 +111,10 @@
 			<artifactId>plugins-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasource-oracle-plugins</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 </project>

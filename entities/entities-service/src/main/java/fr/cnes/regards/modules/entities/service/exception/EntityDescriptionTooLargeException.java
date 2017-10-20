@@ -16,34 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.models.dao;
+package fr.cnes.regards.modules.entities.service.exception;
 
-import java.util.List;
-
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
-
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- *
- * {@link Model} repository
- *
- * @author Marc Sordi
+ * @author Sylvain Vissiere-Guerinet
  *
  */
-@Repository
-public interface IModelRepository extends CrudRepository<Model, Long> {
+public class EntityDescriptionTooLargeException extends ModuleException {
 
-    List<Model> findByType(EntityType pType);
+    private static final String DESCRIPTION_TOO_LARGE = "The system only accept description up to 10MB. %s do not respect this constraint.";
 
-    Model findByName(String pName);
+    /**
+     * @param pDescriptionName
+     */
+    public EntityDescriptionTooLargeException(String pDescriptionName) {
+        super(String.format(DESCRIPTION_TOO_LARGE, pDescriptionName));
+    }
 
-    @Override
-    @Modifying
-    @Query(value = "DELETE FROM {h-schema}t_model CASCADE", nativeQuery = true)
-    void deleteAll();
 }
