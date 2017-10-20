@@ -64,7 +64,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             .put(AttributeType.INTEGER, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDouble()))
             .put(AttributeType.INTEGER, RangeComparison.LE, pFacade -> ICriterion.le(pFacade.getField(), pFacade.getUpperBoundAsDouble()))
             .put(AttributeType.INTEGER, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.INTEGER, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
+            .put(AttributeType.INTEGER, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive() ,pFacade.getUpperBoundAsDouble(), pFacade.isUpperInclusive()))
 
 //            .put(AttributeType.INTEGER_ARRAY, RangeComparison.GE, pFacade -> ICriterion.ge(pFacade.getField(), pFacade.getLowerBoundAsInteger()))
 //            .put(AttributeType.INTEGER_ARRAY, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsInteger()))
@@ -82,7 +82,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             .put(AttributeType.DOUBLE, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDouble()))
             .put(AttributeType.DOUBLE, RangeComparison.LE, pFacade -> ICriterion.le(pFacade.getField(), pFacade.getUpperBoundAsDouble()))
             .put(AttributeType.DOUBLE, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.DOUBLE, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
+            .put(AttributeType.DOUBLE, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDouble(),pFacade.isUpperInclusive()))
 
 //            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.GE, pFacade -> ICriterion.ge(pFacade.getField(), pFacade.getLowerBoundAsDouble()))
 //            .put(AttributeType.DOUBLE_ARRAY, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDouble()))
@@ -100,7 +100,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             .put(AttributeType.LONG, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDouble()))
             .put(AttributeType.LONG, RangeComparison.LE, pFacade -> ICriterion.le(pFacade.getField(), pFacade.getUpperBoundAsDouble()))
             .put(AttributeType.LONG, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsDouble()))
-            .put(AttributeType.LONG, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDouble(), pFacade.getUpperBoundAsDouble()))
+            .put(AttributeType.LONG, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDouble(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDouble(),pFacade.isUpperInclusive()))
 
 //            .put(AttributeType.LONG_ARRAY, RangeComparison.GE, pFacade -> ICriterion.ge(pFacade.getField(), pFacade.getLowerBoundAsLong()))
 //            .put(AttributeType.LONG_ARRAY, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsLong()))
@@ -118,7 +118,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
             .put(AttributeType.DATE_ISO8601, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDateTime()))
             .put(AttributeType.DATE_ISO8601, RangeComparison.LE, pFacade -> ICriterion.le(pFacade.getField(), pFacade.getUpperBoundAsDateTime()))
             .put(AttributeType.DATE_ISO8601, RangeComparison.LT, pFacade -> ICriterion.lt(pFacade.getField(), pFacade.getUpperBoundAsDateTime()))
-            .put(AttributeType.DATE_ISO8601, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDateTime(), pFacade.getUpperBoundAsDateTime()))
+            .put(AttributeType.DATE_ISO8601, RangeComparison.BETWEEN, pFacade -> ICriterion.between(pFacade.getField(), pFacade.getLowerBoundAsDateTime(), pFacade.isLowerInclusive(), pFacade.getUpperBoundAsDateTime(),pFacade.isUpperInclusive()))
 
 //            .put(AttributeType.DATE_ARRAY, RangeComparison.GE, pFacade -> ICriterion.ge(pFacade.getField(), pFacade.getLowerBoundAsDateTime()))
 //            .put(AttributeType.DATE_ARRAY, RangeComparison.GT, pFacade -> ICriterion.gt(pFacade.getField(), pFacade.getLowerBoundAsDateTime()))
