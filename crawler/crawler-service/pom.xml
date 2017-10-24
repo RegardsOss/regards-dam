@@ -156,4 +156,18 @@
 		</dependency>
 
 	</dependencies>
+	
+	<profiles>
+		<profile>
+			<id>oracle</id>
+			<dependencies>
+				<dependency>
+					<groupId>fr.cnes.regards.modules.datasources</groupId>
+					<artifactId>datasource-oracle-plugins</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+	
 </project>
