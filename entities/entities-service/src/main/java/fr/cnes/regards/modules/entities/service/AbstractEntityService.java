@@ -511,7 +511,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,
             DescriptionFile oldOne) throws IOException, ModuleException {
         // we are updating/creating a description
-        if (updatedEntity.getDescriptionFile() != null) {
+        if ((updatedEntity.getDescriptionFile() != null) && !updatedEntity.getDescriptionFile().equals(oldOne)) {
             // this is a description file
             if ((pFile != null) && !pFile.isEmpty()) {
                 // collections and dataset only have a description which is a url or a file

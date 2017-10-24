@@ -23,7 +23,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -239,11 +243,12 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         dataSet21 = dsService.create(dataSet21, pdf);
         expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
-        expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM test"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
-        expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE + "?origin=test",
-                          expectations, "Could not fetch dataset description file", dataSet21.getIpId());
+        expectations.add(MockMvcResultMatchers.header().string(HttpHeaders.CONTENT_LENGTH,
+                                                               String.valueOf(pdf.getBytes().length)));
+
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
+                          "Could not fetch dataset description file", dataSet21.getIpId());
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
@@ -348,17 +353,17 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
         DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10");
-        performDefaultPost(
-                DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION + "?dataModelId="
-                        + dataModel.getId(), query, expectations, "Could not validate that subsetting clause");
+        performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
+                + "?dataModelId=" + dataModel.getId(), query, expectations,
+                           "Could not validate that subsetting clause");
 
         query = new DatasetController.Query("properties.DO_NOT_EXIST:10");
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
-        performDefaultPost(
-                DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION + "?dataModelId="
-                        + dataModel.getId(), query, expectations, "Could not validate that subsetting clause");
+        performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
+                + "?dataModelId=" + dataModel.getId(), query, expectations,
+                           "Could not validate that subsetting clause");
     }
 
     /**

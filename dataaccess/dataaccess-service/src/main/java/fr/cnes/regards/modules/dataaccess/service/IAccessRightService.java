@@ -28,4 +28,7 @@ public interface IAccessRightService {
     AccessRight updateAccessRight(Long pId, AccessRight pToBe) throws ModuleException;
 
     void deleteAccessRight(Long pId) throws ModuleException;
+
+    Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
+            throws EntityNotFoundException;
 }

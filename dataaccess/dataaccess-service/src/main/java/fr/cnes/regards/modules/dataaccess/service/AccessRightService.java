@@ -21,6 +21,8 @@ package fr.cnes.regards.modules.dataaccess.service;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -36,6 +38,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
@@ -91,6 +94,7 @@ public class AccessRightService implements IAccessRightService {
 
     /**
      * Retrieve groups access levels of a specified dataset
+     *
      * @param datasetIpId concerned datasetIpId, must not be null
      * @return a map { groupName, accessLevel }
      * @throws EntityNotFoundException if dataset doesn't exist
@@ -198,6 +202,34 @@ public class AccessRightService implements IAccessRightService {
         }
         repository.delete(pId);
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
+    }
+
+    @Override
+    public Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
+            throws EntityNotFoundException {
+        User user = new User(userEMail);
+
+        final Dataset ds = datasetService.load(datasetIpId);
+        if (ds == null) {
+            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
+        }
+        Set<AccessGroup> accessGroups = accessGroupService.retrieveAllUserAccessGroupsOrPublicAccessGroups(userEMail);
+        Boolean isAutorised = false;
+        for (AccessGroup accessGroup : accessGroups) {
+            // Check if the user is concerned by the accessGroup
+            if (accessGroup.isPublic() || accessGroup.getUsers().contains(user)) {
+                Optional<AccessRight> accessRightOptional = repository
+                        .findAccessRightByAccessGroupAndDataset(accessGroup, ds);
+                // Check if the accessRight allows to access to that dataset
+                if (accessRightOptional.isPresent()
+                        && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
+                    isAutorised = true;
+                    // Stop loop iteration
+                    break;
+                }
+            }
+        }
+        return isAutorised;
     }
 
 }

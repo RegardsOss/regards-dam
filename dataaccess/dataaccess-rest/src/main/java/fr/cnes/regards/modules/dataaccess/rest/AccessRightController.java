@@ -46,7 +46,7 @@ import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author Léo Mieulet
  */
 @RestController
 @RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -55,6 +55,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
     public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
+
+    public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
     @Autowired
     private IResourceService resourceService;
@@ -71,7 +73,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
             final Pageable pPageable, final PagedResourcesAssembler<AccessRight> pAssembler)
             throws EntityNotFoundException {
         Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDatasetIpId,
-                                                                                 pPageable);
+                pPageable);
         return new ResponseEntity<>(toPagedResources(accessRights, pAssembler), HttpStatus.OK);
     }
 
@@ -97,7 +99,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
     public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
-            @Valid @RequestBody AccessRight pToBe) throws ModuleException {
+                                                                   @Valid @RequestBody AccessRight pToBe) throws ModuleException {
         AccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
@@ -111,18 +113,27 @@ public class AccessRightController implements IResourceController<AccessRight> {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
+    @ResponseBody
+    @ResourceAccess(description = "check if an user has access to a dataset")
+    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(@RequestParam(name = "dataset") UniformResourceName datasetIpId,
+                                                                  @RequestParam(name = "user") String userEMail) throws EntityNotFoundException {
+        Boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
+        return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
+    }
+
     @Override
     public Resource<AccessRight> toResource(AccessRight pElement, Object... pExtras) {
         Resource<AccessRight> resource = new Resource<>(pElement);
         resourceService.addLink(resource, this.getClass(), "createAccessRight", LinkRels.CREATE,
-                                MethodParamFactory.build(AccessRight.class, pElement));
+                MethodParamFactory.build(AccessRight.class, pElement));
         resourceService.addLink(resource, this.getClass(), "deleteAccessRight", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAccessRight", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(AccessRight.class, pElement));
+                MethodParamFactory.build(Long.class, pElement.getId()),
+                MethodParamFactory.build(AccessRight.class, pElement));
         resourceService.addLink(resource, this.getClass(), "retrieveAccessRight", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                MethodParamFactory.build(Long.class, pElement.getId()));
         return resource;
     }
 

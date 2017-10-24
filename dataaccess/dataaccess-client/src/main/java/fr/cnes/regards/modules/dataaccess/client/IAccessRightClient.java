@@ -37,15 +37,17 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 @RestClient(name = "rs-dam")
-@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = IAccessRightClient.PATH_ACCESS_RIGHTS, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+        produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessRightClient { // NOSONAR
 
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
     public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
+
+    public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
@@ -57,21 +59,24 @@ public interface IAccessRightClient { // NOSONAR
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<Resource<AccessRight>> createAccessRight(
-            @Valid @RequestBody AccessRight pAccessRight);
+    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight pAccessRight);
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(
-            @Valid @PathVariable("accessright_id") Long pId);
+    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    public ResponseEntity<Resource<AccessRight>> updateAccessRight(
-            @Valid @PathVariable("accessright_id") Long pId, @Valid AccessRight pToBe);
+    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
+            @Valid AccessRight pToBe);
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
+    @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
+    @ResponseBody
+    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
+            @RequestParam(name = "dataset") UniformResourceName datasetIpId,
+            @RequestParam(name = "user") String userEMail);
 }

@@ -18,13 +18,22 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
+import java.util.Arrays;
+
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.validation.constraints.Pattern;
 
-import fr.cnes.regards.framework.jpa.converter.MediaTypeConverter;
 import org.hibernate.annotations.Type;
 import org.springframework.http.MediaType;
 
+import fr.cnes.regards.framework.jpa.converter.MediaTypeConverter;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -101,5 +110,33 @@ public class DescriptionFile {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if ((o == null) || (getClass() != o.getClass().getSuperclass())) {
+            return false;
+        }
+
+        DescriptionFile that = (DescriptionFile) o;
+
+        if (getUrl() != null ? !getUrl().equals(that.getUrl()) : that.getUrl() != null) {
+            return false;
+        }
+        if (!Arrays.equals(getContent(), that.getContent())) {
+            return false;
+        }
+        return getType() != null ? getType().equals(that.getType()) : that.getType() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getUrl() != null ? getUrl().hashCode() : 0;
+        result = (31 * result) + Arrays.hashCode(getContent());
+        result = (31 * result) + (getType() != null ? getType().hashCode() : 0);
+        return result;
     }
 }

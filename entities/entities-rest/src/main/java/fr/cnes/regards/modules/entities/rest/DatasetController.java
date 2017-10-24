@@ -18,19 +18,20 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -42,8 +43,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.google.common.net.HttpHeaders;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
@@ -203,29 +202,21 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     /**
-     * Retrieves a dataset description and set the X-Frame-Options header value to ALLOW-FROM origin
+     * Retrieves a dataset description - only for rs-catalog because permissions not checked right here
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a dataset description file content")
-    public void retrieveDatasetDescription(@RequestParam(name = "origin", required = false) String origin,
-            @PathVariable("dataset_ipId") String datasetIpId, HttpServletResponse response)
-            throws EntityNotFoundException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
+    public ResponseEntity<InputStreamResource> retrieveDatasetDescription(
+            @PathVariable("dataset_ipId") String datasetIpId) throws EntityNotFoundException, IOException {
         DescriptionFile file = service.retrieveDescription(UniformResourceName.fromString(datasetIpId));
-        if (file != null) {
-            if (origin != null) {
-                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
-            }
-            out.write(file.getContent());
-            response.setContentType(file.getType().toString());
-            response.setContentLength(out.size());
-            response.getOutputStream().write(out.toByteArray());
-            response.getOutputStream().flush();
-            response.setStatus(HttpStatus.OK.value());
-        } else {
-            response.setStatus(HttpStatus.NO_CONTENT.value());
-        }
+        final ByteArrayInputStream inputStream = new ByteArrayInputStream(file.getContent());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentLength(file.getContent().length);
+        headers.setContentType(file.getType());
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + datasetIpId);
+
+        return new ResponseEntity<>(new InputStreamResource(inputStream), headers, HttpStatus.OK);
     }
 
     /**
