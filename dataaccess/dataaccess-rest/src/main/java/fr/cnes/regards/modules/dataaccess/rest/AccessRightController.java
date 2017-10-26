@@ -18,29 +18,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import java.beans.PropertyEditorSupport;
-
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -51,10 +28,24 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.beans.PropertyEditorSupport;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
+ * @author Léo Mieulet
  */
 @RestController
 @RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -63,6 +54,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
     public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
+
+    public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
     @Autowired
     private IResourceService resourceService;
@@ -79,7 +72,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
             final Pageable pPageable, final PagedResourcesAssembler<AccessRight> pAssembler)
             throws EntityNotFoundException {
         Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDatasetIpId,
-                                                                                 pPageable);
+                pPageable);
         return new ResponseEntity<>(toPagedResources(accessRights, pAssembler), HttpStatus.OK);
     }
 
@@ -105,7 +98,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
     public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
-            @Valid @RequestBody AccessRight pToBe) throws ModuleException {
+                                                                   @Valid @RequestBody AccessRight pToBe) throws ModuleException {
         AccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
@@ -119,18 +112,27 @@ public class AccessRightController implements IResourceController<AccessRight> {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
+    @ResponseBody
+    @ResourceAccess(description = "check if an user has access to a dataset")
+    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(@RequestParam(name = "dataset") UniformResourceName datasetIpId,
+                                                                  @RequestParam(name = "user") String userEMail) throws EntityNotFoundException {
+        Boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
+        return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
+    }
+
     @Override
     public Resource<AccessRight> toResource(AccessRight pElement, Object... pExtras) {
         Resource<AccessRight> resource = new Resource<>(pElement);
         resourceService.addLink(resource, this.getClass(), "createAccessRight", LinkRels.CREATE,
-                                MethodParamFactory.build(AccessRight.class, pElement));
+                MethodParamFactory.build(AccessRight.class, pElement));
         resourceService.addLink(resource, this.getClass(), "deleteAccessRight", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAccessRight", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(AccessRight.class, pElement));
+                MethodParamFactory.build(Long.class, pElement.getId()),
+                MethodParamFactory.build(AccessRight.class, pElement));
         resourceService.addLink(resource, this.getClass(), "retrieveAccessRight", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                MethodParamFactory.build(Long.class, pElement.getId()));
         return resource;
     }
 

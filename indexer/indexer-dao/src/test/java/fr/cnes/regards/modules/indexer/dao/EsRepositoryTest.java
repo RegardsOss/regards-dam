@@ -14,11 +14,9 @@ import java.util.stream.Stream;
 
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,10 +31,14 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * EsRepository test
  */
+@RunWith(SpringRunner.class)
+@TestPropertySource("classpath:test.properties")
 public class EsRepositoryTest {
 
     /**
@@ -49,20 +51,28 @@ public class EsRepositoryTest {
      */
     private static Gson gson;
 
+    @Value("${regards.elasticsearch.address}")
+    private String elasticHost;
+    @Value("${regards.elasticsearch.cluster.name}")
+    private String elasticName;
+    @Value("${regards.elasticsearch.tcp.port}")
+    private int elasticPort;
+
     /**
      * Befor class setting up method
      *
      * @throws Exception
      *             exception
      */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         boolean repositoryOK = true;
         try {
             gson = new GsonBuilder().create();
-            // FIXME valeurs en dur pour l'instant
-            repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards",
-                                          new AggregationBuilderFacetTypeVisitor(10, 1));
+            repository = new EsRepository(gson, null, elasticHost,
+                    elasticPort,
+                    elasticName,
+                    new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -85,8 +95,8 @@ public class EsRepositoryTest {
         cleanFct.accept("loading");
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (repository != null) {
             repository.close();
         }
@@ -225,9 +235,7 @@ public class EsRepositoryTest {
 
     /**
      * Load generated data into Elsaticsearch
-     *
-     * @param pCount
-     *            number of documents to insert
+     * @param pCount number of documents to insert
      */
     private void loadItemsBulk(int pCount) {
         repository.createIndex("loading");

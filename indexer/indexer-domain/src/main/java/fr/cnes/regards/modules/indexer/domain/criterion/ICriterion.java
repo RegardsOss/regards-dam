@@ -29,326 +29,396 @@ import fr.cnes.regards.modules.indexer.domain.IMapping;
 
 /**
  * Search criterion
- *
  * @author oroussel
  */
 @Gsonable
 public interface ICriterion {
 
-    <U> U accept(ICriterionVisitor<U> pVisitor);
+    <U> U accept(ICriterionVisitor<U> visitor);
 
     static ICriterion all() {
         return EmptyCriterion.INSTANCE;
     }
 
-    static ICriterion and(ICriterion... pCrits) {
-        return new AndCriterion(pCrits);
+    static ICriterion and(ICriterion... crits) {
+        return new AndCriterion(crits);
     }
 
-    static ICriterion and(Iterable<ICriterion> pCrits) {
-        return new AndCriterion(pCrits);
+    static ICriterion and(Iterable<ICriterion> crits) {
+        return new AndCriterion(crits);
     }
 
-    static ICriterion or(ICriterion... pCrits) {
-        return new OrCriterion(pCrits);
+    static ICriterion or(ICriterion... crits) {
+        return new OrCriterion(crits);
     }
 
-    static ICriterion or(Iterable<ICriterion> pCrits) {
-        return new OrCriterion(pCrits);
+    static ICriterion or(Iterable<ICriterion> crits) {
+        return new OrCriterion(crits);
     }
 
-    static ICriterion not(ICriterion pCrit) {
-        return new NotCriterion(pCrit);
+    static ICriterion not(ICriterion crit) {
+        return new NotCriterion(crit);
     }
 
-    static <T extends Number & Comparable<T>> ICriterion gt(String pAttName, T pValue) {
-        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER, pValue));
+    static <T extends Number & Comparable<T>> ICriterion gt(String attName, T value) {
+        RangeCriterion<T> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER, value));
         return crit;
     }
 
-    static <T extends Number & Comparable<T>> ICriterion ge(String pAttName, T pValue) {
-        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pValue));
+    static <T extends Number & Comparable<T>> ICriterion ge(String attName, T value) {
+        RangeCriterion<T> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, value));
         return crit;
     }
 
-    static <T extends Number & Comparable<T>> ICriterion lt(String pAttName, T pValue) {
-        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS, pValue));
+    static <T extends Number & Comparable<T>> ICriterion lt(String attName, T value) {
+        RangeCriterion<T> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS, value));
         return crit;
     }
 
-    static <T extends Number & Comparable<T>> ICriterion le(String pAttName, T pValue) {
-        RangeCriterion<T> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pValue));
+    static <T extends Number & Comparable<T>> ICriterion le(String attName, T value) {
+        RangeCriterion<T> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, value));
         return crit;
     }
 
-    static ICriterion gt(String pAttName, OffsetDateTime pDate) {
-        DateRangeCriterion crit = new DateRangeCriterion(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER, pDate));
+    static ICriterion gt(String attName, OffsetDateTime date) {
+        DateRangeCriterion crit = new DateRangeCriterion(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER, date));
         return crit;
     }
 
-    static ICriterion ge(String pAttName, OffsetDateTime pDate) {
-        DateRangeCriterion crit = new DateRangeCriterion(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pDate));
+    static ICriterion ge(String attName, OffsetDateTime date) {
+        DateRangeCriterion crit = new DateRangeCriterion(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, date));
         return crit;
     }
 
-    static ICriterion lt(String pAttName, OffsetDateTime pDate) {
-        DateRangeCriterion crit = new DateRangeCriterion(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS, pDate));
+    static ICriterion lt(String attName, OffsetDateTime date) {
+        DateRangeCriterion crit = new DateRangeCriterion(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS, date));
         return crit;
     }
 
-    static ICriterion le(String pAttName, OffsetDateTime pDate) {
-        DateRangeCriterion crit = new DateRangeCriterion(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pDate));
+    static ICriterion le(String attName, OffsetDateTime date) {
+        DateRangeCriterion crit = new DateRangeCriterion(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, date));
         return crit;
     }
 
-    static ICriterion eq(String pAttName, int pValue) {
-        return new IntMatchCriterion(pAttName, pValue);
+    static ICriterion eq(String attName, int value) {
+        return new IntMatchCriterion(attName, value);
     }
 
-    static ICriterion eq(String pAttName, long pValue) {
-        return new LongMatchCriterion(pAttName, pValue);
+    static ICriterion eq(String attName, long value) {
+        return new LongMatchCriterion(attName, value);
     }
 
-    static ICriterion isTrue(String pAttName) {
-        return ICriterion.eq(pAttName, true);
+    static ICriterion isTrue(String attName) {
+        return ICriterion.eq(attName, true);
     }
 
-    static ICriterion isFalse(String pAttName) {
-        return ICriterion.eq(pAttName, false);
+    static ICriterion isFalse(String attName) {
+        return ICriterion.eq(attName, false);
     }
 
-    static ICriterion eq(String pAttName, boolean pValue) {
-        return new BooleanMatchCriterion(pAttName, pValue);
+    static ICriterion eq(String attName, boolean value) {
+        return new BooleanMatchCriterion(attName, value);
     }
 
-    static ICriterion in(String pAttName, int... pValues) {
-        return new OrCriterion(IntStream.of(pValues).mapToObj(val -> new IntMatchCriterion(pAttName, val))
-                .collect(Collectors.toList()));
+    static ICriterion in(String attName, int... values) {
+        return new OrCriterion(IntStream.of(values).mapToObj(val -> new IntMatchCriterion(attName, val))
+                                       .collect(Collectors.toList()));
     }
 
-    static ICriterion in(String pAttName, long... pValues) {
-        return new OrCriterion(LongStream.of(pValues).mapToObj(val -> new LongMatchCriterion(pAttName, val))
-                .collect(Collectors.toList()));
+    static ICriterion in(String attName, long... values) {
+        return new OrCriterion(LongStream.of(values).mapToObj(val -> new LongMatchCriterion(attName, val))
+                                       .collect(Collectors.toList()));
     }
 
-    static ICriterion eq(String pAttName, double pValue, double pPrecision) {
-        RangeCriterion<Double> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pValue - pPrecision));
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pValue + pPrecision));
+    static ICriterion eq(String attName, double value, double precision) {
+        RangeCriterion<Double> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, value - precision));
+        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, value + precision));
         return crit;
     }
 
-    static ICriterion ne(String pAttName, int pValue) {
-        return new NotCriterion(ICriterion.eq(pAttName, pValue));
+    static ICriterion ne(String attName, int value) {
+        return new NotCriterion(ICriterion.eq(attName, value));
     }
 
-    static ICriterion ne(String pAttName, long pValue) {
-        return new NotCriterion(ICriterion.eq(pAttName, pValue));
+    static ICriterion ne(String attName, long value) {
+        return new NotCriterion(ICriterion.eq(attName, value));
     }
 
-    static ICriterion ne(String pAttName, double pValue, double pPrecision) {
-        return ICriterion.not(ICriterion.eq(pAttName, pValue, pPrecision));
+    static ICriterion ne(String attName, double value, double precision) {
+        return ICriterion.not(ICriterion.eq(attName, value, precision));
     }
 
     /**
      * Criterion to test if a parameter is exactly the provided text or if a String array parameter contains an element
      * which is exactly the provided text
-     * @param pAttName String or String array attribute
-     * @param pText provided text
+     * @param attName String or String array attribute
+     * @param text provided text
      * @return criterion
      */
-    static ICriterion eq(String pAttName, String pText) {
-        return new StringMatchCriterion(pAttName, MatchType.EQUALS, pText);
+    static ICriterion eq(String attName, String text) {
+        return new StringMatchCriterion(attName, MatchType.EQUALS, text);
     }
 
     /**
      * Criterion to test if a parameter starts with the provided text or if a String array parameter contains an element
      * that starts with the provided text
-     * @param pAttName String or String array attribute
-     * @param pText provided text
+     * @param attName String or String array attribute
+     * @param text provided text
      * @return criterion
      */
-    static ICriterion startsWith(String pAttName, String pText) {
-        return new StringMatchCriterion(pAttName, MatchType.STARTS_WITH, pText);
+    static ICriterion startsWith(String attName, String text) {
+        return new StringMatchCriterion(attName, MatchType.STARTS_WITH, text);
     }
 
     /**
      * Criterion to test if a parameter ends with the provided text or if a String array parameter contains an element
      * that ends with the provided text
-     * @param pAttName String or String array attribute
-     * @param pText provided text
+     * @param attName String or String array attribute
+     * @param text provided text
      * @return criterion
      */
-    static ICriterion endsWith(String pAttName, String pText) {
-        return new StringMatchCriterion(pAttName, MatchType.ENDS_WITH, pText);
+    static ICriterion endsWith(String attName, String text) {
+        return new StringMatchCriterion(attName, MatchType.ENDS_WITH, text);
     }
 
     /**
      * Criterion to test if a parameter contain the provided text or if a String array parameter contains an element
      * that contains the provided text
-     * @param pAttName String or String array attribute
-     * @param pText provided text
+     * @param attName String or String array attribute
+     * @param text provided text
      * @return criterion
      */
-    static ICriterion contains(String pAttName, String pText) {
-        return new StringMatchCriterion(pAttName, MatchType.CONTAINS, pText);
+    static ICriterion contains(String attName, String text) {
+        return new StringMatchCriterion(attName, MatchType.CONTAINS, text);
     }
 
     /**
      * Criterion to test if an array parameter contains specified value
-     * @param pAttName attribute name
-     * @param pValue value to search
+     * @param attName attribute name
+     * @param value value to search
      * @return criterion
      */
-    static ICriterion contains(String pAttName, int pValue) {
-        return ICriterion.eq(pAttName, pValue);
+    static ICriterion contains(String attName, int value) {
+        return ICriterion.eq(attName, value);
     }
 
     /**
      * Criterion to test if an array parameter contains specified value
-     * @param pAttName attribute name
-     * @param pValue value to search
+     * @param attName attribute name
+     * @param value value to search
      * @return criterion
      */
-    static ICriterion contains(String pAttName, long pValue) {
-        return ICriterion.eq(pAttName, pValue);
+    static ICriterion contains(String attName, long value) {
+        return ICriterion.eq(attName, value);
     }
 
     /**
      * Criterion to test if a double array parameter contains specified double value specifying precision
-     * @param pAttName attribute name
-     * @param pValue value to search
-     * @param pPrecision wanted precision
+     * @param attName attribute name
+     * @param value value to search
+     * @param precision wanted precision
      * @return criterion
      */
-    static ICriterion contains(String pAttName, double pValue, double pPrecision) {
-        return ICriterion.eq(pAttName, pValue, pPrecision);
+    static ICriterion contains(String attName, double value, double precision) {
+        return ICriterion.eq(attName, value, precision);
     }
 
     /**
      * Criterion to test if a date array parameter contains a date between given lower and upper dates
-     * @param pAttName attribute name
-     * @param pLowerDate inclusive lower bound
-     * @param pUpperDate inclusive upper bound
+     * @param attName attribute name
+     * @param lowerDate inclusive lower bound
+     * @param upperDate inclusive upper bound
      * @return criterion
      */
-    static ICriterion containsDateBetween(String pAttName, OffsetDateTime pLowerDate, OffsetDateTime pUpperDate) {
-        return ICriterion.between(pAttName, pLowerDate, pUpperDate);
+    static ICriterion containsDateBetween(String attName, OffsetDateTime lowerDate, OffsetDateTime upperDate) {
+        return ICriterion.between(attName, lowerDate, upperDate);
     }
 
     /**
      * Criterion to test if a string parameter has one of the provided values
-     * @param pAttName attribute name
-     * @param pTexts text array to test
+     * @param attName attribute name
+     * @param texts text array to test
      * @return criterion
      */
-    static ICriterion in(String pAttName, String... pTexts) {
+    static ICriterion in(String attName, String... texts) {
         // If one of the texts contains a blank character, StringMatchAnyCriterion cannot be used due to ES limitations
-        if (Stream.of(pTexts).anyMatch(str -> str.contains(" "))) {
+        if (Stream.of(texts).anyMatch(str -> str.contains(" "))) {
             return new OrCriterion(
-                    Stream.of(pTexts).map(str -> ICriterion.eq(pAttName, str)).collect(Collectors.toList()));
+                    Stream.of(texts).map(str -> ICriterion.eq(attName, str)).collect(Collectors.toList()));
         }
-        return new StringMatchAnyCriterion(pAttName, pTexts);
+        return new StringMatchAnyCriterion(attName, texts);
     }
 
     /**
      * Criterion to test if an int parameter has a value into given range
-     * @param pAttName attribute name
-     * @param pLower inclusive lower bound
-     * @param pUpper inclusive upper bound
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param upper inclusive upper bound
      * @return criterion
      */
-    static ICriterion between(String pAttName, int pLower, int pUpper) {
-        RangeCriterion<Integer> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pLower));
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pUpper));
+    static ICriterion between(String attName, int lower, int upper) {
+        return between(attName, lower, true, upper, true);
+    }
+
+    /**
+     * Criterion to test if a long parameter has a value into given range
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param upper inclusive upper bound
+     * @return criterion
+     */
+    static ICriterion between(String attName, long lower, long upper) {
+        return between(attName, lower, true, upper, true);
+    }
+
+    /**
+     * Criterion to test if a date parameter is into given range period
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param upper inclusive upper bound
+     * @return criterion
+     */
+    static ICriterion between(String attName, OffsetDateTime lower, OffsetDateTime upper) {
+        return between(attName, lower, true, upper, true);
+    }
+
+    /**
+     * Criterion to test if a double parameter has a value into given range
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param upper inclusive upper bound
+     * @return criterion
+     */
+    static ICriterion between(String attName, double lower, double upper) {
+        return between(attName, lower, true, upper, true);
+    }
+
+    /**
+     * Criterion to test if an int parameter has a value into given range
+     * @param attName attribute name
+     * @param lower lower bound
+     * @param lowerInclusive inclusive lower bound or not
+     * @param upper upper bound
+     * @param upperInclusive inclusive upper bound or not
+     * @return criterion
+     */
+    static ICriterion between(String attName, int lower, boolean lowerInclusive, int upper, boolean upperInclusive) {
+        RangeCriterion<Integer> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(
+                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
+                                      lower));
+        crit.addValueComparison(
+                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
+                                      upper));
         return crit;
     }
 
     /**
      * Criterion to test if a long parameter has a value into given range
-     * @param pAttName attribute name
-     * @param pLower inclusive lower bound
-     * @param pUpper inclusive upper bound
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param lowerInclusive inclusive lower bound or not
+     * @param upper inclusive upper bound
+     * @param upperInclusive inclusive upper bound or not
      * @return criterion
      */
-    static ICriterion between(String pAttName, long pLower, long pUpper) {
-        RangeCriterion<Long> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pLower));
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pUpper));
+    static ICriterion between(String attName, long lower, boolean lowerInclusive, long upper,
+            boolean upperInclusive) {
+        RangeCriterion<Long> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(
+                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
+                                      lower));
+        crit.addValueComparison(
+                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
+                                      upper));
         return crit;
     }
 
     /**
      * Criterion to test if a date parameter is into given range period
-     * @param pAttName attribute name
-     * @param pLower inclusive lower bound
-     * @param pUpper inclusive upper bound
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param lowerInclusive inclusive lower bound or not
+     * @param upper inclusive upper bound
+     * @param upperInclusive inclusive upper bound or not
      * @return criterion
      */
-    static ICriterion between(String pAttName, OffsetDateTime pLower, OffsetDateTime pUpper) {
-        DateRangeCriterion crit = new DateRangeCriterion(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pLower));
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pUpper));
+    static ICriterion between(String attName, OffsetDateTime lower, boolean lowerInclusive, OffsetDateTime upper,
+            boolean upperInclusive) {
+        DateRangeCriterion crit = new DateRangeCriterion(attName);
+        crit.addValueComparison(
+                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
+                                      lower));
+        crit.addValueComparison(
+                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
+                                      upper));
         return crit;
     }
 
     /**
      * Criterion to test if a double parameter has a value into given range
-     * @param pAttName attribute name
-     * @param pLower inclusive lower bound
-     * @param pUpper inclusive upper bound
+     * @param attName attribute name
+     * @param lower inclusive lower bound
+     * @param lowerInclusive inclusive lower bound or not
+     * @param upper inclusive upper bound
+     * @param upperInclusive inclusive upper bound or not
      * @return criterion
      */
-    static ICriterion between(String pAttName, double pLower, double pUpper) {
-        RangeCriterion<Double> crit = new RangeCriterion<>(pAttName);
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.GREATER_OR_EQUAL, pLower));
-        crit.addValueComparison(new ValueComparison<>(ComparisonOperator.LESS_OR_EQUAL, pUpper));
+    static ICriterion between(String attName, double lower, boolean lowerInclusive, double upper,
+            boolean upperInclusive) {
+        RangeCriterion<Double> crit = new RangeCriterion<>(attName);
+        crit.addValueComparison(
+                new ValueComparison<>(lowerInclusive ? ComparisonOperator.GREATER_OR_EQUAL : ComparisonOperator.GREATER,
+                                      lower));
+        crit.addValueComparison(
+                new ValueComparison<>(upperInclusive ? ComparisonOperator.LESS_OR_EQUAL : ComparisonOperator.LESS,
+                                      upper));
         return crit;
     }
 
     /**
      * Criterion to test if a numeric value (int or double) is into (inclusive) given interval attribute name
-     * @param pAttName interval attribute name
-     * @param pValue value to test inclusion
+     * @param attName interval attribute name
+     * @param value value to test inclusion
      * @return criterion
      */
     // CHECKSTYLE:OFF
-    static <T extends Number & Comparable<T>> ICriterion into(String pAttName, T pValue) {
-        return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pValue),
-                              ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pValue));
+    static <T extends Number & Comparable<T>> ICriterion into(String attName, T value) {
+        return ICriterion.and(ICriterion.le(attName + "." + IMapping.RANGE_LOWER_BOUND, value),
+                              ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, value));
     }
 
     /**
      * Criterion to test if given date range intersects given interval attribute name
-     * @param pAttName interval attribute name
-     * @param pLowerBound lower bound
-     * @param pUpperBound upper bound
+     * @param attName interval attribute name
+     * @param lowerBound lower bound
+     * @param upperBound upper bound
      * @return criterion
      */
-    static ICriterion intersects(String pAttName, OffsetDateTime pLowerBound, OffsetDateTime pUpperBound) {
-        return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pUpperBound),
-                              ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
+    static ICriterion intersects(String attName, OffsetDateTime lowerBound, OffsetDateTime upperBound) {
+        return ICriterion.and(ICriterion.le(attName + "." + IMapping.RANGE_LOWER_BOUND, upperBound),
+                              ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, lowerBound));
     }
 
     /**
      * Criterion to test if given number range intersects given interval attribute name
-     * @param pAttName interval attribute name
-     * @param pLowerBound lower bound
-     * @param pUpperBound upper bound
+     * @param attName interval attribute name
+     * @param lowerBound lower bound
+     * @param upperBound upper bound
      * @return criterion
      */
-    static <T extends Number & Comparable<T>> ICriterion intersects(String pAttName, T pLowerBound, T pUpperBound) {
-        return ICriterion.and(ICriterion.le(pAttName + "." + IMapping.RANGE_LOWER_BOUND, pUpperBound),
-                              ICriterion.ge(pAttName + "." + IMapping.RANGE_UPPER_BOUND, pLowerBound));
+    static <T extends Number & Comparable<T>> ICriterion intersects(String attName, T lowerBound, T upperBound) {
+        return ICriterion.and(ICriterion.le(attName + "." + IMapping.RANGE_LOWER_BOUND, upperBound),
+                              ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, lowerBound));
     }
 
     // CHECKSTYLE:ON

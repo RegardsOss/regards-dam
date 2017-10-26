@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.opensearch.service.builder;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.builders.QueryTreeBuilder;
 import org.apache.lucene.queryparser.flexible.core.nodes.ModifierQueryNode;
+import org.apache.lucene.queryparser.flexible.core.nodes.ModifierQueryNode.Modifier;
 import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -34,7 +35,12 @@ public class ModifierQueryNodeBuilder implements ICriterionQueryBuilder {
     @Override
     public ICriterion build(final QueryNode pQueryNode) throws QueryNodeException {
         final ModifierQueryNode modifierQueryNode = (ModifierQueryNode) pQueryNode;
-        return (ICriterion) (modifierQueryNode).getChild().getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+        if (modifierQueryNode.getModifier().equals(Modifier.MOD_NOT)) {
+            return ICriterion
+                    .not((ICriterion) (modifierQueryNode).getChild().getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID));
+        } else {
+            return (ICriterion) (modifierQueryNode).getChild().getTag(QueryTreeBuilder.QUERY_TREE_BUILDER_TAGID);
+        }
     }
 
 }

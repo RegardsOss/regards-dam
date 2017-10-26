@@ -24,10 +24,33 @@
 	<groupId>fr.cnes.regards.modules.datasources</groupId>
 	<artifactId>datasources-plugin</artifactId>
 
+	<name>Data Sources Plugins</name>
+	<description>Plugins of the Data Sources module</description>
+	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
+	<inceptionYear>2016</inceptionYear>
+	<licenses>
+		<license>
+			<name>GNU General Public License (GNU GPL)</name>
+			<url>http://www.gnu.org/licenses/gpl.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<organization>
+		<name>CNES</name>
+		<url>https://cnes.fr/fr</url>
+	</organization>
+	<developers>
+		<developer>
+			<name>REGARDS Team</name>
+			<organization>CS Systèmes d'Information</organization>
+			<organizationUrl>http://www.c-s.fr</organizationUrl>
+		</developer>
+	</developers>
+
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>datasources</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.1.0</version>
 	</parent>
 
 	<dependencies>
@@ -55,19 +78,6 @@
 			<groupId>com.mchange</groupId>
 			<artifactId>c3p0</artifactId>
 		</dependency>
-
-		<!-- Oracle driver -->
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<version>11.2.0.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>orai18n</artifactId>
-			<version>11.2.0.4</version>
-		</dependency>
-		<!-- Oracle driver -->
 		
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
@@ -97,6 +107,7 @@
 			<artifactId>module-plugins-service</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>

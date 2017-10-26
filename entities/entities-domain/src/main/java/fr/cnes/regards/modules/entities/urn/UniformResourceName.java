@@ -18,13 +18,14 @@
  */
 package fr.cnes.regards.modules.entities.urn;
 
+import java.util.StringJoiner;
+import java.util.UUID;
+import java.util.regex.Pattern;
+
 import javax.persistence.Convert;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.util.StringJoiner;
-import java.util.UUID;
-import java.util.regex.Pattern;
 
 import org.springframework.util.Assert;
 
@@ -208,8 +209,7 @@ public class UniformResourceName {
      * @return a new instance of {@link UniformResourceName}
      */
     public static UniformResourceName fromString(String pUrn) {
-        final Pattern pattern = Pattern.compile(URN_PATTERN);
-        Assert.isTrue(pattern.matcher(pUrn).matches());
+        Assert.isTrue(PATTERN.matcher(pUrn).matches());
         final String[] stringFragment = pUrn.split(DELIMITER);
         final OAISIdentifier oaisIdentifier = OAISIdentifier.valueOf(stringFragment[1]);
         final EntityType entityType = EntityType.valueOf(stringFragment[2]);

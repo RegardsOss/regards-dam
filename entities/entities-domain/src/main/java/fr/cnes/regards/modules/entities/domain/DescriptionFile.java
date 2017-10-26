@@ -18,13 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
-import javax.validation.constraints.Pattern;
-
+import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
 import org.hibernate.annotations.Type;
 import org.springframework.http.MediaType;
 
-import fr.cnes.regards.modules.entities.domain.converter.MediaTypeConverter;
+import javax.persistence.*;
+import javax.validation.constraints.Pattern;
+import java.util.Arrays;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -102,5 +102,25 @@ public class DescriptionFile {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass().getSuperclass()) return false;
+
+        DescriptionFile that = (DescriptionFile) o;
+
+        if (getUrl() != null ? !getUrl().equals(that.getUrl()) : that.getUrl() != null) return false;
+        if (!Arrays.equals(getContent(), that.getContent())) return false;
+        return getType() != null ? getType().equals(that.getType()) : that.getType() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getUrl() != null ? getUrl().hashCode() : 0;
+        result = 31 * result + Arrays.hashCode(getContent());
+        result = 31 * result + (getType() != null ? getType().hashCode() : 0);
+        return result;
     }
 }

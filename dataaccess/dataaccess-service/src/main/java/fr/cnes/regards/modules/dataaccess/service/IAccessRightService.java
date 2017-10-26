@@ -1,15 +1,14 @@
 package fr.cnes.regards.modules.dataaccess.service;
 
-import java.util.Map;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Map;
 
 /**
  * Created by oroussel on 03/07/17.
@@ -28,4 +27,6 @@ public interface IAccessRightService {
     AccessRight updateAccessRight(Long pId, AccessRight pToBe) throws ModuleException;
 
     void deleteAccessRight(Long pId) throws ModuleException;
+
+    Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail) throws EntityNotFoundException;
 }

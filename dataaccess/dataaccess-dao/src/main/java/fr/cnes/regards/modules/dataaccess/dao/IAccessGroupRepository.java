@@ -18,15 +18,14 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
-import java.util.Set;
-
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import java.util.Set;
 
 /**
  *
@@ -59,4 +58,5 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      */
     Page<AccessGroup> findAllByIsPublic(Boolean isPublic, Pageable pPageable);
 
+    Set<AccessGroup> findAllByUsersOrIsPublic(User user, Boolean aTrue);
 }
