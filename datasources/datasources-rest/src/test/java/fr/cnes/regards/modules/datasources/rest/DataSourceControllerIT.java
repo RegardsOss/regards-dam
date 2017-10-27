@@ -354,7 +354,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("The system allows to delete a datasource")
     public void deleteDataSource() {
         final List<ResultMatcher> expectations = new ArrayList<>();
-
+        expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
         // Create a DataSource
         final DataSource dataSource = createDataSourceWithFromClause();
         performDefaultPost(DataSourceController.TYPE_MAPPING, dataSource, expectations,
