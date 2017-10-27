@@ -199,8 +199,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         fileList.add(dataset);
         fileList.add(firstFile);
 
-        performDefaultFileUploadPost(DatasetController.DATASET_PATH, fileList, expectations,
-                                     "Failed to create a new dataset");
+        performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
+                                 "Failed to create a new dataset");
 
         final Dataset dataSet21 = new Dataset(model1, DEFAULT_TENANT, "dataSet21");
         dataSet21.setLicence("licence");
@@ -213,22 +213,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         fileList.clear();
         fileList.add(pdf);
         fileList.add(dataset21);
-        performDefaultFileUploadPost(DatasetController.DATASET_PATH, fileList, expectations,
-                                     "Failed to create a new dataset");
-    }
-
-    @Override
-    protected MockMultipartHttpServletRequestBuilder getMultipartRequestBuilder(final String pAuthToken,
-            final List<MockMultipartFile> pFiles, final String pUrlTemplate, final Object... pUrlVars) {
-
-        final MockMultipartHttpServletRequestBuilder multipartRequestBuilder = MockMvcRequestBuilders
-                .fileUpload(pUrlTemplate, pUrlVars);
-        for (final MockMultipartFile file : pFiles) {
-            multipartRequestBuilder.file(file);
-        }
-        multipartRequestBuilder.accept(MediaType.APPLICATION_JSON_UTF8);
-        addSecurityHeader(multipartRequestBuilder, pAuthToken);
-        return multipartRequestBuilder;
+        performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
+                                 "Failed to create a new dataset");
     }
 
     @Ignore
@@ -281,7 +267,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(dataset);
 
-        performDefaultFileUpload(RequestMethod.POST, DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
+        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
                                  parts, expectations, "Failed to update a specific dataset using its id",
                                  dataSetClone.getId());
 
@@ -304,7 +290,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(dataset);
 
-        performDefaultFileUpload(RequestMethod.POST, DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
+        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
                                  parts, expectations, "Failed to update a specific dataset using its id",
                                  dataSetClone.getId());
     }

@@ -169,7 +169,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
                 collectionStr.getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
-        performDefaultFileUploadPost(COLLECTIONS, parts, expectations, "Failed to create a new collection");
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
         //we have tested to create a collection with a pdf description, so lets test with an url
         Collection collectionWithUrl = new Collection(model1, DEFAULT_TENANT, "collectionWithURL");
@@ -177,7 +177,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         parts.clear();
         parts.add(new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_UTF8_VALUE,
                 gson(collectionWithUrl).getBytes()));
-        performDefaultFileUploadPost(COLLECTIONS, parts, expectations, "Failed to create a new collection");
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
     }
 
@@ -236,7 +236,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
 
-        performDefaultFileUpload(RequestMethod.POST, COLLECTIONS_COLLECTION_ID, parts, expectations,
+        performDefaultFileUpload(COLLECTIONS_COLLECTION_ID, parts, expectations,
                                  "Failed to update a specific collection using its id", collection1.getId());
     }
 
@@ -257,23 +257,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
 
-        performDefaultFileUpload(RequestMethod.POST, COLLECTIONS_COLLECTION_ID, parts, expectations,
+        performDefaultFileUpload(COLLECTIONS_COLLECTION_ID, parts, expectations,
                                  "Failed to update a specific collection using its id", collection1.getId());
 
-    }
-
-    @Override
-    protected MockMultipartHttpServletRequestBuilder getMultipartRequestBuilder(final String pAuthToken,
-            final List<MockMultipartFile> pFiles, final String pUrlTemplate, final Object... pUrlVars) {
-
-        final MockMultipartHttpServletRequestBuilder multipartRequestBuilder = MockMvcRequestBuilders
-                .fileUpload(pUrlTemplate, pUrlVars);
-        for (final MockMultipartFile file : pFiles) {
-            multipartRequestBuilder.file(file);
-        }
-        multipartRequestBuilder.accept(MediaType.APPLICATION_JSON_UTF8);
-        addSecurityHeader(multipartRequestBuilder, pAuthToken);
-        return multipartRequestBuilder;
     }
 
     // TODO: add delete by ip id

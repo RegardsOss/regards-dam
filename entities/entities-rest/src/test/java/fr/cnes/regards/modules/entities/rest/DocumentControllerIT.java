@@ -260,8 +260,8 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
         pFileList.add(new MockMultipartFile("files", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input));
         pFileList.add(new MockMultipartFile("files", "other-file-name.data", "text/plain", "some other type".getBytes()));
         // Upload files
-        performDefaultFileUploadPost(DOCUMENTS_DOCUMENT_ID_FILES, pFileList, expectations,
-                "Failed to upload files to a document", document1.getId());
+        performDefaultFileUpload(DOCUMENTS_DOCUMENT_ID_FILES, pFileList, expectations,
+                                 "Failed to upload files to a document", document1.getId());
 
         // Check if everything is ok
         document1 = documentRepository.findById(document1.getId());
