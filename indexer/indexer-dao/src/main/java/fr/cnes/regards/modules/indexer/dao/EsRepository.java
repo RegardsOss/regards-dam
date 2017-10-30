@@ -18,9 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -108,9 +105,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -532,7 +530,8 @@ public class EsRepository implements IEsRepository {
                 response = getWithTimeouts(request);
             }
 
-            // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist (not necessarly)
+            // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
+            // (not necessarly)
             if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
                 saveReminder(searchKey, pageRequest, crit, sort, response);
             }
@@ -561,21 +560,22 @@ public class EsRepository implements IEsRepository {
 
     private <T extends IIndexable> void saveReminder(SearchKey<T, T> searchKey, Pageable pageRequest, ICriterion crit,
             Sort sort, SearchResponse response) {
-        // Store last sort value in order to use searchAfter next time
-        Object[] sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
-        OffsetDateTime expirationDate = OffsetDateTime.now()
-                .plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
-        // Create a Reminder and save it into ES for next page
-        SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest.next());
-        reminder.setExpirationDate(expirationDate);
-        reminder.setSearchAfterSortValues(sortValues);
+        if (response.getHits().getHits().length != 0) {
+            // Store last sort value in order to use searchAfter next time
+            Object[] sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
+            OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
+            // Create a Reminder and save it into ES for next page
+            SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest.next());
+            reminder.setExpirationDate(expirationDate);
+            reminder.setSearchAfterSortValues(sortValues);
 
-        save(REMINDER_IDX, reminder);
-        // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MS that delete all reminders whom
-        // expiration date has been reached
-        reminderCleanExecutor.schedule(
-                () -> deleteByQuery(REMINDER_IDX, ICriterion.le("expirationDate", OffsetDateTime.now())),
-                KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
+            save(REMINDER_IDX, reminder);
+            // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MS that delete all reminders whom
+            // expiration date has been reached
+            reminderCleanExecutor
+                    .schedule(() -> deleteByQuery(REMINDER_IDX, ICriterion.le("expirationDate", OffsetDateTime.now())),
+                              KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
+        }
     }
 
     private <T extends IIndexable> Object[] advanceWithSearchAfter(ICriterion crit, SearchKey<T, T> searchKey,
