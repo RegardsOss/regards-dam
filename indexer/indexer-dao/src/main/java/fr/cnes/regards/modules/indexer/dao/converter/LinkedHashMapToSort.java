@@ -18,22 +18,16 @@ import org.springframework.data.domain.Sort.Order;
  */
 public class LinkedHashMapToSort implements Converter<LinkedHashMap<String, Boolean>, Sort> {
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-     */
     @Override
-    public Sort convert(LinkedHashMap<String, Boolean> pSource) {
-        if (pSource == null) {
+    public Sort convert(LinkedHashMap<String, Boolean> sortMap) {
+        if (sortMap == null) {
             return null;
         }
-
         List<Order> orders = new ArrayList<>();
         BiConsumer<? super String, ? super Boolean> addNewOrder = (property, ascendance) -> orders
                 .add(new Order(ascendance ? Direction.ASC : Direction.DESC, property));
 
-        pSource.forEach(addNewOrder);
+        sortMap.forEach(addNewOrder);
         return new Sort(orders);
     }
 

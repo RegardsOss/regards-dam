@@ -33,33 +33,33 @@ public interface IIndexerService {
 
     /**
      * Create index if not already exists
-     * @param pIndex index name
+     * @param index index name
      * @return true if index exists after method returns, false overwise
      */
-    boolean createIndex(String pIndex);
+    boolean createIndex(String index);
 
     /**
      * Delete index if index exists
-     * @param pIndex index name
+     * @param index index name
      * @return true if index doesn't exist after method returns
      */
-    boolean deleteIndex(String pIndex);
+    boolean deleteIndex(String index);
 
-    boolean indexExists(String pIndex);
+    boolean indexExists(String index);
 
-    boolean saveEntity(String pIndex, IIndexable pEntity);
+    boolean saveEntity(String index, IIndexable entity);
 
     /**
      * Method only used for tests. Elasticsearch performs refreshes every second. So, il a search is called just after
      * a save, the document will not be available. A manual refresh is necessary (on saveBulkEntities, it is
      * automaticaly called)
-     * @param pIndex index to refresh
+     * @param index index to refresh
      */
-    void refresh(String pIndex);
+    void refresh(String index);
 
-    int saveBulkEntities(String pIndex, IIndexable... pEntities);
+    int saveBulkEntities(String index, IIndexable... entities);
 
-    int saveBulkEntities(String pIndex, Collection<? extends IIndexable> pEntities);
+    int saveBulkEntities(String index, Collection<? extends IIndexable> entities);
 
-    boolean deleteEntity(String pIndex, IIndexable pEntity);
+    boolean deleteEntity(String index, IIndexable entity);
 }

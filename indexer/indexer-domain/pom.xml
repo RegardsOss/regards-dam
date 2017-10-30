@@ -43,6 +43,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>jpa-data-regards</artifactId>
+		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>

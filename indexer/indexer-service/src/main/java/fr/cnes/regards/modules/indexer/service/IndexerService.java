@@ -27,12 +27,15 @@ import org.springframework.stereotype.Service;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
 @Service
 public class IndexerService implements IIndexerService {
 
     @Autowired
     private IEsRepository repository;
+
+
 
     @Override
     public boolean createIndex(String pIndex) {
