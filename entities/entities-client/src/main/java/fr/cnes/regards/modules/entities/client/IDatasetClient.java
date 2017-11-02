@@ -40,6 +40,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * @author Sylvain Vissiere-Guerinet
+ * @author Christophe Mertz
  */
 @RestClient(name = "rs-dam")
 @RequestMapping(value = IDatasetClient.DATASET_PATH, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -56,61 +57,70 @@ public interface IDatasetClient {
     public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
 
     @RequestMapping(method = RequestMethod.GET)
-    ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(@RequestParam("page") int pPage,
-            @RequestParam("size") int pSize);
+    ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(@RequestParam("page") int page,
+            @RequestParam("size") int size);
 
     /**
      * Retrieve a dataset using its id
      *
-     * @param pDatasetId
+     * @param datasetId
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
-    ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long pDatasetId);
+    ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long datasetId);
+
+    /**
+     * Retrieve a dataset using its ip id
+     *
+     * @param datasetId
+     * @return
+     */
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
+    ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_ipId") String datasetIpId);
 
     /**
      * Delete dataset
      *
-     * @param pDatasetId
+     * @param datasetId
      * @return
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
-    ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long pDatasetId);
+    ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long datasetId);
 
     /**
      * Update dataset
      *
-     * @param pDatasetId
-     * @param pDataset
+     * @param datasetId
+     * @param dataset
      * @return
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
-    ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long pDatasetId,
-            @RequestBody Dataset pDataset);
+    ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
+            @RequestBody Dataset dataset);
 
     /**
      * Entry point to handle dissociation of {@link Dataset} specified by its id to other entities
      *
-     * @param pDatasetId       {@link Dataset} id
-     * @param pToBeDissociated entity to dissociate
+     * @param datasetId       {@link Dataset} id
+     * @param toBeDissociated entity to dissociate
      * @return {@link Dataset} as a {@link Resource}
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_DISSOCIATE_PATH)
-    ResponseEntity<Resource<Dataset>> dissociateDataset(@PathVariable("dataset_id") Long pDatasetId,
-            @RequestBody Set<UniformResourceName> pToBeDissociated);
+    ResponseEntity<Resource<Dataset>> dissociateDataset(@PathVariable("dataset_id") Long datasetId,
+            @RequestBody Set<UniformResourceName> toBeDissociated);
 
     /**
      * Entry point to handle association of {@link Dataset} specified by its id to other entities
      *
-     * @param pDatasetId          {@link Dataset} id
-     * @param pToBeAssociatedWith entities to be associated
+     * @param datasetId          {@link Dataset} id
+     * @param toBeAssociatedWith entities to be associated
      * @return {@link Dataset} as a {@link Resource}
      * @throws ModuleException if error occurs
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_ASSOCIATE_PATH)
-    ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long pDatasetId,
-            @RequestBody Set<UniformResourceName> pToBeAssociatedWith);
+    ResponseEntity<Resource<Dataset>> associateDataset(@PathVariable("dataset_id") Long datasetId,
+            @RequestBody Set<UniformResourceName> toBeAssociatedWith);
 
     /**
      * Returns the dataset description file
