@@ -269,7 +269,7 @@ public class DocumentController implements IResourceController<Document> {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DocumentController.DOCUMENT_FILES_SINGLE_MAPPING)
     @ResponseBody
-    @ResourceAccess(description = "delete the document using its id")
+    @ResourceAccess(description = "delete the document file using its id")
     public HttpEntity<Resource<Document>> deleteDocumentFile(@PathVariable("document_id") final Long pDocumentId,
                                                              @PathVariable("file_checksum") final String fileChecksum)
             throws ModuleException, IOException {

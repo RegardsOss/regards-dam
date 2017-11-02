@@ -1,35 +1,5 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
-import java.io.Serializable;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -45,11 +15,27 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
-import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
+import fr.cnes.regards.modules.indexer.domain.facet.*;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class EsQueryTest {
 
@@ -61,6 +47,7 @@ public class EsQueryTest {
 
     private static final int BIG_VOLUME_SIZE = 1_000;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EsQueryTest.class);
     /**
      * Class to test
      */
@@ -77,16 +64,24 @@ public class EsQueryTest {
      */
     @BeforeClass
     public static void setUp() throws Exception {
+        Map<String, String> propMap = Maps.newHashMap();
         // By now, repository try to connect localhost:9300 for ElasticSearch
         boolean repositoryOK = true;
+        // we get the properties into target/test-classes because this is where maven will put the filtered file(with
+        // real values and not placeholder)
+        Stream<String> props = Files.lines(Paths.get("target/test-classes/test.properties"));
+        props.filter(line -> !(line.startsWith("#") || line.trim().isEmpty())).forEach(line -> {
+            String[] keyVal = line.split("=");
+            propMap.put(keyVal[0], keyVal[1]);
+        });
         try {
             gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
                     .create();
-            // FIXME valeurs en dur pour l'instant
-            // repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
-            repository = new EsRepository(gson, null, "localhost", 9300, "regards",
-                                          new AggregationBuilderFacetTypeVisitor(100, 5));
+            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
+                    Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
+                    propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(100, 5));
         } catch (NoNodeAvailableException e) {
+            LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
         }
         // Do not launch tests is Elasticsearch is not available
@@ -604,6 +599,7 @@ public class EsQueryTest {
     }
 
     @Test
+    @Ignore
     public void testPageOther10_000() throws InterruptedException {
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
         sortMap.put("properties.text", true);
@@ -651,6 +647,7 @@ public class EsQueryTest {
     }
 
     @Test
+    @Ignore
     public void testFrom0To10MNoSortNoCrit() throws InterruptedException {
         ICriterion crit = ICriterion.all();
         SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
@@ -669,6 +666,7 @@ public class EsQueryTest {
     }
 
     @Test
+    @Ignore
     public void test10_000WithAggs() throws InterruptedException {
         ICriterion crit = ICriterion.all();
         SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);

@@ -151,6 +151,9 @@ public class DocumentService extends AbstractEntityService<Document> implements 
 
     private DataFile retrieveDataFile(Document doc, String fileChecksum) throws EntityNotFoundException {
         Collection<DataFile> docFiles = doc.getDocumentFiles();
+        if (docFiles == null) {
+            throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);
+        }
         Optional<DataFile> dataFileToRemove = docFiles.stream().filter(dataFile -> fileChecksum.equals(dataFile.getChecksum())).findFirst();
         if (!dataFileToRemove.isPresent()) {
             throw new EntityNotFoundException(fileChecksum.toString(), DataFile.class);
