@@ -1,16 +1,16 @@
 package fr.cnes.regards.modules.entities.domain.converter;
 
-import javax.persistence.AttributeConverter;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Map;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
+
+import javax.persistence.AttributeConverter;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * This {@link AttributeConverter} allows to convert a LocalDate to persist with JPA.
@@ -34,10 +34,10 @@ public class FilesMultiMapConverter implements AttributeConverter<Multimap<DataT
     @Override
     public Multimap<DataType, DataFile> convertToEntityAttribute(String dbData) {
         final HashMultimap<DataType, DataFile> result = HashMultimap.create();
-        final Map<DataType, Collection<DataFile>> map = gson.fromJson(dbData, ourType);
-        for (final Map.Entry<DataType, Collection<DataFile>> e : map.entrySet()) {
+        final Map<String, Collection<DataFile>> map = gson.fromJson(dbData, ourType);
+        for (final Map.Entry<String, Collection<DataFile>> e : map.entrySet()) {
             final Collection<DataFile> value = e.getValue();
-            result.putAll(e.getKey(), value);
+            result.putAll(DataType.valueOf(e.getKey()), value);
         }
         return result;
     }
