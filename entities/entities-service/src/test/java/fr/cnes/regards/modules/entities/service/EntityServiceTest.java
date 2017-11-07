@@ -31,15 +31,18 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
-import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
-import fr.cnes.regards.modules.entities.domain.*;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Collection;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -49,8 +52,6 @@ import fr.cnes.regards.modules.models.service.IModelService;
  *
  */
 public class EntityServiceTest {
-
-    private EntityService entityServiceMocked;
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
@@ -120,76 +121,9 @@ public class EntityServiceTest {
         IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
-        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
-                null, null, entitiesRepositoryMocked, emMocked, publisherMocked, runtimeTenantResolver, Mockito.mock(
-                IDescriptionFileRepository.class));
-
-        //        entityServiceMocked = new EntityService(pModelAttributeService, entitiesRepositoryMocked, pModelService, null,
-        //                null, null, emMocked, publisherMocked);
         Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);
         Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(doc);
         Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(dataset);
-    }
-
-    /*
-     * @Requirement("REGARDS_DSL_DAM_COL_050")
-     *
-     * @Purpose("Si une collection cible est associée à une collection source alors la collection source doit aussi être associée à la collection cible (navigation bidirectionnelle)."
-     * )
-     *
-     * @Test public void testAssociateCollectionSourceToTarget() { final List<AbstractEntity> col3List = new
-     * ArrayList<>(); col3List.add(collection3); final Set<UniformResourceName> col3URNList = new HashSet<>();
-     * col3URNList.add(collection3.getIpId());
-     * Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-     *
-     * // TODO // entityServiceMocked.associate(collection2, col3URNList);
-     * Assert.assertTrue(collection3.getTags().contains(collection2.getIpId().toString())); }
-     */
-
-    @Requirement("REGARDS_DSL_DAM_CAT_450")
-    @Purpose("Le système doit permettre d’ajouter un tag de type « collection » sur un ou plusieurs AIP de type « data » à partir d’une liste d’IP_ID.")
-    @Test
-    public void testAssociateDataToCollectionList() throws EntityNotFoundException {
-        final List<AbstractEntity> col3List = new ArrayList<>();
-        col3List.add(collection3);
-        final Set<UniformResourceName> col3URNList = new HashSet<>();
-        col3URNList.add(collection3.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-        Mockito.when(entitiesRepositoryMocked.findOneByIpId(data.getIpId())).thenReturn(data);
-        Mockito.when(entitiesRepositoryMocked.save(data)).thenReturn(data);
-        entityServiceMocked.associate(data.getId(), col3URNList);
-        Assert.assertTrue(data.getTags().contains(collection3.getIpId().toString()));
-    }
-
-    @Requirement("REGARDS_DSL_DAM_CAT_310")
-    @Purpose("Le système doit permettre d’ajouter un AIP de données dans un jeu de données à partir de son IP_ID (ajout d'un tag sur l'AIP de données).")
-    @Test
-    public void testAssociateDataToDatasetList() throws EntityNotFoundException {
-        final List<AbstractEntity> datasetList = new ArrayList<>();
-        datasetList.add(dataset);
-        final Set<UniformResourceName> datasetURNList = new HashSet<>();
-        datasetURNList.add(dataset.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(datasetURNList)).thenReturn(datasetList);
-        Mockito.when(entitiesRepositoryMocked.findOneByIpId(data.getIpId())).thenReturn(data);
-        Mockito.when(entitiesRepositoryMocked.save(data)).thenReturn(data);
-        entityServiceMocked.associate(data.getId(), datasetURNList);
-        Assert.assertTrue(data.getTags().contains(dataset.getIpId().toString()));
-    }
-
-    @Requirement("REGARDS_DSL_DAM_CAT_050")
-    @Purpose("Le système doit permettre d’associer un document à une ou plusieurs collections.")
-    @Test
-    public void testAssociateDocToCollectionList() throws EntityNotFoundException {
-        final List<AbstractEntity> col3List = new ArrayList<>();
-        col3List.add(collection3);
-        final Set<UniformResourceName> col3URNList = new HashSet<>();
-        col3URNList.add(collection3.getIpId());
-        Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col3URNList)).thenReturn(col3List);
-        Mockito.when(entitiesRepositoryMocked.findById(data.getId())).thenReturn(data);
-        Mockito.when(entitiesRepositoryMocked.findOneByIpId(data.getIpId())).thenReturn(data);
-        Mockito.when(entitiesRepositoryMocked.save(data)).thenReturn(data);
-        entityServiceMocked.associate(data.getId(), col3URNList);
-        Assert.assertTrue(data.getTags().contains(collection3.getIpId().toString()));
     }
 
     @Test
@@ -217,24 +151,9 @@ public class EntityServiceTest {
         Assert.assertFalse(dataset.getTags().contains(doc.getIpId().toString()));
     }
 
-    /*
-     * @Requirement("REGARDS_DSL_DAM_COL_230")
-     *
-     * @Purpose("Si la collection courante est dissociée d’une collection alors cette dernière doit aussi être dissociée de la collection courante (suppression de la navigation bidirectionnelle)."
-     * )
-     *
-     * @Test public void testDissociate() { final List<AbstractEntity> col2List = new ArrayList<>();
-     * col2List.add(collection2); final Set<UniformResourceName> col2URNList = new HashSet<>();
-     * col2URNList.add(collection2.getIpId());
-     * Mockito.when(entitiesRepositoryMocked.findByIpIdIn(col2URNList)).thenReturn(col2List);
-     * entityServiceMocked.dissociate(collection3, col2URNList);
-     * Assert.assertFalse(collection3.getTags().contains(collection2.getIpId().toString()));
-     * Assert.assertFalse(collection2.getTags().contains(collection3.getIpId().toString())); }
-     */
-
     @Test
     @Requirement("REGARDS_DSL_SYS_ARC_450")
-    @Purpose("The URN identifier of a document is uniq")
+    @Purpose("The URN identifier of a document is unique")
     public void documentUrnUnicity() throws ModuleException, IOException {
         String docName = "un document";
 

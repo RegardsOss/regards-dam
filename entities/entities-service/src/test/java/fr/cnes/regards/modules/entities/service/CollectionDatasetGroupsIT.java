@@ -155,16 +155,21 @@ public class CollectionDatasetGroupsIT {
 
         coll1 = new Collection(modelColl, "PROJECT", "coll1");
         coll1.setSipId("SipId4");
-        // C1 -> (DS1, DS2)
-        coll1.setTags(Sets.newHashSet(dataset1.getIpId().toString(), dataset2.getIpId().toString()));
+
+        // DS1 -> C1
+        dataset1.setTags(Sets.newHashSet(coll1.getIpId().toString()));
+
         coll2 = new Collection(modelColl, "PROJECT", "coll2");
         coll2.setSipId("SipId5");
-        // C2 -> (C1, DS3)
-        coll2.setTags(Sets.newHashSet(coll1.getIpId().toString(), dataset3.getIpId().toString()));
+        // DS2 -> C1
+        dataset2.setTags(Sets.newHashSet(coll1.getIpId().toString()));
+        // C1 -> C2
+        coll1.getTags().add(coll2.getIpId().toString());
+
         coll3 = new Collection(modelColl, "PROJECT", "coll3");
         coll3.setSipId("SipId6");
-        // C3 -> (DS3)
-        coll3.setTags(Sets.newHashSet(dataset3.getIpId().toString()));
+        // DS3 -> (C2, C3)
+        dataset3.setTags(Sets.newHashSet(coll2.getIpId().toString(), coll3.getIpId().toString()));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_310")
@@ -218,13 +223,13 @@ public class CollectionDatasetGroupsIT {
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll2.getGroups());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
 
-        // Add C4: C1 -> C4 -> C2
+        // Add C4: C2 -> C4 -> C1
         // C4 => (G1, G2, G3)
         // C1 => (G1, G2, G3)
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
         coll4.setSipId("SipId7");
-        coll4.setTags(Sets.newHashSet(coll2.getIpId().toString()));
-        coll1.getTags().add(coll4.getIpId().toString());
+        coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
+        coll2.getTags().add(coll4.getIpId().toString());
 
         coll4 = collService.create(coll4);
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
@@ -259,13 +264,13 @@ public class CollectionDatasetGroupsIT {
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll2.getGroups());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
 
-        // Add C4: C1 -> C4 -> C2
+        // Add C4: C2 -> C4 -> C1
         // C4 => (G1, G2, G3)
         // C1 => (G1, G2, G3)
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
         coll4.setSipId("SipId7");
-        coll4.setTags(Sets.newHashSet(coll2.getIpId().toString()));
-        coll1.getTags().add(coll4.getIpId().toString());
+        coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
+        coll2.getTags().add(coll4.getIpId().toString());
 
         coll4 = collService.create(coll4);
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
@@ -285,6 +290,8 @@ public class CollectionDatasetGroupsIT {
         Assert.assertEquals(Sets.newHashSet("G1", "G3"), coll1.getGroups());
     }
 
+    @Requirement("REGARDS_DSL_DAM_CAT_050")
+    @Purpose("Le système doit permettre d’associer un document à une ou plusieurs collections.")
     @Test
     public void testAssociateDissociate() throws ModuleException, IOException {
         buildData1();
@@ -298,10 +305,10 @@ public class CollectionDatasetGroupsIT {
         coll2 = collService.create(coll2); // C2 tags DS3 and C1 => (G1, G2, G3)
         coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
 
-        // Dissociate all collections and their tags to datasets
-        collService.dissociate(coll1.getId(), Sets.newHashSet(dataset1.getIpId(), dataset2.getIpId()));
-        collService.dissociate(coll2.getId(), Sets.newHashSet(dataset3.getIpId()));
-        collService.dissociate(coll3.getId(), Sets.newHashSet(dataset3.getIpId()));
+        // Dissociate all datasets and their tags to collections
+        dataSetService.dissociate(dataset1.getId(), Sets.newHashSet(coll1.getIpId()));
+        dataSetService.dissociate(dataset2.getId(), Sets.newHashSet(coll1.getIpId()));
+        dataSetService.dissociate(dataset3.getId(), Sets.newHashSet(coll2.getIpId(), coll3.getIpId()));
 
         coll1 = collService.load(coll1.getId());
         Assert.assertTrue(coll1.getGroups().isEmpty());
@@ -310,10 +317,11 @@ public class CollectionDatasetGroupsIT {
         coll3 = collService.load(coll3.getId());
         Assert.assertTrue(coll3.getGroups().isEmpty());
 
-        // Re-Associate all collections and their tags to datasets
-        collService.associate(coll1.getId(), Sets.newHashSet(dataset1.getIpId(), dataset2.getIpId()));
-        collService.associate(coll2.getId(), Sets.newHashSet(dataset3.getIpId()));
-        collService.associate(coll3.getId(), Sets.newHashSet(dataset3.getIpId()));
+        // Re-associate all datasets and their tags to collections
+        dataSetService.associate(dataset1.getId(), Sets.newHashSet(coll1.getIpId()));
+        dataSetService.associate(dataset2.getId(), Sets.newHashSet(coll1.getIpId()));
+        dataSetService.associate(dataset3.getId(), Sets.newHashSet(coll2.getIpId(), coll3.getIpId()));
+
 
         coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll1.getGroups());
@@ -322,17 +330,21 @@ public class CollectionDatasetGroupsIT {
         coll3 = collService.load(coll3.getId());
         Assert.assertEquals(Sets.newHashSet("G3"), coll3.getGroups());
 
+        // Add C4: C2 -> C4
+        // C4 (G1, G2, G3)
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
         coll4.setSipId("SipId7");
         coll4 = collService.create(coll4);
 
-        collService.associate(coll4.getId(), Sets.newHashSet(coll2.getIpId()));
+        collService.associate(coll2.getId(), Sets.newHashSet(coll4.getIpId()));
 
         coll4 = collService.load(coll4.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
 
-        //lets test when we add group G4 to DS1 so we can check it has been propagated to C1(direct tag), C2(indirect tag through C1->DS1), C4(indirect tag through C2->C1->DS1)
-        // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and the logic are respected
+        // lets test when we add group G4 to DS1 so we can check it has been propagated to C1(direct tag), C2(indirect
+        // tag through DS1->C1->C2), C4 (indirect tag through DS1->C1->C2->C4)
+        // because the tests are transactional we need to create a new object so hibernate doesn't see the changes and
+        // the logic is respected
         Dataset dataset1Updated = new Dataset();
         dataset1Updated.setGroups(Sets.newHashSet("G1"));
         dataset1Updated.setDescriptionFile(dataset1.getDescriptionFile());
@@ -352,7 +364,7 @@ public class CollectionDatasetGroupsIT {
         dataset1Updated.setModel(dataset1.getModel());
         dataset1Updated.setProperties(dataset1.getProperties());
         dataset1Updated.setSipId(dataset1.getSipId());
-        dataset1Updated.setTags(dataset1.getTags());
+        dataset1Updated.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         dataset1Updated.getGroups().add("G4");
         dataset1 = dataSetService.update(dataset1Updated);
         // we now should have:
@@ -412,13 +424,14 @@ public class CollectionDatasetGroupsIT {
         dataset3 = dataSetService.update(dataset3);
         Assert.assertTrue(dataset3.getTags().isEmpty());
 
-        // Associate "by hand"
+        // Associate "by hand" C1 -> (C3, DS1)
         coll1.getTags().add(coll3.getIpId().toString());
         coll1.getTags().add(dataset1.getIpId().toString());
         coll1 = collService.update(coll1.getId(), coll1);
         Assert.assertTrue(coll1.getTags().contains(coll3.getIpId().toString()));
         Assert.assertTrue(coll1.getTags().contains(dataset1.getIpId().toString()));
 
+        // Associate "by hands" DS1 -> (C1, DS2)
         dataset1.getTags().add(coll1.getIpId().toString());
         dataset1.getTags().add(dataset2.getIpId().toString());
         Assert.assertTrue(dataset1.getTags().contains(coll1.getIpId().toString()));
@@ -437,18 +450,18 @@ public class CollectionDatasetGroupsIT {
         dataset3 = dataSetService.create(dataset3);
 
         // Then collections => groups must have been updated on collections
-        coll1 = collService.create(coll1); // C1 tags DS1 and DS2 => (G1, G2)
-        coll2 = collService.create(coll2); // C2 tags DS3 and C1 => (G1, G2, G3)
-        coll3.getTags().add(coll1.getIpId().toString()); // Add C3 -> C1
-        coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
+        coll2 = collService.create(coll2); // DS3 tags C2 => C2 (G1, G2, G3)
+        coll3 = collService.create(coll3); // DS3 tags C3 => C3 (G3)
+        coll1.getTags().add(coll3.getIpId().toString()); // Add C1 -> C3
+        coll1 = collService.create(coll1); // DS1 and DS2 tag C1 => C1 (G1, G2)
 
-        // C2 -> C1 and C3 -> C1
-        collService.delete(coll1.getId());
+        // C1 -> C2 and C1 -> C3
+        collService.delete(coll2.getId());
+        collService.delete(coll3.getId());
 
-        coll2 = collService.load(coll2.getId());
-        Assert.assertFalse(coll2.getTags().contains(coll1.getIpId().toString()));
-        coll3 = collService.load(coll3.getId());
-        Assert.assertFalse(coll3.getTags().contains(coll1.getIpId().toString()));
+        coll1 = collService.load(coll1.getId());
+        Assert.assertFalse(coll1.getTags().contains(coll2.getIpId().toString()));
+        Assert.assertFalse(coll1.getTags().contains(coll3.getIpId().toString()));
 
     }
 
@@ -459,9 +472,9 @@ public class CollectionDatasetGroupsIT {
         buildData1();
 
         // Then collections => groups must have been updated on collections
-        coll1 = collService.create(coll1); // C1 tags DS1 and DS2 => (G1, G2)
-        coll2 = collService.create(coll2); // C2 tags DS3 and C1 => (G1, G2, G3)
-        coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
+        coll1 = collService.create(coll1);
+        coll2 = collService.create(coll2);
+        coll3 = collService.create(coll3);
 
         List<Collection> collections = collService.findAll();
         Assert.assertEquals(3, collections.size());

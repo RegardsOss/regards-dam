@@ -57,6 +57,8 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
@@ -306,6 +308,8 @@ public class CrawlerIngestIT {
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 
+    @Requirement("REGARDS_DSL_DAM_CAT_310")
+    @Purpose("Le système doit permettre d’ajouter un AIP de données dans un jeu de données à partir de son IP_ID (ajout d'un tag sur l'AIP de données).")
     @Test
     public void test()
             throws ModuleException, IOException, InterruptedException, ExecutionException, DataSourceException {
