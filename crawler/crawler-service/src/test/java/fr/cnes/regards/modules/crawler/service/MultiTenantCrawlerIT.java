@@ -3,7 +3,11 @@ package fr.cnes.regards.modules.crawler.service;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,8 +114,10 @@ public class MultiTenantCrawlerIT {
         coll11.setGroups(Sets.newHashSet("Michou", "Jojo"));
         collService.create(coll11);
         final Collection coll12 = new Collection(model1, TENANT1, "collection 2 pour tenant " + TENANT1);
-        coll12.setTags(Sets.newHashSet(coll11.getIpId().toString()));
         collService.create(coll12);
+
+        coll11.setTags(Sets.newHashSet(coll12.getIpId().toString()));
+        collService.update(coll11);
 
         tenantResolver.forceTenant(TENANT2);
         Model model2 = Model.build("model2_" + TENANT2, "modele pour tenant " + TENANT2, EntityType.COLLECTION);
@@ -122,20 +128,22 @@ public class MultiTenantCrawlerIT {
         collService.create(coll21);
 
         final Collection coll22 = new Collection(model2, TENANT2, "collection 2 pour tenant " + TENANT2);
-        coll22.setTags(Sets.newHashSet(coll21.getIpId().toString()));
         collService.create(coll22);
+
+        coll21.setTags(Sets.newHashSet(coll22.getIpId().toString()));
+        collService.update(coll21);
 
         Thread.sleep(10_000);
         esRepos.refresh(TENANT1);
         esRepos.refresh(TENANT2);
 
         final Collection coll12FromEs = esRepos.get(TENANT1, coll12);
-        // coll12 tags coll11 so coll11 groups must have been copied to coll12
+        // coll11 tags coll12 so coll11 groups must have been copied to coll12
         Assert.assertArrayEquals(Sets.newTreeSet(coll11.getGroups()).toArray(),
                                  Sets.newTreeSet(coll12FromEs.getGroups()).toArray());
 
         final Collection coll22FromEs = esRepos.get(TENANT2, coll22);
-        // coll22 tags coll21 so coll21 groups must have been copied to coll22
+        // coll21 tags coll22 so coll21 groups must have been copied to coll22
         Assert.assertArrayEquals(Sets.newTreeSet(coll21.getGroups()).toArray(),
                                  Sets.newTreeSet(coll22FromEs.getGroups()).toArray());
     }
