@@ -87,54 +87,21 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             throws ModuleException, InterruptedException, ExecutionException, DataSourceException {
         String tenant = runtimeTenantResolver.getTenant();
 
-        String datasourceId = pluginConf.getId().toString();
         if (!pluginConf.isActive()) {
             throw new InactiveDatasourceException();
         }
-        IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf);
+        IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf.getId());
 
         int savedObjectsCount = 0;
         OffsetDateTime now = OffsetDateTime.now();
-        ExecutorService executor = Executors.newFixedThreadPool(1);
+        String datasourceId = pluginConf.getId().toString();
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
-            Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
-                                                          new PageRequest(0, IEsRepository.BULK_SIZE));
-            final List<DataObject> list = page.getContent();
-            Future<Integer> task = executor.submit(() -> {
-                runtimeTenantResolver.forceTenant(tenant);
-                return entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
-            });
-
-            while (page.hasNext()) {
-                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                savedObjectsCount += task.get();
-                final List<DataObject> otherList = page.getContent();
-                task = executor.submit(() -> {
-                    runtimeTenantResolver.forceTenant(tenant);
-                    return entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
-                });
-            }
-            savedObjectsCount += task.get();
+            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, savedObjectsCount,
+                                                                   now, datasourceId);
         } else { // index exists, data objects may also exist
-            Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
-                                                          new PageRequest(0, IEsRepository.BULK_SIZE));
-            final List<DataObject> list = page.getContent();
-            Future<Integer> task = executor.submit(() -> {
-                runtimeTenantResolver.forceTenant(tenant);
-                return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
-            });
-
-            while (page.hasNext()) {
-                page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-                savedObjectsCount += task.get();
-                final List<DataObject> otherList = page.getContent();
-                task = executor.submit(() -> {
-                    runtimeTenantResolver.forceTenant(tenant);
-                    return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
-                });
-            }
-            savedObjectsCount += task.get();
+            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, savedObjectsCount,
+                                                                  now, datasourceId);
         }
         // In case Dataset associated with datasourceId already exists (or had been created between datasrouyce creation and its ingestion
         // , we must search for it and do as it has
@@ -151,6 +118,66 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         return new IngestionResult(now, savedObjectsCount);
     }
 
+    private int readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
+            IDataSourcePlugin dsPlugin, int savedObjectsCount, OffsetDateTime now, String datasourceId)
+            throws DataSourceException, InterruptedException, ExecutionException {
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+                                                      new PageRequest(0, IEsRepository.BULK_SIZE));
+        final List<DataObject> list = page.getContent();
+        Future<Integer> task = executor.submit(() -> {
+            runtimeTenantResolver.forceTenant(tenant);
+            return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+        });
+
+        while (page.hasNext()) {
+            page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+            savedObjectsCount += task.get();
+            final List<DataObject> otherList = page.getContent();
+            task = executor.submit(() -> {
+                runtimeTenantResolver.forceTenant(tenant);
+                return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
+            });
+        }
+        savedObjectsCount += task.get();
+        return savedObjectsCount;
+    }
+
+    private int readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
+            IDataSourcePlugin dsPlugin, int savedObjectsCount, OffsetDateTime now, String datasourceId)
+            throws DataSourceException, InterruptedException, ExecutionException {
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
+                                                      new PageRequest(0, IEsRepository.BULK_SIZE));
+        final List<DataObject> list = page.getContent();
+        Future<Integer> task = executor.submit(() -> {
+            runtimeTenantResolver.forceTenant(tenant);
+            return entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+        });
+
+        while (page.hasNext()) {
+            page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+            savedObjectsCount += task.get();
+            final List<DataObject> otherList = page.getContent();
+            task = executor.submit(() -> {
+                runtimeTenantResolver.forceTenant(tenant);
+                return entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
+            });
+        }
+        savedObjectsCount += task.get();
+        return savedObjectsCount;
+    }
+
+    /**
+     * Read datasource since given date page setting ipId to each objects
+     * @param date date from which to read datasource data
+     * @param tenant
+     * @param dsPlugin
+     * @param datasourceId
+     * @param pageable
+     * @return
+     * @throws DataSourceException
+     */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
             String datasourceId, Pageable pageable) throws DataSourceException {
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);

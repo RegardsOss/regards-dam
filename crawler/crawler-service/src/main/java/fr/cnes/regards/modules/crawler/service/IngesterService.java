@@ -317,8 +317,7 @@ public class IngesterService implements IIngesterService {
     @MultitenantTransactional
     public Optional<DatasourceIngestion> pickAndStartDatasourceIngestion(String pTenant) {
         Optional<DatasourceIngestion> dsIngestionOpt = dsIngestionRepos
-                .findTopByNextPlannedIngestDateLessThanAndStatusNot(
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), IngestionStatus.STARTED);
+                .findNextReady(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         if (dsIngestionOpt.isPresent()) {
             DatasourceIngestion dsIngestion = dsIngestionOpt.get();
             // Reinit old DatasourceIngestion properties
