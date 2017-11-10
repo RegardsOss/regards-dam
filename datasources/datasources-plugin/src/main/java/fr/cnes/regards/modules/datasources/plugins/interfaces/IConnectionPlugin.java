@@ -37,32 +37,32 @@ public interface IConnectionPlugin {
     /**
      * The user name
      */
-    static final String USER_PARAM = "user";
+    String USER_PARAM = "user";
 
     /**
      * The user's password
      */
-    static final String PASSWORD_PARAM = "password"; // NOSONAR
+    String PASSWORD_PARAM = "password"; // NOSONAR
 
     /**
      * The databse's host
      */
-    static final String DB_HOST_PARAM = "dbHost";
+    String DB_HOST_PARAM = "dbHost";
 
     /**
      * The databse's port
      */
-    static final String DB_PORT_PARAM = "dbPort";
+    String DB_PORT_PARAM = "dbPort";
 
     /**
      * The database's name
      */
-    static final String DB_NAME_PARAM = "dbName";
+    String DB_NAME_PARAM = "dbName";
 
     /**
      * The databse's driver
      */
-    static final String DRIVER_PARAM = "driver";
+    String DRIVER_PARAM = "driver";
 
     /**
      * Test the connection
