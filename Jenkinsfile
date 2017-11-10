@@ -9,7 +9,7 @@
  * Contains the definition of a Jenkins Pipeline, is checked into source control
  * and is expected to be the reference.
  * To fully support multibranch builds without issues, we are using docker-compose to setup cots for each build.
- *
+ * dam <- admin <- microservice
  * @author Sylvain VISSIERE-GUERINET
  * @author Marc SORDI
  * @see https://jenkins.io/doc/book/pipeline/jenkinsfile/
