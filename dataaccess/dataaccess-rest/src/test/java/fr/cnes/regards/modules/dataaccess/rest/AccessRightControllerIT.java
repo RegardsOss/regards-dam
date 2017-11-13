@@ -94,6 +94,12 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         public IModelAttrAssocClient modelAttrAssocClient() {
             return Mockito.mock(IModelAttrAssocClient.class);
         }
+
+        @Bean
+        public IProjectUsersClient mockProjectUsersClient() {
+            return Mockito.mock(IProjectUsersClient.class);
+        }
+
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessRightControllerIT.class);
