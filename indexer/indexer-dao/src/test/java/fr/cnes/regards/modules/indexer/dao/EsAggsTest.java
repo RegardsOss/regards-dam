@@ -1,24 +1,5 @@
 package fr.cnes.regards.modules.indexer.dao;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -31,6 +12,24 @@ import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * Test on complex aggs
@@ -70,7 +69,7 @@ public class EsAggsTest {
             propMap.put(keyVal[0], keyVal[1]);
         });
         try {
-            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter<>()).create();
+            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
                     Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
                     propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));

@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.dataaccess.client;
 
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,6 +82,12 @@ public class IAccessGroupClientIT extends AbstractRegardsWebIT {
         public IModelAttrAssocClient modelAttrAssocClient() {
             return Mockito.mock(IModelAttrAssocClient.class);
         }
+
+        @Bean
+        public IProjectUsersClient mockProjectUsersClient() {
+            return Mockito.mock(IProjectUsersClient.class);
+        }
+
     }
 
     /**
