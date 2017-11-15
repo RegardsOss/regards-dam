@@ -70,9 +70,9 @@ public class EsAggsTest {
             propMap.put(keyVal[0], keyVal[1]);
         });
         try {
-            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter<>()).create();
+            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                    Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
+                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
                     propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");

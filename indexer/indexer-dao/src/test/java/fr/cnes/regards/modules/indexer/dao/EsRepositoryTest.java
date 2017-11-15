@@ -2,9 +2,10 @@ package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -12,14 +13,19 @@ import java.util.stream.Stream;
 
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.svenjacobs.loremipsum.LoremIpsum;
@@ -29,8 +35,6 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * EsRepository test
@@ -54,7 +58,7 @@ public class EsRepositoryTest {
     private String elasticHost;
     @Value("${regards.elasticsearch.cluster.name}")
     private String elasticName;
-    @Value("${regards.elasticsearch.tcp.port}")
+    @Value("${regards.elasticsearch.http.port}")
     private int elasticPort;
 
     /**
@@ -107,9 +111,12 @@ public class EsRepositoryTest {
     }
 
     @Test
-    public void testFindIndices() {
-        Assert.assertTrue(repository.createIndex("titi"));
-        Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((pIndex) -> pIndex.equals("titi")));
+    public void testCreateIndexWithSpecialMappings() {
+        Assert.assertTrue(repository.createIndex("test"));
+        String[] types = { "pipo", "bimbo"};
+        repository.setAutomaticDoubleMapping("test", types);
+        repository.setGeometryMapping("test", types);
+
     }
 
     @Test
@@ -158,45 +165,6 @@ public class EsRepositoryTest {
         Assert.assertTrue(repository.delete("items", "item", "4"));
         Assert.assertTrue(repository.delete("items", "item", "1"));
 
-    }
-
-    /**
-     * Test merge
-     */
-    @Test
-    public void testMerge() {
-        repository.createIndex("mergeditems");
-        // Creations for firt two
-        final Item item1 = new Item("1", "group1", "group2", "group3");
-        // final Item subItem = new Item(10);
-        // subItem.setName("Bert");
-        // item1.setSubItem(subItem);
-        Assert.assertTrue(repository.save("mergeditems", item1));
-
-        // Add name and change groups
-        final Map<String, Object> propsMap = new HashMap<>();
-        propsMap.put("name", "Robert");
-        propsMap.put("groups", new String[] { "group1" });
-        Assert.assertTrue(repository.merge("mergeditems", "item", "1", propsMap));
-        Item item1FromIndex = repository.get("mergeditems", "item", "1", Item.class);
-        Assert.assertNotNull(item1FromIndex.getName());
-        Assert.assertEquals("Robert", item1FromIndex.getName());
-        Assert.assertNotNull(item1FromIndex.getGroups());
-        Assert.assertEquals(1, item1FromIndex.getGroups().size());
-        Assert.assertEquals("group1", item1FromIndex.getGroups().get(0));
-        Assert.assertEquals("1", item1FromIndex.getDocId());
-
-        // Adding subItem
-        propsMap.clear();
-        propsMap.put("subItem.name", "Bart");
-        propsMap.put("subItem.groups", new String[] { "G1, G2" });
-
-        Assert.assertTrue(repository.merge("mergeditems", "item", "1", propsMap));
-        item1FromIndex = repository.get("mergeditems", "item", "1", Item.class);
-        Assert.assertNotNull(item1FromIndex.getSubItem());
-        Assert.assertEquals("Bart", item1FromIndex.getSubItem().getName());
-        Assert.assertNull(item1FromIndex.getSubItem().getDocId());
-        Assert.assertEquals(Arrays.asList(new String[] { "G1, G2" }), item1FromIndex.getSubItem().getGroups());
     }
 
     /**

@@ -19,13 +19,8 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,11 +73,13 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
     /**
      * The {@link TransportClient} used to connect to one or more node
      */
-    private TransportClient client;
+//    private TransportClient client;
 
     @Override
     public boolean testConnection() {
-        return !client.connectedNodes().isEmpty();
+
+//        return !client.connectedNodes().isEmpty();
+        return false;
     }
 
     @SuppressWarnings("resource")
@@ -94,18 +91,18 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
             settings = Settings.builder().put("cluster.name", cluster).build();
         }
 
-        try {
-            client = new PreBuiltTransportClient(settings)
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
-        } catch (UnknownHostException e) {
-            LOG.error(e.getMessage(), e);
-        }
+//        try {
+//            client = new PreBuiltTransportClient(settings)
+//                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
+//        } catch (UnknownHostException e) {
+//            LOG.error(e.getMessage(), e);
+//        }
     }
 
     @Override
     @PluginDestroy
     public void closeConnection() {
-        client.close();
+//        client.close();
     }
 
 }

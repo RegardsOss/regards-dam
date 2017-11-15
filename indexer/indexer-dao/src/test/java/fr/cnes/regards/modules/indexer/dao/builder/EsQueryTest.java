@@ -93,7 +93,7 @@ public class EsQueryTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
                     .create();
-            repository = new EsRepository(gson, null, "localhost", 9300, "regards",
+            repository = new EsRepository(gson, null, "localhost", 9200, "regards",
                                           new AggregationBuilderFacetTypeVisitor(100, 5));
 
             // This test is not intended to be executed on integration serveur but better locally to test
@@ -732,7 +732,7 @@ public class EsQueryTest {
         // .put("properties.ints", FacetType.NUMERIC);
         // .put("properties.doubles", FacetType.NUMERIC).put("properties.dates", FacetType.DATE);
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
-        // sortMap.put("docId", false);
+        sortMap.put("docId", false);
         long start = System.currentTimeMillis();
         SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
         Page<Item> page = repository.search(searchKey, 100, ICriterion.all(), facetMapBuilder.build(), sortMap);
