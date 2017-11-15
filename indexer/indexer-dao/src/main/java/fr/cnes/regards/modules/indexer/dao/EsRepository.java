@@ -64,6 +64,7 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
@@ -200,11 +201,6 @@ public class EsRepository implements IEsRepository {
     private static final String GEOM_TYPE_PROP = "type=geo_shape";
 
     /**
-     * Elasticsearch port
-     */
-    private final String esClusterName;
-
-    /**
      * Elasticsearch host
      */
     private final String esHost;
@@ -241,40 +237,33 @@ public class EsRepository implements IEsRepository {
     public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String inEsHost,
             @Value("${regards.elasticsearch.address:}") String inEsAddress,
             @Value("${regards.elasticsearch.http.port}") int esPort,
-            @Value("${regards.elasticsearch.cluster.name}") String esClusterName,
             AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) throws UnknownHostException {
 
         gson = pGson;
         this.esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.esPort = esPort;
-        this.esClusterName = esClusterName;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
         String connectionInfoMessage = String
-                .format("Elastic search connection properties : host \"%s\", port \"%d\", cluster \"%s\"", this.esHost,
-                        this.esPort, this.esClusterName);
+                .format("Elastic search connection properties : host \"%s\", port \"%d\"", this.esHost, this.esPort);
         LOGGER.info(connectionInfoMessage);
-
-        //        try {
-        //            tcpClient = new PreBuiltTransportClient(Settings.builder().put("cluster.name", this.esClusterName).build());
-        //            tcpClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(inEsHost), this.esPort));
-        //            // Testing availability of ES
-        //            List<DiscoveryNode> nodes = tcpClient.connectedNodes();
-        //            if (nodes.isEmpty()) {
-        //                throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
-        //            }
-        //        } catch (Throwable t) {
-        //
-        //        }
 
         restClient = RestClient.builder(new HttpHost(this.esHost, this.esPort)).build();
         client = new RestHighLevelClient(restClient);
+
+        try {
+            // Testing availability of ES
+            if (!client.ping()) {
+                throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
+            }
+        } catch (Throwable t) {
+            // TODO ??? Qui a (osé) écrire ça ?
+        }
     }
 
     @Override
     public void close() {
         LOGGER.info("Closing connection");
-        //        tcpClient.close();
         try {
             restClient.close();
         } catch (IOException e) {
@@ -290,8 +279,6 @@ public class EsRepository implements IEsRepository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        //        return tcpClient.admin().indices().prepareCreate(index.toLowerCase()).get().isAcknowledged();
     }
 
     @Override
@@ -312,10 +299,6 @@ public class EsRepository implements IEsRepository {
                 }
             }
             return true;
-
-            //            return Arrays.stream(types)
-            //                    .map(type -> tcpClient.admin().indices().preparePutMapping(index.toLowerCase()).setType(type)
-            //                            .setSource(mapping).get().isAcknowledged()).allMatch(ack -> (ack == true));
         } catch (IOException ioe) { // NOSONAR
             throw new RuntimeException(ioe);
         }
@@ -341,39 +324,22 @@ public class EsRepository implements IEsRepository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        //        return Arrays.stream(types).map(type -> tcpClient.admin().indices().preparePutMapping(index.toLowerCase()).setType(type)
-        //                .setSource(GEOM_NAME, GEOM_TYPE_PROP).get().isAcknowledged()).allMatch(ack -> (ack == true));
     }
 
     @Override
     public boolean delete(String index, String type, String id) {
         DeleteRequest request = new DeleteRequest(index.toLowerCase(), type, id);
-        //        final DeleteResponse response = tcpClient.prepareDelete(pIndex.toLowerCase(), pType, pId).get();
-        DeleteResponse response = null;
         try {
-            response = client.delete(request);
+            DeleteResponse response = client.delete(request);
+            return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
     }
 
     @Override
     public long deleteAll(String inIndex) {
-        String index = inIndex.toLowerCase();
-        //        SearchSourceBuilder builder = new SearchSourceBuilder().query(QueryBuilders.matchAllQuery());
-        //        SearchRequest searchRequest = new SearchRequest(index).source(builder);
-        //        DeleteByQueryRequest request = new DeleteByQueryRequest(searchRequest);
-        //
-        //        SearchResponse response = client.searchScroll(request);
-        //
-        //        BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(tcpClient)
-        //                .filter(QueryBuilders.matchAllQuery()).source(pIndex.toLowerCase()).get();
-        //        refresh(pIndex);
-        //        return response.getDeleted();
-        this.deleteIndex(index);
-        this.createIndex(index);
-        return 1l;
+        return this.deleteByQuery(inIndex.toLowerCase(), ICriterion.all());
     }
 
     @Override
@@ -396,16 +362,12 @@ public class EsRepository implements IEsRepository {
         } catch (IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
-        //        return tcpClient.admin().indices().prepareDelete(pIndex.toLowerCase()).get().isAcknowledged();
     }
 
     @Override
     public <T extends IIndexable> T get(String pIndex, String pType, String pId, Class<T> pClass) {
-
         GetRequest request = new GetRequest(pIndex.toLowerCase(), pType, pId);
-
         try {
-            //            final GetResponse response = tcpClient.prepareGet(pIndex.toLowerCase(), pType, pId).get();
             GetResponse response = client.get(request);
             if (!response.isExists()) {
                 return null;
@@ -424,7 +386,6 @@ public class EsRepository implements IEsRepository {
         } catch (IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
-        //        return tcpClient.admin().indices().prepareExists(name.toLowerCase()).get().isExists();
     }
 
     private void checkDocument(IIndexable pDoc) {
@@ -436,23 +397,18 @@ public class EsRepository implements IEsRepository {
     @Override
     public boolean save(String index, IIndexable doc) {
         checkDocument(doc);
-        //        final IndexResponse response = tcpClient
-        //                .prepareIndex(pIndex.toLowerCase(), pDocument.getType(), pDocument.getDocId())
-        //                .setSource(gson.toJson(pDocument)).get();
-        IndexResponse response = null;
         try {
-            response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
+            IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
                                             .source(gson.toJson(doc), XContentType.JSON));
+            return (response.getResult() == Result.CREATED);
         } catch (IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
-        return (response.getResult() == Result.CREATED);
     }
 
     @Override
     public void refresh(String index) {
         // To make just saved documents searchable, the associated index must be refreshed
-        //        tcpClient.admin().indices().prepareRefresh(index.toLowerCase()).get();
         try {
             restClient.performRequest("GET", index.toLowerCase() + "/_refresh");
         } catch (IOException e) {
@@ -477,11 +433,6 @@ public class EsRepository implements IEsRepository {
                                         .source(gson.toJson(doc), XContentType.JSON));
             }
 
-            //        final BulkRequestBuilder bulkRequest = tcpClient.prepareBulk();
-            //        for (T doc : documents) {
-            //            bulkRequest.add(tcpClient.prepareIndex(index, doc.getType(), doc.getDocId()).setSource(gson.toJson(doc)));
-            //        }
-            //        final BulkResponse response = bulkRequest.get();
             BulkResponse response = client.bulk(bulkRequest);
             for (final BulkItemResponse itemResponse : response.getItems()) {
                 if (itemResponse.isFailed()) {
@@ -492,7 +443,6 @@ public class EsRepository implements IEsRepository {
                 }
             }
             // To make just saved documents searchable, the associated index must be refreshed
-            //            tcpClient.admin().indices().prepareRefresh(index).get();
             this.refresh(index);
             return savedDocCount;
         } catch (IOException e) {
@@ -512,11 +462,6 @@ public class EsRepository implements IEsRepository {
             request.scroll(TimeValue.timeValueMillis(KEEP_ALIVE_SCROLLING_TIME_MS));
             SearchResponse scrollResp = client.search(request);
 
-            //        SearchRequestBuilder requestBuilder = tcpClient.prepareSearch(searchKey.getSearchIndex());
-            //        requestBuilder = requestBuilder.setTypes(searchKey.getSearchTypes());
-            //        ICriterion crit = (inCrit == null) ? ICriterion.all() : inCrit;
-            //            SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
-            //                    .setQuery(crit.accept(CRITERION_VISITOR)).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
             // Scroll until no hits are returned
             do {
                 for (final SearchHit hit : scrollResp.getHits().getHits()) {
@@ -526,8 +471,6 @@ public class EsRepository implements IEsRepository {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollResp.getScrollId());
                 scrollRequest.scroll(TimeValue.timeValueMillis(KEEP_ALIVE_SCROLLING_TIME_MS));
                 scrollResp = client.searchScroll(scrollRequest);
-                //                scrollResp = tcpClient.prepareSearchScroll(scrollResp.getScrollId())
-                //                        .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
             } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
             // loop.
         } catch (IOException e) {
@@ -565,9 +508,6 @@ public class EsRepository implements IEsRepository {
                     .size(pageRequest.getPageSize());
             request.source(builder);
 
-            //            SearchRequestBuilder request = tcpClient.prepareSearch(index.toLowerCase()).setFrom(pageRequest.getOffset())
-            //                    .setSize(pageRequest.getPageSize());
-            //            SearchResponse response = getWithTimeouts(request);
             SearchResponse response = client.search(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
@@ -610,13 +550,10 @@ public class EsRepository implements IEsRepository {
             SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
             SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
                     .size(pageRequest.getPageSize());
-            //            SearchRequestBuilder request = tcpClient.prepareSearch(index).setTypes(searchKey.getSearchTypes());
-            //            request = request.setQuery(critBuilder).setFrom(pageRequest.getOffset()).setSize(pageRequest.getPageSize());
 
             // If searchAfter has been executed (in that case manageSortRequest() has already been called)
             if (lastSearchAfterSortValues != null) {
                 builder.searchAfter(lastSearchAfterSortValues).from(0);
-                //                request = request.searchAfter(lastSearchAfterSortValues).setFrom(0); // needed by searchAfter
                 manageSortRequest(index, builder, sort);
             } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
                 manageSortRequest(index, builder, sort);
@@ -626,7 +563,6 @@ public class EsRepository implements IEsRepository {
             boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, builder);
             request.source(builder);
             // Launch the request
-            //            SearchResponse response = getWithTimeouts(request);
             SearchResponse response = client.search(request);
 
             Set<IFacet<?>> facetResults = new HashSet<>();
@@ -634,14 +570,10 @@ public class EsRepository implements IEsRepository {
                 // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
                 if (twoPassRequestNeeded) {
                     // Rebuild request
-                    //                request = tcpClient.prepareSearch(index).setTypes(searchKey.getSearchTypes());
                     request = new SearchRequest(index).types(searchKey.getSearchTypes());
                     builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
                             .size(pageRequest.getPageSize());
-                    //                request = request.setQuery(critBuilder).setFrom(pageRequest.getOffset())
-                    //                        .setSize(pageRequest.getPageSize());
                     if (lastSearchAfterSortValues != null) {
-                        //                    request = request.searchAfter(lastSearchAfterSortValues).setFrom(0); // needed by searchAfter
                         builder.searchAfter(lastSearchAfterSortValues).from(0); // needed by searchAfter
                         manageSortRequest(index, builder, sort);
                     } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
@@ -650,7 +582,6 @@ public class EsRepository implements IEsRepository {
                     Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                     manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
                     // Relaunch the request with replaced facets
-                    //                response = getWithTimeouts(request);
                     request.source(builder);
                     response = client.search(request);
                 }
@@ -709,7 +640,7 @@ public class EsRepository implements IEsRepository {
         try {
             Object[] sortValues = null;
             int searchPageNumber = 0;
-            Pageable searchReminderPageRequest = null;
+            Pageable searchReminderPageRequest;
             if (indexExists(REMINDER_IDX)) {
                 // First check existence of Reminder for exact given pageRequest from ES
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest);
@@ -737,22 +668,18 @@ public class EsRepository implements IEsRepository {
             }
 
             // No reminder found (first request or last one is too old) => advance to next to last page
-            //        SearchRequestBuilder request = tcpClient.prepareSearch(index).setTypes(searchKey.getSearchTypes());
             SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
             // By default, launch request from 0 to 10_000 (without aggregations)...
             int offset = 0;
             int pageSize = MAX_RESULT_WINDOW;
-            //        request = request.setQuery(critBuilder).setFrom(offset).setSize(pageSize);
             SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(offset).size(pageSize);
             manageSortRequest(index, builder, sort);
             request.source(builder);
             // ...Except if a closer reminder has already been found
             if (sortValues != null) {
                 offset = searchPageNumber * MAX_RESULT_WINDOW;
-                //            request = request.setFrom(0).searchAfter(sortValues);
             } else {
                 LOGGER.debug("Search (after) : offset {}", offset);
-                //            SearchResponse response = getWithTimeouts(request);
                 SearchResponse response = client.search(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 offset += MAX_RESULT_WINDOW;
@@ -765,9 +692,7 @@ public class EsRepository implements IEsRepository {
             while (offset < nextToLastOffset) {
                 // Change offset
                 LOGGER.debug("Search after : offset {}", offset);
-                //            request = request.setFrom(0).searchAfter(sortValues);
                 builder.from(0).searchAfter(sortValues);
-                //            SearchResponse response = getWithTimeouts(request);
                 SearchResponse response = client.search(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
                 // Create a Reminder and save it into ES for next page
@@ -785,9 +710,7 @@ public class EsRepository implements IEsRepository {
             if (pageRequest.getOffset() != offset) {
                 int size = pageRequest.getOffset() - offset;
                 LOGGER.debug("Search after : offset {}, size {}", offset, size);
-                //            request = request.setSize(size).searchAfter(sortValues).setFrom(0); // needed by searchAfter
                 builder.size(size).searchAfter(sortValues).from(0); // needed by searchAfter
-                //            SearchResponse response = getWithTimeouts(request);
                 SearchResponse response = client.search(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
             }
@@ -811,12 +734,8 @@ public class EsRepository implements IEsRepository {
         ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
         QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                 .filter(crit.accept(CRITERION_VISITOR));
-        SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).size(0);
-
-        //        SearchRequestBuilder request = tcpClient.prepareSearch(index).setTypes(searchKey.getSearchTypes());
         // Only return hits information
-        //        request = request.setQuery(critBuilder).setSize(0);
-        return builder;
+        return new SearchSourceBuilder().query(critBuilder).size(0);
     }
 
     @Override
@@ -827,7 +746,6 @@ public class EsRepository implements IEsRepository {
                     .source(builder);
             // Launch the request
             SearchResponse response = client.search(request);
-            //        SearchResponse response = getWithTimeouts(request);
             return response.getHits().getTotalHits();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -1020,23 +938,6 @@ public class EsRepository implements IEsRepository {
             }
         }
         return false;
-        //        GetFieldMappingsResponse response = tcpClient.admin().indices().prepareGetFieldMappings(index.toLowerCase())
-        //                .setFields(attribute).get();
-        //        FieldMappingMetaData fieldMapping = response.fieldMappings(index.toLowerCase(), type, attribute);
-        //
-        //        if (fieldMapping != null) {
-        //            Map<String, Object> metaDataMap = fieldMapping.sourceAsMap();
-        //            String lastPathAtt = (attribute.contains(".") ?
-        //                    attribute.substring(attribute.lastIndexOf('.') + 1) :
-        //                    attribute);
-        //            if ((metaDataMap != null) && (metaDataMap.get(lastPathAtt) instanceof Map)) {
-        //                Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAtt);
-        //                if (mappingMap.containsKey("type")) {
-        //                    return mappingMap.get("type").equals("text");
-        //                }
-        //            }
-        //        }
-        //        return false;
     }
 
     /**
@@ -1076,9 +977,6 @@ public class EsRepository implements IEsRepository {
 
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
-        //        GetFieldMappingsResponse response = tcpClient.admin().indices().prepareGetFieldMappings(index)
-        //                .setFields(ascSortMap.keySet().toArray(new String[ascSortMap.size()])).get();
-
         Response response = restClient
                 .performRequest("GET", index + "/_mapping" + "/field/" + Joiner.on(",").join(ascSortMap.keySet()),
                                 Collections.emptyMap());
@@ -1098,51 +996,8 @@ public class EsRepository implements IEsRepository {
                     }
                 }
 
-                // map(type, map(field, metadata)) for asked index
-                //        Map<String, Map<String, FieldMappingMetaData>> mappings = response.mappings().get(index);
-                //        // All types mappings are retrieved.
-                //        // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
-                //        // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
-                //        LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
-                //        for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
-                //            String attributeName = sortEntry.getKey();
-                //            // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
-                //            String lastPathAttName = attributeName.contains(".") ?
-                //                    attributeName.substring(attributeName.lastIndexOf('.') + 1) :
-                //                    attributeName;
-                //            // For all type mappings
-                //            boolean typeText = false;
-                //            for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
-                //                // Once we found attribute name on one type, we stop to next attribute
-                //                if (typeEntry.getValue().containsKey(attributeName)) {
-                //                    FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
-                //                    // If field type is String, we must add ".keyword" to attribute name
-                //                    Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
-                //                    if ((metaDataMap.get(lastPathAttName) != null) && (metaDataMap
-                //                            .get(lastPathAttName) instanceof Map)) {
-                //                        Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
-                //                        // Should contains "type" field but...
-                //                        if (mappingMap.containsKey("type")) {
-                //                            if (mappingMap.get("type").equals("text")) {
-                //                                updatedAscSortMap.put(attributeName + ".keyword", sortEntry.getValue());
-                //                                typeText = true;
-                //                                break;
-                //                            } else { // "type" field found => it's not "text"
-                //                                typeText = false;
-                //                                break;
-                //                            }
-                //                        }
-                //                    }
-                //                }
-                //            }
-                //            // Not "text" type => add the key/value to keep the sort order
-                //            if (!typeText) {
-                //                updatedAscSortMap.put(attributeName, sortEntry.getValue());
-                //            }
-                //        }
                 // Add sort to request
                 updatedAscSortMap.entrySet().forEach(
-                        //                        entry -> builder.addSort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC)
                         entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
             }
         }
@@ -1167,14 +1022,11 @@ public class EsRepository implements IEsRepository {
                 if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
                     // Add min aggregation and max aggregagtion when a range aggregagtion is asked for (NUMERIC and DATE
                     // facets leed to range aggregagtion at second pass) to avoid ranges with Infinties values
-                    //                    builder.addAggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
-                    //                    builder.addAggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
                     builder.aggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
                     builder.aggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
 
                     twoPassRequestNeeded = true;
                 }
-                //                builder.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
                 builder.aggregation(facetType.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
             }
         }
@@ -1204,18 +1056,13 @@ public class EsRepository implements IEsRepository {
                         FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
-                    //                    builder.addAggregation(aggBuilder);
-                    //                    // And add max and min aggregagtions
-                    //                    builder.addAggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, attributeName));
-                    //                    builder.addAggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, attributeName));
+                    // And add max and min aggregagtions
                     builder.aggregation(aggBuilder);
                     // And add max and min aggregagtions
                     builder.aggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, attributeName));
                     builder.aggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, attributeName));
-
                 }
             } else { // Let others as it
-                //                builder.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
                 builder.aggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
             }
         }
@@ -1347,11 +1194,6 @@ public class EsRepository implements IEsRepository {
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
                     .source(builder);
 
-            //            SearchRequestBuilder request = tcpClient.prepareSearch(searchKey.getSearchIndex());
-            //            request = request.setTypes(searchKey.getSearchTypes());
-            //            request = request.setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
-            //                    .setSize(pPageRequest.getPageSize());
-//            SearchResponse response = getWithTimeouts(request);
             SearchResponse response = client.search(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
@@ -1371,7 +1213,6 @@ public class EsRepository implements IEsRepository {
                 throw new IllegalArgumentException("At least on file type must be provided");
             }
             SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
-            //        SearchRequestBuilder request = createSourceBuilder4Agg(searchKey, crit);
             // Add aggregations to manage compute summary
             // First "global" aggregations on each asked file types
             for (String fileType : fileTypes) {
@@ -1390,7 +1231,7 @@ public class EsRepository implements IEsRepository {
             // Discriminant distribution aggregator
             TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
                     .field(termsFieldProperty).size(Integer.MAX_VALUE);
-            // and "total" aggregagtions on each asked file types
+            // and "total" aggregations on each asked file types
             for (String fileType : fileTypes) {
                 // files count
                 termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
@@ -1445,21 +1286,4 @@ public class EsRepository implements IEsRepository {
             throw new RuntimeException(e);
         }
     }
-
-    /**
-     * Call specified request at least MAX_TIMEOUT_RETRIES
-     */
-//    private SearchResponse getWithTimeouts(SearchRequestBuilder request) {
-//        SearchResponse response;
-//        int errorCount = 0;
-//        do {
-//            response = request.get();
-//            errorCount += response.isTimedOut() ? 1 : 0;
-//            if (errorCount == MAX_TIMEOUT_RETRIES) {
-//                throw new TimeoutException(
-//                        String.format("Get %d timeouts while attempting to retrieve data", MAX_TIMEOUT_RETRIES));
-//            }
-//        } while (response.isTimedOut());
-//        return response;
-//    }
 }

@@ -530,13 +530,10 @@ public class IndexerServiceDataSourceIT {
 
     private void checkDatasetComputedAttribute(final Dataset pDataset,
             final SimpleSearchKey<DataObject> pObjectSearchKey, final long objectsCreationCount) throws IOException {
-        //        final TransportClient client = new PreBuiltTransportClient(
-        //                Settings.builder().put("cluster.name", esClusterName).build());
+        RestClient restClient;
         RestHighLevelClient client;
         try {
-            //            client.addTransportAddress(new InetSocketTransportAddress(
-            //                    InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort));
-            RestClient restClient = RestClient.builder(
+            restClient = RestClient.builder(
                     new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort))
                     .build();
             client = new RestHighLevelClient(restClient);
@@ -554,16 +551,6 @@ public class IndexerServiceDataSourceIT {
         final QueryBuilder qb = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                 .filter(crit.accept(critVisitor));
         // now we have a request on the right data
-//        final SearchRequestBuilder searchRequest = client.prepareSearch(pObjectSearchKey.getSearchIndex().toLowerCase())
-//                .setTypes(pObjectSearchKey.getSearchTypes()).setQuery(qb).setSize(0);
-        // lets build the aggregations
-        // aggregation for the min
-        //        searchRequest.addAggregation(AggregationBuilders.min("min_start_date").field("properties.START_DATE"));
-        //        // aggregation for the max
-        //        searchRequest.addAggregation(AggregationBuilders.max("max_stop_date").field("properties.STOP_DATE"));
-        //        // aggregation for the sum
-        //        searchRequest.addAggregation(AggregationBuilders.sum("sum_file_size").field("properties.FILE_SIZE"));
-
         SearchSourceBuilder builder = new SearchSourceBuilder();
         builder.query(qb).size(0);
         // lets build the aggregations
@@ -577,7 +564,6 @@ public class IndexerServiceDataSourceIT {
                 .types(pObjectSearchKey.getSearchTypes()).source(builder);
 
         // get the results computed by ElasticSearch
-//        final SearchResponse response = searchRequest.get();
         SearchResponse response = client.search(request);
         final Map<String, Aggregation> aggregations = response.getAggregations().asMap();
 
@@ -590,7 +576,7 @@ public class IndexerServiceDataSourceIT {
                             ((OffsetDateTime) getDatasetProperty(pDataset, "START_DATE").getValue()).toInstant());
         Assert.assertEquals(Instant.parse(((InternalMax) aggregations.get("max_stop_date")).getValueAsString()),
                             ((OffsetDateTime) getDatasetProperty(pDataset, "STOP_DATE").getValue()).toInstant());
-//        client.close();
+        restClient.close();
     }
 
     private AbstractAttribute<?> getDatasetProperty(final Dataset pDataset, final String pPropertyName) {

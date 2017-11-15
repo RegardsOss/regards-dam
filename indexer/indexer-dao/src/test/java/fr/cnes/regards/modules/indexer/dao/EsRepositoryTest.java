@@ -56,8 +56,7 @@ public class EsRepositoryTest {
 
     @Value("${regards.elasticsearch.address}")
     private String elasticHost;
-    @Value("${regards.elasticsearch.cluster.name}")
-    private String elasticName;
+
     @Value("${regards.elasticsearch.http.port}")
     private int elasticPort;
 
@@ -71,10 +70,8 @@ public class EsRepositoryTest {
         // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
         try {
             gson = new GsonBuilder().create();
-            repository = new EsRepository(gson, null, elasticHost,
-                    elasticPort,
-                    elasticName,
-                    new AggregationBuilderFacetTypeVisitor(10, 1));
+            repository = new EsRepository(gson, null, elasticHost, elasticPort,
+                                          new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -113,7 +110,7 @@ public class EsRepositoryTest {
     @Test
     public void testCreateIndexWithSpecialMappings() {
         Assert.assertTrue(repository.createIndex("test"));
-        String[] types = { "pipo", "bimbo"};
+        String[] types = { "pipo", "bimbo" };
         repository.setAutomaticDoubleMapping("test", types);
         repository.setGeometryMapping("test", types);
 
