@@ -19,11 +19,10 @@
 
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
-
-import javax.sql.DataSource;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.datasources.domain.Column;
@@ -41,12 +40,12 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
     /**
      * The max size of the pool
      */
-    static final String MAX_POOLSIZE_PARAM = "maxPoolSize";
+    String MAX_POOLSIZE_PARAM = "maxPoolSize";
 
     /**
      * The min size of the pool
      */
-    static final String MIN_POOLSIZE_PARAM = "minPoolSize";
+    String MIN_POOLSIZE_PARAM = "minPoolSize";
 
     /**
      * Retrieve a {@link Connection} to a database
@@ -63,7 +62,7 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
      * 
      * @return a {@link Map} of the database's table
      */
-    public Map<String, Table> getTables();
+    Map<String, Table> getTables();
 
     /**
      * Requests the database to get the columns of a specific table.
@@ -73,6 +72,6 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
      * @return a {@link Map} of the columns
      * 
      */
-    public Map<String, Column> getColumns(String pTableName);
+    Map<String, Column> getColumns(String pTableName);
 
 }

@@ -18,16 +18,15 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessgroup;
 
-import java.util.HashSet;
-import java.util.Set;
+import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-
-import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Entity representing an group of user having rights on some data
@@ -81,6 +80,9 @@ public class AccessGroup implements IIdentifiable<Long> {
     @Column(name = "public")
     private boolean isPublic = Boolean.FALSE;
 
+    @Column(name = "internal")
+    private boolean isInternal = Boolean.FALSE;
+
     public AccessGroup() {
         super();
         name = "";
@@ -130,6 +132,14 @@ public class AccessGroup implements IIdentifiable<Long> {
 
     public void setUsers(final Set<User> pUsers) {
         users = pUsers;
+    }
+
+    public void setInternal(boolean isInternal) {
+        this.isInternal = isInternal;
+    }
+
+    public boolean isInternal() {
+        return isInternal;
     }
 
     @Override

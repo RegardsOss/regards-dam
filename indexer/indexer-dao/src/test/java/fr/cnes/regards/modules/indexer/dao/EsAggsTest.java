@@ -1,24 +1,5 @@
 package fr.cnes.regards.modules.indexer.dao;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -31,6 +12,24 @@ import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * Test on complex aggs
@@ -70,10 +69,10 @@ public class EsAggsTest {
             propMap.put(keyVal[0], keyVal[1]);
         });
         try {
-            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter<>()).create();
+            gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                    Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
-                    propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));
+                                          Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
+                                          new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
@@ -133,8 +132,9 @@ public class EsAggsTest {
     @Test
     public void test() {
         createData();
-        DocFilesSummary summary = repository.computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class),
-                                                                     null, "tags", "RAWDATA", "QUICKLOOK_HD");
+        DocFilesSummary summary = repository
+                .computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class), null, "tags", "RAWDATA",
+                                         "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
         // 36 because 24 RAWDATA (each RAWDATA is doubled with same name and "2" at the end) and 12 QUICKLOOKS
@@ -222,13 +222,7 @@ public class EsAggsTest {
     }
 
     private static enum DataType {
-        RAWDATA,
-        RAWDATA2, // To permit add fil in double with a different name (for testing multimap of rawdata)
-        QUICKLOOK_SD,
-        QUICKLOOK_MD,
-        QUICKLOOK_HD,
-        DOCUMENT,
-        THUMBNAIL,
-        OTHER;
+        RAWDATA, RAWDATA2, // To permit add fil in double with a different name (for testing multimap of rawdata)
+        QUICKLOOK_SD, QUICKLOOK_MD, QUICKLOOK_HD, DOCUMENT, THUMBNAIL, OTHER;
     }
 }

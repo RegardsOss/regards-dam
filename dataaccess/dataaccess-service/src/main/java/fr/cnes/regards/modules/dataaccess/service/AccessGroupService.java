@@ -18,18 +18,18 @@
  */
 package fr.cnes.regards.modules.dataaccess.service;
 
+import fr.cnes.regards.framework.amqp.IInstanceSubscriber;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
+import fr.cnes.regards.framework.jpa.multitenant.event.TenantConnectionReady;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.module.rest.exception.*;
 import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUserEvent;
@@ -40,9 +40,10 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupAs
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupDissociationEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupPublicEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,6 +54,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Set;
 
@@ -61,14 +63,23 @@ import java.util.Set;
  * Service handling {@link AccessGroup}
  *
  * @author Sylvain Vissiere-Guerinet
+ * @author Léo Mieulet
  *
  */
 @Service
 @MultitenantTransactional
-@EnableFeignClients(clients = IProjectUsersClient.class)
 public class AccessGroupService implements ApplicationListener<ApplicationReadyEvent>, IAccessGroupService {
 
+    private final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
+
+
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
+
+
+    /**
+     * Name of the public access group used to allow everyone to access Documents
+     */
+    public static final String ACCESS_GROUP_PUBLIC_DOCUMENTS = "PublicDocumentGroup";
 
     private final IAccessGroupRepository accessGroupDao;
 
@@ -81,21 +92,48 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
 
     private final ISubscriber subscriber;
 
+    /**
+     * Tenant resolver to access all configured tenant
+     */
+    private final ITenantResolver tenantResolver;
+    /**
+     * AMQP instance message subscriber
+     */
+    private final IInstanceSubscriber instanceSubscriber;
+
     @Value("${spring.application.name}")
     private String microserviceName;
 
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
     public AccessGroupService(final IAccessGroupRepository pAccessGroupDao,
-            final IProjectUsersClient pProjectUserClient, final IPublisher pPublisher, final ISubscriber subscriber,
-            IRuntimeTenantResolver runtimeTenantResolver) {
+                              final IProjectUsersClient pProjectUserClient, final IPublisher pPublisher, final ISubscriber subscriber,
+                              final ITenantResolver pTenantResolver, final IInstanceSubscriber pInstanceSubscriber,
+                              IRuntimeTenantResolver runtimeTenantResolver) {
         super();
         accessGroupDao = pAccessGroupDao;
         projectUserClient = pProjectUserClient;
         publisher = pPublisher;
         this.subscriber = subscriber;
         this.runtimeTenantResolver = runtimeTenantResolver;
+
+        tenantResolver = pTenantResolver;
+        this.instanceSubscriber = pInstanceSubscriber;
     }
+
+
+    /**
+     * Post contruct
+     */
+    @PostConstruct
+    public void init() {
+        // Ensure the existence of the default Group Access for Documents.
+        for (final String tenant : tenantResolver.getAllActiveTenants()) {
+            initDefaultAccessGroup(tenant);
+        }
+        instanceSubscriber.subscribeTo(TenantConnectionReady.class, new TenantConnectionReadyEventHandler());
+    }
+
 
     @Override
     public void setMicroserviceName(final String pMicroserviceName) {
@@ -137,9 +175,13 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     }
 
     @Override
-    public void deleteAccessGroup(final String pAccessGroupName) {
+    public void deleteAccessGroup(final String pAccessGroupName) throws EntityOperationForbiddenException, EntityNotFoundException {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
         if (toDelete != null) {
+            // Prevent users to delete the public AccessGroup used by Documents
+            if (toDelete.isInternal()) {
+                throw new EntityOperationForbiddenException(toDelete.getName(), AccessGroup.class, "Cannot remove the public access group used by Documents");
+            }
             accessGroupDao.delete(toDelete.getId());
             // Publish attribute deletion
             publisher.publish(new AccessGroupEvent(toDelete));
@@ -147,6 +189,8 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
             if (toDelete.isPublic()) {
                 publisher.publish(new AccessGroupPublicEvent(toDelete));
             }
+        } else {
+            throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
     }
 
@@ -276,5 +320,49 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
 
         }
 
+    }
+
+
+    /**
+     * Handle a new tenant connection to initialize default Access Group for Documents
+     *
+     * @author Léo Mieulet
+     *
+     */
+    private class TenantConnectionReadyEventHandler implements IHandler<TenantConnectionReady> {
+
+        /**
+         * Initialize default Access Group for Documents in the new project connection
+         *
+         * @see fr.cnes.regards.framework.amqp.domain.IHandler#handle(fr.cnes.regards.framework.amqp.domain.TenantWrapper)
+         * @since 2.0-SNAPSHOT
+         */
+        @Override
+        public void handle(final TenantWrapper<TenantConnectionReady> pWrapper) {
+            if (microserviceName.equals(pWrapper.getContent().getMicroserviceName())) {
+                // Retrieve new tenant to manage
+                final String tenant = pWrapper.getContent().getTenant();
+                // Init default role for this tenant
+                initDefaultAccessGroup(tenant);
+            }
+        }
+    }
+
+    private void initDefaultAccessGroup(String tenant) {
+        // Set working tenant
+        runtimeTenantResolver.forceTenant(tenant);
+        // Build the AccessGroup we need in the current project
+        final AccessGroup publicDocumentAccessGroup = new AccessGroup();
+        publicDocumentAccessGroup.setName(AccessGroupService.ACCESS_GROUP_PUBLIC_DOCUMENTS);
+        publicDocumentAccessGroup.setPublic(true);
+        publicDocumentAccessGroup.setInternal(true);
+        try {
+            createAccessGroup(publicDocumentAccessGroup);
+        } catch (EntityAlreadyExistsException e) {
+            // the entity already exists, no problem
+        } catch (Exception e) {
+            LOGGER.error("Failed to register the public AccessGroup used by documents on tenant {}", tenant);
+            // Do not prevent microservice to boot
+        }
     }
 }

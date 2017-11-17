@@ -18,9 +18,19 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
+import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
+import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -39,19 +49,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
-import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
-import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
-import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
-import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * REST module controller
@@ -85,6 +84,13 @@ public class AccessGroupControllerIT extends AbstractRegardsTransactionalIT {
         public IModelAttrAssocClient modelAttrAssocClient() {
             return Mockito.mock(IModelAttrAssocClient.class);
         }
+
+
+        @Bean
+        public IProjectUsersClient mockProjectUsersClient() {
+            return Mockito.mock(IProjectUsersClient.class);
+        }
+
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessGroupControllerIT.class);

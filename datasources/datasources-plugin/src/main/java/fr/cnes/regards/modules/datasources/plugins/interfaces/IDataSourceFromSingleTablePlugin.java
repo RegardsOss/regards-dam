@@ -35,7 +35,7 @@ public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
     /**
      * The table parameter name
      */
-    public static final String TABLE_PARAM = "table";
+    String TABLE_PARAM = "table";
 
     /**
      * Allows to define the database table used, and the columns of this table.</br>
@@ -44,6 +44,6 @@ public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
      * @param pTable
      *            the name of the table
      */
-    public void initializePluginMapping(String pTable);
+    void initializePluginMapping(String pTable);
 
 }

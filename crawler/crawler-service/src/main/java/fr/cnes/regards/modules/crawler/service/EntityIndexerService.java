@@ -1,5 +1,33 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import com.google.common.base.Strings;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
+import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
+import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.entities.service.IEntitiesService;
+import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.models.domain.IComputedAttribute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
@@ -10,35 +38,9 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.google.common.base.Strings;
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
-import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
-import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
-import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.service.IEntitiesService;
-import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
-import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
-import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.models.domain.IComputedAttribute;
-
 /**
  * @author oroussel
+ * @author Léo Mieulet
  */
 @Service
 public class EntityIndexerService implements IEntityIndexerService {
@@ -90,7 +92,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Remove parameters of dataset datasource to avoid expose security values
             if (entity instanceof Dataset) {
                 Dataset dataset = (Dataset) entity;
-                // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHed)
+                // entity must be detached else Hibernate tries to commit update (datasource is cascade.DETACHED)
                 em.detach(entity);
                 if (dataset.getDataSource() != null) {
                     dataset.getDataSource().setParameters(null);
@@ -114,6 +116,9 @@ public class EntityIndexerService implements IEntityIndexerService {
                         dataset.getGroups().add(entry.getKey());
                     }
                 }
+            } else if (entity instanceof Document) {
+                // Add the internal AccessGroup to allow everyone to see this document
+                entity.getGroups().add(AccessGroupService.ACCESS_GROUP_PUBLIC_DOCUMENTS);
             }
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);

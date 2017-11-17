@@ -121,6 +121,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     private int readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, int savedObjectsCount, OffsetDateTime now, String datasourceId)
             throws DataSourceException, InterruptedException, ExecutionException {
+        // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
@@ -146,6 +147,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     private int readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
             IDataSourcePlugin dsPlugin, int savedObjectsCount, OffsetDateTime now, String datasourceId)
             throws DataSourceException, InterruptedException, ExecutionException {
+        // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
