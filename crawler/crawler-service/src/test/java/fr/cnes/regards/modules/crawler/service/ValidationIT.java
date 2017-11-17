@@ -93,18 +93,6 @@ public class ValidationIT {
     @Value("${postgresql.datasource.driver}")
     private String driver;
 
-    @Value("${regards.elasticsearch.host:}")
-    private String esHost;
-
-    @Value("${regards.elasticsearch.address:}")
-    private String esAddress;
-
-    @Value("${regards.elasticsearch.tcp.port}")
-    private int esPort;
-
-    @Value("${regards.elasticsearch.cluster.name}")
-    private String esClusterName;
-
     @Autowired
     private IModelService modelService;
 

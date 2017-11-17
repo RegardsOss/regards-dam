@@ -168,9 +168,6 @@ public class IndexerServiceDataSourceIT {
     @Value("${regards.elasticsearch.tcp.port}")
     private int esPort;
 
-    @Value("${regards.elasticsearch.cluster.name}")
-    private String esClusterName;
-
     @Autowired
     private IModelService modelService;
 

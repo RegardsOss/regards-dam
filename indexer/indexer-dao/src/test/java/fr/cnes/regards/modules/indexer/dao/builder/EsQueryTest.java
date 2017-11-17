@@ -99,7 +99,7 @@ public class EsQueryTest {
             // This test is not intended to be executed on integration serveur but better locally to test
             // functionnalities during development phase
             //            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-            //                    Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")), new AggregationBuilderFacetTypeVisitor(100, 5));
+            //                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")), new AggregationBuilderFacetTypeVisitor(100, 5));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
