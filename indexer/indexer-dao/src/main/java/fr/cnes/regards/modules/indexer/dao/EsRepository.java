@@ -65,7 +65,6 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.unit.TimeValue;
@@ -75,8 +74,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -221,11 +218,6 @@ public class EsRepository implements IEsRepository {
     private RestHighLevelClient client;
 
     /**
-     * Client to ElasticSearch base
-     */
-    private TransportClient tcpClient;
-
-    /**
      * Json mapper
      */
     private final Gson gson;
@@ -344,9 +336,19 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public long deleteByQuery(String index, ICriterion criterion) {
-        BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(tcpClient)
-                .filter(criterion.accept(CRITERION_VISITOR)).source(index).get();
-        return response.getDeleted();
+        try {
+            HttpEntity entity = new NStringEntity("{ \"query\":" + criterion.accept(CRITERION_VISITOR).toString() + "}",
+                                                  ContentType.APPLICATION_JSON);
+            Response response = restClient
+                    .performRequest("POST", index.toLowerCase() + "/_delete_by_query", Collections.emptyMap(), entity);
+
+            try (InputStream is = response.getEntity().getContent()) {
+                Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+                return ((Number)map.get("deleted")).longValue();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -399,7 +401,7 @@ public class EsRepository implements IEsRepository {
         checkDocument(doc);
         try {
             IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
-                                            .source(gson.toJson(doc), XContentType.JSON));
+                                                          .source(gson.toJson(doc), XContentType.JSON));
             return (response.getResult() == Result.CREATED);
         } catch (IOException e) {
             throw new RuntimeException(e); // NOSONAR

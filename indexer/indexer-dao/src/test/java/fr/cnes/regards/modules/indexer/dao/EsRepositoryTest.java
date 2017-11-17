@@ -102,6 +102,15 @@ public class EsRepositoryTest {
     }
 
     @Test
+    public void testDeleteByQuery() {
+        if (repository.indexExists("Pouet")) {
+            repository.deleteIndex("Pouet");
+        }
+        repository.createIndex("Pouet");
+        repository.deleteAll("Pouet");
+    }
+
+    @Test
     public void testCreateDeleteIndex() throws UnknownHostException {
         Assert.assertTrue(repository.createIndex("test"));
         Assert.assertTrue(repository.deleteIndex("test"));
