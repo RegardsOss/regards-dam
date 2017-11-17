@@ -64,12 +64,6 @@ public interface IEsRepository {
     boolean deleteIndex(String index);
 
     /**
-     * Find all indices
-     * @return all indices <b>lowercase</b>
-     */
-    String[] findIndices();
-
-    /**
      * Does specified index exist ?
      * @param name index name
      * @return true or false
@@ -169,28 +163,6 @@ public interface IEsRepository {
      */
     default boolean delete(final String index, final IIndexable document) {
         return delete(index, document.getType(), document.getDocId());
-    }
-
-    /**
-     * Merge partial document with existing one.
-     * @param index index
-     * @param type document type
-     * @param id document id
-     * @param mergedPropertiesMap map { name -> value } of properties to merge. Name can be one level sub-property dot identifier (ie. "toto.tata")
-     * @return true if document has been updated, false otherwise
-     */
-    boolean merge(String index, String type, String id, Map<String, Object> mergedPropertiesMap);
-
-    /**
-     * {@link #merge(String, String, String, Map)}
-     * @param index index
-     * @param document IIndexable object specifying docId and type
-     * @param mergedPropertiesMap map { name -> value } of properties to merge. Name can be one level sub-property dot identifier (ie. "toto.tata")
-     * @return true if document has been updated, false otherwise
-     */
-    default boolean merge(final String index, final IIndexable document,
-            final Map<String, Object> mergedPropertiesMap) {
-        return merge(index, document.getType(), document.getDocId(), mergedPropertiesMap);
     }
 
     /**

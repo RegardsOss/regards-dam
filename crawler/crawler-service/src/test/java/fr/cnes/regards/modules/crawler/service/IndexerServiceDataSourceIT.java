@@ -31,11 +31,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -43,7 +43,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -64,7 +64,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -348,7 +347,7 @@ public class IndexerServiceDataSourceIT {
         final List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                "DATA_OBJECTS_ID"));
+                                                  "DATA_OBJECTS_ID"));
 
         attributes.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         attributes.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
@@ -362,7 +361,7 @@ public class IndexerServiceDataSourceIT {
         attributes.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE"));
         attributes.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
         attributes.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE"));
+                                                   "DATA_CREATION_DATE"));
 
         attributes.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
@@ -449,8 +448,8 @@ public class IndexerServiceDataSourceIT {
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // All data are associated with the 3 datasets so they must all have the 4 groups
@@ -470,8 +469,8 @@ public class IndexerServiceDataSourceIT {
         crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset1.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
         objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
@@ -480,8 +479,8 @@ public class IndexerServiceDataSourceIT {
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset2.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
         // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)
@@ -522,23 +521,27 @@ public class IndexerServiceDataSourceIT {
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
 
-        objectsPage = searchService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
-                                                      "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
-                                                      "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
+        objectsPage = searchService
+                .multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13, "properties.DATA_OBJECTS_ID",
+                                   "properties.FILE_SIZE", "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
         Assert.assertFalse(objectsPage.getContent().isEmpty());
         Assert.assertEquals(3092, objectsPage.getContent().size());
     }
 
     private void checkDatasetComputedAttribute(final Dataset pDataset,
-            final SimpleSearchKey<DataObject> pObjectSearchKey, final long objectsCreationCount) {
-        final TransportClient client = new PreBuiltTransportClient(
-                Settings.builder().put("cluster.name", esClusterName).build());
+            final SimpleSearchKey<DataObject> pObjectSearchKey, final long objectsCreationCount) throws IOException {
+        RestClient restClient;
+        RestHighLevelClient client;
         try {
-            client.addTransportAddress(new InetSocketTransportAddress(
-                    InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort));
+            restClient = RestClient.builder(
+                    new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort))
+                    .build();
+            client = new RestHighLevelClient(restClient);
+
         } catch (final UnknownHostException e) {
             LOGGER.error("could not get a connection to ES in the middle of the test where we know ES is available", e);
             Assert.fail();
+            return;
         }
         // lets build the request so elasticsearch can calculate the few attribute we are using in test(min(START_DATE),
         // max(STOP_DATE), sum(FILE_SIZE) via aggregation, the count of element in this context is already known:
@@ -548,18 +551,20 @@ public class IndexerServiceDataSourceIT {
         final QueryBuilder qb = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                 .filter(crit.accept(critVisitor));
         // now we have a request on the right data
-        final SearchRequestBuilder searchRequest = client.prepareSearch(pObjectSearchKey.getSearchIndex().toLowerCase())
-                .setTypes(pObjectSearchKey.getSearchTypes()).setQuery(qb).setSize(0);
+        SearchSourceBuilder builder = new SearchSourceBuilder();
+        builder.query(qb).size(0);
         // lets build the aggregations
         // aggregation for the min
-        searchRequest.addAggregation(AggregationBuilders.min("min_start_date").field("properties.START_DATE"));
+        builder.aggregation(AggregationBuilders.min("min_start_date").field("properties.START_DATE"));
         // aggregation for the max
-        searchRequest.addAggregation(AggregationBuilders.max("max_stop_date").field("properties.STOP_DATE"));
+        builder.aggregation(AggregationBuilders.max("max_stop_date").field("properties.STOP_DATE"));
         // aggregation for the sum
-        searchRequest.addAggregation(AggregationBuilders.sum("sum_file_size").field("properties.FILE_SIZE"));
+        builder.aggregation(AggregationBuilders.sum("sum_file_size").field("properties.FILE_SIZE"));
+        SearchRequest request = new SearchRequest(pObjectSearchKey.getSearchIndex().toLowerCase())
+                .types(pObjectSearchKey.getSearchTypes()).source(builder);
 
         // get the results computed by ElasticSearch
-        final SearchResponse response = searchRequest.get();
+        SearchResponse response = client.search(request);
         final Map<String, Aggregation> aggregations = response.getAggregations().asMap();
 
         // now lets actually test things
@@ -571,7 +576,7 @@ public class IndexerServiceDataSourceIT {
                             ((OffsetDateTime) getDatasetProperty(pDataset, "START_DATE").getValue()).toInstant());
         Assert.assertEquals(Instant.parse(((InternalMax) aggregations.get("max_stop_date")).getValueAsString()),
                             ((OffsetDateTime) getDatasetProperty(pDataset, "STOP_DATE").getValue()).toInstant());
-        client.close();
+        restClient.close();
     }
 
     private AbstractAttribute<?> getDatasetProperty(final Dataset pDataset, final String pPropertyName) {
@@ -580,12 +585,9 @@ public class IndexerServiceDataSourceIT {
 
     /**
      * Import model definition file from resources directory
-     *
-     * @param pFilename
-     *            filename
+     * @param pFilename filename
      * @return list of created model attributes
-     * @throws ModuleException
-     *             if error occurs
+     * @throws ModuleException if error occurs
      */
     private void importModel(final String pFilename) throws ModuleException {
         try {

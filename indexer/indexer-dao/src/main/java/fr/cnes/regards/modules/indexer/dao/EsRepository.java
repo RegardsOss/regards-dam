@@ -19,15 +19,13 @@
 package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,31 +42,40 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
+import org.apache.http.entity.ContentType;
+import org.apache.http.nio.entity.NStringEntity;
 import org.elasticsearch.action.DocWriteResponse.Result;
-import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetaData;
 import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.BulkIndexByScrollResponse;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -84,9 +91,8 @@ import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.jboss.netty.handler.timeout.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,10 +104,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -195,24 +201,29 @@ public class EsRepository implements IEsRepository {
     private static final String GEOM_TYPE_PROP = "type=geo_shape";
 
     /**
-     * Elasticsearch port
-     */
-    private final String esClusterName;
-
-    /**
      * Elasticsearch host
      */
     private final String esHost;
 
     /**
-     * Elasticsearch TCP port
+     * Elasticsearch port
      */
-    private int esPort = 9300;
+    private int esPort;
+
+    /**
+     * Low level Rest API client
+     */
+    private RestClient restClient;
+
+    /**
+     * High level Rest API client
+     */
+    private RestHighLevelClient client;
 
     /**
      * Client to ElasticSearch base
      */
-    private final TransportClient client;
+    private TransportClient tcpClient;
 
     /**
      * Json mapper
@@ -223,146 +234,157 @@ public class EsRepository implements IEsRepository {
      * Constructor
      * @param pGson JSon mapper bean
      */
-    public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String pEsHost,
-            @Value("${regards.elasticsearch.address:}") String pEsAddress,
-            @Value("${regards.elasticsearch.tcp.port}") int pEsPort,
-            @Value("${regards.elasticsearch.cluster.name}") String pEsClusterName,
-            AggregationBuilderFacetTypeVisitor pAggBuilderFacetTypeVisitor) throws UnknownHostException {
+    public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String inEsHost,
+            @Value("${regards.elasticsearch.address:}") String inEsAddress,
+            @Value("${regards.elasticsearch.http.port}") int esPort,
+            AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) throws UnknownHostException {
 
         gson = pGson;
-        esHost = Strings.isEmpty(pEsHost) ? pEsAddress : pEsHost;
-        esPort = pEsPort;
-        esClusterName = pEsClusterName;
-        aggBuilderFacetTypeVisitor = pAggBuilderFacetTypeVisitor;
+        this.esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
+        this.esPort = esPort;
+        this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
         String connectionInfoMessage = String
-                .format("Elastic search connection properties : host \"%s\", port \"%d\", cluster \"%s\"", esHost,
-                        esPort, esClusterName);
+                .format("Elastic search connection properties : host \"%s\", port \"%d\"", this.esHost, this.esPort);
         LOGGER.info(connectionInfoMessage);
 
-        client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", esClusterName).build());
-        client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(esHost), esPort));
-        // Testinf availability of ES
-        List<DiscoveryNode> nodes = client.connectedNodes();
-        if (nodes.isEmpty()) {
-            throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
+        restClient = RestClient.builder(new HttpHost(this.esHost, this.esPort)).build();
+        client = new RestHighLevelClient(restClient);
+
+        try {
+            // Testing availability of ES
+            if (!client.ping()) {
+                throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
+            }
+        } catch (Throwable t) {
+            // TODO ??? Qui a (osé) écrire ça ?
         }
     }
 
     @Override
     public void close() {
         LOGGER.info("Closing connection");
-        client.close();
+        try {
+            restClient.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
 
     @Override
-    public boolean createIndex(String pIndex) {
-        return client.admin().indices().prepareCreate(pIndex.toLowerCase()).get().isAcknowledged();
+    public boolean createIndex(String index) {
+        try {
+            Response response = restClient.performRequest("PUT", index.toLowerCase());
+            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public boolean setAutomaticDoubleMapping(String index, String... types) {
         try {
-            XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates")
-                    .startObject().startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
-                    .field("type", "double").endObject().endObject().endObject().endArray().endObject();
-            return Arrays.stream(types)
-                    .map(type -> client.admin().indices().preparePutMapping(index.toLowerCase()).setType(type)
-                            .setSource(mapping).get().isAcknowledged()).allMatch(ack -> (ack == true));
+            String mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates").startObject()
+                    .startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
+                    .field("type", "double").endObject().endObject().endObject().endArray().endObject().string();
+
+            HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+
+            for (String type : types) {
+                Response response = restClient
+                        .performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping", Collections.emptyMap(),
+                                        entity);
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    return false;
+                }
+            }
+            return true;
         } catch (IOException ioe) { // NOSONAR
             throw new RuntimeException(ioe);
         }
     }
 
     @Override
-    public boolean setGeometryMapping(String pIndex, String... types) {
-        String index = pIndex.toLowerCase();
-        return Arrays.stream(types).map(type -> client.admin().indices().preparePutMapping(index).setType(type)
-                .setSource(GEOM_NAME, GEOM_TYPE_PROP).get().isAcknowledged()).allMatch(ack -> (ack == true));
+    public boolean setGeometryMapping(String index, String... types) {
+        try {
+            for (String type : types) {
+                String mapping = XContentFactory.jsonBuilder().startObject().startObject(type).startObject("properties")
+                        .startObject("geometry").field("type", "geo_shape").endObject().endObject().endObject()
+                        .endObject().string();
+
+                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+                Response response = restClient
+                        .performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping", Collections.emptyMap(),
+                                        entity);
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public boolean delete(String pIndex, String pType, String pId) {
-        final DeleteResponse response = client.prepareDelete(pIndex.toLowerCase(), pType, pId).get();
-        return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
+    public boolean delete(String index, String type, String id) {
+        DeleteRequest request = new DeleteRequest(index.toLowerCase(), type, id);
+        try {
+            DeleteResponse response = client.delete(request);
+            return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public long deleteAll(String pIndex) {
-        BulkIndexByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
-                .filter(QueryBuilders.matchAllQuery()).source(pIndex.toLowerCase()).get();
-        refresh(pIndex);
-        return response.getDeleted();
+    public long deleteAll(String inIndex) {
+        return this.deleteByQuery(inIndex.toLowerCase(), ICriterion.all());
     }
 
     @Override
     public long deleteByQuery(String index, ICriterion criterion) {
-        BulkIndexByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
+        BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(tcpClient)
                 .filter(criterion.accept(CRITERION_VISITOR)).source(index).get();
         return response.getDeleted();
     }
 
     @Override
-    public boolean deleteIndex(String pIndex) {
-        return client.admin().indices().prepareDelete(pIndex.toLowerCase()).get().isAcknowledged();
-
-    }
-
-    @Override
-    public String[] findIndices() {
-        return Iterables.toArray(Iterables.transform(
-                client.admin().indices().prepareGetSettings().get().getIndexToSettings(), (pSetting) -> pSetting.key),
-                                 String.class);
-    }
-
-    @Override
-    public <T extends IIndexable> T get(String pIndex, String pType, String pId, Class<T> pClass) {
+    public boolean deleteIndex(String index) throws IndexNotFoundException {
         try {
-            final GetResponse response = client.prepareGet(pIndex.toLowerCase(), pType, pId).get();
-            if (!response.isExists()) {
-                return null;
+            Response response = restClient.performRequest("DELETE", index.toLowerCase());
+            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
+        } catch (ResponseException e) {
+            if (e.getResponse().getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                throw new IndexNotFoundException(index.toLowerCase());
             }
-            return gson.fromJson(response.getSourceAsString(), pClass);
-        } catch (final JsonSyntaxException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
     }
 
     @Override
-    public boolean indexExists(String pName) {
-        return client.admin().indices().prepareExists(pName.toLowerCase()).get().isExists();
+    public <T extends IIndexable> T get(String pIndex, String pType, String pId, Class<T> pClass) {
+        GetRequest request = new GetRequest(pIndex.toLowerCase(), pType, pId);
+        try {
+            GetResponse response = client.get(request);
+            if (!response.isExists()) {
+                return null;
+            }
+            return gson.fromJson(response.getSourceAsString(), pClass);
+        } catch (final JsonSyntaxException | IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
 
     @Override
-    public boolean merge(String pIndex, String pType, String pId, Map<String, Object> pMergedPropertiesMap) {
+    public boolean indexExists(String name) {
         try {
-            final Map<String, Map<String, Object>> mapMap = new HashMap<>();
-            try (XContentBuilder builder = XContentFactory.jsonBuilder().startObject()) { // NOSONAR
-                for (final Map.Entry<String, Object> entry : pMergedPropertiesMap.entrySet()) {
-                    // Simple key = value
-                    if (!entry.getKey().contains(".")) {
-                        builder.field(entry.getKey(), entry.getValue());
-                    } else { // Complex key => key.subKey = value
-                        final String name = entry.getKey().substring(0, entry.getKey().indexOf('.'));
-                        if (!mapMap.containsKey(name)) {
-                            mapMap.put(name, new HashMap<>());
-                        }
-                        final Map<String, Object> subMap = mapMap.get(name);
-                        subMap.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
-                    }
-                }
-                // Pending sub objects ?
-                if (!mapMap.isEmpty()) {
-                    for (final Map.Entry<String, Map<String, Object>> entry : mapMap.entrySet()) {
-                        builder.field(entry.getKey(), entry.getValue());
-                    }
-                }
-                final UpdateResponse response = client.prepareUpdate(pIndex.toLowerCase(), pType, pId)
-                        .setDoc(builder.endObject()).get();
-                return (response.getResult() == Result.UPDATED);
-            }
-        } catch (final IOException jpe) {
-            throw new RuntimeException(jpe); // NOSONAR
+            Response response = restClient.performRequest("HEAD", name.toLowerCase());
+            return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
         }
     }
 
@@ -373,65 +395,87 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public boolean save(String pIndex, IIndexable pDocument) {
-        checkDocument(pDocument);
-        final IndexResponse response = client
-                .prepareIndex(pIndex.toLowerCase(), pDocument.getType(), pDocument.getDocId())
-                .setSource(gson.toJson(pDocument)).get();
-        return (response.getResult() == Result.CREATED);
+    public boolean save(String index, IIndexable doc) {
+        checkDocument(doc);
+        try {
+            IndexResponse response = client.index(new IndexRequest(index.toLowerCase(), doc.getType(), doc.getDocId())
+                                            .source(gson.toJson(doc), XContentType.JSON));
+            return (response.getResult() == Result.CREATED);
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
 
     @Override
-    public void refresh(String pIndex) {
+    public void refresh(String index) {
         // To make just saved documents searchable, the associated index must be refreshed
-        client.admin().indices().prepareRefresh(pIndex.toLowerCase()).get();
+        try {
+            restClient.performRequest("GET", index.toLowerCase() + "/_refresh");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public <T extends IIndexable> int saveBulk(String pIndex, @SuppressWarnings("unchecked") T... documents) {
-        if (documents.length == 0) {
-            return 0;
-        }
-        String index = pIndex.toLowerCase();
-        for (T doc : documents) {
-            checkDocument(doc);
-        }
-        int savedDocCount = 0;
-        final BulkRequestBuilder bulkRequest = client.prepareBulk();
-        for (T doc : documents) {
-            bulkRequest.add(client.prepareIndex(index, doc.getType(), doc.getDocId()).setSource(gson.toJson(doc)));
-        }
-        final BulkResponse response = bulkRequest.get();
-        for (final BulkItemResponse itemResponse : response.getItems()) {
-            if (itemResponse.isFailed()) {
-                LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
-                                          itemResponse.getId()), itemResponse.getFailure().getCause());
-            } else {
-                savedDocCount++;
+    public <T extends IIndexable> int saveBulk(String inIndex, @SuppressWarnings("unchecked") T... documents) {
+        try {
+            if (documents.length == 0) {
+                return 0;
             }
-        }
-        // To make just saved documents searchable, the associated index must be refreshed
-        client.admin().indices().prepareRefresh(index).get();
-        return savedDocCount;
-    }
-
-    @Override
-    public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion pCrit) {
-        SearchRequestBuilder requestBuilder = client.prepareSearch(searchKey.getSearchIndex());
-        requestBuilder = requestBuilder.setTypes(searchKey.getSearchTypes());
-        ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
-        SearchResponse scrollResp = requestBuilder.setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS))
-                .setQuery(crit.accept(CRITERION_VISITOR)).setSize(DEFAULT_SCROLLING_HITS_SIZE).get();
-        // Scroll until no hits are returned
-        do {
-            for (final SearchHit hit : scrollResp.getHits().getHits()) {
-                pAction.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+            String index = inIndex.toLowerCase();
+            for (T doc : documents) {
+                checkDocument(doc);
+            }
+            int savedDocCount = 0;
+            BulkRequest bulkRequest = new BulkRequest();
+            for (T doc : documents) {
+                bulkRequest.add(new IndexRequest(index, doc.getType(), doc.getDocId())
+                                        .source(gson.toJson(doc), XContentType.JSON));
             }
 
-            scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
-                    .setScroll(new TimeValue(KEEP_ALIVE_SCROLLING_TIME_MS)).execute().actionGet();
-        } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
-        // loop.
+            BulkResponse response = client.bulk(bulkRequest);
+            for (final BulkItemResponse itemResponse : response.getItems()) {
+                if (itemResponse.isFailed()) {
+                    LOGGER.warn(String.format("Document of type %s of id %s cannot be saved", documents[0].getClass(),
+                                              itemResponse.getId()), itemResponse.getFailure().getCause());
+                } else {
+                    savedDocCount++;
+                }
+            }
+            // To make just saved documents searchable, the associated index must be refreshed
+            this.refresh(index);
+            return savedDocCount;
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
+    }
+
+    @Override
+    public <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> action, ICriterion inCrit) {
+        try {
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex());
+            request.types(searchKey.getSearchTypes());
+            ICriterion crit = (inCrit == null) ? ICriterion.all() : inCrit;
+            SearchSourceBuilder builder = new SearchSourceBuilder();
+            builder.query(crit.accept(CRITERION_VISITOR)).size(DEFAULT_SCROLLING_HITS_SIZE);
+            request.source(builder);
+            request.scroll(TimeValue.timeValueMillis(KEEP_ALIVE_SCROLLING_TIME_MS));
+            SearchResponse scrollResp = client.search(request);
+
+            // Scroll until no hits are returned
+            do {
+                for (final SearchHit hit : scrollResp.getHits().getHits()) {
+                    action.accept(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                }
+
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollResp.getScrollId());
+                scrollRequest.scroll(TimeValue.timeValueMillis(KEEP_ALIVE_SCROLLING_TIME_MS));
+                scrollResp = client.searchScroll(scrollRequest);
+            } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
+            // loop.
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
 
     /**
@@ -443,27 +487,34 @@ public class EsRepository implements IEsRepository {
      * @return a set of unique attribute values
      */
     private <R> Set<Object> searchJoined(SearchKey<?, R> searchKey, ICriterion pCrit, String attributeSource) {
-        // Only first type is chosen, this case is too complex to permit a multi-type search
-        // Add ".keyword" if attribute mapping type is of type text
-        String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], attributeSource) ?
-                attributeSource + ".keyword" :
-                attributeSource;
-        return this.unique(searchKey, pCrit, attribute);
+        try {
+            // Only first type is chosen, this case is too complex to permit a multi-type search
+            // Add ".keyword" if attribute mapping type is of type text
+            String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0],
+                                             attributeSource) ? attributeSource + ".keyword" : attributeSource;
+            return this.unique(searchKey, pCrit, attribute);
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
 
     @Override
-    public <T> Page<T> searchAllLimited(String pIndex, Class<T> pClass, Pageable pPageRequest) {
+    public <T> Page<T> searchAllLimited(String index, Class<T> clazz, Pageable pageRequest) {
         try {
             final List<T> results = new ArrayList<>();
-            SearchRequestBuilder request = client.prepareSearch(pIndex.toLowerCase()).setFrom(pPageRequest.getOffset())
-                    .setSize(pPageRequest.getPageSize());
-            SearchResponse response = getWithTimeouts(request);
+            SearchRequest request = new SearchRequest(index.toLowerCase());
+
+            SearchSourceBuilder builder = new SearchSourceBuilder().from(pageRequest.getOffset())
+                    .size(pageRequest.getPageSize());
+            request.source(builder);
+
+            SearchResponse response = client.search(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), pClass));
+                results.add(gson.fromJson(hit.getSourceAsString(), clazz));
             }
-            return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
-        } catch (final JsonSyntaxException e) {
+            return new PageImpl<>(results, pageRequest, response.getHits().getTotalHits());
+        } catch (final JsonSyntaxException | IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
     }
@@ -496,55 +547,61 @@ public class EsRepository implements IEsRepository {
                                                                    critBuilder);
             }
 
-            SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
-            request = request.setQuery(critBuilder).setFrom(pageRequest.getOffset()).setSize(pageRequest.getPageSize());
+            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
+                    .size(pageRequest.getPageSize());
 
             // If searchAfter has been executed (in that case manageSortRequest() has already been called)
             if (lastSearchAfterSortValues != null) {
-                request = request.searchAfter(lastSearchAfterSortValues).setFrom(0); // needed by searchAfter
-                manageSortRequest(index, request, sort);
+                builder.searchAfter(lastSearchAfterSortValues).from(0);
+                manageSortRequest(index, builder, sort);
             } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
-                manageSortRequest(index, request, sort);
+                manageSortRequest(index, builder, sort);
             }
 
             // Managing aggregations if some facets are asked
-            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, request);
+            boolean twoPassRequestNeeded = manageFirstPassRequestAggregations(facetsMap, builder);
+            request.source(builder);
             // Launch the request
-            SearchResponse response = getWithTimeouts(request);
-
-            // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
-            if (twoPassRequestNeeded) {
-                // Rebuild request
-                request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
-                request = request.setQuery(critBuilder).setFrom(pageRequest.getOffset())
-                        .setSize(pageRequest.getPageSize());
-                if (lastSearchAfterSortValues != null) {
-                    request = request.searchAfter(lastSearchAfterSortValues).setFrom(0); // needed by searchAfter
-                    manageSortRequest(index, request, sort);
-                } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
-                    manageSortRequest(index, request, pageRequest.getSort());
-                }
-                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                manageSecondPassRequestAggregations(facetsMap, request, aggsMap);
-                // Relaunch the request with replaced facets
-                response = getWithTimeouts(request);
-            }
-
-            // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
-            // (not necessarly)
-            if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
-                saveReminder(searchKey, pageRequest, crit, sort, response);
-            }
+            SearchResponse response = client.search(request);
 
             Set<IFacet<?>> facetResults = new HashSet<>();
-            if (response.getAggregations() != null) {
-                // Get the new aggregations result map
-                Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
-                // Fill the facet set
-                for (Map.Entry<String, FacetType> entry : facetsMap.entrySet()) {
-                    FacetType facetType = entry.getValue();
-                    String attributeName = entry.getKey();
-                    fillFacets(aggsMap, facetResults, facetType, attributeName);
+            if (response.getHits().getTotalHits() != 0) {
+                // At least one numeric facet is present, we need to replace all numeric facets by associated range facets
+                if (twoPassRequestNeeded) {
+                    // Rebuild request
+                    request = new SearchRequest(index).types(searchKey.getSearchTypes());
+                    builder = new SearchSourceBuilder().query(critBuilder).from(pageRequest.getOffset())
+                            .size(pageRequest.getPageSize());
+                    if (lastSearchAfterSortValues != null) {
+                        builder.searchAfter(lastSearchAfterSortValues).from(0); // needed by searchAfter
+                        manageSortRequest(index, builder, sort);
+                    } else if (pageRequest.getSort() != null) { // Don't forget to manage sort if one is provided
+                        manageSortRequest(index, builder, pageRequest.getSort());
+                    }
+                    Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                    manageSecondPassRequestAggregations(facetsMap, builder, aggsMap);
+                    // Relaunch the request with replaced facets
+                    request.source(builder);
+                    response = client.search(request);
+                }
+
+                // If offset >= MAX_RESULT_WINDOW or page size = MAX_RESULT_WINDOW, this means a next page should exist
+                // (not necessarly)
+                if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize()
+                        == MAX_RESULT_WINDOW)) {
+                    saveReminder(searchKey, pageRequest, crit, sort, response);
+                }
+
+                if (response.getAggregations() != null) {
+                    // Get the new aggregations result map
+                    Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
+                    // Fill the facet set
+                    for (Map.Entry<String, FacetType> entry : facetsMap.entrySet()) {
+                        FacetType facetType = entry.getValue();
+                        String attributeName = entry.getKey();
+                        fillFacets(aggsMap, facetResults, facetType, attributeName);
+                    }
                 }
             }
 
@@ -553,7 +610,7 @@ public class EsRepository implements IEsRepository {
                 results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
             return new FacetPage<>(results, facetResults, pageRequest, response.getHits().getTotalHits());
-        } catch (final JsonSyntaxException e) {
+        } catch (final JsonSyntaxException | IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
     }
@@ -580,166 +637,194 @@ public class EsRepository implements IEsRepository {
 
     private <T extends IIndexable> Object[] advanceWithSearchAfter(ICriterion crit, SearchKey<T, T> searchKey,
             Pageable pageRequest, String index, Sort sort, QueryBuilder critBuilder) {
-        Object[] sortValues = null;
-        int searchPageNumber = 0;
-        Pageable searchReminderPageRequest = null;
-        if (indexExists(REMINDER_IDX)) {
-            // First check existence of Reminder for exact given pageRequest from ES
-            SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest);
-            reminder = get(REMINDER_IDX, reminder);
-            if (reminder != null) {
-                LOGGER.debug("Found search after for offset {}", pageRequest.getOffset());
-                return reminder.getSearchAfterSortValues();
-            }
-            // Then check if a closer one exists (advance is done by MAX_RESULT_WINDOW steps so we must take this into
-            // account)
-            searchPageNumber =
-                    (pageRequest.getOffset() - pageRequest.getOffset() % MAX_RESULT_WINDOW) / MAX_RESULT_WINDOW;
-            while (searchPageNumber > 0) {
-                searchReminderPageRequest = new PageRequest(searchPageNumber, MAX_RESULT_WINDOW);
-                reminder = new SearchAfterReminder(crit, searchKey, sort, searchReminderPageRequest);
+        try {
+            Object[] sortValues = null;
+            int searchPageNumber = 0;
+            Pageable searchReminderPageRequest;
+            if (indexExists(REMINDER_IDX)) {
+                // First check existence of Reminder for exact given pageRequest from ES
+                SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest);
                 reminder = get(REMINDER_IDX, reminder);
-                // A reminder has been found ! Let's start from it
                 if (reminder != null) {
-                    LOGGER.debug("Found search after for offset {}", searchReminderPageRequest.getOffset());
-                    sortValues = reminder.getSearchAfterSortValues();
-                    break;
+                    LOGGER.debug("Found search after for offset {}", pageRequest.getOffset());
+                    return reminder.getSearchAfterSortValues();
                 }
-                searchPageNumber--;
+                // Then check if a closer one exists (advance is done by MAX_RESULT_WINDOW steps so we must take this into
+                // account)
+                searchPageNumber =
+                        (pageRequest.getOffset() - pageRequest.getOffset() % MAX_RESULT_WINDOW) / MAX_RESULT_WINDOW;
+                while (searchPageNumber > 0) {
+                    searchReminderPageRequest = new PageRequest(searchPageNumber, MAX_RESULT_WINDOW);
+                    reminder = new SearchAfterReminder(crit, searchKey, sort, searchReminderPageRequest);
+                    reminder = get(REMINDER_IDX, reminder);
+                    // A reminder has been found ! Let's start from it
+                    if (reminder != null) {
+                        LOGGER.debug("Found search after for offset {}", searchReminderPageRequest.getOffset());
+                        sortValues = reminder.getSearchAfterSortValues();
+                        break;
+                    }
+                    searchPageNumber--;
+                }
             }
-        }
 
-        // No reminder found (first request or last one is too old) => advance to next to last page
-        SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
-        // By default, launch request from 0 to 10_000 (without aggregations)...
-        int offset = 0;
-        int pageSize = MAX_RESULT_WINDOW;
-        request = request.setQuery(critBuilder).setFrom(offset).setSize(pageSize);
-        manageSortRequest(index, request, sort);
-        // ...Except if a closer reminder has already been found
-        if (sortValues != null) {
-            offset = searchPageNumber * MAX_RESULT_WINDOW;
-            //            request = request.setFrom(0).searchAfter(sortValues);
-        } else {
-            LOGGER.debug("Search (after) : offset {}", offset);
-            SearchResponse response = getWithTimeouts(request);
-            sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
-            offset += MAX_RESULT_WINDOW;
-        }
-        OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
+            // No reminder found (first request or last one is too old) => advance to next to last page
+            SearchRequest request = new SearchRequest(index).types(searchKey.getSearchTypes());
+            // By default, launch request from 0 to 10_000 (without aggregations)...
+            int offset = 0;
+            int pageSize = MAX_RESULT_WINDOW;
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(critBuilder).from(offset).size(pageSize);
+            manageSortRequest(index, builder, sort);
+            request.source(builder);
+            // ...Except if a closer reminder has already been found
+            if (sortValues != null) {
+                offset = searchPageNumber * MAX_RESULT_WINDOW;
+            } else {
+                LOGGER.debug("Search (after) : offset {}", offset);
+                SearchResponse response = client.search(request);
+                sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
+                offset += MAX_RESULT_WINDOW;
+            }
+            OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
 
-        int nextToLastOffset = pageRequest.getOffset() - pageRequest.getOffset() % MAX_RESULT_WINDOW;
-        // Execute as many request with search after as necessary to advance to next to last page of
-        // MAX_RESULT_WINDOW size until offset
-        while (offset < nextToLastOffset) {
-            // Change offset
-            LOGGER.debug("Search after : offset {}", offset);
-            request = request.setFrom(0).searchAfter(sortValues);
-            SearchResponse response = getWithTimeouts(request);
-            sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
-            // Create a Reminder and save it into ES for next page
-            SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
-                                                                   new PageRequest(offset / MAX_RESULT_WINDOW,
-                                                                                   MAX_RESULT_WINDOW).next());
-            reminder.setExpirationDate(expirationDate);
-            reminder.setSearchAfterSortValues(
-                    response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues());
+            int nextToLastOffset = pageRequest.getOffset() - pageRequest.getOffset() % MAX_RESULT_WINDOW;
+            // Execute as many request with search after as necessary to advance to next to last page of
+            // MAX_RESULT_WINDOW size until offset
+            while (offset < nextToLastOffset) {
+                // Change offset
+                LOGGER.debug("Search after : offset {}", offset);
+                builder.from(0).searchAfter(sortValues);
+                SearchResponse response = client.search(request);
+                sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
+                // Create a Reminder and save it into ES for next page
+                SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
+                                                                       new PageRequest(offset / MAX_RESULT_WINDOW,
+                                                                                       MAX_RESULT_WINDOW).next());
+                reminder.setExpirationDate(expirationDate);
+                reminder.setSearchAfterSortValues(
+                        response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues());
 
-            save(REMINDER_IDX, reminder);
-            offset += MAX_RESULT_WINDOW;
-        }
-        // Beware of offset that is a multiple of MAX_RESULT_WINDOW
-        if (pageRequest.getOffset() != offset) {
-            int size = pageRequest.getOffset() - offset;
-            LOGGER.debug("Search after : offset {}, size {}", offset, size);
-            request = request.setSize(size).searchAfter(sortValues).setFrom(0); // needed by searchAfter
-            SearchResponse response = getWithTimeouts(request);
-            sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
-        }
+                save(REMINDER_IDX, reminder);
+                offset += MAX_RESULT_WINDOW;
+            }
+            // Beware of offset that is a multiple of MAX_RESULT_WINDOW
+            if (pageRequest.getOffset() != offset) {
+                int size = pageRequest.getOffset() - offset;
+                LOGGER.debug("Search after : offset {}, size {}", offset, size);
+                builder.size(size).searchAfter(sortValues).from(0); // needed by searchAfter
+                SearchResponse response = client.search(request);
+                sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
+            }
 
-        // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MS that delete all reminders whom
-        // expiration date has been reached
-        reminderCleanExecutor
-                .schedule(() -> deleteByQuery(REMINDER_IDX, ICriterion.le("expirationDate", OffsetDateTime.now())),
-                          KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
-        return sortValues;
+            // Create a task to be executed after KEEP_ALIVE_SCROLLING_TIME_MS that delete all reminders whom
+            // expiration date has been reached
+            reminderCleanExecutor
+                    .schedule(() -> deleteByQuery(REMINDER_IDX, ICriterion.le("expirationDate", OffsetDateTime.now())),
+                              KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
+            return sortValues;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
-     * Build a SearchRequestBuilder following given ICriterion on searchKey with a result size of 0
+     * Build a SearchSourceBuilder following given ICriterion on searchKey with a result size of 0
      */
-    private <T> SearchRequestBuilder createRequestBuilderForAgg(SearchKey<?, T> searchKey, ICriterion pCrit) {
-        String index = searchKey.getSearchIndex();
-
+    private <T> SearchSourceBuilder createSourceBuilder4Agg(SearchKey<?, T> searchKey, ICriterion pCrit) {
         // Use filter instead of "direct" query (in theory, quickest because no score is computed)
         ICriterion crit = (pCrit == null) ? ICriterion.all() : pCrit;
         QueryBuilder critBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                 .filter(crit.accept(CRITERION_VISITOR));
-        SearchRequestBuilder request = client.prepareSearch(index).setTypes(searchKey.getSearchTypes());
         // Only return hits information
-        request = request.setQuery(critBuilder).setSize(0);
-        return request;
+        return new SearchSourceBuilder().query(critBuilder).size(0);
     }
 
     @Override
     public <T extends IIndexable> Long count(SearchKey<?, T> searchKey, ICriterion pCrit) {
-        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
-        // Launch the request
-        SearchResponse response = getWithTimeouts(request);
-
-        return response.getHits().getTotalHits();
+        try {
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, pCrit);
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            return response.getHits().getTotalHits();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @Override
     public <T extends IIndexable> double sum(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
-        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
-        request = request.addAggregation(AggregationBuilders.sum(attName).field(attName));
-        // Launch the request
-        SearchResponse response = getWithTimeouts(request);
-        return ((Sum) response.getAggregations().get(attName)).getValue();
+        try {
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, pCrit);
+            builder.aggregation(AggregationBuilders.sum(attName).field(attName));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            return ((Sum) response.getAggregations().get(attName)).getValue();
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
 
     @Override
     public <T extends IIndexable> OffsetDateTime minDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
-        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
-        request = request.addAggregation(AggregationBuilders.min(attName).field(attName));
-        // Launch the request
-        SearchResponse response = getWithTimeouts(request);
-        Min min = response.getAggregations().get(attName);
-        if ((min == null) || !Double.isFinite(min.getValue())) {
-            return null;
+        try {
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, pCrit);
+            builder.aggregation(AggregationBuilders.min(attName).field(attName));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            Min min = response.getAggregations().get(attName);
+            if ((min == null) || !Double.isFinite(min.getValue())) {
+                return null;
+            }
+            return OffsetDateTimeAdapter.parse(min.getValueAsString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return OffsetDateTimeAdapter.parse(min.getValueAsString());
     }
 
     @Override
     public <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion pCrit, String attName) {
-        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, pCrit);
-        request = request.addAggregation(AggregationBuilders.max(attName).field(attName));
-        // Launch the request
-        SearchResponse response = getWithTimeouts(request);
-        Max max = response.getAggregations().get(attName);
-        if ((max == null) || !Double.isFinite(max.getValue())) {
-            return null;
+        try {
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, pCrit);
+            builder.aggregation(AggregationBuilders.max(attName).field(attName));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            Max max = response.getAggregations().get(attName);
+            if ((max == null) || !Double.isFinite(max.getValue())) {
+                return null;
+            }
+            return OffsetDateTimeAdapter.parse(max.getValueAsString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return OffsetDateTimeAdapter.parse(max.getValueAsString());
     }
 
     public <T> Set<Object> unique(SearchKey<?, T> searchKey, ICriterion crit, String attName) {
-        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, crit);
-        // Assuming no more than Integer.MAX_SIZE results will be returned
-        request = request.addAggregation(AggregationBuilders.terms(attName).field(attName).size(Integer.MAX_VALUE));
-        // Launch the request
-        SearchResponse response = getWithTimeouts(request);
-        Terms terms = response.getAggregations().get(attName);
-        if (terms == null) {
-            return Collections.emptySet();
+        try {
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
+            // Assuming no more than Integer.MAX_SIZE results will be returned
+            builder.aggregation(AggregationBuilders.terms(attName).field(attName).size(Integer.MAX_VALUE));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            Terms terms = response.getAggregations().get(attName);
+            if (terms == null) {
+                return Collections.emptySet();
+            }
+            Set<Object> results = new HashSet<>();
+            for (Terms.Bucket bucket : terms.getBuckets()) {
+                results.add(bucket.getKey());
+            }
+            return results;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        Set<Object> results = new HashSet<>();
-        for (Terms.Bucket bucket : terms.getBuckets()) {
-            results.add(bucket.getKey());
-        }
-        return results;
     }
 
     /**
@@ -823,101 +908,108 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    private static Map<String, Object> toMap(Object o) {
+        return (Map<String, Object>) o;
+    }
+
     /**
      * Is given attribute (can be a composite attribute like toto.titi) of type text from ES mapping ?
-     * @param index concerned index
+     * @param inIndex concerned index
      * @param type concerned type
      * @param attribute attribute from type
      * @return true or false
      */
-    private boolean isTextMapping(String index, String type, String attribute) {
-        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(index.toLowerCase())
-                .setFields(attribute).get();
-        FieldMappingMetaData fieldMapping = response.fieldMappings(index.toLowerCase(), type, attribute);
+    private boolean isTextMapping(String inIndex, String type, String attribute) throws IOException {
+        String index = inIndex.toLowerCase();
+        Response response = restClient
+                .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
+        try (InputStream is = response.getEntity().getContent()) {
+            Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+            // If attribute exists, response should contain this chain of several maps :
+            // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
+            if ((map != null) && !map.isEmpty()) {
+                // In cas attribute is toto.titi.tutu, we will need "tutu" further
+                String lastPathAtt = (attribute.contains(".") ?
+                        attribute.substring(attribute.lastIndexOf('.') + 1) :
+                        attribute);
+                return toMap(toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
+                                           .get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
-        if (fieldMapping != null) {
-            Map<String, Object> metaDataMap = fieldMapping.sourceAsMap();
-            String lastPathAtt = (attribute.contains(".") ?
-                    attribute.substring(attribute.lastIndexOf('.') + 1) :
-                    attribute);
-            if ((metaDataMap != null) && (metaDataMap.get(lastPathAtt) instanceof Map)) {
-                Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAtt);
-                if (mappingMap.containsKey("type")) {
-                    return mappingMap.get("type").equals("text");
-                }
             }
         }
         return false;
     }
 
     /**
+     * Tell if given attribute is of type "text" from all types mappings of specified index.
+     * @param map response of "mappings" rest request
+     * @return true is first type mapping found fro given attribute is of type "text"
+     */
+    private static boolean isTextMapping(String index, Map<String, Object> map, String attribute) {
+        String lastPathAttName = attribute.contains(".") ?
+                attribute.substring(attribute.lastIndexOf('.') + 1) :
+                attribute;
+        try {
+            Map<String, Object> allTypesMapping = toMap(toMap(map.get(index)).get("mappings"));
+            // Search from all types mapping if one contains asked attribute (frankly, all must contain it but maybe
+            // automatic mapping isn't present for all
+            for (Object oTypeMap : allTypesMapping.values()) {
+                Map<String, Object> typeMap = toMap(oTypeMap);
+                if (typeMap.containsKey(attribute)) {
+                    return toMap(toMap(toMap(typeMap.get(attribute)).get("mapping")).get(lastPathAttName)).get("type")
+                            .equals("text");
+                }
+            }
+            return false; // NOSONAR
+        } catch (NullPointerException e) {
+            return false; // NOSONAR (better catch a NUllPointerException than testing all imbricated maps)
+        }
+    }
+
+    /**
      * Add sort to the request
-     * @param request search request
+     * @param builder search request
      * @param sort map(attribute name, true if ascending)
      */
-    private void manageSortRequest(String index, SearchRequestBuilder request, Sort sort) {
+    private void manageSortRequest(String index, SearchSourceBuilder builder, Sort sort) throws IOException {
         // Convert Sort into linked hash map
         LinkedHashMap<String, Boolean> ascSortMap = new SortToLinkedHashMap().convert(sort);
 
         // Because string attributes are not indexed with Elasticsearch, it is necessary to add ".keyword" at
         // end of attribute name into sort request. So we need to know string attributes
-        GetFieldMappingsResponse response = client.admin().indices().prepareGetFieldMappings(index)
-                .setFields(ascSortMap.keySet().toArray(new String[ascSortMap.size()])).get();
-        // map(type, map(field, metadata)) for asked index
-        Map<String, Map<String, FieldMappingMetaData>> mappings = response.mappings().get(index);
-        // All types mappings are retrieved.
-        // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
-        // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
-        LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
-        for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
-            String attributeName = sortEntry.getKey();
-            // "terminal" field name ie. for "toto.titi.tutu" => "tutu"
-            String lastPathAttName = attributeName.contains(".") ?
-                    attributeName.substring(attributeName.lastIndexOf('.') + 1) :
-                    attributeName;
-            // For all type mappings
-            boolean typeText = false;
-            for (Map.Entry<String, Map<String, FieldMappingMetaData>> typeEntry : mappings.entrySet()) {
-                // Once we found attribute name on one type, we stop to next attribute
-                if (typeEntry.getValue().containsKey(attributeName)) {
-                    FieldMappingMetaData attMetaData = typeEntry.getValue().get(attributeName);
-                    // If field type is String, we must add ".keyword" to attribute name
-                    Map<String, Object> metaDataMap = attMetaData.sourceAsMap();
-                    if ((metaDataMap.get(lastPathAttName) != null) && (metaDataMap
-                            .get(lastPathAttName) instanceof Map)) {
-                        Map<?, ?> mappingMap = (Map<?, ?>) metaDataMap.get(lastPathAttName);
-                        // Should contains "type" field but...
-                        if (mappingMap.containsKey("type")) {
-                            if (mappingMap.get("type").equals("text")) {
-                                updatedAscSortMap.put(attributeName + ".keyword", sortEntry.getValue());
-                                typeText = true;
-                                break;
-                            } else { // "type" field found => it's not "text"
-                                typeText = false;
-                                break;
-                            }
-                        }
+        Response response = restClient
+                .performRequest("GET", index + "/_mapping" + "/field/" + Joiner.on(",").join(ascSortMap.keySet()),
+                                Collections.emptyMap());
+        try (InputStream is = response.getEntity().getContent()) {
+            Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+            if ((map != null) && !map.isEmpty()) {
+                // All types mappings are retrieved.
+                // NOTE: in our context, attributes have same metada for all types so once we found one, we stop.
+                // To do that, we create a new LinkedHashMap to KEEPS keys order !!! (crucial)
+                LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
+                for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
+                    String attribute = sortEntry.getKey();
+                    if (isTextMapping(index, map, attribute)) {
+                        updatedAscSortMap.put(attribute + ".keyword", sortEntry.getValue());
+                    } else {
+                        updatedAscSortMap.put(attribute, sortEntry.getValue());
                     }
                 }
-            }
-            // Not "text" type => add the key/value to keep the sort order
-            if (!typeText) {
-                updatedAscSortMap.put(attributeName, sortEntry.getValue());
+
+                // Add sort to request
+                updatedAscSortMap.entrySet().forEach(
+                        entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
             }
         }
-        // Add sort to request
-        updatedAscSortMap.entrySet()
-                .forEach(entry -> request.addSort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
     }
 
     /**
      * Add aggregations to the search request.
      * @param pFacetsMap asked facets
-     * @param request search request
+     * @param builder search request
      * @return true if a second pass is needed (managing range facets)
      */
-    private boolean manageFirstPassRequestAggregations(Map<String, FacetType> pFacetsMap,
-            SearchRequestBuilder request) {
+    private boolean manageFirstPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchSourceBuilder builder) {
         boolean twoPassRequestNeeded = false;
         if (pFacetsMap != null) {
             // Numeric/date facets needs :
@@ -930,12 +1022,12 @@ public class EsRepository implements IEsRepository {
                 if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
                     // Add min aggregation and max aggregagtion when a range aggregagtion is asked for (NUMERIC and DATE
                     // facets leed to range aggregagtion at second pass) to avoid ranges with Infinties values
-                    request.addAggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
-                    request.addAggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
+                    builder.aggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
+                    builder.aggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
+
                     twoPassRequestNeeded = true;
                 }
-                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
-
+                builder.aggregation(facetType.accept(aggBuilderFacetTypeVisitor, entry.getKey()));
             }
         }
         return twoPassRequestNeeded;
@@ -944,10 +1036,10 @@ public class EsRepository implements IEsRepository {
     /**
      * Add aggregations to the search request (second pass). For range aggregations, use percentiles results (from first pass request results) to create range aggregagtions.
      * @param pFacetsMap asked facets
-     * @param request search request
+     * @param builder search request
      * @param aggsMap first pass aggregagtions results
      */
-    private void manageSecondPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchRequestBuilder request,
+    private void manageSecondPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchSourceBuilder builder,
             Map<String, Aggregation> aggsMap) {
         for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
             FacetType facetType = entry.getValue();
@@ -964,13 +1056,14 @@ public class EsRepository implements IEsRepository {
                         FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
-                    request.addAggregation(aggBuilder);
                     // And add max and min aggregagtions
-                    request.addAggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, attributeName));
-                    request.addAggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, attributeName));
+                    builder.aggregation(aggBuilder);
+                    // And add max and min aggregagtions
+                    builder.aggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, attributeName));
+                    builder.aggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, attributeName));
                 }
             } else { // Let others as it
-                request.addAggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
+                builder.aggregation(facetType.accept(aggBuilderFacetTypeVisitor, attributeName));
             }
         }
     }
@@ -1096,17 +1189,18 @@ public class EsRepository implements IEsRepository {
                     pValue;
             QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery())
                     .filter(QueryBuilders.multiMatchQuery(value, pFields));
-            SearchRequestBuilder request = client.prepareSearch(searchKey.getSearchIndex());
-            request = request.setTypes(searchKey.getSearchTypes());
-            request = request.setQuery(queryBuilder).setFrom(pPageRequest.getOffset())
-                    .setSize(pPageRequest.getPageSize());
-            SearchResponse response = getWithTimeouts(request);
+            SearchSourceBuilder builder = new SearchSourceBuilder().query(queryBuilder).from(pPageRequest.getOffset())
+                    .size(pPageRequest.getPageSize());
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+
+            SearchResponse response = client.search(request);
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
                 results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
-        } catch (final JsonSyntaxException e) {
+        } catch (final JsonSyntaxException | IOException e) {
             throw new RuntimeException(e); // NOSONAR
         }
     }
@@ -1114,93 +1208,82 @@ public class EsRepository implements IEsRepository {
     @Override
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
             ICriterion crit, String discriminantProperty, String... fileTypes) {
-        if ((fileTypes == null) || (fileTypes.length == 0)) {
-            throw new IllegalArgumentException("At least on file type must be provided");
-        }
-        SearchRequestBuilder request = createRequestBuilderForAgg(searchKey, crit);
-        // Add aggregations to manage compute summary
-        // First "global" aggregations on each asked file types
-        for (String fileType : fileTypes) {
-            // file count
-            request.addAggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                                           .field("files." + fileType + ".uri.keyword"));
-            // file size sum
-            request.addAggregation(
-                    AggregationBuilders.sum("total_" + fileType + "_files_size").field("files." + fileType + ".size"));
-        }
-        // Then bucket aggregation by discriminants
-        String termsFieldProperty = discriminantProperty;
-        if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
-            termsFieldProperty += ".keyword";
-        }
-        // Discriminant distribution aggregator
-        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
-                .field(termsFieldProperty).size(Integer.MAX_VALUE);
-        // and "total" aggregagtions on each asked file types
-        for (String fileType : fileTypes) {
-            // files count
-            termsAggBuilder.subAggregation(
-                    AggregationBuilders.count(fileType + "_files_count").field("files." + fileType + ".uri.keyword"));
-            // file size sum
-            termsAggBuilder.subAggregation(
-                    AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));
-        }
-        request.addAggregation(termsAggBuilder);
-
-        // Launch the request
-        SearchResponse response = getWithTimeouts(request);
-        DocFilesSummary summary = new DocFilesSummary();
-        // First "global" aggregations results
-        summary.setDocumentsCount(response.getHits().getTotalHits());
-        Aggregations aggs = response.getAggregations();
-        long totalFileCount = 0;
-        long totalFileSize = 0;
-        for (String fileType : fileTypes) {
-            ValueCount valueCount = aggs.get("total_" + fileType + "_files_count");
-            totalFileCount += valueCount.getValue();
-            Sum sum = aggs.get("total_" + fileType + "_files_size");
-            totalFileSize += sum.getValue();
-        }
-        summary.setFilesCount(totalFileCount);
-        summary.setFilesSize(totalFileSize);
-        // Then discriminants buckets aggregations results
-        Terms buckets = aggs.get(discriminantProperty);
-        for (Terms.Bucket bucket : buckets.getBuckets()) {
-            String discriminant = bucket.getKeyAsString();
-            DocFilesSubSummary discSummary = new DocFilesSubSummary();
-            discSummary.setDocumentsCount(bucket.getDocCount());
-            Aggregations discAggs = bucket.getAggregations();
-            long filesCount = 0;
-            long filesSize = 0;
+        try {
+            if ((fileTypes == null) || (fileTypes.length == 0)) {
+                throw new IllegalArgumentException("At least on file type must be provided");
+            }
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
+            // Add aggregations to manage compute summary
+            // First "global" aggregations on each asked file types
             for (String fileType : fileTypes) {
-                ValueCount valueCount = discAggs.get(fileType + "_files_count");
-                filesCount += valueCount.getValue();
-                Sum sum = discAggs.get(fileType + "_files_size");
-                filesSize += sum.getValue();
-                discSummary.getFileTypesSummaryMap()
-                        .put(fileType, new FilesSummary(valueCount.getValue(), (long) sum.getValue()));
+                // file count
+                builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
+                                            .field("files." + fileType + ".uri.keyword"));
+                // file size sum
+                builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
+                                            .field("files." + fileType + ".size"));
             }
-            discSummary.setFilesCount(filesCount);
-            discSummary.setFilesSize(filesSize);
-            summary.getSubSummariesMap().put(discriminant, discSummary);
-        }
-        return summary;
-    }
+            // Then bucket aggregation by discriminants
+            String termsFieldProperty = discriminantProperty;
+            if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
+                termsFieldProperty += ".keyword";
+            }
+            // Discriminant distribution aggregator
+            TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
+                    .field(termsFieldProperty).size(Integer.MAX_VALUE);
+            // and "total" aggregations on each asked file types
+            for (String fileType : fileTypes) {
+                // files count
+                termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
+                                                       .field("files." + fileType + ".uri.keyword"));
+                // file size sum
+                termsAggBuilder.subAggregation(
+                        AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));
+            }
+            builder.aggregation(termsAggBuilder);
 
-    /**
-     * Call specified request at least MAX_TIMEOUT_RETRIES
-     */
-    private SearchResponse getWithTimeouts(SearchRequestBuilder request) {
-        SearchResponse response;
-        int errorCount = 0;
-        do {
-            response = request.get();
-            errorCount += response.isTimedOut() ? 1 : 0;
-            if (errorCount == MAX_TIMEOUT_RETRIES) {
-                throw new TimeoutException(
-                        String.format("Get %d timeouts while attempting to retrieve data", MAX_TIMEOUT_RETRIES));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            DocFilesSummary summary = new DocFilesSummary();
+            // First "global" aggregations results
+            summary.setDocumentsCount(response.getHits().getTotalHits());
+            Aggregations aggs = response.getAggregations();
+            long totalFileCount = 0;
+            long totalFileSize = 0;
+            for (String fileType : fileTypes) {
+                ValueCount valueCount = aggs.get("total_" + fileType + "_files_count");
+                totalFileCount += valueCount.getValue();
+                Sum sum = aggs.get("total_" + fileType + "_files_size");
+                totalFileSize += sum.getValue();
             }
-        } while (response.isTimedOut());
-        return response;
+            summary.setFilesCount(totalFileCount);
+            summary.setFilesSize(totalFileSize);
+            // Then discriminants buckets aggregations results
+            Terms buckets = aggs.get(discriminantProperty);
+            for (Terms.Bucket bucket : buckets.getBuckets()) {
+                String discriminant = bucket.getKeyAsString();
+                DocFilesSubSummary discSummary = new DocFilesSubSummary();
+                discSummary.setDocumentsCount(bucket.getDocCount());
+                Aggregations discAggs = bucket.getAggregations();
+                long filesCount = 0;
+                long filesSize = 0;
+                for (String fileType : fileTypes) {
+                    ValueCount valueCount = discAggs.get(fileType + "_files_count");
+                    filesCount += valueCount.getValue();
+                    Sum sum = discAggs.get(fileType + "_files_size");
+                    filesSize += sum.getValue();
+                    discSummary.getFileTypesSummaryMap()
+                            .put(fileType, new FilesSummary(valueCount.getValue(), (long) sum.getValue()));
+                }
+                discSummary.setFilesCount(filesCount);
+                discSummary.setFilesSize(filesSize);
+                summary.getSubSummariesMap().put(discriminant, discSummary);
+            }
+            return summary;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

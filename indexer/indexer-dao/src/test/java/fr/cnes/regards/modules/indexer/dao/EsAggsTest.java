@@ -71,8 +71,8 @@ public class EsAggsTest {
         try {
             gson = new GsonBuilder().registerTypeAdapter(Multimap.class, new MultimapAdapter()).create();
             repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
-                    Integer.parseInt(propMap.get("regards.elasticsearch.tcp.port")),
-                    propMap.get("regards.elasticsearch.cluster.name"), new AggregationBuilderFacetTypeVisitor(10, 1));
+                                          Integer.parseInt(propMap.get("regards.elasticsearch.http.port")),
+                                          new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             LOGGER.error("NO NODE AVAILABLE");
             repositoryOK = false;
@@ -132,8 +132,9 @@ public class EsAggsTest {
     @Test
     public void test() {
         createData();
-        DocFilesSummary summary = repository.computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class),
-                                                                     null, "tags", "RAWDATA", "QUICKLOOK_HD");
+        DocFilesSummary summary = repository
+                .computeDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class), null, "tags", "RAWDATA",
+                                         "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());
         // 36 because 24 RAWDATA (each RAWDATA is doubled with same name and "2" at the end) and 12 QUICKLOOKS
@@ -221,13 +222,7 @@ public class EsAggsTest {
     }
 
     private static enum DataType {
-        RAWDATA,
-        RAWDATA2, // To permit add fil in double with a different name (for testing multimap of rawdata)
-        QUICKLOOK_SD,
-        QUICKLOOK_MD,
-        QUICKLOOK_HD,
-        DOCUMENT,
-        THUMBNAIL,
-        OTHER;
+        RAWDATA, RAWDATA2, // To permit add fil in double with a different name (for testing multimap of rawdata)
+        QUICKLOOK_SD, QUICKLOOK_MD, QUICKLOOK_HD, DOCUMENT, THUMBNAIL, OTHER;
     }
 }

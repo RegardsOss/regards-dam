@@ -19,13 +19,11 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.IOException;
 
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +53,6 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
 
     private static final String PORT_PARAM = "port";
 
-    private static final String CLUSTER_PARAM = "cluster";
-
     /**
      * The host
      */
@@ -64,48 +60,47 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
     private String host;
 
     /**
-     * The port
+     * The (HTTP) port
      */
     @PluginParameter(name = PORT_PARAM)
     private int port;
 
-    /**
-     * The cluster
-     */
-    @PluginParameter(name = CLUSTER_PARAM)
-    private String cluster;
 
     /**
-     * The {@link TransportClient} used to connect to one or more node
+     * The Rest client (low level API) used to connect to one or more node
      */
-    private TransportClient client;
+    private RestClient restClient;
+
+    /**
+     * The ES client (high level API) used to connect to one or more node
+     */
+    private RestHighLevelClient client;
 
     @Override
     public boolean testConnection() {
-        return !client.connectedNodes().isEmpty();
+        try {
+            return client.ping();
+        } catch (IOException e) {
+            LOG.error("Error while pinging Elasticsearch node", e);
+            return false;
+        }
     }
 
     @SuppressWarnings("resource")
     @PluginInit
-    private void createTransportClient() {
-        Settings settings = Settings.EMPTY;
-
-        if (cluster != null) {
-            settings = Settings.builder().put("cluster.name", cluster).build();
-        }
-
-        try {
-            client = new PreBuiltTransportClient(settings)
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
-        } catch (UnknownHostException e) {
-            LOG.error(e.getMessage(), e);
-        }
+    private void createRestClients() {
+        restClient = RestClient.builder(new HttpHost(host, port)).build();
+        client = new RestHighLevelClient(restClient);
     }
 
     @Override
     @PluginDestroy
     public void closeConnection() {
-        client.close();
+        try {
+            restClient.close();
+        } catch (IOException e) {
+            LOG.warn("Error while closing client", e);
+        }
     }
 
 }
