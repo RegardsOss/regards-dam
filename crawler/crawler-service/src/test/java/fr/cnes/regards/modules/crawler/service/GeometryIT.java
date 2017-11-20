@@ -71,7 +71,11 @@ public class GeometryIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteAll(TENANT);
+            try {
+                esRepos.deleteAll(TENANT);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+            }
         } else {
             esRepos.createIndex(TENANT);
         }

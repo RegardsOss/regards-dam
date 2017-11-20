@@ -91,10 +91,13 @@
 			<groupId>com.vividsolutions</groupId>
 			<artifactId>jts</artifactId>
 		</dependency>
+		<!-- Opensearch-service needs lucene-queryparser BUT elasticsearch needs it too. To avoid having versions
+		     incompatibilities, it is better here to depends on elasticsearch (which brings lucene-queryparser
+		     with one of the latest version)
+		-->
 		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-queryparser</artifactId>
-			<version>6.3.0</version>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
 		</dependency>
 		<dependency>
 			<!-- this dependence is added here for a good management of amqp transactional in AttributeModelCache -->
