@@ -105,6 +105,7 @@ import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -1053,6 +1054,10 @@ public class EsRepository implements IEsRepository {
                         attributeName + NUMERIC_FACET_SUFFIX :
                         attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
+                // No percentile values for this property => skip aggregation
+                if (Iterables.all(percentiles, p -> Double.isNaN(p.getValue()))) {
+                    continue;
+                }
                 AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ?
                         FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles) :
                         FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
