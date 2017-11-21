@@ -129,11 +129,17 @@ public interface ICriterion {
     }
 
     static ICriterion in(String attName, int... values) {
+        if (values.length == 0) {
+            return new NotCriterion(all());
+        }
         return new OrCriterion(IntStream.of(values).mapToObj(val -> new IntMatchCriterion(attName, val))
                                        .collect(Collectors.toList()));
     }
 
     static ICriterion in(String attName, long... values) {
+        if (values.length == 0) {
+            return new NotCriterion(all());
+        }
         return new OrCriterion(LongStream.of(values).mapToObj(val -> new LongMatchCriterion(attName, val))
                                        .collect(Collectors.toList()));
     }
@@ -250,6 +256,9 @@ public interface ICriterion {
      * @return criterion
      */
     static ICriterion in(String attName, String... texts) {
+        if (texts.length == 0) {
+            return new NotCriterion(all());
+        }
         // If one of the texts contains a blank character, StringMatchAnyCriterion cannot be used due to ES limitations
         if (Stream.of(texts).anyMatch(str -> str.contains(" "))) {
             return new OrCriterion(
