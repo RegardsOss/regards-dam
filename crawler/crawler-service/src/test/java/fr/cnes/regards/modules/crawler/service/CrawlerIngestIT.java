@@ -46,8 +46,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
 
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
-import fr.cnes.regards.framework.amqp.configuration.RegardsAmqpAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -176,7 +176,7 @@ public class CrawlerIngestIT {
     private IRabbitVirtualHostAdmin rabbitVhostAdmin;
 
     @Autowired
-    private RegardsAmqpAdmin amqpAdmin;
+    private IPublisher publisher;
 
     @Autowired
     private EsRepository esRepos;
@@ -213,10 +213,8 @@ public class CrawlerIngestIT {
         crawlerService.setConsumeOnlyMode(false);
         ingesterService.setConsumeOnlyMode(true);
 
-        rabbitVhostAdmin.bind(tenantResolver.getTenant());
-        amqpAdmin.purgeQueue(DatasetEvent.class, false);
-        amqpAdmin.purgeQueue(NotDatasetEntityEvent.class, false);
-        rabbitVhostAdmin.unbind();
+        publisher.purgeQueue(DatasetEvent.class);
+        publisher.purgeQueue(NotDatasetEntityEvent.class);
 
         attrAssocRepos.deleteAll();
         datasetRepos.deleteAll();
