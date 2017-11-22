@@ -345,7 +345,7 @@ public class EsRepository implements IEsRepository {
 
             try (InputStream is = response.getEntity().getContent()) {
                 Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-                return ((Number)map.get("deleted")).longValue();
+                return ((Number) map.get("deleted")).longValue();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -924,21 +924,30 @@ public class EsRepository implements IEsRepository {
      */
     private boolean isTextMapping(String inIndex, String type, String attribute) throws IOException {
         String index = inIndex.toLowerCase();
-        Response response = restClient
-                .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
-        try (InputStream is = response.getEntity().getContent()) {
-            Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-            // If attribute exists, response should contain this chain of several maps :
-            // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
-            if ((map != null) && !map.isEmpty()) {
-                // In cas attribute is toto.titi.tutu, we will need "tutu" further
-                String lastPathAtt = (attribute.contains(".") ?
-                        attribute.substring(attribute.lastIndexOf('.') + 1) :
-                        attribute);
-                return toMap(toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
-                                           .get("mapping")).get(lastPathAtt)).get("type").equals("text");
+        try {
+            Response response = restClient
+                    .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
+            try (InputStream is = response.getEntity().getContent()) {
+                Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+                // If attribute exists, response should contain this chain of several maps :
+                // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
+                if ((map != null) && !map.isEmpty()) {
+                    // In cas attribute is toto.titi.tutu, we will need "tutu" further
+                    String lastPathAtt = (attribute.contains(".") ?
+                            attribute.substring(attribute.lastIndexOf('.') + 1) :
+                            attribute);
+                    return toMap(
+                            toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
+                                          .get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
+                }
             }
+        } catch (ResponseException e) {
+            // In case index does not exist and/or mapping not available
+            if (e.getResponse().getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                return false;
+            }
+            throw e;
         }
         return false;
     }
