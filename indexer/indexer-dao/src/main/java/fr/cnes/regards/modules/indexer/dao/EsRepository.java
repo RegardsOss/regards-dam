@@ -150,12 +150,6 @@ public class EsRepository implements IEsRepository {
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
 
     /**
-     * ElasticSearch window pagination limit ie only from 0 to 10_000 is permit with a classic search.
-     * Outside this window, it is necessary to use scrollable or searchAfter API.
-     */
-    private static final int MAX_RESULT_WINDOW = 10_000;
-
-    /**
      * Maximum number of retries after a timeout
      */
     private static final int MAX_TIMEOUT_RETRIES = 3;
