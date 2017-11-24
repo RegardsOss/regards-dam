@@ -105,6 +105,7 @@ import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -147,12 +148,6 @@ public class EsRepository implements IEsRepository {
      * Default number of hits retrieved by scrolling (10 is the default value and according to doc is the best value)
      */
     private static final int DEFAULT_SCROLLING_HITS_SIZE = 100;
-
-    /**
-     * ElasticSearch window pagination limit ie only from 0 to 10_000 is permit with a classic search.
-     * Outside this window, it is necessary to use scrollable or searchAfter API.
-     */
-    private static final int MAX_RESULT_WINDOW = 10_000;
 
     /**
      * Maximum number of retries after a timeout
@@ -344,7 +339,7 @@ public class EsRepository implements IEsRepository {
 
             try (InputStream is = response.getEntity().getContent()) {
                 Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-                return ((Number)map.get("deleted")).longValue();
+                return ((Number) map.get("deleted")).longValue();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -923,21 +918,30 @@ public class EsRepository implements IEsRepository {
      */
     private boolean isTextMapping(String inIndex, String type, String attribute) throws IOException {
         String index = inIndex.toLowerCase();
-        Response response = restClient
-                .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
-        try (InputStream is = response.getEntity().getContent()) {
-            Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-            // If attribute exists, response should contain this chain of several maps :
-            // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
-            if ((map != null) && !map.isEmpty()) {
-                // In cas attribute is toto.titi.tutu, we will need "tutu" further
-                String lastPathAtt = (attribute.contains(".") ?
-                        attribute.substring(attribute.lastIndexOf('.') + 1) :
-                        attribute);
-                return toMap(toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
-                                           .get("mapping")).get(lastPathAtt)).get("type").equals("text");
+        try {
+            Response response = restClient
+                    .performRequest("GET", index + "/_mapping/" + type + "/field/" + attribute, Collections.emptyMap());
+            try (InputStream is = response.getEntity().getContent()) {
+                Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+                // If attribute exists, response should contain this chain of several maps :
+                // <index>."mappings".<type>.<attribute>."mapping".<attribute_last_path>."type"
+                if ((map != null) && !map.isEmpty()) {
+                    // In cas attribute is toto.titi.tutu, we will need "tutu" further
+                    String lastPathAtt = (attribute.contains(".") ?
+                            attribute.substring(attribute.lastIndexOf('.') + 1) :
+                            attribute);
+                    return toMap(
+                            toMap(toMap(toMap(toMap(toMap(map.get(index)).get("mappings")).get(type)).get(attribute))
+                                          .get("mapping")).get(lastPathAtt)).get("type").equals("text");
 
+                }
             }
+        } catch (ResponseException e) {
+            // In case index does not exist and/or mapping not available
+            if (e.getResponse().getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                return false;
+            }
+            throw e;
         }
         return false;
     }
@@ -1053,6 +1057,10 @@ public class EsRepository implements IEsRepository {
                         attributeName + NUMERIC_FACET_SUFFIX :
                         attributeName + DATE_FACET_SUFFIX;
                 Percentiles percentiles = (Percentiles) aggsMap.get(attName);
+                // No percentile values for this property => skip aggregation
+                if (Iterables.all(percentiles, p -> Double.isNaN(p.getValue()))) {
+                    continue;
+                }
                 AggregationBuilder aggBuilder = (facetType == FacetType.NUMERIC) ?
                         FacetType.RANGE_DOUBLE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles) :
                         FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
