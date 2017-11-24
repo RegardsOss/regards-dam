@@ -21,10 +21,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.modules.datasources</groupId>
+	<groupId>fr.cnes.regards.modules.crawler</groupId>
 	<artifactId>crawler-rest</artifactId>
 
-	<name>Data Sources REST</name>
+	<name>Crawler REST</name>
 	<description>Controller layer of Data Sources module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
