@@ -1,10 +1,12 @@
 package fr.cnes.regards.modules.crawler.service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 
@@ -31,4 +33,10 @@ public interface IDatasourceIngesterService {
      */
     IngestionResult ingest(PluginConfiguration pluginConfiguration, OffsetDateTime date)
             throws ModuleException, InterruptedException, ExecutionException, DataSourceException;
+
+    /**
+     * Retrieve all {@link DatasourceIngestion}
+     * @return
+     */
+    List<DatasourceIngestion> getDatasourceIngestions();
 }
