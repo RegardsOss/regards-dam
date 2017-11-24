@@ -20,9 +20,6 @@ package fr.cnes.regards.modules.crawler.rest;
 
 import java.util.List;
 
-import org.assertj.core.util.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
-import fr.cnes.regards.modules.crawler.domain.dto.DatasourceIngestionDTO;
-import fr.cnes.regards.modules.crawler.domain.dto.DatasourceIngestionDTOBuilder;
 import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
 
 /**
@@ -52,20 +44,15 @@ import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
         documentation = "http://test")
 //CHECKSTYLE:ON
 @RequestMapping(CrawlerController.TYPE_MAPPING)
-public class CrawlerController implements IResourceController<DatasourceIngestionDTO> {
+public class CrawlerController implements IResourceController<DatasourceIngestion> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerController.class);
-
-    public static final String TYPE_MAPPING = "/crawler";
+    public static final String TYPE_MAPPING = "/crawler/datasourceIngestions";
 
     /**
      * Crawler service
      */
     @Autowired
     private ICrawlerAndIngesterService crawlerService;
-
-    @Autowired
-    private IPluginService pluginService;
 
     /**
      * HATEOAS service
@@ -79,24 +66,12 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
      */
     @ResourceAccess(description = "List all crawler datasources.")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<DatasourceIngestionDTO>>> getAllDatasourceIngestion() {
-        List<DatasourceIngestion> list = crawlerService.getDatasourceIngestions();
-        List<DatasourceIngestionDTO> dtos = Lists.newArrayList();
-        for (DatasourceIngestion ds : list) {
-            try {
-                PluginConfiguration conf = pluginService.getPluginConfiguration(ds.getId());
-                dtos.add(DatasourceIngestionDTOBuilder.build(ds, conf.getLabel()));
-            } catch (ModuleException e) {
-                LOGGER.warn("Plugin configuration associated to datasourceIngestion {} does not exists anymore",
-                            ds.getId(), e);
-                dtos.add(DatasourceIngestionDTOBuilder.build(ds, null));
-            }
-        }
-        return ResponseEntity.ok(toResources(dtos));
+    public ResponseEntity<List<Resource<DatasourceIngestion>>> getAllDatasourceIngestion() {
+        return ResponseEntity.ok(toResources(crawlerService.getDatasourceIngestions()));
     }
 
     @Override
-    public Resource<DatasourceIngestionDTO> toResource(DatasourceIngestionDTO pElement, Object... pExtras) {
+    public Resource<DatasourceIngestion> toResource(DatasourceIngestion pElement, Object... pExtras) {
         return resourceService.toResource(pElement);
     }
 
