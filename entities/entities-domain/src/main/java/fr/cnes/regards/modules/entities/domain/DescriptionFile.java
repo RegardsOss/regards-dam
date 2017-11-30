@@ -134,18 +134,32 @@ public class DescriptionFile {
         type = pType;
     }
 
+    /**
+     * @return the url
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Set the url
+     * @param pDescription
+     */
     public void setUrl(String pDescription) {
         url = pDescription;
     }
 
+    /**
+     * @return the id
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Set the id
+     * @param id
+     */
     public void setId(Long id) {
         this.id = id;
     }

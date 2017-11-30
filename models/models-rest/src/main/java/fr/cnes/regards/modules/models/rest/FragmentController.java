@@ -86,8 +86,17 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     private final IResourceService resourceService;
 
+    /**
+     * {@link IAttributeModelService} instance
+     */
     private final IAttributeModelService attributeModelService;
 
+    /**
+     * Constructor setting the parameters as attributes
+     * @param pFragmentService
+     * @param pResourceService
+     * @param attributeModelService
+     */
     public FragmentController(IFragmentService pFragmentService, IResourceService pResourceService,
             IAttributeModelService attributeModelService) {
         this.fragmentService = pFragmentService;

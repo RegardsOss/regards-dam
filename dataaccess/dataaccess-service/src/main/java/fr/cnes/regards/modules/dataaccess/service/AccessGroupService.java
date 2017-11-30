@@ -79,6 +79,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
 
     private final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
 
+    /**
+     * Access group already exist message format
+     */
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
 
     /**
@@ -86,8 +89,14 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      */
     public static final String ACCESS_GROUP_PUBLIC_DOCUMENTS = "PublicDocumentGroup";
 
+    /**
+     * {@link IAccessGroupRepository} instance
+     */
     private final IAccessGroupRepository accessGroupDao;
 
+    /**
+     * {@link IProjectUsersClient} instance
+     */
     private final IProjectUsersClient projectUserClient;
 
     /**
@@ -95,6 +104,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      */
     private final IPublisher publisher;
 
+    /**
+     * {@link ISubscriber} instance
+     */
     private final ISubscriber subscriber;
 
     /**
@@ -102,9 +114,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      */
     private final ITenantResolver tenantResolver;
 
-    @Value("${spring.application.name}")
-    private String microserviceName;
-
+    /**
+     * {@link IRuntimeTenantResolver} instance
+     */
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
     public AccessGroupService(final IAccessGroupRepository pAccessGroupDao,
@@ -136,11 +148,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     public void processEvent(TenantConnectionReady event) {
         // Init default role for this tenant
         initDefaultAccessGroup(event.getTenant());
-    }
-
-    @Override
-    public void setMicroserviceName(final String pMicroserviceName) {
-        microserviceName = pMicroserviceName;
     }
 
     @Override

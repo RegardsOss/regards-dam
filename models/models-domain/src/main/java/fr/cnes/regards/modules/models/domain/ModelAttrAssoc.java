@@ -98,6 +98,13 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         super();
     }
 
+    /**
+     * Constructor
+     * @param pAttributeModel
+     * @param pModel
+     * @param pPosition
+     * @param pIsCalculated
+     */
     public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition,
             Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
