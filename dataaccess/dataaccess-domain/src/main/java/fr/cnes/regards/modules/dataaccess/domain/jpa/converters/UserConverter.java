@@ -24,8 +24,9 @@ import javax.persistence.Converter;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 
 /**
- * @author Sylvain Vissiere-Guerinet
+ * User database converter
  *
+ * @author Sylvain Vissiere-Guerinet
  */
 @Converter(autoApply = true)
 public class UserConverter implements AttributeConverter<User, String> {

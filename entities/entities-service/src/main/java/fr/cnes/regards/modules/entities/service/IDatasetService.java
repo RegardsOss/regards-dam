@@ -53,8 +53,19 @@ public interface IDatasetService extends IEntityService<Dataset> {
     Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
 
+    /**
+     * Retrieve the description file of the given dataset, represented by its ip id
+     * @param datasetIpId
+     * @return the description file
+     * @throws EntityNotFoundException
+     */
     DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException;
 
+    /**
+     * Remove the description file from the given dataset, represented by its ip id
+     * @param datasetIpId
+     * @throws EntityNotFoundException
+     */
     void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException;
 
     /**

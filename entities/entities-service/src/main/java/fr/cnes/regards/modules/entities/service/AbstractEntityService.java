@@ -114,6 +114,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     protected final IModelAttrAssocService modelAttributeService;
 
+    /**
+     {@link IModelService} instance
+     */
     protected final IModelService modelService;
 
     /**
@@ -140,10 +143,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final EntityManager em;
 
+    /**
+     * {@link IPublisher} instance
+     */
     private final IPublisher publisher;
 
+    /**
+     * {@link IRuntimeTenantResolver} instance
+     */
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
+    /**
+     * {@link IDescriptionFileRepository} instance
+     */
     protected final IDescriptionFileRepository descriptionFileRepository;
 
     public AbstractEntityService(IModelAttrAssocService pModelAttributeService,

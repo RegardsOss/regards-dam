@@ -41,39 +41,71 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.validation.DataAcce
 @DataAccessRightValidation
 public class DataAccessRight {
 
+    /**
+     * Data access level
+     */
     @NotNull
     @Column(length = 30, name = "data_access_level")
     @Enumerated(EnumType.STRING)
     private DataAccessLevel dataAccessLevel;
 
+    /**
+     * Plugin configuration allowing to customize the data access level
+     */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plugin_conf_id", foreignKey = @ForeignKey(name = "fk_access_right_plugin_conf"))
     private PluginConfiguration pluginConfiguration;
 
+    /**
+     * Default constructor
+     */
     protected DataAccessRight() {
     }
 
+    /**
+     * Constructor setting the parameter as attribute
+     * @param pDataAccessLevel
+     */
     public DataAccessRight(DataAccessLevel pDataAccessLevel) {
         dataAccessLevel = pDataAccessLevel;
     }
 
+    /**
+     * Constructor setting the parameters as attribute
+     * @param pDataAccessLevel
+     * @param pPluginConf
+     */
     public DataAccessRight(DataAccessLevel pDataAccessLevel, PluginConfiguration pPluginConf) { // NOSONAR
         this(pDataAccessLevel);
         pluginConfiguration = pPluginConf;
     }
 
+    /**
+     * @return the data access level
+     */
     public DataAccessLevel getDataAccessLevel() {
         return dataAccessLevel;
     }
 
+    /**
+     * Set the data access level
+     * @param pDataAccessLevel
+     */
     public void setDataAccessLevel(DataAccessLevel pDataAccessLevel) {
         dataAccessLevel = pDataAccessLevel;
     }
 
+    /**
+     * @return the plugin configuration
+     */
     public PluginConfiguration getPluginConfiguration() {
         return pluginConfiguration;
     }
 
+    /**
+     * Set the plugin
+     * @param pPluginConfiguration
+     */
     public void setPluginConfiguration(PluginConfiguration pPluginConfiguration) {
         pluginConfiguration = pPluginConfiguration;
     }

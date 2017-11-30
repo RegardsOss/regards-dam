@@ -99,8 +99,14 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     public static final String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
+    /**
+     * Controller path for description file of a dataset using its ip id as path variable
+     */
     public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
 
+    /**
+     * Controller path for subsetting clause validation
+     */
     public static final String DATA_SUB_SETTING_VALIDATION = "/isValidSubsetting";
 
     /**
@@ -193,6 +199,11 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(dataset, HttpStatus.OK);
     }
 
+    /**
+     * Remove the description file of a dataset, represented by its ip id
+     * @param datasetIpId
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_IPID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")
     public ResponseEntity<Void> removeDatasetDescription(@PathVariable("dataset_ipId") String datasetIpId)
@@ -301,6 +312,13 @@ public class DatasetController implements IResourceController<Dataset> {
         return new ResponseEntity<>(pAssembler.toResource(result), HttpStatus.OK);
     }
 
+    /**
+     * Validate an open search query for the given data model, represented by its id
+     * @param dataModelId
+     * @param query
+     * @return whether the query is valid or not
+     * @throws ModuleException
+     */
     @RequestMapping(method = RequestMethod.POST, value = DATA_SUB_SETTING_VALIDATION)
     @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model")
     public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelId") Long dataModelId,
@@ -339,23 +357,40 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     /**
-     * Query POJO sent by our front to be validated
+     * Open search query POJO sent by our front to be validated
      */
     public static class Query {
 
+        /**
+         * The query
+         */
         private String query;
 
+        /**
+         * Default constructor
+         */
         private Query() {
         }
 
+        /**
+         * Constructor setting the parameter as attribute
+         * @param query
+         */
         public Query(String query) {
             this.query = query;
         }
 
+        /**
+         * @return the query
+         */
         public String getQuery() {
             return query;
         }
 
+        /**
+         * Set the query
+         * @param query
+         */
         public void setQuery(String query) {
             this.query = query;
         }

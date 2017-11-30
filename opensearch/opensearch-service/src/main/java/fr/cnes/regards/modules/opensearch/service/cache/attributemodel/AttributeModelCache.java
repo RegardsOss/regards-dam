@@ -92,14 +92,6 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      */
     private final Map<String, Map<String, AttributeModel>> dynamicPropertyMap;
 
-    @Override
-    //no transaction needed here, it is call out of context with no acces to DB and fails prevent the application from booting
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        subscriber.subscribeTo(AttributeModelCreated.class, new CreatedHandler());
-        subscriber.subscribeTo(AttributeModelDeleted.class, new DeletedHandler());
-    }
-
     /**
      * Creates a new instance of the service with passed services/repos
      *
@@ -119,33 +111,49 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         initStaticAttributes();
     }
 
+    @Override
+    //no transaction needed here, it is call out of context with no acces to DB and fails prevent the application from booting
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(AttributeModelCreated.class, new CreatedHandler());
+        subscriber.subscribeTo(AttributeModelDeleted.class, new DeletedHandler());
+    }
+
     /**
      * Initialize queryable static attributes
      */
     public void initStaticAttributes() {
 
-        staticPropertyMap
-                .put(StaticProperties.IP_ID,
-                     AttributeModelBuilder.build(StaticProperties.IP_ID, AttributeType.STRING, null).isStatic().get());
-        staticPropertyMap.put(StaticProperties.GEOMETRY, AttributeModelBuilder
-                .build(StaticProperties.GEOMETRY, AttributeType.STRING, null).isStatic().get());
-        staticPropertyMap
-                .put(StaticProperties.LABEL,
-                     AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).isStatic().get());
-        staticPropertyMap.put(StaticProperties.MODEL_NAME, AttributeModelBuilder
-                .build(StaticProperties.MODEL_NAME, AttributeType.STRING, null).isStatic().get());
-        staticPropertyMap.put(StaticProperties.LAST_UPDATE, AttributeModelBuilder
-                .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic().get());
-        staticPropertyMap.put(StaticProperties.CREATION_DATE, AttributeModelBuilder
-                .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.IP_ID,
+                              AttributeModelBuilder.build(StaticProperties.IP_ID, AttributeType.STRING, null).isStatic()
+                                      .get());
+        staticPropertyMap.put(StaticProperties.GEOMETRY,
+                              AttributeModelBuilder.build(StaticProperties.GEOMETRY, AttributeType.STRING, null)
+                                      .isStatic().get());
+        staticPropertyMap.put(StaticProperties.LABEL,
+                              AttributeModelBuilder.build(StaticProperties.LABEL, AttributeType.STRING, null).isStatic()
+                                      .get());
+        staticPropertyMap.put(StaticProperties.MODEL_NAME,
+                              AttributeModelBuilder.build(StaticProperties.MODEL_NAME, AttributeType.STRING, null)
+                                      .isStatic().get());
+        staticPropertyMap.put(StaticProperties.LAST_UPDATE,
+                              AttributeModelBuilder
+                                      .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic()
+                                      .get());
+        staticPropertyMap.put(StaticProperties.CREATION_DATE,
+                              AttributeModelBuilder
+                                      .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null)
+                                      .isStatic().get());
         staticPropertyMap.put(StaticProperties.TAGS,
                               AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).isStatic()
                                       .get());
         staticPropertyMap.put(StaticProperties.ENTITY_TYPE,
                               AttributeModelBuilder.build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null)
                                       .isStatic().get());
-        staticPropertyMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
-                .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.STRING, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.DATASET_MODEL_IDS,
+                              AttributeModelBuilder
+                                      .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.STRING, null).isStatic()
+                                      .get());
     }
 
     @Override
@@ -224,7 +232,7 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         if (attModel == null) {
             String errorMessage = String.format("Unknown parameter %s for tenant %s", pName, tenant);
             LOGGER.error(errorMessage);
-             throw new OpenSearchUnknownParameter(errorMessage);
+            throw new OpenSearchUnknownParameter(errorMessage);
         }
 
         return attModel;

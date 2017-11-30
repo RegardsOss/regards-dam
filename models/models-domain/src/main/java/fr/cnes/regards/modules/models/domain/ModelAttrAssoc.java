@@ -74,6 +74,9 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     @NotNull
     private AttributeModel attribute;
 
+    /**
+     * The computation plugin configuration
+     */
     @OneToOne
     @JoinColumn(name = "compute_conf_id", foreignKey = @ForeignKey(name = "fk_plugin_id"))
     private PluginConfiguration computationConf;
@@ -95,7 +98,8 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         super();
     }
 
-    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition,
+            Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
         model = pModel;
         pos = pPosition;
@@ -204,15 +208,16 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             // Cyclic dependency between entities plugin and models-domain
             // TODO : Find a good idea to avoid this shit
             // Count plugin are really something different from others, lets treat them apart
-            String pluginClassName=computationConf.getPluginClassName();
-            if("fr.cnes.regards.modules.entities.plugin.CountPlugin".equals(pluginClassName)) {
+            String pluginClassName = computationConf.getPluginClassName();
+            if ("fr.cnes.regards.modules.entities.plugin.CountPlugin".equals(pluginClassName)) {
                 computation.setCount(new NoParamPluginType());
             } else {
                 // For plugins which are calculated according to a data object property, lets set the parameters and then the type
                 ParamPluginType paramPluginType = new ParamPluginType();
-                paramPluginType.setParameterAttributeName(
-                        computationConf.getParameter("parameterAttributeName").getValue());
-                String parameterAttributeFragmentName = computationConf.getParameter("parameterAttributeFragmentName").getValue();
+                paramPluginType
+                        .setParameterAttributeName(computationConf.getParameter("parameterAttributeName").getValue());
+                String parameterAttributeFragmentName = computationConf.getParameter("parameterAttributeFragmentName")
+                        .getValue();
                 if (parameterAttributeFragmentName != null) {
                     paramPluginType.setParameterAttributeFragmentName(parameterAttributeFragmentName);
                 }
@@ -226,6 +231,8 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                         break;
                     case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
                         computation.setMaxCompute(paramPluginType);
+                        break;
+                    default:
                         break;
                 }
             }
@@ -243,10 +250,17 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     }
 
+    /**
+     * @return the computation plugin configuration
+     */
     public PluginConfiguration getComputationConf() {
         return computationConf;
     }
 
+    /**
+     * Set the computation plugin configuration
+     * @param pComputationConf
+     */
     public void setComputationConf(PluginConfiguration pComputationConf) {
         computationConf = pComputationConf;
     }

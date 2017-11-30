@@ -61,6 +61,9 @@ public class EntitiesService implements IEntitiesService {
     @Autowired
     private IPluginService pluginService;
 
+    /**
+     * {@link ICollectionRepository} instance
+     */
     @Autowired
     private ICollectionRepository collectionRepository;
 

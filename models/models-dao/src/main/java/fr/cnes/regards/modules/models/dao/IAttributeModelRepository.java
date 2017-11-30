@@ -47,5 +47,10 @@ public interface IAttributeModelRepository extends CrudRepository<AttributeModel
 
     List<AttributeModel> findByFragmentId(Long pFragmentId);
 
+    /**
+     * Find attributes by name
+     * @param fragmentName
+     * @return attributes
+     */
     Collection<AttributeModel> findByName(String fragmentName);
 }

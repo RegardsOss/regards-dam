@@ -41,6 +41,10 @@ public interface IStorageService {
      */
     public <T extends AbstractEntity> T storeAIP(T pToPersist);
 
+    /**
+     * Delete the aip associated to the given entity
+     * @param pToDelete
+     */
     public void deleteAIP(AbstractEntity pToDelete);
 
     public <T extends AbstractEntity> T updateAIP(T pToUpdate);

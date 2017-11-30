@@ -63,8 +63,7 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
         if (col == null) {
             throw new EntityNotFoundException(collectionIpId.toString(), Dataset.class);
         }
-        DescriptionFile desc = col.getDescriptionFile();
-        return desc;
+        return col.getDescriptionFile();
     }
 
     @Override

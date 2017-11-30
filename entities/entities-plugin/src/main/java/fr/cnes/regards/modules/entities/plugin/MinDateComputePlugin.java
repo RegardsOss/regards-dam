@@ -106,10 +106,10 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
         if (parameterOpt.isPresent()) {
             OffsetDateTime value = (OffsetDateTime) parameterOpt.get().getValue();
             if (value != null) {
-                if (result != null) {
-                    result = value.isBefore(result) ? value : result;
-                } else {
+                if (result == null) {
                     result = value;
+                } else {
+                    result = value.isBefore(result) ? value : result;
                 }
             }
         }

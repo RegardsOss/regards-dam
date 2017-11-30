@@ -181,11 +181,13 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     public void deleteAccessGroup(final String pAccessGroupName)
             throws EntityOperationForbiddenException, EntityNotFoundException {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
-        if (toDelete != null) {
+        if (toDelete == null) {
+            throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
+        } else {
             // Prevent users to delete the public AccessGroup used by Documents
             if (toDelete.isInternal()) {
                 throw new EntityOperationForbiddenException(toDelete.getName(), AccessGroup.class,
-                        "Cannot remove the public access group used by Documents");
+                                                            "Cannot remove the public access group used by Documents");
             }
             accessGroupDao.delete(toDelete.getId());
             // Publish attribute deletion
@@ -194,8 +196,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
             if (toDelete.isPublic()) {
                 publisher.publish(new AccessGroupPublicEvent(toDelete));
             }
-        } else {
-            throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
     }
 
@@ -307,6 +307,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         subscriber.subscribeTo(ProjectUserEvent.class, new ProjectUserEventHandler());
     }
 
+    /**
+     * Project user event handler
+     */
     private class ProjectUserEventHandler implements IHandler<ProjectUserEvent> {
 
         @Override

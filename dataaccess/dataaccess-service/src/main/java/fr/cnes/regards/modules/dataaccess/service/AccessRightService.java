@@ -47,18 +47,26 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 
 /**
+ * Access right business service
+ *
  * @author Sylvain Vissiere-Guerinet
  */
 @Service
 @MultitenantTransactional
 public class AccessRightService implements IAccessRightService {
 
+    /**
+     * {@link IAccessRightRepository} instance
+     */
     private final IAccessRightRepository repository;
 
     private final IAccessGroupService accessGroupService;
 
     private final IDatasetService datasetService;
 
+    /**
+     * {@link IPublisher} instance
+     */
     private final IPublisher eventPublisher;
 
     public AccessRightService(final IAccessRightRepository pAccessRightRepository,

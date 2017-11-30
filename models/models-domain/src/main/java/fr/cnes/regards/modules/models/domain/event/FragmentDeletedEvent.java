@@ -5,24 +5,43 @@ import fr.cnes.regards.framework.amqp.event.ISubscribable;
 import fr.cnes.regards.framework.amqp.event.Target;
 
 /**
+ * AMQP event for fragment deletion
+ *
  * @author Sylvain VISSIERE-GUERINET
  */
 @Event(target = Target.ALL)
 public class FragmentDeletedEvent implements ISubscribable {
 
+    /**
+     * The deleted fragment name
+     */
     private String fragmentName;
 
+    /**
+     * Default constructor
+     */
     public FragmentDeletedEvent() {
     }
 
+    /**
+     * Constructor setting the parameter as attribute
+     * @param fragmentName
+     */
     public FragmentDeletedEvent(String fragmentName) {
         this.fragmentName = fragmentName;
     }
 
+    /**
+     * @return the fragment name
+     */
     public String getFragmentName() {
         return fragmentName;
     }
 
+    /**
+     * Set the fragment name
+     * @param fragmentName
+     */
     public void setFragmentName(String fragmentName) {
         this.fragmentName = fragmentName;
     }
