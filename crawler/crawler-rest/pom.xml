@@ -21,13 +21,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>fr.cnes.regards.modules</groupId>
-	<artifactId>crawler</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<groupId>fr.cnes.regards.modules.crawler</groupId>
+	<artifactId>crawler-rest</artifactId>
 
-	<name>Crawler</name>
-	<description>Module crawling external datasources for data aspiration</description>
+	<name>Crawler REST</name>
+	<description>Controller layer of Data Sources module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
 	<licenses>
@@ -50,43 +48,36 @@
 	</developers>
 
 	<parent>
-		<groupId>fr.cnes.regards</groupId>
-		<artifactId>regards-parent</artifactId>
-		<version>2.0.1-SNAPSHOT</version>
-		<relativePath />
+		<groupId>fr.cnes.regards.modules</groupId>
+		<artifactId>crawler</artifactId>
+		<version>2.0.0-SNAPSHOT</version>
 	</parent>
-	
-	<modules>
-		<module>crawler-service</module>
-		<module>crawler-domain</module>
-		<module>crawler-dao</module>
-		<module>crawler-rest</module>
-	</modules>
 
-	<dependencyManagement>
-		<dependencies>
-			<!-- Module layers -->
-			<dependency>
-				<groupId>fr.cnes.regards.modules.crawler</groupId>
-				<artifactId>crawler-service</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.crawler</groupId>
-				<artifactId>crawler-domain</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.crawler</groupId>
-				<artifactId>crawler-dao</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>fr.cnes.regards.modules.crawler</groupId>
-				<artifactId>crawler-rest</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+	<dependencies>
+		<!-- Starters -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>module-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>hateoas-regards-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework</groupId>
+			<artifactId>security-regards-starter</artifactId>
+		</dependency>
+		<!-- Module dependencies -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.crawler</groupId>
+			<artifactId>crawler-service</artifactId>
+		</dependency>
+		<!-- Test -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-integration-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 	
 </project>

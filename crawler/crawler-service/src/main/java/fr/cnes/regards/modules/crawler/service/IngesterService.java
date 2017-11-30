@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PreDestroy;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
@@ -16,6 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
-@Service// Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
+@Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
 public class IngesterService implements IIngesterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
@@ -260,9 +261,9 @@ public class IngesterService implements IIngesterService {
         List<PluginConfiguration> pluginConfs = new ArrayList<>(
                 pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class));
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
-        pluginConfs.stream().mapToLong(PluginConfiguration::getId).filter(id -> !dsIngestionRepos.exists(id)).mapToObj(
-                id -> dsIngestionRepos
-                        .save(new DatasourceIngestion(id, OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC))))
+        pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
+                .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -271,14 +272,15 @@ public class IngesterService implements IIngesterService {
         pluginConfs.stream().forEach(pluginConf -> {
             try {
                 this.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()),
-                                       ((IDataSourcePlugin) pluginService.getPlugin(pluginConf)).getRefreshRate());
+                                       ((IDataSourcePlugin) pluginService.getPlugin(pluginConf.getId()))
+                                               .getRefreshRate());
             } catch (ModuleException e) {
                 LOGGER.error("Cannot compute next ingestion planned date", e);
             }
         });
     }
 
-    private ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
+    private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
 
     /**
      * Create a task to launch datasource data objects deletion later (use a thread pool of size 1)
@@ -293,15 +295,14 @@ public class IngesterService implements IIngesterService {
     private void updatePlannedDate(DatasourceIngestion dsIngestion, int refreshRate) {
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
-                        dsIngestion.getLastIngestDate();
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
+                        ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) : dsIngestion.getLastIngestDate();
                 dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(
-                        dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
+                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
+                                                                                          ChronoUnit.SECONDS));
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case STARTED: // Already in progress
