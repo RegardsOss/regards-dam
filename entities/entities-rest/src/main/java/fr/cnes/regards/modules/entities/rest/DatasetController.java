@@ -155,10 +155,11 @@ public class DatasetController implements IResourceController<Dataset> {
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResourceAccess(description = "endpoint to retrieve the list of all datasets")
-    public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(final Pageable pPageable,
+    public ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(
+            @RequestParam(name = "label", required = false) String label, final Pageable pPageable,
             final PagedResourcesAssembler<Dataset> pAssembler) {
 
-        final Page<Dataset> datasets = service.findAll(pPageable);
+        final Page<Dataset> datasets = service.search(label, pPageable);
         final PagedResources<Resource<Dataset>> resources = toPagedResources(datasets, pAssembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
 
