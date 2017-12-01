@@ -45,12 +45,12 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceConnection implements IDBConnectionPlugin {
+public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceConnection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDBConnection.class);
 
     private static final String METADATA_TABLE = "TABLE";
 

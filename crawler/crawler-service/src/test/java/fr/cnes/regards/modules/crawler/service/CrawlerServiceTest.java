@@ -58,7 +58,7 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -105,7 +105,7 @@ public class CrawlerServiceTest {
     @Autowired
     private IIndexerService indexerService;
 
-    private IDataSourceFromSingleTablePlugin dsPlugin;
+    private IDBDataSourceFromSingleTablePlugin dsPlugin;
 
     private DataSourceModelMapping dataSourceModelMapping;
 

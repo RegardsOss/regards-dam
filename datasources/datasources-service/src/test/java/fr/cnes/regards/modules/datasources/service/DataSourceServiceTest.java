@@ -23,12 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.mockito.Mockito;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -37,6 +34,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType.Para
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
 /**
@@ -89,35 +87,6 @@ public class DataSourceServiceTest {
                 initializePluginParameterNotInternalDataSource()));
     }
 
-    @Test
-    public void setInternalDataSource() throws ModuleException {
-        Assert.assertEquals(IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE,
-                            internalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-        Assert.assertEquals("false",
-                            externalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-        
-        Mockito.when(pluginServiceMock.getPluginConfiguration(externalConf.getId())).thenReturn(externalConf);
-        Mockito.when(pluginServiceMock.getPluginConfigurationsByType(IDataSourcePlugin.class)).thenReturn(plgConfs);
-        Mockito.when(pluginServiceMock.savePluginConfiguration(externalConf)).thenReturn(externalConf);
-        PluginConfiguration newInternaleDS = dataSourceServiceMock.setInternalDataSource(externalConf);
-
-        Assert.assertNotNull(newInternaleDS);
-        Assert.assertEquals(newInternaleDS, externalConf);
-        Assert.assertEquals(IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE,
-                            externalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-        Assert.assertEquals("false",
-                            internalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-    }
-
-    @Test
-    public void getInternalDataSource() {
-        Mockito.when(pluginServiceMock.getPluginConfigurationsByType(IDataSourcePlugin.class)).thenReturn(plgConfs);
-        PluginConfiguration internaleDS = dataSourceServiceMock.getInternalDataSource();
-
-        Assert.assertNotNull(internaleDS);
-        Assert.assertEquals(internaleDS, internalConf);
-    }
-
     private PluginMetaData initializePluginMeta() {
         final PluginMetaData pluginMetaData = new PluginMetaData();
         pluginMetaData.setPluginClassName(PostgreDataSourcePlugin.class.getCanonicalName());
@@ -129,24 +98,20 @@ public class DataSourceServiceTest {
     }
 
     private List<PluginParameter> initializePluginParameterIsInternalDataSource() {
-        return PluginParametersFactory.build().addParameter(IDataSourcePlugin.FROM_CLAUSE, "from t_table_name")
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, "model param")
-                .addParameter(IDataSourcePlugin.IS_INTERNAL_PARAM, "true").getParameters();
+        return PluginParametersFactory.build().addParameter(IDBDataSourcePlugin.FROM_CLAUSE, "from t_table_name")
+                .addParameter(IDataSourcePlugin.MODEL_PARAM, "model param").getParameters();
     }
 
     private List<PluginParameter> initializePluginParameterNotInternalDataSource() {
-        return PluginParametersFactory.build().addParameter(IDataSourcePlugin.FROM_CLAUSE, "from table")
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, "model")
-                .addParameter(IDataSourcePlugin.IS_INTERNAL_PARAM, "false").getParameters();
+        return PluginParametersFactory.build().addParameter(IDBDataSourcePlugin.FROM_CLAUSE, "from table")
+                .addParameter(IDataSourcePlugin.MODEL_PARAM, "model").getParameters();
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
         return Arrays.asList(
                              new PluginParameterType(IDataSourcePlugin.MODEL_PARAM, String.class.getName(),
                                      ParamType.PRIMITIVE),
-                             new PluginParameterType(IDataSourcePlugin.FROM_CLAUSE, String.class.getName(),
-                                     ParamType.PRIMITIVE),
-                             new PluginParameterType(IDataSourcePlugin.IS_INTERNAL_PARAM, String.class.getName(),
+                             new PluginParameterType(IDBDataSourcePlugin.FROM_CLAUSE, String.class.getName(),
                                      ParamType.PRIMITIVE));
     }
 

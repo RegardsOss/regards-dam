@@ -24,7 +24,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginDestroy;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
+import fr.cnes.regards.modules.datasources.utils.AbstractDBConnection;
 
 /**
  * A default {@link Plugin} of type {@link IDBConnectionPlugin}. For the test of the connection :
@@ -36,7 +36,7 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 @Plugin(id = "postgresql-db-connection", version = "1.0-SNAPSHOT", description = "Connection to a PostgreSql database",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-public class DefaultPostgreConnectionPlugin extends AbstractDataSourceConnection {
+public class DefaultPostgreConnectionPlugin extends AbstractDBConnection {
 
     /**
      * The JDBC PostgreSQL driver

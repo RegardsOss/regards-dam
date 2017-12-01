@@ -60,7 +60,7 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
@@ -103,7 +103,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
     @Value("${postgresql.datasource.password}")
     private String dbPassword;
 
-    private IDataSourceFromSingleTablePlugin plgDBDataSource;
+    private IDBDataSourceFromSingleTablePlugin plgDBDataSource;
 
     private DataSourceModelMapping modelMapping;
 
