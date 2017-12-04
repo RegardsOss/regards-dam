@@ -56,13 +56,13 @@ public class DefaultESConnectionPlugin implements IConnectionPlugin {
     /**
      * The host
      */
-    @PluginParameter(name = HOST_PARAM)
+    @PluginParameter(name = HOST_PARAM, label = "Elasticsearch host")
     private String host;
 
     /**
      * The (HTTP) port
      */
-    @PluginParameter(name = PORT_PARAM)
+    @PluginParameter(name = PORT_PARAM, label = "Elasticsearch port")
     private int port;
 
 

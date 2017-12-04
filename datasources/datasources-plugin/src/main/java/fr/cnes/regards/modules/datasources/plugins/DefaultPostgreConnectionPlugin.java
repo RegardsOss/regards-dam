@@ -46,43 +46,43 @@ public class DefaultPostgreConnectionPlugin extends AbstractDBConnection {
     /**
      * The user to used for the database connection
      */
-    @PluginParameter(name = USER_PARAM)
+    @PluginParameter(name = USER_PARAM, label = "Databse user")
     private String dbUser;
 
     /**
      * The user's password to used for the database connection
      */
-    @PluginParameter(name = PASSWORD_PARAM)
+    @PluginParameter(name = PASSWORD_PARAM, label = "Database user password")
     private String dbPassword;
 
     /**
      * The URL to the database's host
      */
-    @PluginParameter(name = DB_HOST_PARAM)
+    @PluginParameter(name = DB_HOST_PARAM, label = "Database host")
     private String dbHost;
 
     /**
      * The PORT to the database's host
      */
-    @PluginParameter(name = DB_PORT_PARAM)
+    @PluginParameter(name = DB_PORT_PARAM, label = "Database port")
     private String dbPort;
 
     /**
      * The NAME of the database
      */
-    @PluginParameter(name = DB_NAME_PARAM)
+    @PluginParameter(name = DB_NAME_PARAM, label = "Database name")
     private String dbName;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MAX_POOLSIZE_PARAM)
+    @PluginParameter(name = MAX_POOLSIZE_PARAM, label = "Maximum pool size")
     private Integer maxPoolSize;
 
     /**
      * Minimum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MIN_POOLSIZE_PARAM)
+    @PluginParameter(name = MIN_POOLSIZE_PARAM, label = "Minimum pool size")
     private Integer minPoolSize;
 
     /**

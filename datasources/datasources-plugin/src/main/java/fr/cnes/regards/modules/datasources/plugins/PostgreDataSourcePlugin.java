@@ -56,25 +56,28 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     /**
      * The connection to the database
      */
-    @PluginParameter(name = CONNECTION_PARAM)
+    @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin" )
     private IDBConnectionPlugin dbConnection;
 
     /**
      * The SQL request
      */
-    @PluginParameter(name = FROM_CLAUSE)
+    @PluginParameter(name = FROM_CLAUSE, label = "SQL FROM clause")
     private String sqlFromClause;
 
     /**
      * The {@link Model} to used by the {@link Plugin} in JSon format.
      */
-    @PluginParameter(name = MODEL_PARAM)
+    @PluginParameter(name = MODEL_PARAM, label = "data model",
+            description = "Data object associated model (in JSON format)")
     private String modelJSon;
 
     /**
-     * Ingestion refresh rate
+     * Ingestion refresh rate in seconds
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true,
+            label = "refresh rate",
+            description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
 
     /**
