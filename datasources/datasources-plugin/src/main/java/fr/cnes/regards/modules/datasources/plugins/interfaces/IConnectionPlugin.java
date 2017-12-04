@@ -34,35 +34,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 @PluginInterface(description = "Plugin to manage a connection to a datasource")
 public interface IConnectionPlugin {
 
-    /**
-     * The user name
-     */
-    String USER_PARAM = "user";
 
-    /**
-     * The user's password
-     */
-    String PASSWORD_PARAM = "password"; // NOSONAR
-
-    /**
-     * The databse's host
-     */
-    String DB_HOST_PARAM = "dbHost";
-
-    /**
-     * The databse's port
-     */
-    String DB_PORT_PARAM = "dbPort";
-
-    /**
-     * The database's name
-     */
-    String DB_NAME_PARAM = "dbName";
-
-    /**
-     * The databse's driver
-     */
-    String DRIVER_PARAM = "driver";
 
     /**
      * Test the connection

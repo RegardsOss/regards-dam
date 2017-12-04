@@ -20,9 +20,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.After;
@@ -42,22 +40,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.test.util.Beans;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -193,17 +187,19 @@ public class CrawlerServiceIT {
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
-                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+//        final List<PluginParameter> parameters = PluginParametersFactory.build()
+//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
+//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
+//                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
+//                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
+//                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
+//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
+//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+//
+//        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO  replace by a Postgres plugin
+        return null;
     }
 
     public void buildData1() throws ModuleException {
