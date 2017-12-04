@@ -36,6 +36,9 @@ import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
  */
 public class ComputedAttributeValidator implements ConstraintValidator<ComputedAttribute, ModelAttrAssoc> {
 
+    /**
+     * Class logger
+     */
     private static final Logger LOG = LoggerFactory.getLogger(ComputedAttributeValidator.class);
 
     @Override

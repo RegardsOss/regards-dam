@@ -54,18 +54,43 @@ import fr.cnes.regards.modules.search.schema.UrlType;
 @Component
 public class OpenSearchDescriptionBuilder {
 
+    /**
+     * Description format constant
+     */
     private static final String DESCRIPTION = "%s REGARDS Search Engine";
 
+    /**
+     * Short name format constant
+     */
     private static final String SHORT_NAME = "%s Search";
 
+    /**
+     * microservice name
+     */
     private final String microserviceName;
 
+    /**
+     * {@link IProjectsClient} instance
+     */
     private final IProjectsClient projectClient;
 
+    /**
+     * {@link IRuntimeTenantResolver} instance
+     */
     private final IRuntimeTenantResolver tenantResolver;
 
+    /**
+     * {@link IModelAttrAssocClient} instance
+     */
     private final IModelAttrAssocClient modelAttrAssocClient;
 
+    /**
+     * Constructor setting the parameters as attributes
+     * @param microserviceName
+     * @param projectClient
+     * @param tenantResolver
+     * @param modelAttrAssocClient
+     */
     public OpenSearchDescriptionBuilder(@Value("${spring.application.name}") String microserviceName,
             @Autowired IProjectsClient projectClient, @Autowired IRuntimeTenantResolver tenantResolver,
             @Autowired IModelAttrAssocClient modelAttrAssocClient) {
@@ -106,9 +131,10 @@ public class OpenSearchDescriptionBuilder {
         int incorrectDoubleSlashIndex = project.getHost().length() - 1;
         String correctPart = urlTemplate.substring(0, incorrectDoubleSlashIndex);
         String incorrectPart = urlTemplate.substring(incorrectDoubleSlashIndex);
-        urlTemplate = correctPart + incorrectPart.replaceAll("//", "/");
-        urlTemplate += "?q={searchTerms}";
-        url.setTemplate(urlTemplate);
+        StringBuilder urlTemplateBuilder = new StringBuilder(correctPart);
+        urlTemplateBuilder.append(incorrectPart.replaceAll("//", "/"));
+        urlTemplateBuilder.append("?q={searchTerms}");
+        url.setTemplate(urlTemplateBuilder.toString());
         desc.getUrl().add(url);
 
         Set<AttributeModel> attrs = getAttributesFor(searchOn, currentTenant);

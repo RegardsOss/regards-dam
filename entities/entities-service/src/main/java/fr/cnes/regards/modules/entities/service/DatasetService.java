@@ -71,10 +71,19 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 @MultitenantTransactional
 public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
 
+    /**
+     * {@link IAttributeModelService} instance
+     */
     private final IAttributeModelService attributeService;
 
+    /**
+     * {@link IDataSourceService} instance
+     */
     private final IDataSourceService dataSourceService;
 
+    /**
+     * {@link IOpenSearchService} instance
+     */
     private final IOpenSearchService openSearchService;
 
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,

@@ -18,14 +18,15 @@
  */
 package fr.cnes.regards.modules.dataaccess.dao;
 
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import java.util.Set;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Set;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 
 /**
  *
@@ -36,6 +37,11 @@ import java.util.Set;
  */
 public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long> {
 
+    /**
+     * find an access group by its name
+     * @param pName
+     * @return the access group or null if none found
+     */
     AccessGroup findOneByName(String pName);
 
     /**
@@ -46,9 +52,21 @@ public interface IAccessGroupRepository extends JpaRepository<AccessGroup, Long>
      */
     Page<AccessGroup> findAllByUsers(User pUser, Pageable pPageable);
 
+    /**
+     * find all groups which the user belongs to
+     * @param pUser
+     * @return all the groups which the user belongs to
+     */
     @EntityGraph(value = "graph.accessgroup.users")
     Set<AccessGroup> findAllByUsers(User pUser);
 
+    /**
+     * find a page of groups which the user belongs to or which are public
+     * @param pUser
+     * @param pTrue
+     * @param pPageable page informations
+     * @return page of groups which the user belongs to or which are public
+     */
     Page<AccessGroup> findAllByUsersOrIsPublic(User pUser, Boolean pTrue, Pageable pPageable);
 
     /**

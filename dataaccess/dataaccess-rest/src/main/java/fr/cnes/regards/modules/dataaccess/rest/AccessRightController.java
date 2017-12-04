@@ -45,6 +45,8 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 
 /**
+ * Access right REST controller
+ *
  * @author Sylvain Vissiere-Guerinet
  * @author Léo Mieulet
  */
@@ -52,18 +54,39 @@ import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 @RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class AccessRightController implements IResourceController<AccessRight> {
 
+    /**
+     * Controller base path
+     */
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
+    /**
+     * Controller path using an access right id as path variable
+     */
     public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
 
+    /**
+     * Controller path used to know whether a dataset is accessible
+     */
     public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
+    /**
+     * {@link IResourceService} instance
+     */
     @Autowired
     private IResourceService resourceService;
 
     @Autowired
     private IAccessRightService accessRightService;
 
+    /**
+     * Retrieve a page of access rights according to the parameters
+     * @param pAccessGroupName name of the access group which the access rights belongs to
+     * @param pDatasetIpId ip id of the dataset which is constrained by the access rights
+     * @param pPageable page information
+     * @param pAssembler page assembler
+     * @return page of access rights
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
@@ -77,6 +100,12 @@ public class AccessRightController implements IResourceController<AccessRight> {
         return new ResponseEntity<>(toPagedResources(accessRights, pAssembler), HttpStatus.OK);
     }
 
+    /**
+     * Create an access right
+     * @param pAccessRight
+     * @return created access right
+     * @throws ModuleException
+     */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
@@ -86,6 +115,12 @@ public class AccessRightController implements IResourceController<AccessRight> {
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
+    /**
+     * Retrieve an access right by its id
+     * @param pId
+     * @return retrieved access right
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "send the access right of id requested")
@@ -95,6 +130,13 @@ public class AccessRightController implements IResourceController<AccessRight> {
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
     }
 
+    /**
+     * Update an access right.
+     * @param pId
+     * @param pToBe
+     * @return updated access right
+     * @throws ModuleException
+     */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
@@ -137,10 +179,17 @@ public class AccessRightController implements IResourceController<AccessRight> {
         return resource;
     }
 
+    /**
+     * Data binder to recognize {@link UniformResourceName}
+     * @param dataBinder
+     */
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
         dataBinder.registerCustomEditor(UniformResourceName.class, new PropertyEditorSupport() {
 
+            /**
+             * The value
+             */
             Object value;
 
             @Override

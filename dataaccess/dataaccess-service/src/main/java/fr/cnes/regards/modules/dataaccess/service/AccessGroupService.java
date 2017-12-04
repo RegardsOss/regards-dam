@@ -79,6 +79,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
 
     private final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
 
+    /**
+     * Access group already exist message format
+     */
     public static final String ACCESS_GROUP_ALREADY_EXIST_ERROR_MESSAGE = "Access Group of name %s already exists! Name of an access group has to be unique.";
 
     /**
@@ -86,8 +89,14 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      */
     public static final String ACCESS_GROUP_PUBLIC_DOCUMENTS = "PublicDocumentGroup";
 
+    /**
+     * {@link IAccessGroupRepository} instance
+     */
     private final IAccessGroupRepository accessGroupDao;
 
+    /**
+     * {@link IProjectUsersClient} instance
+     */
     private final IProjectUsersClient projectUserClient;
 
     /**
@@ -95,6 +104,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      */
     private final IPublisher publisher;
 
+    /**
+     * {@link ISubscriber} instance
+     */
     private final ISubscriber subscriber;
 
     /**
@@ -102,9 +114,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
      */
     private final ITenantResolver tenantResolver;
 
-    @Value("${spring.application.name}")
-    private String microserviceName;
-
+    /**
+     * {@link IRuntimeTenantResolver} instance
+     */
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
     public AccessGroupService(final IAccessGroupRepository pAccessGroupDao,
@@ -136,11 +148,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     public void processEvent(TenantConnectionReady event) {
         // Init default role for this tenant
         initDefaultAccessGroup(event.getTenant());
-    }
-
-    @Override
-    public void setMicroserviceName(final String pMicroserviceName) {
-        microserviceName = pMicroserviceName;
     }
 
     @Override
@@ -181,11 +188,13 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     public void deleteAccessGroup(final String pAccessGroupName)
             throws EntityOperationForbiddenException, EntityNotFoundException {
         final AccessGroup toDelete = accessGroupDao.findOneByName(pAccessGroupName);
-        if (toDelete != null) {
+        if (toDelete == null) {
+            throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
+        } else {
             // Prevent users to delete the public AccessGroup used by Documents
             if (toDelete.isInternal()) {
                 throw new EntityOperationForbiddenException(toDelete.getName(), AccessGroup.class,
-                        "Cannot remove the public access group used by Documents");
+                                                            "Cannot remove the public access group used by Documents");
             }
             accessGroupDao.delete(toDelete.getId());
             // Publish attribute deletion
@@ -194,8 +203,6 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
             if (toDelete.isPublic()) {
                 publisher.publish(new AccessGroupPublicEvent(toDelete));
             }
-        } else {
-            throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
     }
 
@@ -307,6 +314,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         subscriber.subscribeTo(ProjectUserEvent.class, new ProjectUserEventHandler());
     }
 
+    /**
+     * Project user event handler
+     */
     private class ProjectUserEventHandler implements IHandler<ProjectUserEvent> {
 
         @Override

@@ -23,10 +23,10 @@ import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * Common requests on entities
@@ -34,7 +34,10 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
-public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
+public interface IAbstractEntityRepository<T extends AbstractEntity>
+        extends JpaRepository<T, Long>, JpaSpecificationExecutor<T>
+
+{
 
     /**
      * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity

@@ -49,10 +49,17 @@ public abstract class AbstractDescEntity extends AbstractEntity {
         super(pModel, pIpId, pLabel);
     }
 
+    /**
+     * @return the description file
+     */
     public DescriptionFile getDescriptionFile() {
         return descriptionFile;
     }
 
+    /**
+     * Set the description file
+     * @param pDescriptionFile
+     */
     public void setDescriptionFile(DescriptionFile pDescriptionFile) {
         descriptionFile = pDescriptionFile;
     }

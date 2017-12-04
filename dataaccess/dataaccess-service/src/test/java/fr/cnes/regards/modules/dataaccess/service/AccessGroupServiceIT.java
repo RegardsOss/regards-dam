@@ -84,7 +84,6 @@ public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT 
     public void init() {
         runtimeTenantResolver.forceTenant(DEFAULT_TENANT);
 
-        accessGroupService.setMicroserviceName("test");
         accessGroup1 = new AccessGroup(AG1_NAME);
         dao.save(accessGroup1);
     }

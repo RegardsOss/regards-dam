@@ -89,8 +89,18 @@ public interface IAttributeModelService {
      */
     boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
 
+    /**
+     * Find attributes by fragment id
+     * @param pFragmentId
+     * @return attribute which fragment id is the given one
+     */
     List<AttributeModel> findByFragmentId(Long pFragmentId);
 
+    /**
+     * Find attributes by fragment name
+     * @param pFragmentName
+     * @return attribute which fragment name is the given one
+     */
     List<AttributeModel> findByFragmentName(String pFragmentName);
 
     void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;

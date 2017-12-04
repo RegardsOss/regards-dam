@@ -78,6 +78,8 @@ public interface IEntityService<U extends AbstractEntity> {
 
     List<U> findAll();
 
+    Page<U> search(String label, Pageable pageRequest);
+
     void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 
     /**

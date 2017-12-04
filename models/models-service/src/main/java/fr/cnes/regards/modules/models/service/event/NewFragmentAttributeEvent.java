@@ -12,6 +12,10 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
  */
 public class NewFragmentAttributeEvent extends ApplicationEvent {
 
+    /**
+     * Constructor
+     * @param attributeAdded
+     */
     public NewFragmentAttributeEvent(AttributeModel attributeAdded) {
         super(attributeAdded);
     }

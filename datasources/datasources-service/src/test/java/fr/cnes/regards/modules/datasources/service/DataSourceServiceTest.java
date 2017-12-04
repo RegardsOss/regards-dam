@@ -57,7 +57,7 @@ public class DataSourceServiceTest {
     /**
      * A {@link List} of {@link PluginConfiguration}
      */
-    private List<PluginConfiguration> plgConfs = new ArrayList<>();
+    private final List<PluginConfiguration> plgConfs = new ArrayList<>();
 
     private PluginConfiguration internalConf;
 
@@ -109,10 +109,9 @@ public class DataSourceServiceTest {
 
     private List<PluginParameterType> initializePluginParameterType() {
         return Arrays.asList(
-                             new PluginParameterType(IDataSourcePlugin.MODEL_PARAM, String.class.getName(),
-                                     ParamType.PRIMITIVE),
-                             new PluginParameterType(IDBDataSourcePlugin.FROM_CLAUSE, String.class.getName(),
-                                     ParamType.PRIMITIVE));
+                             PluginParameterType.create(IDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null,
+                                                        String.class, ParamType.PRIMITIVE, false),
+                             PluginParameterType.create(IDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null,
+                                                        String.class, ParamType.PRIMITIVE, false),
     }
-
 }

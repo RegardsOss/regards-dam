@@ -25,6 +25,9 @@ package fr.cnes.regards.modules.models.domain;
  */
 public interface IComputedAttributeVisitor<T> {
 
+    /**
+     * Visit method from the visitor design pattern
+     */
     <P, U> T visit(IComputedAttribute<P, U> pPlugin);
 
 }
