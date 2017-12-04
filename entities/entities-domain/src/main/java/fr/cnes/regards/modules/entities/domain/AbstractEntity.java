@@ -65,6 +65,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Valid
     protected UniformResourceName ipId;
 
+    /**
+     * The entity label
+     */
     @NotNull
     @Column(length = 128, nullable = false)
     protected String label;
@@ -175,19 +178,33 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         creationDate = pCreationDate;
     }
 
+    /**
+     * @return the id
+     */
     @Override
     public Long getId() {
         return id;
     }
 
+    /**
+     * Set the id
+     * @param pId
+     */
     public void setId(Long pId) {
         id = pId;
     }
 
+    /**
+     * @return the ip id
+     */
     public UniformResourceName getIpId() {
         return ipId;
     }
 
+    /**
+     * Set the ip id
+     * @param pIpId
+     */
     public void setIpId(UniformResourceName pIpId) {
         ipId = pIpId;
     }
@@ -204,22 +221,40 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return properties;
     }
 
+    /**
+     * Set the properties
+     * @param pAttributes
+     */
     public void setProperties(Set<AbstractAttribute<?>> pAttributes) {
         properties = pAttributes;
     }
 
+    /**
+     * @return the model
+     */
     public Model getModel() {
         return model;
     }
 
+    /**
+     * Set the model
+     * @param pModel
+     */
     public void setModel(Model pModel) {
         model = pModel;
     }
 
+    /**
+     * @return the sip id
+     */
     public String getSipId() {
         return sipId;
     }
 
+    /**
+     * Set the sip id
+     * @param pSipId
+     */
     public void setSipId(String pSipId) {
         sipId = pSipId;
     }

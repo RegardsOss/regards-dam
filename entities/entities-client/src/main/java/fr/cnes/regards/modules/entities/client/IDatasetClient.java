@@ -56,6 +56,12 @@ public interface IDatasetClient {
 
     public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
 
+    /**
+     * Retrieve a page of datasets
+     * @param page
+     * @param size
+     * @return a page of datasets
+     */
     @RequestMapping(method = RequestMethod.GET)
     ResponseEntity<PagedResources<Resource<Dataset>>> retrieveDatasets(@RequestParam("page") int page,
             @RequestParam("size") int size);

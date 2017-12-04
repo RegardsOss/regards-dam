@@ -54,12 +54,24 @@ import javax.validation.Valid;
 @RequestMapping(AccessGroupController.PATH_ACCESS_GROUPS)
 public class AccessGroupController implements IResourceController<AccessGroup> {
 
+    /**
+     * Controller base path
+     */
     public static final String PATH_ACCESS_GROUPS = "/accessgroups";
 
+    /**
+     * Controller path using an access group name as path variable
+     */
     public static final String PATH_ACCESS_GROUPS_NAME = "/{name}";
 
+    /**
+     * Controller path using an access group name and a user email as path variable
+     */
     public static final String PATH_ACCESS_GROUPS_NAME_EMAIL = PATH_ACCESS_GROUPS_NAME + "/{email}";
 
+    /**
+     * {@link IResourceService} instance
+     */
     @Autowired
     private IResourceService resourceService;
 
@@ -83,6 +95,12 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
+    /**
+     * Retrieve an access group by its name
+     * @param pAccessGroupName
+     * @return retrieved access group
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_GROUPS_NAME)
     @ResourceAccess(description = "send the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> retrieveAccessGroup(
@@ -107,6 +125,13 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
 
+    /**
+     * Associate a user, represented by its email, to an access group, represented by its name
+     * @param pAccessGroupName
+     * @param pUserEmail
+     * @return the updated access group
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResourceAccess(description = "associated the user of email specified to the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> associateUserToAccessGroup(
@@ -116,6 +141,13 @@ public class AccessGroupController implements IResourceController<AccessGroup> {
         return new ResponseEntity<>(toResource(ag), HttpStatus.OK);
     }
 
+    /**
+     * dissociate a user, represented by its email, from an access group, represented by its name.
+     * @param pAccessGroupName
+     * @param pUserEmail
+     * @return the updated access group
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_GROUPS_NAME_EMAIL)
     @ResourceAccess(description = "dissociated the user of email specified from the access group of name requested")
     public ResponseEntity<Resource<AccessGroup>> dissociateUserFromAccessGroup(

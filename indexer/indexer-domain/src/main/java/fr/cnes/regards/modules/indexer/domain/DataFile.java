@@ -18,17 +18,15 @@
  */
 package fr.cnes.regards.modules.indexer.domain;
 
-import fr.cnes.regards.framework.gson.annotation.Gsonable;
-import org.springframework.util.MimeType;
-
 import javax.validation.Valid;
 import java.net.URI;
+
+import org.springframework.util.MimeType;
 
 /**
  * This class manages physical data reference
  * @author lmieulet
  */
-@Gsonable
 public class DataFile {
 
     /**

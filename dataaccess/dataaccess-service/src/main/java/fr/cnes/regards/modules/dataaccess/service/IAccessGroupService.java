@@ -18,8 +18,6 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
  */
 public interface IAccessGroupService {
 
-    void setMicroserviceName(String pMicroserviceName);
-
     Page<AccessGroup> retrieveAccessGroups(Boolean isPublic, Pageable pPageable);
 
     AccessGroup createAccessGroup(AccessGroup pToBeCreated) throws EntityAlreadyExistsException;

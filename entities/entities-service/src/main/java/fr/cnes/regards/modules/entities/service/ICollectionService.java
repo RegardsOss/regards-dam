@@ -29,7 +29,18 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
  */
 public interface ICollectionService extends IEntityService<Collection> {
 
+    /**
+     * Retrieve the description file of the given collection, represented by its ip id
+     * @param collectionIpId
+     * @return the description file
+     * @throws EntityNotFoundException
+     */
     DescriptionFile retrieveDescription(UniformResourceName collectionIpId) throws EntityNotFoundException;
 
+    /**
+     * Remove the description file from the given collection, represented by its ip id
+     * @param collectionIpId
+     * @throws EntityNotFoundException
+     */
     void removeDescription(UniformResourceName collectionIpId) throws EntityNotFoundException;
 }

@@ -41,10 +41,26 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
 
     ModelAttrAssoc findByModelIdAndAttribute(Long pModelId, AttributeModel pAttributeModel);
 
+    /**
+     * Find page attribute which are associated to at least one of the models
+     * @param pModelIds
+     * @param pPageable
+     * @return a page of attribute which are associated to at least one of the models
+     */
     @Query("SELECT assoc.attribute FROM ModelAttrAssoc assoc WHERE assoc.model.id IN :modelIds")
     Page<AttributeModel> findAllAttributeByModelIdIn(@Param("modelIds") List<Long> pModelIds, Pageable pPageable);
 
+    /**
+     * Find all the model attribute association which model is one of the given, represented by their ids
+     * @param pModelsIds
+     * @return the model attribute assocations
+     */
     Collection<ModelAttrAssoc> findAllByModelIdIn(Collection<Long> pModelsIds);
 
+    /**
+     * Find all model attribute associations by attribute id
+     * @param attrId
+     * @return the model attribute associations
+     */
     Collection<ModelAttrAssoc> findAllByAttributeId(Long attrId);
 }

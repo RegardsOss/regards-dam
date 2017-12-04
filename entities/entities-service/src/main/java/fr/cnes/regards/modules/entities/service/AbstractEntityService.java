@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -34,6 +33,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -58,6 +60,7 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.entities.dao.EntitySpecifications;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -114,6 +117,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     protected final IModelAttrAssocService modelAttributeService;
 
+    /**
+     {@link IModelService} instance
+     */
     protected final IModelService modelService;
 
     /**
@@ -140,10 +146,19 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     private final EntityManager em;
 
+    /**
+     * {@link IPublisher} instance
+     */
     private final IPublisher publisher;
 
+    /**
+     * {@link IRuntimeTenantResolver} instance
+     */
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
+    /**
+     * {@link IDescriptionFileRepository} instance
+     */
     protected final IDescriptionFileRepository descriptionFileRepository;
 
     public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
@@ -191,6 +206,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     @Override
+    public Page<U> search(String label, Pageable pageRequest) {
+        EntitySpecifications<U> spec = new EntitySpecifications<>();
+        return repository.findAll(spec.search(label), pageRequest);
+    }
+
+    @Override
     public List<U> findAll() {
         return repository.findAll();
     }
@@ -213,8 +234,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty()) && ((entity.getProperties() != null) && (!entity.getProperties()
-                .isEmpty()))) {
+        if (((modAtts == null) || modAtts.isEmpty())
+                && ((entity.getProperties() != null) && (!entity.getProperties().isEmpty()))) {
             inErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                  "No properties defined in corresponding model but trying to create.");
         }
@@ -282,9 +303,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, errors);
                 } else {
-                    String defaultMessage = String
-                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
-                                    key);
+                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
+                                                          validator.getClass().getName(), key);
                     errors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
@@ -325,8 +345,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return validators;
     }
 
-    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity,
-            AttributeModel attribute) { // NOSONAR
+    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity, AttributeModel attribute) { // NOSONAR
         if (attribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
             return entity.getProperties().stream().filter(p -> p.getName().equals(attribute.getName())).findFirst();
@@ -393,7 +412,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
         // Set description
         if (entity instanceof AbstractDescEntity) {
@@ -452,7 +471,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param entity entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(final T entity, Set<UniformResourceName> updatedIpIds) {
-/*        // If entity tags entities => retrieve all groups of tagged entities (only for collection)
+        /*        // If entity tags entities => retrieve all groups of tagged entities (only for collection)
         if ((entity instanceof Collection) && !entity.getTags().isEmpty()) {
             List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
             final T finalEntity = entity;
@@ -495,7 +514,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 this.manageGroups(coll, updatedIpIds);
             }
         }
-/*        UniformResourceName urn = entity.getIpId();
+        /*        UniformResourceName urn = entity.getIpId();
         // If entity contains groups => update all entities tagging this entity (recursively)
         // Need to manage groups one by one
         for (String group : entity.getGroups()) {
@@ -562,8 +581,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     updatedEntity.setDescriptionFile(oldOne);
                 } else {
                     // if there is no descriptionFile existing then lets create one
-                    updatedEntity.setDescriptionFile(
-                            new DescriptionFile(pFile.getBytes(), updatedEntity.getDescriptionFile().getType()));
+                    updatedEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+                            updatedEntity.getDescriptionFile().getType()));
                 }
             } else { // pFile is null
                 // this is an url
@@ -622,8 +641,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");
             String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
-                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
+                    || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
         }
         return false;
     }

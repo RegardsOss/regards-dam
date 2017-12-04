@@ -43,33 +43,70 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public interface IAccessRightClient { // NOSONAR
 
+    /**
+     * Client base path
+     */
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
 
+    /**
+     * Client path using an access right id as path variable
+     */
     public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
 
+    /**
+     * Client path to know if a dataset is accessible
+     */
     public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
+    /**
+     * Retrieve access rights
+     * @param pAccessGroupName group which the access right should be applied to
+     * @param pDatasetIpId dataset id which the access right should be applied to
+     * @param pPage which page
+     * @param pSize which page size
+     * @return the retrieved access rights
+     */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName pDatasetIpId,
-            @RequestParam(name = "useremail", required = false) String pUserEmail, @RequestParam("page") int pPage,
+            @RequestParam("page") int pPage,
             @RequestParam("size") int pSize);
 
+    /**
+     * Create an access right
+     * @param pAccessRight
+     * @return created access right
+     */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight pAccessRight);
 
+    /**
+     * Retrieve an access right by its id
+     * @param pId
+     * @return retrieved access right
+     */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
+    /**
+     * Update an access right. pToBe id should be the same as pId
+     * @param pId
+     * @param pToBe
+     * @return updated access right
+     */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
             @Valid AccessRight pToBe);
 
+    /**
+     * Delete access right by its id
+     * @param pId
+     */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId);

@@ -48,66 +48,118 @@ public class DescriptionFile {
      */
     private static final String URL_REGEXP = "^https?://.*$";
 
+    /**
+     * The id
+     */
     @Id
     @SequenceGenerator(name = "DescriptionFileSequence", initialValue = 1, sequenceName = "seq_description_file")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "DescriptionFileSequence")
     protected Long id;
 
+    /**
+     * The description file url
+     */
     @Column
     @Type(type = "text")
     @Pattern(regexp = URL_REGEXP,
             message = "Description url must conform to regular expression \"" + URL_REGEXP + "\".")
     protected String url;
 
+    /**
+     * The description file content
+     */
     @Column(name = "description_file_content")
     private byte[] content;
 
+    /**
+     * The description file mime type
+     */
     @Column(name = "description_file_type")
     @Convert(converter = MediaTypeConverter.class)
     private MediaType type;
 
+    /**
+     * Default constructor
+     */
     public DescriptionFile() {
     }
 
+    /**
+     * Constructor setting the parameter as attribute
+     * @param url
+     */
     public DescriptionFile(String url) {
         super();
         this.url = url;
     }
 
+    /**
+     * Constructor setting the parameters as attributes
+     * @param pContent
+     * @param pType
+     */
     public DescriptionFile(byte[] pContent, MediaType pType) {
         super();
         content = pContent;
         type = pType;
     }
 
+    /**
+     * @return the content
+     */
     public byte[] getContent() {
         return content;
     }
 
+    /**
+     * Set the content
+     * @param pContent
+     */
     public void setContent(byte[] pContent) {
         content = pContent;
     }
 
+    /**
+     * @return the type
+     */
     public MediaType getType() {
         return type;
     }
 
+    /**
+     * Set the type
+     * @param pType
+     */
     public void setType(MediaType pType) {
         type = pType;
     }
 
+    /**
+     * @return the url
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Set the url
+     * @param pDescription
+     */
     public void setUrl(String pDescription) {
         url = pDescription;
     }
 
+    /**
+     * @return the id
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Set the id
+     * @param id
+     */
     public void setId(Long id) {
         this.id = id;
     }

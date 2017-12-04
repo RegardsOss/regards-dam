@@ -101,6 +101,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
      */
     private final IAttributeModelService attributeModelService;
 
+    /**
+     * {@link IPluginService} instance
+     */
     private final IPluginService pluginService;
 
     // CHECKSTYLE:OFF
@@ -587,12 +590,12 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
     @Override
     public Collection<ModelAttrAssoc> getModelAttrAssocsFor(EntityType pType) {
-        if (pType != null) {
+        if (pType == null) {
+            return modelAttributeRepository.findAll();
+        } else {
             Collection<Model> models = getModels(pType);
             Collection<Long> modelsIds = Collections2.transform(models, (model -> model.getId()));
             return modelAttributeRepository.findAllByModelIdIn(modelsIds);
-        } else {
-            return modelAttributeRepository.findAll();
         }
     }
 

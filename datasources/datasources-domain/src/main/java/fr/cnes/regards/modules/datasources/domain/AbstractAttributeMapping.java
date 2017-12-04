@@ -94,7 +94,7 @@ public abstract class AbstractAttributeMapping {
         this.nameSpace = pNameSpace;
         this.nameDS = pMappingDS;
         if (pType == null && isMappedToStaticProperty()) {
-            this.type = getStaticdAttributeType(pName);
+            this.type = getStaticAttributeType(pName);
         } else {
             this.type = pType;
         }
@@ -111,7 +111,7 @@ public abstract class AbstractAttributeMapping {
      * <li>{@value #GEOMETRY}
      * @return the {@link AttributeType}
      */
-    private AttributeType getStaticdAttributeType(String staticAttrName) {
+    private AttributeType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
                 return AttributeType.LONG;

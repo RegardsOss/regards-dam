@@ -41,6 +41,13 @@ public final class AttributeModelBuilder {
         this.attributeModel = pAttributeModel;
     }
 
+    /**
+     * Initialize the builder by instanciating a minimal attribute model
+     * @param pName attribute name
+     * @param pType attribute type
+     * @param label attribute label
+     * @return initialized builder
+     */
     public static AttributeModelBuilder build(String pName, AttributeType pType, String label) {
         final AttributeModel am = new AttributeModel();
         am.setName(pName);
