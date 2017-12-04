@@ -32,8 +32,7 @@ public class DataFile {
     /**
      * File reference
      */
-    @Valid
-    private URI uri;
+    protected String uri;
 
     /**
      * File checksum
@@ -66,11 +65,11 @@ public class DataFile {
     private MimeType mimeType;
 
     public URI getUri() {
-        return uri;
+        return URI.create(uri);
     }
 
     public void setUri(URI pFileRef) {
-        uri = pFileRef;
+        uri = pFileRef.toString();
     }
 
     public String getDigestAlgorithm() {
