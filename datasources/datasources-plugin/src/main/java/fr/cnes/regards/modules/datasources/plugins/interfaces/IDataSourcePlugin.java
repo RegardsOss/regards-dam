@@ -43,8 +43,6 @@ public interface IDataSourcePlugin {
      */
     String MODEL_PARAM = "model";
 
-    String TRUE_INTERNAL_DATASOURCE = "true";
-
     /**
      * Ingestion refresh rate parameter name
      */

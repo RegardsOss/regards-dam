@@ -38,9 +38,7 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugi
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
 /**
- *
  * Unit testing of {@link DataSourceService}.
- *
  * @author Christophe Mertz
  */
 public class DataSourceServiceTest {
@@ -74,17 +72,17 @@ public class DataSourceServiceTest {
 
         // create PluginConfiguration
         internalConf = new PluginConfiguration(this.initializePluginMeta(), "internal configuration",
-                initializePluginParameterIsInternalDataSource());
+                                               initializePluginParameterIsInternalDataSource());
         externalConf = new PluginConfiguration(this.initializePluginMeta(), "external configuration",
-                initializePluginParameterNotInternalDataSource());
+                                               initializePluginParameterNotInternalDataSource());
 
         externalConf.setId(123456L);
         plgConfs.add(externalConf);
         plgConfs.add(new PluginConfiguration(this.initializePluginMeta(), "third configuration",
-                initializePluginParameterNotInternalDataSource()));
+                                             initializePluginParameterNotInternalDataSource()));
         plgConfs.add(internalConf);
         plgConfs.add(new PluginConfiguration(this.initializePluginMeta(), "forth configuration",
-                initializePluginParameterNotInternalDataSource()));
+                                             initializePluginParameterNotInternalDataSource()));
     }
 
     private PluginMetaData initializePluginMeta() {
@@ -108,10 +106,10 @@ public class DataSourceServiceTest {
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
-        return Arrays.asList(
-                             PluginParameterType.create(IDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null,
-                                                        String.class, ParamType.PRIMITIVE, false),
-                             PluginParameterType.create(IDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null,
-                                                        String.class, ParamType.PRIMITIVE, false),
+        return Arrays.asList(PluginParameterType
+                                     .create(IDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null, String.class,
+                                             ParamType.PRIMITIVE, false), PluginParameterType
+                                     .create(IDBDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null, String.class,
+                                             ParamType.PRIMITIVE, false));
     }
 }
