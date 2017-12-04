@@ -45,7 +45,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -68,10 +67,10 @@ import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -283,13 +282,13 @@ public class CrawlerIngestIT {
 
     private PluginConfiguration getPostgresConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
+                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));

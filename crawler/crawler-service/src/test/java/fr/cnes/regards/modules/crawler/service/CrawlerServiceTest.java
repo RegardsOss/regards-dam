@@ -20,8 +20,6 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -43,22 +41,16 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
-
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
@@ -105,7 +97,7 @@ public class CrawlerServiceTest {
     @Autowired
     private IIndexerService indexerService;
 
-    private IDataSourceFromSingleTablePlugin dsPlugin;
+    private IDBDataSourceFromSingleTablePlugin dsPlugin;
 
     private DataSourceModelMapping dataSourceModelMapping;
 
@@ -127,14 +119,15 @@ public class CrawlerServiceTest {
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
-        parameters = PluginParametersFactory.build()
-                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                 getOracleConnectionConfiguration())
-                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
-                .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
-        dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
+//        parameters = PluginParametersFactory.build()
+//                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+//                                                 getOracleConnectionConfiguration())
+//                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+//                .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
+//        dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
+//                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
+        // TODO use a Postgres plugin
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(dsPlugin.getDBConnection().testConnection());
@@ -173,19 +166,19 @@ public class CrawlerServiceTest {
         Assert.assertTrue(true);
     }
 
-    private PluginConfiguration getOracleConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-    }
+//    private PluginConfiguration getOracleConnectionConfiguration() {
+//        final List<PluginParameter> parameters = PluginParametersFactory.build()
+//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+//                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+//                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+//                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
+//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+//
+//        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+//    }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();

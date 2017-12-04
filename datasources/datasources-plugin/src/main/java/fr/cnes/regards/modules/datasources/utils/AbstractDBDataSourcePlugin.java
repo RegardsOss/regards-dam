@@ -31,7 +31,7 @@ import org.springframework.data.domain.Pageable;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -41,12 +41,12 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping implements IDataSourcePlugin {
+public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMapping implements IDBDataSourcePlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourcePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDBDataSourcePlugin.class);
 
     protected static final String SELECT = "SELECT ";
 
@@ -90,22 +90,22 @@ public abstract class AbstractDataSourcePlugin extends AbstractDataObjectMapping
 
     /**
      *
-     * @param pTenant
-     * @param pPageable
-     * @param pDate can be null
+     * @param tenant
+     * @param pageable
+     * @param date can be null
      * @return
      */
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) throws
+    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws
             DataSourceException {
-        final String selectRequest = getSelectRequest(pPageable, pDate);
-        final String countRequest = getCountRequest(pDate);
+        final String selectRequest = getSelectRequest(pageable, date);
+        final String countRequest = getCountRequest(date);
 
         LOG.debug("select request :" + selectRequest);
         LOG.debug("count request :" + countRequest);
 
         try (Connection conn = getDBConnection().getConnection()) {
 
-            return findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
+            return findAll(tenant, conn, selectRequest, countRequest, pageable, date);
 
         } catch (SQLException e) {
             LOG.error("Unable to obtain a database connection.", e);
