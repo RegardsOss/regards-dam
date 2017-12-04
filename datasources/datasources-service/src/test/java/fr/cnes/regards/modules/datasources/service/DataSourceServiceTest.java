@@ -59,7 +59,7 @@ public class DataSourceServiceTest {
     /**
      * A {@link List} of {@link PluginConfiguration}
      */
-    private List<PluginConfiguration> plgConfs = new ArrayList<>();
+    private final List<PluginConfiguration> plgConfs = new ArrayList<>();
 
     private PluginConfiguration internalConf;
 
@@ -93,9 +93,8 @@ public class DataSourceServiceTest {
     public void setInternalDataSource() throws ModuleException {
         Assert.assertEquals(IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE,
                             internalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-        Assert.assertEquals("false",
-                            externalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-        
+        Assert.assertEquals("false", externalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
+
         Mockito.when(pluginServiceMock.getPluginConfiguration(externalConf.getId())).thenReturn(externalConf);
         Mockito.when(pluginServiceMock.getPluginConfigurationsByType(IDataSourcePlugin.class)).thenReturn(plgConfs);
         Mockito.when(pluginServiceMock.savePluginConfiguration(externalConf)).thenReturn(externalConf);
@@ -105,8 +104,7 @@ public class DataSourceServiceTest {
         Assert.assertEquals(newInternaleDS, externalConf);
         Assert.assertEquals(IDataSourcePlugin.TRUE_INTERNAL_DATASOURCE,
                             externalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
-        Assert.assertEquals("false",
-                            internalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
+        Assert.assertEquals("false", internalConf.getParameterValue(IDataSourcePlugin.IS_INTERNAL_PARAM));
     }
 
     @Test
@@ -142,12 +140,11 @@ public class DataSourceServiceTest {
 
     private List<PluginParameterType> initializePluginParameterType() {
         return Arrays.asList(
-                             new PluginParameterType(IDataSourcePlugin.MODEL_PARAM, String.class.getName(),
-                                     ParamType.PRIMITIVE),
-                             new PluginParameterType(IDataSourcePlugin.FROM_CLAUSE, String.class.getName(),
-                                     ParamType.PRIMITIVE),
-                             new PluginParameterType(IDataSourcePlugin.IS_INTERNAL_PARAM, String.class.getName(),
-                                     ParamType.PRIMITIVE));
+                             PluginParameterType.create(IDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null,
+                                                        String.class, ParamType.PRIMITIVE, false),
+                             PluginParameterType.create(IDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null,
+                                                        String.class, ParamType.PRIMITIVE, false),
+                             PluginParameterType.create(IDataSourcePlugin.IS_INTERNAL_PARAM, "IS_INTERNAL_PARAM", null,
+                                                        String.class, ParamType.PRIMITIVE, false));
     }
-
 }
