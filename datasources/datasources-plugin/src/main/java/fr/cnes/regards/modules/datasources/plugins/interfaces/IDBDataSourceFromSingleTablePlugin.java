@@ -22,15 +22,13 @@ package fr.cnes.regards.modules.datasources.plugins.interfaces;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * Class IDataSourceFromSingleTablePlugin
- * 
- * Allows to search in a database, and to explore the database's tables, columns and indexes.
+ * Class IDBDataSourceFromSingleTablePlugin
  *
+ * Allows to search in a database, and to explore the database's tables, columns and indexes.
  * @author Christophe Mertz
- * 
  */
 @PluginInterface(description = "Plugin to explore a data source and search in a single table of the data source")
-public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
+public interface IDBDataSourceFromSingleTablePlugin extends IDBDataSourcePlugin {
 
     /**
      * The table parameter name
@@ -40,9 +38,7 @@ public interface IDataSourceFromSingleTablePlugin extends IDataSourcePlugin {
     /**
      * Allows to define the database table used, and the columns of this table.</br>
      * The tables and columns are used to generate the SQL request used to execute statement on the database.
-     * 
-     * @param pTable
-     *            the name of the table
+     * @param pTable the name of the table
      */
     void initializePluginMapping(String pTable);
 

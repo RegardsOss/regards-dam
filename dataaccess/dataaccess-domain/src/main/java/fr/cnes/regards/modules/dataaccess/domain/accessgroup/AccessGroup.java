@@ -18,15 +18,29 @@
  */
 package fr.cnes.regards.modules.dataaccess.domain.accessgroup;
 
-import fr.cnes.regards.framework.jpa.IIdentifiable;
-import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
-
-import javax.persistence.*;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
+
+import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.modules.dataaccess.domain.jpa.converters.UserConverter;
 
 /**
  * Entity representing an group of user having rights on some data
@@ -58,11 +72,17 @@ public class AccessGroup implements IIdentifiable<Long> {
      */
     public static final int NAME_MAX_SIZE = 32;
 
+    /**
+     * the id
+     */
     @Id
     @SequenceGenerator(name = "AccessGroupSequence", initialValue = 1, sequenceName = "seq_access_group")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AccessGroupSequence")
     private Long id;
 
+    /**
+     * The name
+     */
     @NotNull
     @Pattern(regexp = NAME_REGEXP, message = "Group name must conform to regular expression \"" + NAME_REGEXP + "\".")
     @Size(min = NAME_MIN_SIZE, max = NAME_MAX_SIZE,
@@ -77,6 +97,9 @@ public class AccessGroup implements IIdentifiable<Long> {
     @Convert(converter = UserConverter.class)
     private Set<User> users = new HashSet<>();
 
+    /**
+     * Is the group public?
+     */
     @Column(name = "public")
     private boolean isPublic = Boolean.FALSE;
 
@@ -93,6 +116,9 @@ public class AccessGroup implements IIdentifiable<Long> {
         name = pName;
     }
 
+    /**
+     * @return the id
+     */
     @Override
     public Long getId() {
         return id;
@@ -102,6 +128,9 @@ public class AccessGroup implements IIdentifiable<Long> {
         id = pId;
     }
 
+    /**
+     * @return the name
+     */
     public String getName() {
         return name;
     }
@@ -118,10 +147,16 @@ public class AccessGroup implements IIdentifiable<Long> {
         users.remove(pUser);
     }
 
+    /**
+     * @return the users
+     */
     public Set<User> getUsers() {
         return users;
     }
 
+    /**
+     * @return whether the group is public or not
+     */
     public boolean isPublic() {
         return isPublic;
     }

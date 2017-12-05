@@ -24,7 +24,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginDestroy;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
+import fr.cnes.regards.modules.datasources.utils.AbstractDBConnection;
 
 /**
  * A default {@link Plugin} of type {@link IDBConnectionPlugin}. For the test of the connection :
@@ -36,7 +36,7 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDataSourceConnection;
 @Plugin(id = "postgresql-db-connection", version = "1.0-SNAPSHOT", description = "Connection to a PostgreSql database",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-public class DefaultPostgreConnectionPlugin extends AbstractDataSourceConnection {
+public class DefaultPostgreConnectionPlugin extends AbstractDBConnection {
 
     /**
      * The JDBC PostgreSQL driver
@@ -46,43 +46,43 @@ public class DefaultPostgreConnectionPlugin extends AbstractDataSourceConnection
     /**
      * The user to used for the database connection
      */
-    @PluginParameter(name = USER_PARAM)
+    @PluginParameter(name = USER_PARAM, label = "Databse user")
     private String dbUser;
 
     /**
      * The user's password to used for the database connection
      */
-    @PluginParameter(name = PASSWORD_PARAM)
+    @PluginParameter(name = PASSWORD_PARAM, label = "Database user password")
     private String dbPassword;
 
     /**
      * The URL to the database's host
      */
-    @PluginParameter(name = DB_HOST_PARAM)
+    @PluginParameter(name = DB_HOST_PARAM, label = "Database host")
     private String dbHost;
 
     /**
      * The PORT to the database's host
      */
-    @PluginParameter(name = DB_PORT_PARAM)
+    @PluginParameter(name = DB_PORT_PARAM, label = "Database port")
     private String dbPort;
 
     /**
      * The NAME of the database
      */
-    @PluginParameter(name = DB_NAME_PARAM)
+    @PluginParameter(name = DB_NAME_PARAM, label = "Database name")
     private String dbName;
 
     /**
      * Maximum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MAX_POOLSIZE_PARAM)
+    @PluginParameter(name = MAX_POOLSIZE_PARAM, label = "Maximum pool size")
     private Integer maxPoolSize;
 
     /**
      * Minimum number of Connections a pool will maintain at any given time.
      */
-    @PluginParameter(name = MIN_POOLSIZE_PARAM)
+    @PluginParameter(name = MIN_POOLSIZE_PARAM, label = "Minimum pool size")
     private Integer minPoolSize;
 
     /**

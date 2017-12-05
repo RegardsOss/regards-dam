@@ -124,7 +124,7 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
     @Test
     public void testRetrieveAccessRightsList() {
         ResponseEntity<PagedResources<Resource<AccessRight>>> accessRights = client
-                .retrieveAccessRightsList(null, null, null, 0, 10);
+                .retrieveAccessRightsList(null, null, 0, 10);
         Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));
     }
 

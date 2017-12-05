@@ -18,24 +18,21 @@
  */
 package fr.cnes.regards.modules.indexer.domain;
 
-import fr.cnes.regards.framework.gson.annotation.Gsonable;
-import org.springframework.util.MimeType;
-
 import javax.validation.Valid;
 import java.net.URI;
+
+import org.springframework.util.MimeType;
 
 /**
  * This class manages physical data reference
  * @author lmieulet
  */
-@Gsonable
 public class DataFile {
 
     /**
      * File reference
      */
-    @Valid
-    private URI uri;
+    protected String uri;
 
     /**
      * File checksum
@@ -68,11 +65,11 @@ public class DataFile {
     private MimeType mimeType;
 
     public URI getUri() {
-        return uri;
+        return URI.create(uri);
     }
 
     public void setUri(URI pFileRef) {
-        uri = pFileRef;
+        uri = pFileRef.toString();
     }
 
     public String getDigestAlgorithm() {

@@ -79,6 +79,11 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelName(String pModelName);
 
+    /**
+     * Find a dataset by its ip id with the description file loaded
+     * @param datasetIpId
+     * @return the dataset with the description file loaded or null if none were found
+     */
     @Query("from Dataset ds left join fetch ds.descriptionFile where ds.ipId=:ipId")
     Dataset findOneDescriptionFile(@Param("ipId") UniformResourceName datasetIpId);
 

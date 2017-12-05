@@ -91,7 +91,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.crawler</groupId>
-			<artifactId>crawler-service</artifactId>
+			<artifactId>crawler-rest</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>

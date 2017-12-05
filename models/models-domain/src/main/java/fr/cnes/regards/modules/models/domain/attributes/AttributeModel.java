@@ -147,6 +147,9 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @Column
     private boolean optional;
 
+    /**
+     * Attribute label
+     */
     @Column(length = 20)
     @NotBlank
     @Size(max = 20, message = "Label must be between 1 and 20 characters.")
@@ -243,10 +246,17 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         return (restriction != null) && !restriction.getType().equals(RestrictionType.NO_RESTRICTION);
     }
 
+    /**
+     * @return the label
+     */
     public String getLabel() {
         return label;
     }
 
+    /**
+     * Set the label
+     * @param label
+     */
     public void setLabel(String label) {
         this.label = label;
     }

@@ -33,8 +33,14 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
         description = "Plugins of type ICalculationModel are plugins allowing to calculate the value of an AttributeModel thanks to a ModelAttrAssoc")
 public interface IComputedAttribute<P, R> {
 
+    /**
+     * The plugin parameter name for the resulting attribute name
+     */
     String RESULT_ATTRIBUTE_NAME = "resultAttributeName";
 
+    /**
+     * The plugin parameter name for the resulting attribute fragment name
+     */
     String RESULT_FRAGMENT_NAME = "resultAttributeFragmentName";
 
     /**
@@ -53,11 +59,15 @@ public interface IComputedAttribute<P, R> {
      */
     AttributeType getSupported();
 
+    /**
+     * Allows to build the resulting attribute from the computation
+     * @param pVisitor
+     * @param <U>
+     * @return computed attribute
+     */
     default <U> U accept(IComputedAttributeVisitor<U> pVisitor) {
         return pVisitor.visit(this);
     }
-
-    ;
 
     /**
      * @return the attribute computed by this plugin

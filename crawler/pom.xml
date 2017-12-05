@@ -60,6 +60,7 @@
 		<module>crawler-service</module>
 		<module>crawler-domain</module>
 		<module>crawler-dao</module>
+		<module>crawler-rest</module>
 	</modules>
 
 	<dependencyManagement>
@@ -80,7 +81,11 @@
 				<artifactId>crawler-dao</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			
+			<dependency>
+				<groupId>fr.cnes.regards.modules.crawler</groupId>
+				<artifactId>crawler-rest</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	

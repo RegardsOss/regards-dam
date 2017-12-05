@@ -85,7 +85,7 @@ public class DBConnectionServiceTest {
     /**
      * A {@link List} of {@link PluginConfiguration}
      */
-    private List<PluginConfiguration> plgConfs = new ArrayList<>();
+    private final List<PluginConfiguration> plgConfs = new ArrayList<>();
 
     /**
      * This method is run before all tests
@@ -177,9 +177,11 @@ public class DBConnectionServiceTest {
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
-        return Arrays.asList(new PluginParameterType("model", String.class.getName(), ParamType.PRIMITIVE),
-                             new PluginParameterType("connection", IDBConnectionPlugin.class.getCanonicalName(),
-                                     ParamType.PLUGIN));
+
+        return Arrays
+                .asList(PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE, false),
+                        PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
+                                                   ParamType.PLUGIN, false));
     }
 
 }

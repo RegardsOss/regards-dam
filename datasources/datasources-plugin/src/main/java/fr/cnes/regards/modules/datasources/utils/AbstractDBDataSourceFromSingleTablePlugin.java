@@ -37,7 +37,7 @@ import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 
 /**
@@ -48,13 +48,13 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping
-        implements IDataSourceFromSingleTablePlugin {
+public abstract class AbstractDBDataSourceFromSingleTablePlugin extends AbstractDataObjectMapping
+        implements IDBDataSourceFromSingleTablePlugin {
 
     /**
      * Class logger
      */
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDataSourceFromSingleTablePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDBDataSourceFromSingleTablePlugin.class);
 
     protected static final String AND = " AND ";
 
@@ -204,22 +204,22 @@ public abstract class AbstractDataSourceFromSingleTablePlugin extends AbstractDa
     }
 
     @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable) throws DataSourceException {
-        return findAll(pTenant, pPageable, null);
+    public Page<DataObject> findAll(String tenant, Pageable pageable) throws DataSourceException {
+        return findAll(tenant, pageable, null);
     }
 
     @Override
-    public Page<DataObject> findAll(String pTenant, Pageable pPageable, OffsetDateTime pDate) throws
+    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws
             DataSourceException {
         if (sqlGenerator == null) {
             throw new DataSourceException("sqlGenerator is null");
         }
-        final String selectRequest = getSelectRequest(pPageable, pDate);
-        final String countRequest = getCountRequest(pDate);
+        final String selectRequest = getSelectRequest(pageable, date);
+        final String countRequest = getCountRequest(date);
 
         try (Connection conn = getDBConnection().getConnection()) {
 
-            Page<DataObject> pages = findAll(pTenant, conn, selectRequest, countRequest, pPageable, pDate);
+            Page<DataObject> pages = findAll(tenant, conn, selectRequest, countRequest, pageable, date);
 
             return pages;
         } catch (SQLException e) {

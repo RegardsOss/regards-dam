@@ -37,8 +37,16 @@ import fr.cnes.regards.modules.models.domain.Model;
 @RequestMapping(IModelClient.TYPE_MAPPING)
 public interface IModelClient {
 
+    /**
+     * Client base path
+     */
     public static final String TYPE_MAPPING = "/models";
 
+    /**
+     * Retrieve the models of a given type (optional)
+     * @param pType
+     * @return the models
+     */
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<Model>>> getModels(
             @RequestParam(value = "type", required = false) EntityType pType);

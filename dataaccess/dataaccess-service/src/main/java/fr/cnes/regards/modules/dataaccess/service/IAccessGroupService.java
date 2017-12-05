@@ -1,22 +1,22 @@
 package fr.cnes.regards.modules.dataaccess.service;
 
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by oroussel on 03/07/17.
  */
 public interface IAccessGroupService {
-
-    void setMicroserviceName(String pMicroserviceName);
 
     Page<AccessGroup> retrieveAccessGroups(Boolean isPublic, Pageable pPageable);
 
@@ -39,4 +39,6 @@ public interface IAccessGroupService {
     boolean existGroup(Long pId);
 
     AccessGroup update(String pAccessGroupName, AccessGroup pAccessGroup) throws ModuleException;
+
+    void processEvent(TenantConnectionReady event);
 }

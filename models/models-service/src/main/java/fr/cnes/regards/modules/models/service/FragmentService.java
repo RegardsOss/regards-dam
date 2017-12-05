@@ -76,6 +76,9 @@ public class FragmentService implements IFragmentService {
      */
     private final IAttributeModelService attributeModelService;
 
+    /**
+     * {@link IPublisher} instance
+     */
     private final IPublisher publisher;
 
     public FragmentService(IFragmentRepository pFragmentRepository, IAttributeModelRepository pAttributeModelRepository,

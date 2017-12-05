@@ -43,6 +43,8 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
@@ -76,6 +78,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     @Lazy
     private ICrawlerAndIngesterService self;
 
+    @Autowired
+    private IDatasourceIngestionRepository datasourceIngestionRepo;
+
     @Override
     @Async
     public void crawl() {
@@ -107,7 +112,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // , we must search for it and do as it has
         // been updated (to update all associated data objects which have a lastUpdate date >= now)
         SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
-                                                                   Dataset.class);
+                Dataset.class);
         Set<Dataset> datasetsToUpdate = new HashSet<>();
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {
@@ -197,6 +202,11 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      */
     private static final UniformResourceName buildIpId(String tenant, String sipId, String datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
+                UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
+    }
+
+    @Override
+    public List<DatasourceIngestion> getDatasourceIngestions() {
+        return datasourceIngestionRepo.findAll();
     }
 }

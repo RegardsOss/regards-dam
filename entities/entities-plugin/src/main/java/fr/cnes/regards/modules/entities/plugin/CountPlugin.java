@@ -55,12 +55,12 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     @Autowired
     protected IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = RESULT_ATTRIBUTE_NAME,
-            description = "Name of the attribute to compute (ie result attribute).")
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
+            description = "Name of attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
-    @PluginParameter(name = RESULT_FRAGMENT_NAME,
-            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the "
+    @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
+            description = "Name of attribute to compute fragment. If computed attribute belongs to "
                     + "default fragment, this value can be set to null.", optional = true)
     private String attributeToComputeFragmentName;
 

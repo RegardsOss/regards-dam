@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,8 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
 
     @Value("${postgresql.datasource.password}")
     private String dbPassword;
+
+    private int pluginConfCount = 0;
 
     @Autowired
     IPluginConfigurationRepository pluginConfR;
@@ -181,7 +184,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath("$.length()", Matchers.is(3)));
+        expectations.add(MockMvcResultMatchers.jsonPath("$.length()", Matchers.is(pluginConfCount)));
 
         performDefaultGet(DBConnectionController.TYPE_MAPPING, expectations, "Could not get all DBConnection.");
     }
@@ -250,6 +253,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_020")
     @Purpose("The system allows to modify an existing connection")
+    @Ignore // Reactivate to test Oracle DB
     public void updateDBConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
         dbConnection.setMinPoolSize(3);
@@ -267,6 +271,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    @Ignore // Reactivate to test Oracle DB
     public void updateBadDBConnection() throws ModuleException {
         DBConnection dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
@@ -373,7 +378,9 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         List<PluginConfiguration> plgConfs = new ArrayList<>();
         plgConfs.add(service.createDBConnection(createADbConnection("Hello Toulouse", POSTGRESQL_PLUGIN_CONNECTION)));
         plgConfs.add(service.createDBConnection(createADbConnection("Hello Paris", POSTGRESQL_PLUGIN_CONNECTION)));
-        plgConfs.add(service.createDBConnection(createADbConnection("Hello Bordeaux", ORACLE_PLUGIN_CONNECTION)));
+        // Feel free to uncomment if you want to test oracle DB
+//        plgConfs.add(service.createDBConnection(createADbConnection("Hello Bordeaux", ORACLE_PLUGIN_CONNECTION)));
+        pluginConfCount = plgConfs.size();
         return plgConfs;
     }
 

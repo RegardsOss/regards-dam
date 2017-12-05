@@ -65,8 +65,14 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
 
     public static final String FRAGMENT_UNBIND_MAPPING = "/fragments/{pFragmentId}";
 
+    /**
+     * Controller path
+     */
     public static final String ASSOCS_MAPPING = "/assocs";
 
+    /**
+     * Controller path
+     */
     public static final String COMPUTATION_TYPE_MAPPING = ASSOCS_MAPPING + "/computation/types";
 
     /**
@@ -89,6 +95,11 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
         resourceService = pResourceService;
     }
 
+    /**
+     * Retrieve model attribute associations for a given entity type (optional)
+     * @param type
+     * @return the model attribute associations
+     */
     @ResourceAccess(
             description = "endpoint allowing to retrieve all links between models and attribute for a given type of entity")
     @RequestMapping(path = ASSOCS_MAPPING, method = RequestMethod.GET)
@@ -98,6 +109,10 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
         return ResponseEntity.ok(assocs);
     }
 
+    /**
+     * Retrieve which plugin configuration can be used for which attribute type with which possible metadata
+     * @return mappings between attribute type, plugin configurations and metadata
+     */
     @ResourceAccess(
             description = "endpoint allowing to retrieve which plugin configuration can be used for which attribute type with which possible metadata")
     @RequestMapping(path = COMPUTATION_TYPE_MAPPING, method = RequestMethod.GET)
@@ -262,38 +277,72 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     private static class TypeMetadataResourceConfMapping {
 
+        /**
+         * Attribute type
+         */
         private AttributeType attrType;
 
+        /**
+         * Wrapped plugin configurations
+         */
         private Collection<Resource<PluginConfiguration>> pluginConfigurations;
 
+        /**
+         * Wrapped plugin metadata
+         */
         private Collection<Resource<PluginMetaData>> pluginMetaDatas;
 
+        /**
+         * Constructor initializing the attributes from the parameter
+         * @param mapping
+         */
         public TypeMetadataResourceConfMapping(TypeMetadataConfMapping mapping) {
             this.attrType = mapping.getAttrType();
             this.pluginConfigurations = HateoasUtils.wrapCollection(mapping.getPluginConfigurations());
             this.pluginMetaDatas = HateoasUtils.wrapCollection(mapping.getPluginMetaDatas());
         }
 
+        /**
+         * @return the attribute type
+         */
         public AttributeType getAttrType() {
             return attrType;
         }
 
+        /**
+         * Set the attribute type
+         * @param attrType
+         */
         public void setAttrType(AttributeType attrType) {
             this.attrType = attrType;
         }
 
+        /**
+         * @return the plugin configurations wrapped into {@link Resource}
+         */
         public Collection<Resource<PluginConfiguration>> getPluginConfigurations() {
             return pluginConfigurations;
         }
 
+        /**
+         * Set the plugin configurations wrapped into {@link Resource}
+         * @param pluginConfigurations
+         */
         public void setPluginConfigurations(Collection<Resource<PluginConfiguration>> pluginConfigurations) {
             this.pluginConfigurations = pluginConfigurations;
         }
 
+        /**
+         * @return the plugin metadata wrapped into {@link Resource}
+         */
         public Collection<Resource<PluginMetaData>> getPluginMetaDatas() {
             return pluginMetaDatas;
         }
 
+        /**
+         * Set the plugin metadata wrapped into {@link Resource}
+         * @param pluginMetaDatas
+         */
         public void setPluginMetaDatas(Collection<Resource<PluginMetaData>> pluginMetaDatas) {
             this.pluginMetaDatas = pluginMetaDatas;
         }

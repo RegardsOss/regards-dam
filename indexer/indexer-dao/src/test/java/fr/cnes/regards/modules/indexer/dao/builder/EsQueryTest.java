@@ -420,6 +420,10 @@ public class EsQueryTest {
         ICriterion inCrit = ICriterion.in("properties.size", 1, 3, 5, 7, 9);
         Assert.assertEquals(5, repository.search(searchKey, 10, inCrit).getContent().size());
 
+        ICriterion emptyInCrit = ICriterion.in("properties.size", new int[0]);
+        Assert.assertEquals(0, repository.search(searchKey, 10, emptyInCrit).getContent().size());
+
+
         ICriterion allCrit = ICriterion.ne("atributes.size", -1);
         Assert.assertEquals(10, repository.search(searchKey, 10, allCrit).getContent().size());
 

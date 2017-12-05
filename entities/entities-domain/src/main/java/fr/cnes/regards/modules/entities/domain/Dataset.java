@@ -117,10 +117,17 @@ public class Dataset extends AbstractDescEntity {
               pLabel);
     }
 
+    /**
+     * @return the score
+     */
     public int getScore() {
         return score;
     }
 
+    /**
+     * Set the score
+     * @param pScore
+     */
     public void setScore(int pScore) {
         score = pScore;
     }
@@ -145,6 +152,10 @@ public class Dataset extends AbstractDescEntity {
         return subsettingCrit;
     }
 
+    /**
+     * Set the subsetting clause
+     * @param pSubsettingClause
+     */
     public void setSubsettingClause(ICriterion pSubsettingClause) {
         subsettingClause = pSubsettingClause;
     }
@@ -161,30 +172,55 @@ public class Dataset extends AbstractDescEntity {
         plgConfDataSource = pPlgConfDataSource;
     }
 
+    /**
+     * @return the data model
+     */
     public Long getDataModel() {
         return dataModel;
     }
 
+    /**
+     * Set the data model
+     * @param pDataModel
+     */
     public void setDataModel(Long pDataModel) {
         dataModel = pDataModel;
     }
 
+    /**
+     * @return the quotations
+     */
     public Set<String> getQuotations() {
         return quotations;
     }
 
+    /**
+     * Set the quotations
+     * @param pQuotations
+     */
     public void setQuotations(Set<String> pQuotations) {
         quotations = pQuotations;
     }
 
-    public void addQuotation(String pQuotations) {
-        quotations.add(pQuotations);
+    /**
+     * Add a quotation
+     * @param pQuotation
+     */
+    public void addQuotation(String pQuotation) {
+        quotations.add(pQuotation);
     }
 
+    /**
+     * @return the licence
+     */
     public String getLicence() {
         return licence;
     }
 
+    /**
+     * Set the licence
+     * @param pLicence
+     */
     public void setLicence(String pLicence) {
         licence = pLicence;
     }

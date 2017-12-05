@@ -55,18 +55,34 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
  */
 public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
+    /**
+     * Class logger
+     */
     private static final Logger LOG = LoggerFactory.getLogger(SubsettingCoherenceVisitor.class);
 
+    /**
+     * Attribute does not exist message format
+     */
     private static final String ATTRIBUTE_DOES_NOT_EXIST = "Attribute of name : %s could not be found in the database";
 
+    /**
+     * Attribute is not coherent message format
+     */
     private static final String ATTRIBUTE_IS_NOT_COHERENT = "Attribute of name : %s is not an attribute of the model : %s";
 
-    private static final String ATTRIBUTE_IS_NOT_QUERYABLE = "Attribute of name : %s of the model : %s is not queryable";
-
+    /**
+     * Reference model
+     */
     private final Model referenceModel;
 
+    /**
+     * {@link IAttributeModelService} instance
+     */
     private final IAttributeModelService attributeService;
 
+    /**
+     * {@link IModelAttrAssocService} instance
+     */
     private final IModelAttrAssocService modelAttributeService;
 
     /**

@@ -68,15 +68,39 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
 
     void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
 
+    /**
+     * Find all model attribute associations by attribute
+     * @param attr
+     * @return the model attribute associations
+     */
     Collection<ModelAttrAssoc> retrieveModelAttrAssocsByAttributeId(AttributeModel attr);
 
     Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException;
 
+    /**
+     * Retrieve the computed attributes association to a model, represented by its id
+     * @param pId
+     * @return computed attributes association to the model
+     */
     Set<ModelAttrAssoc> getComputedAttributes(Long pId);
 
+    /**
+     * Find page attribute which are associated to at least one of the models
+     * @param pModelIds
+     * @param pPageable
+     * @return a page of attribute which are associated to at least one of the models
+     */
     Page<AttributeModel> getAttributeModels(List<Long> pModelIds, Pageable pPageable) throws ModuleException;
 
+    /**
+     * Find the model attribute associations for a given entity type(or all if none is given)
+     * @param pType
+     * @return model attribute associations for a given entity type(or all if none is given)
+     */
     Collection<ModelAttrAssoc> getModelAttrAssocsFor(EntityType pType);
 
+    /**
+     * @return the possible mappings between an attribute, computation plugin configurations and their metadata
+     */
     List<TypeMetadataConfMapping> retrievePossibleMappingsForComputed();
 }

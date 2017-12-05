@@ -71,10 +71,19 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 @MultitenantTransactional
 public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
 
+    /**
+     * {@link IAttributeModelService} instance
+     */
     private final IAttributeModelService attributeService;
 
+    /**
+     * {@link IDataSourceService} instance
+     */
     private final IDataSourceService dataSourceService;
 
+    /**
+     * {@link IOpenSearchService} instance
+     */
     private final IOpenSearchService openSearchService;
 
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
@@ -94,54 +103,50 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * Control the DataSource associated to the {@link Dataset} in parameter if needed.</br>
      * If any DataSource is associated, sets the default DataSource.
      *
-     * @param pDataset
+     * @param dataset
      * @throws EntityNotFoundException
      */
-    private Dataset checkDataSource(final Dataset pDataset) throws EntityNotFoundException {
-        if (pDataset.getDataSource() == null) {
-            // If any DataSource, set the default DataSource
-            pDataset.setDataSource(dataSourceService.getInternalDataSource());
-            // TODO ? which data model ?
-        } else {
+    private Dataset checkDataSource(final Dataset dataset) throws EntityNotFoundException {
+        if (dataset.getDataSource() != null) {
             // Verify the existence of the DataSource associated to the Dataset
-            final DataSource src = dataSourceService.getDataSource(pDataset.getDataSource().getId());
-            pDataset.setDataModel(src.getMapping().getModel());
+            final DataSource src = dataSourceService.getDataSource(dataset.getDataSource().getId());
+            dataset.setDataModel(src.getMapping().getModel());
         }
-        return pDataset;
+        return dataset;
     }
 
     /**
      * Check that the sub-setting criterion setting on a Dataset are coherent with the {@link Model} associated to the
      * {@link DataSource}. Should always be closed after checkDataSource, so the dataModel is properly set.
      *
-     * @param pDataset
+     * @param dataset
      *            the {@link Dataset} to check
      * @return the modified {@link Dataset}
      * @throws ModuleException
      */
-    private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
+    private Dataset checkSubsettingCriterion(final Dataset dataset) throws ModuleException {
         // getUserSubsettingClause() cannot be null
         try {
-            String stringClause = pDataset.getOpenSearchSubsettingClause();
+            String stringClause = dataset.getOpenSearchSubsettingClause();
             if (Strings.isNullOrEmpty(stringClause)) {
-                pDataset.setSubsettingClause(ICriterion.all());
+                dataset.setSubsettingClause(ICriterion.all());
             } else {
-                pDataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
+                dataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
             }
         } catch (UnsupportedEncodingException e) {
             //if this exception happens its really an issue as the whole system relys on the fact UTF-8 is handled
             throw new RuntimeException(e);
         }
-        final ICriterion subsettingCriterion = pDataset.getUserSubsettingClause();
+        final ICriterion subsettingCriterion = dataset.getUserSubsettingClause();
         // To avoid loading models when not necessary
         if (!subsettingCriterion.equals(ICriterion.all())) {
-            final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(pDataset.getDataModel());
+            final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(dataset.getDataModel());
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
-                        "Given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
+                        "Given subsettingCriterion cannot be accepted for the Dataset : " + dataset.getLabel());
             }
         }
-        return pDataset;
+        return dataset;
     }
 
     @Override
@@ -151,16 +156,16 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    protected void doCheck(final Dataset pEntity, final Dataset entityInDB) throws ModuleException {
-        Dataset ds = checkDataSource(pEntity);
+    protected void doCheck(final Dataset entity, final Dataset entityInDB) throws ModuleException {
+        Dataset ds = checkDataSource(entity);
         checkSubsettingCriterion(ds);
         // check for updates on data model or datasource
         // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
         if (entityInDB != null) {
-            if (!Objects.equal(pEntity.getDataSource(), entityInDB.getDataSource())) {
+            if (!Objects.equal(entity.getDataSource(), entityInDB.getDataSource())) {
                 throw new EntityOperationForbiddenException("Datasources of datasets cannot be updated");
             }
-            if (!Objects.equal(pEntity.getDataModel(), entityInDB.getDataModel())) {
+            if (!Objects.equal(entity.getDataModel(), entityInDB.getDataModel())) {
                 throw new EntityOperationForbiddenException("Data models of datasets cannot be updated");
             }
         }
@@ -168,17 +173,17 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Override
     public Page<AttributeModel> getDataAttributeModels(final Set<UniformResourceName> urns, final Set<Long> modelIds,
-            final Pageable pPageable) throws ModuleException {
+            final Pageable pageable) throws ModuleException {
         if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             final List<Dataset> datasets = datasetRepository.findAll();
-            return getDataAttributeModelsFromDatasets(datasets, pPageable);
+            return getDataAttributeModelsFromDatasets(datasets, pageable);
         } else {
             if ((modelIds == null) || modelIds.isEmpty()) {
                 final List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
-                return getDataAttributeModelsFromDatasets(datasets, pPageable);
+                return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
                 final Set<Dataset> datasets = datasetRepository.findAllByModelId(modelIds);
-                return getDataAttributeModelsFromDatasets(datasets, pPageable);
+                return getDataAttributeModelsFromDatasets(datasets, pageable);
             }
         }
     }
@@ -207,9 +212,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * extract all the AttributeModel of {@link DataObject} that can be contained into the datasets
      */
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(final Collection<Dataset> datasets,
-            final Pageable pPageable) throws ModuleException {
+            final Pageable pageable) throws ModuleException {
         final List<Long> modelIds = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
-        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelIds, pPageable);
+        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelIds, pageable);
         // Build JSON path
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return attModelPage;

@@ -27,7 +27,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +45,6 @@ import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -64,20 +62,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
@@ -85,9 +79,6 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -292,12 +283,12 @@ public class IndexerServiceDataSourceIT {
         dBConnectionConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(dBConnectionConf);
 
-        final DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
-        Assume.assumeTrue(dbCtx.testConnection());
+//        final DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+//        Assume.assumeTrue(dbCtx.testConnection());
 
         // DataSource PluginConf
-        dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
-        pluginService.savePluginConfiguration(dataSourcePluginConf);
+//        dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
+//        pluginService.savePluginConfiguration(dataSourcePluginConf);
     }
 
     private void initPluginConfForComputedAttributes() throws ModuleException {
@@ -314,29 +305,33 @@ public class IndexerServiceDataSourceIT {
     }
 
     private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
-                .getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+//        final List<PluginParameter> parameters = PluginParametersFactory.build()
+//                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+//                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+//                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
+//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+//                .getParameters();
+//
+//        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO use portgres plugin
+        return null;
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+//        final List<PluginParameter> parameters = PluginParametersFactory.build()
+//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+//                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+//                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+//                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
+//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+//
+//        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO use Postgres
+        return null;
     }
 
     private void buildModelAttributes() {

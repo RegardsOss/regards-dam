@@ -1,5 +1,9 @@
 package fr.cnes.regards.modules.crawler.domain;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -7,9 +11,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import org.hibernate.annotations.Type;
 
@@ -29,6 +30,9 @@ public class DatasourceIngestion {
     @Id
     @Column(name = "ds_id")
     private Long id;
+
+    @Column(name = "label", length = 255)
+    private String label;
 
     /**
      * Date of last ingestion (null if none yet)
@@ -87,9 +91,10 @@ public class DatasourceIngestion {
         this.id = id;
     }
 
-    public DatasourceIngestion(Long id, OffsetDateTime nextPlannedIngestDate) {
+    public DatasourceIngestion(Long id, OffsetDateTime nextPlannedIngestDate, String label) {
         this(id);
         this.nextPlannedIngestDate = nextPlannedIngestDate;
+        this.label = label;
     }
 
     public Long getId() {
@@ -153,6 +158,14 @@ public class DatasourceIngestion {
 
     public void setStackTrace(String pStackTrace) {
         stackTrace = pStackTrace;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     @Override

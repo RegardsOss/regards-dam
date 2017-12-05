@@ -33,6 +33,12 @@ public interface IEsRepository {
     int BULK_SIZE = 10_000;
 
     /**
+     * ElasticSearch window pagination limit ie only from 0 to 10_000 is permit with a classic search.
+     * Outside this window, it is necessary to use scrollable or searchAfter API.
+     */
+    int MAX_RESULT_WINDOW = 10_000;
+
+    /**
      * Create specified index
      * @param index index
      * @return true if acknowledged by Elasticsearch, false otherwise. returns

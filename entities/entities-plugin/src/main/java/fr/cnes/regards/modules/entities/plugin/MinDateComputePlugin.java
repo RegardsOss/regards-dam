@@ -59,20 +59,20 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
     @Autowired
     private IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = RESULT_ATTRIBUTE_NAME,
-            description = "Name of the attribute to compute (ie result attribute).")
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
+            description = "Name of attribute to compute (ie result attribute).")
     private String attributeToComputeName;
 
-    @PluginParameter(name = RESULT_FRAGMENT_NAME,
-            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.",
+    @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
+            description = "Name of attribute to compute fragment. If computed attribute belongs to default fragment, this value can be set to null.",
             optional = true)
     private String attributeToComputeFragmentName;
 
-    @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME,
-            description = "Name of the parameter attribute used to compute result attribute.")
+    @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
+            description = "Name of parameter attribute used to compute result attribute.")
     private String parameterAttributeName;
 
-    @PluginParameter(name = PARAMETER_FRAGMENT_NAME,
+    @PluginParameter(name = PARAMETER_FRAGMENT_NAME, label = "Parameter fragment name",
             description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.",
             optional = true)
     private String parameterAttributeFragmentName;
@@ -106,10 +106,10 @@ public class MinDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
         if (parameterOpt.isPresent()) {
             OffsetDateTime value = (OffsetDateTime) parameterOpt.get().getValue();
             if (value != null) {
-                if (result != null) {
-                    result = value.isBefore(result) ? value : result;
-                } else {
+                if (result == null) {
                     result = value;
+                } else {
+                    result = value.isBefore(result) ? value : result;
                 }
             }
         }

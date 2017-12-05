@@ -38,6 +38,36 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     /**
+     * The user name
+     */
+    String USER_PARAM = "user";
+
+    /**
+     * The user's password
+     */
+    String PASSWORD_PARAM = "password"; // NOSONAR
+
+    /**
+     * The databse's host
+     */
+    String DB_HOST_PARAM = "dbHost";
+
+    /**
+     * The databse's port
+     */
+    String DB_PORT_PARAM = "dbPort";
+
+    /**
+     * The database's name
+     */
+    String DB_NAME_PARAM = "dbName";
+
+    /**
+     * The databse's driver
+     */
+    String DRIVER_PARAM = "driver";
+
+    /**
      * The max size of the pool
      */
     String MAX_POOLSIZE_PARAM = "maxPoolSize";

@@ -19,11 +19,10 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
+import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -44,10 +43,10 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
-@Plugin(id = "postgresql-datasource", version = "1.0-SNAPSHOT",
+@Plugin(id = "postgresql-datasource", version = "2.0-SNAPSHOT",
         description = "Allows data extraction to a PostgreSql database", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
-public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
+public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
 
     /**
      * Class logger
@@ -57,31 +56,28 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
     /**
      * The connection to the database
      */
-    @PluginParameter(name = CONNECTION_PARAM)
+    @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin" )
     private IDBConnectionPlugin dbConnection;
 
     /**
      * The SQL request
      */
-    @PluginParameter(name = FROM_CLAUSE)
+    @PluginParameter(name = FROM_CLAUSE, label = "SQL FROM clause")
     private String sqlFromClause;
 
     /**
      * The {@link Model} to used by the {@link Plugin} in JSon format.
      */
-    @PluginParameter(name = MODEL_PARAM)
+    @PluginParameter(name = MODEL_PARAM, label = "data model",
+            description = "Data object associated model (in JSON format)")
     private String modelJSon;
 
     /**
-     * Is this data source is a REGARDS internal data source
+     * Ingestion refresh rate in seconds
      */
-    @PluginParameter(name = IS_INTERNAL_PARAM, defaultValue = "false", optional = true)
-    private String internalDataSource;
-
-    /**
-     * Ingestion refresh rate
-     */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true)
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true,
+            label = "refresh rate",
+            description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
 
     /**
@@ -97,11 +93,6 @@ public class PostgreDataSourcePlugin extends AbstractDataSourcePlugin {
 
         // Converts the modelJson to a list of AbstractAttributeMapping
         initDataSourceMapping(modelJSon);
-    }
-
-    @Override
-    public boolean isInternalDataSource() {
-        return !internalDataSource.isEmpty() && TRUE_INTERNAL_DATASOURCE.equalsIgnoreCase(internalDataSource);
     }
 
     @Override

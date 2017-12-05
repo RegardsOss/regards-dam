@@ -72,6 +72,9 @@ public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
 
+    /**
+     * Controller path for description file of a collection using its ip id as path variable
+     */
     public static final String COLLECTION_IPID_PATH_FILE = "/{collection_ipId}/file";
 
     /**
@@ -119,6 +122,14 @@ public class CollectionController implements IResourceController<Collection> {
         return new ResponseEntity<>(resource, HttpStatus.OK);
     }
 
+    /**
+     * Retrieve the description file of a collection, represented by its ip id
+     * @param origin origin to be allowed for X-FRAME-OPTIONS header
+     * @param collectionIpId
+     * @param response
+     * @throws EntityNotFoundException
+     * @throws IOException
+     */
     @RequestMapping(method = RequestMethod.GET, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "Retrieves a collection description file content", role = DefaultRole.PUBLIC)
     public void retrieveCollectionDescription(@RequestParam(name = "origin", required = false) String origin,
@@ -127,7 +138,9 @@ public class CollectionController implements IResourceController<Collection> {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(collectionIpId));
-        if (file != null) {
+        if (file == null) {
+            response.setStatus(HttpStatus.NO_CONTENT.value());
+        } else {
             if (origin != null) {
                 response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
             }
@@ -143,11 +156,14 @@ public class CollectionController implements IResourceController<Collection> {
             response.getOutputStream().write(out.toByteArray());
             response.getOutputStream().flush();
             response.setStatus(HttpStatus.OK.value());
-        } else {
-            response.setStatus(HttpStatus.NO_CONTENT.value());
         }
     }
 
+    /**
+     * Remove the description file of a collection, represented by its ip id
+     * @param collectionIpId
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_IPID_PATH_FILE)
     @ResourceAccess(description = "remove a dataset description file content")
     public ResponseEntity<Void> removeCollectionDescription(@PathVariable("collection_ipId") String collectionIpId)
