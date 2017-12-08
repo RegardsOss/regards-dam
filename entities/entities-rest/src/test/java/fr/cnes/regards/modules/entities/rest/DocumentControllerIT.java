@@ -18,6 +18,30 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -35,25 +59,6 @@ import fr.cnes.regards.modules.entities.service.IDocumentService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.OffsetDateTime;
-import java.util.*;
 
 /**
  * @author lmieulet
@@ -129,8 +134,8 @@ public class DocumentControllerIT extends AbstractRegardsTransactionalIT {
     public void initRepos() {
         expectations = new ArrayList<>();
         // Bootstrap default values
-        model1 = Model.build("modelName1", "model desc", EntityType.COLLECTION);
-        model2 = Model.build("modelName2", "model desc", EntityType.DOCUMENT);
+        model1 = Model.build("documentModelName1", "model desc", EntityType.COLLECTION);
+        model2 = Model.build("documentModelName2", "model desc", EntityType.DOCUMENT);
         model2 = modelRepository.save(model2);
         model1 = modelRepository.save(model1);
 
