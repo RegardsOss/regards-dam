@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="../../../../../models/models-domain/src/main/resources/model_V1.0.xsd">
+    <name>model_1</name>
+    <description>Test data object model</description>
+    <version>1</version>
+    <type>DATA</type>
+    <attribute>
+        <label>forTests</label>
+        <name>START_DATE</name>
+        <description>date at which the acquisition of the data has started</description>
+        <type>DATE_ISO8601</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>DATES</name>
+        <description>date at which the acquisition of the data has ended</description>
+        <type>DATE_ARRAY</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>SIZE</name>
+        <description>file size</description>
+        <type>INTEGER</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>ORIGIN</name>
+        <description>name of the original file</description>
+        <type>STRING</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>SIZES</name>
+        <description>id of the dataset</description>
+        <type>INTEGER_ARRAY</type>
+    </attribute>
+    <attribute>
+        <label>forTests</label>
+        <name>SPEED</name>
+        <type>DOUBLE</type>
+    </attribute>
+    <fragment>
+        <name>ALTITUDE</name>
+        <description>Altitude fragment</description>
+        <attribute>
+            <label>forTests</label>
+            <name>MIN</name>
+            <type>INTEGER</type>
+        </attribute>
+        <attribute>
+            <label>forTests</label>
+            <name>MAX</name>
+            <type>INTEGER</type>
+        </attribute>
+    </fragment>
+</model>

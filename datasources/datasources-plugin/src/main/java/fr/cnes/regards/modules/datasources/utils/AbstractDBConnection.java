@@ -41,7 +41,6 @@ import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugi
  * A class to discover the tables and columns of a SQL Database.</br>
  * This class manage a connection pool to the database.</br>
  * This class used @see http://www.mchange.com/projects/c3p0/index.html.</br>
- *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
@@ -79,14 +78,12 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * The driver used to connect to the database
-     *
      * @return the JDBC driver
      */
     protected abstract String getJdbcDriver();
 
     /**
      * The SQL request used to test the connection to the database
-     *
      * @return the SQL request
      */
     protected abstract String getSqlRequestTestConnection();
@@ -94,14 +91,12 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
     /**
      * The URL used to connect to the database.</br>
      * Generally this URL look likes : jdbc:xxxxx//host:port/databaseName
-     *
      * @return the database's URL
      */
     protected abstract String buildUrl();
 
     /**
      * Test the connection to the database
-     *
      * @return true if the connection is active
      */
     @Override
@@ -122,15 +117,10 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Initialize the {@link ComboPooledDataSource}
-     *
-     * @param pUser
-     *            The user to used for the database connection
-     * @param pPassword
-     *            The user's password to used for the database connection
-     * @param pMaxPoolSize
-     *            Maximum number of Connections a pool will maintain at any given time.
-     * @param pMinPoolSize
-     *            Minimum number of Connections a pool will maintain at any given time.
+     * @param pUser The user to used for the database connection
+     * @param pPassword The user's password to used for the database connection
+     * @param pMaxPoolSize Maximum number of Connections a pool will maintain at any given time.
+     * @param pMinPoolSize Minimum number of Connections a pool will maintain at any given time.
      */
     protected void createPoolConnection(String pUser, String pPassword, Integer pMaxPoolSize, Integer pMinPoolSize) {
         String url = buildUrl();
@@ -149,7 +139,6 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
         }
     }
 
-
     /**
      * Destroy the {@link ComboPooledDataSource}
      */
@@ -162,10 +151,7 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Get a {@link Connection} to the database
-     *
      * @return the {@link Connection}
-     * @throws SQLException
-     *
      */
     @Override
     public Connection getConnection() throws SQLException {
@@ -179,7 +165,6 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Returns all the table from the database.
-     *
      * @return a {@link Map} of {@link Table}
      */
     @Override
@@ -195,8 +180,10 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
             while (rs.next()) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("[TABLE] --> " + logString(rs, TABLE_NAME) + "] " + logString(rs, TABLE_CAT)
-                            + logString(rs, TABLE_SCHEM) + logString(rs, TABLE_TYPE) + logString(rs, REMARKS));
+                    LOG.debug(
+                            "[TABLE] --> " + logString(rs, TABLE_NAME) + "] " + logString(rs, TABLE_CAT) + logString(rs,
+                                                                                                                     TABLE_SCHEM)
+                                    + logString(rs, TABLE_TYPE) + logString(rs, REMARKS));
                 }
                 Table table = new Table(rs.getString(TABLE_NAME), rs.getString(TABLE_CAT), rs.getString(TABLE_SCHEM));
                 table.setPKey(getPrimaryKey(metaData, rs.getString(TABLE_CAT), rs.getString(TABLE_SCHEM),
@@ -212,18 +199,12 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Get the primary key name of a database's table
-     *
-     * @param pMetaData
-     *            The {@link DatabaseMetaData} of the database
-     * @param pCatalog
-     *            The catalog name
-     * @param pSchema
-     *            The database's schema
-     * @param pTable
-     *            The table name
+     * @param pMetaData The {@link DatabaseMetaData} of the database
+     * @param pCatalog The catalog name
+     * @param pSchema The database's schema
+     * @param pTable The table name
      * @return the primary key name
-     * @throws SQLException
-     *             an SQL error occurred
+     * @throws SQLException an SQL error occurred
      */
     private String getPrimaryKey(DatabaseMetaData pMetaData, String pCatalog, String pSchema, String pTable)
             throws SQLException {
@@ -240,13 +221,11 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Get the columns of a {@link Table} from the database
-     *
-     * @param pTableName
-     *            a table of the database
+     * @param tableName a table of the database
      * @return a {@link Map} of {@link Column}
      */
     @Override
-    public Map<String, Column> getColumns(String pTableName) {
+    public Map<String, Column> getColumns(String tableName) {
         Map<String, Column> cols = new HashMap<>();
 
         // Get a connection
@@ -254,16 +233,16 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
             DatabaseMetaData metaData = conn.getMetaData();
 
-            try (ResultSet rs = metaData.getColumns(null, null, pTableName, null)) {
+            try (ResultSet rs = metaData.getColumns(null, null, tableName, null)) {
 
                 while (rs.next()) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("[COLUMN] --> " + logString(rs, COLUMN_NAME) + logString(rs, TYPE_NAME)
-                                + logInt(rs, DATA_TYPE));
+                        LOG.debug("[COLUMN] --> " + logString(rs, COLUMN_NAME) + logString(rs, TYPE_NAME) + logInt(rs,
+                                                                                                                   DATA_TYPE));
                     }
 
                     Column column = new Column(rs.getString(COLUMN_NAME), rs.getString(TYPE_NAME),
-                            rs.getInt(DATA_TYPE));
+                                               rs.getInt(DATA_TYPE));
                     cols.put(column.getName(), column);
                 }
             }

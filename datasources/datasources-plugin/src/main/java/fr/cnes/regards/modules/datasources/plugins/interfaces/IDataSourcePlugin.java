@@ -39,11 +39,6 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 public interface IDataSourcePlugin {
 
     /**
-     * The model parameter name
-     */
-    String MODEL_PARAM = "model";
-
-    /**
      * Ingestion refresh rate parameter name
      */
     String REFRESH_RATE = "refreshRate";

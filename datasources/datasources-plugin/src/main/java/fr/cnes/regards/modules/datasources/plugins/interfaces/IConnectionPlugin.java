@@ -33,9 +33,6 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
  */
 @PluginInterface(description = "Plugin to manage a connection to a datasource")
 public interface IConnectionPlugin {
-
-
-
     /**
      * Test the connection
      *

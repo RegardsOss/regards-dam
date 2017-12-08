@@ -30,7 +30,6 @@ import fr.cnes.regards.modules.datasources.domain.Table;
 
 /**
  * Allows to manage a connection pool to a {@link DataSource}.
- *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
@@ -79,29 +78,22 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     /**
      * Retrieve a {@link Connection} to a database
-     * 
      * @return the {@link Connection}
-     * 
-     * @throws SQLException
-     *             the {@link Connection} is not available
+     * @throws SQLException the {@link Connection} is not available
      */
     Connection getConnection() throws SQLException;
 
     /**
      * Requests the database to get the tables of a data source.
-     * 
      * @return a {@link Map} of the database's table
      */
     Map<String, Table> getTables();
 
     /**
      * Requests the database to get the columns of a specific table.
-     * 
-     * @param pTableName
-     *            the database's table name
+     * @param tableName the database's table name
      * @return a {@link Map} of the columns
-     * 
      */
-    Map<String, Column> getColumns(String pTableName);
+    Map<String, Column> getColumns(String tableName);
 
 }

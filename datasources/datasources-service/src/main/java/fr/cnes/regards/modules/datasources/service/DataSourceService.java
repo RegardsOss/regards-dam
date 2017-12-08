@@ -168,7 +168,7 @@ public class DataSourceService implements IDataSourceService {
         PluginParametersFactory factory = PluginParametersFactory.build();
         factory.addParameterPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, dbConnectionService
                 .getDBConnection(dataSource.getPluginConfigurationConnectionId()))
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSource.getMapping()))
+                .addParameter(IDBDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSource.getMapping()))
                 .addParameter(IDataSourcePlugin.REFRESH_RATE, (dataSource.getRefreshRate() == null) ?
                         IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE :
                         dataSource.getRefreshRate().toString());
@@ -277,7 +277,7 @@ public class DataSourceService implements IDataSourceService {
             case IDBDataSourcePlugin.CONNECTION_PARAM:
                 mergePluginConfigurationParameter(pluginParam, dataSource);
                 break;
-            case IDataSourcePlugin.MODEL_PARAM:
+            case IDBDataSourcePlugin.MODEL_PARAM:
                 pluginParam.setValue(adapter.toJson(dataSource.getMapping()));
                 break;
             case IDBDataSourcePlugin.FROM_CLAUSE:
@@ -332,7 +332,7 @@ public class DataSourceService implements IDataSourceService {
         dataSource.setTableName(pluginConf.getParameterValue(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM));
         dataSource.setRefreshRate(Integer.parseInt(pluginConf.getParameterValue(IDataSourcePlugin.REFRESH_RATE)));
 
-        String mapping = pluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM);
+        String mapping = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_PARAM);
         if (mapping != null) {
             dataSource.setMapping(adapter.fromJson(mapping));
         }

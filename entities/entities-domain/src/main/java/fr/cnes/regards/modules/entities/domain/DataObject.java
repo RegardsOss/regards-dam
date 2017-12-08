@@ -18,15 +18,15 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.models.domain.Model;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * A DataObject is created by a DataSource when an external database is ingested.
@@ -52,9 +52,9 @@ public class DataObject extends AbstractDataEntity {
      */
     private DataObjectMetadata metadata = new DataObjectMetadata();
 
-    public DataObject(Model pModel, String pTenant, String pLabel) {
-        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant, UUID.randomUUID(), 1),
-              pLabel);
+    public DataObject(Model model, String tenant, String label) {
+        super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1),
+              label);
     }
 
     public DataObject() {
@@ -96,7 +96,7 @@ public class DataObject extends AbstractDataEntity {
     }
 
     @Override
-    public boolean equals(Object pObject) {
-        return super.equals(pObject);
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }

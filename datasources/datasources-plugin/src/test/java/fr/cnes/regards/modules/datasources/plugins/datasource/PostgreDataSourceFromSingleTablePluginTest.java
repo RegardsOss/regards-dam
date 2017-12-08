@@ -40,15 +40,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
@@ -73,14 +74,16 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
-@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgreDataSourceFromSingleTablePluginTest {
+@TestPropertySource("classpath:datasource-test.properties")
+//@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    private static final String TENANT = "PGDB_TENANT";
+//    private static final String TENANT = "PGDB_TENANT";
+    private static final String TENANT = DEFAULT_TENANT;
 
     private static final String HELLO = "hello world from ";
 
@@ -117,7 +120,7 @@ public class PostgreDataSourceFromSingleTablePluginTest {
      * JPA Repository
      */
     @Autowired
-    IDataSourceRepositoryTest repository;
+    private IDataSourceRepositoryTest repository;
 
     /**
      * Populate the datasource as a legacy catalog

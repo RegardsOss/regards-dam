@@ -75,9 +75,9 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     /**
      * The {@link Model} to be used by the {@link Plugin} in JSON format
      */
-    @PluginParameter(name = MODEL_PARAM, label = "data model",
-            description = "Data object associated model (in JSON format)")
-    private String modelJSon;
+    @PluginParameter(name = MODEL_PARAM, label = "model mapping",
+            description = "Mapping between model and database table (in JSON format)")
+    private String modelMappingJSon;
 
     /**
      * Ingestion refresh rate in seconds
@@ -93,10 +93,10 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     @PluginInit
     private void initPlugin() {
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString()
-                + "table name=" + tableName + "model=" + modelJSon);
+                + "table name=" + tableName + ", model=" + modelMappingJSon);
 
         // Converts the modelJson to a list of AbstractAttributeMapping
-        initDataSourceMapping(modelJSon);
+        initDataSourceMapping(modelMappingJSon);
 
         initializePluginMapping(tableName);
 

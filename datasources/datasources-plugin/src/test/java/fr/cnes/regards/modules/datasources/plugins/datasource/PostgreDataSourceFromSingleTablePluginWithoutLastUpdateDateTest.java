@@ -43,11 +43,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
@@ -72,8 +74,9 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
+@TestPropertySource("classpath:datasource-test.properties")
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest {
+public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory
             .getLogger(PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest.class);

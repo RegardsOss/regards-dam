@@ -23,9 +23,7 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -33,9 +31,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.multitenant.test.SingleRuntimeTenantResolver;
 
 /**
  *
@@ -46,9 +41,8 @@ import fr.cnes.regards.framework.multitenant.test.SingleRuntimeTenantResolver;
  * @author Christophe Mertz
  */
 @Configuration
-@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources" })
-@PropertySource("classpath:datasource-test.properties")
-@EnableJpaRepositories(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+//@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources", "fr.cnes.regards.modules.models"  })
+@EnableJpaRepositories(basePackages = { "fr.cnes.regards.modules.datasources.utils", "fr.cnes.regards.modules.models.dao" })
 @EnableTransactionManagement
 public class PostgreDataSourcePluginTestConfiguration {
 
@@ -122,11 +116,11 @@ public class PostgreDataSourcePluginTestConfiguration {
         txManager.setEntityManagerFactory(entityManagerFactory());
         return txManager;
     }
-
-    @Bean
-    public IRuntimeTenantResolver runtimeTenantResolver() {
-        return new SingleRuntimeTenantResolver(null);
-    }
+//
+//    @Bean
+//    public IRuntimeTenantResolver runtimeTenantResolver() {
+//        return new SingleRuntimeTenantResolver(null);
+//    }
 
     private String buildUrl() {
         return "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;

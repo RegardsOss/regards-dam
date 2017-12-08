@@ -30,6 +30,12 @@ import fr.cnes.regards.modules.datasources.domain.DBConnection;
  */
 public interface IDBDataSourcePlugin extends IDataSourcePlugin {
     /**
+     * The model mapping parameter name
+     * <B>Beware : false friend parameter name, it corresponds to Json model mapping object</B>
+     */
+    String MODEL_PARAM = "model";
+
+    /**
      * The from clause to apply to the SQL request parameter name
      */
     String FROM_CLAUSE = "fromClause";

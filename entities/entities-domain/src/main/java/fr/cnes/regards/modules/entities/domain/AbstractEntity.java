@@ -147,10 +147,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @JsonAdapter(value = GeometryAdapter.class)
     protected Geometry<?> geometry;
 
-    protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
-        model = pModel;
-        ipId = pIpId;
-        label = pLabel;
+    protected AbstractEntity(Model model, UniformResourceName ipId, String label) { // NOSONAR
+        this.model = model;
+        this.ipId = ipId;
+        this.label = label;
     }
 
     protected AbstractEntity() { // NOSONAR
@@ -166,16 +166,16 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return lastUpdate;
     }
 
-    public void setLastUpdate(OffsetDateTime pLastUpdate) {
-        lastUpdate = pLastUpdate;
+    public void setLastUpdate(OffsetDateTime lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 
     public OffsetDateTime getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(OffsetDateTime pCreationDate) {
-        creationDate = pCreationDate;
+    public void setCreationDate(OffsetDateTime creationDate) {
+        this.creationDate = creationDate;
     }
 
     /**
@@ -188,10 +188,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the id
-     * @param pId
+     * @param id
      */
-    public void setId(Long pId) {
-        id = pId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -203,18 +203,18 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the ip id
-     * @param pIpId
+     * @param ipId
      */
-    public void setIpId(UniformResourceName pIpId) {
-        ipId = pIpId;
+    public void setIpId(UniformResourceName ipId) {
+        this.ipId = ipId;
     }
 
     public Set<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> pTags) {
-        tags = pTags;
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
     }
 
     public Set<AbstractAttribute<?>> getProperties() { // NOSONAR
@@ -223,10 +223,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the properties
-     * @param pAttributes
+     * @param attributes
      */
-    public void setProperties(Set<AbstractAttribute<?>> pAttributes) {
-        properties = pAttributes;
+    public void setProperties(Set<AbstractAttribute<?>> attributes) {
+        properties = attributes;
     }
 
     /**
@@ -238,10 +238,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the model
-     * @param pModel
+     * @param model
      */
-    public void setModel(Model pModel) {
-        model = pModel;
+    public void setModel(Model model) {
+        this.model = model;
     }
 
     /**
@@ -253,34 +253,34 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the sip id
-     * @param pSipId
+     * @param sipId
      */
-    public void setSipId(String pSipId) {
-        sipId = pSipId;
+    public void setSipId(String sipId) {
+        this.sipId = sipId;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String pLabel) {
-        label = pLabel;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public Set<String> getGroups() {
         return groups;
     }
 
-    public void setGroups(Set<String> pGroups) {
-        groups = pGroups;
+    public void setGroups(Set<String> groups) {
+        this.groups = groups;
     }
 
     public Geometry<?> getGeometry() {
         return geometry;
     }
 
-    public void setGeometry(Geometry<?> pGeometry) {
-        geometry = pGeometry;
+    public void setGeometry(Geometry<?> geometry) {
+        this.geometry = geometry;
     }
 
     @Override

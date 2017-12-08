@@ -32,10 +32,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
@@ -46,11 +48,11 @@ import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConf
 
 /**
  * @author Christophe Mertz
- *
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
-public class PostgreConnectionPluginIntrospectionTest {
+@TestPropertySource("classpath:datasource-test.properties")
+public class PostgreConnectionPluginIntrospectionTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreConnectionPluginIntrospectionTest.class);
 
@@ -86,8 +88,9 @@ public class PostgreConnectionPluginIntrospectionTest {
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "5")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        postgreDBConn = PluginUtils.getPlugin(parameters, DefaultPostgreConnectionPlugin.class,
-                                              Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
+        postgreDBConn = PluginUtils
+                .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
+                           new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(postgreDBConn.testConnection());
@@ -106,7 +109,8 @@ public class PostgreConnectionPluginIntrospectionTest {
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_155")
-    @Purpose("The system has a plugin that enables for a SGBD to get the list of tables and for a table, the list of columns and their types")
+    @Purpose(
+            "The system has a plugin that enables for a SGBD to get the list of tables and for a table, the list of columns and their types")
     public void getTablesAndColumns() {
         Assert.assertTrue(postgreDBConn.testConnection());
 

@@ -68,9 +68,9 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     /**
      * The {@link Model} to used by the {@link Plugin} in JSon format.
      */
-    @PluginParameter(name = MODEL_PARAM, label = "data model",
-            description = "Data object associated model (in JSON format)")
-    private String modelJSon;
+    @PluginParameter(name = MODEL_PARAM, label = "model mapping",
+            description = "Mapping between model and database table (in JSON format)")
+    private String modelMappingJSon;
 
     /**
      * Ingestion refresh rate in seconds
@@ -86,13 +86,13 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     @PluginInit
     private void initPlugin() {
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString() + "model="
-                + modelJSon + "requete=" + sqlFromClause);
+                + modelMappingJSon + "requete=" + sqlFromClause);
 
         LOG.info("Init method call : "
                 + (dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
 
         // Converts the modelJson to a list of AbstractAttributeMapping
-        initDataSourceMapping(modelJSon);
+        initDataSourceMapping(modelMappingJSon);
     }
 
     @Override

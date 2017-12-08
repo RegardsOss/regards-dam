@@ -35,7 +35,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
 /**
  * Unit testing of {@link DataSourceService}.
@@ -97,17 +96,17 @@ public class DataSourceServiceTest {
 
     private List<PluginParameter> initializePluginParameterIsInternalDataSource() {
         return PluginParametersFactory.build().addParameter(IDBDataSourcePlugin.FROM_CLAUSE, "from t_table_name")
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, "model param").getParameters();
+                .addParameter(IDBDataSourcePlugin.MODEL_PARAM, "model param").getParameters();
     }
 
     private List<PluginParameter> initializePluginParameterNotInternalDataSource() {
         return PluginParametersFactory.build().addParameter(IDBDataSourcePlugin.FROM_CLAUSE, "from table")
-                .addParameter(IDataSourcePlugin.MODEL_PARAM, "model").getParameters();
+                .addParameter(IDBDataSourcePlugin.MODEL_PARAM, "model").getParameters();
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
         return Arrays.asList(PluginParameterType
-                                     .create(IDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null, String.class,
+                                     .create(IDBDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null, String.class,
                                              ParamType.PRIMITIVE, false), PluginParameterType
                                      .create(IDBDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null, String.class,
                                              ParamType.PRIMITIVE, false));

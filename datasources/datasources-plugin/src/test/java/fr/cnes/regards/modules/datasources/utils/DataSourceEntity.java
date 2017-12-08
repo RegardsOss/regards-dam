@@ -18,11 +18,6 @@
  */
 package fr.cnes.regards.modules.datasources.utils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -32,6 +27,10 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -45,9 +44,9 @@ import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
  * @author Christophe Mertz
  */
 @Entity
-@Table(name = "T_TEST_PLUGIN_DATA_SOURCE",
-        indexes = { @Index(name = "ndex_test", columnList = "altitude", unique = true) })
-@SequenceGenerator(name = "testPlgDataSourceSequence", initialValue = 1, sequenceName = "SEQ_TEST_PLUGIN")
+@Table(name = "t_test_plugin_data_source",
+        indexes = { @Index(name = "index_test", columnList = "altitude", unique = true) })
+@SequenceGenerator(name = "testPlgDataSourceSequence", initialValue = 1, sequenceName = "seq_test_plugin")
 public class DataSourceEntity implements IIdentifiable<Long> {
 
     /**

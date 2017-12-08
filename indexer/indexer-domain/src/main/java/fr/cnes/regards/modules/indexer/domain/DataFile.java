@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.domain;
 
-import javax.validation.Valid;
 import java.net.URI;
 
 import org.springframework.util.MimeType;
@@ -68,8 +67,8 @@ public class DataFile {
         return URI.create(uri);
     }
 
-    public void setUri(URI pFileRef) {
-        uri = pFileRef.toString();
+    public void setUri(URI fileRef) {
+        uri = fileRef.toString();
     }
 
     public String getDigestAlgorithm() {
@@ -84,24 +83,24 @@ public class DataFile {
         return checksum;
     }
 
-    public void setChecksum(String pChecksum) {
-        checksum = pChecksum;
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
     }
 
     public Long getSize() {
         return size;
     }
 
-    public void setSize(Long pFileSize) {
-        size = pFileSize;
+    public void setSize(Long fileSize) {
+        size = fileSize;
     }
 
     public MimeType getMimeType() {
         return mimeType;
     }
 
-    public void setMimeType(MimeType pMimeType) {
-        mimeType = pMimeType;
+    public void setMimeType(MimeType mimeType) {
+        this.mimeType = mimeType;
     }
 
     public String getName() {

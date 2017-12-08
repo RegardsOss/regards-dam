@@ -59,8 +59,8 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         this(null, null, null);
     }
 
-    protected AbstractDataEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
-        super(pModel, pIpId, pLabel);
+    protected AbstractDataEntity(Model model, UniformResourceName ipId, String label) {
+        super(model, ipId, label);
     }
 
     public Multimap<DataType, DataFile> getFiles() {
@@ -72,8 +72,8 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
     }
 
     @Override
-    public boolean equals(Object pObj) {
-        return super.equals(pObj);
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 
     @Override

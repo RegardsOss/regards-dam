@@ -74,10 +74,22 @@
 			<groupId>com.mchange</groupId>
 			<artifactId>c3p0</artifactId>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
+			<artifactId>plugins-service</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.storage</groupId>
+			<artifactId>storage-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-java8 -->
@@ -93,15 +105,9 @@
 			<version>0.5.0</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-domain</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>plugins-service</artifactId>
-			<scope>test</scope>
 		</dependency>
 
 		<!-- Test -->
@@ -110,6 +116,21 @@
 			<artifactId>regards-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-integration-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>fr.cnes.regards.modules.entities</groupId>-->
+			<!--<artifactId>entities-gson</artifactId>-->
+			<!--<scope>test</scope>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>fr.cnes.regards.modules.entities</groupId>-->
+			<!--<artifactId>entities-service</artifactId>-->
+			<!--<scope>test</scope>-->
+		<!--</dependency>-->
 
 	</dependencies>
 </project>

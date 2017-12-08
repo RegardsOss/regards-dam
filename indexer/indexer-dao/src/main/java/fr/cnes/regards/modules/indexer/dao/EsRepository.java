@@ -244,7 +244,7 @@ public class EsRepository implements IEsRepository {
                 throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
             }
         } catch (Throwable t) {
-            // TODO ??? Qui a (osé) écrire ça ?
+            throw new NoNodeAvailableException("Error while pinging Elasticsearch (" + connectionInfoMessage + ")", t);
         }
     }
 

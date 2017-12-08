@@ -27,34 +27,33 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
 
 /**
  * @author Christophe Mertz
  */
 @RunWith(SpringRunner.class)
+@ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
-@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
-public class PostgreSQLConnectionTestWithService {
+public class PostgreSQLConnectionTestWithService extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSQLConnectionTestWithService.class);
 
@@ -75,50 +74,35 @@ public class PostgreSQLConnectionTestWithService {
     @Value("${postgresql.datasource.password}")
     private String dbPassword;
 
-    private IPluginConfigurationRepository pluginConfRepositoryMocked;
+    @Autowired
+    private IPluginConfigurationRepository pluginConfRepository;
 
-    private IPluginService pluginServiceMocked;
-
-    private IRuntimeTenantResolver runtimeTenantResolver;
+    @Autowired
+    private IPluginService pluginService;
 
     @Before
     public void setUp() {
-        runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
-        Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("tenant");
-
-        // create a mock repository
-        pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
-        pluginServiceMocked = new PluginService(pluginConfRepositoryMocked, Mockito.mock(IPublisher.class),
-                runtimeTenantResolver);
-        pluginServiceMocked.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+        pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
     }
 
     @Test
     public void testPoolConnectionWithGetFirstPluginByType() throws ModuleException {
         // Save a PluginConfiguration
-        final Long anId = 33L;
         final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
-        aPluginConfiguration.setId(anId);
-        Mockito.when(pluginConfRepositoryMocked.save(aPluginConfiguration)).thenReturn(aPluginConfiguration);
-        pluginServiceMocked.savePluginConfiguration(aPluginConfiguration);
+        pluginService.savePluginConfiguration(aPluginConfiguration);
+        Long anId =aPluginConfiguration.getId();
 
         final List<PluginConfiguration> pluginConfs = new ArrayList<>();
         pluginConfs.add(aPluginConfiguration);
 
-        Mockito.when(pluginConfRepositoryMocked.findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
-                .thenReturn(pluginConfs);
-        Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
-        Mockito.when(pluginConfRepositoryMocked.findAll()).thenReturn(pluginConfs);
-        Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
-
         // Get the first Plugin
-        final DefaultPostgreConnectionPlugin aa = pluginServiceMocked.getFirstPluginByType(IDBConnectionPlugin.class);
+        final DefaultPostgreConnectionPlugin aa = pluginService.getFirstPluginByType(IDBConnectionPlugin.class);
 
         Assert.assertNotNull(aa);
         Assert.assertTrue(aa.testConnection());
 
         // Get the first Plugin : the same than the previous
-        final DefaultPostgreConnectionPlugin bb = pluginServiceMocked.getFirstPluginByType(IDBConnectionPlugin.class);
+        final DefaultPostgreConnectionPlugin bb = pluginService.getFirstPluginByType(IDBConnectionPlugin.class);
 
         Assert.assertNotNull(bb);
         Assert.assertTrue(bb.testConnection());
@@ -128,28 +112,21 @@ public class PostgreSQLConnectionTestWithService {
     @Test
     public void testPoolConnectionWithGetPlugin() throws ModuleException {
         // Save a PluginConfiguration
-        final Long anId = 33L;
-        final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
-        aPluginConfiguration.setId(anId);
-        Mockito.when(pluginConfRepositoryMocked.save(aPluginConfiguration)).thenReturn(aPluginConfiguration);
-        pluginServiceMocked.savePluginConfiguration(aPluginConfiguration);
+        PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
+        pluginService.savePluginConfiguration(aPluginConfiguration);
+        Long anId = aPluginConfiguration.getId();
 
         final List<PluginConfiguration> pluginConfs = new ArrayList<>();
         pluginConfs.add(aPluginConfiguration);
 
-        Mockito.when(pluginConfRepositoryMocked.findByPluginIdOrderByPriorityOrderDesc("postgresql-db-connection"))
-                .thenReturn(pluginConfs);
-        Mockito.when(pluginConfRepositoryMocked.findOne(aPluginConfiguration.getId())).thenReturn(aPluginConfiguration);
-        Mockito.when(pluginConfRepositoryMocked.exists(aPluginConfiguration.getId())).thenReturn(true);
-
         // Get a Plugin for a specific configuration
-        final DefaultPostgreConnectionPlugin aa = pluginServiceMocked.getPlugin(anId);
+        final DefaultPostgreConnectionPlugin aa = pluginService.getPlugin(anId);
 
         Assert.assertNotNull(aa);
         Assert.assertTrue(aa.testConnection());
 
         // Get a Plugin for a specific configuration
-        final DefaultPostgreConnectionPlugin bb = pluginServiceMocked.getPlugin(anId);
+        final DefaultPostgreConnectionPlugin bb = pluginService.getPlugin(anId);
 
         Assert.assertNotNull(bb);
         Assert.assertTrue(bb.testConnection());

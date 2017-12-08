@@ -55,7 +55,6 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -368,7 +367,7 @@ public class DatasetServiceTest {
         dataSource.setLabel(pPluginConf.getLabel());
         dataSource.setFromClause(pPluginConf.getParameterValue(IDBDataSourcePlugin.FROM_CLAUSE));
         dataSource.setTableName(pPluginConf.getParameterValue(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM));
-        dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDataSourcePlugin.MODEL_PARAM)));
+        dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_PARAM)));
 
         PluginConfiguration plgConfig = pPluginConf.getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM);
         if (plgConfig != null) {

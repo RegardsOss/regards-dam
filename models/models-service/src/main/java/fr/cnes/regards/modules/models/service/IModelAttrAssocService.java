@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
  */
 public interface IModelAttrAssocService extends ApplicationListener<NewFragmentAttributeEvent> {
 
-    List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) throws ModuleException;
+    List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId);
 
     ModelAttrAssoc bindAttributeToModel(Long pModelId, ModelAttrAssoc pModelAttribute) throws ModuleException;
 
@@ -60,13 +60,10 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
 
     /**
      * Propagate a fragment update
-     *
-     * @param pFragmentId fragment updated
-     * @throws ModuleException if error occurs!
      */
     void updateNSBind(AttributeModel added);
 
-    void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
+    void unbindNSAttributeToModel(Long pModelId, Long pFragmentId);
 
     /**
      * Find all model attribute associations by attribute
@@ -75,7 +72,7 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      */
     Collection<ModelAttrAssoc> retrieveModelAttrAssocsByAttributeId(AttributeModel attr);
 
-    Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException;
+    Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel);
 
     /**
      * Retrieve the computed attributes association to a model, represented by its id

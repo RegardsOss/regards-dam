@@ -151,7 +151,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Model getModelByName(String pModelName) throws ModuleException {
+    public Model getModelByName(String pModelName) {
         return modelRepository.findByName(pModelName);
     }
 
@@ -170,7 +170,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public void deleteModel(Long pModelId) throws ModuleException {
+    public void deleteModel(Long pModelId) {
         List<ModelAttrAssoc> modelAttrAssocs = modelAttributeRepository.findByModelId(pModelId);
         modelAttributeRepository.delete(modelAttrAssocs);
         if (modelRepository.exists(pModelId)) {
@@ -187,7 +187,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) throws ModuleException {
+    public List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) {
         Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelId(pModelId);
 
         if (modelAttributes != null) {
@@ -324,7 +324,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException {
+    public void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) {
         final Iterable<ModelAttrAssoc> modelAtts = modelAttributeRepository.findByModelId(pModelId);
         if (modelAtts != null) {
             for (ModelAttrAssoc modelAtt : modelAtts) {
@@ -357,7 +357,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException {
+    public Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) {
         // Retrieve all reference model attributes
         final List<ModelAttrAssoc> modelAtts = getModelAttrAssocs(pSourceModelId);
         if (modelAtts != null) {
@@ -552,7 +552,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
      * @return true if existing fragment {@link AttributeModel} match with this ones.
      * @throws ModuleException if error occurs!
      */
-    private boolean containsExactly(String pFragmentName, List<AttributeModel> pAttModels) throws ModuleException {
+    private boolean containsExactly(String pFragmentName, List<AttributeModel> pAttModels) {
         // Get existing fragment attributes
         List<AttributeModel> existingAttModels = attributeModelService.findByFragmentName(pFragmentName);
 
