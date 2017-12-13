@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
-
+ *
  */
 package fr.cnes.regards.modules.datasources.service;
 
@@ -35,9 +35,9 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -97,8 +97,7 @@ public class DataSourceService implements IDataSourceService {
             try {
                 dataSources.add(getDataSourceFromPluginConfiguration(c));
             } catch (IOException e) {
-                LOGGER.error("Unable to convert the PluginConfiguration <" + c.getId() + "> to a DataSource object",
-                             e);
+                LOGGER.error("Unable to convert the PluginConfiguration <" + c.getId() + "> to a DataSource object", e);
             }
         });
         return dataSources;
@@ -138,10 +137,10 @@ public class DataSourceService implements IDataSourceService {
     private PluginConfiguration createDataSourceFromSingleTable(DataSource dataSource) throws ModuleException {
         LOGGER.info("createDataSource : " + dataSource.getLabel());
 
-        PluginMetaData metaData = service
-                .checkPluginClassName(IDBDataSourceFromSingleTablePlugin.class, dataSource.getPluginClassName());
-        return service.savePluginConfiguration(
-                new PluginConfiguration(metaData, dataSource.getLabel(), buildParametersSingleTable(dataSource)));
+        PluginMetaData metaData = service.checkPluginClassName(IDBDataSourceFromSingleTablePlugin.class,
+                                                               dataSource.getPluginClassName());
+        return service.savePluginConfiguration(new PluginConfiguration(metaData, dataSource.getLabel(),
+                buildParametersSingleTable(dataSource)));
     }
 
     /**
@@ -152,10 +151,10 @@ public class DataSourceService implements IDataSourceService {
     private PluginConfiguration createDataSourceFromComplexRequest(DataSource dataSource) throws ModuleException {
         LOGGER.info("createDataSource : " + dataSource.getLabel());
 
-        PluginMetaData metaData = service
-                .checkPluginClassName(IDataSourcePlugin.class, dataSource.getPluginClassName());
+        PluginMetaData metaData = service.checkPluginClassName(IDataSourcePlugin.class,
+                                                               dataSource.getPluginClassName());
         return service.savePluginConfiguration(new PluginConfiguration(metaData, dataSource.getLabel(),
-                                                                       buildParametersFromComplexRequest(dataSource)));
+                buildParametersFromComplexRequest(dataSource)));
     }
 
     /**
@@ -166,18 +165,20 @@ public class DataSourceService implements IDataSourceService {
      */
     private PluginParametersFactory buildParametersCommon(DataSource dataSource) throws ModuleException {
         PluginParametersFactory factory = PluginParametersFactory.build();
-        factory.addParameterPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, dbConnectionService
-                .getDBConnection(dataSource.getPluginConfigurationConnectionId()))
+        factory.addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM,
+                                       dbConnectionService
+                                               .getDBConnection(dataSource.getPluginConfigurationConnectionId()))
                 .addParameter(IDBDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSource.getMapping()))
-                .addParameter(IDataSourcePlugin.REFRESH_RATE, (dataSource.getRefreshRate() == null) ?
-                        IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE :
-                        dataSource.getRefreshRate().toString());
+                .addParameter(IDataSourcePlugin.REFRESH_RATE,
+                              (dataSource.getRefreshRate() == null) ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE
+                                      : dataSource.getRefreshRate().toString());
 
         return factory;
     }
 
     /**
-     * Create a {@link List} of {@link PluginParameter} for a pluin's type type {@link IDBDataSourceFromSingleTablePlugin}
+     * Create a {@link List} of {@link PluginParameter} for a pluin's type type
+     * {@link IDBDataSourceFromSingleTablePlugin}
      * @param dataSource the {@link DataSource} to used to create the {@link List} {@link PluginParameter}
      * @return a {@link List} of {@link PluginParameter}
      * @throws ModuleException an error occurred when converts the mapping to a JSON String
@@ -211,7 +212,7 @@ public class DataSourceService implements IDataSourceService {
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasource object",
-                                              PluginConfiguration.class);
+                    PluginConfiguration.class);
         }
     }
 
@@ -228,19 +229,17 @@ public class DataSourceService implements IDataSourceService {
 
         // Manage the change between a DataSource from a single table and a from clause
         PluginParameter paramTableName = plgConf.getParameter(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM);
-        if ((paramTableName != null) && (dataSource.getFromClause() != null) && !""
-                .equals(dataSource.getFromClause())) {
+        if ((paramTableName != null) && (dataSource.getFromClause() != null)
+                && !"".equals(dataSource.getFromClause())) {
             plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters()).removeParameter(paramTableName)
-                                          .addParameterPluginConfiguration(IDBDataSourcePlugin.FROM_CLAUSE, null)
-                                          .getParameters());
+                    .addPluginConfiguration(IDBDataSourcePlugin.FROM_CLAUSE, null).getParameters());
         } else {
             PluginParameter paramFromClause = plgConf.getParameter(IDBDataSourcePlugin.FROM_CLAUSE);
-            if ((paramFromClause != null) && (dataSource.getTableName() != null) && !""
-                    .equals(dataSource.getTableName())) {
-                plgConf.setParameters(
-                        PluginParametersFactory.build(plgConf.getParameters()).removeParameter(paramFromClause)
-                                .addParameterPluginConfiguration(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM, null)
-                                .getParameters());
+            if ((paramFromClause != null) && (dataSource.getTableName() != null)
+                    && !"".equals(dataSource.getTableName())) {
+                plgConf.setParameters(PluginParametersFactory.build(plgConf.getParameters())
+                        .removeParameter(paramFromClause)
+                        .addPluginConfiguration(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM, null).getParameters());
             }
         }
 
@@ -287,9 +286,8 @@ public class DataSourceService implements IDataSourceService {
                 pluginParam.setValue(dataSource.getTableName());
                 break;
             case IDataSourcePlugin.REFRESH_RATE:
-                pluginParam.setValue(dataSource.getRefreshRate() == null ?
-                                           IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE :
-                                           dataSource.getRefreshRate().toString());
+                pluginParam.setValue(dataSource.getRefreshRate() == null ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE
+                        : dataSource.getRefreshRate().toString());
                 break;
             default:
                 break;
@@ -308,8 +306,8 @@ public class DataSourceService implements IDataSourceService {
             pluginParam.setPluginConfiguration(null);
 
             try {
-                pluginParam.setPluginConfiguration(
-                        service.getPluginConfiguration(dataSource.getPluginConfigurationConnectionId()));
+                pluginParam.setPluginConfiguration(service
+                        .getPluginConfiguration(dataSource.getPluginConfigurationConnectionId()));
             } catch (ModuleException e) {
                 LOGGER.error(e.getMessage(), e);
             }

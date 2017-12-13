@@ -49,10 +49,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -83,7 +83,7 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-//    private static final String TENANT = "PG_TENANT";
+    // private static final String TENANT = "PG_TENANT";
     private static final String TENANT = DEFAULT_TENANT;
 
     private static final String HELLO = "hello world from ";
@@ -154,8 +154,7 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
          */
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build()
-                .addParameterPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM,
-                                                 getPostgreConnectionConfiguration())
+                .addPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM, getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                 .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from\n\n\nT_TEST_PLUGIN_DATA_SOURCE")
                 .getParameters();

@@ -54,11 +54,11 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.EntitySpecifications;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -118,7 +118,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     protected final IModelAttrAssocService modelAttributeService;
 
     /**
-     {@link IModelService} instance
+     * {@link IModelService} instance
      */
     protected final IModelService modelService;
 
@@ -471,28 +471,30 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param entity entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(final T entity, Set<UniformResourceName> updatedIpIds) {
-        /*        // If entity tags entities => retrieve all groups of tagged entities (only for collection)
-        if ((entity instanceof Collection) && !entity.getTags().isEmpty()) {
-            List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
-            final T finalEntity = entity;
-            taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
-            updatedIpIds.add(finalEntity.getIpId());
-        }
-        UniformResourceName urn = entity.getIpId();
-        // If entity contains groups => update all entities tagging this entity (recursively)
-        // Need to manage groups one by one
-        for (String group : entity.getGroups()) {
-            Set<Collection> collectionsToUpdate = new HashSet<>();
-            // Find all collections tagging this entity and try adding group
-            manageGroup(group, collectionsToUpdate, urn, entity, updatedIpIds);
-            // Recursively continue to collections tagging updated collections and so on until no more collections
-            // has to be updated
-            while (!collectionsToUpdate.isEmpty()) {
-                Collection firstColl = collectionsToUpdate.iterator().next();
-                manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, updatedIpIds);
-                collectionsToUpdate.remove(firstColl);
-            }
-        }*/
+        /*
+         * // If entity tags entities => retrieve all groups of tagged entities (only for collection)
+         * if ((entity instanceof Collection) && !entity.getTags().isEmpty()) {
+         * List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
+         * final T finalEntity = entity;
+         * taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
+         * updatedIpIds.add(finalEntity.getIpId());
+         * }
+         * UniformResourceName urn = entity.getIpId();
+         * // If entity contains groups => update all entities tagging this entity (recursively)
+         * // Need to manage groups one by one
+         * for (String group : entity.getGroups()) {
+         * Set<Collection> collectionsToUpdate = new HashSet<>();
+         * // Find all collections tagging this entity and try adding group
+         * manageGroup(group, collectionsToUpdate, urn, entity, updatedIpIds);
+         * // Recursively continue to collections tagging updated collections and so on until no more collections
+         * // has to be updated
+         * while (!collectionsToUpdate.isEmpty()) {
+         * Collection firstColl = collectionsToUpdate.iterator().next();
+         * manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, updatedIpIds);
+         * collectionsToUpdate.remove(firstColl);
+         * }
+         * }
+         */
 
         // Search Datasets and collections which tag this entity (if entity is a collection)
         if (entity instanceof Collection) {
@@ -514,21 +516,23 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 this.manageGroups(coll, updatedIpIds);
             }
         }
-        /*        UniformResourceName urn = entity.getIpId();
-        // If entity contains groups => update all entities tagging this entity (recursively)
-        // Need to manage groups one by one
-        for (String group : entity.getGroups()) {
-            Set<Collection> collectionsToUpdate = new HashSet<>();
-            // Find all collections tagging this entity and try adding group
-            manageGroup(group, collectionsToUpdate, urn, entity, updatedIpIds);
-            // Recursively continue to collections tagging updated collections and so on until no more collections
-            // has to be updated
-            while (!collectionsToUpdate.isEmpty()) {
-                Collection firstColl = collectionsToUpdate.iterator().next();
-                manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, updatedIpIds);
-                collectionsToUpdate.remove(firstColl);
-            }
-        }*/
+        /*
+         * UniformResourceName urn = entity.getIpId();
+         * // If entity contains groups => update all entities tagging this entity (recursively)
+         * // Need to manage groups one by one
+         * for (String group : entity.getGroups()) {
+         * Set<Collection> collectionsToUpdate = new HashSet<>();
+         * // Find all collections tagging this entity and try adding group
+         * manageGroup(group, collectionsToUpdate, urn, entity, updatedIpIds);
+         * // Recursively continue to collections tagging updated collections and so on until no more collections
+         * // has to be updated
+         * while (!collectionsToUpdate.isEmpty()) {
+         * Collection firstColl = collectionsToUpdate.iterator().next();
+         * manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, updatedIpIds);
+         * collectionsToUpdate.remove(firstColl);
+         * }
+         * }
+         */
 
     }
 
@@ -549,7 +553,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param updatedEntity entity being created/updated
      * @param pFile the description of the entity
      * @param oldOne previous description file of updatedEntity
-     * @throws IOException     if description cannot be read
+     * @throws IOException if description cannot be read
      * @throws ModuleException if description not conform to REGARDS requirements
      */
     private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,

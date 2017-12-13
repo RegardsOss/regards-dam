@@ -31,8 +31,8 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameterType.ParamType;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 
@@ -71,17 +71,17 @@ public class DataSourceServiceTest {
 
         // create PluginConfiguration
         internalConf = new PluginConfiguration(this.initializePluginMeta(), "internal configuration",
-                                               initializePluginParameterIsInternalDataSource());
+                initializePluginParameterIsInternalDataSource());
         externalConf = new PluginConfiguration(this.initializePluginMeta(), "external configuration",
-                                               initializePluginParameterNotInternalDataSource());
+                initializePluginParameterNotInternalDataSource());
 
         externalConf.setId(123456L);
         plgConfs.add(externalConf);
         plgConfs.add(new PluginConfiguration(this.initializePluginMeta(), "third configuration",
-                                             initializePluginParameterNotInternalDataSource()));
+                initializePluginParameterNotInternalDataSource()));
         plgConfs.add(internalConf);
         plgConfs.add(new PluginConfiguration(this.initializePluginMeta(), "forth configuration",
-                                             initializePluginParameterNotInternalDataSource()));
+                initializePluginParameterNotInternalDataSource()));
     }
 
     private PluginMetaData initializePluginMeta() {
@@ -105,10 +105,10 @@ public class DataSourceServiceTest {
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
-        return Arrays.asList(PluginParameterType
-                                     .create(IDBDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null, String.class,
-                                             ParamType.PRIMITIVE, false), PluginParameterType
-                                     .create(IDBDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null, String.class,
-                                             ParamType.PRIMITIVE, false));
+        return Arrays.asList(
+                             PluginParameterType.create(IDBDataSourcePlugin.MODEL_PARAM, "MODEL_PARAM", null,
+                                                        String.class, ParamType.PRIMITIVE, false),
+                             PluginParameterType.create(IDBDataSourcePlugin.FROM_CLAUSE, "FROM_CLAUSE", null,
+                                                        String.class, ParamType.PRIMITIVE, false));
     }
 }

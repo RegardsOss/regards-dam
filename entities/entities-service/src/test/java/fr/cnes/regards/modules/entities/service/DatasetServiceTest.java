@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -27,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
+import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,12 +41,12 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSource;
@@ -303,26 +304,26 @@ public class DatasetServiceTest {
         Assert.assertNotEquals(dataSet1.getIpId(), dataSet2.getIpId());
     }
 
-//    @Test
-//    @Requirement("REGARDS_DSL_DAM_SET_200")
-//    @Purpose("The system allows to update the data source assiated to a dataset")
-//    public void dataSetUpdateDataSource() throws ModuleException, IOException {
-//        PluginConfiguration postgreConf = getDataSourceMapping();
-//        postgreConf.setId(33L);
-//
-//        dataSet1.setDataSource(postgreConf);
-//
-//        Mockito.when(pluginConfRepositoryMocked.exists(postgreConf.getId())).thenReturn(true);
-//        Mockito.when(pluginConfRepositoryMocked.findOne(postgreConf.getId())).thenReturn(postgreConf);
-//        Mockito.when(dataSetRepositoryMocked.findById(dataSet1.getId())).thenReturn(dataSet1);
-//        Mockito.when(dataSourceServiceMocked.getDataSource(dataSet1.getDataSource().getId()))
-//                .thenReturn(getDataSourceFromPluginConfiguration(postgreConf));
-//        Mockito.when(dataSetRepositoryMocked.save(dataSet1)).thenReturn(dataSet1);
-//
-//        dataSetServiceMocked.update(dataSet1);
-//
-//        Mockito.verify(publisherMocked).publish(Mockito.any(AbstractEntityEvent.class));
-//    }
+    // @Test
+    // @Requirement("REGARDS_DSL_DAM_SET_200")
+    // @Purpose("The system allows to update the data source assiated to a dataset")
+    // public void dataSetUpdateDataSource() throws ModuleException, IOException {
+    // PluginConfiguration postgreConf = getDataSourceMapping();
+    // postgreConf.setId(33L);
+    //
+    // dataSet1.setDataSource(postgreConf);
+    //
+    // Mockito.when(pluginConfRepositoryMocked.exists(postgreConf.getId())).thenReturn(true);
+    // Mockito.when(pluginConfRepositoryMocked.findOne(postgreConf.getId())).thenReturn(postgreConf);
+    // Mockito.when(dataSetRepositoryMocked.findById(dataSet1.getId())).thenReturn(dataSet1);
+    // Mockito.when(dataSourceServiceMocked.getDataSource(dataSet1.getDataSource().getId()))
+    // .thenReturn(getDataSourceFromPluginConfiguration(postgreConf));
+    // Mockito.when(dataSetRepositoryMocked.save(dataSet1)).thenReturn(dataSet1);
+    //
+    // dataSetServiceMocked.update(dataSet1);
+    //
+    // Mockito.verify(publisherMocked).publish(Mockito.any(AbstractEntityEvent.class));
+    // }
 
     private PluginConfiguration getPostgreConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
@@ -338,18 +339,18 @@ public class DatasetServiceTest {
                                                   Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
     }
 
-//    private PluginConfiguration getDataSourceMapping() {
-//        List<PluginParameter> parameters;
-//        parameters = PluginParametersFactory.build()
-//                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-//                                                 getPostgreConnectionConfiguration())
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, "database_table_name")
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
-//        return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
-//                                                  Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
-//
-//    }
+    // private PluginConfiguration getDataSourceMapping() {
+    // List<PluginParameter> parameters;
+    // parameters = PluginParametersFactory.build()
+    // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+    // getPostgreConnectionConfiguration())
+    // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, "database_table_name")
+    // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+    // .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
+    // return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
+    // Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
+    //
+    // }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();

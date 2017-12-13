@@ -39,9 +39,9 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
@@ -90,7 +90,7 @@ public class PostgreSQLConnectionTestWithService extends AbstractRegardsServiceI
         // Save a PluginConfiguration
         final PluginConfiguration aPluginConfiguration = getPostGreSqlConnectionConfiguration();
         pluginService.savePluginConfiguration(aPluginConfiguration);
-        Long anId =aPluginConfiguration.getId();
+        Long anId = aPluginConfiguration.getId();
 
         final List<PluginConfiguration> pluginConfs = new ArrayList<>();
         pluginConfs.add(aPluginConfiguration);

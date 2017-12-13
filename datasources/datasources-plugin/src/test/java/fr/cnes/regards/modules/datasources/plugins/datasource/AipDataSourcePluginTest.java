@@ -40,9 +40,9 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.plugins.AipDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
@@ -63,8 +63,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-//    private static final String TENANT = "PLUGINS";
-private static final String TENANT = DEFAULT_TENANT;
+    // private static final String TENANT = "PLUGINS";
+    private static final String TENANT = DEFAULT_TENANT;
 
     private static final String MODEL_FILE_NAME = "model.xml";
 
@@ -81,12 +81,11 @@ private static final String TENANT = DEFAULT_TENANT;
     @Autowired
     private IAipClient aipClient;
 
-//    @Autowired
-//    private IAttributeModelService attributeModelService;
-//
-//    @Autowired
-//    private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
-
+    // @Autowired
+    // private IAttributeModelService attributeModelService;
+    //
+    // @Autowired
+    // private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException, ModuleException {
@@ -100,8 +99,9 @@ private static final String TENANT = DEFAULT_TENANT;
         importModel(MODEL_FILE_NAME);
 
         FeignSecurityManager.asSystem();
-//        Mockito.doReturn(null).when(aipClient).retrieveAIPs(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(), Mockito.anyInt());
-//        aipClient.retrieveAIPs(AIPState.STORED, null, null, 0, 10);
+        // Mockito.doReturn(null).when(aipClient).retrieveAIPs(Mockito.any(), Mockito.any(), Mockito.any(),
+        // Mockito.anyInt(), Mockito.anyInt());
+        // aipClient.retrieveAIPs(AIPState.STORED, null, null, 0, 10);
         FeignSecurityManager.reset();
 
         Map<Long, Object> pluginCacheMap = new HashMap<>();
@@ -132,8 +132,8 @@ private static final String TENANT = DEFAULT_TENANT;
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", filename));
             modelService.importModel(input);
 
-//            final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
-//            gsonAttributeFactory.refresh(TENANT, attributes);
+            // final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
+            // gsonAttributeFactory.refresh(TENANT, attributes);
         } catch (final IOException e) {
             final String errorMessage = "Cannot import " + filename;
             throw new AssertionError(errorMessage);
@@ -142,7 +142,7 @@ private static final String TENANT = DEFAULT_TENANT;
 
     @Test
     public void test() throws DataSourceException {
-//        Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 10));
+        // Page<DataObject> page = dsPlugin.findAll(TENANT, new PageRequest(0, 10));
     }
 
     @After

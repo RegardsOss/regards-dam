@@ -48,10 +48,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -75,14 +75,14 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @TestPropertySource("classpath:datasource-test.properties")
-//@ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+// @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
 public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-//    private static final String TENANT = "PGDB_TENANT";
+    // private static final String TENANT = "PGDB_TENANT";
     private static final String TENANT = DEFAULT_TENANT;
 
     private static final String HELLO = "hello world from ";
@@ -155,8 +155,8 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
          */
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build()
-                .addParameterPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-                                                 getPostgreConnectionConfiguration())
+                .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+                                        getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();

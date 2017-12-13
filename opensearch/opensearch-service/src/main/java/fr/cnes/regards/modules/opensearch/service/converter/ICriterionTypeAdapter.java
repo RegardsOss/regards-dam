@@ -13,14 +13,13 @@ import com.google.gson.stream.JsonWriter;
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
-import fr.cnes.regards.modules.opensearch.service.OpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
  * Type adapter reading an OpenSearch query string and converting it to an {@link ICriterion}
  * @author Xavier-Alexandre Brochard
  */
-@GsonTypeAdapterBean(type = ICriterion.class)
+@GsonTypeAdapterBean(adapted = ICriterion.class)
 public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
 
     /**
@@ -34,7 +33,8 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
     private final Gson gson;
 
     /**
-     * @param pOpenSearchService The OpenSearch service building {@link ICriterion} from a request string. Autowired by Spring. Must not be null.
+     * @param pOpenSearchService The OpenSearch service building {@link ICriterion} from a request string. Autowired by
+     *            Spring. Must not be null.
      * @param pGson Gson. Autowired by Spring. Must not be null.
      */
     public ICriterionTypeAdapter(IOpenSearchService pOpenSearchService, Gson pGson) {
@@ -56,7 +56,9 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see com.google.gson.TypeAdapter#write(com.google.gson.stream.JsonWriter, java.lang.Object)
      */
     @Override

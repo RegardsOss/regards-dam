@@ -36,10 +36,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
@@ -88,9 +88,8 @@ public class PostgreConnectionPluginIntrospectionTest extends AbstractRegardsSer
                 .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "5")
                 .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
 
-        postgreDBConn = PluginUtils
-                .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
-                           new HashMap<>());
+        postgreDBConn = PluginUtils.getPlugin(parameters, DefaultPostgreConnectionPlugin.class,
+                                              Arrays.asList(PLUGIN_PACKAGE), new HashMap<>());
 
         // Do not launch tests is Database is not available
         Assume.assumeTrue(postgreDBConn.testConnection());
@@ -109,8 +108,7 @@ public class PostgreConnectionPluginIntrospectionTest extends AbstractRegardsSer
 
     @Test
     @Requirement("REGARDS_DSL_DAM_SRC_155")
-    @Purpose(
-            "The system has a plugin that enables for a SGBD to get the list of tables and for a table, the list of columns and their types")
+    @Purpose("The system has a plugin that enables for a SGBD to get the list of tables and for a table, the list of columns and their types")
     public void getTablesAndColumns() {
         Assert.assertTrue(postgreDBConn.testConnection());
 
