@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -956,14 +957,19 @@ public class EsRepository implements IEsRepository {
                 attribute.substring(attribute.lastIndexOf('.') + 1) :
                 attribute;
         try {
-            Map<String, Object> allTypesMapping = toMap(toMap(map.get(index)).get("mappings"));
-            // Search from all types mapping if one contains asked attribute (frankly, all must contain it but maybe
-            // automatic mapping isn't present for all
-            for (Object oTypeMap : allTypesMapping.values()) {
-                Map<String, Object> typeMap = toMap(oTypeMap);
-                if (typeMap.containsKey(attribute)) {
-                    return toMap(toMap(toMap(typeMap.get(attribute)).get("mapping")).get(lastPathAttName)).get("type")
-                            .equals("text");
+            // Mapping map contain only one value, the concerned index mapping BUT in case index is an alias, map key
+            // is true index name, not alias one so DON'T retrieve mappinh from its name !!!
+            Iterator<Object> i = map.values().iterator();
+            if (i.hasNext()) {
+                Map<String, Object> allTypesMapping = toMap(toMap(i.next()).get("mappings"));
+                // Search from all types mapping if one contains asked attribute (frankly, all must contain it but maybe
+                // automatic mapping isn't present for all
+                for (Object oTypeMap : allTypesMapping.values()) {
+                    Map<String, Object> typeMap = toMap(oTypeMap);
+                    if (typeMap.containsKey(attribute)) {
+                        return toMap(toMap(toMap(typeMap.get(attribute)).get("mapping")).get(lastPathAttName)).get("type")
+                                .equals("text");
+                    }
                 }
             }
             return false; // NOSONAR
