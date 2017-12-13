@@ -273,7 +273,7 @@ public class IngesterService implements IIngesterService {
                 this.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()),
                                        ((IDataSourcePlugin) pluginService.getPlugin(pluginConf.getId()))
                                                .getRefreshRate());
-            } catch (ModuleException e) {
+            } catch (Exception e) {
                 LOGGER.error("Cannot compute next ingestion planned date", e);
             }
         });

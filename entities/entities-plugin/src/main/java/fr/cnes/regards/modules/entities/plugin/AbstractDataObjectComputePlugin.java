@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -144,15 +145,16 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     protected Optional<AbstractAttribute<?>> extractProperty(DataObject object) { //NOSONAR
         if (parameterAttribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
-            return object.getProperties().stream().filter(p -> p.getName().equals(parameterAttribute.getName()))
-                    .findFirst();
+            return Optional.ofNullable(object.getProperty(parameterAttribute.getName()));
         }
         // the attribute is in a fragment so :
         // filter the fragment property then filter the right property on fragment properties
-        return object.getProperties().stream().filter(p -> (p instanceof ObjectAttribute) && p.getName()
-                .equals(parameterAttribute.getFragment().getName())).limit(1) // Only one fragment with searched name
-                .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
-                .filter(p -> p.getName().equals(parameterAttribute.getName())).findFirst();
+        com.google.common.base.Optional<ObjectAttribute> fragmentOpt = com.google.common.base.Optional
+                .fromNullable((ObjectAttribute) object.getProperty(parameterAttribute.getFragment().getName()));
+        return (fragmentOpt.isPresent() ?
+                Iterables.tryFind(fragmentOpt.get().getValue(), p -> p.getName().equals(parameterAttribute.getName())).toJavaUtil():
+                Optional.empty());
+
     }
 
 }

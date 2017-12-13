@@ -22,13 +22,16 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 
 import fr.cnes.regards.framework.amqp.IInstanceSubscriber;
@@ -37,6 +40,7 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPState;
+import fr.cnes.regards.modules.storage.domain.AipDataFiles;
 
 /**
  * @author oroussel
@@ -62,8 +66,6 @@ public class AipDataSourceConfiguration {
 
     @Bean
     public IAipClient aipClient() {
-//        return Mockito.mock(IAipClient.class);
-
         AipClientProxy aipClientProxy = new AipClientProxy();
         InvocationHandler handler = (proxy, method, args) -> {
             for (Method aipClientProxyMethod : aipClientProxy.getClass().getMethods()) {
@@ -79,10 +81,25 @@ public class AipDataSourceConfiguration {
 
     private class AipClientProxy {
 
-        public ResponseEntity<PagedResources<Resource<AIP>>> retrieveAIPs(AIPState state, OffsetDateTime fromDate,
+/*        public ResponseEntity<PagedResources<Resource<AIP>>> retrieveAIPs(AIPState state, OffsetDateTime fromDate,
                 OffsetDateTime toDate, int page, int size) {
-            return null;
+            List<AIP> aips = AipDataSourcePluginTest.createAIPs(1, "tag1", "tag2");
+
+            return ResponseEntity.ok(new PagedResources<Resource<AIP>>(
+                    aips.stream().map(aip -> new Resource<AIP>(aip)).collect(Collectors.toList()),
+                    new PagedResources.PageMetadata(1, 1, 1)));
+        }*/
+
+        ResponseEntity<Page<AipDataFiles>> retrieveAipDataFiles(AIPState state, Set<String> tags,
+                OffsetDateTime fromLastUpdateDate, int page, int size) {
+            List<AipDataFiles> aipDataFiles = new ArrayList<>();
+
+            for (AIP aip : AipDataSourcePluginTest.createAIPs(1, "tag1", "tag2")) {
+                aipDataFiles.add(new AipDataFiles(aip));
+            }
+            return ResponseEntity.ok(new PageImpl<AipDataFiles>(aipDataFiles));
         }
+
     }
 
 }
