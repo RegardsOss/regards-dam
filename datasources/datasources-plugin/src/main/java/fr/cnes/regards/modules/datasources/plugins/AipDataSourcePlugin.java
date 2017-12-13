@@ -37,11 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MimeType;
 
 import com.google.common.base.Joiner;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
@@ -49,9 +46,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.framework.oais.ContentInformation;
-import fr.cnes.regards.framework.oais.InformationPackageProperties;
-import fr.cnes.regards.framework.oais.OAISDataObject;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
@@ -70,6 +64,7 @@ import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPState;
 import fr.cnes.regards.modules.storage.domain.AipDataFiles;
+import fr.cnes.regards.modules.storage.domain.DataFileDto;
 
 /**
  * @author oroussel
@@ -166,8 +161,8 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
                                       pageable.getPageNumber(), pageable.getPageSize());
         FeignSecurityManager.reset();
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            List<DataObject> list = new ArrayList<>();
             for (AipDataFiles aipDataFiles : responseEntity.getBody().getContent()) {
-                List<DataObject> list = new ArrayList<>();
                 try {
                     list.add(createDataObject(aipDataFiles));
                 } catch (URISyntaxException e) {
@@ -176,7 +171,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
                     throw new PluginUtilsRuntimeException(e);
                 }
             }
-            return new PageImpl<>(list, pageable, pagedResources.getMetadata().getTotalElements());
+            return new PageImpl<>(list, pageable, list.size());
 
         } else {
             throw new DataSourceException(
@@ -194,8 +189,20 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
         obj.setSipId(aip.getSipId());
 
         // Data files
-        InformationPackageProperties ipp = aip.getProperties();
-/*        for (ContentInformation ci : ipp.getContentInformations()) {
+        for (DataFileDto dataFileDto : aipDataFiles.getDataFiles()) {
+            DataFile dataFile = new DataFile();
+            // Cannot use BeanUtils.copyProperty because names or types are different....(thank you)
+            dataFile.setUri(dataFileDto.getUrl().toURI());
+            dataFile.setOnline(dataFileDto.isOnline());
+            dataFile.setSize(dataFileDto.getFileSize());
+            dataFile.setName(dataFileDto.getName());
+            dataFile.setMimeType(dataFileDto.getMimeType());
+            dataFile.setDigestAlgorithm(dataFileDto.getAlgorithm());
+            dataFile.setChecksum(dataFileDto.getChecksum());
+            obj.getFiles().put(dataFileDto.getDataType(), dataFile);
+        }
+/*        InformationPackageProperties ipp = aip.getProperties();
+        for (ContentInformation ci : ipp.getContentInformations()) {
             OAISDataObject oaisDataObject = ci.getDataObject();
             DataFile dataFile = new DataFile();
             dataFile.setChecksum(oaisDataObject.getChecksum());
