@@ -64,9 +64,10 @@ import fr.cnes.regards.modules.storage.domain.AIPState;
  * @author oroussel
  */
 @Plugin(id = "aip-storage-datasource", version = "1.0-SNAPSHOT",
-        description = "Allows data extraction from AIP storage", author = "REGARDS Team",
-        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
+        description = "Allows data extraction from AIP storage", author = "REGARDS Team", contact = "regards@c-s.fr",
+        licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class AipDataSourcePlugin implements IDataSourcePlugin {
+
     public final static String MODEL_NAME_PARAM = "model name";
 
     public final static String BINDING_MAP = "binding map";
@@ -76,7 +77,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
     private String modelName;
 
-    @PluginParameter(name = BINDING_MAP, label = "Binding map",
+    @PluginParameter(name = BINDING_MAP, keylabel = "Attribute name path", label = "AIP property path",
             description = "Binding map betwwen AIP and model ie property chain from AIP format and its associated property chain from model")
     private Map<String, String> bindingMap;
 
@@ -107,14 +108,15 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     private void initPlugin() {
         this.model = modelService.getModelByName(modelName);
         if (this.model == null) {
-            throw new PluginUtilsRuntimeException(String. format("Model '%s' does not exist.", modelName));
+            throw new PluginUtilsRuntimeException(String.format("Model '%s' does not exist.", modelName));
         }
 
         List<ModelAttrAssoc> modelAttrAssocs = modelAttrAssocService.getModelAttrAssocs(this.model.getId());
         // Create map { "toto.titi.tutu", AttributeType.STRING }
         Map<String, AttributeType> modelMappingMap = new HashMap<>();
         for (ModelAttrAssoc assoc : modelAttrAssocs) {
-            modelMappingMap.put(assoc.getAttribute().buildJsonPath(StaticProperties.PROPERTIES), assoc.getAttribute().getType());
+            modelMappingMap.put(assoc.getAttribute().buildJsonPath(StaticProperties.PROPERTIES),
+                                assoc.getAttribute().getType());
         }
     }
 
@@ -154,7 +156,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
         DataObject obj = new DataObject();
         obj.setModel(this.model);
         obj.setIpId(aip.getId());
-//        obj.setLabel(aip.get); // TODO
+        // obj.setLabel(aip.get); // TODO
 
         obj.setSipId(aip.getSipId());
 
@@ -168,14 +170,13 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
             dataFile.setMimeType(MimeType.valueOf(ci.getRepresentationInformation().getSyntax().getMimeType()));
             dataFile.setName(oaisDataObject.getFilename());
             dataFile.setSize(oaisDataObject.getFileSize());
-//            dataFile.setOnline(false); // TODO Pourquoi ?
+            // dataFile.setOnline(false); // TODO Pourquoi ?
             dataFile.setUri(oaisDataObject.getUrl().toURI());
             // Add dataFile to "files" property (with type, it's a multimap)
             obj.getFiles().put(oaisDataObject.getRegardsDataType(), dataFile);
         }
         obj.getTags().addAll(aip.getTags());
         PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
-
 
         return obj;
     }
