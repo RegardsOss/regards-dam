@@ -159,7 +159,7 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
                                         getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800).getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                 Arrays.asList(PLUGIN_CURRENT_PACKAGE), pluginCacheMap);
@@ -266,8 +266,8 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         PluginConfiguration plgConf = PluginUtils.getPluginConfiguration(parameters,
                                                                          DefaultPostgreConnectionPlugin.class,

@@ -162,8 +162,8 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "5")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 5)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
@@ -218,8 +218,8 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
@@ -236,8 +236,8 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         return parameters;
     }

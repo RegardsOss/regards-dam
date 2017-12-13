@@ -110,7 +110,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build().addParameter(AipDataSourcePlugin.BINDING_MAP, createBindingMap())
                 .addParameter(AipDataSourcePlugin.MODEL_NAME_PARAM, MODEL_NAME)
-                .addParameter(IDataSourcePlugin.REFRESH_RATE, "1800").getParameters();
+                .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800).getParameters();
 
         dsPlugin = PluginUtils.getPlugin(parameters, AipDataSourcePlugin.class, Arrays.asList(PLUGIN_CURRENT_PACKAGE),
                                          pluginCacheMap);
@@ -139,7 +139,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         List<AIP> aips = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             UniformResourceName id = new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA,
-                                                             AipDataSourcePluginTest.TENANT, UUID.randomUUID(), 1);
+                    AipDataSourcePluginTest.TENANT, UUID.randomUUID(), 1);
             AIPBuilder builder = new AIPBuilder(id, "sipId" + i, EntityType.DATA);
             builder.addTags(tags);
 
@@ -182,10 +182,10 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         Assert.assertTrue(do1.getTags().contains("tag1"));
         Assert.assertTrue(do1.getTags().contains("tag2"));
         Assert.assertTrue(do1.getProperty("history") instanceof StringArrayAttribute);
-        Assert.assertTrue(
-                Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(), "H1") > -1);
-        Assert.assertTrue(
-                Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(), "H2") > -1);
+        Assert.assertTrue(Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(),
+                                              "H1") > -1);
+        Assert.assertTrue(Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(),
+                                              "H2") > -1);
         Assert.assertNotNull(do1.getFiles());
         Assert.assertEquals(1, do1.getFiles().size());
         Assert.assertTrue(do1.getFiles().containsKey(DataType.RAWDATA));
