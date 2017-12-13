@@ -90,14 +90,14 @@ public class AipDataSourceConfiguration {
                     new PagedResources.PageMetadata(1, 1, 1)));
         }*/
 
-        ResponseEntity<Page<AipDataFiles>> retrieveAipDataFiles(AIPState state, Set<String> tags,
+        public ResponseEntity<Page<AipDataFiles>> retrieveAipDataFiles(AIPState state, Set<String> tags,
                 OffsetDateTime fromLastUpdateDate, int page, int size) {
             List<AipDataFiles> aipDataFiles = new ArrayList<>();
 
             for (AIP aip : AipDataSourcePluginTest.createAIPs(1, "tag1", "tag2")) {
                 aipDataFiles.add(new AipDataFiles(aip));
             }
-            return ResponseEntity.ok(new PageImpl<AipDataFiles>(aipDataFiles));
+            return ResponseEntity.ok(new PageImpl<>(aipDataFiles));
         }
 
     }

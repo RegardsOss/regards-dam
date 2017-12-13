@@ -83,7 +83,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
     private String modelName;
 
-    @PluginParameter(name = BINDING_MAP, keylabel = "Attribute name path", label = "AIP property path",
+    @PluginParameter(name = BINDING_MAP, keylabel = "AIP property path", label = "Attribute path",
             description = "Binding map betwwen AIP and model ie property chain from AIP format and its associated property chain from model")
     private Map<String, String> bindingMap;
 
@@ -201,22 +201,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
             dataFile.setChecksum(dataFileDto.getChecksum());
             obj.getFiles().put(dataFileDto.getDataType(), dataFile);
         }
-/*        InformationPackageProperties ipp = aip.getProperties();
-        for (ContentInformation ci : ipp.getContentInformations()) {
-            OAISDataObject oaisDataObject = ci.getDataObject();
-            DataFile dataFile = new DataFile();
-            dataFile.setChecksum(oaisDataObject.getChecksum());
-            dataFile.setDigestAlgorithm(oaisDataObject.getAlgorithm());
-            dataFile.setMimeType(MimeType.valueOf(ci.getRepresentationInformation().getSyntax().getMimeType()));
-            dataFile.setName(oaisDataObject.getFilename());
-            dataFile.setSize(oaisDataObject.getFileSize());
-            //            dataFile.setOnline(false); // TODO Pourquoi ?
-            dataFile.setUri(oaisDataObject.getUrl().toURI());
-            // Add dataFile to "files" property (with type, it's a multimap)
-            obj.getFiles().put(oaisDataObject.getRegardsDataType(), dataFile);
-        }*/
 
-//        DataFile dataFile = new DataFile()
         // Tags
         obj.getTags().addAll(aip.getTags());
 
