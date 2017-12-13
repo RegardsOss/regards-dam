@@ -18,12 +18,17 @@
  */
 package fr.cnes.regards.modules.datasources.plugins;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.slf4j.Logger;
@@ -38,7 +43,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MimeType;
 
+import com.google.common.base.Joiner;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
@@ -50,6 +57,9 @@ import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -59,14 +69,16 @@ import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPState;
+import fr.cnes.regards.modules.storage.domain.AipDataFiles;
 
 /**
  * @author oroussel
  */
 @Plugin(id = "aip-storage-datasource", version = "1.0-SNAPSHOT",
-        description = "Allows data extraction from AIP storage", author = "REGARDS Team",
-        contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
+        description = "Allows data extraction from AIP storage", author = "REGARDS Team", contact = "regards@c-s.fr",
+        licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class AipDataSourcePlugin implements IDataSourcePlugin {
+
     public final static String MODEL_NAME_PARAM = "model name";
 
     public final static String BINDING_MAP = "binding map";
@@ -92,29 +104,50 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     private Model model;
 
     /**
+     * Association table between json path property and its type from model
+     */
+    private Map<String, AttributeType> modelMappingMap = new HashMap<>();
+
+    /**
      * Ingestion refresh rate in seconds
      */
     @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true,
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
-
     private Integer refreshRate;
 
     /**
      * Init method
      */
     @PluginInit
-    private void initPlugin() {
+    private void initPlugin() throws ModuleException {
         this.model = modelService.getModelByName(modelName);
         if (this.model == null) {
-            throw new PluginUtilsRuntimeException(String. format("Model '%s' does not exist.", modelName));
+            throw new ModuleException(String.format("Model '%s' does not exist.", modelName));
         }
 
         List<ModelAttrAssoc> modelAttrAssocs = modelAttrAssocService.getModelAttrAssocs(this.model.getId());
-        // Create map { "toto.titi.tutu", AttributeType.STRING }
-        Map<String, AttributeType> modelMappingMap = new HashMap<>();
+        // Fill map { "properties.titi.tutu", AttributeType.STRING }
         for (ModelAttrAssoc assoc : modelAttrAssocs) {
-            modelMappingMap.put(assoc.getAttribute().buildJsonPath(StaticProperties.PROPERTIES), assoc.getAttribute().getType());
+            modelMappingMap.put(assoc.getAttribute().buildJsonPath(StaticProperties.PROPERTIES),
+                                assoc.getAttribute().getType());
+        }
+        // All bindingMap values should be json path properties from model so each of them starting with "properties."
+        // must exist as a value into modelMappingMap
+        Set<String> notInModelProperties = bindingMap.values().stream().filter(name -> name.startsWith("properties."))
+                .filter(name -> !modelMappingMap.containsKey(name)).collect(Collectors.toSet());
+        if (!notInModelProperties.isEmpty()) {
+            throw new ModuleException(
+                    "Following properties don't exist into model : " + Joiner.on(", ").join(notInModelProperties));
+        }
+        DataObject forIntrospection = new DataObject();
+        PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
+        Set<String> notInModelStaticProperties = bindingMap.values().stream()
+                .filter(name -> !name.startsWith("properties."))
+                .filter(name -> !propertyUtilsBean.isWriteable(forIntrospection, name)).collect(Collectors.toSet());
+        if (!notInModelStaticProperties.isEmpty()) {
+            throw new ModuleException(
+                    "Following static properties don't exist : " + Joiner.on(", ").join(notInModelProperties));
         }
     }
 
@@ -125,21 +158,22 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
 
     @Override
     public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
-        if (this.model == null) {
-            throw new DataSourceException("DataSource cannot be searched because associated model doe not exist");
-        }
         FeignSecurityManager.asSystem();
-        ResponseEntity<PagedResources<Resource<AIP>>> responseEntity = aipClient
-                .retrieveAIPs(AIPState.STORED, date, null, pageable.getPageNumber(), pageable.getPageSize());
+//        ResponseEntity<PagedResources<Resource<AIP>>> responseEntity = aipClient
+//                .retrieveAIPs(AIPState.STORED, date, null, pageable.getPageNumber(), pageable.getPageSize());
+        ResponseEntity<Page<AipDataFiles>> responseEntity = aipClient
+                .retrieveAipDataFiles(AIPState.STORED, Collections.singleton(this.model.getName()), date,
+                                      pageable.getPageNumber(), pageable.getPageSize());
         FeignSecurityManager.reset();
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
-            PagedResources<Resource<AIP>> pagedResources = responseEntity.getBody();
-            List<DataObject> list = new ArrayList<>();
-            for (Resource<AIP> resource : pagedResources.getContent()) {
+            for (AipDataFiles aipDataFiles : responseEntity.getBody().getContent()) {
+                List<DataObject> list = new ArrayList<>();
                 try {
-                    list.add(createDataObject(resource.getContent()));
+                    list.add(createDataObject(aipDataFiles));
                 } catch (URISyntaxException e) {
                     throw new DataSourceException("AIP dataObject url cannot be transformed in URI", e);
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new PluginUtilsRuntimeException(e);
                 }
             }
             return new PageImpl<>(list, pageable, pagedResources.getMetadata().getTotalElements());
@@ -150,17 +184,18 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
         }
     }
 
-    private DataObject createDataObject(AIP aip) throws URISyntaxException {
+    private DataObject createDataObject(AipDataFiles aipDataFiles)
+            throws URISyntaxException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        AIP aip = aipDataFiles.getAip();
         DataObject obj = new DataObject();
+        // Mandatory properties
         obj.setModel(this.model);
         obj.setIpId(aip.getId());
-//        obj.setLabel(aip.get); // TODO
-
         obj.setSipId(aip.getSipId());
 
+        // Data files
         InformationPackageProperties ipp = aip.getProperties();
-        for (ContentInformation ci : ipp.getContentInformations()) {
-            // Data files
+/*        for (ContentInformation ci : ipp.getContentInformations()) {
             OAISDataObject oaisDataObject = ci.getDataObject();
             DataFile dataFile = new DataFile();
             dataFile.setChecksum(oaisDataObject.getChecksum());
@@ -168,14 +203,53 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
             dataFile.setMimeType(MimeType.valueOf(ci.getRepresentationInformation().getSyntax().getMimeType()));
             dataFile.setName(oaisDataObject.getFilename());
             dataFile.setSize(oaisDataObject.getFileSize());
-//            dataFile.setOnline(false); // TODO Pourquoi ?
+            //            dataFile.setOnline(false); // TODO Pourquoi ?
             dataFile.setUri(oaisDataObject.getUrl().toURI());
             // Add dataFile to "files" property (with type, it's a multimap)
             obj.getFiles().put(oaisDataObject.getRegardsDataType(), dataFile);
-        }
-        obj.getTags().addAll(aip.getTags());
-        PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
+        }*/
 
+//        DataFile dataFile = new DataFile()
+        // Tags
+        obj.getTags().addAll(aip.getTags());
+
+        // Binded properties
+        PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
+        for (Map.Entry<String, String> entry : bindingMap.entrySet()) {
+            String aipPropertyPath = entry.getKey();
+            String doPropertyPath = entry.getValue();
+
+            // Value from AIP
+            Object value = propertyUtilsBean.getNestedProperty(aip, aipPropertyPath);
+
+            // Does property refers to a dynamic ("properties....") or static property ?
+            if (!doPropertyPath.startsWith("properties.")) {
+                // Static, use propertyUtilsBean
+                propertyUtilsBean.setNestedProperty(obj, doPropertyPath, value);
+            } else { // Dynamic
+                String dynamicPropertyPath = doPropertyPath.substring(doPropertyPath.indexOf('.') + 1);
+                // Property name in all cases (fragment or not)
+                String propName = dynamicPropertyPath.substring(dynamicPropertyPath.indexOf('.') + 1);
+                AbstractAttribute<?> propAtt = AttributeBuilder
+                        .forType(modelMappingMap.get(doPropertyPath), propName, value);
+                // If it contains another '.', there is a fragment
+                if (dynamicPropertyPath.contains(".")) {
+                    String fragmentName = dynamicPropertyPath.substring(0, dynamicPropertyPath.indexOf('.'));
+
+                    Optional<AbstractAttribute<?>> opt = obj.getProperties().stream()
+                            .filter(p -> p.getName().equals(fragmentName)).findAny();
+                    ObjectAttribute fragmentAtt = opt.isPresent() ? (ObjectAttribute) opt.get() : null;
+                    if (fragmentAtt == null) {
+                        fragmentAtt = AttributeBuilder.buildObject(fragmentName, propAtt);
+                    } else {
+                        fragmentAtt.getValue().add(propAtt);
+                    }
+                    obj.addProperty(fragmentAtt);
+                } else {
+                    obj.addProperty(propAtt);
+                }
+            }
+        }
 
         return obj;
     }

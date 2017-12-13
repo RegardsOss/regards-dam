@@ -294,7 +294,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         final BooleanAttribute runnable = new BooleanAttribute();
         runnable.setName(DISCRIMINATOR_RUNNABLE);
         runnable.setValue(true);
-        pCar.getProperties().add(runnable);
+        pCar.addProperty(runnable);
     }
 
     /**
@@ -315,7 +315,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         atts.add(crs);
         geo.setValue(atts);
 
-        pCar.getProperties().add(geo);
+        pCar.addProperty(geo);
     }
 
     /**
@@ -335,7 +335,7 @@ public class MultitenantPolymorphicTypeAdapterFactoryTest {
         atts.add(description);
         org.setValue(atts);
 
-        pCar.getProperties().add(org);
+        pCar.addProperty(org);
     }
 
 }

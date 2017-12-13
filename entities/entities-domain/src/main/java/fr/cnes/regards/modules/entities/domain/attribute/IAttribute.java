@@ -19,19 +19,14 @@
 package fr.cnes.regards.modules.entities.domain.attribute;
 
 /**
- *
- * @param <T>
- *            type of Attribute
- *
+ * @param <T> type of Attribute
  * @author lmieulet
  * @author Marc Sordi
- *
  */
-public interface IAttribute<T> {
+public interface IAttribute<T> extends Comparable<IAttribute> {
 
     /**
      * Get attribute name
-     *
      * @return attribute name
      */
     String getName();
@@ -39,6 +34,11 @@ public interface IAttribute<T> {
     /**
      * @return the attribute value
      */
-    public T getValue();
+    T getValue();
 
+    @Override
+    default int compareTo(IAttribute o) {
+        // name is not null (mandatory)
+        return this.getName().compareToIgnoreCase(o.getName());
+    }
 }

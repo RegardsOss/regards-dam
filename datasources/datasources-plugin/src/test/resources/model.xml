@@ -36,6 +36,11 @@
         <type>INTEGER_ARRAY</type>
     </attribute>
     <attribute>
+        <label>History</label>
+        <name>history</name>
+        <type>STRING_ARRAY</type>
+    </attribute>
+    <attribute>
         <label>forTests</label>
         <name>SPEED</name>
         <type>DOUBLE</type>

@@ -18,11 +18,32 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.hibernate.annotations.Parameter;
@@ -30,6 +51,8 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.gson.annotations.JsonAdapter;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -39,6 +62,7 @@ import fr.cnes.regards.framework.jpa.validator.PastOrNow;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -46,7 +70,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Base class for all entities(on a REGARDS point of view)
- *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
  */
@@ -57,6 +80,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @DiscriminatorColumn(name = "dtype", length = 10)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
+
     /**
      * Information Package ID for REST request
      */
@@ -142,6 +166,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Valid
     protected Set<AbstractAttribute<?>> properties = new HashSet<>();
 
+    // To perform quick access to attribute from its name
+    @Transient
+    private Map<String, AbstractAttribute<?>> propertyMap = Collections.emptyMap();
+
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @JsonAdapter(value = GeometryAdapter.class)
@@ -188,7 +216,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the id
-     * @param id
      */
     public void setId(Long id) {
         this.id = id;
@@ -203,7 +230,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the ip id
-     * @param ipId
      */
     public void setIpId(UniformResourceName ipId) {
         this.ipId = ipId;
@@ -217,16 +243,41 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         this.tags = tags;
     }
 
-    public Set<AbstractAttribute<?>> getProperties() { // NOSONAR
-        return properties;
+    public ImmutableSet<AbstractAttribute<?>> getProperties() { // NOSONAR
+        return ImmutableSet.copyOf(properties);
+    }
+
+    public void addProperty(AbstractAttribute<?> property) {
+        properties.add(property);
+        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+    }
+
+    public void removeProperty(AbstractAttribute<?> property) {
+        properties.remove(property);
+        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+    }
+
+    public AbstractAttribute<?> getProperty(String name) {
+        if (!name.contains(".")) {
+            return this.propertyMap.get(name);
+        } else {
+            ObjectAttribute fragment = (ObjectAttribute) this.propertyMap.get(name.substring(0, name.indexOf('.')));
+            String propName = name.substring(name.indexOf('.') + 1);
+            if (fragment != null) {
+                Optional<AbstractAttribute<?>> attOpt = fragment.getValue().stream()
+                        .filter(p -> p.getName().equals(propName)).findFirst();
+                return attOpt.isPresent() ? attOpt.get() : null;
+            }
+            return null;
+        }
     }
 
     /**
      * Set the properties
-     * @param attributes
      */
     public void setProperties(Set<AbstractAttribute<?>> attributes) {
         properties = attributes;
+        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
     }
 
     /**
@@ -238,7 +289,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the model
-     * @param model
      */
     public void setModel(Model model) {
         this.model = model;
@@ -253,7 +303,6 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Set the sip id
-     * @param sipId
      */
     public void setSipId(String sipId) {
         this.sipId = sipId;
