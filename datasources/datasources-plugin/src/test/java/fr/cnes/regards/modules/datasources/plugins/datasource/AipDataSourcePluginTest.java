@@ -46,6 +46,7 @@ import org.springframework.test.context.TestPropertySource;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -185,6 +186,9 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
                 Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(), "H1") > -1);
         Assert.assertTrue(
                 Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(), "H2") > -1);
+        Assert.assertNotNull(do1.getFiles());
+        Assert.assertEquals(1, do1.getFiles().size());
+        Assert.assertTrue(do1.getFiles().containsKey(DataType.RAWDATA));
 
     }
 

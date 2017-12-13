@@ -21,8 +21,11 @@ package fr.cnes.regards.modules.datasources.plugins.datasource;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,14 +36,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.amqp.IInstanceSubscriber;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPState;
 import fr.cnes.regards.modules.storage.domain.AipDataFiles;
+import fr.cnes.regards.modules.storage.domain.DataFileDto;
 
 /**
  * @author oroussel
@@ -81,21 +87,30 @@ public class AipDataSourceConfiguration {
 
     private class AipClientProxy {
 
-/*        public ResponseEntity<PagedResources<Resource<AIP>>> retrieveAIPs(AIPState state, OffsetDateTime fromDate,
-                OffsetDateTime toDate, int page, int size) {
-            List<AIP> aips = AipDataSourcePluginTest.createAIPs(1, "tag1", "tag2");
-
-            return ResponseEntity.ok(new PagedResources<Resource<AIP>>(
-                    aips.stream().map(aip -> new Resource<AIP>(aip)).collect(Collectors.toList()),
-                    new PagedResources.PageMetadata(1, 1, 1)));
-        }*/
-
         public ResponseEntity<Page<AipDataFiles>> retrieveAipDataFiles(AIPState state, Set<String> tags,
                 OffsetDateTime fromLastUpdateDate, int page, int size) {
             List<AipDataFiles> aipDataFiles = new ArrayList<>();
 
             for (AIP aip : AipDataSourcePluginTest.createAIPs(1, "tag1", "tag2")) {
-                aipDataFiles.add(new AipDataFiles(aip));
+                Set<DataFileDto> dataFileDtos = new HashSet<>();
+                DataFileDto dto1 = new DataFileDto();
+                dto1.setAlgorithm("SHA");
+                dto1.setChecksum("Checksum");
+                dto1.setDataType(DataType.RAWDATA);
+                dto1.setFileSize(1000L);
+                dto1.setName("Name");
+                dto1.setOnline(false);
+                dto1.setMimeType(MimeType.valueOf("application/pdf"));
+                try {
+                    dto1.setUrl(URI.create("http://perdu.com").toURL());
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException(e);
+                }
+                dataFileDtos.add(dto1);
+                AipDataFiles oneAipDataFiles = new AipDataFiles(aip);
+                oneAipDataFiles.setDataFiles(dataFileDtos);
+                aipDataFiles.add(oneAipDataFiles);
+
             }
             return ResponseEntity.ok(new PageImpl<>(aipDataFiles));
         }

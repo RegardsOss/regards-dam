@@ -154,8 +154,6 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     @Override
     public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
         FeignSecurityManager.asSystem();
-//        ResponseEntity<PagedResources<Resource<AIP>>> responseEntity = aipClient
-//                .retrieveAIPs(AIPState.STORED, date, null, pageable.getPageNumber(), pageable.getPageSize());
         ResponseEntity<Page<AipDataFiles>> responseEntity = aipClient
                 .retrieveAipDataFiles(AIPState.STORED, Collections.singleton(this.model.getName()), date,
                                       pageable.getPageNumber(), pageable.getPageSize());
