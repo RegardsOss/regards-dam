@@ -151,7 +151,7 @@ public class IngesterGeometryServiceIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_VIEW)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
                               adapter.toJson(dataSourceModelMapping))
                 .getParameters();
@@ -167,8 +167,8 @@ public class IngesterGeometryServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
