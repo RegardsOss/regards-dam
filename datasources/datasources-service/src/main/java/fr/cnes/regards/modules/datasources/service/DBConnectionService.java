@@ -127,8 +127,8 @@ public class DBConnectionService implements IDBConnectionService {
                 .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, pDbConn.getDbHost())
                 .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, pDbConn.getDbPort())
                 .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, pDbConn.getDbName())
-                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, pDbConn.getMaxPoolSize().toString())
-                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, pDbConn.getMinPoolSize().toString());
+                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, pDbConn.getMaxPoolSize())
+                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, pDbConn.getMinPoolSize());
 
         return factory.getParameters();
     }
