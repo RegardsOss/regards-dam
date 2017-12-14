@@ -1,13 +1,12 @@
 package fr.cnes.regards.modules.crawler.service.ds;
 
-import java.time.LocalDate;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.time.LocalDate;
 
 /**
  * External Datasource data.<br/>
@@ -16,7 +15,7 @@ import javax.persistence.Table;
  * @author oroussel
  */
 @Entity
-@Table(name = "T_DATA")
+@Table(name = "t_data")
 public class ExternalData {
 
     @Id

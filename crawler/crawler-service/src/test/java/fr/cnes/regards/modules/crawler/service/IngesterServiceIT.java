@@ -18,31 +18,46 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
@@ -59,6 +74,7 @@ import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.AipDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -71,25 +87,30 @@ import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.storage.client.IAipClient;
+import fr.cnes.regards.modules.storage.domain.AIP;
+import fr.cnes.regards.modules.storage.domain.AIPBuilder;
+import fr.cnes.regards.modules.storage.domain.AipDataFiles;
+import fr.cnes.regards.modules.storage.domain.DataFileDto;
 
-@Ignore("orouseel should check it i don't understand what's happenning and i don't have the time to check")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-public class IngesterServiceIT {
+public class IngesterServiceIT extends AbstractRegardsServiceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    private static final String TENANT = "INGEST";
+    //    private static final String TENANT = "INGEST";
+    private static final String TENANT = DEFAULT_TENANT;
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
-    private static final String T_DATA_1 = "t_data";
+    private static final String T_DATA_1 = "projectdb.t_data";
 
-    private static final String T_DATA_2 = "t_data_2";
+    private static final String T_DATA_2 = "projectdb.t_data_2";
 
-    private static final String T_DATA_3 = "t_data_3";
+    private static final String T_DATA_3 = "projectdb.t_data_3";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -125,6 +146,8 @@ public class IngesterServiceIT {
     private PluginConfiguration dataSourcePluginConf2;
 
     private PluginConfiguration dataSourcePluginConf3;
+
+    private PluginConfiguration dataSourcePluginConf4;
 
     private PluginConfiguration dBConnectionConf;
 
@@ -173,14 +196,16 @@ public class IngesterServiceIT {
     @Autowired
     private IEsRepository esRepository;
 
+    @Autowired
+    private IAipClient aipClient;
+
     private PluginConfiguration getPostgresDataSource1(final PluginConfiguration pluginConf) {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -190,10 +215,9 @@ public class IngesterServiceIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_2)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -203,13 +227,22 @@ public class IngesterServiceIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_3)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "10")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 10)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
-                .getParameters();
+                              adapter.toJson(dataSourceModelMapping)).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+    }
+
+    private PluginConfiguration getAipDataSource() {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter(AipDataSourcePlugin.MODEL_NAME_PARAM, "model_1")
+                .addParameter(AipDataSourcePlugin.REFRESH_RATE, 10)
+                .addParameter(AipDataSourcePlugin.BINDING_MAP, createBindingMap()).getParameters();
+
+        return PluginUtils
+                .getPluginConfiguration(parameters, AipDataSourcePlugin.class, Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     private PluginConfiguration getPostgresConnectionConfiguration() {
@@ -219,8 +252,8 @@ public class IngesterServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -232,9 +265,17 @@ public class IngesterServiceIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                "date"));
+                                                  "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+    }
+
+    /**
+     * No binding with dynamic values, only mandatory ones
+     */
+    private Map<String, String> createBindingMap() {
+        Map<String, String> map = new HashMap<>();
+        return map;
     }
 
     @Before
@@ -302,6 +343,56 @@ public class IngesterServiceIT {
 
         dataSourcePluginConf3 = getPostgresDataSource3(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf3);
+
+        dataSourcePluginConf4 = getAipDataSource();
+        pluginService.savePluginConfiguration(dataSourcePluginConf4);
+
+
+    }
+
+    private List<AipDataFiles> retrieveDataFiles() {
+        List<AipDataFiles> aipDataFiles = new ArrayList<>();
+
+        for (AIP aip : createAIPs(1, "tag1", "tag2")) {
+            Set<DataFileDto> dataFileDtos = new HashSet<>();
+            DataFileDto dto1 = new DataFileDto();
+            dto1.setAlgorithm("SHA");
+            dto1.setChecksum("Checksum");
+            dto1.setDataType(DataType.RAWDATA);
+            dto1.setFileSize(1000L);
+            dto1.setName("Name");
+            dto1.setOnline(false);
+            dto1.setMimeType(MimeType.valueOf("application/pdf"));
+            try {
+                dto1.setUrl(URI.create("http://perdu.com").toURL());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            dataFileDtos.add(dto1);
+            AipDataFiles oneAipDataFiles = new AipDataFiles(aip);
+            oneAipDataFiles.setDataFiles(dataFileDtos);
+            aipDataFiles.add(oneAipDataFiles);
+
+        }
+        return aipDataFiles;
+    }
+
+    private static List<AIP> createAIPs(int count, String... tags) {
+        List<AIP> aips = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            UniformResourceName id = new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, TENANT,
+                                                             UUID.randomUUID(), 1);
+            AIPBuilder builder = new AIPBuilder(id, "sipId" + i, EntityType.DATA);
+            builder.addTags(tags);
+
+            builder.addDescriptiveInformation("label", "libellé du data object " + i);
+            builder.addDescriptiveInformation("START_DATE", OffsetDateTime.now());
+            builder.addDescriptiveInformation("ALT_MAX", 1500 + i);
+            builder.addDescriptiveInformation("HISTORY", new String[] { "H1", "H2", "H3" });
+            builder.addDescriptiveInformation("POUET", "POUET");
+            aips.add(builder.build());
+        }
+        return aips;
     }
 
     @After
@@ -318,6 +409,9 @@ public class IngesterServiceIT {
         if (dBConnectionConf != null) {
             Utils.execute(pluginService::deletePluginConfiguration, dBConnectionConf.getId());
         }
+        if (dataSourcePluginConf4 != null) {
+            Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf4.getId());
+        }
 
         if (datasetModel != null) {
             Utils.execute(modelService::deleteModel, datasetModel.getId());
@@ -330,6 +424,9 @@ public class IngesterServiceIT {
 
     @Test
     public void test() throws InterruptedException {
+        Mockito.when(aipClient.retrieveAipDataFiles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(),
+                                                    Mockito.anyInt()))
+                .thenReturn(ResponseEntity.ok(new PageImpl<>(Collections.emptyList())));
         // Initial Ingestion with no value from datasources
         ingesterService.manage();
 
@@ -358,7 +455,7 @@ public class IngesterServiceIT {
         extData3Repos.save(data3_0);
 
         // ExternalData2 is from a datasource that has a refresh rate of 1 s
-        // ExternalData3 is from a datasource that has a refresh rate of 10 s
+        // ExternalData3 is from a datasource that has a refresh rate of 10 s (so does AipDataSourcePlugin)
         Thread.sleep(1_000);
         ingesterService.manage();
         dsIngestions = dsIngestionRepos.findAll();

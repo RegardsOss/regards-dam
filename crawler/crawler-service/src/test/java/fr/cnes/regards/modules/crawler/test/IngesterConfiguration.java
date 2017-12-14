@@ -9,10 +9,12 @@ import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServi
 import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.storage.client.IAipClient;
 
 @Configuration
 @ComponentScan(basePackages = { "fr.cnes.regards.modules.crawler.service", "fr.cnes.regards.modules.indexer",
@@ -50,5 +52,15 @@ public class IngesterConfiguration {
     @Bean
     public IResourceService getResourceService() {
         return Mockito.mock(IResourceService.class);
+    }
+
+    @Bean
+    public IAipClient aipClient() {
+        return Mockito.mock(IAipClient.class);
+    }
+
+    @Bean
+    public IProjectUsersClient projectUsersClient() {
+        return Mockito.mock(IProjectUsersClient.class);
     }
 }

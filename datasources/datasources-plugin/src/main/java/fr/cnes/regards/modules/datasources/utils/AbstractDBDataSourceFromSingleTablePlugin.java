@@ -44,7 +44,6 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
  * A {@link Plugin} to discover the tables and columns of a SQL Database and to retrieve the data elements of a specific
  * table.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define the connection to the Database.
- *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
@@ -73,7 +72,10 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
      */
     private TableDescription tableDescription;
 
-    private Map<String, Column> columnsType;
+    /**
+     * Map { column name -> Column}
+     */
+    private Map<String, Column> columnTypeMap;
 
     /**
      *
@@ -86,9 +88,7 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
 
     /**
      * This method initialize the {@link SqlGenerator} used to request the database.<br>
-     *
-     * @param pTable
-     *            the table used to requests the database
+     * @param pTable the table used to requests the database
      */
     @Override
     public void initializePluginMapping(String pTable) {
@@ -109,8 +109,8 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
     }
 
     protected void initDataSourceColumns(IDBConnectionPlugin dbConnection) {
-
-        columnsType = dbConnection.getColumns(tableDescription.getName());
+        // Retrieve all data types from DatabaseMetaData
+        columnTypeMap = dbConnection.getColumns(tableDescription.getName());
 
     }
 
@@ -122,7 +122,7 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
             LOG.debug("Retrieving type for {}", colName);
             LOG.debug("Extracted type is {}", extractColumnName);
             if (extractColumnName != null) {
-                Column col = columnsType.get(extractColumnName);
+                Column col = columnTypeMap.get(extractColumnName);
                 if (col != null) {
                     LOG.debug("Column name {} mapped to {} / JAVA {} / SQL {}", extractColumnName, col.getName(),
                               col.getJavaSqlType(), col.getSqlType());
@@ -133,7 +133,7 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
             LOG.debug("******************************************************************");
         }
 
-        return columnsType.get(extractColumnName).getSqlType();
+        return columnTypeMap.get(extractColumnName).getSqlType();
     }
 
     protected String extractDataSourceColumnName(String attrDataSourceName) {
@@ -156,8 +156,6 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
     /**
      * Build the SELECT request.</br>
      * Add the key word "%last_modification_date%" in the WHERE clause.
-     * @param pPageable
-     * @param pDate
      * @return the SELECT request
      */
     protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
@@ -169,20 +167,20 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
                 // Add at the beginning of the where clause
                 int pos = selectRequest.indexOf(WHERE);
                 selectRequest = selectRequest.substring(0, pos) + WHERE
-                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + AND
-                        + selectRequest.substring(pos + WHERE.length(), selectRequest.length());
+                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + AND + selectRequest
+                        .substring(pos + WHERE.length(), selectRequest.length());
             } else if (selectRequest.contains(ORDER_BY)) {
                 // Add before the order by clause
                 int pos = selectRequest.indexOf(ORDER_BY);
                 selectRequest = selectRequest.substring(0, pos) + WHERE
-                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + SPACE
-                        + selectRequest.substring(pos, selectRequest.length());
+                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + SPACE + selectRequest
+                        .substring(pos, selectRequest.length());
             } else if (selectRequest.contains(LIMIT)) {
                 // Add before the limit clause
                 int pos = selectRequest.indexOf(LIMIT);
                 selectRequest = selectRequest.substring(0, pos) + WHERE
-                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + SPACE
-                        + selectRequest.substring(pos, selectRequest.length());
+                        + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + SPACE + selectRequest
+                        .substring(pos, selectRequest.length());
             } else {
                 // Add at the end of the request
                 StringBuffer newRequest = new StringBuffer(selectRequest);
@@ -209,8 +207,7 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
     }
 
     @Override
-    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws
-            DataSourceException {
+    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
         if (sqlGenerator == null) {
             throw new DataSourceException("sqlGenerator is null");
         }
