@@ -44,9 +44,6 @@ public final class Column {
     @GsonIgnore
     private Integer sqlType;
 
-    /**
-     *
-     */
     public Column() {
         super();
     }

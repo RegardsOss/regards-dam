@@ -221,11 +221,12 @@ public abstract class AbstractDBConnection implements IDBConnectionPlugin {
 
     /**
      * Get the columns of a {@link Table} from the database
-     * @param tableName a table of the database
+     * @param tableNameWithSchema table from database optionnally with dotted schema first (ie &lt;schema>.&lt;table_name>)
      * @return a {@link Map} of {@link Column}
      */
     @Override
-    public Map<String, Column> getColumns(String tableName) {
+    public Map<String, Column> getColumns(String tableNameWithSchema) {
+        String tableName = tableNameWithSchema.substring(tableNameWithSchema.indexOf('.') + 1);
         Map<String, Column> cols = new HashMap<>();
 
         // Get a connection

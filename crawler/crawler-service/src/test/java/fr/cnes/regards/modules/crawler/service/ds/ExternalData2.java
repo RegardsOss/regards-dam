@@ -1,7 +1,12 @@
 package fr.cnes.regards.modules.crawler.service.ds;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.time.OffsetDateTime;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -13,7 +18,7 @@ import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter
  * @author oroussel
  */
 @Entity
-@Table(name = "T_DATA_2")
+@Table(name = "t_data_2")
 public class ExternalData2 {
 
     @Id

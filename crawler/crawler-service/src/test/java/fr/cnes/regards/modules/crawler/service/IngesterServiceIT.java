@@ -28,7 +28,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +71,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 
-@Ignore("orouseel should check it i don't understand what's happenning and i don't have the time to check")
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
@@ -85,11 +83,11 @@ public class IngesterServiceIT {
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
-    private static final String T_DATA_1 = "t_data";
+    private static final String T_DATA_1 = "projectdb.t_data";
 
-    private static final String T_DATA_2 = "t_data_2";
+    private static final String T_DATA_2 = "projectdb.t_data_2";
 
-    private static final String T_DATA_3 = "t_data_3";
+    private static final String T_DATA_3 = "projectdb.t_data_3";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -177,7 +175,7 @@ public class IngesterServiceIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
                               adapter.toJson(dataSourceModelMapping))
                 .getParameters();
@@ -190,7 +188,7 @@ public class IngesterServiceIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_2)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
                               adapter.toJson(dataSourceModelMapping))
                 .getParameters();
@@ -203,7 +201,7 @@ public class IngesterServiceIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_3)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "10")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 10)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
                               adapter.toJson(dataSourceModelMapping))
                 .getParameters();
@@ -219,8 +217,8 @@ public class IngesterServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
