@@ -41,6 +41,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
+
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -101,12 +102,12 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     /**
      * Association table between json path property and its type from model
      */
-    private Map<String, AttributeType> modelMappingMap = new HashMap<>();
+    private final Map<String, AttributeType> modelMappingMap = new HashMap<>();
 
     /**
      * Ingestion refresh rate in seconds
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true,
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE_AS_STRING, optional = true,
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
@@ -220,8 +221,8 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
                 String dynamicPropertyPath = doPropertyPath.substring(doPropertyPath.indexOf('.') + 1);
                 // Property name in all cases (fragment or not)
                 String propName = dynamicPropertyPath.substring(dynamicPropertyPath.indexOf('.') + 1);
-                AbstractAttribute<?> propAtt = AttributeBuilder
-                        .forType(modelMappingMap.get(doPropertyPath), propName, value);
+                AbstractAttribute<?> propAtt = AttributeBuilder.forType(modelMappingMap.get(doPropertyPath), propName,
+                                                                        value);
                 // If it contains another '.', there is a fragment
                 if (dynamicPropertyPath.contains(".")) {
                     String fragmentName = dynamicPropertyPath.substring(0, dynamicPropertyPath.indexOf('.'));

@@ -19,10 +19,11 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+
+import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     /**
      * The connection to the database
      */
-    @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin" )
+    @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin")
     private IDBConnectionPlugin dbConnection;
 
     /**
@@ -75,7 +76,7 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     /**
      * Ingestion refresh rate in seconds
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true,
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE_AS_STRING, optional = true,
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;

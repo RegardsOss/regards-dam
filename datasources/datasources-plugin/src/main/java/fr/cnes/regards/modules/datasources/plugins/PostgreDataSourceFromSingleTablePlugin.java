@@ -19,7 +19,6 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -27,10 +26,13 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
+
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
@@ -68,8 +70,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     /**
      * The table name used to request the database
      */
-    @PluginParameter(name = TABLE_PARAM, label = "Table name",
-            description = "Database table name to be requested")
+    @PluginParameter(name = TABLE_PARAM, label = "Table name", description = "Database table name to be requested")
     private String tableName;
 
     /**
@@ -82,7 +83,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     /**
      * Ingestion refresh rate in seconds
      */
-    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE, optional = true,
+    @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE_AS_STRING, optional = true,
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;

@@ -46,7 +46,9 @@ public interface IDataSourcePlugin {
     /**
      * Ingestion refresh rate default value in seconds
      */
-    String REFRESH_RATE_DEFAULT_VALUE = "86400";
+    Integer REFRESH_RATE_DEFAULT_VALUE = 86400;
+
+    String REFRESH_RATE_DEFAULT_VALUE_AS_STRING = "86400";
 
     /**
      * The refresh rate of the data source

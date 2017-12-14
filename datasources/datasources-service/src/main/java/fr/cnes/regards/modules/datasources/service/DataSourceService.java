@@ -168,10 +168,10 @@ public class DataSourceService implements IDataSourceService {
         factory.addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM,
                                        dbConnectionService
                                                .getDBConnection(dataSource.getPluginConfigurationConnectionId()))
-                .addParameter(IDBDataSourcePlugin.MODEL_PARAM, adapter.toJson(dataSource.getMapping()))
+                .addParameter(IDBDataSourcePlugin.MODEL_PARAM, dataSource.getMapping())
                 .addParameter(IDataSourcePlugin.REFRESH_RATE,
                               (dataSource.getRefreshRate() == null) ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE
-                                      : dataSource.getRefreshRate().toString());
+                                      : dataSource.getRefreshRate());
 
         return factory;
     }
@@ -286,7 +286,8 @@ public class DataSourceService implements IDataSourceService {
                 pluginParam.setValue(dataSource.getTableName());
                 break;
             case IDataSourcePlugin.REFRESH_RATE:
-                pluginParam.setValue(dataSource.getRefreshRate() == null ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE
+                pluginParam.setValue(dataSource.getRefreshRate() == null
+                        ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE_AS_STRING
                         : dataSource.getRefreshRate().toString());
                 break;
             default:
@@ -326,8 +327,8 @@ public class DataSourceService implements IDataSourceService {
         dataSource.setPluginConfigurationId(pluginConf.getId());
         dataSource.setLabel(pluginConf.getLabel());
         dataSource.setPluginClassName(pluginConf.getPluginClassName());
-        dataSource.setFromClause(pluginConf.getParameterValue(IDBDataSourcePlugin.FROM_CLAUSE));
-        dataSource.setTableName(pluginConf.getParameterValue(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM));
+        dataSource.setFromClause(pluginConf.getStripParameterValue(IDBDataSourcePlugin.FROM_CLAUSE));
+        dataSource.setTableName(pluginConf.getStripParameterValue(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM));
         dataSource.setRefreshRate(Integer.parseInt(pluginConf.getParameterValue(IDataSourcePlugin.REFRESH_RATE)));
 
         String mapping = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_PARAM);
