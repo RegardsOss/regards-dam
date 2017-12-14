@@ -270,25 +270,26 @@ public class DataSourceService implements IDataSourceService {
      */
     private PluginParameter mergeParameters(PluginParameter pluginParam, DataSource dataSource) {
         // Update the parameter's value, because all parameters are not required for each DataSource
-        pluginParam.setValue("");
+        PluginParametersFactory.updateParameter(pluginParam, null);
 
         switch (pluginParam.getName()) {
             case IDBDataSourcePlugin.CONNECTION_PARAM:
                 mergePluginConfigurationParameter(pluginParam, dataSource);
                 break;
             case IDBDataSourcePlugin.MODEL_PARAM:
-                pluginParam.setValue(adapter.toJson(dataSource.getMapping()));
+                PluginParametersFactory.updateParameter(pluginParam, dataSource.getMapping());
                 break;
             case IDBDataSourcePlugin.FROM_CLAUSE:
-                pluginParam.setValue(dataSource.getFromClause());
+                PluginParametersFactory.updateParameter(pluginParam, dataSource.getFromClause());
                 break;
             case IDBDataSourceFromSingleTablePlugin.TABLE_PARAM:
-                pluginParam.setValue(dataSource.getTableName());
+                PluginParametersFactory.updateParameter(pluginParam, dataSource.getTableName());
                 break;
             case IDataSourcePlugin.REFRESH_RATE:
-                pluginParam.setValue(dataSource.getRefreshRate() == null
-                        ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE_AS_STRING
-                        : dataSource.getRefreshRate().toString());
+                PluginParametersFactory.updateParameter(pluginParam,
+                                                        dataSource.getRefreshRate() == null
+                                                                ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE_AS_STRING
+                                                                : dataSource.getRefreshRate().toString());
                 break;
             default:
                 break;
