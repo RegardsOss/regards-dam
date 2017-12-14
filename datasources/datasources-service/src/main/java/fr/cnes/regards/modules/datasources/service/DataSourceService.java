@@ -288,8 +288,8 @@ public class DataSourceService implements IDataSourceService {
             case IDataSourcePlugin.REFRESH_RATE:
                 PluginParametersFactory.updateParameter(pluginParam,
                                                         dataSource.getRefreshRate() == null
-                                                                ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE_AS_STRING
-                                                                : dataSource.getRefreshRate().toString());
+                                                                ? IDataSourcePlugin.REFRESH_RATE_DEFAULT_VALUE
+                                                                : dataSource.getRefreshRate());
                 break;
             default:
                 break;
