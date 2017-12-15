@@ -18,11 +18,11 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.Valid;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,17 +49,12 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- *
  * REST interface for managing data {@link Model}
- *
  * @author Christophe Mertz
- *
  */
 @RestController
-// CHECKSTYLE:OFF
 @ModuleInfo(name = "dbconnection", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
         documentation = "http://test")
-// CHECKSTYLE:ON
 @RequestMapping(DBConnectionController.TYPE_MAPPING)
 public class DBConnectionController implements IResourceController<PluginConfiguration> {
 
@@ -71,21 +66,17 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * DBConnectionService attribute service
      */
-    private final IDBConnectionService dbConnectionService;
+    @Autowired
+    private IDBConnectionService dbConnectionService;
 
     /**
      * Resource service
      */
-    private final IResourceService resourceService;
-
-    public DBConnectionController(IDBConnectionService pDBConnectionService, IResourceService pResourceService) {
-        this.dbConnectionService = pDBConnectionService;
-        this.resourceService = pResourceService;
-    }
+    @Autowired
+    private IResourceService resourceService;
 
     /**
      * Retrieve all {@link PluginConfiguration} used by the plugin type {@link IDBConnectionPlugin}
-     *
      * @return a list of {@link PluginConfiguration}
      */
     @ResourceAccess(description = "List all plugin's configurations defined for the plugin type IDBConnectionPlugin")
@@ -96,12 +87,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Create a {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
-     *
-     * @param pDbConnection
-     *            the database connection used to create the {@link PluginConfiguration}
+     * @param pDbConnection the database connection used to create the {@link PluginConfiguration}
      * @return the created {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if problem occurs during plugin configuration creation
+     * @throws ModuleException if problem occurs during plugin configuration creation
      */
     @ResourceAccess(description = "Create a plugin configuration for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.POST)
@@ -112,12 +100,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get a {@link PluginConfiguration}
-     *
-     * @param pConnectionId
-     *            a {@link PluginConfiguration} identifier
+     * @param pConnectionId a {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if plugin configuration cannot be retrieved
+     * @throws ModuleException if plugin configuration cannot be retrieved
      */
     @ResourceAccess(description = "Get a plugin configuration for a plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}")
@@ -128,14 +113,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
-     *
-     * @param pConnectionId
-     *            a {@link PluginConfiguration} identifier
-     * @param pDbConnection
-     *            the {@link DBConnection} to update
+     * @param pConnectionId a {@link PluginConfiguration} identifier
+     * @param pDbConnection the {@link DBConnection} to update
      * @return updated {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if plugin configuration cannot be updated
+     * @throws ModuleException if plugin configuration cannot be updated
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pConnectionId}")
@@ -143,19 +124,16 @@ public class DBConnectionController implements IResourceController<PluginConfigu
             @Valid @RequestBody DBConnection pDbConnection) throws ModuleException {
         if (!pConnectionId.equals(pDbConnection.getPluginConfigurationId())) {
             throw new EntityInconsistentIdentifierException(pConnectionId, pDbConnection.getPluginConfigurationId(),
-                    PluginConfiguration.class);
+                                                            PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dbConnectionService.updateDBConnection(pDbConnection)));
     }
 
     /**
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDBConnectionPlugin}
-     *
-     * @param pConnectionId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId {@link PluginConfiguration} identifier
      * @return nothing
-     * @throws ModuleException
-     *             if plugin configuration cannot be deleted
+     * @throws ModuleException if plugin configuration cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pConnectionId}")
@@ -166,12 +144,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Test a {@link PluginConfiguration} defined for the plugin type {@link IDBConnectionPlugin}
-     *
-     * @param pConnectionId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId {@link PluginConfiguration} identifier
      * @return nothing
-     * @throws ModuleException
-     *             if problem occurs during test of the connection
+     * @throws ModuleException if problem occurs during test of the connection
      */
     @ResourceAccess(description = "Test the connection to the database")
     @RequestMapping(method = RequestMethod.POST, value = "/{pConnectionId}")
@@ -187,12 +162,9 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get the database's tables
-     *
-     * @param pConnectionId
-     *            {@link PluginConfiguration} identifier
+     * @param pConnectionId {@link PluginConfiguration} identifier
      * @return a {@link Map} that contains the database's tables
-     * @throws ModuleException
-     *             if problem occurs during retrieve the database's tables
+     * @throws ModuleException if problem occurs during retrieve the database's tables
      */
     @ResourceAccess(description = "Get the tables of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables")
@@ -203,14 +175,10 @@ public class DBConnectionController implements IResourceController<PluginConfigu
 
     /**
      * Get the column of a table
-     *
-     * @param pConnectionId
-     *            {@link PluginConfiguration} identifier
-     * @param pTableName
-     *            a database table name
+     * @param pConnectionId {@link PluginConfiguration} identifier
+     * @param pTableName a database table name
      * @return a {@link Map} that contains the columns of a table
-     * @throws ModuleException
-     *             if problem occurs during retrieve the columns of a table
+     * @throws ModuleException if problem occurs during retrieve the columns of a table
      */
     @ResourceAccess(description = "Get the columns of a specific table of the database")
     @RequestMapping(method = RequestMethod.GET, value = "/{pConnectionId}/tables/{pTableName}/columns")

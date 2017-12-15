@@ -18,10 +18,10 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
+import javax.validation.Valid;
 import java.util.List;
 
-import javax.validation.Valid;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,17 +46,12 @@ import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- *
  * REST interface for managing data {@link Model}
- *
  * @author Christophe Mertz
- *
  */
 @RestController
-// CHECKSTYLE:OFF
 @ModuleInfo(name = "datasource", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
         documentation = "http://test")
-// CHECKSTYLE:ON
 @RequestMapping(DataSourceController.TYPE_MAPPING)
 public class DataSourceController implements IResourceController<DataSource> {
 
@@ -68,21 +63,17 @@ public class DataSourceController implements IResourceController<DataSource> {
     /**
      * DBConnectionService attribute service
      */
-    private final IDataSourceService dataSourceService;
+    @Autowired
+    private IDataSourceService dataSourceService;
 
     /**
      * Resource service
      */
-    private final IResourceService resourceService;
-
-    public DataSourceController(IDataSourceService pDBConnectionService, IResourceService pResourceService) {
-        this.dataSourceService = pDBConnectionService;
-        this.resourceService = pResourceService;
-    }
+    @Autowired
+    private IResourceService resourceService;
 
     /**
      * Retrieve all {@link DataSource}.
-     *
      * @return a list of {@link PluginConfiguration}
      */
     @ResourceAccess(description = "List all the datasources defined for the plugin type IDataSourcePlugin")
@@ -94,12 +85,9 @@ public class DataSourceController implements IResourceController<DataSource> {
     /**
      * Create a {@link DataSource}.</br>
      * A {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin} is created.
-     *
-     * @param pDatasource
-     *            the DataSource used to create the {@link PluginConfiguration}
+     * @param pDatasource the DataSource used to create the {@link PluginConfiguration}
      * @return the created {@link DataSource}
-     * @throws ModuleException
-     *             if problem occurs during plugin configuration creation
+     * @throws ModuleException if problem occurs during plugin configuration creation
      */
     @ResourceAccess(description = "Create a DataSource")
     @RequestMapping(method = RequestMethod.POST)
@@ -110,12 +98,9 @@ public class DataSourceController implements IResourceController<DataSource> {
 
     /**
      * Get a {@link DataSource}
-     *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pPluginConfId {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if plugin configuration cannot be retrieved
+     * @throws ModuleException if plugin configuration cannot be retrieved
      */
     @ResourceAccess(
             description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
@@ -126,14 +111,10 @@ public class DataSourceController implements IResourceController<DataSource> {
 
     /**
      * Allow to update {@link PluginConfiguration} for the plugin type {@link IDataSourcePlugin}
-     *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
-     * @param pDataSource
-     *            {@link DataSource} to update
+     * @param pPluginConfId {@link PluginConfiguration} identifier
+     * @param pDataSource {@link DataSource} to update
      * @return updated {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if plugin configuration cannot be updated
+     * @throws ModuleException if plugin configuration cannot be updated
      */
     @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pPluginConfId}")
@@ -141,19 +122,16 @@ public class DataSourceController implements IResourceController<DataSource> {
             @Valid @RequestBody DataSource pDataSource) throws ModuleException {
         if (!pPluginConfId.equals(pDataSource.getPluginConfigurationId())) {
             throw new EntityInconsistentIdentifierException(pPluginConfId, pDataSource.getPluginConfigurationId(),
-                    PluginConfiguration.class);
+                                                            PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dataSourceService.updateDataSource(pDataSource)));
     }
 
     /**
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDataSourcePlugin}
-     *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pPluginConfId {@link PluginConfiguration} identifier
      * @return nothing
-     * @throws ModuleException
-     *             if {@link PluginConfiguration} cannot be deleted
+     * @throws ModuleException if {@link PluginConfiguration} cannot be deleted
      */
     @ResourceAccess(description = "Delete a plugin configuration defined for the plugin type IDBConnectionPlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pPluginConfId}")

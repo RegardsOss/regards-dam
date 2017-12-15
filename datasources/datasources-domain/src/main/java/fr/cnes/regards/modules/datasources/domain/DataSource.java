@@ -40,7 +40,7 @@ public class DataSource {
     private Long pluginConfigurationConnectionId;
 
     /**
-     * The plugin class name that implements the {@link  IDataSourcePlugin} interface
+     * The plugin class name that implements the IDataSourcePlugin interface
      */
     @NotNull
     private String pluginClassName;
