@@ -145,25 +145,25 @@ public class DBConnectionService implements IDBConnectionService {
     private PluginParameter mergeParameters(PluginParameter pPlgParam, DBConnection pDbConn) {
         switch (pPlgParam.getName()) {
             case IDBConnectionPlugin.USER_PARAM:
-                pPlgParam.setValue(pDbConn.getUser());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getUser());
                 break;
             case IDBConnectionPlugin.PASSWORD_PARAM:
-                pPlgParam.setValue(pDbConn.getPassword());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getPassword());
                 break;
             case IDBConnectionPlugin.DB_HOST_PARAM:
-                pPlgParam.setValue(pDbConn.getDbHost());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getDbHost());
                 break;
             case IDBConnectionPlugin.DB_PORT_PARAM:
-                pPlgParam.setValue(pDbConn.getDbPort());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getDbPort());
                 break;
             case IDBConnectionPlugin.DB_NAME_PARAM:
-                pPlgParam.setValue(pDbConn.getDbName());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getDbName());
                 break;
             case IDBConnectionPlugin.MIN_POOLSIZE_PARAM:
-                pPlgParam.setValue(pDbConn.getMinPoolSize().toString());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getMinPoolSize());
                 break;
             case IDBConnectionPlugin.MAX_POOLSIZE_PARAM:
-                pPlgParam.setValue(pDbConn.getMaxPoolSize().toString());
+                PluginParametersFactory.updateParameter(pPlgParam, pDbConn.getMaxPoolSize());
                 break;
             default:
                 break;

@@ -36,7 +36,7 @@ import org.xml.sax.SAXException;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.plugin.CountPlugin;
 import fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin;
@@ -198,10 +198,9 @@ public final class XmlImportHelper {
                     pluginClass = LongSumComputePlugin.class;
                     break;
                 default:
-                    String message = String.format(
-                                                   "Only LONG and INTEGER attribute types are supported for sum_compute plugin"
-                                                           + " (attribute %s with type %s)",
-                                                   xmlAtt.getName(), xmlAtt.getType());
+                    String message = String
+                            .format("Only LONG and INTEGER attribute types are supported for sum_compute plugin"
+                                    + " (attribute %s with type %s)", xmlAtt.getName(), xmlAtt.getType());
                     LOGGER.error(message);
                     throw new ImportException(message);
             }
@@ -247,21 +246,19 @@ public final class XmlImportHelper {
                     .createPluginMetaData(pluginClass, IComputedAttribute.class.getPackage().getName());
             PluginConfiguration compConf = new PluginConfiguration(plgMetaData, xmlAtt.getComputation().getLabel());
             // Add plugin parameters (from attribute and associated fragment)
-            List<PluginParameter> parameters = new ArrayList<>();
+            PluginParametersFactory ppf = PluginParametersFactory.build();
             // All compute plugins need result parameter(s)
-            parameters.add(new PluginParameter("resultAttributeName", modelAtt.getAttribute().getName()));
+            ppf.addParameter("resultAttributeName", modelAtt.getAttribute().getName());
             if (!modelAtt.getAttribute().getFragment().isDefaultFragment()) {
-                parameters.add(new PluginParameter("resultAttributeFragmentName",
-                        modelAtt.getAttribute().getFragment().getName()));
+                ppf.addParameter("resultAttributeFragmentName", modelAtt.getAttribute().getFragment().getName());
             }
             // Some plugins need parameters (in this case, xmlParamPluginType contains them as attributes)
             if (xmlParamPluginType != null) {
-                parameters.add(new PluginParameter("parameterAttributeName",
-                        xmlParamPluginType.getParameterAttributeName()));
-                parameters.add(new PluginParameter("parameterAttributeFragmentName",
-                        xmlParamPluginType.getParameterAttributeFragmentName()));
+                ppf.addParameter("parameterAttributeName", xmlParamPluginType.getParameterAttributeName());
+                ppf.addParameter("parameterAttributeFragmentName",
+                                 xmlParamPluginType.getParameterAttributeFragmentName());
             }
-            compConf.setParameters(parameters);
+            compConf.setParameters(ppf.getParameters());
             modelAtt.setComputationConf(compConf);
             // And create/update PluginConfiguration
             plgConfigurations.add(compConf);
