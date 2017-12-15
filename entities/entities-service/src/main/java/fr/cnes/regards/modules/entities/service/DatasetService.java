@@ -63,7 +63,6 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
  * Specific EntityService for Datasets
- *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
@@ -102,9 +101,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     /**
      * Control the DataSource associated to the {@link Dataset} in parameter if needed.</br>
      * If any DataSource is associated, sets the default DataSource.
-     *
-     * @param dataset
-     * @throws EntityNotFoundException
      */
     private Dataset checkDataSource(final Dataset dataset) throws EntityNotFoundException {
         if (dataset.getDataSource() != null) {
@@ -118,11 +114,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     /**
      * Check that the sub-setting criterion setting on a Dataset are coherent with the {@link Model} associated to the
      * {@link DataSource}. Should always be closed after checkDataSource, so the dataModel is properly set.
-     *
-     * @param dataset
-     *            the {@link Dataset} to check
+     * @param dataset the {@link Dataset} to check
      * @return the modified {@link Dataset}
-     * @throws ModuleException
      */
     private Dataset checkSubsettingCriterion(final Dataset dataset) throws ModuleException {
         // getUserSubsettingClause() cannot be null
