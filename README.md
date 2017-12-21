@@ -4,7 +4,7 @@ This is the DATA MANAGEMENT microservice repository.
 
 REGARDS is still under heavy development. Operational version V1.0.0 is planed for 2018.
 
-## Build requirement
+## Build requirements
 
 Build relies on :
 * Maven 3+
