@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -155,7 +156,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     @Override
     public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
         FeignSecurityManager.asSystem();
-        ResponseEntity<Page<AipDataFiles>> responseEntity = aipClient
+        ResponseEntity<PagedResources<AipDataFiles>> responseEntity = aipClient
                 .retrieveAipDataFiles(AIPState.STORED, Collections.singleton(this.model.getName()), date,
                                       pageable.getPageNumber(), pageable.getPageSize());
         FeignSecurityManager.reset();
@@ -171,7 +172,6 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
                 }
             }
             return new PageImpl<>(list, pageable, list.size());
-
         } else {
             throw new DataSourceException(
                     "Error while calling storage client (HTTP STATUS : " + responseEntity.getStatusCode());
