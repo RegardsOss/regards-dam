@@ -38,45 +38,45 @@ public abstract class AbstractIntervalAttributeTypeAdapter<T extends Comparable<
 {
 
     @Override
-    public void write(JsonWriter pOut, A pValue) throws IOException {
-        pOut.beginObject();
-        pOut.name(IMapping.NAME);
-        pOut.value(pValue.getName());
-        pOut.name(IMapping.VALUE);
-        pOut.beginObject();
-        pOut.name(IMapping.RANGE_LOWER_BOUND);
-        this.writeValueLowerBound(pOut, pValue);
-        pOut.name(IMapping.RANGE_UPPER_BOUND);
-        this.writeValueUpperBound(pOut, pValue);
-        pOut.endObject();
-        pOut.endObject();
+    public void write(JsonWriter out, A value) throws IOException {
+        out.beginObject();
+        out.name(IMapping.NAME);
+        out.value(value.getName());
+        out.name(IMapping.VALUE);
+        out.beginObject();
+        out.name(IMapping.RANGE_LOWER_BOUND);
+        this.writeValueLowerBound(out, value);
+        out.name(IMapping.RANGE_UPPER_BOUND);
+        this.writeValueUpperBound(out, value);
+        out.endObject();
+        out.endObject();
     }
 
-    protected abstract void writeValueLowerBound(JsonWriter pOut, AbstractAttribute<Range<T>> pValue)
+    protected abstract void writeValueLowerBound(JsonWriter out, AbstractAttribute<Range<T>> value)
             throws IOException;
 
-    protected abstract void writeValueUpperBound(JsonWriter pOut, AbstractAttribute<Range<T>> pValue)
+    protected abstract void writeValueUpperBound(JsonWriter out, AbstractAttribute<Range<T>> value)
             throws IOException;
 
     @Override
-    public A read(JsonReader pIn) throws IOException {
+    public A read(JsonReader in) throws IOException {
         // read "{"
-        pIn.beginObject();
+        in.beginObject();
         // read "name"
-        pIn.nextName();
+        in.nextName();
         // read "value"
-        String name = pIn.nextString();
+        String name = in.nextString();
         // read "value"
-        pIn.nextName();
+        in.nextName();
         // read "{"
-        pIn.beginObject();
-        Range<T> range = this.readRangeFromInnerJsonObject(pIn);
-        pIn.endObject();
-        pIn.endObject();
+        in.beginObject();
+        Range<T> range = this.readRangeFromInnerJsonObject(in);
+        in.endObject();
+        in.endObject();
         return this.createRangeAttribute(name, range);
     }
 
-    protected abstract Range<T> readRangeFromInnerJsonObject(JsonReader pIn) throws IOException;
+    protected abstract Range<T> readRangeFromInnerJsonObject(JsonReader in) throws IOException;
 
-    protected abstract A createRangeAttribute(String pName, Range<T> pRange);
+    protected abstract A createRangeAttribute(String name, Range<T> range);
 }

@@ -40,14 +40,11 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
-import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
- *
  * Unit testing of {@link DBConnectionService}.
- *
  * @author Christophe Mertz
  */
 public class DBConnectionServiceTest {
@@ -97,11 +94,11 @@ public class DBConnectionServiceTest {
         dbConnectionServiceMock = new DBConnectionService(pluginServiceMock);
 
         // create PluginConfiguration
-        List<PluginParameter> parameters = initializePluginParameter();
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
-                parameters));
-        plgConfs.add(new PluginConfiguration(this.initializePluginMetaDataPostGre("plugin-id-2"),
-                "second configuration", parameters, 5));
+        List<PluginParameter> parameters = initializePluginParameters();
+        plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
+                                             parameters));
+        plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "second configuration",
+                                             parameters, 5));
     }
 
     @Test
@@ -118,16 +115,17 @@ public class DBConnectionServiceTest {
     @Requirement("REGARDS_DSL_DAM_SRC_080")
     @Purpose("Test the creation of a connection by setting the connection's parameters including the pool size")
     public void createConnection() throws ModuleException {
-        DBConnection dbConnection = new DBConnection();
+        PluginConfiguration dbConnection = new PluginConfiguration();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
         dbConnection.setPluginClassName(className);
-        dbConnection.setUser(dbUser);
-        dbConnection.setPassword(dbPassword);
-        dbConnection.setDbHost(dbHost);
-        dbConnection.setDbPort(dbPort);
-        dbConnection.setDbName(dbName);
-        dbConnection.setMinPoolSize(1);
-        dbConnection.setMaxPoolSize(10);
+        dbConnection.setParameters(initializePluginParameters());
+        //        dbConnection.setUser(dbUser);
+        //        dbConnection.setPassword(dbPassword);
+        //        dbConnection.setDbHost(dbHost);
+        //        dbConnection.setDbPort(dbPort);
+        //        dbConnection.setDbName(dbName);
+        //        dbConnection.setMinPoolSize(1);
+        //        dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
                 .thenReturn(initializePluginMetaDataPostGre("plugin-id-2"));
@@ -138,16 +136,17 @@ public class DBConnectionServiceTest {
     @SuppressWarnings("unchecked")
     @Test(expected = EntityInvalidException.class)
     public void createConnectionUnknownPluginClassName() throws ModuleException {
-        DBConnection dbConnection = new DBConnection();
+        PluginConfiguration dbConnection = new PluginConfiguration();
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
         dbConnection.setPluginClassName(className);
-        dbConnection.setUser(dbUser);
-        dbConnection.setPassword(dbPassword);
-        dbConnection.setDbHost(dbHost);
-        dbConnection.setDbPort(dbPort);
-        dbConnection.setDbName(dbName);
-        dbConnection.setMinPoolSize(1);
-        dbConnection.setMaxPoolSize(10);
+        dbConnection.setParameters(initializePluginParameters());
+        //        dbConnection.setUser(dbUser);
+        //        dbConnection.setPassword(dbPassword);
+        //        dbConnection.setDbHost(dbHost);
+        //        dbConnection.setDbPort(dbPort);
+        //        dbConnection.setDbName(dbName);
+        //        dbConnection.setMinPoolSize(1);
+        //        dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection failed");
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
                 .thenThrow(EntityInvalidException.class);
@@ -157,7 +156,7 @@ public class DBConnectionServiceTest {
 
     private PluginMetaData initializePluginMetaDataPostGre(String pluginId) {
         final PluginMetaData pluginMetaData = new PluginMetaData();
-        pluginMetaData.setPluginClassName(DefaultPostgreConnectionPlugin.class.getCanonicalName());
+        pluginMetaData.setPluginClassName(DefaultPostgreConnectionPlugin.class.getName());
         pluginMetaData.setPluginId(pluginId);
         pluginMetaData.setAuthor("CS-SI");
         pluginMetaData.setVersion("1.1");
@@ -165,7 +164,7 @@ public class DBConnectionServiceTest {
         return pluginMetaData;
     }
 
-    private List<PluginParameter> initializePluginParameter() {
+    private List<PluginParameter> initializePluginParameters() {
         return PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
                 .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
                 .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
@@ -180,8 +179,9 @@ public class DBConnectionServiceTest {
 
         return Arrays
                 .asList(PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE, false),
-                        PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
-                                                   ParamType.PLUGIN, false));
+                        PluginParameterType
+                                .create("connection", "connection", null, IDBConnectionPlugin.class, ParamType.PLUGIN,
+                                        false));
     }
 
 }

@@ -19,14 +19,19 @@
 package fr.cnes.regards.modules.datasources.domain;
 
 import javax.validation.constraints.NotNull;
-
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import java.util.HashMap;
 
 /**
+ * Dto for datasource plugin (for refreshRate and specific parameters as mapping, ...) and pluginConfiguration (for
+ * label, pluginClassName, ...).<br>
+ * The intent of this class is to ease datasource AND plugin configuration creation in one step by frontend.
  * @author Sylvain Vissiere-Guerinet
  * @author Christophe Mertz
+ * @author oroussel
+ * @deprecated Directly use PluginConfiguration instead of this class
  */
-public class DataSource {
+@Deprecated
+public class DataSource extends HashMap<String, Object> {
 
     /**
      * The associated {@link PluginConfiguration} to the {@link DataSource}
@@ -45,6 +50,9 @@ public class DataSource {
     @NotNull
     private String pluginClassName;
 
+    /**
+     * Plugin configuration label
+     */
     @NotNull
     private String label;
 

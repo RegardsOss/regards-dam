@@ -27,7 +27,9 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 
 /**
  * @author Christophe Mertz
+ * @deprecated Directly use PluginConfiguration instead of this class
  */
+@Deprecated
 public class DBConnection {
 
     /**
