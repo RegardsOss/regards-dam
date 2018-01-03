@@ -26,8 +26,7 @@ import com.google.common.base.Strings;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
-import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapter;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -37,7 +36,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  * @author Christophe Mertz
  *
  */
-@GsonTypeAdapter(adapted = DataSourceModelMapping.class)
+@GsonTypeAdapterBean(adapted = DataSourceModelMapping.class)
 public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
     /**

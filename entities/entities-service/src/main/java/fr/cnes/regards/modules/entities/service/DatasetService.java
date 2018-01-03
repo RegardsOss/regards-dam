@@ -43,7 +43,6 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
@@ -147,7 +146,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     /**
      * Check that the sub-setting criterion setting on a Dataset are coherent with the {@link Model} associated to the
-     * {@link DataSource}. Should always be closed after checkDataSource, so the dataModel is properly set.
+     * data source. Should always be closed after checkDataSource, so the dataModel is properly set.
      * @param dataset the {@link Dataset} to check
      * @return the modified {@link Dataset}
      */

@@ -42,7 +42,6 @@ import fr.cnes.regards.framework.module.rest.representation.GenericResponseBody;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.datasources.domain.Column;
-import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
@@ -114,7 +113,7 @@ public class DBConnectionController implements IResourceController<PluginConfigu
     /**
      * Allows to update {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin}
      * @param connectionId a {@link PluginConfiguration} identifier
-     * @param pDbConnection the {@link DBConnection} to update
+     * @param dbConnection the {@link PluginConfiguration} to update
      * @return updated {@link PluginConfiguration}
      * @throws ModuleException if plugin configuration cannot be updated
      */

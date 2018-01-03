@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
@@ -56,7 +57,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -75,14 +75,13 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { PostgreDataSourcePluginTestConfiguration.class })
 @TestPropertySource("classpath:datasource-test.properties")
-// @ComponentScan(basePackages = { "fr.cnes.regards.modules.datasources.utils" })
+@EnableAutoConfiguration
 public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    // private static final String TENANT = "PGDB_TENANT";
     private static final String TENANT = DEFAULT_TENANT;
 
     private static final String HELLO = "hello world from ";
@@ -110,11 +109,14 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
 
     private DataSourceModelMapping modelMapping;
 
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+//    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     private static int nbElements;
 
     private final Map<Long, Object> pluginCacheMap = new HashMap<>();
+
+//    @Autowired
+//    private Gson gson;
 
     /**
      * JPA Repository
@@ -158,7 +160,8 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                         getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+//                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, modelMapping)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800).getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,

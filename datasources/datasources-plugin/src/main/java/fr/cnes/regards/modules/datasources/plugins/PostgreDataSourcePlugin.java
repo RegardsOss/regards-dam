@@ -19,11 +19,10 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
+import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -40,7 +40,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 /**
  * A {@link Plugin} to extract data from a PostgreSQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
- *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
@@ -71,7 +70,8 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
      */
     @PluginParameter(name = MODEL_PARAM, label = "model mapping",
             description = "Mapping between model and database table (in JSON format)")
-    private String modelMappingJSon;
+    //    private String modelMappingJSon;
+    private DataSourceModelMapping modelMapping;
 
     /**
      * Ingestion refresh rate in seconds
@@ -87,13 +87,13 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     @PluginInit
     private void initPlugin() {
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString() + "model="
-                + modelMappingJSon + "requete=" + sqlFromClause);
+                         + modelMapping + "request=" + sqlFromClause);
 
-        LOG.info("Init method call : "
-                + (dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM"));
+        LOG.info("Init method call : " + (dbConnection.testConnection() ?
+                "CONNECTION_PARAM IS VALID" :
+                "ERROR CONNECTION_PARAM"));
 
-        // Converts the modelJson to a list of AbstractAttributeMapping
-        initDataSourceMapping(modelMappingJSon);
+        initDataSourceMapping(modelMapping);
     }
 
     @Override

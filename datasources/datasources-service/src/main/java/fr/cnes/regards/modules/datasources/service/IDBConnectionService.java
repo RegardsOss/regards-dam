@@ -25,7 +25,6 @@ import java.util.Map;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.datasources.domain.Column;
-import fr.cnes.regards.modules.datasources.domain.DBConnection;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
@@ -44,7 +43,7 @@ public interface IDBConnectionService {
 
     /**
      * Create a {@link PluginConfiguration} for the plugin types {@link IDBConnectionPlugin}.
-     * @param dbConnection the {@link DBConnection} to the database
+     * @param dbConnection the {@link PluginConfiguration} to the database
      * @return the new {@link PluginConfiguration}
      * @throws ModuleException throw if an error occurs
      */
@@ -59,15 +58,15 @@ public interface IDBConnectionService {
     PluginConfiguration getDBConnection(Long configurationId) throws ModuleException;
 
     /**
-     * Update the {@link PluginConfiguration} linked to the {@link DBConnection}
-     * @param dbConnection the {@link DBConnection} to update
+     * Update a DB connection {@link PluginConfiguration}
+     * @param dbConnection the {@link PluginConfiguration} to update
      * @return the updated {@link PluginConfiguration}
      * @throws ModuleException throw if an error occurs
      */
     PluginConfiguration updateDBConnection(PluginConfiguration dbConnection) throws ModuleException;
 
     /**
-     * Delete a {@link DBConnection}.
+     * Delete a DB connection {@link PluginConfiguration}
      * @param configurationId a {@link PluginConfiguration} identifier
      * @throws ModuleException throw if an error occurs
      */
@@ -83,20 +82,20 @@ public interface IDBConnectionService {
     Boolean testDBConnection(Long configurationId) throws ModuleException;
 
     /**
-     *
-     * @param id
-     * @return
+     * Retrieve all tables from DB connection plugin
+     * @param dbConnectionId identifier of DB connection plugin
+     * @return a map of { table name, table }
      * @throws ModuleException
      */
-    Map<String, Table> getTables(Long id) throws ModuleException;
+    Map<String, Table> getTables(Long dbConnectionId) throws ModuleException;
 
     /**
-     *
-     * @param id
-     * @param tableName
-     * @return
+     * Retrieve all columns from DB connection plugin and given table name
+     * @param dbConnectionId identifier of DB connection plugin
+     * @param tableName table name whom columns belong to
+     * @return a map of { column name, column }
      * @throws ModuleException
      */
-    Map<String, Column> getColumns(Long id, String tableName) throws ModuleException;
+    Map<String, Column> getColumns(Long dbConnectionId, String tableName) throws ModuleException;
 
 }

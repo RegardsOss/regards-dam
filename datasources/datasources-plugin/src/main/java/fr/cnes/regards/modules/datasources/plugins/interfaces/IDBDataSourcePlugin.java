@@ -21,34 +21,30 @@ package fr.cnes.regards.modules.datasources.plugins.interfaces;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.datasources.domain.DBConnection;
-
 /**
  * Database specialization of data source plugin
  * @author oroussel
  */
 public interface IDBDataSourcePlugin extends IDataSourcePlugin {
     /**
-     * The model mapping parameter name
+     * Model mapping parameter name
      * <B>Beware : false friend parameter name, it corresponds to Json model mapping object</B>
      */
     String MODEL_PARAM = "model";
 
     /**
-     * The from clause to apply to the SQL request parameter name
+     * From clause to apply to the SQL request parameter name
      */
     String FROM_CLAUSE = "fromClause";
 
     /**
-     * The connection parameter name
+     * Connection parameter name
      */
     String CONNECTION_PARAM = "connection";
 
     /**
-     * Retrieve the {@link DBConnection} used by the {@link Plugin}
-     * @return Retrieve a {@link DBConnection}
-     * @throws SQLException the {@link Connection} is not available
+     * Retrieve DB connection plugin used by the datasource plugin
+     * @throws SQLException {@link Connection} is not available
      */
     IDBConnectionPlugin getDBConnection() throws SQLException;
 

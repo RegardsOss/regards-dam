@@ -48,7 +48,6 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
@@ -64,7 +63,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Test {@link DataSource} controller
+ * Test sata source PluginConfiguration controller
  * @author Christophe Mertz
  */
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
