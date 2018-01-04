@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * A DataObject is created by a DataSource when an external database is ingested.
+ * A DataObject is created by a DataSource when a data source (external database or AIPs by example) is ingested.
  *
  * @author lmieulet
  * @author Marc Sordi

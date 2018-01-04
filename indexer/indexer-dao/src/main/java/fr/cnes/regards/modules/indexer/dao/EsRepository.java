@@ -1235,7 +1235,6 @@ public class EsRepository implements IEsRepository {
                 // file count
                 builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
                                             .field("files." + fileType + ".size")); // Only count files with a size
-//                                            .field("files." + fileType + ".uri.keyword"));
                 // file size sum
                 builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
                                             .field("files." + fileType + ".size"));
@@ -1253,7 +1252,6 @@ public class EsRepository implements IEsRepository {
                 // files count
                 termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
                                                        .field("files." + fileType + ".size"));
-//                                                       .field("files." + fileType + ".uri.keyword"));
                 // file size sum
                 termsAggBuilder.subAggregation(
                         AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));

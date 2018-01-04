@@ -15,7 +15,7 @@ public class DatasetEvent extends AbstractEntityEvent {
         super();
     }
 
-    public DatasetEvent(UniformResourceName... pIpIds) {
-        super(pIpIds);
+    public DatasetEvent(UniformResourceName... ipIds) {
+        super(ipIds);
     }
 }

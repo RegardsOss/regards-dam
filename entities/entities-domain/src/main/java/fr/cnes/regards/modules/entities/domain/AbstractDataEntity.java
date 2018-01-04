@@ -71,6 +71,13 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         this.files = files;
     }
 
+    /**
+     * @return true if at least one associated file (through "files" property) is physically available (scf. Storage)
+     */
+    public boolean containsPhysicalData() {
+        return files.values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
+    }
+
     @Override
     public boolean equals(Object obj) {
         return super.equals(obj);

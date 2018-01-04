@@ -1,6 +1,27 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.google.common.base.Strings;
+import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -17,26 +38,14 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
+import fr.cnes.regards.modules.entities.domain.event.EventType;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author oroussel
@@ -62,12 +71,14 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private IAccessRightService accessRightService;
 
+    @Autowired
+    private IPublisher publisher;
+
     @PersistenceContext
     private EntityManager em;
 
     /**
      * Load given entity from database and update Elasticsearch
-     *
      * @param tenant concerned tenant (also index intoES)
      * @param ipId concerned entity IpId
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
@@ -157,7 +168,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Search and update associated dataset data objects (ie remove dataset IpId from tags)
-     *
      * @param tenant concerned tenant
      * @param ipId dataset identifier
      */
@@ -198,7 +208,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Search and update associated dataset data objects (ie add dataset IpId into tags)
-     *
      * @param dataset concerned dataset
      */
     private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate) {
@@ -339,7 +348,12 @@ public class EntityIndexerService implements IEntityIndexerService {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
         });
-        return esRepos.saveBulk(tenant, objects);
+        int createdCount = esRepos.saveBulk(tenant, objects);
+        publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
+                                                   objects.stream().filter(DataObject::containsPhysicalData)
+                                                           .map(DataObject::getIpId)
+                                                           .toArray(n -> new UniformResourceName[n])));
+        return createdCount;
     }
 
     @Override
@@ -356,7 +370,8 @@ public class EntityIndexerService implements IEntityIndexerService {
                 dataObject.setMetadata(curObject.getMetadata());
                 dataObject.setGroups(dataObject.getMetadata().getGroups());
                 dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
-                dataObject.setTags(curObject.getTags());
+                // In case to ingest object has new tags
+                dataObject.getTags().addAll(curObject.getTags());
             } else { // else it must be created
                 dataObject.setCreationDate(now);
             }
@@ -371,7 +386,13 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
-        return esRepos.saveBulk(tenant, toSaveObjects);
+        int savedCount = esRepos.saveBulk(tenant, toSaveObjects);
+        publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
+                                                   toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                           .map(DataObject::getIpId)
+                                                           .toArray(n -> new UniformResourceName[n])));
+        return savedCount;
+
     }
 
 }
