@@ -44,6 +44,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -112,6 +114,10 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
                 .addParameter(AipDataSourcePlugin.MODEL_NAME_PARAM, MODEL_NAME)
                 .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800).getParameters();
 
+        PluginMetaData metadata = PluginUtils.createPluginMetaData(AipDataSourcePlugin.class, IDataSourcePlugin.class.getPackage().getName(), AipDataSourcePlugin.class.getPackage().getName());
+
+        PluginConfiguration aipDs = new PluginConfiguration( metadata, "LABEL", parameters);
+        String truc = gsonBuilder.create().toJson(aipDs);
         dsPlugin = PluginUtils.getPlugin(parameters, AipDataSourcePlugin.class, Arrays.asList(PLUGIN_CURRENT_PACKAGE),
                                          pluginCacheMap);
 

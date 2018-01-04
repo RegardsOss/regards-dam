@@ -63,6 +63,10 @@ public class DataFile {
      */
     private MimeType mimeType;
 
+    private Integer imageWidth;
+
+    private Integer imageHeight;
+
     public URI getUri() {
         return URI.create(uri);
     }
@@ -117,6 +121,22 @@ public class DataFile {
 
     public void setOnline(Boolean online) {
         this.online = online;
+    }
+
+    public Integer getImageWidth() {
+        return imageWidth;
+    }
+
+    public void setImageWidth(Integer imageWidth) {
+        this.imageWidth = imageWidth;
+    }
+
+    public Integer getImageHeight() {
+        return imageHeight;
+    }
+
+    public void setImageHeight(Integer imageHeight) {
+        this.imageHeight = imageHeight;
     }
 
     @Override

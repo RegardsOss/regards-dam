@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MimeType;
 
@@ -87,7 +88,7 @@ public class AipDataSourceConfiguration {
 
     private class AipClientProxy {
 
-        public ResponseEntity<Page<AipDataFiles>> retrieveAipDataFiles(AIPState state, Set<String> tags,
+        public ResponseEntity<PagedResources<AipDataFiles>> retrieveAipDataFiles(AIPState state, Set<String> tags,
                 OffsetDateTime fromLastUpdateDate, int page, int size) {
             List<AipDataFiles> aipDataFiles = new ArrayList<>();
 
@@ -112,7 +113,7 @@ public class AipDataSourceConfiguration {
                 aipDataFiles.add(oneAipDataFiles);
 
             }
-            return ResponseEntity.ok(new PageImpl<>(aipDataFiles));
+            return ResponseEntity.ok(new PagedResources<>(aipDataFiles, new PagedResources.PageMetadata(aipDataFiles.size(), 0, aipDataFiles.size(), 1)));
         }
 
     }

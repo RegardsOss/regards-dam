@@ -42,6 +42,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -426,7 +427,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     public void test() throws InterruptedException {
         Mockito.when(aipClient.retrieveAipDataFiles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(),
                                                     Mockito.anyInt()))
-                .thenReturn(ResponseEntity.ok(new PageImpl<>(Collections.emptyList())));
+                .thenReturn(ResponseEntity.ok(new PagedResources<>(Collections.emptyList(), new PagedResources.PageMetadata(0,0,0,1))));
         // Initial Ingestion with no value from datasources
         ingesterService.manage();
 

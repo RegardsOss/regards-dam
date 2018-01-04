@@ -25,10 +25,8 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.Resource;
@@ -44,7 +42,6 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
-import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -140,14 +137,15 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
     public void init() {
         // Ensure the existence of the default Group Access for Documents.
         for (final String tenant : tenantResolver.getAllActiveTenants()) {
-            initDefaultAccessGroup(tenant);
-        }
-    }
+            try {
+                // Set working tenant
+                runtimeTenantResolver.forceTenant(tenant);
+                initDefaultAccessGroup();
+            } finally {
+                runtimeTenantResolver.clearTenant();
+            }
 
-    @EventListener
-    public void processEvent(TenantConnectionReady event) {
-        // Init default role for this tenant
-        initDefaultAccessGroup(event.getTenant());
+        }
     }
 
     @Override
@@ -194,7 +192,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
             // Prevent users to delete the public AccessGroup used by Documents
             if (toDelete.isInternal()) {
                 throw new EntityOperationForbiddenException(toDelete.getName(), AccessGroup.class,
-                                                            "Cannot remove the public access group used by Documents");
+                        "Cannot remove the public access group used by Documents");
             }
             accessGroupDao.delete(toDelete.getId());
             // Publish attribute deletion
@@ -337,9 +335,8 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
 
     }
 
-    private void initDefaultAccessGroup(String tenant) {
-        // Set working tenant
-        runtimeTenantResolver.forceTenant(tenant);
+    @Override
+    public void initDefaultAccessGroup() {
         // Build the AccessGroup we need in the current project
         final AccessGroup publicDocumentAccessGroup = new AccessGroup();
         publicDocumentAccessGroup.setName(AccessGroupService.ACCESS_GROUP_PUBLIC_DOCUMENTS);
@@ -350,7 +347,7 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
         } catch (EntityAlreadyExistsException e) {
             // the entity already exists, no problem
         } catch (Exception e) {
-            LOGGER.error("Failed to register the public AccessGroup used by documents on tenant {}", tenant);
+            LOGGER.error("Failed to register the public AccessGroup used by documents");
             // Do not prevent microservice to boot
         }
     }
