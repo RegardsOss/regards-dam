@@ -35,8 +35,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
@@ -55,11 +53,6 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
 
     @Autowired
     private IPluginService service;
-
-    /**
-     * GSON adapter for {@link AbstractAttributeMapping}
-     */
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {

@@ -50,7 +50,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -119,8 +118,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private DataSourceModelMapping modelMapping;
 
-    private final static ModelMappingAdapter adapter = new ModelMappingAdapter();
-
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -132,14 +129,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
         pluginConfRepos.deleteAll();
 
-        /*
-         * Initialize the AbstractAttributeMapping
-         */
+        // Initialize the AbstractAttributeMapping
         buildModelAttributes();
 
-        /*
-         * Save a PluginConfiguration for plugin's type IDBConnectionPlugin
-         */
+        // Save a PluginConfiguration for plugin's type IDBConnectionPlugin
         pluginPostgreDbConnection = pluginService.savePluginConfiguration(getPostGreSqlConnectionConfiguration());
     }
 

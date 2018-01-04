@@ -57,7 +57,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
@@ -109,8 +108,6 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
 
     private DataSourceModelMapping modelMapping;
 
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-
     private static int nbElements;
 
     private final Map<Long, Object> pluginCacheMap = new HashMap<>();
@@ -155,7 +152,7 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourcePlugin.CONNECTION_PARAM, getPostgreConnectionConfiguration())
-                .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+                .addParameter(PostgreDataSourcePlugin.MODEL_PARAM, modelMapping)
                 .addParameter(PostgreDataSourcePlugin.FROM_CLAUSE, "from\n\n\nT_TEST_PLUGIN_DATA_SOURCE")
                 .getParameters();
 

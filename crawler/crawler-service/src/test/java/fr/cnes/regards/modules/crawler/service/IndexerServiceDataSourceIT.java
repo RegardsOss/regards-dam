@@ -210,8 +210,6 @@ public class IndexerServiceDataSourceIT {
 
     private DataSourceModelMapping dataSourceModelMapping;
 
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-
     @Autowired
     private IPluginService pluginService;
 
@@ -309,7 +307,7 @@ public class IndexerServiceDataSourceIT {
 //                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
 //                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
 //                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
+//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
 //                .getParameters();
 //
 //        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,

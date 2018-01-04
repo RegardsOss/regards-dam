@@ -50,7 +50,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
@@ -116,8 +115,6 @@ public class DatasetServiceTest {
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
 
     private DataSourceModelMapping dataSourceModelMapping;
-
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     private IPublisher publisherMocked;
 
