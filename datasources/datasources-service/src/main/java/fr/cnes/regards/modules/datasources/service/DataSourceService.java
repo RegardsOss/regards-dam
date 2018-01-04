@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -55,6 +56,7 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
     private IPluginService service;
 
     @Override
+    @MultitenantTransactional(propagation = Propagation.SUPPORTS)
     public void onApplicationEvent(ApplicationReadyEvent event) {
         this.service.addPluginPackage(PostgreDataSourcePlugin.class.getPackage().getName());
     }
