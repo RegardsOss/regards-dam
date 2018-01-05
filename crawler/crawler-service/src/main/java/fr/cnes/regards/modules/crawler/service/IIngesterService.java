@@ -10,8 +10,6 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
  * @author oroussel
  */
 public interface IIngesterService {
-    void listenToPluginConfChange();
-
     void manage();
 
     void updateAndCleanTenantDatasourceIngestions(String tenant);
