@@ -25,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -62,6 +63,7 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalData;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
+import fr.cnes.regards.modules.crawler.service.ds.plugin.TestDsPlugin;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
@@ -98,7 +100,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
+//@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
 public class CrawlerIngestIT {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
@@ -107,6 +109,8 @@ public class CrawlerIngestIT {
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+
+    private static final String PLUGIN_TEST_PACKAGE = "fr.cnes.regards.modules.crawler.service.ds.plugin";
 
     private static final String TABLE_NAME_TEST = "t_data";
 
@@ -187,6 +191,8 @@ public class CrawlerIngestIT {
 
     private PluginConfiguration dBConnectionConf;
 
+    private PluginConfiguration dataSourceTestPluginConf;
+
     @Autowired
     private ExternalDataRepository extDataRepos;
 
@@ -219,7 +225,8 @@ public class CrawlerIngestIT {
         modelRepository.deleteAll();
         extDataRepos.deleteAll();
 
-        pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
+        pluginService.addPluginPackage(PLUGIN_CURRENT_PACKAGE);
+        pluginService.addPluginPackage(PLUGIN_TEST_PACKAGE);
 
         // Register model attributes
         dataModel = new Model();
@@ -249,6 +256,10 @@ public class CrawlerIngestIT {
         // DataSource PluginConf
         dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
         pluginService.savePluginConfiguration(dataSourcePluginConf);
+
+        // DataSource from Test Plugin Conf
+        dataSourceTestPluginConf = getTestDsPluginDatasource();
+        pluginService.savePluginConfiguration(dataSourceTestPluginConf);
         LOGGER.info("***************************************************************************");
     }
 
@@ -268,7 +279,7 @@ public class CrawlerIngestIT {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
                 .getParameters();
 
@@ -283,11 +294,16 @@ public class CrawlerIngestIT {
                 .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
+                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+    }
+
+    private PluginConfiguration getTestDsPluginDatasource() {
+        return PluginUtils.getPluginConfiguration(Collections.emptyList(), TestDsPlugin.class,
+                                                  Arrays.asList(PLUGIN_TEST_PACKAGE));
     }
 
     private void buildModelAttributes() {
@@ -296,14 +312,16 @@ public class CrawlerIngestIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                "date"));
+                                                  "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
 
     @Requirement("REGARDS_DSL_DAM_CAT_310")
-    @Purpose("Le système doit permettre d’ajouter un AIP de données dans un jeu de données à partir de son IP_ID (ajout d'un tag sur l'AIP de données).")
+    @Purpose("Le système doit permettre d’ajouter un AIP de données dans un jeu de données à partir de son IP_ID "
+            + "(ajout d'un tag sur l'AIP de données).")
     @Test
+    @Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
     public void test()
             throws ModuleException, IOException, InterruptedException, ExecutionException, DataSourceException {
         LOGGER.info("********************* test CrawlerIngestIT ***********************************");
@@ -351,26 +369,33 @@ public class CrawlerIngestIT {
         LOGGER.info("searchService : " + searchService);
         LOGGER.info("dataset : " + dataset);
         LOGGER.info("dataset.getIpId() : " + dataset.getIpId());
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.eq("tags", dataset.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(1L, objectsPage.getTotalElements());
 
         // Fill the Db with an object dated 2001/01/01
         extDataRepos.save(new ExternalData(LocalDate.of(2001, Month.JANUARY, 1)));
 
         // Ingest from 2000/01/01 (strictly after)
-        summary = crawlerService.ingest(dataSourcePluginConf,
-                                        OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
+        summary = crawlerService
+                .ingest(dataSourcePluginConf, OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, summary.getSavedObjectsCount());
 
         // Search for DataObjects tagging dataset1
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(2L, objectsPage.getTotalElements());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().isAfter(data.getCreationDate())).count());
         LOGGER.info("***************************************************************************");
+    }
+
+    @Test
+    public void testDsIngestionWithValidation()
+            throws InterruptedException, ExecutionException, DataSourceException, ModuleException {
+        IngestionResult summary = crawlerService.ingest(dataSourceTestPluginConf);
+        Assert.assertEquals(0, summary.getSavedObjectsCount());
     }
 }

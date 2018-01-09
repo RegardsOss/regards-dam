@@ -5,6 +5,7 @@ import javax.persistence.PersistenceContext;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.MapBindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.Validator;
 
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -76,6 +82,12 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @PersistenceContext
     private EntityManager em;
+
+    /**
+     * Validator used to validate each DataObject creation before its indexing into ElasticSearch
+     */
+    @Autowired
+    private Validator validator;
 
     /**
      * Load given entity from database and update Elasticsearch
@@ -341,19 +353,50 @@ public class EntityIndexerService implements IEntityIndexerService {
     public int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
         // On all objects, it is necessary to set datasourceId and creation date
         OffsetDateTime creationDate = now;
-        objects.forEach(dataObject -> {
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        for (DataObject dataObject : objects) {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
-        });
-        int createdCount = esRepos.saveBulk(tenant, objects);
-        publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                   objects.stream().filter(DataObject::containsPhysicalData)
-                                                           .map(DataObject::getIpId)
-                                                           .toArray(n -> new UniformResourceName[n])));
+            validateDataObject(toSaveObjects, dataObject);
+        }
+        int createdCount = esRepos.saveBulk(tenant, toSaveObjects);
+        if (createdCount != 0) {
+            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
+                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                               .map(DataObject::getIpId)
+                                                               .toArray(n -> new UniformResourceName[n])));
+        }
         return createdCount;
+    }
+
+    /**
+     * Validate given DataObject. If no error, add it to given set else log validation errors
+     */
+    private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject) {
+        Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
+        validator.validate(dataObject, errors);
+        // If some validation errors occur, don't index data object
+        if (errors.getErrorCount() == 0) {
+            toSaveObjects.add(dataObject);
+        } else {
+            StringBuilder buf = new StringBuilder();
+            buf.append(errors.getErrorCount()).append(" validation errors:");
+            for (ObjectError objError : errors.getAllErrors()) {
+                if (objError instanceof FieldError) {
+                    buf.append("\nField error in object ").append(objError.getObjectName());
+                    buf.append(" on field '").append(((FieldError) objError).getField());
+                    buf.append("', rejected value '").append(((FieldError) objError).getRejectedValue());
+                    buf.append("': ").append(((FieldError) objError).getField());
+                    buf.append(" ").append(objError.getDefaultMessage());
+                } else {
+                    buf.append("\n").append(objError.toString());
+                }
+            }
+            LOGGER.warn("Data object not indexed due to {}", buf.toString());
+        }
     }
 
     @Override
@@ -382,15 +425,17 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
-            toSaveObjects.add(dataObject);
+            validateDataObject(toSaveObjects, dataObject);
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
         int savedCount = esRepos.saveBulk(tenant, toSaveObjects);
-        publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                   toSaveObjects.stream().filter(DataObject::containsPhysicalData)
-                                                           .map(DataObject::getIpId)
-                                                           .toArray(n -> new UniformResourceName[n])));
+        if (savedCount != 0) {
+            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
+                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                               .map(DataObject::getIpId)
+                                                               .toArray(n -> new UniformResourceName[n])));
+        }
         return savedCount;
 
     }

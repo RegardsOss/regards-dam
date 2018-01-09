@@ -249,7 +249,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     public void addProperty(AbstractAttribute<?> property) {
         properties.add(property);
-        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        // If property key is null, it is not a valid property and so it may not pass validation process
+        if (property.getName() != null) {
+            propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        }
     }
 
     public void removeProperty(AbstractAttribute<?> property) {
