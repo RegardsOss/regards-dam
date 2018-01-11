@@ -7,13 +7,13 @@ import java.time.OffsetDateTime;
  */
 public class DateRangeCriterion extends RangeCriterion<OffsetDateTime> implements ICriterion {
 
-    protected DateRangeCriterion(String pName) {
-        super(pName);
+    protected DateRangeCriterion(String name) {
+        super(name);
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitDateRangeCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitDateRangeCriterion(this);
     }
 
 }

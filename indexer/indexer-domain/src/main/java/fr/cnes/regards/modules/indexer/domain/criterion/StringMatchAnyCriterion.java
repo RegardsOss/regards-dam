@@ -8,13 +8,13 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
  */
 public class StringMatchAnyCriterion extends AbstractMatchCriterion<String[]> {
 
-    protected StringMatchAnyCriterion(String pName, String... pValue) {
-        super(pName, MatchType.CONTAINS_ANY, pValue);
+    protected StringMatchAnyCriterion(String name, String... value) {
+        super(name, MatchType.CONTAINS_ANY, value);
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitStringMatchAnyCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitStringMatchAnyCriterion(this);
     }
 
 }

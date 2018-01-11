@@ -40,24 +40,24 @@ public interface ICriterion {
         return EmptyCriterion.INSTANCE;
     }
 
-    static ICriterion and(ICriterion... crits) {
-        return new AndCriterion(crits);
+    static ICriterion and(ICriterion... criteria) {
+        return new AndCriterion(criteria);
     }
 
-    static ICriterion and(Iterable<ICriterion> crits) {
-        return new AndCriterion(crits);
+    static ICriterion and(Iterable<ICriterion> criteria) {
+        return new AndCriterion(criteria);
     }
 
-    static ICriterion or(ICriterion... crits) {
-        return new OrCriterion(crits);
+    static ICriterion or(ICriterion... criteria) {
+        return new OrCriterion(criteria);
     }
 
-    static ICriterion or(Iterable<ICriterion> crits) {
-        return new OrCriterion(crits);
+    static ICriterion or(Iterable<ICriterion> criteria) {
+        return new OrCriterion(criteria);
     }
 
-    static ICriterion not(ICriterion crit) {
-        return new NotCriterion(crit);
+    static ICriterion not(ICriterion criterion) {
+        return new NotCriterion(criterion);
     }
 
     static <T extends Number & Comparable<T>> ICriterion gt(String attName, T value) {
@@ -400,7 +400,6 @@ public interface ICriterion {
      * @param value value to test inclusion
      * @return criterion
      */
-    // CHECKSTYLE:OFF
     static <T extends Number & Comparable<T>> ICriterion into(String attName, T value) {
         return ICriterion.and(ICriterion.le(attName + "." + IMapping.RANGE_LOWER_BOUND, value),
                               ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, value));
@@ -430,8 +429,6 @@ public interface ICriterion {
                               ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, lowerBound));
     }
 
-    // CHECKSTYLE:ON
-
     /**
      * Criterion to test the intersection with a circle giving center coordinates and radius.
      * @param center coordinates of center
@@ -449,5 +446,14 @@ public interface ICriterion {
      */
     static ICriterion intersectsPolygon(Double[][][] coordinates) {
         return new PolygonCriterion(coordinates);
+    }
+
+    /**
+     * Criterion to test if given attribute exists
+     * @param attName attribute name
+     * @return criterion
+     */
+    static ICriterion attributeExists(String attName) {
+        return new FieldExistsCriterion(attName);
     }
 }

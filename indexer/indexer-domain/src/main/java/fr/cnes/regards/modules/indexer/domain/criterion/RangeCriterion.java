@@ -43,17 +43,17 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!super.equals(obj)) {
+        if (!super.equals(o)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != o.getClass()) {
             return false;
         }
-        RangeCriterion<?> other = (RangeCriterion<?>) obj;
+        RangeCriterion<?> other = (RangeCriterion<?>) o;
         if (valueComparisons == null) {
             if (other.valueComparisons != null) {
                 return false;

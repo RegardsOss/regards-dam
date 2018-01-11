@@ -13,8 +13,8 @@ public abstract class AbstractFacet<T> implements IFacet<T> {
      */
     private final String attributeName;
 
-    public AbstractFacet(String pAttributeName) {
-        this.attributeName = pAttributeName;
+    public AbstractFacet(String attName) {
+        this.attributeName = attName;
     }
 
     @Override

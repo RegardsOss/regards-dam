@@ -2,7 +2,6 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -261,6 +260,11 @@ public class CriterionTest {
 
         @Override
         public String visitCircleCriterion(CircleCriterion pCriterion) {
+            return null;
+        }
+
+        @Override
+        public String visitFieldExistsCriterion(FieldExistsCriterion criterion) {
             return null;
         }
     }

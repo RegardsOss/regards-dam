@@ -19,26 +19,26 @@ public class ValueComparison<T extends Comparable<? super T>> implements Compara
      */
     private T value;
 
-    public ValueComparison(ComparisonOperator pOperator, T pValue) {
+    public ValueComparison(ComparisonOperator operator, T value) {
         super();
-        operator = pOperator;
-        value = pValue;
+        this.operator = operator;
+        this.value = value;
     }
 
     public ComparisonOperator getOperator() {
         return operator;
     }
 
-    public void setOperator(ComparisonOperator pOperator) {
-        operator = pOperator;
+    public void setOperator(ComparisonOperator operator) {
+        this.operator = operator;
     }
 
     public T getValue() {
         return value;
     }
 
-    public void setValue(T pValue) {
-        value = pValue;
+    public void setValue(T value) {
+        this.value = value;
     }
 
     // hashCode() and equals() use only operator because ValueComparison is used
