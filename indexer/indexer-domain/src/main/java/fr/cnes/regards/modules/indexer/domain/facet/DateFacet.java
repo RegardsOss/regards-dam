@@ -1,12 +1,10 @@
 package fr.cnes.regards.modules.indexer.domain.facet;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 import com.google.common.collect.Range;
 import com.google.gson.annotations.JsonAdapter;
-
 import fr.cnes.regards.modules.indexer.domain.facet.adapters.gson.DateFacetSerializer;
 
 /**
@@ -23,9 +21,9 @@ public class DateFacet extends AbstractFacet<Map<Range<OffsetDateTime>, Long>> {
      */
     private final Map<Range<OffsetDateTime>, Long> valueMap;
 
-    public DateFacet(String pAttributeName, Map<Range<OffsetDateTime>, Long> pValueMap) {
+    public DateFacet(String pAttributeName, Map<Range<OffsetDateTime>, Long> valueMap) {
         super(pAttributeName);
-        this.valueMap = pValueMap;
+        this.valueMap = valueMap;
 
     }
 

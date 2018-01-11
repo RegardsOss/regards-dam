@@ -6,12 +6,12 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
  */
 public class StringMatchCriterion extends AbstractMatchCriterion<String> {
 
-    protected StringMatchCriterion(String pName, MatchType pType, String pValue) {
-        super(pName, pType, pValue);
+    protected StringMatchCriterion(String name, MatchType type, String value) {
+        super(name, type, value);
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitStringMatchCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitStringMatchCriterion(this);
     }
 }

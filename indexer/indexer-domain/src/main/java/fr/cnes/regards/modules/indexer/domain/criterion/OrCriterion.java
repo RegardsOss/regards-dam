@@ -8,17 +8,17 @@ import com.google.common.collect.Lists;
  */
 public final class OrCriterion extends AbstractMultiCriterion implements ICriterion {
 
-    OrCriterion(ICriterion... pCriterions) {
-        this.criterions = Lists.newArrayList(pCriterions);
+    OrCriterion(ICriterion... criteria) {
+        this.criterions = Lists.newArrayList(criteria);
     }
 
-    OrCriterion(Iterable<ICriterion> pCriterions) {
-        this.criterions = Lists.newArrayList(pCriterions);
+    OrCriterion(Iterable<ICriterion> criteria) {
+        this.criterions = Lists.newArrayList(criteria);
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitOrCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitOrCriterion(this);
     }
 
     @Override
@@ -30,16 +30,16 @@ public final class OrCriterion extends AbstractMultiCriterion implements ICriter
     }
 
     @Override
-    public boolean equals(Object pObj) {
-        if (this == pObj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (pObj == null) {
+        if (o == null) {
             return false;
         }
-        if (getClass() != pObj.getClass()) {
+        if (getClass() != o.getClass()) {
             return false;
         }
-        return super.equals(pObj);
+        return super.equals(o);
     }
 }

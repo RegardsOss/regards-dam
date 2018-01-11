@@ -30,6 +30,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.FieldExistsCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
@@ -50,7 +51,6 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
  * Visitor to check if a {@link ICriterion} can be accepted as a subsetting filter in {@link Dataset}. <b>The aim is not
  * to execute the filter but to check if the filter is coherent.</b> For example, the visit of
  * NotCriterion(subCriterion) leads to the visit of subcriterion (because the NotCriterion is coherent)
- *
  * @author Sylvain Vissiere-Guerinet
  */
 public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
@@ -99,9 +99,9 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
-    public Boolean visitAndCriterion(AbstractMultiCriterion pCriterion) {
+    public Boolean visitAndCriterion(AbstractMultiCriterion criterion) {
         boolean result = true;
-        Iterator<ICriterion> criterionIterator = pCriterion.getCriterions().iterator();
+        Iterator<ICriterion> criterionIterator = criterion.getCriterions().iterator();
         while (result && criterionIterator.hasNext()) {
             result &= criterionIterator.next().accept(this);
         }
@@ -109,9 +109,9 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
-    public Boolean visitOrCriterion(AbstractMultiCriterion pCriterion) {
+    public Boolean visitOrCriterion(AbstractMultiCriterion criterion) {
         boolean result = true;
-        Iterator<ICriterion> criterionIterator = pCriterion.getCriterions().iterator();
+        Iterator<ICriterion> criterionIterator = criterion.getCriterions().iterator();
         while (result && criterionIterator.hasNext()) {
             result &= criterionIterator.next().accept(this);
         }
@@ -119,39 +119,39 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
-    public Boolean visitNotCriterion(NotCriterion pCriterion) {
-        return pCriterion.getCriterion().accept(this);
+    public Boolean visitNotCriterion(NotCriterion criterion) {
+        return criterion.getCriterion().accept(this);
     }
 
     @Override
-    public Boolean visitStringMatchCriterion(StringMatchCriterion pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
-                || attribute.getType().equals(AttributeType.STRING_ARRAY));
+    public Boolean visitStringMatchCriterion(StringMatchCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
+        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING) || attribute.getType()
+                .equals(AttributeType.STRING_ARRAY));
     }
 
     @Override
-    public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
-        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING)
-                || attribute.getType().equals(AttributeType.STRING_ARRAY));
+    public Boolean visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
+        return (attribute != null) && (attribute.getType().equals(AttributeType.STRING) || attribute.getType()
+                .equals(AttributeType.STRING_ARRAY));
     }
 
     @Override
-    public Boolean visitIntMatchCriterion(IntMatchCriterion pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
+    public Boolean visitIntMatchCriterion(IntMatchCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null) && (attribute.getType().equals(AttributeType.INTEGER));
     }
 
     @Override
-    public Boolean visitLongMatchCriterion(LongMatchCriterion pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
+    public Boolean visitLongMatchCriterion(LongMatchCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null) && (attribute.getType().equals(AttributeType.LONG));
     }
 
     @Override
-    public <U extends Comparable<? super U>> Boolean visitRangeCriterion(RangeCriterion<U> pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
+    public <U extends Comparable<? super U>> Boolean visitRangeCriterion(RangeCriterion<U> criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
         if (attribute == null) {
             return false;
         }
@@ -166,28 +166,26 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
-    public Boolean visitDateRangeCriterion(DateRangeCriterion pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
+    public Boolean visitDateRangeCriterion(DateRangeCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ISO8601));
     }
 
     @Override
-    public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
-        AttributeModel attribute = extractAttribute(pCriterion);
+    public Boolean visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null) && attribute.getType().equals(AttributeType.BOOLEAN);
     }
 
     /**
      * extract the {@link AttributeModel} from the criterion if it is possible and check if it is a attribute from the
      * right model and it is queryable
-     *
-     * @param pCriterion
-     *            {@link AbstractPropertyCriterion} from which extract the attribute
+     * @param criterion {@link AbstractPropertyCriterion} from which extract the attribute
      * @return extracted {@link AttributeModel} or null
      */
-    private AttributeModel extractAttribute(AbstractPropertyCriterion pCriterion) {
+    private AttributeModel extractAttribute(AbstractPropertyCriterion criterion) {
         // contains attributes.attributeFullname
-        String attributeFullName = pCriterion.getName();
+        String attributeFullName = criterion.getName();
         // remove the "attributes."
         int indexOfPoint = attributeFullName.indexOf('.');
         attributeFullName = attributeFullName.substring(indexOfPoint + 1);
@@ -217,17 +215,27 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
-    public Boolean visitEmptyCriterion(EmptyCriterion pCriterion) {
+    public Boolean visitEmptyCriterion(EmptyCriterion criterion) {
         return true;
     }
 
     @Override
-    public Boolean visitPolygonCriterion(PolygonCriterion pCriterion) {
+    public Boolean visitPolygonCriterion(PolygonCriterion criterion) {
         return true;
     }
 
     @Override
-    public Boolean visitCircleCriterion(CircleCriterion pCriterion) {
+    public Boolean visitCircleCriterion(CircleCriterion criterion) {
         return true;
+    }
+
+    /**
+     * Into context of subsetting dataset filter criterion, only model attributes should be concerned, not static
+     * entities properties so criterion attribute should be a model one
+     */
+    @Override
+    public Boolean visitFieldExistsCriterion(FieldExistsCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
+        return (attribute != null);
     }
 }

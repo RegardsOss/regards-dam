@@ -21,9 +21,9 @@ public class NumericFacet extends AbstractFacet<Map<Range<Double>, Long>> {
      */
     private final Map<Range<Double>, Long> valueMap;
 
-    public NumericFacet(String pAttributeName, Map<Range<Double>, Long> pValueMap) {
-        super(pAttributeName);
-        this.valueMap = pValueMap;
+    public NumericFacet(String attName, Map<Range<Double>, Long> valueMap) {
+        super(attName);
+        this.valueMap = valueMap;
     }
 
     @Override

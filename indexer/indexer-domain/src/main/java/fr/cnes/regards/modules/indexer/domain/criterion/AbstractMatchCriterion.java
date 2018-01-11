@@ -17,30 +17,30 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
      */
     private T value;
 
-    private AbstractMatchCriterion(String pName) {
-        super(pName);
+    private AbstractMatchCriterion(String name) {
+        super(name);
     }
 
-    public AbstractMatchCriterion(String pName, MatchType pType, T pValue) {
-        this(pName);
-        type = pType;
-        value = pValue;
+    public AbstractMatchCriterion(String name, MatchType type, T value) {
+        this(name);
+        this.type = type;
+        this.value = value;
     }
 
     public MatchType getType() {
         return type;
     }
 
-    public void setType(MatchType pType) {
-        type = pType;
+    public void setType(MatchType type) {
+        this.type = type;
     }
 
     public T getValue() {
         return value;
     }
 
-    public void setValue(T pValue) {
-        value = pValue;
+    public void setValue(T value) {
+        this.value = value;
     }
 
     @Override
@@ -53,17 +53,17 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
     }
 
     @Override
-    public boolean equals(Object pObj) {
-        if (this == pObj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!super.equals(pObj)) {
+        if (!super.equals(o)) {
             return false;
         }
-        if (getClass() != pObj.getClass()) {
+        if (getClass() != o.getClass()) {
             return false;
         }
-        AbstractMatchCriterion<?> other = (AbstractMatchCriterion<?>) pObj;
+        AbstractMatchCriterion<?> other = (AbstractMatchCriterion<?>) o;
         if (type != other.type) {
             return false;
         }

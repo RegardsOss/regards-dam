@@ -6,7 +6,6 @@ package fr.cnes.regards.modules.indexer.domain.facet;
  *
  * @author oroussel
  */
-// CHECKSTYLE:OFF
 public enum FacetType {
     DATE {
 
@@ -60,4 +59,4 @@ public enum FacetType {
 
     public abstract <T> T accept(IFacetTypeVisitor<T> visitor, Object... args);
 }
-// CHECKSTYLE:OFF
+

@@ -18,9 +18,9 @@ public class CircleCriterion implements ICriterion {
      */
     private String radius;
 
-    public CircleCriterion(Double[] pCoordinates, String pRadius) {
-        coordinates = pCoordinates;
-        radius = pRadius;
+    public CircleCriterion(Double[] coordinates, String radius) {
+        this.coordinates = coordinates;
+        this.radius = radius;
     }
 
     public Double[] getCoordinates() {
@@ -32,8 +32,8 @@ public class CircleCriterion implements ICriterion {
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitCircleCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitCircleCriterion(this);
     }
 
     @Override

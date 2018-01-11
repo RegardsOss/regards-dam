@@ -19,6 +19,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.FieldExistsCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
@@ -167,6 +168,11 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         } catch (IOException ioe) { // Never occurs
             throw new RuntimeException(ioe); // NOSONAR
         }
+    }
+
+    @Override
+    public QueryBuilder visitFieldExistsCriterion(FieldExistsCriterion criterion) {
+        return QueryBuilders.existsQuery(criterion.getName());
     }
 
     @Override
