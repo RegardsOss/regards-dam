@@ -21,9 +21,9 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -41,15 +41,14 @@ public interface IParser {
      * Parses the passed map of parameters into a {@link ICriterion}.<br>
      * For example, we expect
      * {
-     *  q => "date:[* TO 2012-01-01]"
+     * q => "date:[* TO 2012-01-01]"
      * }
      * or
      * {
-     *  lat => 43.25
-     *  lon => -123.45
-     *  r   => 10
+     * lat => 43.25
+     * lon => -123.45
+     * r   => 10
      * }
-     *
      * @param parameters the map of parameters
      * @return the {@link ICriterion}
      * @throws OpenSearchParseException when an error occurs during parsing
@@ -62,16 +61,16 @@ public interface IParser {
      * q="date:[* TO 2012-01-01]"<br>
      * or<br>
      * lat=43.25&lon=-123.45&r=10
-     *
      * @param parameters the string containing the parameters
      * @return the {@link ICriterion}
      */
     default ICriterion parse(String parameters) throws OpenSearchParseException {
         try {
-            List<NameValuePair> asList = URLEncodedUtils.parse(new URI("http://dummy?" + parameters), Charset.forName("UTF-8"));
-            Map<String, String> asMap = new HashMap<>();
-            asList.forEach(item -> asMap.put(item.getName(), item.getValue()));
-            return parse(asMap);
+            List<NameValuePair> nameValues = URLEncodedUtils
+                    .parse(new URI("http://dummy?" + parameters), Charset.forName("UTF-8"));
+            Map<String, String> paramMap = nameValues.stream()
+                    .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+            return parse(paramMap);
         } catch (URISyntaxException e) {
             throw new OpenSearchParseException(e);
         }

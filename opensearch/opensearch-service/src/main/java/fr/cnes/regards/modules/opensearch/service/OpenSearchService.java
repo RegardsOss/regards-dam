@@ -24,10 +24,12 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Lists;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 import fr.cnes.regards.modules.opensearch.service.parser.CircleParser;
+import fr.cnes.regards.modules.opensearch.service.parser.FieldExistsParser;
 import fr.cnes.regards.modules.opensearch.service.parser.GeometryParser;
 import fr.cnes.regards.modules.opensearch.service.parser.IParser;
 import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
@@ -43,42 +45,28 @@ import fr.cnes.regards.modules.opensearch.service.parser.QueryParser;
 public class OpenSearchService implements IOpenSearchService {
 
     // Thread safe parsers holder
-    private static final ThreadLocal<List<IParser>> parsersHolder = new ThreadLocal<>();
+    private static ThreadLocal<List<IParser>> parsersHolder;
 
     private final IAttributeFinder finder;
 
     public OpenSearchService(IAttributeFinder finder) {
         this.finder = finder;
-    }
-
-    private List<IParser> getParsers() {
-        List<IParser> threadSafeParsers = parsersHolder.get();
-        if (threadSafeParsers == null) {
-            threadSafeParsers = new ArrayList<>();
-            threadSafeParsers.add(new QueryParser(finder));
-            threadSafeParsers.add(new GeometryParser());
-            threadSafeParsers.add(new CircleParser());
-            parsersHolder.set(threadSafeParsers);
-        }
-        return threadSafeParsers;
+        this.parsersHolder = ThreadLocal.withInitial(() -> Lists
+                .newArrayList(new QueryParser(finder), new GeometryParser(), new CircleParser(),
+                              new FieldExistsParser()));
     }
 
     @Override
     public ICriterion parse(Map<String, String> queryParameters) throws OpenSearchParseException {
-
         List<ICriterion> criteria = new ArrayList<>();
-        for (IParser parser : getParsers()) {
+        for (IParser parser : parsersHolder.get()) {
             // Parse parameters ... may return null if parser required parameter(s) not set
             ICriterion crit = parser.parse(queryParameters);
             if (crit != null) {
                 criteria.add(crit);
             }
         }
-        if (criteria.isEmpty()) {
-            return null;
-        } else {
-            return ICriterion.and(criteria.toArray(new ICriterion[criteria.size()]));
-        }
+        return criteria.isEmpty() ? null : ICriterion.and(criteria);
     }
 
 }
