@@ -34,7 +34,8 @@ import fr.cnes.regards.modules.opensearch.service.converter.PolygonToArray;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
- * This {@link IParser} implementation only handles the the "lat"/"lon"/"r" part of the OpenSearch request, and returns an {@link ICriterion} describing a circle intersection.<br>
+ * This {@link IParser} implementation only handles the "lat"/"lon"/"r" part of the OpenSearch request and returns an
+ * {@link ICriterion} describing a Geometry intersection.<br>
  * @author Xavier-Alexandre Brochard
  */
 public class GeometryParser implements IParser {
@@ -45,9 +46,9 @@ public class GeometryParser implements IParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(GeometryParser.class);
 
     @Override
-    public ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException {
+    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
 
-        String geoParam = pParameters.get("g");
+        String geoParam = parameters.get("g");
 
         // Check required query parameter
         if (geoParam == null) {
