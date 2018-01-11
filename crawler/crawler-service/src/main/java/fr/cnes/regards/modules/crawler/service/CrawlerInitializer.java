@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Crawler initializer.
- * This component is used to launch crawler services and ingester service as daemons.
+ * This component is used to launch crawler services as daemons.
  * @author oroussel
  */
 @Component
@@ -37,9 +37,6 @@ public class CrawlerInitializer {
     @Autowired
     private ICrawlerAndIngesterService crawlerAndIngesterService;
 
-    @Autowired
-    private IIngesterService ingesterService;
-
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
         datasetCrawlerService.crawl();
@@ -49,10 +46,4 @@ public class CrawlerInitializer {
     public void onApplicationEvent2(ContextRefreshedEvent event) {
         crawlerAndIngesterService.crawl();
     }
-
-    @EventListener
-    public void onApplicationEvent3(ContextRefreshedEvent event) {
-        ingesterService.listenToPluginConfChange();
-    }
-
 }

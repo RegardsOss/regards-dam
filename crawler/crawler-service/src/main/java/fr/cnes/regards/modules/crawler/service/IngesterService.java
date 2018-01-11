@@ -20,16 +20,17 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.amqp.IPoller;
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -44,7 +45,8 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
 @Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
-public class IngesterService implements IIngesterService {
+public class IngesterService
+        implements IIngesterService, IHandler<PluginConfEvent>, ApplicationListener<ApplicationReadyEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
 
@@ -90,7 +92,7 @@ public class IngesterService implements IIngesterService {
     private IPluginService pluginService;
 
     @Autowired
-    private IPoller poller;
+    private ISubscriber subscriber;
 
     /**
      * Proxied version of this service
@@ -127,9 +129,28 @@ public class IngesterService implements IIngesterService {
     private boolean consumeOnlyMode = false;
 
     @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(PluginConfEvent.class, this);
+    }
+
+    @Override
+    public void handle(TenantWrapper<PluginConfEvent> wrapper) {
+        try {
+            runtimeTenantResolver.forceTenant(wrapper.getTenant());
+            // If it concerns a Datasource, manage it
+            if (wrapper.getContent().getPluginTypes().contains(IDataSourcePlugin.class.getName())) {
+                if (!this.consumeOnlyMode) {
+                    this.manage();
+                }
+            }
+        } catch (RuntimeException t) {
+            LOGGER.error("Cannot manage plugin conf event message", t);
+        }
+    }
+
+/*    @Override
     @Async
     public void listenToPluginConfChange() {
-
         delay.set(INITIAL_DELAY_MS);
         // Infinite loop
         while (true) {
@@ -143,7 +164,7 @@ public class IngesterService implements IIngesterService {
                 try {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll a plugin conf event on this tenant
-                    TenantWrapper<PluginConfEvent> wrapper = poller.poll(PluginConfEvent.class);
+                    TenantWrapper<PluginConfEvent> wrapper = subscriber.poll(PluginConfEvent.class);
                     if (wrapper != null) {
                         // If it concerns a Datasource, manage it
                         if (wrapper.getContent().getPluginTypes().contains(IDataSourcePlugin.class.getName())) {
@@ -169,7 +190,7 @@ public class IngesterService implements IIngesterService {
                 }
             }
         }
-    }
+    }*/
 
     /**
      * Ask for termination of daemon process
@@ -262,7 +283,10 @@ public class IngesterService implements IIngesterService {
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
+                                                                                 OffsetDateTime.now()
+                                                                                         .withOffsetSameInstant(
+                                                                                                 ZoneOffset.UTC),
+                                                                                 pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -294,14 +318,15 @@ public class IngesterService implements IIngesterService {
     private void updatePlannedDate(DatasourceIngestion dsIngestion, int refreshRate) {
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
-                        ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) : dsIngestion.getLastIngestDate();
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
+                        dsIngestion.getLastIngestDate();
                 dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
-                                                                                          ChronoUnit.SECONDS));
+                dsIngestion.setNextPlannedIngestDate(
+                        dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case STARTED: // Already in progress
