@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.entities.service;
 
 import javax.persistence.EntityManager;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
@@ -38,9 +39,14 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
+import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
@@ -85,17 +91,21 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      */
     private final IOpenSearchService openSearchService;
 
-    public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
-            IModelAttrAssocService pModelAttributeService, IDataSourceService pDataSourceService,
+    private final IPluginService pluginService;
+
+    public DatasetService(IDatasetRepository pRepository, IAttributeModelService attributeService,
+            IModelAttrAssocService pModelAttributeService, IDataSourceService dataSourceService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
             EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IDescriptionFileRepository descriptionFileRepository, IOpenSearchService openSearchService) {
+            IDescriptionFileRepository descriptionFileRepository, IOpenSearchService openSearchService,
+            IPluginService pluginService) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
-        attributeService = pAttributeService;
-        dataSourceService = pDataSourceService;
+        this.attributeService = attributeService;
+        this.dataSourceService = dataSourceService;
         this.openSearchService = openSearchService;
+        this.pluginService = pluginService;
     }
 
     /**
@@ -104,16 +114,39 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      */
     private Dataset checkDataSource(final Dataset dataset) throws EntityNotFoundException {
         if (dataset.getDataSource() != null) {
-            // Verify the existence of the DataSource associated to the Dataset
-            final DataSource src = dataSourceService.getDataSource(dataset.getDataSource().getId());
-            dataset.setDataModel(src.getMapping().getModel());
+            // Retrieve DataModel from associated datasource
+            // First : pluginConf id
+            Long datasourceId = dataset.getDataSource().getId();
+            // Then PluginConf...
+            PluginConfiguration pluginConf = pluginService.getPluginConfiguration(datasourceId);
+            // ...then retrieve data model id and set it onto dataset
+            if (pluginConf.getInterfaceNames().contains(IDBDataSourcePlugin.class.getName())) {
+                String jsonModelMapping = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_PARAM);
+                ModelMappingAdapter adapter = new ModelMappingAdapter();
+                try {
+                    DataSourceModelMapping modelMapping = adapter.fromJson(jsonModelMapping);
+                    dataset.setDataModel(modelMapping.getModel());
+                } catch (IOException e) {
+                    throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasource object",
+                                                      PluginConfiguration.class);
+                }
+            } else if (pluginConf.getInterfaceNames().contains(IAipDataSourcePlugin.class.getName())) {
+                String modelName = pluginConf.getParameterValue(IAipDataSourcePlugin.MODEL_NAME_PARAM);
+                Model dataModel = modelService.getModelByName(modelName);
+                if (dataModel == null) {
+                    throw new EntityNotFoundException(
+                            "Datasrouce PluginConfiguration refers to an unknown model (name: " + modelName + ")",
+                            PluginConfiguration.class);
+                }
+                dataset.setDataModel(dataModel.getId());
+            }
         }
         return dataset;
     }
 
     /**
      * Check that the sub-setting criterion setting on a Dataset are coherent with the {@link Model} associated to the
-     * {@link DataSource}. Should always be closed after checkDataSource, so the dataModel is properly set.
+     * data source. Should always be closed after checkDataSource, so the dataModel is properly set.
      * @param dataset the {@link Dataset} to check
      * @return the modified {@link Dataset}
      */

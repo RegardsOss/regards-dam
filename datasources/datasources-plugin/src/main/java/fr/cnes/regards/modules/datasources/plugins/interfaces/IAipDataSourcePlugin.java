@@ -16,11 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
+package fr.cnes.regards.modules.datasources.plugins.interfaces;
+
 /**
- *
- * Available model attribute representation
- *
- * @author Marc Sordi
- *
+ * Aip specialization of data source plugin
+ * @author oroussel
  */
-package fr.cnes.regards.modules.entities.domain.attribute;
+public interface IAipDataSourcePlugin extends IDataSourcePlugin {
+    String MODEL_NAME_PARAM = "model name";
+
+    String BINDING_MAP = "binding map";
+
+
+}

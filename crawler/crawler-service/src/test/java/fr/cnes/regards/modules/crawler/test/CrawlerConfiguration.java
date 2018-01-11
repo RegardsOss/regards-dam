@@ -31,6 +31,7 @@ import fr.cnes.regards.modules.dataaccess.service.AccessRightService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
@@ -75,5 +76,10 @@ public class CrawlerConfiguration {
     @Bean
     public IResourceService getResourceService() {
         return Mockito.mock(IResourceService.class);
+    }
+
+    @Bean
+    public INotificationClient notifClient() {
+        return Mockito.mock(INotificationClient.class);
     }
 }

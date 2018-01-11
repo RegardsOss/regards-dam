@@ -1,10 +1,43 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.MapBindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.Validator;
+
 import com.google.common.base.Strings;
+import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
@@ -17,26 +50,17 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
+import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
+import fr.cnes.regards.modules.entities.domain.event.EventType;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
+import fr.cnes.regards.modules.notification.domain.NotificationType;
+import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
 
 /**
  * @author oroussel
@@ -62,12 +86,33 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private IAccessRightService accessRightService;
 
+    @Autowired
+    private IPublisher publisher;
+
     @PersistenceContext
     private EntityManager em;
 
     /**
+     * Validator used to validate each DataObject creation before its indexing into ElasticSearch
+     */
+    @Autowired
+    private Validator validator;
+
+    @Autowired
+    @Lazy
+    private IEntityIndexerService self;
+
+    /**
+     * The spring application name ~= microservice type
+     */
+    @Value("${spring.application.name}")
+    private String applicationName;
+
+    @Autowired
+    private INotificationClient notifClient;
+
+    /**
      * Load given entity from database and update Elasticsearch
-     *
      * @param tenant concerned tenant (also index intoES)
      * @param ipId concerned entity IpId
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
@@ -157,7 +202,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Search and update associated dataset data objects (ie remove dataset IpId from tags)
-     *
      * @param tenant concerned tenant
      * @param ipId dataset identifier
      */
@@ -198,7 +242,6 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     /**
      * Search and update associated dataset data objects (ie add dataset IpId into tags)
-     *
      * @param dataset concerned dataset
      */
     private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate) {
@@ -330,20 +373,73 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Override
     public int createDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
+        StringBuilder buf = new StringBuilder();
         // On all objects, it is necessary to set datasourceId and creation date
         OffsetDateTime creationDate = now;
-        objects.forEach(dataObject -> {
+        Set<DataObject> toSaveObjects = new HashSet<>();
+        for (DataObject dataObject : objects) {
             dataObject.setDataSourceId(datasourceId);
             dataObject.setCreationDate(creationDate);
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
-        });
-        return esRepos.saveBulk(tenant, objects);
+            validateDataObject(toSaveObjects, dataObject, buf);
+        }
+        if (buf.length() > 0) {
+            self.createNotificationForAdmin(tenant, buf);
+        }
+        int createdCount = esRepos.saveBulk(tenant, toSaveObjects);
+        if (createdCount != 0) {
+            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
+                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                               .map(DataObject::getIpId)
+                                                               .toArray(n -> new UniformResourceName[n])));
+        }
+        return createdCount;
+    }
+
+    @Async
+    @Override
+    public void createNotificationForAdmin(String tenant, CharSequence buf) {
+        runtimeTenantResolver.forceTenant(tenant);
+        FeignSecurityManager.asSystem();
+        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptyList(),
+                                                    Collections.singletonList(DefaultRole.PROJECT_ADMIN.name()),
+                                                    applicationName, "Datasource ingestion error",
+                                                    NotificationType.ERROR);
+        notifClient.createNotification(notif);
+        FeignSecurityManager.reset();
+    }
+
+    /**
+     * Validate given DataObject. If no error, add it to given set else log validation errors
+     */
+    private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, StringBuilder buf) {
+        Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
+        validator.validate(dataObject, errors);
+        // If some validation errors occur, don't index data object
+        if (errors.getErrorCount() == 0) {
+            toSaveObjects.add(dataObject);
+        } else {
+            buf.append("\n").append(errors.getErrorCount()).append(" validation errors:");
+            for (ObjectError objError : errors.getAllErrors()) {
+                if (objError instanceof FieldError) {
+                    buf.append("\nField error in object ").append(objError.getObjectName());
+                    buf.append(" on field '").append(((FieldError) objError).getField());
+                    buf.append("', rejected value '").append(((FieldError) objError).getRejectedValue());
+                    buf.append("': ").append(((FieldError) objError).getField());
+                    buf.append(" ").append(objError.getDefaultMessage());
+                } else {
+                    buf.append("\n").append(objError.toString());
+                }
+            }
+            LOGGER.warn("Data object not indexed due to {}", buf.toString());
+        }
     }
 
     @Override
     public int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects) {
+        StringBuilder buf = new StringBuilder();
         // Set of data objects to be saved (depends on existence of data objects into ES)
         Set<DataObject> toSaveObjects = new HashSet<>();
 
@@ -356,7 +452,8 @@ public class EntityIndexerService implements IEntityIndexerService {
                 dataObject.setMetadata(curObject.getMetadata());
                 dataObject.setGroups(dataObject.getMetadata().getGroups());
                 dataObject.setDatasetModelIds(dataObject.getMetadata().getModelIds());
-                dataObject.setTags(curObject.getTags());
+                // In case to ingest object has new tags
+                dataObject.getTags().addAll(curObject.getTags());
             } else { // else it must be created
                 dataObject.setCreationDate(now);
             }
@@ -367,11 +464,22 @@ public class EntityIndexerService implements IEntityIndexerService {
             if (Strings.isNullOrEmpty(dataObject.getLabel())) {
                 dataObject.setLabel(dataObject.getIpId().toString());
             }
-            toSaveObjects.add(dataObject);
+            validateDataObject(toSaveObjects, dataObject, buf);
+        }
+        if (buf.length() > 0) {
+            self.createNotificationForAdmin(tenant, buf);
         }
         // Bulk save : toSaveObjects.size() isn't checked because it is more likely that toSaveObjects
         // has same size as page.getContent() or is empty
-        return esRepos.saveBulk(tenant, toSaveObjects);
+        int savedCount = esRepos.saveBulk(tenant, toSaveObjects);
+        if (savedCount != 0) {
+            publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
+                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                               .map(DataObject::getIpId)
+                                                               .toArray(n -> new UniformResourceName[n])));
+        }
+        return savedCount;
+
     }
 
 }

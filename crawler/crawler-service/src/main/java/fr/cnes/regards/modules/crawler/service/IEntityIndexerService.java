@@ -68,4 +68,11 @@ public interface IEntityIndexerService {
      * @return number of objects effectively saved
      */
     int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
+
+    /**
+     * Create a notification for admin
+     * @param tenant concerned tenant
+     * @param buf Buffer containing message
+     */
+    void createNotificationForAdmin(String tenant, CharSequence buf);
 }

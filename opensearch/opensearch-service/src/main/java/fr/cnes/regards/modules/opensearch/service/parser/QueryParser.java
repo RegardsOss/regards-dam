@@ -81,13 +81,10 @@ public class QueryParser extends QueryParserHelper implements IParser {
         return "<QueryParser config=\"" + this.getQueryConfigHandler() + "\"/>";
     }
 
-    /* (non-Javadoc)
-     * @see fr.cnes.regards.modules.opensearch.service.IParser#parse(java.util.Map)
-     */
     @Override
-    public ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException {
+    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
 
-        String q = pParameters.get(QUERY_PARAMETER);
+        String q = parameters.get(QUERY_PARAMETER);
 
         // Check required query parameter
         if (q == null) {

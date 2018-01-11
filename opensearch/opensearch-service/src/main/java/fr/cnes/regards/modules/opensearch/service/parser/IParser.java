@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,6 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  * Parses a map of parameters into a {@link ICriterion}.
  * @author Xavier-Alexandre Brochard
  */
-@FunctionalInterface
 public interface IParser {
 
     /**
@@ -50,11 +50,11 @@ public interface IParser {
      *  r   => 10
      * }
      *
-     * @param pParameters the map of parameters
+     * @param parameters the map of parameters
      * @return the {@link ICriterion}
      * @throws OpenSearchParseException when an error occurs during parsing
      */
-    ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException;
+    ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException;
 
     /**
      * Parses the passed OpenSearch request string.<br>
@@ -63,12 +63,12 @@ public interface IParser {
      * or<br>
      * lat=43.25&lon=-123.45&r=10
      *
-     * @param pParameters the string containing the parameters
+     * @param parameters the string containing the parameters
      * @return the {@link ICriterion}
      */
-    default ICriterion parse(String pParameters) throws OpenSearchParseException {
+    default ICriterion parse(String parameters) throws OpenSearchParseException {
         try {
-            List<NameValuePair> asList = URLEncodedUtils.parse(new URI("http://dummy?" + pParameters), "UTF-8");
+            List<NameValuePair> asList = URLEncodedUtils.parse(new URI("http://dummy?" + parameters), Charset.forName("UTF-8"));
             Map<String, String> asMap = new HashMap<>();
             asList.forEach(item -> asMap.put(item.getName(), item.getValue()));
             return parse(asMap);

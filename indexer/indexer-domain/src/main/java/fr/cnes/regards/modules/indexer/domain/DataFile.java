@@ -139,6 +139,13 @@ public class DataFile {
         this.imageHeight = imageHeight;
     }
 
+    /**
+     * @return true if associated file can be downloaded/ordered from Regards (online or nearline)
+     */
+    public boolean isPhysicallyAvailable() {
+        return (size != null) && (size > 0l);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -27,7 +27,6 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownPar
  * @author Marc Sordi
  *
  */
-@FunctionalInterface
 public interface IAttributeFinder {
 
     /**
