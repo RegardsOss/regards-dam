@@ -21,6 +21,6 @@ public class EsHelper {
         if (!Double.isFinite(n)) {
             return n;
         }
-        return new BigDecimal(n).round(mathContext).doubleValue();
+        return BigDecimal.valueOf(n).round(mathContext).doubleValue();
     }
 }

@@ -34,6 +34,7 @@ import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -146,7 +147,14 @@ public class EntityIndexerService implements IEntityIndexerService {
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
                 // Retrieve map of { group, AccessLevel }
-                Map<String, AccessLevel> map = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
+                Map<String, AccessLevel> volatileMap;
+                try {
+                    volatileMap = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
+                } catch (EntityNotFoundException e) {
+                    volatileMap = Collections.emptyMap();
+                }
+                // Need to be final to be used into following lambda
+                final Map<String, AccessLevel> map = volatileMap;
                 // Compute groups for associated data objects
                 dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
                                                                    .filter(group -> map.containsKey(group)

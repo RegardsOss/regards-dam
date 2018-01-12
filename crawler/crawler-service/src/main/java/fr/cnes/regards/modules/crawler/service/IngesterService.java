@@ -211,7 +211,7 @@ public class IngesterService
             // if this method is called while currently been executed, doItAgain is set to true and nothing else is
             // done
             if (managing.getAndSet(true)) {
-                doItAgain = new AtomicBoolean(true);
+                doItAgain.set(true);
                 return;
             }
 

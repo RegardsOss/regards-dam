@@ -69,6 +69,7 @@ import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -244,8 +245,8 @@ public class EsRepository implements IEsRepository {
             if (!client.ping()) {
                 throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
             }
-        } catch (Throwable t) {
-            throw new NoNodeAvailableException("Error while pinging Elasticsearch (" + connectionInfoMessage + ")", t);
+        } catch (Exception e) {
+            throw new NoNodeAvailableException("Error while pinging Elasticsearch (" + connectionInfoMessage + ")", e);
         }
     }
 
@@ -271,22 +272,22 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public boolean setAutomaticDoubleMapping(String index, String... types) {
-        try {
-            String mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates").startObject()
+        try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
+            String mapping = builder.startObject().startArray("dynamic_templates").startObject()
                     .startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
                     .field("type", "double").endObject().endObject().endObject().endArray().endObject().string();
 
-            HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+            try (NStringEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON)) {
 
-            for (String type : types) {
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping", Collections.emptyMap(),
-                                        entity);
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    return false;
+                for (String type : types) {
+                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
+                                                                  Collections.emptyMap(), entity);
+                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
         } catch (IOException ioe) { // NOSONAR
             throw new RuntimeException(ioe);
         }
@@ -296,16 +297,17 @@ public class EsRepository implements IEsRepository {
     public boolean setGeometryMapping(String index, String... types) {
         try {
             for (String type : types) {
-                String mapping = XContentFactory.jsonBuilder().startObject().startObject(type).startObject("properties")
-                        .startObject("geometry").field("type", "geo_shape").endObject().endObject().endObject()
-                        .endObject().string();
+                try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
+                    String mapping = builder.startObject().startObject(type).startObject("properties")
+                            .startObject("geometry").field("type", "geo_shape").endObject().endObject().endObject()
+                            .endObject().string();
 
-                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping", Collections.emptyMap(),
-                                        entity);
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    return false;
+                    HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
+                                                                  Collections.emptyMap(), entity);
+                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -973,8 +975,8 @@ public class EsRepository implements IEsRepository {
                 }
             }
             return false; // NOSONAR
-        } catch (NullPointerException e) {
-            return false; // NOSONAR (better catch a NUllPointerException than testing all imbricated maps)
+        } catch (NullPointerException e) { // NOSONAR (better catch a NPE than testing all imbricated maps)
+            return false;
         }
     }
 

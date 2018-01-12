@@ -24,17 +24,32 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.junit4.SpringRunner;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import fr.cnes.regards.framework.amqp.IInstancePublisher;
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.exception.RabbitMQVhostException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
@@ -43,27 +58,43 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
+import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.service.CollectionService;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
+import fr.cnes.regards.modules.entities.service.IDocumentService;
+import fr.cnes.regards.modules.entities.service.IEntitiesService;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
+import fr.cnes.regards.modules.models.dao.IFragmentRepository;
+import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
 import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
+@RunWith(SpringRunner.class)
 public class AccessRightServiceTest {
 
     private static final String DESC = "Desc";
 
+    @Autowired
     private IAccessRightService service;
 
+    @Autowired
     private IAccessRightRepository arRepo;
 
+    @Autowired
     private IAccessGroupService agService;
 
+    @Autowired
     private IDatasetService dsService;
 
+    @Autowired
     private IPublisher eventPublisher;
 
     private AccessGroup AG1;
@@ -86,14 +117,117 @@ public class AccessRightServiceTest {
 
     private AccessRight GAR21;
 
+    @Configuration
+    @ComponentScan(basePackages = { "fr.cnes.regards.modules.dataaccess"})
+    static class Conf {
+        @Bean
+        public IAccessRightRepository accessRightRepository() {
+            return Mockito.mock(IAccessRightRepository.class);
+        }
+
+        @Bean
+        public IAccessGroupService accessGroupService() {
+            return Mockito.mock(AccessGroupService.class);
+        }
+
+        @Bean
+        public IDatasetService datasetService() {
+            return Mockito.mock(DatasetService.class);
+        }
+
+        @Bean
+        public IPublisher publisher() {
+            return Mockito.mock(IPublisher.class);
+        }
+
+        @Bean
+        public ISubscriber subscriber() {
+            return Mockito.mock(ISubscriber.class);
+        }
+
+        @Bean
+        public ITenantResolver tenantResolver() {
+            return Mockito.mock(ITenantResolver.class);
+        }
+
+        @Bean
+        public IRuntimeTenantResolver runtimeTenantResolver() {
+            return Mockito.mock(IRuntimeTenantResolver.class);
+        }
+
+        @Bean
+        public IInstancePublisher instancePublisher() {
+            return Mockito.mock(IInstancePublisher.class);
+        }
+
+        @Bean
+        public CollectionService collectionService() {
+            return Mockito.mock(CollectionService.class);
+        }
+
+        @Bean
+        public IAttributeModelRepository attributeModelRepository() {
+            return Mockito.mock(IAttributeModelRepository.class);
+        }
+
+        @Bean
+        public IRestrictionRepository restrictionRepository() {
+            return Mockito.mock(IRestrictionRepository.class);
+        }
+
+        @Bean
+        public IFragmentRepository fragmentRepository() {
+            return Mockito.mock(IFragmentRepository.class);
+        }
+
+        @Bean
+        public IAttributePropertyRepository attributePropertyRepository() {
+            return Mockito.mock(IAttributePropertyRepository.class);
+        }
+
+        @Bean
+        public IDocumentLSRepository documentLSRepository() {
+            return Mockito.mock(IDocumentLSRepository.class);
+        }
+
+        @Bean
+        public IModelService modelService() {
+            return Mockito.mock(IModelService.class);
+        }
+
+        @Bean
+        public IDocumentService documentService() {
+            return Mockito.mock(IDocumentService.class);
+        }
+
+        @Bean
+        public IEntitiesService entitiesService() {
+            return Mockito.mock(IEntitiesService.class);
+        }
+
+        @Bean
+        public IPluginService pluginService() {
+            return Mockito.mock(IPluginService.class);
+        }
+
+        @Bean
+        public Gson gson() {
+            return new GsonBuilder().create();
+        }
+
+        @Bean
+        public IEsRepository esRepository() {
+            return Mockito.mock(IEsRepository.class);
+        }
+
+        @Bean
+        public CacheManager cacheManager() {
+            return new SimpleCacheManager();
+        }
+    }
+
     @Before
     public void init() {
-        arRepo = Mockito.mock(IAccessRightRepository.class);
-        agService = Mockito.mock(AccessGroupService.class);
-        dsService = Mockito.mock(DatasetService.class);
-        eventPublisher = Mockito.mock(IPublisher.class);
-        service = new AccessRightService(arRepo, agService, dsService, eventPublisher);
-
         final Model model = Model.build("MODEL", DESC, EntityType.DATASET);
         AG1 = new AccessGroup("AG1");
         AG2 = new AccessGroup("AG2");

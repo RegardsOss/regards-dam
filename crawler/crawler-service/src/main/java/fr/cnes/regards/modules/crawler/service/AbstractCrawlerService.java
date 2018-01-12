@@ -127,8 +127,8 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
                     atLeastOnePoll |= pollMethod.get();
-                } catch (Throwable t) {
-                    LOGGER.error("Cannot manage entity event message", t);
+                } catch (Exception e) {
+                    LOGGER.error("Cannot manage entity event message", e);
                 }
                 // Reset inProgress AFTER transaction
                 inProgress = false;

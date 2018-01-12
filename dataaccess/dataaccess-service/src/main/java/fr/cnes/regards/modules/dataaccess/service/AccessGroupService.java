@@ -18,10 +18,9 @@
  */
 package fr.cnes.regards.modules.dataaccess.service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

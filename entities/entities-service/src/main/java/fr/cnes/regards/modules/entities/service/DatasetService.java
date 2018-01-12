@@ -127,7 +127,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                     DataSourceModelMapping modelMapping = adapter.fromJson(jsonModelMapping);
                     dataset.setDataModel(modelMapping.getModel());
                 } catch (IOException e) {
-                    throw new EntityNotFoundException("Unable to converts a PluginConfiguration to a Datasource object",
+                    throw new EntityNotFoundException("Unable to dejsonify model mapping parameter from "
+                                                      + "PluginConfiguration (" + e.getMessage() + ")",
                                                       PluginConfiguration.class);
                 }
             } else if (pluginConf.getInterfaceNames().contains(IAipDataSourcePlugin.class.getName())) {
@@ -135,7 +136,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 Model dataModel = modelService.getModelByName(modelName);
                 if (dataModel == null) {
                     throw new EntityNotFoundException(
-                            "Datasrouce PluginConfiguration refers to an unknown model (name: " + modelName + ")",
+                            "Datasource PluginConfiguration refers to an unknown model (name: " + modelName + ")",
                             PluginConfiguration.class);
                 }
                 dataset.setDataModel(dataModel.getId());

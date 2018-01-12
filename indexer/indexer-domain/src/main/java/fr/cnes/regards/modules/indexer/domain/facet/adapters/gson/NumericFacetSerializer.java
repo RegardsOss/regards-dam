@@ -39,8 +39,8 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
 
     @Override
-    public JsonElement serialize(NumericFacet pSrc, Type pTypeOfSrc, JsonSerializationContext pContext) {
-        return pContext.serialize(new AdaptedFacet(pSrc));
+    public JsonElement serialize(NumericFacet src, Type srcType, JsonSerializationContext context) {
+        return context.serialize(new AdaptedFacet(src));
     }
 
     /**
@@ -48,21 +48,17 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacet {
+    private static class AdaptedFacet {
 
         private final String attributeName;
 
         private final List<AdaptedFacetValue> values;
 
-        /**
-         * @param pAttributeName
-         * @param pValues
-         */
-        public AdaptedFacet(NumericFacet pFacet) {
+        public AdaptedFacet(NumericFacet facet) {
             super();
-            attributeName = pFacet.getAttributeName();
-            values = pFacet.getValues().entrySet().stream()
-                    .map(entry -> new AdaptedFacetValue(entry, pFacet.getAttributeName())).collect(Collectors.toList());
+            attributeName = facet.getAttributeName();
+            values = facet.getValues().entrySet().stream()
+                    .map(entry -> new AdaptedFacetValue(entry, facet.getAttributeName())).collect(Collectors.toList());
         }
 
     }
@@ -72,7 +68,7 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacetValue {
+    private static class AdaptedFacetValue {
 
         private static final String OPENSEARCH_WILDCARD = "*";
 
@@ -84,32 +80,27 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
 
         private final String openSearchQuery;
 
-        /**
-         * @param pLowerBound
-         * @param pUpperBound
-         * @param pCount
-         */
-        public AdaptedFacetValue(Entry<Range<Double>, Long> pEntry, String pAttributeName) {
-            Range<Double> key = pEntry.getKey();
+        public AdaptedFacetValue(Entry<Range<Double>, Long> entry, String attributeName) {
+            Range<Double> key = entry.getKey();
             if (key.hasLowerBound()) {
-                lowerBound = pEntry.getKey().lowerEndpoint().toString();
+                lowerBound = entry.getKey().lowerEndpoint().toString();
             } else {
                 // lowerBound = String.valueOf(Double.NEGATIVE_INFINITY);
                 // Directly build openSearch lower bound
                 lowerBound = OPENSEARCH_WILDCARD;
             }
             if (key.hasUpperBound()) {
-                upperBound = pEntry.getKey().upperEndpoint().toString();
+                upperBound = entry.getKey().upperEndpoint().toString();
             } else {
                 // upperBound = String.valueOf(Double.POSITIVE_INFINITY);
                 // Directly build openSearch lower bound
                 upperBound = OPENSEARCH_WILDCARD;
             }
-            count = pEntry.getValue();
+            count = entry.getValue();
             if (lowerBound.equals(upperBound)) {
-                openSearchQuery = pAttributeName + ":" + lowerBound;
+                openSearchQuery = attributeName + ":" + lowerBound;
             } else {
-                openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "}";
+                openSearchQuery = attributeName + ":[" + lowerBound + " TO " + upperBound + "}";
             }
         }
 

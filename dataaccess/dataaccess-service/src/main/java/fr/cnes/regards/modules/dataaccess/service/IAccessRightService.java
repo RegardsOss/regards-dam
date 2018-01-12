@@ -34,18 +34,19 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
  */
 public interface IAccessRightService {
 
-    Page<AccessRight> retrieveAccessRights(String pAccessGroupName, UniformResourceName pDatasetIpId,
-            Pageable pPageable) throws EntityNotFoundException;
+    Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
+            Pageable pageable) throws EntityNotFoundException;
 
-    Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId);
+    Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
+            throws EntityNotFoundException;
 
-    AccessRight createAccessRight(AccessRight pAccessRight) throws ModuleException;
+    AccessRight createAccessRight(AccessRight accessRight) throws ModuleException;
 
-    AccessRight retrieveAccessRight(Long pId) throws EntityNotFoundException;
+    AccessRight retrieveAccessRight(Long id) throws EntityNotFoundException;
 
-    AccessRight updateAccessRight(Long pId, AccessRight pToBe) throws ModuleException;
+    AccessRight updateAccessRight(Long id, AccessRight accessRight) throws ModuleException;
 
-    void deleteAccessRight(Long pId) throws ModuleException;
+    void deleteAccessRight(Long id) throws ModuleException;
 
     Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
             throws EntityNotFoundException;

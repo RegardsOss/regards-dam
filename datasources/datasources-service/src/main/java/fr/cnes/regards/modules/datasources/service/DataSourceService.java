@@ -125,7 +125,7 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
             PluginConfiguration dataSource) {
         PluginConfiguration dbConf = connectionPluginParam.getPluginConfiguration();
         PluginConfiguration currentDbConf = dataSource.getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM);
-        if ((dbConf == null) || !dbConf.getId().toString().equals(currentDbConf.getId())) {
+        if ((dbConf == null) || !dbConf.getId().equals(currentDbConf.getId())) {
             connectionPluginParam.setPluginConfiguration(currentDbConf);
         }
     }
