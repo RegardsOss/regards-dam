@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dataaccess.service;
+package fr.cnes.regards.modules.dataaccess.service.test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +36,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.gson.Gson;
@@ -58,6 +59,9 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
+import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.CollectionService;
@@ -78,6 +82,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  *
  */
 @RunWith(SpringRunner.class)
+@DirtiesContext
 public class AccessRightServiceTest {
 
     private static final String DESC = "Desc";
