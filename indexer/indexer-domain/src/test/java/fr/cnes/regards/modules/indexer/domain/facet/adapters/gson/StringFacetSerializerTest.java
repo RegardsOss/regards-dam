@@ -40,7 +40,7 @@ public class StringFacetSerializerTest {
         values.put("toto", 1L);
         StringFacet facet = new StringFacet("myattributename", values);
 
-        AdaptedFacet adapted = new StringFacetSerializer().new AdaptedFacet(facet);
+        AdaptedFacet adapted = new StringFacetSerializer.AdaptedFacet(facet);
         String openSearchQuery = adapted.getValues().get(0).getOpenSearchQuery();
 
         Assert.assertEquals("myattributename:toto", openSearchQuery);
@@ -52,7 +52,7 @@ public class StringFacetSerializerTest {
         values.put("Harry Potter", 1L);
         StringFacet facet = new StringFacet("myattributename", values);
 
-        AdaptedFacet adapted = new StringFacetSerializer().new AdaptedFacet(facet);
+        AdaptedFacet adapted = new StringFacetSerializer.AdaptedFacet(facet);
         String openSearchQuery = adapted.getValues().get(0).getOpenSearchQuery();
 
         Assert.assertEquals("myattributename:\"Harry Potter\"", openSearchQuery);

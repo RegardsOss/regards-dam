@@ -45,7 +45,7 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private static class AdaptedFacet {
+    static class AdaptedFacet {
 
         private final String attributeName;
 
@@ -80,7 +80,7 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private static class AdaptedFacetValue {
+    static class AdaptedFacetValue {
 
         private final String word;
 
