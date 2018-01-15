@@ -317,6 +317,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
                           "Could not update a DBConnection.", 456789L);
     }
 
+    @Ignore
     @Test
     public void updateUnknownDBConnection() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
