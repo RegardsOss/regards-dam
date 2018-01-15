@@ -39,12 +39,16 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
@@ -85,6 +89,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     private int pluginConfCount = 0;
 
     @Autowired
+    private IPluginService pluginService;
+
+    @Autowired
+    private IRuntimeTenantResolver resolver;
+
+    @Autowired
     IPluginConfigurationRepository pluginConfR;
 
     @Autowired
@@ -93,6 +103,28 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Override
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    @Test
+    public void createPostgresDBConnection() throws ModuleException {
+
+        pluginService.addPluginPackage(DefaultPostgreConnectionPlugin.class.getPackage().getName());
+
+        RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
+        customizer.addExpectation(MockMvcResultMatchers.status().is2xxSuccessful());
+
+        performDefaultPost(DBConnectionController.TYPE_MAPPING, readJsonContract("newConnection.json"), customizer,
+                           "Configuration should be saved!");
+
+        resolver.forceTenant(DEFAULT_TENANT);
+        List<PluginConfiguration> dbConfs = pluginService.getPluginConfigurationsByType(IConnectionPlugin.class);
+        Assert.assertNotNull(dbConfs);
+        Assert.assertTrue(dbConfs.size() == 1);
+
+        PluginConfiguration dbConf = pluginService.loadPluginConfiguration(dbConfs.get(0).getId());
+
+        performDefaultPut(DBConnectionController.TYPE_MAPPING + "/{connectionId}", dbConf, customizer,
+                          "Configuration should be saved!", dbConf.getId());
     }
 
     @Test
@@ -363,12 +395,12 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
         dbConnection.setParameters(PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
-                                           .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                                           .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
-                                           .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
-                                           .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                                           .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, 3)
-                                           .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, 10).getParameters());
+                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
+                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, 3)
+                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, 10).getParameters());
         dbConnection.setLabel(label);
         dbConnection.setPluginClassName(pluginClassName);
         return dbConnection;
@@ -379,7 +411,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         plgConfs.add(service.createDBConnection(createADbConnection("Hello Toulouse", POSTGRESQL_PLUGIN_CONNECTION)));
         plgConfs.add(service.createDBConnection(createADbConnection("Hello Paris", POSTGRESQL_PLUGIN_CONNECTION)));
         // Feel free to uncomment if you want to test oracle DB
-        //        plgConfs.add(service.createDBConnection(createADbConnection("Hello Bordeaux", ORACLE_PLUGIN_CONNECTION)));
+        // plgConfs.add(service.createDBConnection(createADbConnection("Hello Bordeaux", ORACLE_PLUGIN_CONNECTION)));
         pluginConfCount = plgConfs.size();
         return plgConfs;
     }

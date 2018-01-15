@@ -28,7 +28,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.modules.plugins.service.PluginService;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -63,8 +62,8 @@ public class DBConnectionService implements IDBConnectionService {
 
     @Override
     public PluginConfiguration createDBConnection(PluginConfiguration dbConnection) throws ModuleException {
-        dbConnection.setMetaData(
-                pluginService.checkPluginClassName(IDBConnectionPlugin.class, dbConnection.getPluginClassName()));
+        dbConnection.setMetaData(pluginService.checkPluginClassName(IDBConnectionPlugin.class,
+                                                                    dbConnection.getPluginClassName()));
         return pluginService.savePluginConfiguration(dbConnection);
     }
 
@@ -74,15 +73,10 @@ public class DBConnectionService implements IDBConnectionService {
     }
 
     @Override
-    public PluginConfiguration updateDBConnection(PluginConfiguration dbConn) throws ModuleException {
-        // Get the PluginConfiguration
-        PluginConfiguration plgConf = pluginService.getPluginConfiguration(dbConn.getId());
-
-        // Update the PluginParamater of the PluginConfiguration
-        plgConf.getParameters()
-                .replaceAll(p -> PluginParametersFactory.updateParameter(p, dbConn.getParameterValue(p.getName())));
-
-        return pluginService.updatePluginConfiguration(plgConf);
+    public PluginConfiguration updateDBConnection(PluginConfiguration dbConnection) throws ModuleException {
+        dbConnection.setMetaData(pluginService.checkPluginClassName(IDBConnectionPlugin.class,
+                                                                    dbConnection.getPluginClassName()));
+        return pluginService.updatePluginConfiguration(dbConnection);
     }
 
     @Override
