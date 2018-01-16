@@ -52,6 +52,8 @@ public class DataObject extends AbstractDataEntity {
      */
     private DataObjectMetadata metadata = new DataObjectMetadata();
 
+    private Boolean containsPhysicalData = null;
+
     public DataObject(Model model, String tenant, String label) {
         super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1),
               label);
@@ -83,6 +85,12 @@ public class DataObject extends AbstractDataEntity {
 
     public void setMetadata(DataObjectMetadata metadata) {
         this.metadata = metadata;
+    }
+
+    @Override
+    public boolean containsPhysicalData() {
+        containsPhysicalData = super.containsPhysicalData();
+        return containsPhysicalData;
     }
 
     @Override

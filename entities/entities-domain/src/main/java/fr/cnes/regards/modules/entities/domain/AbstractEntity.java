@@ -54,6 +54,7 @@ import org.hibernate.annotations.TypeDefs;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.gson.annotations.JsonAdapter;
+import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
@@ -168,6 +169,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     // To perform quick access to attribute from its name
     @Transient
+    @GsonIgnore
     private Map<String, AbstractAttribute<?>> propertyMap = Collections.emptyMap();
 
     @Type(type = "jsonb")
