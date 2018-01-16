@@ -150,9 +150,7 @@ public class PostgreSQLConnectionTestWithService extends AbstractRegardsServiceI
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         return PluginUtils.getPluginConfiguration(params, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));

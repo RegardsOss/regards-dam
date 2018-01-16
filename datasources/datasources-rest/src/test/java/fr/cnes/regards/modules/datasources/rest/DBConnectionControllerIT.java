@@ -288,8 +288,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Ignore // Reactivate to test Oracle DB
     public void updateDBConnection() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", ORACLE_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM), 3);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM), 7);
         PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.USER_PARAM), "Bob");
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
@@ -338,8 +336,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         PluginConfiguration dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
         dbConnection.setId(plgConf.getId());
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM), 3);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM), 5);
 
         // Define expectations
         final List<ResultMatcher> expectations = new ArrayList<>();
@@ -352,8 +348,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void testConnectionFailed() throws ModuleException {
         PluginConfiguration dbConnection = createADbConnection("Hello", POSTGRESQL_PLUGIN_CONNECTION);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM), 5);
-        PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM), 9);
         PluginParametersFactory.updateParameter(dbConnection.getParameter(IDBConnectionPlugin.USER_PARAM), "daredevil");
 
         PluginConfiguration plgConf = service.createDBConnection(dbConnection);
@@ -396,12 +390,11 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
         dbConnection.setParameters(PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, 3)
-                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, 10).getParameters());
+                                           .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                                           .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
+                                           .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
+                                           .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
+                                           .getParameters());
         dbConnection.setLabel(label);
         dbConnection.setPluginClassName(pluginClassName);
         return dbConnection;

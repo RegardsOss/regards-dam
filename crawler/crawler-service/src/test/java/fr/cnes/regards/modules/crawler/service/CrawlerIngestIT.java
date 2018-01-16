@@ -293,9 +293,7 @@ public class CrawlerIngestIT {
                 .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPpassword)
                 .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));

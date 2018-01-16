@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -38,20 +37,15 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -296,20 +290,6 @@ public class DatasetServiceTest {
         Assert.assertNotNull(dataSet1.getIpId());
         Assert.assertNotNull(dataSet2.getIpId());
         Assert.assertNotEquals(dataSet1.getIpId(), dataSet2.getIpId());
-    }
-
-    private PluginConfiguration getPostgreConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, "dbUser")
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, "dbPassword")
-                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, "dbHost")
-                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, "dbPort")
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, "dbName")
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
-                                                  Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
     }
 
     private void buildModelAttributes() {

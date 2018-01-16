@@ -23,6 +23,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -108,18 +111,8 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
 
         try (Connection conn1 = sqlConn.getConnection()) {
             Assert.assertNotNull(conn1);
-            Assert.assertTrue(sqlConn.testConnection());
-            try (Connection conn2 = sqlConn.getConnection()) {
-                Assert.assertNotNull(conn2);
-                Assert.assertTrue(sqlConn.testConnection());
-                try (Connection conn3 = sqlConn.getConnection()) {
-                    Assert.assertNotNull(conn3);
-                }
-                try (Connection conn4 = sqlConn.getConnection()) {
-                    Assert.assertNotNull(conn4);
-                }
-            }
         }
+        Assert.assertTrue(sqlConn.testConnection());
     }
 
     @Test
@@ -131,22 +124,6 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
         Assert.assertNotNull(sqlConn);
 
         try (Connection conn1 = sqlConn.getConnection()) {
-            try (Connection conn2 = sqlConn.getConnection()) {
-                try (Connection conn3 = sqlConn.getConnection()) {
-                    try (Connection conn4 = sqlConn.getConnection()) {
-                        Assert.assertNull(conn4);
-                    } catch (SQLException e) {
-                        LOG.info("Unable to get a new connection : poll max sise is reach");
-                        Assert.assertTrue(true);
-                    }
-                } catch (SQLException e) {
-                    LOG.error("unable to get a connection", e);
-                    Assert.fail();
-                }
-            } catch (SQLException e) {
-                LOG.error("unable to get a connection", e);
-                Assert.fail();
-            }
         } catch (SQLException e) {
             LOG.error("unable to get a connection", e);
             Assert.fail();
@@ -161,9 +138,7 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 5)
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
@@ -174,40 +149,25 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
         // Get all the available connections
         final Connection conn1 = sqlConn.getConnection();
         Assert.assertNotNull(conn1);
-        final Connection conn2 = sqlConn.getConnection();
-        Assert.assertNotNull(conn2);
-        final Connection conn3 = sqlConn.getConnection();
-        Assert.assertNotNull(conn3);
-        final Connection conn4 = sqlConn.getConnection();
-        Assert.assertNotNull(conn4);
-        final Connection conn5 = sqlConn.getConnection();
-        Assert.assertNotNull(conn5);
 
         // Lambda Runnable
-        final Runnable closeConnection = () -> {
+        Future<?> closeConnection =  Executors.newSingleThreadExecutor().submit(() -> {
             try {
-                // Close 2 connections
                 conn1.close();
-                conn2.close();
             } catch (SQLException e) {
                 LOG.error(e.getMessage());
             }
-        };
+        });
 
-        // start the thread
-        new Thread(closeConnection).start();
+        // Wait for the thread toi finish
+        try {
+            closeConnection.get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
 
-        // Gest a connection
-        final Connection conn6 = sqlConn.getConnection();
-        Assert.assertNotNull(conn6);
-
-        // Test the connection
+        // Test the connection (create a new connection, as previous one is ended, this should be ok)
         Assert.assertTrue(sqlConn.testConnection());
-
-        conn3.close();
-        conn4.close();
-        conn5.close();
-        conn6.close();
     }
 
     @Test
@@ -217,9 +177,7 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, "unknown")
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         final DefaultPostgreConnectionPlugin sqlConn = PluginUtils
                 .getPlugin(parameters, DefaultPostgreConnectionPlugin.class, Arrays.asList(PLUGIN_PACKAGE),
@@ -235,9 +193,7 @@ public class PostgreSqlConnectionPluginTest extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         return parameters;
     }

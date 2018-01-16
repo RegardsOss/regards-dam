@@ -119,13 +119,6 @@ public class DBConnectionServiceTest {
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin";
         dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
-        //        dbConnection.setUser(dbUser);
-        //        dbConnection.setPassword(dbPassword);
-        //        dbConnection.setDbHost(dbHost);
-        //        dbConnection.setDbPort(dbPort);
-        //        dbConnection.setDbName(dbName);
-        //        dbConnection.setMinPoolSize(1);
-        //        dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection");
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
                 .thenReturn(initializePluginMetaDataPostGre("plugin-id-2"));
@@ -140,13 +133,6 @@ public class DBConnectionServiceTest {
         String className = "fr.cnes.regards.modules.datasources.plugins.DefaultOrcleConnectionPlugin";
         dbConnection.setPluginClassName(className);
         dbConnection.setParameters(initializePluginParameters());
-        //        dbConnection.setUser(dbUser);
-        //        dbConnection.setPassword(dbPassword);
-        //        dbConnection.setDbHost(dbHost);
-        //        dbConnection.setDbPort(dbPort);
-        //        dbConnection.setDbName(dbName);
-        //        dbConnection.setMinPoolSize(1);
-        //        dbConnection.setMaxPoolSize(10);
         dbConnection.setLabel("the label of the new connection failed");
         Mockito.when(pluginServiceMock.checkPluginClassName(IDBConnectionPlugin.class, className))
                 .thenThrow(EntityInvalidException.class);
@@ -170,9 +156,7 @@ public class DBConnectionServiceTest {
                 .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
                 .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER)
-                .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER).getParameters();
     }
 
     private List<PluginParameterType> initializePluginParameterType() {
