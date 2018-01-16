@@ -75,6 +75,8 @@ public class DataSourceEntity implements IIdentifiable<Long> {
     private LocalTime timeWithoutTimeZone; // Types.TIME
 
     private LocalDateTime timeStampWithoutTimeZone; // Types.TIMESTAMP
+    
+    private String dateStr;
 
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime timeStampWithTimeZone; // Types.TIMESTAMP or Types.TIMESTAMP_WITH_TIMEZONE > JDBC 4.2
@@ -86,7 +88,7 @@ public class DataSourceEntity implements IIdentifiable<Long> {
 
     public DataSourceEntity(String pLabel, int pAltitude, double pLatitude, double pLongitude, LocalDate pDate,
             LocalTime pTimeWithoutTimeZone, LocalDateTime pTimeStampWithoutTimeZone,
-            OffsetDateTime pTimeStampWithTimeZone, Boolean pUpdate) {
+            OffsetDateTime pTimeStampWithTimeZone, String dateStr, Boolean pUpdate) {
         super();
         this.label = pLabel;
         this.altitude = pAltitude;
@@ -96,6 +98,7 @@ public class DataSourceEntity implements IIdentifiable<Long> {
         this.timeWithoutTimeZone = pTimeWithoutTimeZone;
         this.timeStampWithoutTimeZone = pTimeStampWithoutTimeZone;
         this.timeStampWithTimeZone = pTimeStampWithTimeZone;
+        this.dateStr = dateStr;
         this.update = pUpdate;
     }
 
