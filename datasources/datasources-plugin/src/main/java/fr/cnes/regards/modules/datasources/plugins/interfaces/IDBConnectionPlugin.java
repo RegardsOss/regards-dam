@@ -67,16 +67,6 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
     String DRIVER_PARAM = "driver";
 
     /**
-     * Max size of the pool
-     */
-    String MAX_POOLSIZE_PARAM = "maxPoolSize";
-
-    /**
-     * Min size of the pool
-     */
-    String MIN_POOLSIZE_PARAM = "minPoolSize";
-
-    /**
      * Retrieve a {@link Connection} to a database
      * @return the {@link Connection}
      * @throws SQLException the {@link Connection} is not available

@@ -74,16 +74,9 @@ public class DBConnectionServiceIT {
                                          .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, "unknown")
                                          .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, 5432)
                                          .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, "regards")
-//                                         .addParameter(IDBConnectionPlugin.DRIVER_PARAM, POSTGRESQL_JDBC_DRIVER)
-                                         .addParameter(IDBConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                                         .addParameter(IDBConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters());
-//        connection.setDbHost("unknown");
-//        connection.setDbName("regards");
-//        connection.setDbPort("5432");
+                                        .getParameters());
         connection.setLabel("Unknown host connection");
-//        connection.setPassword("password");
         connection.setPluginClassName(DefaultPostgreConnectionPlugin.class.getName());
-//        connection.setUser("user");
 
         dbConnectionService.createDBConnection(connection);
 
