@@ -106,14 +106,14 @@ public class QueryParser extends QueryParserHelper implements IParser {
      * <p>
      * Default: false.
      */
-    public void setAllowLeadingWildcard(final boolean allowLeadingWildcard) {
+    public final void setAllowLeadingWildcard(final boolean allowLeadingWildcard) {
         getQueryConfigHandler().set(ConfigurationKeys.ALLOW_LEADING_WILDCARD, allowLeadingWildcard);
     }
 
     /**
      * Enable or disable lowercase regexp transformation
      */
-    public void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
+    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
         getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
     }
 
@@ -125,7 +125,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
      * <p>
      * Default: false.
      */
-    public void setEnablePositionIncrements(final boolean enabled) {
+    public final void setEnablePositionIncrements(final boolean enabled) {
         getQueryConfigHandler().set(ConfigurationKeys.ENABLE_POSITION_INCREMENTS, enabled);
     }
 

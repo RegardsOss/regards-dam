@@ -44,7 +44,7 @@ public class AccessGroupDissociationEvent implements ISubscribable {
 
     public AccessGroupDissociationEvent(AccessGroup accessGroup, String userEmail) {
         this.accessGroup = accessGroup;
-        this.setUserEmail(userEmail);
+        this.userEmail = userEmail;
     }
 
     public AccessGroup getAccessGroup() {

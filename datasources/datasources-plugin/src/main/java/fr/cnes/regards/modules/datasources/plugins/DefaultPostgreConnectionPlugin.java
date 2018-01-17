@@ -78,7 +78,7 @@ public class DefaultPostgreConnectionPlugin extends AbstractDBConnection {
      */
     @PluginInit
     private void createPoolConnection() {
-        createPoolConnection(dbUser, dbPassword, 1, 1);
+        createPoolConnection(dbUser, dbPassword, 3, 1);
     }
 
     @PluginDestroy

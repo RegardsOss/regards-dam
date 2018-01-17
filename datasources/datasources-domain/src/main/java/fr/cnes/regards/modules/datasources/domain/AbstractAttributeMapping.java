@@ -184,7 +184,7 @@ public abstract class AbstractAttributeMapping {
         return name.equals(GEOMETRY);
     }
 
-    public boolean isMappedToStaticProperty() {
+    public final boolean isMappedToStaticProperty() {
         return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() || isThumbnail() || isGeometry();
     }
 }

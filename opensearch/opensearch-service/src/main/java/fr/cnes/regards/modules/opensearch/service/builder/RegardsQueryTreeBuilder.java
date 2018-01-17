@@ -44,7 +44,7 @@ public class RegardsQueryTreeBuilder extends QueryTreeBuilder implements ICriter
 
     /**
      * Constructor
-     * @param pAttributeModelCache provides access to attribute models with caching facilities
+     * @param finder attribute finder
      */
     public RegardsQueryTreeBuilder(IAttributeFinder finder) {
 
