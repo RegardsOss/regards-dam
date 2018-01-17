@@ -13,9 +13,9 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  * @author oroussel
  */
 public class DataObjectAssocRemover extends AbstractDataObjectBulkSaver implements Consumer<DataObject> {
-    private String datasetIpId;
+    private final String datasetIpId;
 
-    private OffsetDateTime updateDate;
+    private final OffsetDateTime updateDate;
 
     public DataObjectAssocRemover(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
             SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor) {

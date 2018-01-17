@@ -40,9 +40,6 @@ public class DeletedEntity {
     @Convert(converter = UrnConverter.class)
     private UniformResourceName ipId;
 
-    public DeletedEntity() {
-    }
-
     public Long getId() {
         return id;
     }

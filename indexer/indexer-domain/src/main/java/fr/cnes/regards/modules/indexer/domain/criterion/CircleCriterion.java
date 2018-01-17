@@ -11,12 +11,12 @@ public class CircleCriterion implements ICriterion {
     /**
      * Center point coordinates
      */
-    private Double[] coordinates;
+    private final Double[] coordinates;
 
     /**
      * Radius length. Format : a number eventually followed by unit (m, km, ...). In meter by default
      */
-    private String radius;
+    private final String radius;
 
     public CircleCriterion(Double[] coordinates, String radius) {
         this.coordinates = coordinates;

@@ -171,7 +171,7 @@ public class EsRepository implements IEsRepository {
     /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
      */
-    private ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
@@ -202,17 +202,17 @@ public class EsRepository implements IEsRepository {
     /**
      * Elasticsearch port
      */
-    private int esPort;
+    private final int esPort;
 
     /**
      * Low level Rest API client
      */
-    private RestClient restClient;
+    private final RestClient restClient;
 
     /**
      * High level Rest API client
      */
-    private RestHighLevelClient client;
+    private final RestHighLevelClient client;
 
     /**
      * Json mapper
@@ -865,8 +865,6 @@ public class EsRepository implements IEsRepository {
                     results.addAll(searchJoined(key.getV1(), key.getV2(), key.getV3()));
                     return results;
                 }
-
-                ;
             });
 
     @SuppressWarnings("unchecked")

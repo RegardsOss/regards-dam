@@ -14,7 +14,7 @@ public class DocFilesSummary extends AbstractDocSummary {
     /**
      * Map of sub-summaries distributed by discriminant value
      */
-    private Map<String, DocFilesSubSummary> subSummariesMap = new HashMap<>();
+    private final Map<String, DocFilesSubSummary> subSummariesMap = new HashMap<>();
 
     public Map<String, DocFilesSubSummary> getSubSummariesMap() {
         return subSummariesMap;

@@ -564,7 +564,4 @@ public abstract class AbstractDataObjectMapping {
          */
         LABEL
     }
-
-    ;
-
 }

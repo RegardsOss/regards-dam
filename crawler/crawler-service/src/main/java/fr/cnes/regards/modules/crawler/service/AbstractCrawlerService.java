@@ -94,7 +94,7 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
      */
     private static boolean consumeOnlyMode = false;
 
-    private Class<T> entityClass;
+    private final Class<T> entityClass;
 
     /**
      * Ask for termination of daemon process

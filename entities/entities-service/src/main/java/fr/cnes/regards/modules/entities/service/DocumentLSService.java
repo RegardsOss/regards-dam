@@ -40,7 +40,7 @@ import fr.cnes.regards.modules.indexer.domain.DataFile;
 @Service
 public class DocumentLSService implements IDocumentLSService {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(DocumentLSService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentLSService.class);
 
     private static final String DIGEST_ALGORITHM = "MD5";
 

@@ -22,12 +22,12 @@ public abstract class AbstractDataObjectBulkSaver {
     /**
      * Set of data objects to usually save
      */
-    private HashSet<DataObject> toSaveObjects;
+    private final HashSet<DataObject> toSaveObjects;
 
     /**
      * Callable used to save data
      */
-    private SaveDataObjectsCallable saveDataObjectsCallable;
+    private final SaveDataObjectsCallable saveDataObjectsCallable;
 
     /**
      * Saving task
@@ -37,12 +37,12 @@ public abstract class AbstractDataObjectBulkSaver {
     /**
      * Executor used to create tasks
      */
-    private ExecutorService executor;
+    private final ExecutorService executor;
 
     /**
      * Dataset if onlyu used for loggin prurpose
      */
-    private long datasetId;
+    private final long datasetId;
 
     protected AbstractDataObjectBulkSaver(SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor,
             HashSet<DataObject> toSaveObjects, long datasetId) {

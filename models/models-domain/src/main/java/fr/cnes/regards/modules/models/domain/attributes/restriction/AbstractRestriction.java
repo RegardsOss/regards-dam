@@ -33,10 +33,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import com.google.gson.annotations.JsonAdapter;
-
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.modules.models.domain.adapters.gson.RestrictionJsonAdapterFactory;
-import fr.cnes.regards.modules.models.schema.Restriction;
 
 /**
  * @author msordi
@@ -83,12 +81,4 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
         type = pType;
     }
 
-    @Override
-    public Restriction toXml() {
-        return null;
-    }
-
-    @Override
-    public void fromXml(Restriction pXmlElement) {
-    }
 }

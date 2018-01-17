@@ -11,7 +11,7 @@ public class PolygonCriterion implements ICriterion {
     /**
      * Polygon coordinates
      */
-    private Double[][][] coordinates;
+    private final Double[][][] coordinates;
 
     protected PolygonCriterion(Double[][][] coordinates) {
         this.coordinates = coordinates;

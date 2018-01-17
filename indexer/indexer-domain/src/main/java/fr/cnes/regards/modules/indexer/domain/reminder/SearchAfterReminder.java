@@ -37,9 +37,9 @@ public class SearchAfterReminder extends Reminder {
 
     private String searchAfterSortValues;
 
-    private int nextOffset;
+    private final int nextOffset;
 
-    private int nextPageSize;
+    private final int nextPageSize;
 
     public SearchAfterReminder(ICriterion crit, SearchKey<?, ?> searchKey, Sort sort, Pageable nextPage) {
         super();

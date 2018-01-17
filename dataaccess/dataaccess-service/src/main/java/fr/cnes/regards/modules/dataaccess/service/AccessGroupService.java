@@ -73,7 +73,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.event.AccessGroupPu
 @MultitenantTransactional
 public class AccessGroupService implements ApplicationListener<ApplicationReadyEvent>, IAccessGroupService {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccessGroupService.class);
 
     /**
      * Access group already exist message format

@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public class DocFilesSubSummary extends AbstractDocSummary {
 
-    private Map<String, FilesSummary> fileTypesSummaryMap = new HashMap<>();
+    private final Map<String, FilesSummary> fileTypesSummaryMap = new HashMap<>();
 
     public Map<String, FilesSummary> getFileTypesSummaryMap() {
         return fileTypesSummaryMap;

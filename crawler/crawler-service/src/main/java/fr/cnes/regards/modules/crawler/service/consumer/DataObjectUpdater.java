@@ -13,13 +13,13 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  * Data object accumulator and multi thread Elasticsearch bulk saver
  */
 public class DataObjectUpdater extends AbstractDataObjectBulkSaver implements Consumer<DataObject> {
-    private String datasetIpId;
+    private final String datasetIpId;
 
-    private Set<String> groups;
+    private final Set<String> groups;
 
-    private OffsetDateTime updateDate;
+    private final OffsetDateTime updateDate;
 
-    private Long datasetModelId;
+    private final Long datasetModelId;
 
     public DataObjectUpdater(Dataset dataset, OffsetDateTime updateDate, HashSet<DataObject> toSaveObjects,
             SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor) {

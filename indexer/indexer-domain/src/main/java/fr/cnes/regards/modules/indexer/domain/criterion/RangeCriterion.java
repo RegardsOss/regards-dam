@@ -15,7 +15,7 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     /**
      * Set of comparisons (att > 0, att <= 25.34, etc...)
      */
-    private Set<ValueComparison<T>> valueComparisons = new HashSet<>();
+    private final Set<ValueComparison<T>> valueComparisons = new HashSet<>();
 
     protected RangeCriterion(String pName) {
         super(pName);
