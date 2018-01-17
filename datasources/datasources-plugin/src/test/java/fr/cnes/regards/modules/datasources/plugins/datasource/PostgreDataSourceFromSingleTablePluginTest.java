@@ -47,6 +47,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
@@ -62,6 +63,7 @@ import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugi
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
@@ -109,14 +111,9 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
 
     private DataSourceModelMapping modelMapping;
 
-//    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-
     private static int nbElements;
 
     private final Map<Long, Object> pluginCacheMap = new HashMap<>();
-
-//    @Autowired
-//    private Gson gson;
 
     /**
      * JPA Repository
@@ -161,9 +158,9 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                         getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-//                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, modelMapping)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800).getParameters();
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800)
+                .addParameter(IDataSourcePlugin.TAGS, Sets.newHashSet("TOTO", "TITI")).getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                 Arrays.asList(PLUGIN_CURRENT_PACKAGE), pluginCacheMap);
@@ -182,26 +179,26 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
         Assert.assertEquals(nbElements, repository.count());
 
         // Get first page
-        Page<DataObject> ll = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
-        Assert.assertNotNull(ll);
-        Assert.assertEquals(2, ll.getContent().size());
+        Page<DataObject> page = plgDBDataSource.findAll(TENANT, new PageRequest(0, 2));
+        Assert.assertNotNull(page);
+        Assert.assertEquals(2, page.getContent().size());
 
-        ll.getContent().get(0).getProperties().forEach(attr -> {
+        page.getContent().get(0).getProperties().forEach(attr -> {
             if (attr.getName().equals("name")) {
                 Assert.assertTrue(attr.getValue().toString().contains(HELLO));
             }
         });
 
-        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
-        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
+        page.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        page.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        page.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
 
         // Get second page
-        ll = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
-        Assert.assertNotNull(ll);
-        Assert.assertEquals(1, ll.getContent().size());
+        page = plgDBDataSource.findAll(TENANT, new PageRequest(1, 2));
+        Assert.assertNotNull(page);
+        Assert.assertEquals(1, page.getContent().size());
 
-        ll.getContent().forEach(dataObj -> {
+        page.getContent().forEach(dataObj -> {
             LOG.info("------------------->");
             dataObj.getProperties().forEach(attr -> {
                 LOG.info(attr.getName() + " : " + attr.getValue());
@@ -211,9 +208,11 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
             });
         });
 
-        ll.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
-        ll.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
-        ll.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
+        page.getContent().forEach(d -> Assert.assertNotNull(d.getIpId()));
+        page.getContent().forEach(d -> Assert.assertNotNull(d.getSipId()));
+        page.getContent().forEach(d -> Assert.assertTrue(0 < d.getProperties().size()));
+        page.getContent().forEach(d -> Assert.assertTrue(d.getTags().contains("TOTO")));
+        page.getContent().forEach(d -> Assert.assertTrue(d.getTags().contains("TITI")));
     }
 
     @Test

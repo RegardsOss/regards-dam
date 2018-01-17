@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -83,6 +84,10 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     @PluginParameter(name = BINDING_MAP, keylabel = "AIP property path", label = "Attribute path",
             description = "Binding map betwwen AIP and model ie property chain from AIP format and its associated property chain from model")
     private Map<String, String> bindingMap;
+
+    @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
+            description = "Common tags to be put on all data objects created by the data source")
+    private Collection<String> commonTags = Collections.emptyList();
 
     @Autowired
     private IModelService modelService;
@@ -197,6 +202,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         }
 
         // Tags
+        obj.getTags().addAll(commonTags);
         obj.getTags().addAll(aip.getTags());
 
         // Binded properties

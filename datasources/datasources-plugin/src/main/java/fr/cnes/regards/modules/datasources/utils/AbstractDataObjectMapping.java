@@ -33,6 +33,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,7 +75,6 @@ import fr.cnes.regards.modules.models.domain.Model;
  * <li>the data file of the data
  * <li>the thumbnail of the data
  * <li>the update date of the data
- *
  * @author Christophe Mertz
  */
 public abstract class AbstractDataObjectMapping {
@@ -130,6 +130,11 @@ public abstract class AbstractDataObjectMapping {
     protected DataSourceModelMapping dataSourceMapping;
 
     /**
+     * Common tags to be added on all created data objects
+     */
+    private Collection<String> commonTags;
+
+    /**
      * The result of the count request
      */
     private int nbItems = RESET_COUNT;
@@ -146,7 +151,6 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Get {@link DateAttribute}.
-     *
      * @param rs the {@link ResultSet}
      * @param attrName the attribute name
      * àparam attrDSName the column name in the external data source
@@ -159,7 +163,6 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Get a {@link LocalDateTime} value from a {@link ResultSet} for a {@link AbstractAttributeMapping}.
-     *
      * @param rs The {@link ResultSet} to read
      * @param colName the column name in the {@link ResultSet}
      * @return the {@link OffsetDateTime}
@@ -174,27 +177,26 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Returns a page of DataObject from the database defined by the {@link Connection} and corresponding to the SQL. A
      * {@link Date} is apply to filter the {@link DataObject} created or updated after this {@link Date}.
-     *
-     * @param pTenant the tenant name
-     * @param pConn a {@link Connection} to a database
-     * @param pSelectRequest the SQL request
-     * @param pCountRequest the SQL count request
-     * @param pPageable the page information
-     * @param pDate a {@link Date} used to apply returns the {@link DataObject} update or create after this date
+     * @param tenant the tenant name
+     * @param ctx a {@link Connection} to a database
+     * @param inSelectRequest the SQL request
+     * @param inCountRequest the SQL count request
+     * @param pageable the page information
+     * @param sinceDate a {@link Date} used to apply returns the {@link DataObject} update or create after this date
      * @return a page of {@link DataObject}
      */
-    protected Page<DataObject> findAll(String pTenant, Connection pConn, String pSelectRequest, String pCountRequest,
-            Pageable pPageable, OffsetDateTime pDate) throws DataSourceException {
+    protected Page<DataObject> findAll(String tenant, Connection ctx, String inSelectRequest, String inCountRequest,
+            Pageable pageable, OffsetDateTime sinceDate) throws DataSourceException {
         List<DataObject> dataObjects = new ArrayList<>();
 
-        try (Statement statement = pConn.createStatement()) {
+        try (Statement statement = ctx.createStatement()) {
 
-            String selectRequest = pSelectRequest;
-            String countRequest = pCountRequest;
+            String selectRequest = inSelectRequest;
+            String countRequest = inCountRequest;
 
-            if (pDate != null) {
-                selectRequest = buildDateStatement(selectRequest, pDate);
-                countRequest = buildDateStatement(countRequest, pDate);
+            if (sinceDate != null) {
+                selectRequest = buildDateStatement(selectRequest, sinceDate);
+                countRequest = buildDateStatement(countRequest, sinceDate);
             }
             LOG.info("select request : " + selectRequest);
             LOG.info("count request : " + countRequest);
@@ -209,21 +211,16 @@ public abstract class AbstractDataObjectMapping {
                     dataObjects.add(processResultSet(rs, model));
                 }
             }
-
             countItems(statement, countRequest);
-
-            statement.close();
         } catch (SQLException e) {
             LOG.error("Error while retrieving or counting datasource elements", e);
             throw new DataSourceException("Error while retrieving or counting datasource elements", e);
         }
-
-        return new PageImpl<>(dataObjects, pPageable, nbItems);
+        return new PageImpl<>(dataObjects, pageable, nbItems);
     }
 
     /**
      * Execute a SQL request to count the number of items
-     *
      * @param pStatement a {@link Statement} used to execute the SQL request
      * @param pCountRequest the SQL count request
      * @throws SQLException an SQL error occurred
@@ -241,12 +238,11 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Build a {@link DataObject} for a {@link ResultSet}.
-     *
-     * @param resultSet the {@link ResultSet}
+     * @param rset the {@link ResultSet}
      * @return the {@link DataObject} created
      * @throws SQLException An SQL error occurred
      */
-    protected DataObject processResultSet(ResultSet resultSet, Model model) throws SQLException {
+    protected DataObject processResultSet(ResultSet rset, Model model) throws SQLException {
         final DataObject data = new DataObject();
 
         final Set<AbstractAttribute<?>> attributes = new HashSet<>();
@@ -256,11 +252,9 @@ public abstract class AbstractDataObjectMapping {
          * Loop the attributes in the mapping
          */
         for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
-
-            AbstractAttribute<?> attr = buildAttribute(resultSet, attrMapping);
+            AbstractAttribute<?> attr = buildAttribute(rset, attrMapping);
 
             if (attr != null) {
-
                 if (attrMapping.isMappedToStaticProperty()) {
                     // static attribute mapping
                     processStaticAttributes(data, attr, attrMapping);
@@ -291,60 +285,60 @@ public abstract class AbstractDataObjectMapping {
         data.setProperties(attributes);
         data.setModel(model);
 
+        // Add common tags
+        data.getTags().addAll(commonTags);
+
         return data;
     }
 
     /**
      * Get an attribute define in the mapping in a {@link ResultSet}
-     *
-     * @param rs the {@link ResultSet}
+     * @param rset the {@link ResultSet}
      * @param attrMapping the {@link AbstractAttributeMapping}
      * @return a new {@link AbstractAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
-    private AbstractAttribute<?> buildAttribute(ResultSet rs, AbstractAttributeMapping attrMapping)
+    private AbstractAttribute<?> buildAttribute(ResultSet rset, AbstractAttributeMapping attrMapping)
             throws SQLException {
         AbstractAttribute<?> attr = null;
-
         final String colName = extractColumnName(attrMapping.getNameDS(), attrMapping.getName(),
                                                  attrMapping.isPrimaryKey());
 
         switch (attrMapping.getType()) {
             case STRING:
-                attr = AttributeBuilder.buildString(attrMapping.getName(), rs.getString(colName));
+                attr = AttributeBuilder.buildString(attrMapping.getName(), rset.getString(colName));
                 break;
             case LONG:
-                attr = AttributeBuilder.buildLong(attrMapping.getName(), rs.getLong(colName));
+                attr = AttributeBuilder.buildLong(attrMapping.getName(), rset.getLong(colName));
                 break;
             case INTEGER:
-                attr = AttributeBuilder.buildInteger(attrMapping.getName(), rs.getInt(colName));
+                attr = AttributeBuilder.buildInteger(attrMapping.getName(), rset.getInt(colName));
                 break;
             case BOOLEAN:
-                attr = AttributeBuilder.buildBoolean(attrMapping.getName(), rs.getBoolean(colName));
+                attr = AttributeBuilder.buildBoolean(attrMapping.getName(), rset.getBoolean(colName));
                 break;
             case DOUBLE:
-                attr = AttributeBuilder.buildDouble(attrMapping.getName(), rs.getDouble(colName));
+                attr = AttributeBuilder.buildDouble(attrMapping.getName(), rset.getDouble(colName));
                 break;
             case DATE_ISO8601:
-                attr = buildDateAttribute(rs, attrMapping.getName(), attrMapping.getNameDS(), colName);
+                attr = buildDateAttribute(rset, attrMapping.getName(), attrMapping.getNameDS(), colName);
                 break;
             default:
                 break;
         }
-
         // If value was null => no attribute value
-        if (rs.wasNull()) {
+        if (rset.wasNull()) {
             return null;
         }
 
         if (LOG.isDebugEnabled() && (attr != null)) {
             if ((attrMapping.getName() != null) && attrMapping.getName().equals(attrMapping.getNameDS())) {
                 LOG.debug("the value for <" + attrMapping.getName() + "> of type <" + attrMapping.getType() + "> is :"
-                        + attr.getValue());
+                                  + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + attrMapping.getName() + "|" + attrMapping.getNameDS() + "> of type <"
-                        + attrMapping.getType() + "> is :" + attr.getValue());
+                                  + attrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -354,8 +348,7 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Extracts a column name from a PL/SQL expression.</br>
      * The column label can be placed after the word 'AS'.
-     * If 'AS' is not present the column name is the internal attribute name. 
-     *
+     * If 'AS' is not present the column name is the internal attribute name.
      * @param attrDataSourceName The PL/SQL expression to analyze
      * @param attrName The attribute name
      * @return the column label extracted from the PL/SQL
@@ -395,38 +388,37 @@ public abstract class AbstractDataObjectMapping {
      * <li>label
      * <li>last update date
      * <li>geometry
-     *
-     * @param pData the current {@link DataObject} to build
-     * @param pAttr the current {@link AbstractAttribute} to analyze
-     * @param pAttrMapping the {@link AbstractAttributeMapping} for the current attribute
+     * @param dataObject the current {@link DataObject} to build
+     * @param attr the current {@link AbstractAttribute} to analyze
+     * @param attrMapping the {@link AbstractAttributeMapping} for the current attribute
      */
-    private void processStaticAttributes(DataObject pData, AbstractAttribute<?> pAttr,
-            AbstractAttributeMapping pAttrMapping) {
-        if (pAttrMapping.isPrimaryKey()) {
-            String val = pAttr.getValue().toString();
-            pData.setSipId(val);
+    private void processStaticAttributes(DataObject dataObject, AbstractAttribute<?> attr,
+            AbstractAttributeMapping attrMapping) {
+        if (attrMapping.isPrimaryKey()) {
+            String val = attr.getValue().toString();
+            dataObject.setSipId(val);
         }
-        if (pAttrMapping.isRawData() || pAttrMapping.isThumbnail()) {
-            String str = ((StringAttribute) pAttr).getValue();
+        if (attrMapping.isRawData() || attrMapping.isThumbnail()) {
+            String str = ((StringAttribute) attr).getValue();
             try {
-                DataType type = pAttrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
+                DataType type = attrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setUri(new URI(str));
-                pData.getFiles().put(type, dataFile);
+                dataObject.getFiles().put(type, dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
             }
         }
-        if (pAttrMapping.isLastUpdate()) {
-            pData.setLastUpdate((OffsetDateTime) pAttr.getValue());
+        if (attrMapping.isLastUpdate()) {
+            dataObject.setLastUpdate((OffsetDateTime) attr.getValue());
         }
-        if (pAttrMapping.isLabel()) {
-            pData.setLabel(((StringAttribute) pAttr).getValue());
+        if (attrMapping.isLabel()) {
+            dataObject.setLabel(((StringAttribute) attr).getValue());
         }
-        if (pAttrMapping.isGeometry()) {
-            String str = ((StringAttribute) pAttr).getValue();
+        if (attrMapping.isGeometry()) {
+            String str = ((StringAttribute) attr).getValue();
             try {
-                pData.setGeometry(GEOMETRY_ADAPTER.read(new JsonReader(new StringReader(str))));
+                dataObject.setGeometry(GEOMETRY_ADAPTER.read(new JsonReader(new StringReader(str))));
             } catch (IOException ioe) {
                 LOG.error("Unable to deserialize geometry : " + str, ioe);
             }
@@ -435,13 +427,12 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Build the select clause with the {@link List} of columns used for the mapping.
-     *
-     * @param pColumns the comulns used for the mapping
+     * @param columns the comulns used for the mapping
      * @return a {@link String} withe the columns separated by a comma
      */
-    protected String buildColumnClause(String... pColumns) {
+    protected String buildColumnClause(String... columns) {
         StringBuilder clauseStr = new StringBuilder();
-        for (String col : pColumns) {
+        for (String col : columns) {
             clauseStr.append(col + COMMA);
         }
         return clauseStr.substring(0, clauseStr.length() - 1) + BLANK;
@@ -449,24 +440,23 @@ public abstract class AbstractDataObjectMapping {
 
     /**
      * Replace the key word '%last_modification_date%' in the request to get the data from a date
-     *
-     * @param pRequest the SQL request
-     * @param pDate the date to used to build the date filter
+     * @param request the SQL request
+     * @param date the date to be used for building date filter
      * @return the SQL request with a from clause to filter the result since a date
      */
-    private String buildDateStatement(String pRequest, OffsetDateTime pDate) {
+    private String buildDateStatement(String request, OffsetDateTime date) {
         // Any attribute is defined in the mapping for compare the date, return
         if (getLastUpdateAttributeName().isEmpty()) {
-            return pRequest;
+            return request;
         }
 
         // if any date is defined, replace the keyword and used the first existing date
-        if (pDate == null) {
-            return pRequest.replaceAll(LAST_MODIFICATION_DATE_KEYWORD, OffsetDateTimeAdapter.format(INIT_DATE));
+        if (date == null) {
+            return request.replaceAll(LAST_MODIFICATION_DATE_KEYWORD, OffsetDateTimeAdapter.format(INIT_DATE));
         } else {
-            return pRequest
-                    .replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
-                                getLastUpdateAttributeName() + "> '" + OffsetDateTimeAdapter.format(pDate) + "'");
+            return request.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
+                                       getLastUpdateAttributeName() + "> '" + OffsetDateTimeAdapter.format(date)
+                                               + "'");
         }
     }
 
@@ -478,13 +468,11 @@ public abstract class AbstractDataObjectMapping {
     }
 
     /**
-     * Converts the mapping between the attribute of the data source and the attributes of the model from a JSon
-     * representation to a {@link List} of {@link AbstractAttributeMapping}.
-     *
-     * @param modelMapping the mapping in JSon format
+     * Init with parameters given directly on plugins with @PluginParameter annotation
      */
-    protected void initDataSourceMapping(DataSourceModelMapping modelMapping) {
+    protected void init(DataSourceModelMapping modelMapping, Collection<String> commonTags) {
         dataSourceMapping = modelMapping;
+        this.commonTags = commonTags;
 
         extractColumnsFromMapping();
     }
@@ -575,6 +563,8 @@ public abstract class AbstractDataObjectMapping {
          * Identify an attribute for a label attribute
          */
         LABEL
-    };
+    }
+
+    ;
 
 }
