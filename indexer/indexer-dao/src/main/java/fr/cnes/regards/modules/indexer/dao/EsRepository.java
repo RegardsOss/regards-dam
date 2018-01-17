@@ -534,10 +534,10 @@ public class EsRepository implements IEsRepository {
             // page size is max or page offset is > max page size, prepare sort for search_after
             if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
                 // A sort is mandatory to permit use of searchAfter (id by default if none provided)
-                sort = (sort == null) ? new Sort("docId") : pageRequest.getSort();
-                // To assure unicity, always add "docId" as a sort parameter
-                if (sort.getOrderFor("docId") == null) {
-                    sort = sort.and(new Sort("docId"));
+                sort = (sort == null) ? new Sort("ipId") : pageRequest.getSort();
+                // To assure unicity, always add "ipId" as a sort parameter
+                if (sort.getOrderFor("ipId") == null) {
+                    sort = sort.and(new Sort("ipId"));
                 }
             }
             Object[] lastSearchAfterSortValues = null;
