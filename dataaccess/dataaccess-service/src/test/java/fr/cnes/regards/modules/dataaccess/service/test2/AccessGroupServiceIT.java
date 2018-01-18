@@ -16,11 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dataaccess.service;
+package fr.cnes.regards.modules.dataaccess.service.test2;
 
-import fr.cnes.regards.framework.amqp.IInstanceSubscriber;
-import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+
 import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -31,27 +42,17 @@ import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-
-import java.util.List;
+import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
+import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
  *
  */
 @TestPropertySource(locations = "classpath:test.properties")
-@ContextConfiguration(classes = { TestConfiguration.class })
+@ContextConfiguration(classes = { TestAccessGroupConfiguration.class })
 @RegardsTransactional
+@DirtiesContext
 public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT {
 
     /**

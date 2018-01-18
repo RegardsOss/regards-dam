@@ -29,7 +29,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.test.ValidationConfiguration;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -141,8 +140,6 @@ public class ValidationIT {
 
     private DataSourceModelMapping dataSourceModelMapping;
 
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-
     @Autowired
     private IPluginService pluginService;
 
@@ -223,8 +220,7 @@ public class ValidationIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_VIEW)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1")
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping))
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
                 .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -237,9 +233,7 @@ public class ValidationIT {
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPpassword)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));

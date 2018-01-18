@@ -5,5 +5,5 @@ package fr.cnes.regards.modules.entities.domain.event;
  * @author oroussel
  */
 public enum EventType {
-    CREATE, UPDATE, DELETE
+    CREATE, DELETE, INDEXED, UPDATE
 }

@@ -15,12 +15,12 @@ public class DataObjectMetadata {
     /**
      * Multimap { groupName, (datasetIpIds) }
      */
-    private Multimap<String, String> groups = HashMultimap.create();
+    private final Multimap<String, String> groups = HashMultimap.create();
 
     /**
      * Multimap { modelId, (datasetIpIds) }
      */
-    private Multimap<Long, String> modelIds = HashMultimap.create();
+    private final Multimap<Long, String> modelIds = HashMultimap.create();
 
     public void addGroup(String groupName, String datasetIpId) {
         groups.put(groupName, datasetIpId);

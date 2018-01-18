@@ -18,12 +18,11 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
-import java.math.BigInteger;
-
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.validation.constraints.NotNull;
+import java.math.BigInteger;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.validator.CheckIntegerRange;
@@ -77,7 +76,7 @@ public class IntegerRangeRestriction extends AbstractRestriction {
 
     public IntegerRangeRestriction() {// NOSONAR
         super();
-        setType(RestrictionType.INTEGER_RANGE);
+        type = RestrictionType.INTEGER_RANGE;
     }
 
     @Override

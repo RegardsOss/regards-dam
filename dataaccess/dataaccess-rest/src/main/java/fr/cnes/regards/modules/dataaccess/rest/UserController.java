@@ -18,9 +18,8 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import java.util.List;
-
 import javax.validation.Valid;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

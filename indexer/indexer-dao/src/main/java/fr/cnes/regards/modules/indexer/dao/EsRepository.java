@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.UnknownHostException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -69,6 +68,7 @@ import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -170,7 +170,7 @@ public class EsRepository implements IEsRepository {
     /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
      */
-    private ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService reminderCleanExecutor = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * AggregationBuilder visitor used for Elasticsearch search requests with facets
@@ -194,24 +194,14 @@ public class EsRepository implements IEsRepository {
     private static final String GEOM_TYPE_PROP = "type=geo_shape";
 
     /**
-     * Elasticsearch host
-     */
-    private final String esHost;
-
-    /**
-     * Elasticsearch port
-     */
-    private int esPort;
-
-    /**
      * Low level Rest API client
      */
-    private RestClient restClient;
+    private final RestClient restClient;
 
     /**
      * High level Rest API client
      */
-    private RestHighLevelClient client;
+    private final RestHighLevelClient client;
 
     /**
      * Json mapper
@@ -225,18 +215,17 @@ public class EsRepository implements IEsRepository {
     public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String inEsHost,
             @Value("${regards.elasticsearch.address:}") String inEsAddress,
             @Value("${regards.elasticsearch.http.port}") int esPort,
-            AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) throws UnknownHostException {
+            AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) {
 
         gson = pGson;
-        this.esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
-        this.esPort = esPort;
+        String esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
         String connectionInfoMessage = String
-                .format("Elastic search connection properties : host \"%s\", port \"%d\"", this.esHost, this.esPort);
+                .format("Elastic search connection properties : host \"%s\", port \"%d\"", esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
-        restClient = RestClient.builder(new HttpHost(this.esHost, this.esPort)).build();
+        restClient = RestClient.builder(new HttpHost(esHost, esPort)).build();
         client = new RestHighLevelClient(restClient);
 
         try {
@@ -244,8 +233,8 @@ public class EsRepository implements IEsRepository {
             if (!client.ping()) {
                 throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
             }
-        } catch (Throwable t) {
-            throw new NoNodeAvailableException("Error while pinging Elasticsearch (" + connectionInfoMessage + ")", t);
+        } catch (Exception e) {
+            throw new NoNodeAvailableException("Error while pinging Elasticsearch (" + connectionInfoMessage + ")", e);
         }
     }
 
@@ -271,22 +260,22 @@ public class EsRepository implements IEsRepository {
 
     @Override
     public boolean setAutomaticDoubleMapping(String index, String... types) {
-        try {
-            String mapping = XContentFactory.jsonBuilder().startObject().startArray("dynamic_templates").startObject()
+        try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
+            String mapping = builder.startObject().startArray("dynamic_templates").startObject()
                     .startObject("doubles").field("match_mapping_type", "double").startObject("mapping")
                     .field("type", "double").endObject().endObject().endObject().endArray().endObject().string();
 
-            HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+            try (NStringEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON)) {
 
-            for (String type : types) {
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping", Collections.emptyMap(),
-                                        entity);
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    return false;
+                for (String type : types) {
+                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
+                                                                  Collections.emptyMap(), entity);
+                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
         } catch (IOException ioe) { // NOSONAR
             throw new RuntimeException(ioe);
         }
@@ -296,16 +285,17 @@ public class EsRepository implements IEsRepository {
     public boolean setGeometryMapping(String index, String... types) {
         try {
             for (String type : types) {
-                String mapping = XContentFactory.jsonBuilder().startObject().startObject(type).startObject("properties")
-                        .startObject("geometry").field("type", "geo_shape").endObject().endObject().endObject()
-                        .endObject().string();
+                try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
+                    String mapping = builder.startObject().startObject(type).startObject("properties")
+                            .startObject("geometry").field("type", "geo_shape").endObject().endObject().endObject()
+                            .endObject().string();
 
-                HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-                Response response = restClient
-                        .performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping", Collections.emptyMap(),
-                                        entity);
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    return false;
+                    HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
+                    Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
+                                                                  Collections.emptyMap(), entity);
+                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -532,10 +522,10 @@ public class EsRepository implements IEsRepository {
             // page size is max or page offset is > max page size, prepare sort for search_after
             if ((pageRequest.getOffset() >= MAX_RESULT_WINDOW) || (pageRequest.getPageSize() == MAX_RESULT_WINDOW)) {
                 // A sort is mandatory to permit use of searchAfter (id by default if none provided)
-                sort = (sort == null) ? new Sort("docId") : pageRequest.getSort();
-                // To assure unicity, always add "docId" as a sort parameter
-                if (sort.getOrderFor("docId") == null) {
-                    sort = sort.and(new Sort("docId"));
+                sort = (sort == null) ? new Sort("ipId") : pageRequest.getSort();
+                // To assure unicity, always add "ipId" as a sort parameter
+                if (sort.getOrderFor("ipId") == null) {
+                    sort = sort.and(new Sort("ipId"));
                 }
             }
             Object[] lastSearchAfterSortValues = null;
@@ -863,8 +853,6 @@ public class EsRepository implements IEsRepository {
                     results.addAll(searchJoined(key.getV1(), key.getV2(), key.getV3()));
                     return results;
                 }
-
-                ;
             });
 
     @SuppressWarnings("unchecked")
@@ -973,8 +961,8 @@ public class EsRepository implements IEsRepository {
                 }
             }
             return false; // NOSONAR
-        } catch (NullPointerException e) {
-            return false; // NOSONAR (better catch a NUllPointerException than testing all imbricated maps)
+        } catch (NullPointerException e) { // NOSONAR (better catch a NPE than testing all imbricated maps)
+            return false;
         }
     }
 
@@ -1095,103 +1083,112 @@ public class EsRepository implements IEsRepository {
     private void fillFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, FacetType facetType,
             String attributeName) {
         switch (facetType) {
-            case STRING: {
-                Terms terms = (Terms) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
-                if (terms.getBuckets().isEmpty()) {
-                    return;
-                }
-                Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
-                terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
-                facets.add(new StringFacet(attributeName, valueMap));
+            case STRING:
+                fillStringFacets(aggsMap, facets, attributeName);
                 break;
-            }
-            case NUMERIC: {
-                org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
-                if (numRange != null) {
-                    // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
-                    Min min = (Min) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
-                    Max max = (Max) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
-                    // Parsing ranges
-                    Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
-                    for (Bucket bucket : numRange.getBuckets()) {
-                        // Case with no value : every bucket has a NaN value (as from, to or both)
-                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
-                                .equals(bucket.getFrom(), Double.NaN)) {
-                            // If first bucket contains NaN value, it means there are no value at all
-                            return;
-                        }
-                        Range<Double> valueRange;
-                        // (-∞ -> ?
-                        if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
-                            // (-∞ -> +∞) (completely dumb but...who knows ?)
-                            if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
-                                // Better not return a facet
-                                return;
-                            } // (-∞ -> value [
-                            // range is then [min -> value [
-                            valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
-                        } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
-                            // range is then [value, max]
-                            valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaled(max.getValue()));
-                        } else { // [value -> value [
-                            valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
-                        }
-                        valueMap.put(valueRange, bucket.getDocCount());
-                    }
-                    facets.add(new NumericFacet(attributeName, valueMap));
-                }
+            case NUMERIC:
+                fillNumericFacets(aggsMap, facets, attributeName);
                 break;
-            }
-            case DATE: {
-                org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
-                if (dateRange != null) {
-                    Map<com.google.common.collect.Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
-                    for (Bucket bucket : dateRange.getBuckets()) {
-                        // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
-                        Min min = (Min) aggsMap
-                                .get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
-                        Max max = (Max) aggsMap
-                                .get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
-                        // Parsing ranges
-                        Range<OffsetDateTime> valueRange;
-                        // Case with no value : every bucket has a NaN value (as from, to or both)
-                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
-                                .equals(bucket.getFrom(), Double.NaN)) {
-                            // If first bucket contains NaN value, it means there are no value at all
-                            return;
-                        }
-                        // (-∞ -> ?
-                        if (bucket.getFromAsString() == null) {
-                            // (-∞ -> +∞) (completely dumb but...who knows ?)
-                            if (bucket.getToAsString() == null) {
-                                // range is then [min, max]
-                                valueRange = Range.closed(OffsetDateTimeAdapter.parse(min.getValueAsString()),
-                                                          OffsetDateTimeAdapter.parse(max.getValueAsString()));
-                            } else { // (-∞ -> value[
-                                // range is then [min, value[
-                                valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(min.getValueAsString()),
-                                                              OffsetDateTimeAdapter.parse(bucket.getToAsString()));
-                            }
-                        } else if (bucket.getToAsString() == null) { // [value -> +∞)
-                            // range is then [value, max ]
-                            valueRange = Range.closed(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                      OffsetDateTimeAdapter.parse(max.getValueAsString()));
-                        } else { // [value -> value[
-                            valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                          OffsetDateTimeAdapter.parse(bucket.getToAsString()));
-                        }
-                        valueMap.put(valueRange, bucket.getDocCount());
-                    }
-                    facets.add(new DateFacet(attributeName, valueMap));
-                }
+            case DATE:
+                fillDateFacets(aggsMap, facets, attributeName);
                 break;
-            }
             default:
                 break;
         }
+    }
+
+    private void fillDateFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
+                .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
+        if (dateRange != null) {
+            Map<Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
+            for (Bucket bucket : dateRange.getBuckets()) {
+                // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
+                Min min = (Min) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
+                Max max = (Max) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
+                // Parsing ranges
+                Range<OffsetDateTime> valueRange;
+                // Case with no value : every bucket has a NaN value (as from, to or both)
+                if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
+                        .equals(bucket.getFrom(), Double.NaN)) {
+                    // If first bucket contains NaN value, it means there are no value at all
+                    return;
+                }
+                // (-∞ -> ?
+                if (bucket.getFromAsString() == null) {
+                    // (-∞ -> +∞) (completely dumb but...who knows ?)
+                    if (bucket.getToAsString() == null) {
+                        // range is then [min, max]
+                        valueRange = Range.closed(OffsetDateTimeAdapter.parse(min.getValueAsString()),
+                                                  OffsetDateTimeAdapter.parse(max.getValueAsString()));
+                    } else { // (-∞ -> value[
+                        // range is then [min, value[
+                        valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(min.getValueAsString()),
+                                                      OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                    }
+                } else if (bucket.getToAsString() == null) { // [value -> +∞)
+                    // range is then [value, max ]
+                    valueRange = Range.closed(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                              OffsetDateTimeAdapter.parse(max.getValueAsString()));
+                } else { // [value -> value[
+                    valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                  OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                }
+                valueMap.put(valueRange, bucket.getDocCount());
+            }
+            facets.add(new DateFacet(attributeName, valueMap));
+        }
+    }
+
+    private void fillNumericFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
+                .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
+        if (numRange != null) {
+            // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
+            Min min = (Min) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
+            Max max = (Max) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
+            // Parsing ranges
+            Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
+            for (Bucket bucket : numRange.getBuckets()) {
+                // Case with no value : every bucket has a NaN value (as from, to or both)
+                if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
+                        .equals(bucket.getFrom(), Double.NaN)) {
+                    // If first bucket contains NaN value, it means there are no value at all
+                    return;
+                }
+                Range<Double> valueRange;
+                // (-∞ -> ?
+                if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
+                    // (-∞ -> +∞) (completely dumb but...who knows ?)
+                    if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
+                        // Better not return a facet
+                        return;
+                    } // (-∞ -> value [
+                    // range is then [min -> value [
+                    valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
+                } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
+                    // range is then [value, max]
+                    valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaled(max.getValue()));
+                } else { // [value -> value [
+                    valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                }
+                valueMap.put(valueRange, bucket.getDocCount());
+            }
+            facets.add(new NumericFacet(attributeName, valueMap));
+        }
+    }
+
+    private void fillStringFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        Terms terms = (Terms) aggsMap
+                .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
+        if (terms.getBuckets().isEmpty()) {
+            return;
+        }
+        Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
+        terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
+        facets.add(new StringFacet(attributeName, valueMap));
     }
 
     @Override
@@ -1235,7 +1232,6 @@ public class EsRepository implements IEsRepository {
                 // file count
                 builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
                                             .field("files." + fileType + ".size")); // Only count files with a size
-//                                            .field("files." + fileType + ".uri.keyword"));
                 // file size sum
                 builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
                                             .field("files." + fileType + ".size"));
@@ -1253,7 +1249,6 @@ public class EsRepository implements IEsRepository {
                 // files count
                 termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
                                                        .field("files." + fileType + ".size"));
-//                                                       .field("files." + fileType + ".uri.keyword"));
                 // file size sum
                 termsAggBuilder.subAggregation(
                         AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));

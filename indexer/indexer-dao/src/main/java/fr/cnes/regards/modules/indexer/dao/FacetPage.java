@@ -16,7 +16,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
  * @author oroussel
  */
 public class FacetPage<T extends IIndexable> extends PageImpl<T> {
-    private Set<IFacet<?>> facets;
+    private final Set<IFacet<?>> facets;
 
     public FacetPage(List<T> pContent, Set<IFacet<?>> pFacets, Pageable pPageable, long pTotal) {
         super(pContent, pPageable, pTotal);

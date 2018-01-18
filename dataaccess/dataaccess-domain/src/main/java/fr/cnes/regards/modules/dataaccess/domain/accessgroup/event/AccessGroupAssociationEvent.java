@@ -44,7 +44,7 @@ public class AccessGroupAssociationEvent implements ISubscribable {
 
     public AccessGroupAssociationEvent(AccessGroup accessGroup, String userEmail) {
         this.accessGroup = accessGroup;
-        this.setUserEmail(userEmail);
+        this.userEmail = userEmail;
     }
 
     public AccessGroup getAccessGroup() {

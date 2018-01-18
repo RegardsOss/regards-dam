@@ -7,13 +7,13 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
  */
 public class BooleanMatchCriterion extends AbstractMatchCriterion<Boolean> {
 
-    public BooleanMatchCriterion(String pName, boolean pValue) {
-        super(pName, MatchType.EQUALS, pValue);
+    public BooleanMatchCriterion(String name, boolean value) {
+        super(name, MatchType.EQUALS, value);
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitBooleanMatchCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitBooleanMatchCriterion(this);
     }
 
 }

@@ -37,22 +37,14 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 /**
  * A {@link Plugin} to retrieve the data elements from a SQL Database.</br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the Database.
- *
  * @author Christophe Mertz
- * @since 1.0-SNAPSHOT
  */
 public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMapping implements IDBDataSourcePlugin {
-
-    /**
-     * Class logger
-     */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDBDataSourcePlugin.class);
 
     protected static final String SELECT = "SELECT ";
 
     protected static final String WHERE = " WHERE ";
-
-    protected static final String COMMA = ", ";
 
     protected static final String SELECT_COUNT = "SELECT COUNT(*) ";
 
@@ -68,18 +60,18 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     protected abstract String getFromClause();
 
-    protected String getSelectRequest(Pageable pPageable, OffsetDateTime pDate) {
-        if ((pDate != null) && !getLastUpdateAttributeName().isEmpty()) {
+    protected String getSelectRequest(Pageable pageable, OffsetDateTime sinceData) {
+        if ((sinceData != null) && !getLastUpdateAttributeName().isEmpty()) {
             return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + WHERE
-                    + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + buildLimitPart(pPageable);
+                    + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD + buildLimitPart(pageable);
         } else {
-            return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause()
-                    + buildLimitPart(pPageable);
+            return SELECT + buildColumnClause(columns.toArray(new String[0])) + getFromClause() + buildLimitPart(
+                    pageable);
         }
     }
 
-    protected String getCountRequest(OffsetDateTime pDate) {
-        if ((pDate != null) && !getLastUpdateAttributeName().isEmpty()) {
+    protected String getCountRequest(OffsetDateTime sinceDate) {
+        if ((sinceDate != null) && !getLastUpdateAttributeName().isEmpty()) {
             return SELECT_COUNT + getFromClause() + WHERE + AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD;
 
         } else {
@@ -89,24 +81,17 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
     }
 
     /**
-     *
-     * @param tenant
-     * @param pageable
-     * @param date can be null
-     * @return
+     * @param sinceDate can be null
      */
-    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws
-            DataSourceException {
-        final String selectRequest = getSelectRequest(pageable, date);
-        final String countRequest = getCountRequest(date);
+    public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime sinceDate) throws DataSourceException {
+        final String selectRequest = getSelectRequest(pageable, sinceDate);
+        final String countRequest = getCountRequest(sinceDate);
 
         LOG.debug("select request :" + selectRequest);
         LOG.debug("count request :" + countRequest);
 
         try (Connection conn = getDBConnection().getConnection()) {
-
-            return findAll(tenant, conn, selectRequest, countRequest, pageable, date);
-
+            return findAll(tenant, conn, selectRequest, countRequest, pageable, sinceDate);
         } catch (SQLException e) {
             LOG.error("Unable to obtain a database connection.", e);
             throw new DataSourceException("Unable to obtain a database connection.", e);
@@ -115,15 +100,13 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
 
     /**
      * Add to the SQL request the part to fetch only a portion of the results.
-     *
-     * @param pPage
-     *            the page of the element to fetch
+     * @param pageable the page of the element to fetch
      * @return the SQL request
      */
-    protected String buildLimitPart(Pageable pPage) {
+    protected String buildLimitPart(Pageable pageable) {
         StringBuilder str = new StringBuilder(" ");
-        final int offset = pPage.getPageNumber() * pPage.getPageSize();
-        final String limit = String.format(LIMIT_CLAUSE, orderByColumn, pPage.getPageSize(), offset);
+        final int offset = pageable.getPageNumber() * pageable.getPageSize();
+        final String limit = String.format(LIMIT_CLAUSE, orderByColumn, pageable.getPageSize(), offset);
         str.append(limit);
 
         return str.toString();

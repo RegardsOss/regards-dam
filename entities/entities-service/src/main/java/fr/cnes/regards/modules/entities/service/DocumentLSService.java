@@ -1,20 +1,5 @@
 package fr.cnes.regards.modules.entities.service;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
-import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.domain.DocumentLS;
-import fr.cnes.regards.modules.indexer.domain.DataFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.util.MimeType;
-import org.springframework.web.multipart.MultipartFile;
-
 import javax.annotation.PostConstruct;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -24,7 +9,6 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -33,6 +17,22 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.util.MimeType;
+import org.springframework.web.multipart.MultipartFile;
+
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.DocumentLS;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+
 /**
  * A service to save document files on disk.</br>
  * @author Léo Mieulet
@@ -40,8 +40,7 @@ import java.util.Set;
 @Service
 public class DocumentLSService implements IDocumentLSService {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(DocumentLSService.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentLSService.class);
 
     private static final String DIGEST_ALGORITHM = "MD5";
 
@@ -50,7 +49,6 @@ public class DocumentLSService implements IDocumentLSService {
      * the real checksum here in the service
      */
     public static final String FILE_CHECKSUM_URL_TEMPLATE = "~checksumFlag~";
-
 
     @Autowired
     private IDocumentLSRepository documentFileLocalStorageRepo;
@@ -65,17 +63,19 @@ public class DocumentLSService implements IDocumentLSService {
     public void init() {
         // Init localStoragePath folder if necessary
         Path path = Paths.get(this.localStoragePath);
-        if(!Files.exists(path)) {
+        if (!Files.exists(path)) {
             try {
-               Files.createDirectory(path);
+                Files.createDirectory(path);
             } catch (IOException e) {
-               throw new InvalidPathException(this.localStoragePath, "Could not create the localStoragePath directory");
+                throw new RuntimeException("Could not create the localStoragePath directory (" + localStoragePath + ")",
+                                           e); //NOSONAR
             }
         }
     }
 
     @Override
-    public Set<DataFile> handleFiles(Document document, MultipartFile[] files, String fileLsUriTemplate) throws ModuleException {
+    public Set<DataFile> handleFiles(Document document, MultipartFile[] files, String fileLsUriTemplate)
+            throws ModuleException {
         Set<DataFile> docFiles = new HashSet<>();
         try {
             for (MultipartFile file : files) {
@@ -93,7 +93,7 @@ public class DocumentLSService implements IDocumentLSService {
                     docFiles.add(dataFile);
                 }
             }
-        } catch (URISyntaxException|IOException e) {
+        } catch (URISyntaxException | IOException e) {
             throw new ModuleException("An error occurred while saving documents files", e);
         } catch (NoSuchAlgorithmException e) {
             throw new ModuleException("No such algorithm (used on checksum computation)", e);
@@ -104,7 +104,6 @@ public class DocumentLSService implements IDocumentLSService {
     /**
      * This methods tries to delete a local file attached to the document if existing
      * But does not raise any error if the file does not exist on rs-dam
-     * @param dataFile
      */
     @Override
     public void removeFile(Document document, DataFile dataFile) throws IOException, EntityNotFoundException {
@@ -123,7 +122,8 @@ public class DocumentLSService implements IDocumentLSService {
                     LOGGER.info("File %s removed for document %d", dataFilePath, document.getId());
                     documentFileLocalStorageRepo.delete(documentFileLS.getId());
                 } else {
-                    throw new IOException(String.format("File %s not removed for document %d", dataFilePath, document.getId()));
+                    throw new IOException(
+                            String.format("File %s not removed for document %d", dataFilePath, document.getId()));
                 }
             } else {
                 LOGGER.info("File %s was removed on filedisk since another document uses it", dataFilePath);
@@ -134,37 +134,40 @@ public class DocumentLSService implements IDocumentLSService {
 
     /**
      * Check if the database knows the dataFile
-     * @param document
-     * @param dataFile
-     * @return
      */
     @Override
-    public boolean isFileLocallyStored (Document document, DataFile dataFile) {
-        Optional<DocumentLS> documentFileLS = documentFileLocalStorageRepo.findOneByDocumentAndFileChecksum(document, dataFile.getChecksum());
+    public boolean isFileLocallyStored(Document document, DataFile dataFile) {
+        Optional<DocumentLS> documentFileLS = documentFileLocalStorageRepo
+                .findOneByDocumentAndFileChecksum(document, dataFile.getChecksum());
         return documentFileLS.isPresent();
     }
 
     @Override
-    public byte[] getDocumentLSContent(Document document, DataFile dataFile) throws EntityNotFoundException, IOException {
+    public byte[] getDocumentLSContent(Document document, DataFile dataFile)
+            throws EntityNotFoundException, IOException {
         DocumentLS documentLS = getDocumentLS(document, dataFile);
         String pathToFile = getDataFilePath(documentLS.getFileChecksum());
         return com.google.common.io.Files.asByteSource(new File(pathToFile)).read();
     }
 
     private DocumentLS getDocumentLS(Document document, DataFile dataFile) throws EntityNotFoundException {
-        Optional<DocumentLS> documentFileLS = documentFileLocalStorageRepo.findOneByDocumentAndFileChecksum(document, dataFile.getChecksum());
-        if (! documentFileLS.isPresent()) {
-            throw new EntityNotFoundException(String.format("Failed to remove the file %s for the document %d", dataFile.getName(), document.getId()), DocumentLS.class);
+        Optional<DocumentLS> documentFileLS = documentFileLocalStorageRepo
+                .findOneByDocumentAndFileChecksum(document, dataFile.getChecksum());
+        if (!documentFileLS.isPresent()) {
+            throw new EntityNotFoundException(
+                    String.format("Failed to remove the file %s for the document %d", dataFile.getName(),
+                                  document.getId()), DocumentLS.class);
         }
         return documentFileLS.get();
     }
 
-    private void saveFile(String checksum, MultipartFile file, Document document) throws URISyntaxException, IOException {
+    private void saveFile(String checksum, MultipartFile file, Document document)
+            throws URISyntaxException, IOException {
         // We assume that baseStorageLocation already exists on the file system.
         // We just need to create, if required, the directory between localStoragePath and the file.
         String dataFileFolder = getDataFileFolder(checksum);
         Path path = Paths.get(dataFileFolder);
-        if(!Files.exists(path)) {
+        if (!Files.exists(path)) {
             Files.createDirectory(path);
         }
 
@@ -179,8 +182,6 @@ public class DocumentLSService implements IDocumentLSService {
 
     /**
      * The DataFile path is the DataFileFolder + checksum
-     * @param checksum
-     * @return
      */
     private String getDataFilePath(String checksum) {
         String storageLocation = getDataFileFolder(checksum);
@@ -189,8 +190,6 @@ public class DocumentLSService implements IDocumentLSService {
 
     /**
      * Lets compute the file folder localStoragePath + 3 first char of checksum
-     * @param checksum
-     * @return
      */
     private String getDataFileFolder(String checksum) {
         return this.localStoragePath + "/" + checksum.substring(0, 3);
@@ -198,13 +197,10 @@ public class DocumentLSService implements IDocumentLSService {
 
     /**
      * Save the file into the disk
-     * @param file
-     * @param fullPathToFile
-     * @throws IOException
      */
     private void saveFileOnDisk(MultipartFile file, String fullPathToFile) throws IOException {
         File dest = new File(fullPathToFile);
-        try(FileOutputStream fos = new FileOutputStream(dest)) {
+        try (FileOutputStream fos = new FileOutputStream(dest)) {
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             FileCopyUtils.copy(file.getInputStream(), bos);
         }
@@ -213,10 +209,6 @@ public class DocumentLSService implements IDocumentLSService {
     /**
      * Compute the checksum without requiring to save the file
      * Because the checksum is the path to the file
-     * @param file
-     * @return
-     * @throws NoSuchAlgorithmException
-     * @throws IOException
      */
     private String getChecksum(MultipartFile file) throws NoSuchAlgorithmException, IOException {
         byte[] uploadBytes = file.getBytes();

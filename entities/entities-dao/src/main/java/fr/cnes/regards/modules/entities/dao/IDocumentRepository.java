@@ -18,13 +18,14 @@
  */
 package fr.cnes.regards.modules.entities.dao;
 
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.domain.Document;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Set;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.domain.Document;
 
 /**
  * Specific requests on Dataset

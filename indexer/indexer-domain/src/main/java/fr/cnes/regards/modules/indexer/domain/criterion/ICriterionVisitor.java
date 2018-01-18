@@ -7,29 +7,31 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
  */
 public interface ICriterionVisitor<T> {
 
-    T visitEmptyCriterion(EmptyCriterion pCriterion);
+    T visitEmptyCriterion(EmptyCriterion criterion);
 
-    T visitAndCriterion(AbstractMultiCriterion pCriterion);
+    T visitAndCriterion(AbstractMultiCriterion criterion);
 
-    T visitOrCriterion(AbstractMultiCriterion pCriterion);
+    T visitOrCriterion(AbstractMultiCriterion criterion);
 
-    T visitNotCriterion(NotCriterion pCriterion);
+    T visitNotCriterion(NotCriterion criterion);
 
-    T visitStringMatchCriterion(StringMatchCriterion pCriterion);
+    T visitStringMatchCriterion(StringMatchCriterion criterion);
 
-    T visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion);
+    T visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion);
 
-    T visitIntMatchCriterion(IntMatchCriterion pCriterion);
+    T visitIntMatchCriterion(IntMatchCriterion criterion);
 
-    T visitLongMatchCriterion(LongMatchCriterion pCriterion);
+    T visitLongMatchCriterion(LongMatchCriterion criterion);
 
-    <U extends Comparable<? super U>> T visitRangeCriterion(RangeCriterion<U> pCriterion);
+    <U extends Comparable<? super U>> T visitRangeCriterion(RangeCriterion<U> criterion);
 
-    T visitDateRangeCriterion(DateRangeCriterion pCriterion);
+    T visitDateRangeCriterion(DateRangeCriterion criterion);
 
-    T visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion);
+    T visitBooleanMatchCriterion(BooleanMatchCriterion criterion);
 
-    T visitPolygonCriterion(PolygonCriterion pCriterion);
+    T visitPolygonCriterion(PolygonCriterion criterion);
 
-    T visitCircleCriterion(CircleCriterion pCriterion);
+    T visitCircleCriterion(CircleCriterion criterion);
+
+    T visitFieldExistsCriterion(FieldExistsCriterion criterion);
 }

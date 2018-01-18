@@ -56,7 +56,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -110,8 +109,6 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
 
     private DataSourceModelMapping modelMapping;
 
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
-
     private static int nbElements;
 
     private final Map<Long, Object> pluginCacheMap = new HashMap<>();
@@ -136,13 +133,14 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
         repository.deleteAll();
         repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
                 LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
-                OffsetDateTime.now().minusMinutes(33), true));
+                OffsetDateTime.now().minusMinutes(33), OffsetDateTime.now().minusMinutes(12132125).toString(), true));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
                 LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10), LocalDateTime.now().plusHours(33),
-                OffsetDateTime.now().minusSeconds(22), true));
+                OffsetDateTime.now().minusSeconds(22), OffsetDateTime.now().minusMinutes(12132125).toString(), true));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
-                LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7), false));
+                LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7),
+                OffsetDateTime.now().minusMinutes(12132125).toString(), false));
         nbElements = 3;
 
         /*
@@ -158,7 +156,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                         getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(modelMapping))
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, modelMapping)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800).getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -206,9 +204,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         PluginConfiguration plgConf = PluginUtils.getPluginConfiguration(parameters,
                                                                          DefaultPostgreConnectionPlugin.class,

@@ -18,15 +18,9 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
-import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -38,8 +32,15 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.util.ArrayList;
-import java.util.List;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
 /**
  * @author Sylvain Vissiere-Guerinet

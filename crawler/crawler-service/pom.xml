@@ -106,7 +106,10 @@
 			<groupId>fr.cnes.regards.modules.indexer</groupId>
 			<artifactId>indexer-dao</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>fr.cnes.regards.modules.notification</groupId>
+			<artifactId>notification-client</artifactId>
+		</dependency>
 
 		<!-- TODO : slf4j -->
 		<dependency>

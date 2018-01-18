@@ -44,6 +44,11 @@ public interface IDataSourcePlugin {
     String REFRESH_RATE = "refreshRate";
 
     /**
+     * Ingestion static tags parameter name
+     */
+    String TAGS = "tags";
+
+    /**
      * Ingestion refresh rate default value in seconds
      */
     Integer REFRESH_RATE_DEFAULT_VALUE = 86400;

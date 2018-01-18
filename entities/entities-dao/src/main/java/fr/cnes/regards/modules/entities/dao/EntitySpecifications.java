@@ -18,10 +18,9 @@
  */
 package fr.cnes.regards.modules.entities.dao;
 
+import javax.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
 import java.util.Set;
-
-import javax.persistence.criteria.Predicate;
 
 import org.springframework.data.jpa.domain.Specification;
 

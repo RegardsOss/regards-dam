@@ -26,18 +26,14 @@ import com.google.common.base.Strings;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
-import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapter;
+import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
- *
  * GSON adapter for {@link DataSourceModelMapping}
- *
  * @author Christophe Mertz
- *
  */
-@GsonTypeAdapter(adapted = DataSourceModelMapping.class)
+@GsonTypeAdapterBean(adapted = DataSourceModelMapping.class)
 public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
     /**
@@ -95,33 +91,33 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     }
 
     @Override
-    public DataSourceModelMapping read(final JsonReader pIn) throws IOException {
+    public DataSourceModelMapping read(final JsonReader in) throws IOException {
         DataSourceModelMapping dataSourceModelMapping = new DataSourceModelMapping();
         final List<AbstractAttributeMapping> attributes = new ArrayList<>();
 
-        pIn.beginObject();
+        in.beginObject();
 
-        if (!pIn.nextName().equals(MODEL_LABEL)) {
+        if (!in.nextName().equals(MODEL_LABEL)) {
             throw new IOException(MODEL_LABEL + " is expected");
         }
 
-        dataSourceModelMapping.setModel(Long.parseLong(pIn.nextString()));
+        dataSourceModelMapping.setModel(Long.parseLong(in.nextString()));
 
-        if (!pIn.nextName().equals(MAPPINGS_LABEL)) {
+        if (!in.nextName().equals(MAPPINGS_LABEL)) {
             throw new IOException(MAPPINGS_LABEL + " is expected");
         }
 
-        pIn.beginArray();
+        in.beginArray();
         // Compute the element's array
-        while (pIn.hasNext()) {
-            pIn.beginObject();
+        while (in.hasNext()) {
+            in.beginObject();
 
             // Add the new attribute to the list
-            attributes.add(readMapping(pIn));
-            pIn.endObject();
+            attributes.add(readMapping(in));
+            in.endObject();
         }
-        pIn.endArray();
-        pIn.endObject();
+        in.endArray();
+        in.endObject();
 
         dataSourceModelMapping.setAttributesMapping(attributes);
 
@@ -130,31 +126,28 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
 
     /**
      * Read one attribute mapping and create a {@link AbstractAttributeMapping}
-     *
-     * @param pIn
-     *            the {@link JsonReader} used to read a JSon and to convert in a data object
+     * @param in the {@link JsonReader} used to read a JSon and to convert in a data object
      * @return a {@link AbstractAttributeMapping}
-     * @throws IOException
-     *             An error throw, the Json format format is no correct
+     * @throws IOException An error throw, the Json format format is no correct
      */
-    private AbstractAttributeMapping readMapping(final JsonReader pIn) throws IOException {
+    private AbstractAttributeMapping readMapping(final JsonReader in) throws IOException {
         String name = null;
         String namespace = null;
         String nameDS = null;
         AttributeType attributeType = null;
-        while (pIn.hasNext()) {
-            switch (pIn.nextName()) {
+        while (in.hasNext()) {
+            switch (in.nextName()) {
                 case NAME_LABEL:
-                    name = pIn.nextString();
+                    name = in.nextString();
                     break;
                 case NAMESPACE_LABEL:
-                    namespace = pIn.nextString();
+                    namespace = in.nextString();
                     break;
                 case NAME_DS_LABEL:
-                    nameDS = pIn.nextString();
+                    nameDS = in.nextString();
                     break;
                 case TYPE_LABEL:
-                    String val = pIn.nextString();
+                    String val = in.nextString();
                     if (!val.isEmpty()) {
                         attributeType = AttributeType.valueOf(val);
                     }
@@ -163,7 +156,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
                     break;
             }
         }
-        
+
         if (attributeType == null && Strings.isNullOrEmpty(namespace)) {
             return new StaticAttributeMapping(name, null, nameDS);
         } else {

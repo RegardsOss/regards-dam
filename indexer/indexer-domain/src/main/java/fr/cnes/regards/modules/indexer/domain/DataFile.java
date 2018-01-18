@@ -71,7 +71,7 @@ public class DataFile {
         return URI.create(uri);
     }
 
-    public void setUri(URI fileRef) {
+    public final void setUri(URI fileRef) {
         uri = fileRef.toString();
     }
 
@@ -79,7 +79,7 @@ public class DataFile {
         return digestAlgorithm;
     }
 
-    public void setDigestAlgorithm(String digestAlgorithm) {
+    public final void setDigestAlgorithm(String digestAlgorithm) {
         this.digestAlgorithm = digestAlgorithm;
     }
 
@@ -87,7 +87,7 @@ public class DataFile {
         return checksum;
     }
 
-    public void setChecksum(String checksum) {
+    public final void setChecksum(String checksum) {
         this.checksum = checksum;
     }
 
@@ -95,7 +95,7 @@ public class DataFile {
         return size;
     }
 
-    public void setSize(Long fileSize) {
+    public final void setSize(Long fileSize) {
         size = fileSize;
     }
 
@@ -103,7 +103,7 @@ public class DataFile {
         return mimeType;
     }
 
-    public void setMimeType(MimeType mimeType) {
+    public final void setMimeType(MimeType mimeType) {
         this.mimeType = mimeType;
     }
 
@@ -111,7 +111,7 @@ public class DataFile {
         return name;
     }
 
-    public void setName(String name) {
+    public final void setName(String name) {
         this.name = name;
     }
 
@@ -127,7 +127,7 @@ public class DataFile {
         return imageWidth;
     }
 
-    public void setImageWidth(Integer imageWidth) {
+    public final void setImageWidth(Integer imageWidth) {
         this.imageWidth = imageWidth;
     }
 
@@ -135,8 +135,15 @@ public class DataFile {
         return imageHeight;
     }
 
-    public void setImageHeight(Integer imageHeight) {
+    public final void setImageHeight(Integer imageHeight) {
         this.imageHeight = imageHeight;
+    }
+
+    /**
+     * @return true if associated file can be downloaded/ordered from Regards (online or nearline)
+     */
+    public boolean isPhysicallyAvailable() {
+        return (size != null) && (size > 0l);
     }
 
     @Override

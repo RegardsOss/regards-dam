@@ -225,10 +225,18 @@ public class EsRepositoryTest {
             item.setHeight((int) (Math.random() * 1000));
             item.setPrice(Math.random() * 10000.);
             items.add(item);
+            if (i % 10_000 == 0) {
+                final long start = System.currentTimeMillis();
+                repository.saveBulk("loading", items);
+                System.out.println("Loading (10 000 items): " + (System.currentTimeMillis() - start) + " ms");
+                items.clear();
+            }
         }
-        final long start = System.currentTimeMillis();
-        repository.saveBulk("loading", items);
-        System.out.println("Loading (" + pCount + " items): " + (System.currentTimeMillis() - start) + " ms");
+        if (items.size() > 0) {
+            final long start = System.currentTimeMillis();
+            repository.saveBulk("loading", items);
+            System.out.println("Loading (" + items.size() + " items): " + (System.currentTimeMillis() - start) + " ms");
+        }
     }
 
     /**

@@ -52,7 +52,7 @@ public class PatternRestriction extends AbstractRestriction {
      */
     public PatternRestriction() { // NOSONAR
         super();
-        setType(RestrictionType.PATTERN);
+        type = RestrictionType.PATTERN;
     }
 
     /**

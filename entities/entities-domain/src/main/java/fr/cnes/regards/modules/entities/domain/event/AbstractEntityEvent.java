@@ -38,9 +38,9 @@ public abstract class AbstractEntityEvent implements IPollable {
         super();
     }
 
-    public AbstractEntityEvent(UniformResourceName... pIpIds) {
+    public AbstractEntityEvent(UniformResourceName... ipIds) {
         this();
-        ipIds = pIpIds;
+        this.ipIds = ipIds;
     }
 
     public UniformResourceName[] getIpIds() {

@@ -122,7 +122,7 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
     /**
      * Initialize queryable static attributes
      */
-    public void initStaticAttributes() {
+    public final void initStaticAttributes() {
 
         staticPropertyMap.put(StaticProperties.IP_ID,
                               AttributeModelBuilder.build(StaticProperties.IP_ID, AttributeType.STRING, null).isStatic()

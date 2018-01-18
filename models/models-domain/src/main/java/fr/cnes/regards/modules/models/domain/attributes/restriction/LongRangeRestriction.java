@@ -76,7 +76,7 @@ public class LongRangeRestriction extends AbstractRestriction {
 
     public LongRangeRestriction() {// NOSONAR
         super();
-        setType(RestrictionType.LONG_RANGE);
+        type = RestrictionType.LONG_RANGE;
     }
 
     @Override

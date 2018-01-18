@@ -16,20 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.dataaccess.service;
+package fr.cnes.regards.modules.dataaccess.service.test2;
 
-import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
-import fr.cnes.regards.modules.models.client.IAttributeModelClient;
-import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
+import fr.cnes.regards.modules.models.client.IAttributeModelClient;
+import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+
 @Configuration
-@ComponentScan(basePackages = { "fr.cnes.regards.modules" })
-public class TestConfiguration {
+@ComponentScan(basePackages = { "fr.cnes.regards.modules.dataaccess.service.test2" })
+public class TestAccessGroupConfiguration {
 
     @Bean
     public IAttributeModelClient mockAttributeModelClient() {
@@ -50,6 +51,5 @@ public class TestConfiguration {
     public IProjectUsersClient mockProjectUsersClient() {
         return Mockito.mock(IProjectUsersClient.class);
     }
-
 
 }

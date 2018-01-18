@@ -41,7 +41,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -73,7 +72,6 @@ import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
 import fr.cnes.regards.modules.crawler.test.IngesterConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.AipDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -135,8 +133,6 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     private IIngesterService ingesterService;
 
     private DataSourceModelMapping dataSourceModelMapping;
-
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     private Model dataModel;
 
@@ -205,8 +201,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping)).getParameters();
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -217,8 +213,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_2)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping)).getParameters();
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -229,8 +225,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_3)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 10)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM,
-                              adapter.toJson(dataSourceModelMapping)).getParameters();
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -252,9 +248,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPpassword)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
                 .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName)
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, 3)
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, 1).getParameters();
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE));
@@ -348,7 +342,6 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
         dataSourcePluginConf4 = getAipDataSource();
         pluginService.savePluginConfiguration(dataSourcePluginConf4);
 
-
     }
 
     private List<AipDataFiles> retrieveDataFiles() {
@@ -426,8 +419,13 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     @Test
     public void test() throws InterruptedException {
         Mockito.when(aipClient.retrieveAipDataFiles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(),
-                                                    Mockito.anyInt()))
-                .thenReturn(ResponseEntity.ok(new PagedResources<>(Collections.emptyList(), new PagedResources.PageMetadata(0,0,0,1))));
+                                                    Mockito.anyInt())).thenReturn(ResponseEntity
+                                                                                          .ok(new PagedResources<>(
+                                                                                                  Collections
+                                                                                                          .emptyList(),
+                                                                                                  new PagedResources.PageMetadata(
+                                                                                                          0, 0, 0,
+                                                                                                          1))));
         // Initial Ingestion with no value from datasources
         ingesterService.manage();
 

@@ -43,6 +43,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
+import com.google.common.collect.Lists;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -112,11 +113,13 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build().addParameter(AipDataSourcePlugin.BINDING_MAP, createBindingMap())
                 .addParameter(AipDataSourcePlugin.MODEL_NAME_PARAM, MODEL_NAME)
-                .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800).getParameters();
+                .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800)
+                .addParameter(IDataSourcePlugin.TAGS, Lists.newArrayList("TOTO", "TITI")).getParameters();
 
         PluginMetaData metadata = PluginUtils.createPluginMetaData(AipDataSourcePlugin.class, IDataSourcePlugin.class.getPackage().getName(), AipDataSourcePlugin.class.getPackage().getName());
 
         PluginConfiguration aipDs = new PluginConfiguration( metadata, "LABEL", parameters);
+        // FIXME : @svissier Why the fuck is this shit ?
         String truc = gsonBuilder.create().toJson(aipDs);
         dsPlugin = PluginUtils.getPlugin(parameters, AipDataSourcePlugin.class, Arrays.asList(PLUGIN_CURRENT_PACKAGE),
                                          pluginCacheMap);
@@ -196,6 +199,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         Assert.assertEquals(1, do1.getFiles().size());
         Assert.assertTrue(do1.getFiles().containsKey(DataType.RAWDATA));
 
+        Assert.assertTrue(do1.getTags().contains("TOTO"));
+        Assert.assertTrue(do1.getTags().contains("TITI"));
     }
 
     @After

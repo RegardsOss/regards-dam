@@ -16,11 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
+package fr.cnes.regards.modules.opensearch.service.parser;
+
+import java.util.Map;
+
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+
 /**
- *
- * Available model attribute representation
- *
- * @author Marc Sordi
- *
+ * This {@link IParser} implementation only handles the "exists" parameter (exists doesn't seem to exist in openSearch)
+ * and returns an {@link ICriterion} testing that given field exists.
+ * @author oroussel
  */
-package fr.cnes.regards.modules.entities.domain.attribute;
+public class FieldExistsParser implements IParser {
+    private static final String EXISTS_PARAM = "exists";
+
+    @Override
+    public ICriterion parse(Map<String, String> parameters) {
+        return parameters.containsKey(EXISTS_PARAM) ? ICriterion.attributeExists(parameters.get(EXISTS_PARAM)) : null;
+    }
+}

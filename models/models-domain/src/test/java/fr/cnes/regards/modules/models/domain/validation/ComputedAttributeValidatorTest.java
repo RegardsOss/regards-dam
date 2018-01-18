@@ -18,7 +18,11 @@
  */
 package fr.cnes.regards.modules.models.domain.validation;
 
-import javax.validation.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.util.Set;
 
 import org.junit.BeforeClass;

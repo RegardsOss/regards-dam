@@ -1,6 +1,14 @@
 package fr.cnes.regards.modules.entities.domain.deleted;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -39,9 +47,6 @@ public class DeletedEntity {
     @Column(nullable = false)
     @Convert(converter = UrnConverter.class)
     private UniformResourceName ipId;
-
-    public DeletedEntity() {
-    }
 
     public Long getId() {
         return id;

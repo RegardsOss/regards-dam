@@ -18,16 +18,14 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
-import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,24 +37,15 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -108,8 +97,6 @@ public class DatasetServiceTest {
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
-    private DataSourceService dataSourceServiceMocked;
-
     private IModelAttrAssocService pModelAttributeService;
 
     private IAttributeModelService pAttributeModelService;
@@ -119,8 +106,6 @@ public class DatasetServiceTest {
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
 
     private DataSourceModelMapping dataSourceModelMapping;
-
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
 
     private IPublisher publisherMocked;
 
@@ -141,7 +126,6 @@ public class DatasetServiceTest {
         pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         modelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
-        dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
         pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
         emMocked = Mockito.mock(EntityManager.class);
 
@@ -187,9 +171,9 @@ public class DatasetServiceTest {
 
         publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
+                pModelAttributeService, entitiesRepositoryMocked, modelService,
                 deletedEntityRepositoryMocked, null, emMocked, publisherMocked, runtimeTenantResolver, null,
-                Mockito.mock(IOpenSearchService.class));
+                Mockito.mock(IOpenSearchService.class), Mockito.mock(IPluginService.class));
 
         buildModelAttributes();
     }
@@ -304,54 +288,6 @@ public class DatasetServiceTest {
         Assert.assertNotEquals(dataSet1.getIpId(), dataSet2.getIpId());
     }
 
-    // @Test
-    // @Requirement("REGARDS_DSL_DAM_SET_200")
-    // @Purpose("The system allows to update the data source assiated to a dataset")
-    // public void dataSetUpdateDataSource() throws ModuleException, IOException {
-    // PluginConfiguration postgreConf = getDataSourceMapping();
-    // postgreConf.setId(33L);
-    //
-    // dataSet1.setDataSource(postgreConf);
-    //
-    // Mockito.when(pluginConfRepositoryMocked.exists(postgreConf.getId())).thenReturn(true);
-    // Mockito.when(pluginConfRepositoryMocked.findOne(postgreConf.getId())).thenReturn(postgreConf);
-    // Mockito.when(dataSetRepositoryMocked.findById(dataSet1.getId())).thenReturn(dataSet1);
-    // Mockito.when(dataSourceServiceMocked.getDataSource(dataSet1.getDataSource().getId()))
-    // .thenReturn(getDataSourceFromPluginConfiguration(postgreConf));
-    // Mockito.when(dataSetRepositoryMocked.save(dataSet1)).thenReturn(dataSet1);
-    //
-    // dataSetServiceMocked.update(dataSet1);
-    //
-    // Mockito.verify(publisherMocked).publish(Mockito.any(AbstractEntityEvent.class));
-    // }
-
-    private PluginConfiguration getPostgreConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, "dbUser")
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, "dbPassword")
-                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, "dbHost")
-                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, "dbPort")
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, "dbName")
-                .addParameter(DefaultPostgreConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-                .addParameter(DefaultPostgreConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
-                                                  Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
-    }
-
-    // private PluginConfiguration getDataSourceMapping() {
-    // List<PluginParameter> parameters;
-    // parameters = PluginParametersFactory.build()
-    // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-    // getPostgreConnectionConfiguration())
-    // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, "database_table_name")
-    // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
-    // .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
-    // return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
-    // Arrays.asList("fr.cnes.regards.modules.datasources.plugins"));
-    //
-    // }
-
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
 
@@ -360,22 +296,4 @@ public class DatasetServiceTest {
 
         dataSourceModelMapping = new DataSourceModelMapping(99L, attributes);
     }
-
-    private DataSource getDataSourceFromPluginConfiguration(PluginConfiguration pPluginConf) throws IOException {
-        DataSource dataSource = new DataSource();
-
-        dataSource.setPluginConfigurationId(pPluginConf.getId());
-        dataSource.setLabel(pPluginConf.getLabel());
-        dataSource.setFromClause(pPluginConf.getParameterValue(IDBDataSourcePlugin.FROM_CLAUSE));
-        dataSource.setTableName(pPluginConf.getParameterValue(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM));
-        dataSource.setMapping(adapter.fromJson(pPluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_PARAM)));
-
-        PluginConfiguration plgConfig = pPluginConf.getParameterConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM);
-        if (plgConfig != null) {
-            dataSource.setPluginConfigurationConnectionId(plgConfig.getId());
-        }
-
-        return dataSource;
-    }
-
 }

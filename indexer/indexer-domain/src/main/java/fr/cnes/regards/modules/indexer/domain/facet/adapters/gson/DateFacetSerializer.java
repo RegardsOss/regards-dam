@@ -28,7 +28,6 @@ import com.google.common.collect.Range;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
@@ -49,7 +48,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacet {
+    private static class AdaptedFacet {
 
         private final String attributeName;
 
@@ -69,7 +68,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacetValue {
+    private static class AdaptedFacetValue {
 
         private static final String OPENSEARCH_WILDCARD = "*";
 

@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * A DataObject is created by a DataSource when an external database is ingested.
+ * A DataObject is created by a DataSource when a data source (external database or AIPs by example) is ingested.
  *
  * @author lmieulet
  * @author Marc Sordi
@@ -51,6 +51,11 @@ public class DataObject extends AbstractDataEntity {
      * These metadata are used only by elasticsearch to add useful informations needed by catalog
      */
     private DataObjectMetadata metadata = new DataObjectMetadata();
+
+    /**
+     * This field only exists for Gson serialization (used by frontent)
+     */
+    private Boolean containsPhysicalData = null;
 
     public DataObject(Model model, String tenant, String label) {
         super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1),
@@ -83,6 +88,12 @@ public class DataObject extends AbstractDataEntity {
 
     public void setMetadata(DataObjectMetadata metadata) {
         this.metadata = metadata;
+    }
+
+    @Override
+    public boolean containsPhysicalData() {
+        containsPhysicalData = super.containsPhysicalData();
+        return containsPhysicalData;
     }
 
     @Override

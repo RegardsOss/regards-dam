@@ -1,13 +1,14 @@
 package fr.cnes.regards.modules.entities.service;
 
+import java.io.IOException;
+import java.util.Collection;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Document LS (Local Storage)

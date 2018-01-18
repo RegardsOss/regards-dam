@@ -31,9 +31,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.datasources.domain.DBConnection;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 
 /**
  *
@@ -66,14 +68,15 @@ public class DBConnectionServiceIT {
         runtimeTenantResolver.forceTenant("test");
 
         // Initialize wrong connection
-        DBConnection connection = new DBConnection();
-        connection.setDbHost("unknown");
-        connection.setDbName("regards");
-        connection.setDbPort("5432");
+        PluginConfiguration connection = new PluginConfiguration();
+        connection.setParameters(PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, "user")
+                                         .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, "password")
+                                         .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, "unknown")
+                                         .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, 5432)
+                                         .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, "regards")
+                                        .getParameters());
         connection.setLabel("Unknown host connection");
-        connection.setPassword("password");
         connection.setPluginClassName(DefaultPostgreConnectionPlugin.class.getName());
-        connection.setUser("user");
 
         dbConnectionService.createDBConnection(connection);
 

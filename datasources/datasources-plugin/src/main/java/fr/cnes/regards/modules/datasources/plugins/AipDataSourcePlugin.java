@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +43,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
-
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -50,7 +50,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -74,11 +74,7 @@ import fr.cnes.regards.modules.storage.domain.DataFileDto;
 @Plugin(id = "aip-storage-datasource", version = "1.0-SNAPSHOT",
         description = "Allows data extraction from AIP storage", author = "REGARDS Team", contact = "regards@c-s.fr",
         licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
-public class AipDataSourcePlugin implements IDataSourcePlugin {
-
-    public final static String MODEL_NAME_PARAM = "model name";
-
-    public final static String BINDING_MAP = "binding map";
+public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AipDataSourcePlugin.class);
 
@@ -88,6 +84,10 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
     @PluginParameter(name = BINDING_MAP, keylabel = "AIP property path", label = "Attribute path",
             description = "Binding map betwwen AIP and model ie property chain from AIP format and its associated property chain from model")
     private Map<String, String> bindingMap;
+
+    @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
+            description = "Common tags to be put on all data objects created by the data source")
+    private Collection<String> commonTags = Collections.emptyList();
 
     @Autowired
     private IModelService modelService;
@@ -202,6 +202,7 @@ public class AipDataSourcePlugin implements IDataSourcePlugin {
         }
 
         // Tags
+        obj.getTags().addAll(commonTags);
         obj.getTags().addAll(aip.getTags());
 
         // Binded properties

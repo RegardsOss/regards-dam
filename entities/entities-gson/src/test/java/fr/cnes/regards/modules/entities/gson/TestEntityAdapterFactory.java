@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.gson;
 
-import fr.cnes.regards.modules.entities.gson.EntityAdapterFactory;
-
 /**
  * @author Marc Sordi
  *

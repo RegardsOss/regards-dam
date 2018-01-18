@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.Arrays;
-
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -29,6 +27,7 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.Pattern;
+import java.util.Arrays;
 
 import org.hibernate.annotations.Type;
 import org.springframework.http.MediaType;

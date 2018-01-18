@@ -9,24 +9,24 @@ import java.util.Map;
  */
 public class SimpleSearchKey<T> extends SearchKey<T, T> {
 
-    public SimpleSearchKey(String pSearchIndex, Map<String, Class<? extends T>> pSearchTypeMap, Class<T> pResultClass) {
-        super(pSearchIndex, pSearchTypeMap, pResultClass);
+    public SimpleSearchKey(String searchIndex, Map<String, Class<? extends T>> searchTypeMap, Class<T> resultClass) {
+        super(searchIndex, searchTypeMap, resultClass);
 
     }
 
-    public SimpleSearchKey(String pSearchIndex, Map<String, Class<? extends T>> pSearchTypeMap) {
-        super(pSearchIndex, pSearchTypeMap);
+    public SimpleSearchKey(String searchIndex, Map<String, Class<? extends T>> searchTypeMap) {
+        super(searchIndex, searchTypeMap);
 
     }
 
-    public SimpleSearchKey(String pSearchIndex, String pSearchType, Class<? extends T> pSearchClass,
-            Class<T> pResultClass) {
-        super(pSearchIndex, pSearchType, pSearchClass, pResultClass);
+    public SimpleSearchKey(String searchIndex, String searchType, Class<? extends T> searchClass,
+            Class<T> resultClass) {
+        super(searchIndex, searchType, searchClass, resultClass);
 
     }
 
-    public SimpleSearchKey(String pSearchIndex, String pSearchType, Class<? extends T> pSearchClass) {
-        super(pSearchIndex, pSearchType, pSearchClass);
+    public SimpleSearchKey(String searchIndex, String searchType, Class<? extends T> searchClass) {
+        super(searchIndex, searchType, searchClass);
 
     }
 

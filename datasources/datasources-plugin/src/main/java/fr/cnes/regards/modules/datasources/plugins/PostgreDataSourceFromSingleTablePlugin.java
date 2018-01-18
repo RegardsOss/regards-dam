@@ -19,35 +19,34 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
+import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-
-import javax.sql.DataSource;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Class PostgreDataSourceFromSingleTablePlugin A {@link Plugin} to discover the tables, columns and indexes to a
  * PostgreSQL Database.<br>
  * This {@link Plugin} used a {@link IDBConnectionPlugin} to define to connection to the {@link DataSource}.
- *
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
@@ -55,38 +54,26 @@ import fr.cnes.regards.modules.models.domain.Model;
         description = "Allows introspection and data extraction to a PostgreSql database", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSourceFromSingleTablePlugin {
-
-    /**
-     * Class logger
-     */
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePlugin.class);
 
-    /**
-     * The connection to the database
-     */
     @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin")
     private IDBConnectionPlugin dbConnection;
 
-    /**
-     * The table name used to request the database
-     */
     @PluginParameter(name = TABLE_PARAM, label = "Table name", description = "Database table name to be requested")
     private String tableName;
 
-    /**
-     * The {@link Model} to be used by the {@link Plugin} in JSON format
-     */
     @PluginParameter(name = MODEL_PARAM, label = "model mapping",
             description = "Mapping between model and database table (in JSON format)")
-    private String modelMappingJSon;
+    private DataSourceModelMapping modelMapping;
 
-    /**
-     * Ingestion refresh rate in seconds
-     */
     @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE_AS_STRING, optional = true,
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
+
+    @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
+            description = "Common tags to be put on all data objects created by the data source")
+    private Collection<String> commonTags = Collections.emptyList();
 
     /**
      * Init method
@@ -94,10 +81,9 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     @PluginInit
     private void initPlugin() {
         LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString()
-                + "table name=" + tableName + ", model=" + modelMappingJSon);
+                         + "table name=" + tableName + ", model=" + modelMapping);
 
-        // Converts the modelJson to a list of AbstractAttributeMapping
-        initDataSourceMapping(modelMappingJSon);
+        init(modelMapping, commonTags);
 
         initializePluginMapping(tableName);
 
@@ -114,8 +100,8 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     }
 
     @Override
-    protected SqlGenerator buildSqlGenerator(String pAllColumnsClause, String pOrderBy) {
-        return new PostgreSqlGenerator(pAllColumnsClause, pOrderBy);
+    protected SqlGenerator buildSqlGenerator(String allColumnsClause, String orderBy) {
+        return new PostgreSqlGenerator(allColumnsClause, orderBy);
     }
 
     @Override
@@ -126,9 +112,8 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     @Override
     /**
      * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
-     */
-    protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
-            throws SQLException {
+     */ protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName,
+            String colName) throws SQLException {
         OffsetDateTime ldt;
         Integer typeDS = getTypeDs(attrDSName);
 

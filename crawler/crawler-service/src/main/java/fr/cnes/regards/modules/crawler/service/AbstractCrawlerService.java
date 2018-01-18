@@ -94,7 +94,12 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
      */
     private static boolean consumeOnlyMode = false;
 
-    private Class<T> entityClass;
+    private final Class<T> entityClass;
+
+    protected AbstractCrawlerService() {
+        this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
+                .getActualTypeArguments()[0];
+    }
 
     /**
      * Ask for termination of daemon process
@@ -104,10 +109,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
         stopAsked = true;
     }
 
-    protected AbstractCrawlerService() {
-        this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
-                .getActualTypeArguments()[0];
-    }
 
     /**
      * Daemon process. Poll entity events on all tenants and update Elasticsearch to reflect Postgres database
@@ -127,8 +128,8 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
                     atLeastOnePoll |= pollMethod.get();
-                } catch (Throwable t) {
-                    LOGGER.error("Cannot manage entity event message", t);
+                } catch (Exception e) {
+                    LOGGER.error("Cannot manage entity event message", e);
                 }
                 // Reset inProgress AFTER transaction
                 inProgress = false;

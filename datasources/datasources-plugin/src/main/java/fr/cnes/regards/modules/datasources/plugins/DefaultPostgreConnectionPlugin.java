@@ -29,7 +29,7 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDBConnection;
 /**
  * A default {@link Plugin} of type {@link IDBConnectionPlugin}. For the test of the connection :
  *
- * @see http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most
+ * @see 'http://stackoverflow.com/questions/3668506/efficient-sql-test-query-or-validation-query-that-will-work-across-all-or-most'
  * @author Christophe Mertz
  * @since 1.0-SNAPSHOT
  */
@@ -74,23 +74,11 @@ public class DefaultPostgreConnectionPlugin extends AbstractDBConnection {
     private String dbName;
 
     /**
-     * Maximum number of Connections a pool will maintain at any given time.
-     */
-    @PluginParameter(name = MAX_POOLSIZE_PARAM, label = "Maximum pool size")
-    private Integer maxPoolSize;
-
-    /**
-     * Minimum number of Connections a pool will maintain at any given time.
-     */
-    @PluginParameter(name = MIN_POOLSIZE_PARAM, label = "Minimum pool size")
-    private Integer minPoolSize;
-
-    /**
      * This class is used to initialize the {@link Plugin}
      */
     @PluginInit
     private void createPoolConnection() {
-        createPoolConnection(dbUser, dbPassword, maxPoolSize, minPoolSize);
+        createPoolConnection(dbUser, dbPassword, 3, 1);
     }
 
     @PluginDestroy

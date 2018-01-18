@@ -11,21 +11,21 @@ public class NotCriterion implements ICriterion {
      */
     private ICriterion criterion;
 
-    public NotCriterion(ICriterion pCriterion) {
-        criterion = pCriterion;
+    public NotCriterion(ICriterion criterion) {
+        this.criterion = criterion;
     }
 
     public ICriterion getCriterion() {
         return criterion;
     }
 
-    public void setCriterion(ICriterion pCriterion) {
-        criterion = pCriterion;
+    public void setCriterion(ICriterion criterion) {
+        this.criterion = criterion;
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitNotCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitNotCriterion(this);
     }
 
     @Override

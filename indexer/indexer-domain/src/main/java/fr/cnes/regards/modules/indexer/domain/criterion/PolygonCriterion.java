@@ -11,10 +11,10 @@ public class PolygonCriterion implements ICriterion {
     /**
      * Polygon coordinates
      */
-    private Double[][][] coordinates;
+    private final Double[][][] coordinates;
 
-    protected PolygonCriterion(Double[][][] pCoordinates) {
-        coordinates = pCoordinates;
+    protected PolygonCriterion(Double[][][] coordinates) {
+        this.coordinates = coordinates;
     }
 
     public Double[][][] getCoordinates() {
@@ -22,8 +22,8 @@ public class PolygonCriterion implements ICriterion {
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitPolygonCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitPolygonCriterion(this);
     }
 
     @Override
