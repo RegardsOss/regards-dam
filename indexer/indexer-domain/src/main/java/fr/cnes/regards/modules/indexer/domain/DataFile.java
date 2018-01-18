@@ -119,7 +119,7 @@ public class DataFile {
         return online;
     }
 
-    public final void setOnline(Boolean online) {
+    public void setOnline(Boolean online) {
         this.online = online;
     }
 
