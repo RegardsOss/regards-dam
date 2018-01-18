@@ -28,7 +28,6 @@ import com.google.common.collect.Range;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 

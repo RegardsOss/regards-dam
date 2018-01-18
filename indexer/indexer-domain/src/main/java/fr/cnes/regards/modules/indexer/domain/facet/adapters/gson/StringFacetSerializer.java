@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**

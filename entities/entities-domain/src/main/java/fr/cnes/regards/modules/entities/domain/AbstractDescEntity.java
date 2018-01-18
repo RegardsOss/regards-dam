@@ -18,10 +18,15 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 
 import com.google.gson.annotations.JsonAdapter;
-
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.converter.DescriptionFileAdapter;
 import fr.cnes.regards.modules.models.domain.Model;

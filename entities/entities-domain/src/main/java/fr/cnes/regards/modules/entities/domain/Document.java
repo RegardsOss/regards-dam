@@ -18,17 +18,17 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import java.util.Collection;
+import java.util.UUID;
+
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
-
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import java.util.Collection;
-import java.util.UUID;
 
 /**
  * @author Sylvain Vissiere-Guerinet

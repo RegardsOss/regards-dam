@@ -52,6 +52,9 @@ public class DataObject extends AbstractDataEntity {
      */
     private DataObjectMetadata metadata = new DataObjectMetadata();
 
+    /**
+     * This field only exists for Gson serialization (used by frontent)
+     */
     private Boolean containsPhysicalData = null;
 
     public DataObject(Model model, String tenant, String label) {

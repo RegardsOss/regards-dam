@@ -1,10 +1,11 @@
 package fr.cnes.regards.modules.entities.dao;
 
-import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.domain.DocumentLS;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.DocumentLS;
 
 public interface IDocumentLSRepository extends JpaRepository<DocumentLS, Long> {
 

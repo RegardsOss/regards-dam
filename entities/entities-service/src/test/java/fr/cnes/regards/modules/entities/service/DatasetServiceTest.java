@@ -46,7 +46,6 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.service.DataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -98,8 +97,6 @@ public class DatasetServiceTest {
 
     private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
 
-    private DataSourceService dataSourceServiceMocked;
-
     private IModelAttrAssocService pModelAttributeService;
 
     private IAttributeModelService pAttributeModelService;
@@ -129,7 +126,6 @@ public class DatasetServiceTest {
         pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         modelService = Mockito.mock(IModelService.class);
         pAttributeModelService = Mockito.mock(IAttributeModelService.class);
-        dataSourceServiceMocked = Mockito.mock(DataSourceService.class);
         pluginConfRepositoryMocked = Mockito.mock(IPluginConfigurationRepository.class);
         emMocked = Mockito.mock(EntityManager.class);
 
@@ -175,7 +171,7 @@ public class DatasetServiceTest {
 
         publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, dataSourceServiceMocked, entitiesRepositoryMocked, modelService,
+                pModelAttributeService, entitiesRepositoryMocked, modelService,
                 deletedEntityRepositoryMocked, null, emMocked, publisherMocked, runtimeTenantResolver, null,
                 Mockito.mock(IOpenSearchService.class), Mockito.mock(IPluginService.class));
 

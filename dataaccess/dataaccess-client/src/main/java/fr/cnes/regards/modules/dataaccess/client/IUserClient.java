@@ -18,9 +18,8 @@
  */
 package fr.cnes.regards.modules.dataaccess.client;
 
-import java.util.List;
-
 import javax.validation.Valid;
+import java.util.List;
 
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;

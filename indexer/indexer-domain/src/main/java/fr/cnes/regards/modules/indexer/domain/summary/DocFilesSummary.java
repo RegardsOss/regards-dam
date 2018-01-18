@@ -16,16 +16,16 @@ public class DocFilesSummary extends AbstractDocSummary {
      */
     private final Map<String, DocFilesSubSummary> subSummariesMap = new HashMap<>();
 
-    public Map<String, DocFilesSubSummary> getSubSummariesMap() {
-        return subSummariesMap;
-    }
-
     public DocFilesSummary() {
 
     }
 
     public DocFilesSummary(long documentsCount, long filesCount, long filesSize) {
         super(documentsCount, filesCount, filesSize);
+    }
+
+    public Map<String, DocFilesSubSummary> getSubSummariesMap() {
+        return subSummariesMap;
     }
 
     @Override

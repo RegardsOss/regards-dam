@@ -4,7 +4,6 @@ import java.util.Map;
 
 import com.google.common.collect.Range;
 import com.google.gson.annotations.JsonAdapter;
-
 import fr.cnes.regards.modules.indexer.domain.facet.adapters.gson.NumericFacetSerializer;
 
 /**

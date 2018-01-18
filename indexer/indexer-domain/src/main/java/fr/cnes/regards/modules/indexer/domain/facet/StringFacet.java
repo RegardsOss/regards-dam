@@ -3,7 +3,6 @@ package fr.cnes.regards.modules.indexer.domain.facet;
 import java.util.Map;
 
 import com.google.gson.annotations.JsonAdapter;
-
 import fr.cnes.regards.modules.indexer.domain.facet.adapters.gson.StringFacetSerializer;
 
 /**

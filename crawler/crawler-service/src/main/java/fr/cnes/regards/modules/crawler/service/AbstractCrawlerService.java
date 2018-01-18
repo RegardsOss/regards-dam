@@ -96,6 +96,11 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
 
     private final Class<T> entityClass;
 
+    protected AbstractCrawlerService() {
+        this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
+                .getActualTypeArguments()[0];
+    }
+
     /**
      * Ask for termination of daemon process
      */
@@ -104,10 +109,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
         stopAsked = true;
     }
 
-    protected AbstractCrawlerService() {
-        this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
-                .getActualTypeArguments()[0];
-    }
 
     /**
      * Daemon process. Poll entity events on all tenants and update Elasticsearch to reflect Postgres database

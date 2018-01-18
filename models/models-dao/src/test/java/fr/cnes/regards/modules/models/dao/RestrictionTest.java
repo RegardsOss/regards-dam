@@ -25,8 +25,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.AbstractRestriction;
-import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.DoubleRangeRestriction;
+import fr.cnes.regards.modules.models.domain.attributes.restriction.EnumerationRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.IntegerRangeRestriction;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.PatternRestriction;
 

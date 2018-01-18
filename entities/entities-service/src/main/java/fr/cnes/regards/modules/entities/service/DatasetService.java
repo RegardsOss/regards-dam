@@ -47,7 +47,6 @@ import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -82,11 +81,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private final IAttributeModelService attributeService;
 
     /**
-     * {@link IDataSourceService} instance
-     */
-    private final IDataSourceService dataSourceService;
-
-    /**
      * {@link IOpenSearchService} instance
      */
     private final IOpenSearchService openSearchService;
@@ -94,16 +88,14 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private final IPluginService pluginService;
 
     public DatasetService(IDatasetRepository pRepository, IAttributeModelService attributeService,
-            IModelAttrAssocService pModelAttributeService, IDataSourceService dataSourceService,
-            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
-            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IDescriptionFileRepository descriptionFileRepository, IOpenSearchService openSearchService,
-            IPluginService pluginService) {
+            IModelAttrAssocService pModelAttributeService, IAbstractEntityRepository<AbstractEntity> pEntityRepository,
+            IModelService pModelService, IDeletedEntityRepository deletedEntityRepository,
+            ICollectionRepository pCollectionRepository, EntityManager pEm, IPublisher pPublisher,
+            IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
+            IOpenSearchService openSearchService, IPluginService pluginService) {
         super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
               pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
         this.attributeService = attributeService;
-        this.dataSourceService = dataSourceService;
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
     }
@@ -127,9 +119,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                     DataSourceModelMapping modelMapping = adapter.fromJson(jsonModelMapping);
                     dataset.setDataModel(modelMapping.getModel());
                 } catch (IOException e) {
-                    throw new EntityNotFoundException("Unable to dejsonify model mapping parameter from "
-                                                      + "PluginConfiguration (" + e.getMessage() + ")",
-                                                      PluginConfiguration.class);
+                    throw new EntityNotFoundException(
+                            "Unable to dejsonify model mapping parameter from " + "PluginConfiguration (" + e
+                                    .getMessage() + ")", PluginConfiguration.class);
                 }
             } else if (pluginConf.getInterfaceNames().contains(IAipDataSourcePlugin.class.getName())) {
                 String modelName = pluginConf.getParameterValue(IAipDataSourcePlugin.MODEL_NAME_PARAM);

@@ -37,8 +37,10 @@ public class SearchAfterReminder extends Reminder {
 
     private String searchAfterSortValues;
 
+    // For information (serialized into Elasticsearch)
     private final int nextOffset;
 
+    // For information (serialized into Elasticsearch)
     private final int nextPageSize;
 
     public SearchAfterReminder(ICriterion crit, SearchKey<?, ?> searchKey, Sort sort, Pageable nextPage) {

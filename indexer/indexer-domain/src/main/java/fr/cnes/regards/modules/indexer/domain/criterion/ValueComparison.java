@@ -1,6 +1,6 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
-import org.springframework.util.Assert;
+import com.google.common.base.Preconditions;
 
 /**
  * Pair of comparison operator and value
@@ -47,14 +47,12 @@ public class ValueComparison<T extends Comparable<? super T>> implements Compara
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        // CHECKSTYLE:OFF
         result = (prime * result) + ((operator == null) ? 0 : operator.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        // CHECKSTYLE:ON
         if (this == obj) {
             return true;
         }
@@ -65,10 +63,7 @@ public class ValueComparison<T extends Comparable<? super T>> implements Compara
             return false;
         }
         ValueComparison<?> other = (ValueComparison<?>) obj;
-        if (operator != other.operator) {
-            return false;
-        }
-        return true;
+        return (operator == other.operator);
     }
 
     @Override
@@ -77,9 +72,9 @@ public class ValueComparison<T extends Comparable<? super T>> implements Compara
     }
 
     @Override
-    public int compareTo(ValueComparison<T> pO) {
-        Assert.notNull(pO);
-        return value.compareTo(pO.value);
+    public int compareTo(ValueComparison<T> other) {
+        Preconditions.checkNotNull(other);
+        return value.compareTo(other.value);
     }
 
 }

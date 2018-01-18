@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.indexer.dao;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.UnknownHostException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -195,16 +194,6 @@ public class EsRepository implements IEsRepository {
     private static final String GEOM_TYPE_PROP = "type=geo_shape";
 
     /**
-     * Elasticsearch host
-     */
-    private final String esHost;
-
-    /**
-     * Elasticsearch port
-     */
-    private final int esPort;
-
-    /**
      * Low level Rest API client
      */
     private final RestClient restClient;
@@ -226,18 +215,17 @@ public class EsRepository implements IEsRepository {
     public EsRepository(@Autowired Gson pGson, @Value("${regards.elasticsearch.host:}") String inEsHost,
             @Value("${regards.elasticsearch.address:}") String inEsAddress,
             @Value("${regards.elasticsearch.http.port}") int esPort,
-            AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) throws UnknownHostException {
+            AggregationBuilderFacetTypeVisitor aggBuilderFacetTypeVisitor) {
 
         gson = pGson;
-        this.esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
-        this.esPort = esPort;
+        String esHost = Strings.isEmpty(inEsHost) ? inEsAddress : inEsHost;
         this.aggBuilderFacetTypeVisitor = aggBuilderFacetTypeVisitor;
 
         String connectionInfoMessage = String
-                .format("Elastic search connection properties : host \"%s\", port \"%d\"", this.esHost, this.esPort);
+                .format("Elastic search connection properties : host \"%s\", port \"%d\"", esHost, esPort);
         LOGGER.info(connectionInfoMessage);
 
-        restClient = RestClient.builder(new HttpHost(this.esHost, this.esPort)).build();
+        restClient = RestClient.builder(new HttpHost(esHost, esPort)).build();
         client = new RestHighLevelClient(restClient);
 
         try {
@@ -1095,103 +1083,112 @@ public class EsRepository implements IEsRepository {
     private void fillFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, FacetType facetType,
             String attributeName) {
         switch (facetType) {
-            case STRING: {
-                Terms terms = (Terms) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
-                if (terms.getBuckets().isEmpty()) {
-                    return;
-                }
-                Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
-                terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
-                facets.add(new StringFacet(attributeName, valueMap));
+            case STRING:
+                fillStringFacets(aggsMap, facets, attributeName);
                 break;
-            }
-            case NUMERIC: {
-                org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
-                if (numRange != null) {
-                    // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
-                    Min min = (Min) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
-                    Max max = (Max) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
-                    // Parsing ranges
-                    Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
-                    for (Bucket bucket : numRange.getBuckets()) {
-                        // Case with no value : every bucket has a NaN value (as from, to or both)
-                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
-                                .equals(bucket.getFrom(), Double.NaN)) {
-                            // If first bucket contains NaN value, it means there are no value at all
-                            return;
-                        }
-                        Range<Double> valueRange;
-                        // (-∞ -> ?
-                        if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
-                            // (-∞ -> +∞) (completely dumb but...who knows ?)
-                            if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
-                                // Better not return a facet
-                                return;
-                            } // (-∞ -> value [
-                            // range is then [min -> value [
-                            valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
-                        } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
-                            // range is then [value, max]
-                            valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaled(max.getValue()));
-                        } else { // [value -> value [
-                            valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
-                        }
-                        valueMap.put(valueRange, bucket.getDocCount());
-                    }
-                    facets.add(new NumericFacet(attributeName, valueMap));
-                }
+            case NUMERIC:
+                fillNumericFacets(aggsMap, facets, attributeName);
                 break;
-            }
-            case DATE: {
-                org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
-                        .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
-                if (dateRange != null) {
-                    Map<com.google.common.collect.Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
-                    for (Bucket bucket : dateRange.getBuckets()) {
-                        // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
-                        Min min = (Min) aggsMap
-                                .get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
-                        Max max = (Max) aggsMap
-                                .get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
-                        // Parsing ranges
-                        Range<OffsetDateTime> valueRange;
-                        // Case with no value : every bucket has a NaN value (as from, to or both)
-                        if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
-                                .equals(bucket.getFrom(), Double.NaN)) {
-                            // If first bucket contains NaN value, it means there are no value at all
-                            return;
-                        }
-                        // (-∞ -> ?
-                        if (bucket.getFromAsString() == null) {
-                            // (-∞ -> +∞) (completely dumb but...who knows ?)
-                            if (bucket.getToAsString() == null) {
-                                // range is then [min, max]
-                                valueRange = Range.closed(OffsetDateTimeAdapter.parse(min.getValueAsString()),
-                                                          OffsetDateTimeAdapter.parse(max.getValueAsString()));
-                            } else { // (-∞ -> value[
-                                // range is then [min, value[
-                                valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(min.getValueAsString()),
-                                                              OffsetDateTimeAdapter.parse(bucket.getToAsString()));
-                            }
-                        } else if (bucket.getToAsString() == null) { // [value -> +∞)
-                            // range is then [value, max ]
-                            valueRange = Range.closed(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                      OffsetDateTimeAdapter.parse(max.getValueAsString()));
-                        } else { // [value -> value[
-                            valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
-                                                          OffsetDateTimeAdapter.parse(bucket.getToAsString()));
-                        }
-                        valueMap.put(valueRange, bucket.getDocCount());
-                    }
-                    facets.add(new DateFacet(attributeName, valueMap));
-                }
+            case DATE:
+                fillDateFacets(aggsMap, facets, attributeName);
                 break;
-            }
             default:
                 break;
         }
+    }
+
+    private void fillDateFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        org.elasticsearch.search.aggregations.bucket.range.Range dateRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
+                .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
+        if (dateRange != null) {
+            Map<Range<OffsetDateTime>, Long> valueMap = new LinkedHashMap<>();
+            for (Bucket bucket : dateRange.getBuckets()) {
+                // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
+                Min min = (Min) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
+                Max max = (Max) aggsMap
+                        .get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
+                // Parsing ranges
+                Range<OffsetDateTime> valueRange;
+                // Case with no value : every bucket has a NaN value (as from, to or both)
+                if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
+                        .equals(bucket.getFrom(), Double.NaN)) {
+                    // If first bucket contains NaN value, it means there are no value at all
+                    return;
+                }
+                // (-∞ -> ?
+                if (bucket.getFromAsString() == null) {
+                    // (-∞ -> +∞) (completely dumb but...who knows ?)
+                    if (bucket.getToAsString() == null) {
+                        // range is then [min, max]
+                        valueRange = Range.closed(OffsetDateTimeAdapter.parse(min.getValueAsString()),
+                                                  OffsetDateTimeAdapter.parse(max.getValueAsString()));
+                    } else { // (-∞ -> value[
+                        // range is then [min, value[
+                        valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(min.getValueAsString()),
+                                                      OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                    }
+                } else if (bucket.getToAsString() == null) { // [value -> +∞)
+                    // range is then [value, max ]
+                    valueRange = Range.closed(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                              OffsetDateTimeAdapter.parse(max.getValueAsString()));
+                } else { // [value -> value[
+                    valueRange = Range.closedOpen(OffsetDateTimeAdapter.parse(bucket.getFromAsString()),
+                                                  OffsetDateTimeAdapter.parse(bucket.getToAsString()));
+                }
+                valueMap.put(valueRange, bucket.getDocCount());
+            }
+            facets.add(new DateFacet(attributeName, valueMap));
+        }
+    }
+
+    private void fillNumericFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        org.elasticsearch.search.aggregations.bucket.range.Range numRange = (org.elasticsearch.search.aggregations.bucket.range.Range) aggsMap
+                .get(attributeName + AggregationBuilderFacetTypeVisitor.RANGE_FACET_SUFFIX);
+        if (numRange != null) {
+            // Retrieve min and max aggregagtions to replace -Infinity and +Infinity
+            Min min = (Min) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MIN_FACET_SUFFIX);
+            Max max = (Max) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.MAX_FACET_SUFFIX);
+            // Parsing ranges
+            Map<Range<Double>, Long> valueMap = new LinkedHashMap<>();
+            for (Bucket bucket : numRange.getBuckets()) {
+                // Case with no value : every bucket has a NaN value (as from, to or both)
+                if (Objects.equals(bucket.getTo(), Double.NaN) || Objects
+                        .equals(bucket.getFrom(), Double.NaN)) {
+                    // If first bucket contains NaN value, it means there are no value at all
+                    return;
+                }
+                Range<Double> valueRange;
+                // (-∞ -> ?
+                if (Objects.equals(bucket.getFrom(), Double.NEGATIVE_INFINITY)) {
+                    // (-∞ -> +∞) (completely dumb but...who knows ?)
+                    if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) {
+                        // Better not return a facet
+                        return;
+                    } // (-∞ -> value [
+                    // range is then [min -> value [
+                    valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
+                } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
+                    // range is then [value, max]
+                    valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaled(max.getValue()));
+                } else { // [value -> value [
+                    valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
+                }
+                valueMap.put(valueRange, bucket.getDocCount());
+            }
+            facets.add(new NumericFacet(attributeName, valueMap));
+        }
+    }
+
+    private void fillStringFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        Terms terms = (Terms) aggsMap
+                .get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
+        if (terms.getBuckets().isEmpty()) {
+            return;
+        }
+        Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
+        terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
+        facets.add(new StringFacet(attributeName, valueMap));
     }
 
     @Override

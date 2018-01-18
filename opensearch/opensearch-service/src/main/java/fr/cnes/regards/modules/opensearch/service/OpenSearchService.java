@@ -47,10 +47,7 @@ public class OpenSearchService implements IOpenSearchService {
     // Thread safe parsers holder
     private static ThreadLocal<List<IParser>> parsersHolder;
 
-    private final IAttributeFinder finder;
-
     public OpenSearchService(IAttributeFinder finder) {
-        this.finder = finder;
         this.parsersHolder = ThreadLocal.withInitial(() -> Lists
                 .newArrayList(new QueryParser(finder), new GeometryParser(), new CircleParser(),
                               new FieldExistsParser()));

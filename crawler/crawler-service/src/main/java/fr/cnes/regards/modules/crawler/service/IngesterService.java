@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PreDestroy;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
@@ -102,11 +101,6 @@ public class IngesterService
     private IIngesterService self;
 
     /**
-     * Indicate that daemon stop has been asked
-     */
-    private boolean stopAsked = false;
-
-    /**
      * Current delay between all tenants poll check
      */
     private final AtomicInteger delay = new AtomicInteger(INITIAL_DELAY_MS);
@@ -128,6 +122,8 @@ public class IngesterService
      */
     private boolean consumeOnlyMode = false;
 
+    private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
+
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         subscriber.subscribeTo(PluginConfEvent.class, this);
@@ -146,58 +142,6 @@ public class IngesterService
         } catch (RuntimeException t) {
             LOGGER.error("Cannot manage plugin conf event message", t);
         }
-    }
-
-/*    @Override
-    @Async
-    public void listenToPluginConfChange() {
-        delay.set(INITIAL_DELAY_MS);
-        // Infinite loop
-        while (true) {
-            // Manage termination
-            if (stopAsked) {
-                break;
-            }
-            boolean atLeastOnePoll = false;
-            // For all tenants
-            for (String tenant : tenantResolver.getAllActiveTenants()) {
-                try {
-                    runtimeTenantResolver.forceTenant(tenant);
-                    // Try to poll a plugin conf event on this tenant
-                    TenantWrapper<PluginConfEvent> wrapper = subscriber.poll(PluginConfEvent.class);
-                    if (wrapper != null) {
-                        // If it concerns a Datasource, manage it
-                        if (wrapper.getContent().getPluginTypes().contains(IDataSourcePlugin.class.getName())) {
-                            if (!this.consumeOnlyMode) {
-                                this.manage();
-                            }
-                        }
-                    }
-                } catch (RuntimeException t) {
-                    LOGGER.error("Cannot manage plugin conf event message", t);
-                }
-            }
-            // If a poll has been done, don't wait and reset delay to initial value
-            if (atLeastOnePoll) {
-                delay.set(INITIAL_DELAY_MS);
-            } else { // else, wait and double delay for next time (limited to MAX_DELAY)
-                try {
-                    Thread.sleep(delay.get());
-                    delay.set(Math.min(delay.get() * 2, MAX_DELAY_MS));
-                } catch (InterruptedException e) {
-                    LOGGER.error("Thread sleep interrupted.");
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-    }*/
-
-    /**
-     * Ask for termination of daemon process
-     */
-    @PreDestroy
-    private void endListenToPluginConfChange() {
-        stopAsked = true;
     }
 
     /**
@@ -302,8 +246,6 @@ public class IngesterService
             }
         });
     }
-
-    private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
 
     /**
      * Create a task to launch datasource data objects deletion later (use a thread pool of size 1)
