@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
  * Factory class for search (types, keys, etc...)
  * @author oroussel
  */
-public class Searches {
+public final class Searches {
 
     protected static final BiMap<EntityType, Class<? extends AbstractEntity>> TYPE_MAP = EnumHashBiMap
             .create(EntityType.class);
@@ -48,6 +48,9 @@ public class Searches {
 
     private static final Map<String, Class<? extends AbstractEntity>> SEARCH_TYPE_MAP = TYPE_MAP.keySet().stream()
             .collect(Collectors.toMap(EntityType::toString, type -> TYPE_MAP.get(type)));
+
+    private Searches() {
+    }
 
     public static EntityType fromClass(Class<?> clazz) {
         return TYPE_MAP.inverse().get(clazz);

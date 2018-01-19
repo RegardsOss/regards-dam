@@ -23,9 +23,10 @@ import java.time.OffsetDateTime;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
 /**
+ * In case another reminder exist one day (by now only SearchAfterReminder does)
  * @author oroussel
  */
-public abstract class Reminder implements IIndexable {
+public abstract class AbstractReminder implements IIndexable {
 
     protected String docId;
 

@@ -609,7 +609,7 @@ public class EsRepository implements IEsRepository {
             // Store last sort value in order to use searchAfter next time
             Object[] sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
             OffsetDateTime expirationDate = OffsetDateTime.now().plus(KEEP_ALIVE_SCROLLING_TIME_MS, ChronoUnit.MILLIS);
-            // Create a Reminder and save it into ES for next page
+            // Create a AbstractReminder and save it into ES for next page
             SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest.next());
             reminder.setExpirationDate(expirationDate);
             reminder.setSearchAfterSortValues(sortValues);
@@ -630,7 +630,7 @@ public class EsRepository implements IEsRepository {
             int searchPageNumber = 0;
             Pageable searchReminderPageRequest;
             if (indexExists(REMINDER_IDX)) {
-                // First check existence of Reminder for exact given pageRequest from ES
+                // First check existence of AbstractReminder for exact given pageRequest from ES
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort, pageRequest);
                 reminder = get(REMINDER_IDX, reminder);
                 if (reminder != null) {
@@ -683,7 +683,7 @@ public class EsRepository implements IEsRepository {
                 builder.from(0).searchAfter(sortValues);
                 SearchResponse response = client.search(request);
                 sortValues = response.getHits().getAt(response.getHits().getHits().length - 1).getSortValues();
-                // Create a Reminder and save it into ES for next page
+                // Create a AbstractReminder and save it into ES for next page
                 SearchAfterReminder reminder = new SearchAfterReminder(crit, searchKey, sort,
                                                                        new PageRequest(offset / MAX_RESULT_WINDOW,
                                                                                        MAX_RESULT_WINDOW).next());

@@ -31,7 +31,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 /**
  * @author oroussel
  */
-public class SearchAfterReminder extends Reminder {
+public class SearchAfterReminder extends AbstractReminder {
 
     private static final String TYPE = "SEARCH_AFTER";
 
