@@ -182,9 +182,9 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
                         .substring(pos, selectRequest.length());
             } else {
                 // Add at the end of the request
-                StringBuffer newRequest = new StringBuffer(selectRequest);
-                newRequest.append(WHERE).append(AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD);
-                selectRequest = newRequest.toString();
+                StringBuilder buf = new StringBuilder(selectRequest);
+                buf.append(WHERE).append(AbstractDataObjectMapping.LAST_MODIFICATION_DATE_KEYWORD);
+                selectRequest = buf.toString();
             }
         }
 
@@ -215,9 +215,7 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
 
         try (Connection conn = getDBConnection().getConnection()) {
 
-            Page<DataObject> pages = findAll(tenant, conn, selectRequest, countRequest, pageable, date);
-
-            return pages;
+            return findAll(tenant, conn, selectRequest, countRequest, pageable, date);
         } catch (SQLException e) {
             // This exception can only be thrown from getDBConnection(), others have already been transformed into
             // DataSourceException

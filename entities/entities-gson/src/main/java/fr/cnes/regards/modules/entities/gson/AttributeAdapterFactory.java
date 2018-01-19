@@ -35,7 +35,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
  * Factory for (de)serialize {@link AbstractAttribute}
  *
  * @author Marc Sordi
- *
+ * @deprecated
  */
 @Deprecated
 @SuppressWarnings("rawtypes")

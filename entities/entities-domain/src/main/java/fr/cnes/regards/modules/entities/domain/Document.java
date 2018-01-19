@@ -55,10 +55,7 @@ public class Document extends AbstractDataEntity {
 
 
     public Collection<DataFile> getDocumentFiles() {
-        if (this.getFiles() != null) {
-            return this.getFiles().get(DataType.DOCUMENT);
-        }
-        return null;
+        return this.getFiles().get(DataType.DOCUMENT);
     }
 
 }

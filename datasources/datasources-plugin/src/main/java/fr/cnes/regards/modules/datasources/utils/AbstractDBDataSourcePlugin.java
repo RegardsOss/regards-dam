@@ -87,8 +87,8 @@ public abstract class AbstractDBDataSourcePlugin extends AbstractDataObjectMappi
         final String selectRequest = getSelectRequest(pageable, sinceDate);
         final String countRequest = getCountRequest(sinceDate);
 
-        LOG.debug("select request :" + selectRequest);
-        LOG.debug("count request :" + countRequest);
+        LOG.debug("select request: {}", selectRequest);
+        LOG.debug("count request: {}", countRequest);
 
         try (Connection conn = getDBConnection().getConnection()) {
             return findAll(tenant, conn, selectRequest, countRequest, pageable, sinceDate);

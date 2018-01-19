@@ -485,7 +485,7 @@ public abstract class AbstractDataObjectMapping {
         for (Map.Entry<String, InternalAttributes> entry : getMappingInternalAttributes().entrySet()) {
             if (entry.getValue() == InternalAttributes.LAST_UPDATE) {
                 lastUpdateAttributeName = entry.getKey();
-                LOG.debug("Attribute for date comparison found: " + entry.getKey());
+                LOG.debug("Attribute for date comparison found: {}", entry.getKey());
                 break;
             }
         }

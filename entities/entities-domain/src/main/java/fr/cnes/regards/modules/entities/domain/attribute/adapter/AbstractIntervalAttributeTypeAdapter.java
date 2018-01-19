@@ -33,10 +33,7 @@ import fr.cnes.regards.modules.indexer.domain.IMapping;
  * @author oroussel
  */
 public abstract class AbstractIntervalAttributeTypeAdapter<T extends Comparable<? super T>, A extends AbstractAttribute<Range<T>>>
-        extends TypeAdapter<A>
-
-{
-
+        extends TypeAdapter<A> {
     @Override
     public void write(JsonWriter out, A value) throws IOException {
         out.beginObject();
@@ -52,11 +49,9 @@ public abstract class AbstractIntervalAttributeTypeAdapter<T extends Comparable<
         out.endObject();
     }
 
-    protected abstract void writeValueLowerBound(JsonWriter out, AbstractAttribute<Range<T>> value)
-            throws IOException;
+    protected abstract void writeValueLowerBound(JsonWriter out, AbstractAttribute<Range<T>> value) throws IOException;
 
-    protected abstract void writeValueUpperBound(JsonWriter out, AbstractAttribute<Range<T>> value)
-            throws IOException;
+    protected abstract void writeValueUpperBound(JsonWriter out, AbstractAttribute<Range<T>> value) throws IOException;
 
     @Override
     public A read(JsonReader in) throws IOException {
