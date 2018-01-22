@@ -164,6 +164,7 @@ public class GeometryAdapter<T extends Geometry<?>> extends TypeAdapter<T> {
                         default:
                             break;
                     }
+                    break;
                 default:
             }
         }
