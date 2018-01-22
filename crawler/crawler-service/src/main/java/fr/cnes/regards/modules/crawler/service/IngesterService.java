@@ -5,7 +5,6 @@ import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -220,10 +219,13 @@ public class IngesterService
     @MultitenantTransactional
     public void updateAndCleanTenantDatasourceIngestions(String tenant) {
         // First, check if all existing datasource plugins are managed
+        // Find all current datasource ingestions
         Map<Long, DatasourceIngestion> dsIngestionsMap = dsIngestionRepos.findAll().stream()
                 .collect(Collectors.toMap(DatasourceIngestion::getId, Function.identity()));
-        List<PluginConfiguration> pluginConfs = new ArrayList<>(
-                pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class));
+        // Find all datasource plugins less inactive ones
+        List<PluginConfiguration> pluginConfs = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)
+                .stream().filter(conf -> !conf.isActive()).collect(Collectors.toList());
+
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
