@@ -222,9 +222,9 @@ public class IngesterService
         // Find all current datasource ingestions
         Map<Long, DatasourceIngestion> dsIngestionsMap = dsIngestionRepos.findAll().stream()
                 .collect(Collectors.toMap(DatasourceIngestion::getId, Function.identity()));
-        // Find all datasource plugins less inactive ones
+        // Find all datasource plugins less inactive ones => find all ACTIVE datasource plugins
         List<PluginConfiguration> pluginConfs = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)
-                .stream().filter(conf -> !conf.isActive()).collect(Collectors.toList());
+                .stream().filter(conf -> conf.isActive()).collect(Collectors.toList());
 
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
