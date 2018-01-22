@@ -21,10 +21,13 @@ package fr.cnes.regards.modules.datasources.plugins.interfaces;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
+
 /**
  * Database specialization of data source plugin
  * @author oroussel
  */
+@PluginInterface(description = "Plugin to search in a database data source")
 public interface IDBDataSourcePlugin extends IDataSourcePlugin {
     /**
      * Model mapping parameter name
