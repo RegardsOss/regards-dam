@@ -38,22 +38,22 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @RestClient(name = "rs-dam")
 @RequestMapping(value = IAttributeModelClient.PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-public interface IAttributeModelClient { //NOSONAR
+public interface IAttributeModelClient {
 
     /**
      * Mapping
      */
-    public static final String PATH = "/models/attributes";
+    String PATH = "/models/attributes";
 
     /**
      * Request parameter : attribute type
      */
-    public static final String PARAM_TYPE = "type";
+    String PARAM_TYPE = "type";
 
     /**
      * Request parameter : fragement name
      */
-    public static final String PARAM_FRAGMENT_NAME = "fragmentName";
+    String PARAM_FRAGMENT_NAME = "fragmentName";
 
     /**
      * Get the list of {@link AttributeModel}
@@ -62,7 +62,7 @@ public interface IAttributeModelClient { //NOSONAR
      * @return the list wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
+    ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) AttributeType pType,
             @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String pFragmentName);
 
