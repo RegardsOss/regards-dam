@@ -18,10 +18,13 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
+
 /**
  * Aip specialization of data source plugin
  * @author oroussel
  */
+@PluginInterface(description = "Plugin to search in a data source that consumes AIPs")
 public interface IAipDataSourcePlugin extends IDataSourcePlugin {
     String MODEL_NAME_PARAM = "model name";
 
