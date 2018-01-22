@@ -51,19 +51,19 @@ public interface IAttributeModelClient {
     String PARAM_TYPE = "type";
 
     /**
-     * Request parameter : fragement name
+     * Request parameter : fragment name
      */
     String PARAM_FRAGMENT_NAME = "fragmentName";
 
     /**
      * Get the list of {@link AttributeModel}
-     * @param pType the type to filter on
-     * @param pFragmentName the fragment to filter on
+     * @param type the type to filter on
+     * @param fragmentName the fragment to filter on
      * @return the list wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.GET)
     ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
-            @RequestParam(value = PARAM_TYPE, required = false) AttributeType pType,
-            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String pFragmentName);
+            @RequestParam(value = PARAM_TYPE, required = false) AttributeType type,
+            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName);
 
 }
