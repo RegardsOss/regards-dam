@@ -411,8 +411,8 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void createNotificationForAdmin(String tenant, CharSequence buf) {
         runtimeTenantResolver.forceTenant(tenant);
         FeignSecurityManager.asSystem();
-        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptyList(),
-                                                    Collections.singletonList(DefaultRole.PROJECT_ADMIN.name()),
+        NotificationDTO notif = new NotificationDTO(buf.toString(), Collections.emptySet(),
+                                                    Collections.singleton(DefaultRole.PROJECT_ADMIN.name()),
                                                     applicationName, "Datasource ingestion error",
                                                     NotificationType.ERROR);
         notifClient.createNotification(notif);
