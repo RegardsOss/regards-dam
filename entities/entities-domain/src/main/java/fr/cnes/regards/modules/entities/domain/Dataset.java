@@ -75,7 +75,7 @@ public class Dataset extends AbstractDescEntity {
     private PluginConfiguration plgConfDataSource;
 
     /**
-     * Model id of the Data objects held by this Dataset. nullable=true because fo single table
+     * Model id of the Data objects held by this Dataset. nullable=true because single table mapping for all entities
      */
     @Column(name = "data_model_id", updatable = false, nullable = true)
     private Long dataModel;
