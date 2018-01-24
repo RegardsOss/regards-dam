@@ -404,6 +404,8 @@ public abstract class AbstractDataObjectMapping {
                 DataType type = attrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
                 DataFile dataFile = new DataFile();
                 dataFile.setUri(new URI(str));
+                // No check that uri is truly available
+                dataFile.setOnline(true);
                 dataObject.getFiles().put(type, dataFile);
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
