@@ -198,6 +198,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             dataFile.setMimeType(dataFileDto.getMimeType());
             dataFile.setDigestAlgorithm(dataFileDto.getAlgorithm());
             dataFile.setChecksum(dataFileDto.getChecksum());
+            dataFile.setImageHeight(dataFileDto.getHeight());
+            dataFile.setImageWidth(dataFileDto.getWidth());
             obj.getFiles().put(dataFileDto.getDataType(), dataFile);
         }
 
