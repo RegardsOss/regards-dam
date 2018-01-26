@@ -234,7 +234,7 @@ public class EsRepository implements IEsRepository {
             if (!client.ping()) {
                 throw new NoNodeAvailableException("Elasticsearch is down. " + connectionInfoMessage);
             }
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             throw new NoNodeAvailableException("Error while pinging Elasticsearch (" + connectionInfoMessage + ")", e);
         }
     }
@@ -582,7 +582,7 @@ public class EsRepository implements IEsRepository {
                     saveReminder(searchKey, pageRequest, crit, sort, response);
                 }
 
-                if (response.getAggregations() != null) {
+                if ((facetsMap != null) && (response.getAggregations() != null)) {
                     // Get the new aggregations result map
                     Map<String, Aggregation> aggsMap = response.getAggregations().asMap();
                     // Fill the facet set

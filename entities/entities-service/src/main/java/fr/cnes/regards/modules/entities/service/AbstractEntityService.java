@@ -98,7 +98,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * Namespace separator
@@ -253,7 +253,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             List<String> errors = new ArrayList<>();
             for (ObjectError error : inErrors.getAllErrors()) {
                 String errorMessage = error.getDefaultMessage();
-                LOGGER.error(errorMessage);
+                logger.error(errorMessage);
                 errors.add(errorMessage);
             }
             throw new EntityInvalidException(errors);
@@ -278,7 +278,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             if (!attModel.getFragment().isDefaultFragment()) {
                 key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(key);
             }
-            LOGGER.debug(String.format("Computed key : \"%s\"", key));
+            logger.debug(String.format("Computed key : \"%s\"", key));
 
             // Retrieve attribute
             AbstractAttribute<?> att = attMap.get(key);
@@ -292,7 +292,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     errors.reject(messageKey, defaultMessage);
                     return;
                 }
-                LOGGER.debug(String.format("Attribute \"%s\" not required in current context.", key));
+                logger.debug(String.format("Attribute \"%s\" not required in current context.", key));
                 return;
             }
 
@@ -377,7 +377,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     if (!namespace.equals(Fragment.getDefaultName())) {
                         key = namespace.concat(NAMESPACE_SEPARATOR).concat(key);
                     }
-                    LOGGER.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
+                    logger.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     attMap.put(key, att);
                 }
             }
@@ -568,7 +568,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
                     EntityDescriptionTooLargeException e = new EntityDescriptionTooLargeException(
                             pFile.getOriginalFilename());
-                    LOGGER.error("DescriptionFile is too big", e);
+                    logger.error("DescriptionFile is too big", e);
                     throw e;
                 }
                 String fileCharset = getCharset(pFile);

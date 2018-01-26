@@ -20,4 +20,9 @@ public final class EmptyCriterion implements ICriterion {
     public boolean equals(Object o) {
         return (this == o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,6 +30,7 @@ import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -38,6 +40,7 @@ import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -190,7 +193,8 @@ public class IngesterService
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
                                 dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (Exception e) {
+                            } catch (RuntimeException | InterruptedException | ExecutionException | DataSourceException
+                                    | ModuleException e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
@@ -243,7 +247,7 @@ public class IngesterService
                 this.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()),
                                        ((IDataSourcePlugin) pluginService.getPlugin(pluginConf.getId()))
                                                .getRefreshRate());
-            } catch (Exception e) {
+            } catch (RuntimeException | ModuleException e) {
                 LOGGER.error("Cannot compute next ingestion planned date", e);
             }
         });
