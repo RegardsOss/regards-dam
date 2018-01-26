@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -339,6 +340,7 @@ public class DatasetController implements IResourceController<Dataset> {
         resourceService.addLink(resource, this.getClass(), "retrieveDataset", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "retrieveDatasets", LinkRels.LIST,
+                                MethodParamFactory.build(String.class, pElement.getLabel()),
                                 MethodParamFactory.build(Pageable.class),
                                 MethodParamFactory.build(PagedResourcesAssembler.class));
         resourceService.addLink(resource, this.getClass(), "deleteDataset", LinkRels.DELETE,
