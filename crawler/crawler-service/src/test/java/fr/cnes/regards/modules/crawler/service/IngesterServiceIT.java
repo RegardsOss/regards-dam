@@ -18,19 +18,14 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -46,17 +41,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.MimeType;
 
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
@@ -87,10 +78,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
-import fr.cnes.regards.modules.storage.domain.AIP;
-import fr.cnes.regards.modules.storage.domain.AIPBuilder;
-import fr.cnes.regards.modules.storage.domain.AipDataFiles;
-import fr.cnes.regards.modules.storage.domain.DataFileDto;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterConfiguration.class })
@@ -342,51 +329,6 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
         dataSourcePluginConf4 = getAipDataSource();
         pluginService.savePluginConfiguration(dataSourcePluginConf4);
 
-    }
-
-    private List<AipDataFiles> retrieveDataFiles() {
-        List<AipDataFiles> aipDataFiles = new ArrayList<>();
-
-        for (AIP aip : createAIPs(1, "tag1", "tag2")) {
-            Set<DataFileDto> dataFileDtos = new HashSet<>();
-            DataFileDto dto1 = new DataFileDto();
-            dto1.setAlgorithm("SHA");
-            dto1.setChecksum("Checksum");
-            dto1.setDataType(DataType.RAWDATA);
-            dto1.setFileSize(1000L);
-            dto1.setName("Name");
-            dto1.setOnline(false);
-            dto1.setMimeType(MimeType.valueOf("application/pdf"));
-            try {
-                dto1.setUrl(URI.create("http://perdu.com").toURL());
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-            dataFileDtos.add(dto1);
-            AipDataFiles oneAipDataFiles = new AipDataFiles(aip);
-            oneAipDataFiles.setDataFiles(dataFileDtos);
-            aipDataFiles.add(oneAipDataFiles);
-
-        }
-        return aipDataFiles;
-    }
-
-    private static List<AIP> createAIPs(int count, String... tags) {
-        List<AIP> aips = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            UniformResourceName id = new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, TENANT,
-                                                             UUID.randomUUID(), 1);
-            AIPBuilder builder = new AIPBuilder(id, "sipId" + i, EntityType.DATA);
-            builder.addTags(tags);
-
-            builder.addDescriptiveInformation("label", "libellé du data object " + i);
-            builder.addDescriptiveInformation("START_DATE", OffsetDateTime.now());
-            builder.addDescriptiveInformation("ALT_MAX", 1500 + i);
-            builder.addDescriptiveInformation("HISTORY", new String[] { "H1", "H2", "H3" });
-            builder.addDescriptiveInformation("POUET", "POUET");
-            aips.add(builder.build());
-        }
-        return aips;
     }
 
     @After

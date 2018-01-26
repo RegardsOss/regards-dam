@@ -43,6 +43,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
@@ -153,8 +154,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 dataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
             }
         } catch (UnsupportedEncodingException e) {
-            //if this exception happens its really an issue as the whole system relys on the fact UTF-8 is handled
-            throw new RuntimeException(e);
+            //if this exception happens it's really an issue as the whole system relys on the fact UTF-8 is handled
+            throw new RsRuntimeException(e);
         }
         final ICriterion subsettingCriterion = dataset.getUserSubsettingClause();
         // To avoid loading models when not necessary

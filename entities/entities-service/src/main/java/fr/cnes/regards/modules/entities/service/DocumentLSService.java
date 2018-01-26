@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.domain.DocumentLS;
@@ -67,8 +68,8 @@ public class DocumentLSService implements IDocumentLSService {
             try {
                 Files.createDirectory(path);
             } catch (IOException e) {
-                throw new RuntimeException("Could not create the localStoragePath directory (" + localStoragePath + ")",
-                                           e); //NOSONAR
+                LOGGER.error("Could not create the localStoragePath directory (" + localStoragePath + ")", e);
+                throw new RsRuntimeException(e);
             }
         }
     }
@@ -161,8 +162,7 @@ public class DocumentLSService implements IDocumentLSService {
         return documentFileLS.get();
     }
 
-    private void saveFile(String checksum, MultipartFile file, Document document)
-            throws URISyntaxException, IOException {
+    private void saveFile(String checksum, MultipartFile file, Document document) throws IOException {
         // We assume that baseStorageLocation already exists on the file system.
         // We just need to create, if required, the directory between localStoragePath and the file.
         String dataFileFolder = getDataFileFolder(checksum);

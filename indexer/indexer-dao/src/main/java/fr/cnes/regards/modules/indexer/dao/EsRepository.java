@@ -111,6 +111,7 @@ import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
 import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
@@ -244,7 +245,7 @@ public class EsRepository implements IEsRepository {
         try {
             restClient.close();
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -254,7 +255,7 @@ public class EsRepository implements IEsRepository {
             Response response = restClient.performRequest("PUT", index.toLowerCase());
             return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -277,7 +278,7 @@ public class EsRepository implements IEsRepository {
                 return true;
             }
         } catch (IOException ioe) { // NOSONAR
-            throw new RuntimeException(ioe);
+            throw new RsRuntimeException(ioe);
         }
     }
 
@@ -300,7 +301,7 @@ public class EsRepository implements IEsRepository {
             }
             return true;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -311,7 +312,7 @@ public class EsRepository implements IEsRepository {
             DeleteResponse response = client.delete(request);
             return ((response.getResult() == Result.DELETED) || (response.getResult() == Result.NOT_FOUND));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -333,7 +334,7 @@ public class EsRepository implements IEsRepository {
                 return ((Number) map.get("deleted")).longValue();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -346,9 +347,9 @@ public class EsRepository implements IEsRepository {
             if (e.getResponse().getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 throw new IndexNotFoundException(index.toLowerCase());
             }
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -362,7 +363,7 @@ public class EsRepository implements IEsRepository {
             }
             return gson.fromJson(response.getSourceAsString(), pClass);
         } catch (final JsonSyntaxException | IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -372,7 +373,7 @@ public class EsRepository implements IEsRepository {
             Response response = restClient.performRequest("HEAD", name.toLowerCase());
             return (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -390,7 +391,7 @@ public class EsRepository implements IEsRepository {
                                                           .source(gson.toJson(doc), XContentType.JSON));
             return (response.getResult() == Result.CREATED);
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -400,7 +401,7 @@ public class EsRepository implements IEsRepository {
         try {
             restClient.performRequest("GET", index.toLowerCase() + "/_refresh");
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -434,7 +435,7 @@ public class EsRepository implements IEsRepository {
             this.refresh(index);
             return savedDocCount;
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -462,7 +463,7 @@ public class EsRepository implements IEsRepository {
             } while (scrollResp.getHits().getHits().length != 0); // Zero hits mark the end of the scroll and the while
             // loop.
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -482,7 +483,7 @@ public class EsRepository implements IEsRepository {
                                              attributeSource) ? attributeSource + ".keyword" : attributeSource;
             return this.unique(searchKey, pCrit, attribute);
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -503,7 +504,7 @@ public class EsRepository implements IEsRepository {
             }
             return new PageImpl<>(results, pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -599,7 +600,7 @@ public class EsRepository implements IEsRepository {
             }
             return new FacetPage<>(results, facetResults, pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -710,7 +711,7 @@ public class EsRepository implements IEsRepository {
                               KEEP_ALIVE_SCROLLING_TIME_MS, TimeUnit.MILLISECONDS);
             return sortValues;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -736,7 +737,7 @@ public class EsRepository implements IEsRepository {
             SearchResponse response = client.search(request);
             return response.getHits().getTotalHits();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -750,7 +751,7 @@ public class EsRepository implements IEsRepository {
             SearchResponse response = client.search(request);
             return ((Sum) response.getAggregations().get(attName)).getValue();
         } catch (IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -769,7 +770,7 @@ public class EsRepository implements IEsRepository {
             }
             return OffsetDateTimeAdapter.parse(min.getValueAsString());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -788,7 +789,7 @@ public class EsRepository implements IEsRepository {
             }
             return OffsetDateTimeAdapter.parse(max.getValueAsString());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -811,7 +812,7 @@ public class EsRepository implements IEsRepository {
             }
             return results;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 
@@ -863,7 +864,7 @@ public class EsRepository implements IEsRepository {
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (R) o).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -876,7 +877,7 @@ public class EsRepository implements IEsRepository {
                     .getUnchecked(new CacheKey(searchKey, criterion, sourceAttribute));
             return objects.stream().map(o -> (R) o).map(transformFct).collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -890,7 +891,7 @@ public class EsRepository implements IEsRepository {
             return objects.stream().map(o -> (R) o).distinct().filter(filterPredicate).map(transformFct)
                     .collect(Collectors.toList());
         } catch (final JsonSyntaxException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -1214,7 +1215,7 @@ public class EsRepository implements IEsRepository {
             }
             return new PageImpl<>(results, pPageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e); // NOSONAR
         }
     }
 
@@ -1296,7 +1297,7 @@ public class EsRepository implements IEsRepository {
             }
             return summary;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RsRuntimeException(e);
         }
     }
 }
