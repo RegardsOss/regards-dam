@@ -245,6 +245,10 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         this.tags = tags;
     }
 
+    /**
+     * Get an immutable copy of properties.
+     * If this set should be modified, please use addPorperty or removeProperty
+     */
     public ImmutableSet<AbstractAttribute<?>> getProperties() { // NOSONAR
         return ImmutableSet.copyOf(properties);
     }
