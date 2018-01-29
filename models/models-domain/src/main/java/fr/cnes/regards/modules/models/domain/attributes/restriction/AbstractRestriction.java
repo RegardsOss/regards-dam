@@ -72,7 +72,7 @@ public abstract class AbstractRestriction implements IRestriction, IIdentifiable
     }
 
     @Override
-    @NotNull
+    @NotNull(message = "Restriction type cannot be null")
     public RestrictionType getType() {
         return type;
     }

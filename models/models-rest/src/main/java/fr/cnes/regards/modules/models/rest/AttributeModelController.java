@@ -51,11 +51,8 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.RestrictionService;
 
 /**
- *
  * REST controller for managing {@link AttributeModel}
- *
  * @author msordi
- *
  */
 @RestController
 @RequestMapping(AttributeModelController.TYPE_MAPPING)
@@ -103,13 +100,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Constructor
-     *
-     * @param pAttributeService
-     *            Attribute service
-     * @param pResourceService
-     *            Resource service
-     * @param pRestrictionService
-     *            Restriction service
+     * @param pAttributeService Attribute service
+     * @param pResourceService Resource service
+     * @param pRestrictionService Restriction service
      */
     public AttributeModelController(final IAttributeModelService pAttributeService,
             final IResourceService pResourceService, IModelAttrAssocService pModelAttrAssocService,
@@ -122,11 +115,8 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Retrieve all attributes. The request can be filtered by {@link AttributeType}
-     *
-     * @param pType
-     *            filter by type
-     * @param pFragmentName
-     *            filter by fragment
+     * @param pType filter by type
+     * @param pFragmentName filter by fragment
      * @return list of {@link AttributeModel}
      */
     @ResourceAccess(description = "List all attributes", role = DefaultRole.PUBLIC)
@@ -142,9 +132,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
-     *
-     * @param pModelType
-     *            filter
+     * @param pModelType filter
      * @return a list of {@link Model}
      */
     @ResourceAccess(description = "List all models", role = DefaultRole.PUBLIC)
@@ -161,12 +149,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Add a new attribute.
-     *
-     * @param pAttributeModel
-     *            the attribute to create
+     * @param pAttributeModel the attribute to create
      * @return the created {@link AttributeModel}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Add an attribute")
     @RequestMapping(method = RequestMethod.POST)
@@ -177,12 +162,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Get an attribute
-     *
-     * @param pAttributeId
-     *            attribute identifier
+     * @param pAttributeId attribute identifier
      * @return the retrieved {@link AttributeModel}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Get an attribute", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = "/{pAttributeId}")
@@ -196,14 +178,10 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Update an attribute
-     *
-     * @param pAttributeId
-     *            attribute identifier
-     * @param pAttributeModel
-     *            attribute
+     * @param pAttributeId attribute identifier
+     * @param pAttributeModel attribute
      * @return the updated {@link AttributeModel}
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Update an attribute")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pAttributeId}")
@@ -214,9 +192,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Delete an attribute
-     *
-     * @param pAttributeId
-     *            attribute identifier
+     * @param pAttributeId attribute identifier
      * @return nothing
      */
     @ResourceAccess(description = "Delete an attribute")
@@ -228,9 +204,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Get all restriction by {@link AttributeType}
-     *
-     * @param pType
-     *            filter on attribute type
+     * @param pType filter on attribute type
      * @return list of restriction name
      */
     @ResourceAccess(description = "List available restriction by attribute model type")
@@ -241,7 +215,6 @@ public class AttributeModelController implements IResourceController<AttributeMo
 
     /**
      * Get all attribute types
-     *
      * @return list of type names
      */
     @ResourceAccess(description = "List all attribute model types")
