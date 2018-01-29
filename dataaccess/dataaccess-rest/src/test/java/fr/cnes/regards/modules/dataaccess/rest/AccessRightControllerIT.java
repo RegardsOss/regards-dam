@@ -79,6 +79,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     @Configuration
     static class Conf {
+
         @Bean
         public IAttributeModelClient attributeModelClient() {
             return Mockito.mock(IAttributeModelClient.class);
@@ -154,7 +155,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private User user;
 
-    private String email = "test@email.com";
+    private final String email = "test@email.com";
 
     @Autowired
     private IAccessGroupService agService;
@@ -213,6 +214,15 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS, expectations, ACCESS_RIGHTS_ERROR_MSG);
+    }
+
+    @Test
+    public void testRetrieveDatasetWithAccessRights() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        performDefaultGet(DatasetWithAccessRightController.ROOT_PATH + DatasetWithAccessRightController.GROUP_PATH,
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, ag1Name);
     }
 
     @Test
@@ -305,33 +315,28 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
                              expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
 
-
-
     @Test
     public void testIsUserAutorisedToAccessDataset() {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().string("true"));
-        RequestParamBuilder requestParamBuilder = RequestParamBuilder.build()
-                .param("dataset", ds1.getIpId().toString())
+        RequestParamBuilder requestParamBuilder = RequestParamBuilder.build().param("dataset", ds1.getIpId().toString())
                 .param("user", email);
 
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
-                expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
 
         expectations.clear();
 
         String notExistingUser = "not.existing" + email;
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().string("false"));
-        requestParamBuilder = RequestParamBuilder.build()
-                .param("dataset", ds1.getIpId().toString())
+        requestParamBuilder = RequestParamBuilder.build().param("dataset", ds1.getIpId().toString())
                 .param("user", notExistingUser);
 
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
-                expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
     }
-
 
     @Override
     protected Logger getLogger() {
