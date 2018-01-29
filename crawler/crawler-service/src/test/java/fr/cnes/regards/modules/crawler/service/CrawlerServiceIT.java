@@ -299,23 +299,23 @@ public class CrawlerServiceIT {
         esRepos.refresh(tenant);
         Collection coll1Bis = esRepos.get(tenant, coll1);
         Assert.assertNotNull(coll1Bis);
-        Assert.assertTrue(Beans.equals(coll1, coll1Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(coll1, coll1Bis, "getModel"));
         final Collection coll2Bis = esRepos.get(tenant, coll2);
         Assert.assertNotNull(coll2Bis);
-        Assert.assertTrue(Beans.equals(coll2, coll2Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(coll2, coll2Bis, "getModel"));
         final Collection coll3Bis = esRepos.get(tenant, coll3);
         Assert.assertNotNull(coll3Bis);
-        Assert.assertTrue(Beans.equals(coll3, coll3Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(coll3, coll3Bis, "getModel"));
 
         Dataset ds1Bis = esRepos.get(tenant, dataset1);
         Assert.assertNotNull(ds1Bis);
-        Assert.assertTrue(Beans.equals(dataset1, ds1Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(dataset1, ds1Bis, "getModel"));
         final Dataset ds2Bis = esRepos.get(tenant, dataset2);
         Assert.assertNotNull(ds2Bis);
-        Assert.assertTrue(Beans.equals(dataset2, ds2Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(dataset2, ds2Bis, "getModel"));
         final Dataset ds3Bis = esRepos.get(tenant, dataset3);
         Assert.assertNotNull(ds3Bis);
-        Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(dataset3, ds3Bis, "getModel"));
 
         crawlerService.startWork();
         final OffsetDateTime suppressDate = OffsetDateTime.now();
