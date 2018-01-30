@@ -112,7 +112,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // , we must search for it and do as it has
         // been updated (to update all associated data objects which have a lastUpdate date >= now)
         SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
-                Dataset.class);
+                                                                   Dataset.class);
         Set<Dataset> datasetsToUpdate = new HashSet<>();
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {
@@ -178,31 +178,26 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     /**
      * Read datasource since given date page setting ipId to each objects
      * @param date date from which to read datasource data
-     * @param tenant
-     * @param dsPlugin
-     * @param datasourceId
-     * @param pageable
-     * @return
-     * @throws DataSourceException
      */
     private Page<DataObject> findAllFromDatasource(OffsetDateTime date, String tenant, IDataSourcePlugin dsPlugin,
             String datasourceId, Pageable pageable) throws DataSourceException {
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
-        page.forEach(dataObject -> dataObject.setIpId(buildIpId(tenant, dataObject.getSipId(), datasourceId)));
+        // Generate IpId only if datasource plugin hasn't yet generate it
+        page.getContent().stream().filter(obj -> obj.getIpId() == null)
+                .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getSipId(), datasourceId)));
         return page;
     }
 
     /**
      * Build an URN for a {@link EntityType} of type DATA. The URN contains an UUID builds for a specific value, it used
      * {@link UUID#nameUUIDFromBytes(byte[]).
-     *
      * @param tenant the tenant name
      * @param sipId the original primary key value
      * @return the IpId generated from given parameters
      */
     private static final UniformResourceName buildIpId(String tenant, String sipId, String datasourceId) {
         return new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
+                                       UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()), 1);
     }
 
     @Override
