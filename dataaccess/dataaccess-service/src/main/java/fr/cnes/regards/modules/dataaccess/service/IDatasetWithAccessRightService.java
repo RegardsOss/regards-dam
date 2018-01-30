@@ -29,7 +29,6 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  * Service to handle association between {@link Dataset} and {@link AccessRight} entities.
  * @author Sébastien Binda
  */
-@FunctionalInterface
 public interface IDatasetWithAccessRightService {
 
     /**

@@ -67,8 +67,8 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
     /**
      * Retrieve datasets with access rights
      * @param label String for label filter
-     * @param pPageable the page
-     * @param pAssembler the dataset resources assembler
+     * @param pageRequest the page request
+     * @param assembler the dataset resources assembler
      * @return the page of dataset wrapped in an HTTP response
      */
     @RequestMapping(value = GROUP_PATH, method = RequestMethod.GET)
@@ -76,20 +76,20 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
     public ResponseEntity<PagedResources<Resource<DatasetWithAccessRight>>> retrieveDatasets(
             @PathVariable(name = "accessGroupName") String accessGroupName,
             @RequestParam(name = "datasetLabel", required = false) String label, final Pageable pageRequest,
-            final PagedResourcesAssembler<DatasetWithAccessRight> pAssembler) {
+            final PagedResourcesAssembler<DatasetWithAccessRight> assembler) {
         final Page<DatasetWithAccessRight> datasetsWithAR = service.search(label, accessGroupName, pageRequest);
-        final PagedResources<Resource<DatasetWithAccessRight>> resources = toPagedResources(datasetsWithAR, pAssembler);
+        final PagedResources<Resource<DatasetWithAccessRight>> resources = toPagedResources(datasetsWithAR, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
     @Override
-    public Resource<DatasetWithAccessRight> toResource(DatasetWithAccessRight pElement, Object... pExtras) {
-        Resource<DatasetWithAccessRight> resource = resourceService.toResource(pElement);
-        if (pElement.getAccessRight() != null) {
+    public Resource<DatasetWithAccessRight> toResource(DatasetWithAccessRight element, Object... extras) {
+        Resource<DatasetWithAccessRight> resource = resourceService.toResource(element);
+        if (element.getAccessRight() != null) {
             resourceService.addLink(resource, AccessRightController.class, "deleteAccessRight", LinkRels.DELETE,
-                                    MethodParamFactory.build(Long.class, pElement.getAccessRight().getId()));
+                                    MethodParamFactory.build(Long.class, element.getAccessRight().getId()));
         }
-        return resourceService.toResource(pElement);
+        return resourceService.toResource(element);
     }
 
 }
