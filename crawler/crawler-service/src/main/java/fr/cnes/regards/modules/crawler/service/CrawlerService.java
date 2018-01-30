@@ -108,9 +108,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, savedObjectsCount,
                                                                   now, datasourceId);
         }
-        // In case Dataset associated with datasourceId already exists (or had been created between datasrouyce creation and its ingestion
-        // , we must search for it and do as it has
-        // been updated (to update all associated data objects which have a lastUpdate date >= now)
+        // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
+        // and its ingestion), we must search for it and do as it has been updated (to update all associated data
+        // objects which have a lastUpdate date >= now)
         SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
                                                                    Dataset.class);
         Set<Dataset> datasetsToUpdate = new HashSet<>();
