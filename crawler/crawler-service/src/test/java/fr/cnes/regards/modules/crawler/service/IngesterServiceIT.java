@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -359,6 +360,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     }
 
     @Test
+    @Ignore
     public void test() throws InterruptedException {
         Mockito.when(aipClient.retrieveAipDataFiles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(),
                                                     Mockito.anyInt()))
