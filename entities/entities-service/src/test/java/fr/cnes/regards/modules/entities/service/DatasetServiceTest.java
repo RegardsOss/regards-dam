@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -26,6 +25,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -171,9 +172,9 @@ public class DatasetServiceTest {
 
         publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
-                pModelAttributeService, entitiesRepositoryMocked, modelService,
-                deletedEntityRepositoryMocked, null, emMocked, publisherMocked, runtimeTenantResolver, null,
-                Mockito.mock(IOpenSearchService.class), Mockito.mock(IPluginService.class));
+                pModelAttributeService, entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked, null,
+                emMocked, publisherMocked, runtimeTenantResolver, null, Mockito.mock(IOpenSearchService.class),
+                Mockito.mock(IPluginService.class));
 
         buildModelAttributes();
     }
@@ -294,6 +295,6 @@ public class DatasetServiceTest {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "ATTRIBUTE_ID"));
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "FILE_TYPE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(99L, attributes);
+        dataSourceModelMapping = new DataSourceModelMapping("99L", attributes);
     }
 }

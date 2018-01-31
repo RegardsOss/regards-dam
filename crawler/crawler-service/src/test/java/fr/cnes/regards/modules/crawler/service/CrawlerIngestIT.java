@@ -46,6 +46,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -100,7 +101,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-//@Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
+// @Ignore("Don't reactivate this test, it is nearly impossible de manage a multi-thread tests with all this mess")
 public class CrawlerIngestIT {
 
     private static Logger LOGGER = LoggerFactory.getLogger(CrawlerIngestIT.class);
@@ -310,9 +311,9 @@ public class CrawlerIngestIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                                                  "date"));
+                "date"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     @Requirement("REGARDS_DSL_DAM_CAT_310")
@@ -367,21 +368,21 @@ public class CrawlerIngestIT {
         LOGGER.info("searchService : " + searchService);
         LOGGER.info("dataset : " + dataset);
         LOGGER.info("dataset.getIpId() : " + dataset.getIpId());
-        Page<DataObject> objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                                            ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(1L, objectsPage.getTotalElements());
 
         // Fill the Db with an object dated 2001/01/01
         extDataRepos.save(new ExternalData(LocalDate.of(2001, Month.JANUARY, 1)));
 
         // Ingest from 2000/01/01 (strictly after)
-        summary = crawlerService
-                .ingest(dataSourcePluginConf, OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
+        summary = crawlerService.ingest(dataSourcePluginConf,
+                                        OffsetDateTime.of(2000, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
         Assert.assertEquals(1, summary.getSavedObjectsCount());
 
         // Search for DataObjects tagging dataset1
-        objectsPage = searchService
-                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset.getIpId().toString()));
+        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
+                                           ICriterion.eq("tags", dataset.getIpId().toString()));
         Assert.assertEquals(2L, objectsPage.getTotalElements());
         Assert.assertEquals(1, objectsPage.getContent().stream()
                 .filter(data -> data.getLastUpdate().equals(data.getCreationDate())).count());

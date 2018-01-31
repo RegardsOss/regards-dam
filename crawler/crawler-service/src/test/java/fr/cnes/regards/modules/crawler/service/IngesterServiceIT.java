@@ -249,7 +249,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
                 "date"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     /**

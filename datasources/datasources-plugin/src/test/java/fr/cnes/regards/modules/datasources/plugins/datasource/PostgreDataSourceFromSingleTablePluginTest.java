@@ -48,6 +48,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
@@ -142,7 +143,7 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
                 LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7),
-                OffsetDateTime.now().minusMinutes(12132125).toString(),false));
+                OffsetDateTime.now().minusMinutes(12132125).toString(), false));
         nbElements = 3;
 
         /*
@@ -297,7 +298,7 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
                 "timestampwithtimezone"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        modelMapping = new DataSourceModelMapping(123L, attributes);
+        modelMapping = new DataSourceModelMapping("123L", attributes);
     }
 
 }

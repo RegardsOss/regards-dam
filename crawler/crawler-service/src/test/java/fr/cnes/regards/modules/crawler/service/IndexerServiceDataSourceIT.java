@@ -62,6 +62,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -280,12 +281,12 @@ public class IndexerServiceDataSourceIT {
         dBConnectionConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(dBConnectionConf);
 
-//        final DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
-//        Assume.assumeTrue(dbCtx.testConnection());
+        // final DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        // Assume.assumeTrue(dbCtx.testConnection());
 
         // DataSource PluginConf
-//        dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
-//        pluginService.savePluginConfiguration(dataSourcePluginConf);
+        // dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
+        // pluginService.savePluginConfiguration(dataSourcePluginConf);
     }
 
     private void initPluginConfForComputedAttributes() throws ModuleException {
@@ -302,31 +303,31 @@ public class IndexerServiceDataSourceIT {
     }
 
     private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-//        final List<PluginParameter> parameters = PluginParametersFactory.build()
-//                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-//                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
-//                .getParameters();
-//
-//        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // final List<PluginParameter> parameters = PluginParametersFactory.build()
+        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+        // .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+        // .getParameters();
+        //
+        // return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         // TODO use portgres plugin
         return null;
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() {
-//        final List<PluginParameter> parameters = PluginParametersFactory.build()
-//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-//                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-//                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-//                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-//
-//        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // final List<PluginParameter> parameters = PluginParametersFactory.build()
+        // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+        // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+        // .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+        // .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+        // .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
+        // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+        // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+        //
+        // return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
         // TODO use Postgres
         return null;
     }
@@ -371,7 +372,7 @@ public class IndexerServiceDataSourceIT {
         attributes
                 .add(new StaticAttributeMapping(AbstractAttributeMapping.RAW_DATA, AttributeType.STRING, "ANSE7_URL"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")

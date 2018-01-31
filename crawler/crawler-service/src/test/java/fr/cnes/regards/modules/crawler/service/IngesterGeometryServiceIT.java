@@ -177,7 +177,7 @@ public class IngesterGeometryServiceIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.GEOMETRY, AttributeType.STRING,
                 "polygon_geojson"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     @Before

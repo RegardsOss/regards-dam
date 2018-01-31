@@ -219,7 +219,7 @@ public class CrawlerServiceIT {
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(),
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(),
                 Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
                         AttributeType.INTEGER, "DATA_OBJECTS_ID")));
 

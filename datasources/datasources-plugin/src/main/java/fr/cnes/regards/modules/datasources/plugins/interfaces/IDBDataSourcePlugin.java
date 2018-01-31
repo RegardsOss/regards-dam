@@ -29,11 +29,12 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
  */
 @PluginInterface(description = "Plugin to search in a database data source")
 public interface IDBDataSourcePlugin extends IDataSourcePlugin {
+
     /**
      * Model mapping parameter name
      * <B>Beware : false friend parameter name, it corresponds to Json model mapping object</B>
      */
-    String MODEL_PARAM = "model";
+    String MODEL_PARAM = "modelMapping";
 
     /**
      * From clause to apply to the SQL request parameter name
@@ -50,6 +51,5 @@ public interface IDBDataSourcePlugin extends IDataSourcePlugin {
      * @throws SQLException {@link Connection} is not available
      */
     IDBConnectionPlugin getDBConnection() throws SQLException;
-
 
 }

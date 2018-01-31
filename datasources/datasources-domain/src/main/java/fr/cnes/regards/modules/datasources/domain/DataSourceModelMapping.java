@@ -21,11 +21,12 @@ package fr.cnes.regards.modules.datasources.domain;
 import java.util.List;
 
 import com.google.gson.annotations.JsonAdapter;
+
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * This class is used to map a data source to a {@link Model}
- * 
+ *
  * @author Christophe Mertz
  *
  */
@@ -35,7 +36,7 @@ public class DataSourceModelMapping {
     /**
      * The {@link Model} identifier
      */
-    private Long model;
+    private String modelName;
 
     /**
      * The mapping between the attribute of the {@link Model} of the attributes of th data source
@@ -46,18 +47,10 @@ public class DataSourceModelMapping {
         super();
     }
 
-    public DataSourceModelMapping(Long modelId, List<AbstractAttributeMapping> attributeMappings) {
+    public DataSourceModelMapping(String modelName, List<AbstractAttributeMapping> attributeMappings) {
         super();
-        this.model = modelId;
+        this.setModelName(modelName);
         this.attributesMapping = attributeMappings;
-    }
-
-    public Long getModel() {
-        return model;
-    }
-
-    public void setModel(Long modelId) {
-        this.model = modelId;
     }
 
     public List<AbstractAttributeMapping> getAttributesMapping() {
@@ -66,6 +59,14 @@ public class DataSourceModelMapping {
 
     public void setAttributesMapping(List<AbstractAttributeMapping> attributeMappings) {
         this.attributesMapping = attributeMappings;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
 }

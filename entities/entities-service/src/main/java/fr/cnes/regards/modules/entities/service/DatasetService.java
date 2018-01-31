@@ -121,7 +121,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 ModelMappingAdapter adapter = new ModelMappingAdapter();
                 try {
                     DataSourceModelMapping modelMapping = adapter.fromJson(jsonModelMapping);
-                    dataset.setDataModel(modelMapping.getModel());
+                    Model model = modelService.getModelByName(modelMapping.getModelName());
+                    dataset.setDataModel(model.getId());
                 } catch (IOException e) {
                     logger.error("Unable to dejsonify model mapping parameter from PluginConfiguration", e);
                     throw new EntityNotFoundException(
