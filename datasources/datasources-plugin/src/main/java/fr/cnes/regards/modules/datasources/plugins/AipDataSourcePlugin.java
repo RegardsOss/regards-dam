@@ -43,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
+
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -76,6 +77,7 @@ import fr.cnes.regards.modules.storage.domain.DataFileDto;
         licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
+    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(AipDataSourcePlugin.class);
 
     @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
@@ -87,7 +89,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
     @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
             description = "Common tags to be put on all data objects created by the data source")
-    private Collection<String> commonTags = Collections.emptyList();
+    private final Collection<String> commonTags = Collections.emptyList();
 
     @Autowired
     private IModelService modelService;
@@ -123,7 +125,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             throw new ModuleException(String.format("Model '%s' does not exist.", modelName));
         }
 
-        List<ModelAttrAssoc> modelAttrAssocs = modelAttrAssocService.getModelAttrAssocs(this.model.getId());
+        List<ModelAttrAssoc> modelAttrAssocs = modelAttrAssocService.getModelAttrAssocs(modelName);
         // Fill map { "properties.titi.tutu", AttributeType.STRING }
         for (ModelAttrAssoc assoc : modelAttrAssocs) {
             modelMappingMap.put(assoc.getAttribute().buildJsonPath(StaticProperties.PROPERTIES),

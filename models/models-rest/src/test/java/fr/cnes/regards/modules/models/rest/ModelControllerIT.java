@@ -177,27 +177,29 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("Export model - Allows to share model or export reference model")
     public void exportModel() throws ModuleException {
 
-        final Model model = new Model();
+        Model model = new Model();
         model.setName("EXPORT_MODEL");
         model.setDescription("Exported model");
         model.setType(EntityType.COLLECTION);
         modelService.createModel(model);
 
         // Attribute #1 in default fragment
-        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests").withoutRestriction();
+        AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests")
+                .withoutRestriction();
         attributeModelService.addAttribute(attMod, false);
 
         ModelAttrAssoc modAtt = new ModelAttrAssoc();
         modAtt.setAttribute(attMod);
-        modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
+        modelAttributeService.bindAttributeToModel(model.getName(), modAtt);
 
         // Attribute #2 in default fragment
-        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests").isAlterable().withoutRestriction();
+        attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests").isAlterable()
+                .withoutRestriction();
         attributeModelService.addAttribute(attMod, false);
 
         modAtt = new ModelAttrAssoc();
         modAtt.setAttribute(attMod);
-        modelAttributeService.bindAttributeToModel(model.getId(), modAtt);
+        modelAttributeService.bindAttributeToModel(model.getName(), modAtt);
 
         // Geo fragment
         final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
@@ -207,7 +209,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
         attributeModelService.addAttribute(attMod, false);
 
-        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment());
+        modelAttributeService.bindNSAttributeToModel(model.getName(), attMod.getFragment());
 
         // Contact fragment
         final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
@@ -217,13 +219,13 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                 .withPatternRestriction("[0-9 ]{10}");
         attributeModelService.addAttribute(attMod, false);
 
-        modelAttributeService.bindNSAttributeToModel(model.getId(), attMod.getFragment());
+        modelAttributeService.bindNSAttributeToModel(model.getName(), attMod.getFragment());
 
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
 
-        final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING + "/{pModelId}/export",
-                                                              expectations, "Should return result", model.getId());
+        final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING
+                + ModelController.MODEL_MAPPING + "/export", expectations, "Should return result", model.getName());
 
         assertMediaType(resultActions, MediaType.APPLICATION_XML);
         Assert.assertNotNull(payload(resultActions));
@@ -246,7 +248,7 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
         // Perform test
-        performDefaultDelete(ModelController.TYPE_MAPPING + "/{pModelId}", expectations, "Model should be deleted",
-                             model.getId());
+        performDefaultDelete(ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING, expectations,
+                             "Model should be deleted", model.getName());
     }
 }

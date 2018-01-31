@@ -202,7 +202,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
         // Perform request
         performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, modAtt,
-                           expectations, "Attribute should be binded", mod.getId());
+                           expectations, "Attribute should be binded", mod.getName());
     }
 
     /**
@@ -240,7 +240,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, expectations,
-                          "All attributes should be listed", mod.getId());
+                          "All attributes should be listed", mod.getName());
 
     }
 
@@ -260,7 +260,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = defaultExpectations(att, mod);
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                          expectations, "Should return an attribute", mod.getId(), modAtt.getId());
+                          expectations, "Should return an attribute", mod.getName(), modAtt.getId());
     }
 
     @Test
@@ -358,7 +358,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = defaultExpectations(newAtt, mod);
 
         performDefaultPut(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                          modAtt, expectations, "Should update the model attribute", mod.getId(), modAtt.getId());
+                          modAtt, expectations, "Should update the model attribute", mod.getName(), modAtt.getId());
     }
 
     /**
@@ -377,7 +377,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                + apiAttribute, expectations, "Model should be deleted", mod.getId(), modAtt.getId());
+                + apiAttribute, expectations, "Model should be deleted", mod.getName(), modAtt.getId());
     }
 
     /**
@@ -421,7 +421,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
 
         performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
                 + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, expectations, "Should bind fragment",
-                           mod.getId());
+                           mod.getName());
     }
 
     /**
@@ -444,22 +444,22 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         attributeModelService.addAttribute(att, false);
         attributeModelService.addAttribute(att2, false);
 
-        modelAttributeService.bindNSAttributeToModel(mod.getId(), frag);
+        modelAttributeService.bindNSAttributeToModel(mod.getName(), frag);
 
-        final List<ModelAttrAssoc> modelAttributes = modelAttributeService.getModelAttrAssocs(mod.getId());
+        final List<ModelAttrAssoc> modelAttributes = modelAttributeService.getModelAttrAssocs(name);
 
         List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
                 + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, expectations,
-                             "Fragment's attributes should be deleted", mod.getId(), frag.getId());
+                             "Fragment's attributes should be deleted", mod.getName(), frag.getId());
 
         expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNotFound());
 
         for (ModelAttrAssoc modAtt : modelAttributes) {
-            performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+            performDefaultGet(ModelAttrAssocController.TYPE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
                     + apiAttribute, expectations, "ModelAttribute shouldn't exist anymore", mod.getId(),
                               modAtt.getId());
         }

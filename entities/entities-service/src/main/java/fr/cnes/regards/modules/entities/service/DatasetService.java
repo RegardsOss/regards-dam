@@ -18,13 +18,14 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -104,8 +106,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     /**
      * Control the DataSource associated to the {@link Dataset} in parameter if needed.</br>
      * If any DataSource is associated, sets the default DataSource.
+     * @throws ModuleException if error occurs!
      */
-    private Dataset checkDataSource(final Dataset dataset) throws EntityNotFoundException {
+    private Dataset checkDataSource(final Dataset dataset) throws ModuleException {
         if (dataset.getDataSource() != null) {
             // Retrieve DataModel from associated datasource
             // First : pluginConf id
@@ -122,8 +125,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 } catch (IOException e) {
                     logger.error("Unable to dejsonify model mapping parameter from PluginConfiguration", e);
                     throw new EntityNotFoundException(
-                            "Unable to dejsonify model mapping parameter from PluginConfiguration (" + e
-                                    .getMessage() + ")", PluginConfiguration.class);
+                            "Unable to dejsonify model mapping parameter from PluginConfiguration (" + e.getMessage()
+                                    + ")",
+                            PluginConfiguration.class);
                 }
             } else if (pluginConf.getInterfaceNames().contains(IAipDataSourcePlugin.class.getName())) {
                 String modelName = pluginConf.getParameterValue(IAipDataSourcePlugin.MODEL_NAME_PARAM);
@@ -155,7 +159,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 dataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
             }
         } catch (UnsupportedEncodingException e) {
-            //if this exception happens it's really an issue as the whole system relys on the fact UTF-8 is handled
+            // if this exception happens it's really an issue as the whole system relys on the fact UTF-8 is handled
             throw new RsRuntimeException(e);
         }
         final ICriterion subsettingCriterion = dataset.getUserSubsettingClause();
@@ -173,7 +177,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(Long dataModelId) throws ModuleException {
         return new SubsettingCoherenceVisitor(modelService.getModel(dataModelId), attributeService,
-                                              modelAttributeService);
+                modelAttributeService);
     }
 
     @Override

@@ -110,11 +110,12 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         importModel("model_it.xml");
 
         // Get model from repository
-        final Model model = modelRepository.findByName("sample");
+        String modelName = "sample";
+        final Model model = modelRepository.findByName(modelName);
         Assert.assertNotNull(model);
 
         // Get model attributes
-        final List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getId());
+        final List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(modelName);
         Assert.assertNotNull(modAtts);
         final int expectedSize = 3;
         Assert.assertEquals(expectedSize, modAtts.size());
@@ -174,8 +175,8 @@ public class ImportModelTest extends AbstractRegardsTransactionalIT {
         importModel("model4.xml", MockMvcResultMatchers.status().isBadRequest());
     }
 
-    //    @Test(expected = ImportException.class)
-    //    public void importWrongModel() {
-    //        importModel("wrong_model.xml");
-    //    }
+    // @Test(expected = ImportException.class)
+    // public void importWrongModel() {
+    // importModel("wrong_model.xml");
+    // }
 }

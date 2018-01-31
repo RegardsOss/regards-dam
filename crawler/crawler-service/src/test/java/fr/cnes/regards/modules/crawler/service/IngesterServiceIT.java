@@ -86,7 +86,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
 
-    //    private static final String TENANT = "INGEST";
+    // private static final String TENANT = "INGEST";
     private static final String TENANT = DEFAULT_TENANT;
 
     @Autowired
@@ -225,8 +225,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addParameter(AipDataSourcePlugin.REFRESH_RATE, 10)
                 .addParameter(AipDataSourcePlugin.BINDING_MAP, createBindingMap()).getParameters();
 
-        return PluginUtils
-                .getPluginConfiguration(parameters, AipDataSourcePlugin.class, Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        return PluginUtils.getPluginConfiguration(parameters, AipDataSourcePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     private PluginConfiguration getPostgresConnectionConfiguration() {
@@ -247,7 +247,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
 
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                                                  "date"));
+                "date"));
 
         dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
     }
@@ -350,10 +350,10 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
         }
 
         if (datasetModel != null) {
-            Utils.execute(modelService::deleteModel, datasetModel.getId());
+            Utils.execute(modelService::deleteModel, datasetModel.getName());
         }
         if (dataModel != null) {
-            Utils.execute(modelService::deleteModel, dataModel.getId());
+            Utils.execute(modelService::deleteModel, dataModel.getName());
         }
 
     }
@@ -361,13 +361,9 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     @Test
     public void test() throws InterruptedException {
         Mockito.when(aipClient.retrieveAipDataFiles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(),
-                                                    Mockito.anyInt())).thenReturn(ResponseEntity
-                                                                                          .ok(new PagedResources<>(
-                                                                                                  Collections
-                                                                                                          .emptyList(),
-                                                                                                  new PagedResources.PageMetadata(
-                                                                                                          0, 0, 0,
-                                                                                                          1))));
+                                                    Mockito.anyInt()))
+                .thenReturn(ResponseEntity.ok(new PagedResources<>(Collections.emptyList(),
+                        new PagedResources.PageMetadata(0, 0, 0, 1))));
         // Initial Ingestion with no value from datasources
         ingesterService.manage();
 

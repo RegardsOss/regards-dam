@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -68,7 +69,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     /**
      * Type mapping
      */
-    public static final String TYPE_MAPPING = "/{pModelId}/attributes";
+    public static final String TYPE_MAPPING = "/{modelName}/attributes";
 
     public static final String FRAGMENT_BIND_MAPPING = "/fragments";
 
@@ -132,7 +133,7 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
 
     private List<TypeMetadataResourceConfMapping> transformToTypeMetadataResourceConfMapping(
             List<TypeMetadataConfMapping> typeMetadataConfMappings) {
-        List<TypeMetadataResourceConfMapping> shit = new ArrayList();
+        List<TypeMetadataResourceConfMapping> shit = new ArrayList<>();
         for (TypeMetadataConfMapping typeMetadataConfMapping : typeMetadataConfMappings) {
             shit.add(new TypeMetadataResourceConfMapping(typeMetadataConfMapping));
         }
@@ -148,9 +149,9 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "List all model attributes", role = DefaultRole.PUBLIC)
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId)
+    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable String modelName)
             throws ModuleException {
-        return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(pModelId), pModelId));
+        return ResponseEntity.ok(toResources(modelAttrAssocService.getModelAttrAssocs(modelName), modelName));
     }
 
     /**
@@ -165,10 +166,10 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Bind an attribute to a model")
     @RequestMapping(path = TYPE_MAPPING, method = RequestMethod.POST)
-    public ResponseEntity<Resource<ModelAttrAssoc>> bindAttributeToModel(@PathVariable Long pModelId,
+    public ResponseEntity<Resource<ModelAttrAssoc>> bindAttributeToModel(@PathVariable String modelName,
             @Valid @RequestBody ModelAttrAssoc pModelAttribute) throws ModuleException {
         return ResponseEntity
-                .ok(toResource(modelAttrAssocService.bindAttributeToModel(pModelId, pModelAttribute), pModelId));
+                .ok(toResource(modelAttrAssocService.bindAttributeToModel(modelName, pModelAttribute), modelName));
     }
 
     /**
@@ -181,9 +182,10 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Get a model attribute")
     @RequestMapping(method = RequestMethod.GET, value = TYPE_MAPPING + "/{pAttributeId}")
-    public ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable Long pModelId,
+    public ResponseEntity<Resource<ModelAttrAssoc>> getModelAttrAssoc(@PathVariable String modelName,
             @PathVariable Long pAttributeId) throws ModuleException {
-        return ResponseEntity.ok(toResource(modelAttrAssocService.getModelAttrAssoc(pModelId, pAttributeId), pModelId));
+        return ResponseEntity
+                .ok(toResource(modelAttrAssocService.getModelAttrAssoc(modelName, pAttributeId), modelName));
     }
 
     /**
@@ -197,12 +199,12 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Update a model attribute")
     @RequestMapping(method = RequestMethod.PUT, value = TYPE_MAPPING + "/{pAttributeId}")
-    public ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable Long pModelId,
+    public ResponseEntity<Resource<ModelAttrAssoc>> updateModelAttrAssoc(@PathVariable String modelName,
             @PathVariable Long pAttributeId, @Valid @RequestBody ModelAttrAssoc pModelAttribute)
             throws ModuleException {
         return ResponseEntity
-                .ok(toResource(modelAttrAssocService.updateModelAttribute(pModelId, pAttributeId, pModelAttribute),
-                               pModelId));
+                .ok(toResource(modelAttrAssocService.updateModelAttribute(modelName, pAttributeId, pModelAttribute),
+                               modelName));
     }
 
     /**
@@ -217,9 +219,9 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Unbind an attribute from a model")
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + "/{pAttributeId}")
-    public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable Long pModelId, @PathVariable Long pAttributeId)
-            throws ModuleException {
-        modelAttrAssocService.unbindAttributeFromModel(pModelId, pAttributeId);
+    public ResponseEntity<Void> unbindAttributeFromModel(@PathVariable String modelName,
+            @PathVariable Long pAttributeId) throws ModuleException {
+        modelAttrAssocService.unbindAttributeFromModel(modelName, pAttributeId);
         return ResponseEntity.noContent().build();
     }
 
@@ -235,10 +237,10 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Bind fragment attributes to a model")
     @RequestMapping(method = RequestMethod.POST, value = TYPE_MAPPING + FRAGMENT_BIND_MAPPING)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable Long pModelId,
+    public ResponseEntity<List<Resource<ModelAttrAssoc>>> bindNSAttributeToModel(@PathVariable String modelName,
             @Valid @RequestBody Fragment pFragment) throws ModuleException {
         return ResponseEntity
-                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(pModelId, pFragment), pModelId));
+                .ok(toResources(modelAttrAssocService.bindNSAttributeToModel(modelName, pFragment), modelName));
     }
 
     /**
@@ -254,9 +256,9 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
      */
     @ResourceAccess(description = "Unbind fragment attributes from a model")
     @RequestMapping(method = RequestMethod.DELETE, value = TYPE_MAPPING + FRAGMENT_UNBIND_MAPPING)
-    public ResponseEntity<Void> unbindNSAttributeFromModel(@PathVariable Long pModelId, @PathVariable Long pFragmentId)
-            throws ModuleException {
-        modelAttrAssocService.unbindNSAttributeToModel(pModelId, pFragmentId);
+    public ResponseEntity<Void> unbindNSAttributeFromModel(@PathVariable String modelName,
+            @PathVariable Long pFragmentId) throws ModuleException {
+        modelAttrAssocService.unbindNSAttributeToModel(modelName, pFragmentId);
         return ResponseEntity.noContent().build();
     }
 
@@ -264,20 +266,20 @@ public class ModelAttrAssocController implements IResourceController<ModelAttrAs
     public Resource<ModelAttrAssoc> toResource(ModelAttrAssoc pElement, Object... pExtras) {
         final Resource<ModelAttrAssoc> resource = resourceService.toResource(pElement);
 
-        final Long modelId = (Long) pExtras[0];
+        String modelName = (String) pExtras[0];
 
         resourceService.addLink(resource, this.getClass(), "getModelAttrAssoc", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, modelId),
+                                MethodParamFactory.build(String.class, modelName),
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateModelAttrAssoc", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, modelId),
+                                MethodParamFactory.build(String.class, modelName),
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(ModelAttrAssoc.class));
         resourceService.addLink(resource, this.getClass(), "unbindAttributeFromModel", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, modelId),
+                                MethodParamFactory.build(String.class, modelName),
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "getModelAttrAssocs", LinkRels.LIST,
-                                MethodParamFactory.build(Long.class, modelId));
+                                MethodParamFactory.build(String.class, modelName));
         return resource;
     }
 

@@ -43,27 +43,27 @@ import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
  */
 public interface IModelAttrAssocService extends ApplicationListener<NewFragmentAttributeEvent> {
 
-    List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId);
+    List<ModelAttrAssoc> getModelAttrAssocs(String modelName) throws ModuleException;
 
-    ModelAttrAssoc bindAttributeToModel(Long pModelId, ModelAttrAssoc pModelAttribute) throws ModuleException;
+    ModelAttrAssoc bindAttributeToModel(String modelName, ModelAttrAssoc pModelAttribute) throws ModuleException;
 
-    ModelAttrAssoc getModelAttrAssoc(Long pModelId, Long pAttributeId) throws ModuleException;
+    ModelAttrAssoc getModelAttrAssoc(String modelName, Long pAttributeId) throws ModuleException;
 
     ModelAttrAssoc getModelAttrAssoc(Long pModelId, AttributeModel pAttribute);
 
-    ModelAttrAssoc updateModelAttribute(Long pModelId, Long pAttributeId, ModelAttrAssoc pModelAttribute)
+    ModelAttrAssoc updateModelAttribute(String modelName, Long pAttributeId, ModelAttrAssoc pModelAttribute)
             throws ModuleException;
 
-    void unbindAttributeFromModel(Long pModelId, Long pAttributeId) throws ModuleException;
+    void unbindAttributeFromModel(String modelName, Long pAttributeId) throws ModuleException;
 
-    List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Fragment pFragment) throws ModuleException;
+    List<ModelAttrAssoc> bindNSAttributeToModel(String modelName, Fragment pFragment) throws ModuleException;
 
     /**
      * Propagate a fragment update
      */
     void updateNSBind(AttributeModel added);
 
-    void unbindNSAttributeToModel(Long pModelId, Long pFragmentId);
+    void unbindNSAttributeToModel(String modelName, Long pFragmentId);
 
     /**
      * Find all model attribute associations by attribute
@@ -72,7 +72,7 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      */
     Collection<ModelAttrAssoc> retrieveModelAttrAssocsByAttributeId(AttributeModel attr);
 
-    Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel);
+    Model duplicateModelAttrAssocs(String sourceModelName, Model pTargetModel) throws ModuleException;
 
     /**
      * Retrieve the computed attributes association to a model, represented by its id

@@ -247,10 +247,10 @@ public class IngesterGeometryServiceIT {
         }
 
         if (datasetModel != null) {
-            Utils.execute(modelService::deleteModel, datasetModel.getId());
+            Utils.execute(modelService::deleteModel, datasetModel.getName());
         }
         if (dataModel != null) {
-            Utils.execute(modelService::deleteModel, dataModel.getId());
+            Utils.execute(modelService::deleteModel, dataModel.getName());
         }
 
     }
