@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model>
+    <name>spire_fts_l2_light_chris</name>
+    <description>Data Model spire_fts_l2 - christophe</description>
+    <type>DATA</type>
+    <attribute alterable="true" optional="true">
+        <label>obsid</label>
+        <name>obsid</name>
+        <type unit="unitless">INTEGER</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>filesize</label>
+        <name>filesize</name>
+        <type unit="unitless">DOUBLE</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>origin</label>
+        <name>origin</name>
+        <type unit="unitless">STRING</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>public</label>
+        <name>public</name>
+        <description>public ou prive</description>
+        <type unit="unitless">BOOLEAN</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>dec</label>
+        <name>dec</name>
+        <description>dec</description>
+        <type unit="unitless">DOUBLE</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>object</label>
+        <name>object</name>
+        <type unit="unitless">STRING</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>ra</label>
+        <name>attribut_ra</name>
+        <description>ra</description>
+        <type unit="unitless">DOUBLE</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>observer</label>
+        <name>observer</name>
+        <type unit="unitless">STRING</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>odnumber</label>
+        <name>odnumber</name>
+        <type unit="unitless">INTEGER</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>cusmode</label>
+        <name>cusmode</name>
+        <type unit="unitless">STRING</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>obsmode</label>
+        <name>obsmode</name>
+        <type unit="unitless">STRING</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>endDate</label>
+        <name>endDate</name>
+        <type unit="unitless">DATE_ISO8601</type>
+    </attribute>
+    <attribute alterable="true" optional="true">
+        <label>startDate</label>
+        <name>startDate</name>
+        <type unit="unitless">DATE_ISO8601</type>
+    </attribute>
+</model>
