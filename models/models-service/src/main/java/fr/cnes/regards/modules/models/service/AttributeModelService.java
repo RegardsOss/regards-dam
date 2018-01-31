@@ -159,20 +159,20 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException {
-        if (!pAttributeModel.isIdentifiable()) {
+    public AttributeModel updateAttribute(Long id, AttributeModel attributeModel) throws ModuleException {
+        if (!attributeModel.isIdentifiable()) {
             throw new EntityNotFoundException(
-                    String.format("Unknown identifier for attribute model \"%s\"", pAttributeModel.getName()));
+                    String.format("Unknown identifier for attribute model \"%s\"", attributeModel.getName()));
         }
-        if (!pAttributeId.equals(pAttributeModel.getId())) {
-            throw new EntityInconsistentIdentifierException(pAttributeId, pAttributeModel.getId(),
-                    pAttributeModel.getClass());
+        if (!id.equals(attributeModel.getId())) {
+            throw new EntityInconsistentIdentifierException(id, attributeModel.getId(),
+                    attributeModel.getClass());
         }
-        if (!attModelRepository.exists(pAttributeId)) {
-            throw new EntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
+        if (!attModelRepository.exists(id)) {
+            throw new EntityNotFoundException(attributeModel.getId(), AttributeModel.class);
         }
-        manageRestriction(pAttributeModel);
-        return attModelRepository.save(pAttributeModel);
+        manageRestriction(attributeModel);
+        return attModelRepository.save(attributeModel);
     }
 
     @Override

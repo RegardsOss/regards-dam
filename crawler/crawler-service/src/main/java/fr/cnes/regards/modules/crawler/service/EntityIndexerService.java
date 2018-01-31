@@ -343,13 +343,13 @@ public class EntityIndexerService implements IEntityIndexerService {
                     properties.addAll(attrInFragment.getValue());
                 } else {
                     // the fragment is not here so lets create it by adding it
-                    dataset.getProperties().add(attrInFragment);
+                    dataset.addProperty(attrInFragment);
                 }
             } else {
-                // the attribute is not inside a fragment so lets remove the old one if it exist and add the new one to
+                // the attribute is not inside a fragment so lets remove the old one if it exists and add the new one to
                 // the root
-                dataset.getProperties().remove(attributeToAdd);
-                dataset.getProperties().add(attributeToAdd);
+                dataset.removeProperty(attributeToAdd);
+                dataset.addProperty(attributeToAdd);
             }
         }
     }

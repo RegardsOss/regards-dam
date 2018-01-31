@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -81,7 +82,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
                 LOG.error("ModelAttrAssoc of id: " + modelAttrAssoc.getId()
                                   + " cannot be validated because we couldn't instanciate the associated plugin to check the "
                                   + "coherence of its return type.");
-                throw new RuntimeException(e); // NOSONAR
+                throw new RsRuntimeException(e);
             }
         }
         // It is not a computed attribute so it must be GIVEN one

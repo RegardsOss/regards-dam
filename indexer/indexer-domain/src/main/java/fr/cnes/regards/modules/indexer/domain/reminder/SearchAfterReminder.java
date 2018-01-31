@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import fr.cnes.regards.framework.jpa.json.GsonUtil;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
@@ -53,7 +54,7 @@ public class SearchAfterReminder extends AbstractReminder {
         try {
             md = MessageDigest.getInstance("SHA1");
         } catch (NoSuchAlgorithmException e) { // Does not occur
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e);
         }
         md.reset();
         byte[] buffer = unique.getBytes();

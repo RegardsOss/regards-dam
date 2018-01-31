@@ -46,26 +46,26 @@ public class DataSourceModelMapping {
         super();
     }
 
-    public DataSourceModelMapping(Long pModelId, List<AbstractAttributeMapping> pAttributesMapping) {
+    public DataSourceModelMapping(Long modelId, List<AbstractAttributeMapping> attributeMappings) {
         super();
-        this.model = pModelId;
-        this.attributesMapping = pAttributesMapping;
+        this.model = modelId;
+        this.attributesMapping = attributeMappings;
     }
 
     public Long getModel() {
         return model;
     }
 
-    public void setModel(Long pModel) {
-        this.model = pModel;
+    public void setModel(Long modelId) {
+        this.model = modelId;
     }
 
     public List<AbstractAttributeMapping> getAttributesMapping() {
         return attributesMapping;
     }
 
-    public void setAttributesMapping(List<AbstractAttributeMapping> pAttributesMapping) {
-        this.attributesMapping = pAttributesMapping;
+    public void setAttributesMapping(List<AbstractAttributeMapping> attributeMappings) {
+        this.attributesMapping = attributeMappings;
     }
 
 }

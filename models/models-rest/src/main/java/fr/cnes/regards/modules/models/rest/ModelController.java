@@ -54,17 +54,14 @@ import fr.cnes.regards.modules.models.service.FragmentService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
- *
  * REST interface for managing data {@link Model}
- *
  * @author msordi
  * @author Xavier-Alexandre Brochard
  */
 @RestController
-// CHECKSTYLE:OFF
+
 @ModuleInfo(name = "models", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
         documentation = "http://test")
-// CHECKSTYLE:ON
 @RequestMapping(ModelController.TYPE_MAPPING)
 public class ModelController implements IResourceController<Model> {
 
@@ -110,9 +107,7 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
-     *
-     * @param pType
-     *            filter
+     * @param pType filter
      * @return a list of {@link Model}
      */
     @ResourceAccess(description = "List all models")
@@ -124,12 +119,9 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Create a {@link Model}
-     *
-     * @param pModel
-     *            the {@link Model} to create
+     * @param pModel the {@link Model} to create
      * @return the created {@link Model}
-     * @throws ModuleException
-     *             if problem occurs during model creation
+     * @throws ModuleException if problem occurs during model creation
      */
     @ResourceAccess(description = "Create a model")
     @RequestMapping(method = RequestMethod.POST)
@@ -139,12 +131,9 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Get a {@link Model} without its attributes
-     *
-     * @param pModelId
-     *            {@link Model} identifier
+     * @param pModelId {@link Model} identifier
      * @return a {@link Model}
-     * @throws ModuleException
-     *             if model cannot be retrieved
+     * @throws ModuleException if model cannot be retrieved
      */
     @ResourceAccess(description = "Get a model", role = DefaultRole.PUBLIC)
     @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}")
@@ -154,14 +143,10 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Allow to update {@link Model} description
-     *
-     * @param pModelId
-     *            {@link Model} identifier
-     * @param pModel
-     *            {@link Model} to update
+     * @param pModelId {@link Model} identifier
+     * @param pModel {@link Model} to update
      * @return updated {@link Model}
-     * @throws ModuleException
-     *             if model cannot be updated
+     * @throws ModuleException if model cannot be updated
      */
     @ResourceAccess(description = "Update a model")
     @RequestMapping(method = RequestMethod.PUT, value = "/{pModelId}")
@@ -172,12 +157,9 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Delete a {@link Model} and detach all {@link ModelAttrAssoc}
-     *
-     * @param pModelId
-     *            {@link Model} identifier
+     * @param pModelId {@link Model} identifier
      * @return nothing
-     * @throws ModuleException
-     *             if model cannot be deleted
+     * @throws ModuleException if model cannot be deleted
      */
     @ResourceAccess(description = "Delete a model")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pModelId}")
@@ -188,14 +170,10 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Duplicate a model
-     *
-     * @param pModelId
-     *            {@link Model} to duplicate
-     * @param pModel
-     *            new model to create with its own name, description and type
+     * @param pModelId {@link Model} to duplicate
+     * @param pModel new model to create with its own name, description and type
      * @return a new model based on actual one
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Duplicate a model")
     @RequestMapping(method = RequestMethod.POST, value = "/{pModelId}/duplicate")
@@ -206,15 +184,10 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Export a model
-     *
-     * @param pRequest
-     *            HTTP request
-     * @param pResponse
-     *            HTTP response
-     * @param pModelId
-     *            model to export
-     * @throws ModuleException
-     *             if error occurs!
+     * @param pRequest HTTP request
+     * @param pResponse HTTP response
+     * @param pModelId model to export
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Export a model")
     @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}/export")
@@ -231,8 +204,8 @@ public class ModelController implements IResourceController<Model> {
             modelService.exportModel(pModelId, pResponse.getOutputStream());
             pResponse.getOutputStream().flush();
         } catch (IOException e) {
-            final String message = String.format("Error with servlet output stream while exporting model %s.",
-                                                 model.getName());
+            final String message = String
+                    .format("Error with servlet output stream while exporting model %s.", model.getName());
             LOGGER.error(message, e);
             throw new ModuleException(e);
         }
@@ -240,12 +213,9 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Import a model
-     *
-     * @param pFile
-     *            model to import
+     * @param pFile model to import
      * @return nothing
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Import a model")
     @RequestMapping(method = RequestMethod.POST, value = "/import")

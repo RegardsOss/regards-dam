@@ -345,8 +345,9 @@ public class AccessGroupService implements ApplicationListener<ApplicationReadyE
             createAccessGroup(publicDocumentAccessGroup);
         } catch (EntityAlreadyExistsException e) {
             // the entity already exists, no problem
-        } catch (Exception e) {
-            LOGGER.error("Failed to register the public AccessGroup used by documents");
+            LOGGER.trace("Entity already exists, no problem", e);
+        } catch (RuntimeException e) {
+            LOGGER.error("Failed to register the public AccessGroup used by documents", e);
             // Do not prevent microservice to boot
         }
     }

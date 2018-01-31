@@ -48,6 +48,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilde
         description = "Allows data extraction to a PostgreSql database", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
+
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePlugin.class);
 
     @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin")
@@ -74,18 +75,16 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
      */
     @PluginInit
     private void initPlugin() {
-        LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString() + "model="
-                         + modelMapping + "request=" + sqlFromClause);
-
-        LOG.info("Init method call : " + (dbConnection.testConnection() ?
-                "CONNECTION_PARAM IS VALID" :
-                "ERROR CONNECTION_PARAM"));
+        LOG.info("Init method call : {}, connection = {}, modelMapping = {}, request = {}", this.getClass().getName(),
+                 dbConnection.toString(), modelMapping, sqlFromClause);
+        LOG.info("Init method call : {}",
+                 dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM");
 
         init(modelMapping, commonTags);
     }
 
     @Override
-    public IDBConnectionPlugin getDBConnection() throws SQLException {
+    public IDBConnectionPlugin getDBConnection() {
         return dbConnection;
     }
 

@@ -56,8 +56,6 @@ public abstract class AbstractDBDataSourceFromSingleTablePlugin extends Abstract
 
     protected static final String AND = " AND ";
 
-    protected static final String COMMA = ", ";
-
     protected static final String LIMIT = "LIMIT";
 
     protected static final String ORDER_BY = "ORDER";

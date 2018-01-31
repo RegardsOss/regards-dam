@@ -54,6 +54,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilde
         description = "Allows introspection and data extraction to a PostgreSql database", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSourceFromSingleTablePlugin {
+
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePlugin.class);
 
     @PluginParameter(name = CONNECTION_PARAM, label = "Database connection plugin")
@@ -80,18 +81,11 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
      */
     @PluginInit
     private void initPlugin() {
-        LOG.info("Init method call : " + this.getClass().getName() + "connection=" + dbConnection.toString()
-                         + "table name=" + tableName + ", model=" + modelMapping);
-
+        LOG.info("Init method call : {}, connection = {}, table name = {}, modelMapping = {}",
+                 this.getClass().getName(), dbConnection.toString(), tableName, modelMapping);
         init(modelMapping, commonTags);
-
         initializePluginMapping(tableName);
-
-        try {
-            initDataSourceColumns(getDBConnection());
-        } catch (SQLException e) {
-            LOG.error(e.getMessage(), e);
-        }
+        initDataSourceColumns(getDBConnection());
     }
 
     @Override
@@ -105,15 +99,16 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     }
 
     @Override
-    public IDBConnectionPlugin getDBConnection() throws SQLException {
+    public IDBConnectionPlugin getDBConnection() {
         return dbConnection;
     }
 
-    @Override
     /**
-     * @see https://jdbc.postgresql.org/documentation/head/8-date-time.html
-     */ protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName,
-            String colName) throws SQLException {
+     * @see 'https://jdbc.postgresql.org/documentation/head/8-date-time.html'
+     */
+    @Override
+    protected AbstractAttribute<?> buildDateAttribute(ResultSet rs, String attrName, String attrDSName, String colName)
+            throws SQLException {
         OffsetDateTime ldt;
         Integer typeDS = getTypeDs(attrDSName);
 

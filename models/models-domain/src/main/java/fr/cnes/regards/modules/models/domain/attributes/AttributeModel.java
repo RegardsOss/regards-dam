@@ -80,7 +80,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute name
      */
-    @NotNull
+    @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
     @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
@@ -104,7 +104,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute type
      */
-    @NotNull
+    @NotNull(message = "Type cannot be null")
     @Column(length = 32, nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private AttributeType type;
@@ -151,7 +151,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Attribute label
      */
     @Column(length = 20)
-    @NotBlank
+    @NotBlank(message = "Label cannot be empty")
     @Size(max = 20, message = "Label must be between 1 and 20 characters.")
     private String label;
 

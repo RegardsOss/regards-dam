@@ -34,6 +34,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -133,12 +134,12 @@ public class EntitiesService implements IEntitiesService {
                 }
             }
         } catch (ModuleException e) {
-            // rethrow as a runtime because anyway there is nothing we can do there, if the plugin cannot be
-            // instantiate the system should set itself to maintenance mode!
-            throw new RuntimeException(e); // NOSONAR
+            // Rethrow as a runtime because anyway there is nothing we can do there, if the plugin cannot be
+            // instantiated the system should set itself to maintenance mode!
+            throw new RsRuntimeException(e);
         } catch (SecurityException e) {
             // This exception should not happen. so if it does lets put the system into maintenance mode
-            throw new RuntimeException(e); // NOSONAR
+            throw new RsRuntimeException(e);
         }
         return computationPlugins;
     }
