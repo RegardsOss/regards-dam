@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -101,7 +102,7 @@ public class ModelServiceTest {
         modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService);
     }
 
-    @Test(expected = EntityNotFoundException.class)
+    @Test(expected = EntityInvalidException.class)
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test unexpected model creation")
     public void createUnexpectedModelTest() throws ModuleException {
