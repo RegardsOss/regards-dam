@@ -47,6 +47,7 @@ import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -128,9 +129,10 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public Model createModel(Model model) throws ModuleException {
         if (model.isIdentifiable()) {
-            throw new EntityNotFoundException(model.getId(), Model.class);
+            throw new EntityInvalidException(
+                    String.format("Model with name \"%s\" cannot have an identifier!", model.getName()));
         }
-        final Model modelFromDb = modelRepository.findByName(model.getName());
+        Model modelFromDb = modelRepository.findByName(model.getName());
         if (modelFromDb != null) {
             throw new EntityAlreadyExistsException(
                     String.format("Model with name \"%s\" already exists!", model.getName()));
