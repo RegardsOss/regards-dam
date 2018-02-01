@@ -39,10 +39,8 @@ import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
  * @author Sébastien Binda
  */
 @RestController
-//CHECKSTYLE:OFF
 @ModuleInfo(name = "crawler", version = "2.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
         documentation = "http://test")
-//CHECKSTYLE:ON
 @RequestMapping(CrawlerController.TYPE_MAPPING)
 public class CrawlerController implements IResourceController<DatasourceIngestion> {
 
@@ -71,8 +69,8 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
     }
 
     @Override
-    public Resource<DatasourceIngestion> toResource(DatasourceIngestion pElement, Object... pExtras) {
-        return resourceService.toResource(pElement);
+    public Resource<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
+        return resourceService.toResource(element);
     }
 
 }
