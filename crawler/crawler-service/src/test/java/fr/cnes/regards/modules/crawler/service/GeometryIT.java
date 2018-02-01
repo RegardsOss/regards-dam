@@ -1,8 +1,9 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
+
+import javax.annotation.PostConstruct;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -95,7 +96,7 @@ public class GeometryIT {
             Utils.execute(entityRepos::delete, collection2.getId());
         }
         if (collectionModel != null) {
-            Utils.execute(modelService::deleteModel, collectionModel.getId());
+            Utils.execute(modelService::deleteModel, collectionModel.getName());
         }
     }
 
@@ -213,9 +214,8 @@ public class GeometryIT {
         final Collection collFromDB = collService.load(collection.getId());
         Assert.assertTrue(collFromDB.getGeometry().getType() == GeometryType.MULTI_LINE_STRING);
         Assert.assertTrue(collFromDB.getGeometry() instanceof Geometry.MultiLineString);
-        Assert.assertArrayEquals(
-                new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } }, { { 39.12, -70.34 }, { 38., -70. } } },
-                collFromDB.getGeometry().getCoordinates());
+        Assert.assertArrayEquals(new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } },
+                { { 39.12, -70.34 }, { 38., -70. } } }, collFromDB.getGeometry().getCoordinates());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         collection2.setGeometry(new Geometry.Polygon(
@@ -225,9 +225,8 @@ public class GeometryIT {
         final Collection coll2FromDB = collService.load(collection2.getId());
         Assert.assertTrue(coll2FromDB.getGeometry().getType() == GeometryType.POLYGON);
         Assert.assertTrue(coll2FromDB.getGeometry() instanceof Geometry.Polygon);
-        Assert.assertArrayEquals(
-                new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } }, { { 39.12, -70.34 }, { 38., -70. } } },
-                coll2FromDB.getGeometry().getCoordinates());
+        Assert.assertArrayEquals(new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } },
+                { { 39.12, -70.34 }, { 38., -70. } } }, coll2FromDB.getGeometry().getCoordinates());
 
     }
 
@@ -243,9 +242,8 @@ public class GeometryIT {
 
         final Collection collFromEs = esRepos.get(TENANT, collection);
         Assert.assertTrue(collFromEs.getGeometry().getType() == GeometryType.MULTI_LINE_STRING);
-        Assert.assertArrayEquals(
-                new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } }, { { 39.12, -70.34 }, { 38., -70. } } },
-                collFromEs.getGeometry().getCoordinates());
+        Assert.assertArrayEquals(new Double[][][] { { { 41.12, -71.34 }, { 42., -72. } },
+                { { 39.12, -70.34 }, { 38., -70. } } }, collFromEs.getGeometry().getCoordinates());
 
         collection2 = new Collection(collectionModel, TENANT, "another collection with geometry");
         // Polygon with hole defined using http://geojson.io

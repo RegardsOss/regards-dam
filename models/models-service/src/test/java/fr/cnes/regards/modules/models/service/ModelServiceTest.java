@@ -163,22 +163,20 @@ public class ModelServiceTest {
 
     @Test(expected = EntityNotFoundException.class)
     public void updateUnexpectedModelTest() throws ModuleException {
-        final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
-        modelService.updateModel(modelId, model);
+        modelService.updateModel(MODEL_NAME, model);
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateInconsistentModelTest() throws ModuleException {
-        final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
         model.setId(2L);
 
-        modelService.updateModel(modelId, model);
+        modelService.updateModel("toto", model);
     }
 
     @Test(expected = EntityNotFoundException.class)
@@ -191,7 +189,7 @@ public class ModelServiceTest {
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
 
-        modelService.updateModel(modelId, model);
+        modelService.updateModel(MODEL_NAME, model);
     }
 
     @Test
@@ -207,18 +205,7 @@ public class ModelServiceTest {
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
         Mockito.when(mockModelR.save(model)).thenReturn(model);
 
-        Assert.assertNotNull(modelService.updateModel(modelId, model));
-    }
-
-    @Test
-    public void deleteModelTest() throws ModuleException {
-        final Long modelId = 1L;
-
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
-        final IModelService spy = Mockito.spy(modelService);
-        Mockito.doNothing().when(spy).deleteModel(modelId);
-
-        modelService.deleteModel(modelId);
+        Assert.assertNotNull(modelService.updateModel(MODEL_NAME, model));
     }
 
     /**
@@ -245,11 +232,10 @@ public class ModelServiceTest {
 
         final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
-        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(model);
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
 
-        modelService.bindAttributeToModel(modelId, modAtt);
+        modelService.bindAttributeToModel(MODEL_NAME, modAtt);
     }
 
     // TODO do not rebind an attribute
@@ -285,7 +271,7 @@ public class ModelServiceTest {
         Mockito.when(mockModelAttR.findOne(modAttId)).thenReturn(modAtt);
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
 
-        modelService.unbindAttributeFromModel(modelId, modAttId);
+        modelService.unbindAttributeFromModel(MODEL_NAME, modAttId);
     }
 
     /**
@@ -297,9 +283,10 @@ public class ModelServiceTest {
     public void exportModelTest() throws ModuleException {
 
         final Long modelId = 1L;
+        String modelName = "sample";
         final Model model = new Model();
         model.setId(modelId);
-        model.setName("sample");
+        model.setName(modelName);
         model.setDescription("Model description");
         model.setType(EntityType.COLLECTION);
 
@@ -341,12 +328,13 @@ public class ModelServiceTest {
         modAtt = new ModelAttrAssoc(attMod, model);
         modAtts.add(modAtt);
 
+        Mockito.when(mockModelR.findByName(modelName)).thenReturn(model);
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
         Mockito.when(mockModelAttR.findByModelId(modelId)).thenReturn(modAtts);
 
         try {
             final OutputStream output = Files.newOutputStream(Paths.get("target", model.getName() + ".xml"));
-            modelService.exportModel(modelId, output);
+            modelService.exportModel(modelName, output);
         } catch (IOException e) {
             LOGGER.debug("Cannot export fragment");
         }

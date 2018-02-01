@@ -50,6 +50,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.oais.urn.DataType;
@@ -153,7 +154,7 @@ public abstract class AbstractDataObjectMapping {
      * Get {@link DateAttribute}.
      * @param rs the {@link ResultSet}
      * @param attrName the attribute name
-     * àparam attrDSName the column name in the external data source
+     *            àparam attrDSName the column name in the external data source
      * @param colName the column name in the {@link ResultSet}
      * @return a new {@link DateAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
@@ -203,7 +204,7 @@ public abstract class AbstractDataObjectMapping {
 
             // Retrieve the model
             Model model = new Model();
-            model.setId(dataSourceMapping.getModel());
+            model.setName(dataSourceMapping.getModelName());
 
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
@@ -334,11 +335,11 @@ public abstract class AbstractDataObjectMapping {
         if (LOG.isDebugEnabled() && (attr != null)) {
             if ((attrMapping.getName() != null) && attrMapping.getName().equals(attrMapping.getNameDS())) {
                 LOG.debug("the value for <" + attrMapping.getName() + "> of type <" + attrMapping.getType() + "> is :"
-                                  + attr.getValue());
+                        + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + attrMapping.getName() + "|" + attrMapping.getNameDS() + "> of type <"
-                                  + attrMapping.getType() + "> is :" + attr.getValue());
+                        + attrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -457,8 +458,7 @@ public abstract class AbstractDataObjectMapping {
             return request.replaceAll(LAST_MODIFICATION_DATE_KEYWORD, OffsetDateTimeAdapter.format(INIT_DATE));
         } else {
             return request.replaceAll(LAST_MODIFICATION_DATE_KEYWORD,
-                                       getLastUpdateAttributeName() + "> '" + OffsetDateTimeAdapter.format(date)
-                                               + "'");
+                                      getLastUpdateAttributeName() + "> '" + OffsetDateTimeAdapter.format(date) + "'");
         }
     }
 
@@ -505,7 +505,7 @@ public abstract class AbstractDataObjectMapping {
 
         dataSourceMapping.getAttributesMapping().forEach(d -> {
 
-            if (0 > d.getNameDS().toLowerCase().lastIndexOf(AS) && !d.isPrimaryKey()) {
+            if ((0 > d.getNameDS().toLowerCase().lastIndexOf(AS)) && !d.isPrimaryKey()) {
                 columns.add(d.getNameDS() + BLANK + AS + d.getName());
             } else {
                 columns.add(d.getNameDS());

@@ -39,17 +39,17 @@ public interface IModelService {
 
     Model createModel(Model pModel) throws ModuleException;
 
-    Model getModel(Long pModelId) throws ModuleException;
+    Model getModel(Long id) throws ModuleException;
 
-    Model getModelByName(String pModelName);
+    Model getModelByName(String modelName) throws ModuleException;
 
-    Model updateModel(Long pModelId, Model pModel) throws ModuleException;
+    Model updateModel(String modelName, Model pModel) throws ModuleException;
 
-    void deleteModel(Long pModelId);
+    void deleteModel(String modelName) throws ModuleException;
 
-    Model duplicateModel(Long pModelId, Model pModel) throws ModuleException;
+    Model duplicateModel(String modelName, Model pModel) throws ModuleException;
 
-    void exportModel(Long pModelId, OutputStream pOutputStream) throws ModuleException;
+    void exportModel(String modelName, OutputStream pOutputStream) throws ModuleException;
 
     Model importModel(InputStream pInputStream) throws ModuleException;
 }

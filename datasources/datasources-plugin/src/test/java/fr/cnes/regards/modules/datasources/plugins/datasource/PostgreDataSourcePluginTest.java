@@ -273,11 +273,11 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
                 "timeStampWithTimeZone"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
-        attributes.add(new DynamicAttributeMapping("date_string",  AttributeType.STRING,
-                                                   "to_timestamp(dateStr, 'YYYY-MM-DD HH24:MI:SS:US')"));
+        attributes.add(new DynamicAttributeMapping("date_string", AttributeType.STRING,
+                "to_timestamp(dateStr, 'YYYY-MM-DD HH24:MI:SS:US')"));
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
 
-        modelMapping = new DataSourceModelMapping(123L, attributes);
+        modelMapping = new DataSourceModelMapping("123L", attributes);
     }
 
 }

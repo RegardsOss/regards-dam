@@ -230,7 +230,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
         attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
         attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
 
-        modelMapping = new DataSourceModelMapping(123L, attributes);
+        modelMapping = new DataSourceModelMapping("123L", attributes);
     }
 
 }

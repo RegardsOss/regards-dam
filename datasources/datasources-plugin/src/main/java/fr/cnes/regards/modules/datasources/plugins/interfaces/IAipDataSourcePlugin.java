@@ -26,9 +26,9 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
  */
 @PluginInterface(description = "Plugin to search in a data source that consumes AIPs")
 public interface IAipDataSourcePlugin extends IDataSourcePlugin {
-    String MODEL_NAME_PARAM = "model name";
+
+    String MODEL_NAME_PARAM = "modelName";
 
     String BINDING_MAP = "binding map";
-
 
 }

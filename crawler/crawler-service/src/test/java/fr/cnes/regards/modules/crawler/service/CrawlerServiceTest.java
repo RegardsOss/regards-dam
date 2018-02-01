@@ -41,6 +41,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
@@ -116,14 +117,14 @@ public class CrawlerServiceTest {
          * Instantiate the SQL DataSource plugin
          */
         List<PluginParameter> parameters;
-//        parameters = PluginParametersFactory.build()
-//                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
-//                                                 getOracleConnectionConfiguration())
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
-//        dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
-//                                         Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
+        // parameters = PluginParametersFactory.build()
+        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
+        // getOracleConnectionConfiguration())
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800").getParameters();
+        // dsPlugin = PluginUtils.getPlugin(parameters, OracleDataSourceFromSingleTablePlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE), new HashMap<>());
         // TODO use a Postgres plugin
 
         // Do not launch tests is Database is not available
@@ -163,19 +164,19 @@ public class CrawlerServiceTest {
         Assert.assertTrue(true);
     }
 
-//    private PluginConfiguration getOracleConnectionConfiguration() {
-//        final List<PluginParameter> parameters = PluginParametersFactory.build()
-//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-//                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-//                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-//                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-//
-//        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-//    }
+    // private PluginConfiguration getOracleConnectionConfiguration() {
+    // final List<PluginParameter> parameters = PluginParametersFactory.build()
+    // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
+    // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+    // .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
+    // .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
+    // .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
+    // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
+    // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+    //
+    // return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+    // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+    // }
 
     private void buildModelAttributes() {
         List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
@@ -204,7 +205,7 @@ public class CrawlerServiceTest {
         attributes.add(new DynamicAttributeMapping("MIN_ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
         attributes.add(new DynamicAttributeMapping("MAX_ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(123L, attributes);
+        dataSourceModelMapping = new DataSourceModelMapping("123L", attributes);
     }
 
     private void registerJSonModelAttributes() {

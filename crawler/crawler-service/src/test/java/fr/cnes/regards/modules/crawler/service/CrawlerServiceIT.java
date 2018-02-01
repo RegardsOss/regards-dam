@@ -38,6 +38,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -162,40 +163,40 @@ public class CrawlerServiceIT {
         Utils.execute(entityRepos::delete, coll2.getId());
         Utils.execute(entityRepos::delete, coll3.getId());
 
-        Utils.execute(modelService::deleteModel, modelColl.getId());
-        Utils.execute(modelService::deleteModel, modelDataset.getId());
-        Utils.execute(modelService::deleteModel, dataModel.getId());
+        Utils.execute(modelService::deleteModel, modelColl.getName());
+        Utils.execute(modelService::deleteModel, modelDataset.getName());
+        Utils.execute(modelService::deleteModel, dataModel.getName());
         Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
         Utils.execute(pluginService::deletePluginConfiguration, pluginConf.getId());
 
     }
 
     private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-//        final List<PluginParameter> parameters = PluginParametersFactory.build()
-//                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-//                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
-//                .getParameters();
-//
-//        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO  replace by a Postgres plugin
+        // final List<PluginParameter> parameters = PluginParametersFactory.build()
+        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+        // .getParameters();
+        //
+        // return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO replace by a Postgres plugin
         return null;
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() {
-//        final List<PluginParameter> parameters = PluginParametersFactory.build()
-//                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
-//                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
-//                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
-//                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
-//                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
-//                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
-//                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-//
-//        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-//                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO  replace by a Postgres plugin
+        // final List<PluginParameter> parameters = PluginParametersFactory.build()
+        // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
+        // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+        //
+        // return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO replace by a Postgres plugin
         return null;
     }
 
@@ -218,7 +219,7 @@ public class CrawlerServiceIT {
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(),
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(),
                 Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
                         AttributeType.INTEGER, "DATA_OBJECTS_ID")));
 

@@ -177,7 +177,7 @@ public class IngesterGeometryServiceIT {
         attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.GEOMETRY, AttributeType.STRING,
                 "polygon_geojson"));
 
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), attributes);
+        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     @Before
@@ -247,10 +247,10 @@ public class IngesterGeometryServiceIT {
         }
 
         if (datasetModel != null) {
-            Utils.execute(modelService::deleteModel, datasetModel.getId());
+            Utils.execute(modelService::deleteModel, datasetModel.getName());
         }
         if (dataModel != null) {
-            Utils.execute(modelService::deleteModel, dataModel.getId());
+            Utils.execute(modelService::deleteModel, dataModel.getName());
         }
 
     }

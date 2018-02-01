@@ -26,6 +26,7 @@ import com.google.common.base.Strings;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
 import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterBean;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
@@ -70,7 +71,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
     public void write(final JsonWriter pOut, final DataSourceModelMapping pValue) throws IOException {
 
         pOut.beginObject();
-        pOut.name(MODEL_LABEL).value(pValue.getModel());
+        pOut.name(MODEL_LABEL).value(pValue.getModelName());
         pOut.name(MAPPINGS_LABEL);
 
         pOut.beginArray();
@@ -101,7 +102,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             throw new IOException(MODEL_LABEL + " is expected");
         }
 
-        dataSourceModelMapping.setModel(Long.parseLong(in.nextString()));
+        dataSourceModelMapping.setModelName(in.nextString());
 
         if (!in.nextName().equals(MAPPINGS_LABEL)) {
             throw new IOException(MAPPINGS_LABEL + " is expected");
@@ -157,7 +158,7 @@ public class ModelMappingAdapter extends TypeAdapter<DataSourceModelMapping> {
             }
         }
 
-        if (attributeType == null && Strings.isNullOrEmpty(namespace)) {
+        if ((attributeType == null) && Strings.isNullOrEmpty(namespace)) {
             return new StaticAttributeMapping(name, null, nameDS);
         } else {
             return new DynamicAttributeMapping(name, namespace, attributeType, nameDS);

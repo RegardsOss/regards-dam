@@ -45,6 +45,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -104,7 +105,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
 
         Model model = modelService.getModelByName(MODEL_NAME);
         if (model != null) {
-            modelService.deleteModel(model.getId());
+            modelService.deleteModel(model.getName());
         }
 
         importModel(MODEL_FILE_NAME);
@@ -118,9 +119,11 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
                 .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800)
                 .addParameter(IDataSourcePlugin.TAGS, Lists.newArrayList("TOTO", "TITI")).getParameters();
 
-        PluginMetaData metadata = PluginUtils.createPluginMetaData(AipDataSourcePlugin.class, IDataSourcePlugin.class.getPackage().getName(), AipDataSourcePlugin.class.getPackage().getName());
+        PluginMetaData metadata = PluginUtils.createPluginMetaData(AipDataSourcePlugin.class,
+                                                                   IDataSourcePlugin.class.getPackage().getName(),
+                                                                   AipDataSourcePlugin.class.getPackage().getName());
 
-        PluginConfiguration aipDs = new PluginConfiguration( metadata, "LABEL", parameters);
+        PluginConfiguration aipDs = new PluginConfiguration(metadata, "LABEL", parameters);
         // FIXME : @svissier Why the fuck is this shit ?
         String truc = gsonBuilder.create().toJson(aipDs);
         dsPlugin = PluginUtils.getPlugin(parameters, AipDataSourcePlugin.class, Arrays.asList(PLUGIN_CURRENT_PACKAGE),
@@ -206,10 +209,10 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws ModuleException {
         Model model = modelService.getModelByName(MODEL_NAME);
         if (model != null) {
-            modelService.deleteModel(model.getId());
+            modelService.deleteModel(model.getName());
         }
     }
 }

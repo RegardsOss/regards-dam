@@ -39,6 +39,8 @@ public interface IModelAttrAssocRepository extends JpaRepository<ModelAttrAssoc,
 
     List<ModelAttrAssoc> findByModelId(Long pModelId);
 
+    List<ModelAttrAssoc> findByModelName(String modelName);
+
     ModelAttrAssoc findByModelIdAndAttribute(Long pModelId, AttributeModel pAttributeModel);
 
     /**

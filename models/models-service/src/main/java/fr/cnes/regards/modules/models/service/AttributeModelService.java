@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -165,8 +166,7 @@ public class AttributeModelService implements IAttributeModelService {
                     String.format("Unknown identifier for attribute model \"%s\"", attributeModel.getName()));
         }
         if (!id.equals(attributeModel.getId())) {
-            throw new EntityInconsistentIdentifierException(id, attributeModel.getId(),
-                    attributeModel.getClass());
+            throw new EntityInconsistentIdentifierException(id, attributeModel.getId(), attributeModel.getClass());
         }
         if (!attModelRepository.exists(id)) {
             throw new EntityNotFoundException(attributeModel.getId(), AttributeModel.class);
@@ -240,9 +240,9 @@ public class AttributeModelService implements IAttributeModelService {
         if (fragment == null) {
             pFragment.setId(null);
             if (!isFragmentCreatable(pFragment.getName())) {
-                throw new EntityAlreadyExistsException(
-                        String.format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                                      pFragment.getName()));
+                throw new EntityAlreadyExistsException(String
+                        .format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                                pFragment.getName()));
             }
             fragment = fragmentRepository.save(pFragment);
         }
@@ -270,18 +270,18 @@ public class AttributeModelService implements IAttributeModelService {
                                                    pAttributeModel.getName());
                 } else {
                     // CHECKSTYLE:OFF
-                    message = MessageFormat.format(
-                                                   "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
-                                                   pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                    message = MessageFormat
+                            .format("Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
+                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
                     // CHECKSTYLE:ON
                 }
                 LOGGER.error(message);
                 throw new EntityAlreadyExistsException(message);
             }
             if (fragmentRepository.findByName(pAttributeModel.getName()) != null) {
-                throw new EntityAlreadyExistsException(MessageFormat.format(
-                                                                            "Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
-                                                                            pAttributeModel.getName()));
+                throw new EntityAlreadyExistsException(MessageFormat
+                        .format("Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
+                                pAttributeModel.getName()));
             }
         }
         return attModelRepository.save(pAttributeModel);

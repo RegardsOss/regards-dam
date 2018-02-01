@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -35,6 +36,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.jayway.jsonpath.JsonPath;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -177,7 +179,7 @@ public class AttributeModelControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$[0].content.attribute.jsonPath",
                                                         Matchers.equalTo("properties.test.Attribute1")));
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING, expectations,
-                          "Cannot get all attributes assoc", modelTest.getId());
+                          "Cannot get all attributes assoc", modelTest.getName());
 
     }
 
