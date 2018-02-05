@@ -12,6 +12,7 @@ public class DynamicAttributeMapping extends AbstractAttributeMapping {
 
     public DynamicAttributeMapping() {
         super();
+        attributeType = AttributeMappingEnum.DYNAMIC;
     }
 
     /**
@@ -23,10 +24,12 @@ public class DynamicAttributeMapping extends AbstractAttributeMapping {
      */
     public DynamicAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
         super(pName, pNameSpace, pType, pMappingDS);
+        attributeType = AttributeMappingEnum.DYNAMIC;
     }
 
     public DynamicAttributeMapping(String pName, AttributeType pType, String pMappingDS) {
         this(pName, null, pType, pMappingDS);
+        attributeType = AttributeMappingEnum.DYNAMIC;
     }
 
 }

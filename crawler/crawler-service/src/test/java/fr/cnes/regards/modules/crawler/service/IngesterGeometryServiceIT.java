@@ -48,7 +48,6 @@ import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
 import fr.cnes.regards.modules.crawler.test.IngesterGeometryConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
@@ -101,7 +100,7 @@ public class IngesterGeometryServiceIT {
     @Autowired
     private IIngesterService ingesterService;
 
-    private DataSourceModelMapping dataSourceModelMapping;
+    private List<AbstractAttributeMapping> modelAttrMapping;
 
     private Model dataModel;
 
@@ -149,7 +148,8 @@ public class IngesterGeometryServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_VIEW)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, dataModel.getName())
                 .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -169,15 +169,11 @@ public class IngesterGeometryServiceIT {
     }
 
     private void buildModelAttributes() {
-        final List<AbstractAttributeMapping> attributes = new ArrayList<>();
-
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
+        modelAttrMapping = new ArrayList<>();
+        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
                 "line_id"));
-
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.GEOMETRY, AttributeType.STRING,
+        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.GEOMETRY, AttributeType.STRING,
                 "polygon_geojson"));
-
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     @Before

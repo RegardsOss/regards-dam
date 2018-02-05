@@ -19,24 +19,24 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import javax.sql.DataSource;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
-
+import java.util.List;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourcePlugin;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 
 /**
  * A {@link Plugin} to extract data from a PostgreSQL Database.<br>
@@ -57,9 +57,12 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
     @PluginParameter(name = FROM_CLAUSE, label = "SQL FROM clause")
     private String sqlFromClause;
 
-    @PluginParameter(name = MODEL_PARAM, label = "model mapping",
+    @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
+    private String modelName;
+
+    @PluginParameter(name = MODEL_MAPPING_PARAM, label = "model attributes mapping",
             description = "Mapping between model and database table (in JSON format)")
-    private DataSourceModelMapping modelMapping;
+    private List<AbstractAttributeMapping> attributesMapping;
 
     @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE_AS_STRING, optional = true,
             label = "refresh rate",
@@ -74,13 +77,13 @@ public class PostgreDataSourcePlugin extends AbstractDBDataSourcePlugin {
      * Init method
      */
     @PluginInit
-    private void initPlugin() {
-        LOG.info("Init method call : {}, connection = {}, modelMapping = {}, request = {}", this.getClass().getName(),
-                 dbConnection.toString(), modelMapping, sqlFromClause);
+    private void initPlugin() throws ModuleException {
+        LOG.info("Init method call : {}, connection = {}, model = {}, mapping = {}, request = {}", this.getClass().getName(),
+                 dbConnection.toString(), modelName, attributesMapping, sqlFromClause);
         LOG.info("Init method call : {}",
                  dbConnection.testConnection() ? "CONNECTION_PARAM IS VALID" : "ERROR CONNECTION_PARAM");
 
-        init(modelMapping, commonTags);
+        init(modelName, attributesMapping, commonTags);
     }
 
     @Override

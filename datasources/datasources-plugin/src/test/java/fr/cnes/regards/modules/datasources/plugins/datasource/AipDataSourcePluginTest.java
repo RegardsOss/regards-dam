@@ -102,12 +102,13 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException, ModuleException {
         tenantResolver.forceTenant(TENANT);
-
-        Model model = modelService.getModelByName(MODEL_NAME);
-        if (model != null) {
-            modelService.deleteModel(model.getName());
+        try {
+            // Remove the model if existing
+            modelService.getModelByName(MODEL_NAME);
+            modelService.deleteModel(MODEL_NAME);
+        } catch (ModuleException e) {
+            // There is nothing to do - we create the model later
         }
-
         importModel(MODEL_FILE_NAME);
 
         Map<Long, Object> pluginCacheMap = new HashMap<>();

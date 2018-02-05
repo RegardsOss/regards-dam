@@ -44,9 +44,6 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -105,8 +102,6 @@ public class DatasetServiceTest {
     private IModelService modelService;
 
     private IPluginConfigurationRepository pluginConfRepositoryMocked;
-
-    private DataSourceModelMapping dataSourceModelMapping;
 
     private IPublisher publisherMocked;
 
@@ -175,8 +170,6 @@ public class DatasetServiceTest {
                 pModelAttributeService, entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked, null,
                 emMocked, publisherMocked, runtimeTenantResolver, null, Mockito.mock(IOpenSearchService.class),
                 Mockito.mock(IPluginService.class));
-
-        buildModelAttributes();
     }
 
     /**
@@ -287,14 +280,5 @@ public class DatasetServiceTest {
         Assert.assertNotNull(dataSet1.getIpId());
         Assert.assertNotNull(dataSet2.getIpId());
         Assert.assertNotEquals(dataSet1.getIpId(), dataSet2.getIpId());
-    }
-
-    private void buildModelAttributes() {
-        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
-
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "ATTRIBUTE_ID"));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "FILE_TYPE"));
-
-        dataSourceModelMapping = new DataSourceModelMapping("99L", attributes);
     }
 }

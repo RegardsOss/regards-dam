@@ -19,6 +19,24 @@
 
 package fr.cnes.regards.modules.datasources.utils;
 
+import com.google.common.collect.Maps;
+import com.google.gson.stream.JsonReader;
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.Table;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.service.IModelService;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
@@ -40,32 +58,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import com.google.common.collect.Maps;
-import com.google.gson.stream.JsonReader;
-
-import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
-import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.Table;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
-import fr.cnes.regards.modules.indexer.domain.DataFile;
-import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * This class allows to process a SQL request to a SQL Database.</br>
@@ -79,6 +78,9 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Christophe Mertz
  */
 public abstract class AbstractDataObjectMapping {
+
+    @Autowired
+    private IModelService modelService;
 
     /**
      * Class logger
@@ -126,9 +128,14 @@ public abstract class AbstractDataObjectMapping {
     protected String orderByColumn = "";
 
     /**
-     * The mapping between the attributes in the {@link Model} and the data source
+     * The {@link Model} identifier
      */
-    protected DataSourceModelMapping dataSourceMapping;
+    protected Model model;
+
+    /**
+     * The mapping between the attribute of the {@link Model} of the attributes of th data source
+     */
+    protected List<AbstractAttributeMapping> attributesMapping;
 
     /**
      * Common tags to be added on all created data objects
@@ -202,14 +209,10 @@ public abstract class AbstractDataObjectMapping {
             LOG.info("select request : " + selectRequest);
             LOG.info("count request : " + countRequest);
 
-            // Retrieve the model
-            Model model = new Model();
-            model.setName(dataSourceMapping.getModelName());
-
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
-                    dataObjects.add(processResultSet(rs, model));
+                    dataObjects.add(processResultSet(rs, this.model));
                 }
             }
             countItems(statement, countRequest);
@@ -252,7 +255,7 @@ public abstract class AbstractDataObjectMapping {
         /**
          * Loop the attributes in the mapping
          */
-        for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
+        for (AbstractAttributeMapping attrMapping : attributesMapping) {
             AbstractAttribute<?> attr = buildAttribute(rset, attrMapping);
 
             if (attr != null) {
@@ -472,8 +475,9 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Init with parameters given directly on plugins with @PluginParameter annotation
      */
-    protected void init(DataSourceModelMapping modelMapping, Collection<String> commonTags) {
-        dataSourceMapping = modelMapping;
+    protected void init(String modelName, List<AbstractAttributeMapping> attributesMapping, Collection<String> commonTags) throws ModuleException {
+        this.model = modelService.getModelByName(modelName);
+        this.attributesMapping = attributesMapping;
         this.commonTags = commonTags;
 
         extractColumnsFromMapping();
@@ -503,7 +507,7 @@ public abstract class AbstractDataObjectMapping {
             columns = new ArrayList<>();
         }
 
-        dataSourceMapping.getAttributesMapping().forEach(d -> {
+        attributesMapping.forEach(d -> {
 
             if ((0 > d.getNameDS().toLowerCase().lastIndexOf(AS)) && !d.isPrimaryKey()) {
                 columns.add(d.getNameDS() + BLANK + AS + d.getName());
@@ -524,7 +528,7 @@ public abstract class AbstractDataObjectMapping {
     private void initMappingInternalAttributes() {
         mappingInternalAttributes = new HashMap<>();
 
-        for (AbstractAttributeMapping attrMapping : dataSourceMapping.getAttributesMapping()) {
+        for (AbstractAttributeMapping attrMapping : attributesMapping) {
             if (attrMapping.isLabel()) {
                 mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
             } else if (attrMapping.isRawData()) {

@@ -19,14 +19,12 @@
 
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
-import java.time.OffsetDateTime;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import java.time.OffsetDateTime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Class IDataSourcePlugin
@@ -54,6 +52,8 @@ public interface IDataSourcePlugin {
     Integer REFRESH_RATE_DEFAULT_VALUE = 86400;
 
     String REFRESH_RATE_DEFAULT_VALUE_AS_STRING = "86400";
+
+    String MODEL_NAME_PARAM = "modelName";
 
     /**
      * The refresh rate of the data source

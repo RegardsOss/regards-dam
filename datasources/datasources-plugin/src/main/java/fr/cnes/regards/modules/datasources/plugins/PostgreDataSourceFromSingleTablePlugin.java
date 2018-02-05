@@ -19,7 +19,17 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import javax.sql.DataSource;
+import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -28,20 +38,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
-
+import java.util.List;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
-import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
-import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 
 /**
  * Class PostgreDataSourceFromSingleTablePlugin A {@link Plugin} to discover the tables, columns and indexes to a
@@ -63,9 +63,12 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
     @PluginParameter(name = TABLE_PARAM, label = "Table name", description = "Database table name to be requested")
     private String tableName;
 
-    @PluginParameter(name = MODEL_PARAM, label = "model mapping",
+    @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
+    private String modelName;
+
+    @PluginParameter(name = MODEL_MAPPING_PARAM, label = "model attributes mapping",
             description = "Mapping between model and database table (in JSON format)")
-    private DataSourceModelMapping modelMapping;
+    private List<AbstractAttributeMapping> attributesMapping;
 
     @PluginParameter(name = REFRESH_RATE, defaultValue = REFRESH_RATE_DEFAULT_VALUE_AS_STRING, optional = true,
             label = "refresh rate",
@@ -80,10 +83,10 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
      * Init method
      */
     @PluginInit
-    private void initPlugin() {
-        LOG.info("Init method call : {}, connection = {}, table name = {}, modelMapping = {}",
-                 this.getClass().getName(), dbConnection.toString(), tableName, modelMapping);
-        init(modelMapping, commonTags);
+    private void initPlugin() throws ModuleException {
+        LOG.info("Init method call : {}, connection = {}, table name = {}, model = {}, mapping = {}",
+                 this.getClass().getName(), dbConnection.toString(), tableName, modelName, attributesMapping);
+        init(modelName, attributesMapping, commonTags);
         initializePluginMapping(tableName);
         initDataSourceColumns(getDBConnection());
     }
