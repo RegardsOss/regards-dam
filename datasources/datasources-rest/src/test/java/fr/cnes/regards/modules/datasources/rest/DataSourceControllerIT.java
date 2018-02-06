@@ -89,7 +89,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private final static String JSON_PATH_TABLE_NAME = "$.content.parameters.[0].value";
 
-    private final static String JSON_PATH_PLUGIN_CONNECTION = "$.content.parameters.[1].pluginConfiguration.id";
+    private final static String JSON_PATH_PLUGIN_CONNECTION = "$.content.parameters.[3].pluginConfiguration.id";
 
     private static final String DEFAULT_MODEL_NAME = "VALIDATION_MODEL_2";
 
@@ -325,10 +325,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                            "DataSource shouldn't be created.");
 
         expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[0].content.parameters.[1].pluginConfiguration.id",
+                .jsonPath("$.[0].content.parameters.[3].pluginConfiguration.id",
                           Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
         expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[1].content.parameters.[2].pluginConfiguration.id",
+                .jsonPath("$.[1].content.parameters.[3].pluginConfiguration.id",
                           Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING, expectations, "DataSources shouldn't be retrieve.");
