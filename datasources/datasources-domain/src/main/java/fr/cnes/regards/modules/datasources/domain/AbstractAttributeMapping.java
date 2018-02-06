@@ -79,6 +79,8 @@ public abstract class AbstractAttributeMapping {
      */
     private String nameDS;
 
+    protected AttributeMappingEnum attributeType;
+
     protected AbstractAttributeMapping() {
     }
 

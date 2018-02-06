@@ -18,12 +18,35 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.service.IDataSourceService;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IModelService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,30 +60,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.framework.security.utils.jwt.exception.JwtException;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
-import fr.cnes.regards.framework.test.report.annotation.Purpose;
-import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.service.IDataSourceService;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test sata source PluginConfiguration controller
@@ -89,7 +89,9 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private final static String JSON_PATH_TABLE_NAME = "$.content.parameters.[0].value";
 
-    private final static String JSON_PATH_PLUGIN_CONNECTION = "$.content.parameters.[1].pluginConfiguration.id";
+    private final static String JSON_PATH_PLUGIN_CONNECTION = "$.content.parameters.[3].pluginConfiguration.id";
+
+    private static final String DEFAULT_MODEL_NAME = "VALIDATION_MODEL_2";
 
     @Value("${postgresql.datasource.host}")
     private String dbHost;
@@ -115,9 +117,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IPluginConfigurationRepository pluginConfRepos;
 
+    @Autowired
+    private IModelService modelService;
+
     private PluginConfiguration pluginPostgreDbConnection;
 
-    private DataSourceModelMapping modelMapping;
+    private List<AbstractAttributeMapping> modelAttrMapping;
+
 
     @Override
     protected Logger getLogger() {
@@ -127,6 +133,14 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     @Before
     public void setUp() throws ModuleException, JwtException {
         jwtService.injectToken(DEFAULT_TENANT, DEFAULT_ROLE, DEFAULT_USER_EMAIL);
+        try {
+            // Remove the model if existing
+            modelService.getModelByName(DEFAULT_MODEL_NAME);
+            modelService.deleteModel(DEFAULT_MODEL_NAME);
+        } catch (ModuleException e) {
+            // There is nothing to do - we create the model later
+        }
+        modelService.createModel(Model.build(DEFAULT_MODEL_NAME, "", EntityType.DATA));
 
         pluginConfRepos.deleteAll();
 
@@ -311,10 +325,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                            "DataSource shouldn't be created.");
 
         expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[0].content.parameters.[1].pluginConfiguration.id",
+                .jsonPath("$.[0].content.parameters.[3].pluginConfiguration.id",
                           Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
         expectations.add(MockMvcResultMatchers
-                .jsonPath("$.[1].content.parameters.[2].pluginConfiguration.id",
+                .jsonPath("$.[1].content.parameters.[3].pluginConfiguration.id",
                           Matchers.hasToString(pluginPostgreDbConnection.getId().toString())));
 
         performDefaultGet(DataSourceController.TYPE_MAPPING, expectations, "DataSources shouldn't be retrieve.");
@@ -324,8 +338,10 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         PluginConfiguration dataSource = new PluginConfiguration();
         dataSource.setParameters(PluginParametersFactory.build()
                 .addParameter(IDBDataSourcePlugin.FROM_CLAUSE, FROM_CLAUSE_TEST)
+                .addParameter(IDBDataSourcePlugin.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME)
+                .addParameter(IDBDataSourcePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
                 .addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection)
-                .addParameter(IDBDataSourcePlugin.MODEL_PARAM, modelMapping).getParameters());
+                .getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
         dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getName());
         return dataSource;
@@ -344,7 +360,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         PluginConfiguration dataSource = new PluginConfiguration();
         PluginParametersFactory factory = PluginParametersFactory.build();
         factory.addParameter(IDBDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST);
-        factory.addParameter(IDBDataSourceFromSingleTablePlugin.MODEL_PARAM, modelMapping);
+        factory.addParameter(IDBDataSourcePlugin.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME);
+        factory.addParameter(IDBDataSourcePlugin.MODEL_MAPPING_PARAM, modelAttrMapping);
         factory.addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection);
         dataSource.setParameters(factory.getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
@@ -368,23 +385,21 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     private void buildModelAttributes() {
-        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
+        modelAttrMapping = new ArrayList<AbstractAttributeMapping>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name"));
-        attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
-        attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
-        attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
-        attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
+        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, "id"));
+        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "name"));
+        modelAttrMapping.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude"));
+        modelAttrMapping.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
+        modelAttrMapping.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
+        modelAttrMapping.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
+        modelAttrMapping.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
-        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
-        attributes.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
+        modelAttrMapping.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
+        modelAttrMapping.add(new DynamicAttributeMapping("timeStampWithTimeZone", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithTimeZone"));
-        attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
-
-        modelMapping = new DataSourceModelMapping("123L", attributes);
+        modelAttrMapping.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
     }
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {

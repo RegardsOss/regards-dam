@@ -63,7 +63,6 @@ import fr.cnes.regards.modules.crawler.service.ds.ExternalData3Repository;
 import fr.cnes.regards.modules.crawler.service.ds.ExternalDataRepository;
 import fr.cnes.regards.modules.crawler.test.IngesterConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.AipDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
@@ -120,7 +119,7 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     @Autowired
     private IIngesterService ingesterService;
 
-    private DataSourceModelMapping dataSourceModelMapping;
+    private List<AbstractAttributeMapping> modelAttrMapping;
 
     private Model dataModel;
 
@@ -189,7 +188,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_1)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, dataModel.getName())
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
                 .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -201,7 +201,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_2)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, dataModel.getName())
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
                 .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -213,7 +214,8 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, T_DATA_3)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 10)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, dataModel.getName())
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
                 .getParameters();
 
         return PluginUtils.getPluginConfiguration(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -243,14 +245,10 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     }
 
     private void buildModelAttributes() {
-        final List<AbstractAttributeMapping> attributes = new ArrayList<>();
-
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
-
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
+        modelAttrMapping = new ArrayList<>();
+        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
+        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
                 "date"));
-
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(), attributes);
     }
 
     /**

@@ -18,23 +18,9 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriUtils;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-
+import com.google.gson.Gson;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -46,8 +32,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -68,6 +53,18 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriUtils;
 
 /**
  * Specific EntityService for Datasets
@@ -117,16 +114,14 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             PluginConfiguration pluginConf = pluginService.getPluginConfiguration(datasourceId);
             // ...then retrieve data model id and set it onto dataset
             if (pluginConf.getInterfaceNames().contains(IDBDataSourcePlugin.class.getName())) {
-                String jsonModelMapping = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_PARAM);
-                ModelMappingAdapter adapter = new ModelMappingAdapter();
+                String modelName = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_NAME_PARAM);
                 try {
-                    DataSourceModelMapping modelMapping = adapter.fromJson(jsonModelMapping);
-                    Model model = modelService.getModelByName(modelMapping.getModelName());
+                    Model model = modelService.getModelByName(modelName);
                     dataset.setDataModel(model.getId());
-                } catch (IOException e) {
-                    logger.error("Unable to dejsonify model mapping parameter from PluginConfiguration", e);
+                } catch (ModuleException e) {
+                    logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                     throw new EntityNotFoundException(
-                            "Unable to dejsonify model mapping parameter from PluginConfiguration (" + e.getMessage()
+                            "Unable to dejsonify model parameter from PluginConfiguration (" + e.getMessage()
                                     + ")",
                             PluginConfiguration.class);
                 }

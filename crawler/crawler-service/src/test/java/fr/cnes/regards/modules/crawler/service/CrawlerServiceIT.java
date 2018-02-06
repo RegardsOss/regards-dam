@@ -18,27 +18,7 @@
  */
 package fr.cnes.regards.modules.crawler.service;
 
-import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Optional;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
@@ -50,7 +30,6 @@ import fr.cnes.regards.framework.test.util.Beans;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
@@ -66,6 +45,24 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Crawler service integration tests
@@ -140,7 +137,7 @@ public class CrawlerServiceIT {
     @Autowired
     private IDeletedEntityRepository deletedEntityRepository;
 
-    private DataSourceModelMapping dataSourceModelMapping;
+    private List<AbstractAttributeMapping> modelAttrMapping;
 
     @Before
     public void setUp() {
@@ -219,10 +216,8 @@ public class CrawlerServiceIT {
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getName(),
-                Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
-                        AttributeType.INTEGER, "DATA_OBJECTS_ID")));
-
+        modelAttrMapping = Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
+                AttributeType.INTEGER, "DATA_OBJECTS_ID"));
         pluginConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(pluginConf);
 

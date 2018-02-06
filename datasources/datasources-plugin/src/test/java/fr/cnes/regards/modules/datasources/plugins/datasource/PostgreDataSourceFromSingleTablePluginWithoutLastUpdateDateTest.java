@@ -18,6 +18,30 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.datasource;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
+import fr.cnes.regards.framework.test.report.annotation.Purpose;
+import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
+import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
+import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
+import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
+import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.models.domain.Model;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.service.IModelService;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +53,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -45,28 +68,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
-import fr.cnes.regards.framework.test.report.annotation.Purpose;
-import fr.cnes.regards.framework.test.report.annotation.Requirement;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
-import fr.cnes.regards.framework.utils.plugins.PluginUtils;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
-import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
-import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
-import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
-import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * @author Christophe Mertz
@@ -90,6 +91,8 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
 
     private static final String TABLE_NAME_TEST = "t_test_plugin_data_source";
 
+    private static final String MODEL_NAME_TEST = "VALIDATION_MODEL_1";
+
     @Value("${postgresql.datasource.host}")
     private String dbHost;
 
@@ -107,7 +110,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
 
     private IDBDataSourceFromSingleTablePlugin plgDBDataSource;
 
-    private DataSourceModelMapping modelMapping;
+    private List<AbstractAttributeMapping> attributesMapping;
 
     private static int nbElements;
 
@@ -119,6 +122,9 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
     @Autowired
     IDataSourceRepositoryTest repository;
 
+    @Autowired
+    private IModelService modelService;
+
     /**
      * Populate the datasource as a legacy catalog
      *
@@ -126,7 +132,16 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
      * @throws SQLException
      */
     @Before
-    public void setUp() throws DataSourcesPluginException, SQLException {
+    public void setUp() throws DataSourcesPluginException, SQLException, ModuleException {
+
+        try {
+            // Remove the model if existing
+            modelService.getModelByName(MODEL_NAME_TEST);
+            modelService.deleteModel(MODEL_NAME_TEST);
+        } catch (ModuleException e) {
+            // There is nothing to do - we create the model later
+        }
+        modelService.createModel(Model.build(MODEL_NAME_TEST, "", EntityType.DATA));
         /*
          * Add data to the data source
          */
@@ -146,7 +161,7 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
         /*
          * Initialize the AbstractAttributeMapping
          */
-        buildModelAttributes();
+        buildAttributesMapping();
 
         /*
          * Instantiate the data source plugin
@@ -156,7 +171,8 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
                 .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM,
                                         getPostgreConnectionConfiguration())
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_PARAM, modelMapping)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, MODEL_NAME_TEST)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, attributesMapping)
                 .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800).getParameters();
 
         plgDBDataSource = PluginUtils.getPlugin(parameters, PostgreDataSourceFromSingleTablePlugin.class,
@@ -215,22 +231,20 @@ public class PostgreDataSourceFromSingleTablePluginWithoutLastUpdateDateTest ext
         return plgConf;
     }
 
-    private void buildModelAttributes() {
-        List<AbstractAttributeMapping> attributes = new ArrayList<AbstractAttributeMapping>();
+    private void buildAttributesMapping() {
+        this.attributesMapping = new ArrayList<>();
 
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'" + HELLO + "- '||label as label"));
-        attributes.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
-        attributes.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
-        attributes.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
-        attributes.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
+        this.attributesMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LABEL, "'" + HELLO + "- '||label as label"));
+        this.attributesMapping.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
+        this.attributesMapping.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
+        this.attributesMapping.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
+        this.attributesMapping.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
                 "timestampwithouttimezone"));
-        attributes.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
-        attributes.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
+        this.attributesMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
+        this.attributesMapping.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timestampwithouttimezone"));
-        attributes.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
-        attributes.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
-
-        modelMapping = new DataSourceModelMapping("123L", attributes);
+        this.attributesMapping.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
+        this.attributesMapping.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
     }
 
 }
