@@ -336,7 +336,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
 
         DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10");
         performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
-                + "?dataModelId=" + dataModel.getId(), query, expectations,
+                + "?dataModelName=" + dataModel.getName(), query, expectations,
                            "Could not validate that subsetting clause");
 
         query = new DatasetController.Query("properties.DO_NOT_EXIST:10");
@@ -344,7 +344,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
         performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
-                + "?dataModelId=" + dataModel.getId(), query, expectations,
+                + "?dataModelName=" + dataModel.getName(), query, expectations,
                            "Could not validate that subsetting clause");
     }
 
