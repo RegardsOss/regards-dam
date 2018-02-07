@@ -175,7 +175,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSet2.setLicence("licence");
         dataSet2.setCreationDate(OffsetDateTime.now());
         dataSet2.setSipId("SipId2");
-        dataSet2.setDataModel(dataModel.getId());
+        dataSet2.setDataModel(dataModel.getName());
         dataSet2.getProperties().add(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
         dataSet2.getProperties().add(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
         dataSet2.getProperties().add(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
@@ -307,7 +307,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
         ds.setCreationDate(OffsetDateTime.now());
         ds.setLicence("pLicence");
-        ds.setDataModel(dataModel.getId());
+        ds.setDataModel(dataModel.getName());
         ds = datasetRepository.save(ds);
         final StringJoiner sj = new StringJoiner("&", "?", "");
         sj.add("modelIds=" + datasetModel.getId());

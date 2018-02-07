@@ -71,9 +71,9 @@ public interface IDatasetService extends IEntityService<Dataset> {
     /**
      * Build a criterion visitor allowing us to check if a criterion is valid or not
      *
-     * @param dataModelId modelId towards which we should check coherence
+     * @param dataModelName modelName towards which we should check coherence
      * @return visitor to perform a coherence check
      * @throws ModuleException if the model cannot be retrieve
      */
-    SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(Long dataModelId) throws ModuleException;
+    SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException;
 }

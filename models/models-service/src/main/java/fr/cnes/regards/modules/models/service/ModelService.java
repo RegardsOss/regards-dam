@@ -201,11 +201,23 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModels(List<Long> modelIds, Pageable pageable) {
-        if (modelIds.isEmpty()) {
+    public Page<AttributeModel> getAttributeModels(List<String> pModelNames, Pageable pageable) {
+        if (pModelNames.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
-        return modelAttributeRepository.findAllAttributeByModelIdIn(modelIds, pageable);
+
+        List<Long> pModelIds = pModelNames.stream()
+                .map(modelName -> {
+                    Model m = modelRepository.findByName(modelName);
+                    if (m != null) {
+                        return m.getId();
+                    }
+                    LOGGER.error("The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.", modelName);
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return modelAttributeRepository.findAllAttributeByModelIdIn(pModelIds, pageable);
     }
 
     @Override

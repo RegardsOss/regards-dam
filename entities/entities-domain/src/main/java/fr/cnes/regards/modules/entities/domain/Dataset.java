@@ -75,10 +75,11 @@ public class Dataset extends AbstractDescEntity {
     private PluginConfiguration plgConfDataSource;
 
     /**
-     * Model id of the Data objects held by this Dataset. nullable=true because single table mapping for all entities
+     * Model name of the Data objects held by this Dataset.
+     * nullable=true because all abstract entities share the same table (single table mapping)
      */
-    @Column(name = "data_model_id", updatable = false, nullable = true)
-    private Long dataModel;
+    @Column(name = "data_model_name", updatable = false, nullable = true)
+    private String dataModel;
 
     /**
      * Request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
@@ -184,7 +185,7 @@ public class Dataset extends AbstractDescEntity {
     /**
      * @return the data model
      */
-    public Long getDataModel() {
+    public String getDataModel() {
         return dataModel;
     }
 
@@ -192,7 +193,7 @@ public class Dataset extends AbstractDescEntity {
      * Set the data model
      * @param pDataModel
      */
-    public void setDataModel(Long pDataModel) {
+    public void setDataModel(String pDataModel) {
         dataModel = pDataModel;
     }
 

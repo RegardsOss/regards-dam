@@ -99,7 +99,7 @@ public class DatasetRepositoryIT extends AbstractDaoTransactionalTest {
 
         setModelInPlace(importModel("sample-model-minimal.xml"));
         dataset.setSubsettingClause(getValidClause());
-        dataset.setDataModel(srcModel.getId());
+        dataset.setDataModel(srcModel.getName());
 
         gson.toJson(dataset.getUserSubsettingClause());
 

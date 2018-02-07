@@ -315,19 +315,19 @@ public class DatasetController implements IResourceController<Dataset> {
 
     /**
      * Validate an open search query for the given data model, represented by its id
-     * @param dataModelId
+     * @param dataModelName
      * @param query
      * @return whether the query is valid or not
      * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST, value = DATA_SUB_SETTING_VALIDATION)
     @ResourceAccess(description = "Validate if a subsetting is correct and coherent regarding a data model")
-    public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelId") Long dataModelId,
+    public ResponseEntity<Validity> validateSubSettingClause(@RequestParam("dataModelName") String dataModelName,
             @RequestBody Query query) throws ModuleException {
         // we have to add "q=" to be able to parse the query
         try {
             ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
-            SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelId);
+            SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelName);
             return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
         } catch (OpenSearchParseException e) {
             return ResponseEntity.ok(new Validity(false));

@@ -117,7 +117,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 String modelName = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_NAME_PARAM);
                 try {
                     Model model = modelService.getModelByName(modelName);
-                    dataset.setDataModel(model.getId());
+                    dataset.setDataModel(model.getName());
                 } catch (ModuleException e) {
                     logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                     throw new EntityNotFoundException(
@@ -133,7 +133,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                             "Datasource PluginConfiguration refers to an unknown model (name: " + modelName + ")",
                             PluginConfiguration.class);
                 }
-                dataset.setDataModel(dataModel.getId());
+                dataset.setDataModel(dataModel.getName());
             }
         }
         return dataset;
@@ -171,8 +171,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(Long dataModelId) throws ModuleException {
-        return new SubsettingCoherenceVisitor(modelService.getModel(dataModelId), attributeService,
+    public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
+        return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
                 modelAttributeService);
     }
 
@@ -234,8 +234,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      */
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(final Collection<Dataset> datasets,
             final Pageable pageable) throws ModuleException {
-        final List<Long> modelIds = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
-        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelIds, pageable);
+        final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
+        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelNames, pageable);
         // Build JSON path
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return attModelPage;
