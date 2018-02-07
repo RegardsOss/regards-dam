@@ -30,17 +30,14 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 public class DatasetWithAccessRight {
 
     /**
-     * Internal identifier of the  {@link DataSet}
+     * Internal identifier of the  DataSet
      */
     private final UniformResourceName datasetIpId;
 
-    /**
-     * {@link Dataset}
-     */
     private Dataset dataset;
 
     /**
-     * {@link AccessRight} associated to the dataset.
+     * AccessRight associated to the dataset.
      */
     private AccessRight accessRight;
 

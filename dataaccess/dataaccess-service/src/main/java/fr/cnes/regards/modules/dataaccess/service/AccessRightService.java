@@ -47,7 +47,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 
 /**
- * Access right business service
+ * Access right service implementation
  * @author Sylvain Vissiere-Guerinet
  */
 @Service
@@ -87,12 +87,7 @@ public class AccessRightService implements IAccessRightService {
         return repository.findAll(pageable);
     }
 
-    /**
-     * Retrieve groups access levels of a specified dataset
-     * @param datasetIpId concerned datasetIpId, must not be null
-     * @return a map { groupName, accessLevel }
-     * @throws EntityNotFoundException if dataset doesn't exist
-     */
+
     @Override
     public Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
             throws EntityNotFoundException {
