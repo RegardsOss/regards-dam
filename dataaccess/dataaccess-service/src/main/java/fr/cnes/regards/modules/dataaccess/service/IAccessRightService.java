@@ -30,13 +30,20 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 
 /**
- * @author Olivier Roussel
+ * Access right service
+ * @author Sylvain Vissiere-Guerinet
  */
 public interface IAccessRightService {
 
     Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
             Pageable pageable) throws EntityNotFoundException;
 
+    /**
+     * Retrieve groups access levels of a specified dataset
+     * @param datasetIpId concerned datasetIpId, must not be null
+     * @return a map { groupName, accessLevel }
+     * @throws EntityNotFoundException if dataset doesn't exist
+     */
     Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
             throws EntityNotFoundException;
 
