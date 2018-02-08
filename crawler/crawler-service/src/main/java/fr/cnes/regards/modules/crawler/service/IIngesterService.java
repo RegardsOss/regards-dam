@@ -2,6 +2,7 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Optional;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 
 /**
@@ -21,4 +22,6 @@ public interface IIngesterService {
      * @param b true or false (it's a boolean, what do you expect ?)
      */
     void setConsumeOnlyMode(boolean b);
+
+    void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException;
 }

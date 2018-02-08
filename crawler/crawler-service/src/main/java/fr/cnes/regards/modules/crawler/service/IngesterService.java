@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
@@ -242,11 +243,9 @@ public class IngesterService
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
                 .peek(id -> this.planDatasourceDataObjectsDeletion(tenant, id)).forEach(dsIngestionRepos::delete);
         // For previously ingested datasources, compute next planned ingestion date
-        pluginConfs.stream().forEach(pluginConf -> {
+        pluginConfs.forEach(pluginConf -> {
             try {
-                this.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()),
-                                       ((IDataSourcePlugin) pluginService.getPlugin(pluginConf.getId()))
-                                               .getRefreshRate());
+                self.updatePlannedDate(dsIngestionsMap.get(pluginConf.getId()), pluginConf.getId());
             } catch (RuntimeException | ModuleException e) {
                 LOGGER.error("Cannot compute next ingestion planned date", e);
             }
@@ -261,9 +260,12 @@ public class IngesterService
     }
 
     /**
-     * Compute next ingestion planned date if needed
+     * Compute next ingestion planned date if needed in its own transaction to prevent making
+     * updateAndCleanTenantDatasourceIngestions failing and rollbacking its transaction
      */
-    private void updatePlannedDate(DatasourceIngestion dsIngestion, int refreshRate) {
+    @MultitenantTransactional(propagation = Propagation.REQUIRES_NEW)
+    public void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException {
+        int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
                 OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
