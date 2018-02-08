@@ -27,6 +27,7 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -78,6 +79,8 @@ public class DataSourceEntity implements IIdentifiable<Long> {
     
     private String dateStr;
 
+    private URL url;
+
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     private OffsetDateTime timeStampWithTimeZone; // Types.TIMESTAMP or Types.TIMESTAMP_WITH_TIMEZONE > JDBC 4.2
 
@@ -86,20 +89,21 @@ public class DataSourceEntity implements IIdentifiable<Long> {
     public DataSourceEntity() {
     }
 
-    public DataSourceEntity(String pLabel, int pAltitude, double pLatitude, double pLongitude, LocalDate pDate,
-            LocalTime pTimeWithoutTimeZone, LocalDateTime pTimeStampWithoutTimeZone,
-            OffsetDateTime pTimeStampWithTimeZone, String dateStr, Boolean pUpdate) {
+    public DataSourceEntity(String label, int altitude, double latitude, double longitude, LocalDate date,
+            LocalTime timeWithoutTimeZone, LocalDateTime timeStampWithoutTimeZone,
+            OffsetDateTime timeStampWithTimeZone, String dateStr, Boolean update, URL url) {
         super();
-        this.label = pLabel;
-        this.altitude = pAltitude;
-        this.latitude = pLatitude;
-        this.longitude = pLongitude;
-        this.date = pDate;
-        this.timeWithoutTimeZone = pTimeWithoutTimeZone;
-        this.timeStampWithoutTimeZone = pTimeStampWithoutTimeZone;
-        this.timeStampWithTimeZone = pTimeStampWithTimeZone;
+        this.label = label;
+        this.altitude = altitude;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.date = date;
+        this.timeWithoutTimeZone = timeWithoutTimeZone;
+        this.timeStampWithoutTimeZone = timeStampWithoutTimeZone;
+        this.timeStampWithTimeZone = timeStampWithTimeZone;
         this.dateStr = dateStr;
-        this.update = pUpdate;
+        this.update = update;
+        this.url = url;
     }
 
     @Override

@@ -19,6 +19,38 @@
 
 package fr.cnes.regards.modules.datasources.utils;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.elasticsearch.common.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
@@ -37,34 +69,6 @@ import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
-import java.io.IOException;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.elasticsearch.common.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 /**
  * This class allows to process a SQL request to a SQL Database.</br>
@@ -79,18 +83,20 @@ import org.springframework.data.domain.Pageable;
  */
 public abstract class AbstractDataObjectMapping {
 
-    @Autowired
-    private IModelService modelService;
+    /**
+     * The PL/SQL key word AS
+     */
+    protected static final String AS = "as ";
+
+    /**
+     * A pattern used to set a date in the statement
+     */
+    protected static final String LAST_MODIFICATION_DATE_KEYWORD = "%last_modification_date%";
 
     /**
      * Class logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDataObjectMapping.class);
-
-    /**
-     * The PL/SQL key word AS
-     */
-    protected static final String AS = "as ";
 
     private static final String BLANK = " ";
 
@@ -112,11 +118,6 @@ public abstract class AbstractDataObjectMapping {
     private static final int RESET_COUNT = -1;
 
     /**
-     * A pattern used to set a date in the statement
-     */
-    protected static final String LAST_MODIFICATION_DATE_KEYWORD = "%last_modification_date%";
-
-    /**
      * The {@link List} of columns used by this {@link Plugin} to requests the database. This columns are in the
      * {@link Table}.
      */
@@ -136,6 +137,9 @@ public abstract class AbstractDataObjectMapping {
      * The mapping between the attribute of the {@link Model} of the attributes of th data source
      */
     protected List<AbstractAttributeMapping> attributesMapping;
+
+    @Autowired
+    private IModelService modelService;
 
     /**
      * Common tags to be added on all created data objects
@@ -212,7 +216,7 @@ public abstract class AbstractDataObjectMapping {
             // Execute the request to get the elements
             try (ResultSet rs = statement.executeQuery(selectRequest)) {
                 while (rs.next()) {
-                    dataObjects.add(processResultSet(rs, this.model));
+                    dataObjects.add(processResultSet(rs, this.model, tenant));
                 }
             }
             countItems(statement, countRequest);
@@ -246,8 +250,8 @@ public abstract class AbstractDataObjectMapping {
      * @return the {@link DataObject} created
      * @throws SQLException An SQL error occurred
      */
-    protected DataObject processResultSet(ResultSet rset, Model model) throws SQLException {
-        final DataObject data = new DataObject();
+    protected DataObject processResultSet(ResultSet rset, Model model, String tenant) throws SQLException, DataSourceException {
+        final DataObject data = new DataObject(model, tenant, null);
 
         final Set<AbstractAttribute<?>> attributes = new HashSet<>();
         final Map<String, List<AbstractAttribute<?>>> spaceNames = Maps.newHashMap();
@@ -287,7 +291,6 @@ public abstract class AbstractDataObjectMapping {
         });
 
         data.setProperties(attributes);
-        data.setModel(model);
 
         // Add common tags
         data.getTags().addAll(commonTags);
@@ -303,31 +306,29 @@ public abstract class AbstractDataObjectMapping {
      * @throws SQLException if an error occurs in the {@link ResultSet}
      */
     private AbstractAttribute<?> buildAttribute(ResultSet rset, AbstractAttributeMapping attrMapping)
-            throws SQLException {
+            throws SQLException, DataSourceException {
         AbstractAttribute<?> attr = null;
-        final String colName = extractColumnName(attrMapping.getNameDS(), attrMapping.getName(),
+        final String colName = extractColumnName(attrMapping.getNameDS(),
+                                                 attrMapping.getName(),
                                                  attrMapping.isPrimaryKey());
 
         switch (attrMapping.getType()) {
-            case STRING:
-                attr = AttributeBuilder.buildString(attrMapping.getName(), rset.getString(colName));
-                break;
-            case LONG:
-                attr = AttributeBuilder.buildLong(attrMapping.getName(), rset.getLong(colName));
-                break;
-            case INTEGER:
-                attr = AttributeBuilder.buildInteger(attrMapping.getName(), rset.getInt(colName));
-                break;
-            case BOOLEAN:
-                attr = AttributeBuilder.buildBoolean(attrMapping.getName(), rset.getBoolean(colName));
-                break;
-            case DOUBLE:
-                attr = AttributeBuilder.buildDouble(attrMapping.getName(), rset.getDouble(colName));
+            // lets handle touchy cases by hand
+            case URL:
+                try {
+                    attr = AttributeBuilder.buildUrl(attrMapping.getName(), new URL(rset.getString(colName)));
+                } catch (MalformedURLException e) {
+                    String message = String.format("Given url into database (column %s) could not be processed as a URL", colName);
+                    LOG.error(message, e);
+                    throw new DataSourceException(message, e);
+                }
                 break;
             case DATE_ISO8601:
                 attr = buildDateAttribute(rset, attrMapping.getName(), attrMapping.getNameDS(), colName);
                 break;
+            // if it is not a touchy case, lets use the general way
             default:
+                attr = AttributeBuilder.forType(attrMapping.getType(), attrMapping.getName(), rset.getObject(colName));
                 break;
         }
         // If value was null => no attribute value
@@ -338,11 +339,11 @@ public abstract class AbstractDataObjectMapping {
         if (LOG.isDebugEnabled() && (attr != null)) {
             if ((attrMapping.getName() != null) && attrMapping.getName().equals(attrMapping.getNameDS())) {
                 LOG.debug("the value for <" + attrMapping.getName() + "> of type <" + attrMapping.getType() + "> is :"
-                        + attr.getValue());
+                                  + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + attrMapping.getName() + "|" + attrMapping.getNameDS() + "> of type <"
-                        + attrMapping.getType() + "> is :" + attr.getValue());
+                                  + attrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -475,7 +476,8 @@ public abstract class AbstractDataObjectMapping {
     /**
      * Init with parameters given directly on plugins with @PluginParameter annotation
      */
-    protected void init(String modelName, List<AbstractAttributeMapping> attributesMapping, Collection<String> commonTags) throws ModuleException {
+    protected void init(String modelName, List<AbstractAttributeMapping> attributesMapping,
+            Collection<String> commonTags) throws ModuleException {
         this.model = modelService.getModelByName(modelName);
         this.attributesMapping = attributesMapping;
         this.commonTags = commonTags;

@@ -44,6 +44,9 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -134,7 +137,7 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
      * @throws SQLException
      */
     @Before
-    public void setUp() throws DataSourcesPluginException, SQLException, ModuleException {
+    public void setUp() throws DataSourcesPluginException, SQLException, ModuleException, MalformedURLException {
 
         try {
             // Remove the model if existing
@@ -151,14 +154,14 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
         repository.deleteAll();
         repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
                 LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
-                OffsetDateTime.now().minusMinutes(33), OffsetDateTime.now().minusDays(5).toString(), true));
+                OffsetDateTime.now().minusMinutes(33), OffsetDateTime.now().minusDays(5).toString(), true, new URL("file", "localhost", "")));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
                 LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10), LocalDateTime.now().plusHours(33),
-                OffsetDateTime.now().minusSeconds(22), OffsetDateTime.now().minusMinutes(56565).toString(), true));
+                OffsetDateTime.now().minusSeconds(22), OffsetDateTime.now().minusMinutes(56565).toString(), true, new URL("http", "localhost", "")));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
                 LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7),
-                OffsetDateTime.now().minusMinutes(12132125).toString(), false));
+                OffsetDateTime.now().minusMinutes(12132125).toString(), false, new URL("ftp", "localhost", "")));
         nbElements = 3;
 
         /*
@@ -313,6 +316,7 @@ public class PostgreDataSourceFromSingleTablePluginTest extends AbstractRegardsS
         this.attributesMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
                 "timestampwithtimezone"));
         this.attributesMapping.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
+        this.attributesMapping.add(new DynamicAttributeMapping("url", "", AttributeType.URL, "url"));
     }
 
 }

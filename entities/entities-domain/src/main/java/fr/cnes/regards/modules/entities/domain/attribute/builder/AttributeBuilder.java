@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute.builder;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -195,7 +196,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    private static UrlAttribute buildUrl(String pName, URL pValue) {
+    public static UrlAttribute buildUrl(String pName, URL pValue) {
         UrlAttribute att = new UrlAttribute();
         att.setName(pName);
         att.setValue(pValue);
