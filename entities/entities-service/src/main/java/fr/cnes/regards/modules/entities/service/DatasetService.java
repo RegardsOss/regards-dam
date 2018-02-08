@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.entities.service;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.google.gson.Gson;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -32,9 +31,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -53,14 +50,12 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -113,27 +108,16 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             // Then PluginConf...
             PluginConfiguration pluginConf = pluginService.getPluginConfiguration(datasourceId);
             // ...then retrieve data model id and set it onto dataset
-            if (pluginConf.getInterfaceNames().contains(IDBDataSourcePlugin.class.getName())) {
-                String modelName = pluginConf.getParameterValue(IDBDataSourcePlugin.MODEL_NAME_PARAM);
-                try {
-                    Model model = modelService.getModelByName(modelName);
-                    dataset.setDataModel(model.getName());
-                } catch (ModuleException e) {
-                    logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
-                    throw new EntityNotFoundException(
-                            "Unable to dejsonify model parameter from PluginConfiguration (" + e.getMessage()
-                                    + ")",
-                            PluginConfiguration.class);
-                }
-            } else if (pluginConf.getInterfaceNames().contains(IAipDataSourcePlugin.class.getName())) {
-                String modelName = pluginConf.getParameterValue(IAipDataSourcePlugin.MODEL_NAME_PARAM);
-                Model dataModel = modelService.getModelByName(modelName);
-                if (dataModel == null) {
-                    throw new EntityNotFoundException(
-                            "Datasource PluginConfiguration refers to an unknown model (name: " + modelName + ")",
-                            PluginConfiguration.class);
-                }
-                dataset.setDataModel(dataModel.getName());
+            String modelName = pluginConf.getStripParameterValue(IDataSourcePlugin.MODEL_NAME_PARAM);
+            try {
+                Model model = modelService.getModelByName(modelName);
+                dataset.setDataModel(model.getName());
+            } catch (ModuleException e) {
+                logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
+                throw new EntityNotFoundException(
+                        "Unable to dejsonify model parameter from PluginConfiguration (" + e.getMessage()
+                                + ")",
+                        PluginConfiguration.class);
             }
         }
         return dataset;
@@ -178,9 +162,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Override
     protected void doCheck(final Dataset entity, final Dataset entityInDB) throws ModuleException {
-        //TODO: Check if this is important - the frontend already provides such modelName nubs
-        //Dataset ds = checkDataSource(entity);
-        checkSubsettingCriterion(entity);
+        Dataset ds = checkDataSource(entity);
+        checkSubsettingCriterion(ds);
         // check for updates on data model or datasource
         // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
         if (entityInDB != null) {
