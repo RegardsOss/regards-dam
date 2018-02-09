@@ -54,9 +54,6 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @Service
 @MultitenantTransactional
 public class DocumentService extends AbstractEntityService<Document> implements IDocumentService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentService.class);
-
     /**
      * Attribute {@link PluginService}
      */
