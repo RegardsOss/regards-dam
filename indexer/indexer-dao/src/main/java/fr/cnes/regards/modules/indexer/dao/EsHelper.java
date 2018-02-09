@@ -12,6 +12,9 @@ public class EsHelper {
 
     private static final MathContext mathContext = new MathContext(PRECISION);
 
+    private EsHelper() {
+    }
+
     /**
      * 3 decimal scaled double operation
      * @param n value to scale
