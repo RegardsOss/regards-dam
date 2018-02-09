@@ -9,10 +9,6 @@ import fr.cnes.regards.framework.gson.annotation.GsonTypeAdapterFactory;
 @GsonTypeAdapterFactory
 public class ModelMappingAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractAttributeMapping> {
 
-    public static final String TYPE_DYNAMIC = "dynamic";
-
-    public static final String TYPE_STATIC = "static";
-
     /**
      * Constructor
      */
