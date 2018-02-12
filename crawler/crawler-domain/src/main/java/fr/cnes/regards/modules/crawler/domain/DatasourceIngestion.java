@@ -48,7 +48,7 @@ public class DatasourceIngestion {
     private OffsetDateTime nextPlannedIngestDate;
 
     /**
-     * Duration from Status.STARTED to Status.FINISHED with second representation format (for esample PT8H6M12.345S --
+     * Duration from Status.STARTED to Status.FINISHED with second representation format (for example PT8H6M12.345S --
      * "8 hours 6 mn 12.345 s"
      */
     @Column(name = "duration", length = 20)
