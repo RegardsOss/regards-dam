@@ -38,4 +38,11 @@ public class StaticAttributeMapping extends AbstractAttributeMapping {
         attributeType = AttributeMappingEnum.STATIC;
     }
 
+    @Override
+    public AttributeType getType() {
+        if (super.type == null) {
+            super.type = getStaticAttributeType(getName());
+        }
+        return super.type;
+    }
 }

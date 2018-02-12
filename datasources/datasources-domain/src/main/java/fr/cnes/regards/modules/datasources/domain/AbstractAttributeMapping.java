@@ -62,22 +62,22 @@ public abstract class AbstractAttributeMapping {
     /**
      * The attribute name in the model
      */
-    private String name;
+    protected String name;
 
     /**
      * The attribute type in the model
      */
-    private AttributeType type;
+    protected AttributeType type;
 
     /**
      * The attribute namespace in the model
      */
-    private String nameSpace = null;
+    protected String nameSpace = null;
 
     /**
      * The attribute name in the data source
      */
-    private String nameDS;
+    protected String nameDS;
 
     protected AttributeMappingEnum attributeType;
 
@@ -86,19 +86,19 @@ public abstract class AbstractAttributeMapping {
 
     /**
      * Constructor with all attributes
-     * @param pName the attribute name in the model
-     * @param pNameSpace the attribute name space in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
+     * @param name the attribute name in the model
+     * @param nameSpace the attribute name space in the model
+     * @param type the attribute type in the model @see {@link AttributeType}
+     * @param mappingDS The attribute name in the data source
      */
-    protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
-        this.name = pName;
-        this.nameSpace = pNameSpace;
-        this.nameDS = pMappingDS;
-        if (pType == null && isMappedToStaticProperty()) {
-            this.type = getStaticAttributeType(pName);
+    protected AbstractAttributeMapping(String name, String nameSpace, AttributeType type, String mappingDS) {
+        this.name = name;
+        this.nameSpace = nameSpace;
+        this.nameDS = mappingDS;
+        if (type == null && isMappedToStaticProperty()) {
+            this.type = getStaticAttributeType(name);
         } else {
-            this.type = pType;
+            this.type = type;
         }
     }
 
@@ -113,7 +113,7 @@ public abstract class AbstractAttributeMapping {
      * <li>{@value #GEOMETRY}
      * @return the {@link AttributeType}
      */
-    private AttributeType getStaticAttributeType(String staticAttrName) {
+    protected AttributeType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
                 return AttributeType.LONG;
@@ -134,32 +134,32 @@ public abstract class AbstractAttributeMapping {
         return name;
     }
 
-    public void setName(String pName) {
-        this.name = pName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public AttributeType getType() {
         return type;
     }
 
-    public void setType(AttributeType pType) {
-        this.type = pType;
+    public void setType(AttributeType type) {
+        this.type = type;
     }
 
     public String getNameSpace() {
         return nameSpace;
     }
 
-    public void setNameSpace(String pNameSpace) {
-        this.nameSpace = pNameSpace;
+    public void setNameSpace(String nameSpace) {
+        this.nameSpace = nameSpace;
     }
 
     public String getNameDS() {
         return nameDS;
     }
 
-    public void setNameDS(String pNameDS) {
-        this.nameDS = pNameDS;
+    public void setNameDS(String nameDS) {
+        this.nameDS = nameDS;
     }
 
     public boolean isPrimaryKey() {
