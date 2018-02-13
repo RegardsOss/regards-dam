@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.indexer.service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -123,5 +124,12 @@ public class SearchService implements ISearchService {
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
             ICriterion crit, String discriminantProperty, String... fileTypes) {
         return repository.computeDataFilesSummary(searchKey, crit, discriminantProperty, fileTypes);
+    }
+
+    @Override
+    public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit, String attName,
+            int maxCount) {
+        SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, crit, attName);
+        return values.stream().limit(maxCount).collect(Collectors.toList());
     }
 }

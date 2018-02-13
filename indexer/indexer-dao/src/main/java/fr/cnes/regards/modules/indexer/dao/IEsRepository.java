@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -348,6 +349,15 @@ public interface IEsRepository {
      * @return the max
      */
     <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion crit, String attName);
+
+    /**
+     * Retrieve unique sorted string attribute values following given request
+     * @param searchKey the search key
+     * @param crit search criterion
+     * @param attName complete string attribute path
+     * @return a soprted set of values
+     */
+    <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit, String attName);
 
     /**
      * Searching first page of elements from index giving page size

@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -88,14 +89,13 @@ public interface ISearchService {
     <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
             ICriterion criterion, Predicate<R> searchResultFilter);
 
-
     /**
      * Searching specified page of elements from index giving page size
      * @param searchKey the search key
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
-     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given
-     * value type</b>
+     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
+     * too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */
@@ -129,4 +129,10 @@ public interface ISearchService {
      */
     <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
             ICriterion crit, String discriminantProperty, String... fileTypes);
+
+    /**
+     * Search for alphabeticly sorted top maxCount values of given attribute following given request
+     */
+    <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+            String attName, int maxCount);
 }

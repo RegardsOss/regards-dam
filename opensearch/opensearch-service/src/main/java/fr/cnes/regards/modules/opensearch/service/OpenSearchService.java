@@ -63,7 +63,7 @@ public class OpenSearchService implements IOpenSearchService {
                 criteria.add(crit);
             }
         }
-        return criteria.isEmpty() ? null : ICriterion.and(criteria);
+        return criteria.isEmpty() ? ICriterion.all() : ICriterion.and(criteria);
     }
 
 }

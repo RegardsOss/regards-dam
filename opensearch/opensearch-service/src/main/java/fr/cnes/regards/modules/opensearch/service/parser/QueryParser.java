@@ -30,6 +30,7 @@ import org.apache.lucene.queryparser.flexible.standard.processors.StandardQueryN
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.builder.RegardsQueryTreeBuilder;
@@ -87,8 +88,8 @@ public class QueryParser extends QueryParserHelper implements IParser {
         String q = parameters.get(QUERY_PARAMETER);
 
         // Check required query parameter
-        if (q == null) {
-            return null;
+        if (Strings.isNullOrEmpty(q)) {
+            return ICriterion.all();
         }
         try {
             return (ICriterion) super.parse(q, DEFAULT_FIELD);
