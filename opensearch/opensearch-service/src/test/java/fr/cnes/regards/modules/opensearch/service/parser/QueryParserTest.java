@@ -97,7 +97,7 @@ public class QueryParserTest {
         parser = new QueryParser(finder);
     }
 
-    @Test(expected = OpenSearchParseException.class)
+    @Test
     @Purpose("Tests empty q")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void emptyQTest() throws OpenSearchParseException {
