@@ -37,7 +37,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +62,7 @@ import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
@@ -157,15 +157,10 @@ public abstract class AbstractDataObjectMapping {
     private String lastUpdateAttributeName = "";
 
     /**
-     * For each attributes of the data source, this map contains an optional internal attribute type
-     */
-    private Map<String, InternalAttributes> mappingInternalAttributes = null;
-
-    /**
      * Get {@link DateAttribute}.
      * @param rs the {@link ResultSet}
      * @param attrName the attribute name
-     *            àparam attrDSName the column name in the external data source
+     * àparam attrDSName the column name in the external data source
      * @param colName the column name in the {@link ResultSet}
      * @return a new {@link DateAttribute}
      * @throws SQLException if an error occurs in the {@link ResultSet}
@@ -250,7 +245,8 @@ public abstract class AbstractDataObjectMapping {
      * @return the {@link DataObject} created
      * @throws SQLException An SQL error occurred
      */
-    protected DataObject processResultSet(ResultSet rset, Model model, String tenant) throws SQLException, DataSourceException {
+    protected DataObject processResultSet(ResultSet rset, Model model, String tenant)
+            throws SQLException, DataSourceException {
         final DataObject data = new DataObject(model, tenant, null);
 
         final Set<AbstractAttribute<?>> attributes = new HashSet<>();
@@ -308,8 +304,7 @@ public abstract class AbstractDataObjectMapping {
     private AbstractAttribute<?> buildAttribute(ResultSet rset, AbstractAttributeMapping attrMapping)
             throws SQLException, DataSourceException {
         AbstractAttribute<?> attr = null;
-        final String colName = extractColumnName(attrMapping.getNameDS(),
-                                                 attrMapping.getName(),
+        final String colName = extractColumnName(attrMapping.getNameDS(), attrMapping.getName(),
                                                  attrMapping.isPrimaryKey());
 
         switch (attrMapping.getType()) {
@@ -318,7 +313,8 @@ public abstract class AbstractDataObjectMapping {
                 try {
                     attr = AttributeBuilder.buildUrl(attrMapping.getName(), new URL(rset.getString(colName)));
                 } catch (MalformedURLException e) {
-                    String message = String.format("Given url into database (column %s) could not be processed as a URL", colName);
+                    String message = String
+                            .format("Given url into database (column %s) could not be processed as a URL", colName);
                     LOG.error(message, e);
                     throw new DataSourceException(message, e);
                 }
@@ -365,14 +361,10 @@ public abstract class AbstractDataObjectMapping {
 
         if (pos > 0) {
             String str = attrDataSourceName.substring(pos + AS.length()).trim();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("the extracted column name is : <" + str + ">");
-            }
+            LOG.debug("the extracted column name is : <{}>", str);
             colName = str;
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("the extracted column name is : <" + attrName + ">");
-            }
+            LOG.debug("the extracted column name is : <{}>", attrName);
             if (isPrimaryKey) {
                 colName = attrDataSourceName;
             } else {
@@ -407,13 +399,29 @@ public abstract class AbstractDataObjectMapping {
             String str = ((StringAttribute) attr).getValue();
             try {
                 DataType type = attrMapping.isRawData() ? DataType.RAWDATA : DataType.THUMBNAIL;
-                DataFile dataFile = new DataFile();
+                Collection<DataFile> dataFiles = dataObject.getFiles().get(type);
+                // When external mapping, only one file per type is authorized so dataFiles is a singleton or empty
+                DataFile dataFile = dataFiles.isEmpty() ? new DataFile() : dataFiles.iterator().next();
                 dataFile.setUri(new URI(str));
                 // No check that uri is truly available
                 dataFile.setOnline(true);
-                dataObject.getFiles().put(type, dataFile);
+                // No need to re-put data file if it already exist
+                if (dataFiles.isEmpty()) {
+                    dataObject.getFiles().put(type, dataFile);
+                }
             } catch (URISyntaxException e) {
                 LOG.error(e.getMessage(), e);
+            }
+        }
+        if (attrMapping.isRawDataSize()) {
+            Long size = ((LongAttribute) attr).getValue();
+            Collection<DataFile> rawDatas = dataObject.getFiles().get(DataType.RAWDATA);
+            // When external mapping, only one file per type is authorized so dataFiles is a singleton or empty
+            DataFile dataFile = rawDatas.isEmpty() ? new DataFile() : rawDatas.iterator().next();
+            dataFile.setSize(size);
+            // No need to re-put data file if it already exist
+            if (rawDatas.isEmpty()) {
+                dataObject.getFiles().put(DataType.RAWDATA, dataFile);
             }
         }
         if (attrMapping.isLastUpdate()) {
@@ -490,14 +498,13 @@ public abstract class AbstractDataObjectMapping {
             return lastUpdateAttributeName;
         }
 
-        for (Map.Entry<String, InternalAttributes> entry : getMappingInternalAttributes().entrySet()) {
-            if (entry.getValue() == InternalAttributes.LAST_UPDATE) {
-                lastUpdateAttributeName = entry.getKey();
-                LOG.debug("Attribute for date comparison found: {}", entry.getKey());
+        for (AbstractAttributeMapping attMapping : attributesMapping) {
+            if (attMapping.isLastUpdate()) {
+                lastUpdateAttributeName = attMapping.getNameDS();
+                LOG.debug("Attribute for date comparison found: {}", lastUpdateAttributeName);
                 break;
             }
         }
-
         return lastUpdateAttributeName;
     }
 
@@ -510,7 +517,6 @@ public abstract class AbstractDataObjectMapping {
         }
 
         attributesMapping.forEach(d -> {
-
             if ((0 > d.getNameDS().toLowerCase().lastIndexOf(AS)) && !d.isPrimaryKey()) {
                 columns.add(d.getNameDS() + BLANK + AS + d.getName());
             } else {
@@ -521,55 +527,5 @@ public abstract class AbstractDataObjectMapping {
                 orderByColumn = d.getNameDS();
             }
         });
-    }
-
-    /**
-     * For each attributes of the mapping, determine if it is an internal attributes.</br>
-     * This initialization is done, only once, before the read of the data.
-     */
-    private void initMappingInternalAttributes() {
-        mappingInternalAttributes = new HashMap<>();
-
-        for (AbstractAttributeMapping attrMapping : attributesMapping) {
-            if (attrMapping.isLabel()) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LABEL);
-            } else if (attrMapping.isRawData()) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.RAW_DATA);
-            } else if (attrMapping.isThumbnail()) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.THUMBNAIL);
-            } else if (attrMapping.isLastUpdate()) {
-                mappingInternalAttributes.put(attrMapping.getNameDS(), InternalAttributes.LAST_UPDATE);
-            }
-        }
-    }
-
-    protected Map<String, InternalAttributes> getMappingInternalAttributes() {
-        if (mappingInternalAttributes == null) {
-            initMappingInternalAttributes();
-        }
-
-        return mappingInternalAttributes;
-    }
-
-    private enum InternalAttributes {
-        /**
-         * Identify attribute for the last update attribute
-         */
-        LAST_UPDATE,
-
-        /**
-         * Identify an attribute for a file as {@link DataType}{@link #RAW_DATA}
-         */
-        RAW_DATA,
-
-        /**
-         * Identify an attribute for a file as {@link DataType}{@link #THUMBNAIL}
-         */
-        THUMBNAIL,
-
-        /**
-         * Identify an attribute for a label attribute
-         */
-        LABEL
     }
 }
