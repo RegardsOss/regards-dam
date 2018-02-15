@@ -46,12 +46,12 @@ public abstract class AbstractAttributeMapping {
     /**
      * Constant used for the raw data attribute
      */
-    public static final String RAW_DATA = "raw data";
+    public static final String RAW_DATA = "rawdata";
 
     /**
      * Constant used for the raw data size attribute
      */
-    public static final String RAW_DATA_SIZE = "raw data size";
+    public static final String RAW_DATA_SIZE = "rawdata_size";
 
     /**
      * Constant used for the thumbnail attribute
