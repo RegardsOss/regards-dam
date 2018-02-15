@@ -84,7 +84,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     private String modelName;
 
     @PluginParameter(name = BINDING_MAP, keylabel = "AIP property path", label = "Attribute path",
-            description = "Binding map betwwen AIP and model ie property chain from AIP format and its associated property chain from model")
+            description = "Binding map between AIP and model ie property chain from AIP format and its associated property chain from model")
     private Map<String, String> bindingMap;
 
     @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
