@@ -23,7 +23,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * This class is used to map a data source attribute to an attribute of a {@link Model}
- *
  * @author Christophe Mertz
  * @author oroussel
  */
@@ -47,10 +46,15 @@ public abstract class AbstractAttributeMapping {
     /**
      * Constant used for the raw data attribute
      */
-    public static final String RAW_DATA = "download";
+    public static final String RAW_DATA = "raw data";
 
     /**
-     * Constant used for the thumbnail attribute 
+     * Constant used for the raw data size attribute
+     */
+    public static final String RAW_DATA_SIZE = "raw data size";
+
+    /**
+     * Constant used for the thumbnail attribute
      */
     public static final String THUMBNAIL = "thumbnail";
 
@@ -109,6 +113,7 @@ public abstract class AbstractAttributeMapping {
      * <li>{@value #LAST_UPDATE}
      * <li>{@value #LABEL}
      * <li>{@value #RAW_DATA}
+     *<li>{@value #RAW_DATA_SIZE}
      * <li>{@value #THUMBNAIL}
      * <li>{@value #GEOMETRY}
      * @return the {@link AttributeType}
@@ -116,6 +121,7 @@ public abstract class AbstractAttributeMapping {
     protected AttributeType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
+            case RAW_DATA_SIZE:
                 return AttributeType.LONG;
             case LABEL:
             case RAW_DATA:
@@ -178,6 +184,10 @@ public abstract class AbstractAttributeMapping {
         return name.equals(RAW_DATA);
     }
 
+    public boolean isRawDataSize() {
+        return name.equals(RAW_DATA_SIZE);
+    }
+
     public boolean isThumbnail() {
         return name.equals(THUMBNAIL);
     }
@@ -187,6 +197,7 @@ public abstract class AbstractAttributeMapping {
     }
 
     public final boolean isMappedToStaticProperty() {
-        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() || isThumbnail() || isGeometry();
+        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() || isRawDataSize() || isThumbnail()
+                || isGeometry();
     }
 }
