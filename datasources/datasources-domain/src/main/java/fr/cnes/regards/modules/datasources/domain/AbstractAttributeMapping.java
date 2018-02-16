@@ -51,7 +51,7 @@ public abstract class AbstractAttributeMapping {
     /**
      * Constant used for the raw data size attribute
      */
-    public static final String RAW_DATA_SIZE = "rawdata_size";
+/*    public static final String RAW_DATA_SIZE = "rawdata_size";*/
 
     /**
      * Constant used for the thumbnail attribute
@@ -113,7 +113,6 @@ public abstract class AbstractAttributeMapping {
      * <li>{@value #LAST_UPDATE}
      * <li>{@value #LABEL}
      * <li>{@value #RAW_DATA}
-     *<li>{@value #RAW_DATA_SIZE}
      * <li>{@value #THUMBNAIL}
      * <li>{@value #GEOMETRY}
      * @return the {@link AttributeType}
@@ -121,7 +120,7 @@ public abstract class AbstractAttributeMapping {
     protected AttributeType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
-            case RAW_DATA_SIZE:
+//            case RAW_DATA_SIZE:
                 return AttributeType.LONG;
             case LABEL:
             case RAW_DATA:
@@ -184,9 +183,9 @@ public abstract class AbstractAttributeMapping {
         return name.equals(RAW_DATA);
     }
 
-    public boolean isRawDataSize() {
+/*    public boolean isRawDataSize() {
         return name.equals(RAW_DATA_SIZE);
-    }
+    }*/
 
     public boolean isThumbnail() {
         return name.equals(THUMBNAIL);
@@ -197,7 +196,7 @@ public abstract class AbstractAttributeMapping {
     }
 
     public final boolean isMappedToStaticProperty() {
-        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() || isRawDataSize() || isThumbnail()
+        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() /*|| isRawDataSize()*/ || isThumbnail()
                 || isGeometry();
     }
 }

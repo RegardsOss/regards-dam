@@ -62,7 +62,6 @@ import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
-import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
@@ -413,7 +412,7 @@ public abstract class AbstractDataObjectMapping {
                 LOG.error(e.getMessage(), e);
             }
         }
-        if (attrMapping.isRawDataSize()) {
+/*        if (attrMapping.isRawDataSize()) {
             Long size = ((LongAttribute) attr).getValue();
             Collection<DataFile> rawDatas = dataObject.getFiles().get(DataType.RAWDATA);
             // When external mapping, only one file per type is authorized so dataFiles is a singleton or empty
@@ -423,7 +422,7 @@ public abstract class AbstractDataObjectMapping {
             if (rawDatas.isEmpty()) {
                 dataObject.getFiles().put(DataType.RAWDATA, dataFile);
             }
-        }
+        }*/
         if (attrMapping.isLastUpdate()) {
             dataObject.setLastUpdate((OffsetDateTime) attr.getValue());
         }
