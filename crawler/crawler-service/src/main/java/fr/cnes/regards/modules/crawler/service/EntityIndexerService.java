@@ -21,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
@@ -32,6 +34,9 @@ import org.springframework.validation.Validator;
 
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.amqp.ISubscriber;
+import fr.cnes.regards.framework.amqp.domain.IHandler;
+import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -39,6 +44,7 @@ import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.role.DefaultRole;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
@@ -62,10 +68,11 @@ import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.notification.domain.NotificationType;
 import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
+import fr.cnes.regards.modules.storage.domain.AIPState;
+import fr.cnes.regards.modules.storage.domain.event.AIPEvent;
 
 /**
  * @author oroussel
- * @author Léo Mieulet
  */
 @Service
 public class EntityIndexerService implements IEntityIndexerService {
@@ -90,6 +97,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private IPublisher publisher;
 
+    @Autowired
+    private ISubscriber subscriber;
+
     @PersistenceContext
     private EntityManager em;
 
@@ -111,6 +121,11 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private INotificationClient notifClient;
+
+    @EventListener
+    public void handleApplicationReady(ApplicationReadyEvent event) {
+        subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
+    }
 
     /**
      * Load given entity from database and update Elasticsearch
@@ -487,7 +502,27 @@ public class EntityIndexerService implements IEntityIndexerService {
                                                                .toArray(n -> new UniformResourceName[n])));
         }
         return savedCount;
-
     }
 
+    @Override
+    public boolean deleteDataObject(String tenant, String ipId) {
+        return esRepos.delete(tenant, EntityType.DATA.toString(), ipId);
+    }
+
+    private class AIPEventHandler implements IHandler<AIPEvent> {
+        @Override
+        public void handle(TenantWrapper<AIPEvent> wrapper) {
+                AIPEvent event = wrapper.getContent();
+                if (event.getAipState() == AIPState.DELETED) {
+                    runtimeTenantResolver.forceTenant(wrapper.getTenant());
+                    try {
+                        deleteDataObject(wrapper.getTenant(), event.getIpId());
+                    } catch (RsRuntimeException e) {
+                        String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
+                        LOGGER.error(msg, e);
+                    }
+
+                }
+        }
+    }
 }
