@@ -68,9 +68,13 @@ public interface IDataSourcePlugin {
     /**
      * Interval mapping convention suffix
      */
-    String LOWER_BOUND_SUFFIX = DOT + "lowerBound";
+    String LOWER_BOUND = "lowerBound";
 
-    String UPPER_BOUND_SUFFIX = DOT + "upperBound";
+    String UPPER_BOUND = "upperBound";
+
+    String LOWER_BOUND_SUFFIX = DOT + LOWER_BOUND;
+
+    String UPPER_BOUND_SUFFIX = DOT + UPPER_BOUND;
 
     /**
      * The refresh rate of the data source

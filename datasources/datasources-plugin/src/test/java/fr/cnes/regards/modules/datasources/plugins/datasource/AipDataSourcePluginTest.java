@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Lists;
 
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
@@ -62,10 +64,11 @@ import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPBuilder;
 
@@ -94,9 +97,6 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
 
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
-
-    @Autowired
-    private IAipClient aipClient;
 
     @Before
     public void setUp() throws DataSourcesPluginException, SQLException, ModuleException {
@@ -162,6 +162,19 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
             builder.addDescriptiveInformation("ALT_MAX", 1500 + i);
             builder.addDescriptiveInformation("HISTORY", new String[] { "H1", "H2", "H3" });
             builder.addDescriptiveInformation("POUET", "POUET");
+
+            Map<String, String> dateBounds = new HashMap<>();
+            dateBounds.put(IDataSourcePlugin.LOWER_BOUND, OffsetDateTime.now().atZoneSameInstant(ZoneOffset.UTC)
+                    .format(OffsetDateTimeAdapter.ISO_DATE_TIME_UTC));
+            dateBounds.put(IDataSourcePlugin.UPPER_BOUND, OffsetDateTime.now().atZoneSameInstant(ZoneOffset.UTC)
+                    .format(OffsetDateTimeAdapter.ISO_DATE_TIME_UTC));
+            builder.addDescriptiveInformation("range", dateBounds);
+
+            Map<String, Integer> intBounds = new HashMap<>();
+            intBounds.put("ilow", 100);
+            intBounds.put("iup", null);
+            builder.addDescriptiveInformation("intrange", intBounds);
+
             aips.add(builder.build());
         }
         return aips;
@@ -177,6 +190,19 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         map.put("properties.ALTITUDE.MAX", "properties.descriptiveInformation.ALT_MAX");
         map.put("properties.ALTITUDE.MIN", "properties.descriptiveInformation.ALT_MIN");
         map.put("properties.history", "properties.descriptiveInformation.HISTORY");
+
+        // Date interval
+        map.put("properties.DATE_INTERVAL" + IDataSourcePlugin.LOWER_BOUND_SUFFIX,
+                "properties.descriptiveInformation.range" + IDataSourcePlugin.LOWER_BOUND_SUFFIX);
+        map.put("properties.DATE_INTERVAL" + IDataSourcePlugin.UPPER_BOUND_SUFFIX,
+                "properties.descriptiveInformation.range" + IDataSourcePlugin.UPPER_BOUND_SUFFIX);
+
+        // Integer open interval
+        map.put("properties.INT_INTERVAL" + IDataSourcePlugin.LOWER_BOUND_SUFFIX,
+                "properties.descriptiveInformation.intrange.ilow");
+        map.put("properties.INT_INTERVAL" + IDataSourcePlugin.UPPER_BOUND_SUFFIX,
+                "properties.descriptiveInformation.intrange.iup");
+
         // FIXME
         // map.put("properties.history", "properties.descriptiveInformation.NIMP");
         return map;
@@ -201,6 +227,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
                                               "H1") > -1);
         Assert.assertTrue(Arrays.binarySearch(((StringArrayAttribute) do1.getProperty("history")).getValue(),
                                               "H2") > -1);
+        Assert.assertTrue(do1.getProperty("DATE_INTERVAL") instanceof DateIntervalAttribute);
+        Assert.assertTrue(do1.getProperty("INT_INTERVAL") instanceof IntegerIntervalAttribute);
         Assert.assertNotNull(do1.getFiles());
         Assert.assertEquals(1, do1.getFiles().size());
         Assert.assertTrue(do1.getFiles().containsKey(DataType.RAWDATA));

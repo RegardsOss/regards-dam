@@ -153,7 +153,9 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                         // Add lower bound value at index 0
                         modelBindingMap.get(modelKey).add(0, entry.getValue());
                     } else {
-                        modelBindingMap.put(modelKey, Arrays.asList(entry.getValue()));
+                        List<String> values = new ArrayList<>();
+                        values.add(entry.getValue());
+                        modelBindingMap.put(modelKey, values);
                     }
                 } else if (doPropertyPath.endsWith(UPPER_BOUND_SUFFIX)) {
                     // - interval upper bound
@@ -163,7 +165,9 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                         // Add upper bound value at index 1
                         modelBindingMap.get(modelKey).add(entry.getValue());
                     } else {
-                        modelBindingMap.put(modelKey, Arrays.asList(entry.getValue()));
+                        List<String> values = new ArrayList<>();
+                        values.add(entry.getValue());
+                        modelBindingMap.put(modelKey, values);
                     }
                 } else {
                     // - others : propagate properties
