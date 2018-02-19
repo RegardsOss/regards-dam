@@ -45,6 +45,16 @@
         <name>SPEED</name>
         <type>DOUBLE</type>
     </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>DATE_INTERVAL</name>
+    	<type>DATE_INTERVAL</type>
+    </attribute>
+    <attribute>
+    	<label>forTests</label>
+    	<name>INT_INTERVAL</name>
+    	<type>INTEGER_INTERVAL</type>
+    </attribute>
     <fragment>
         <name>ALTITUDE</name>
         <description>Altitude fragment</description>

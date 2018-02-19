@@ -60,7 +60,8 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
 
     @Override
     public String toString() {
-        return name + " : " + value.toString();
+        String display = value == null ? "null" : value.toString();
+        return name + " : " + display;
     }
 
     public abstract boolean represents(AttributeType pAttributeType);
