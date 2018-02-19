@@ -70,6 +70,14 @@ public interface IEntityIndexerService {
     int mergeDataObjects(String tenant, String datasourceId, OffsetDateTime now, List<DataObject> objects);
 
     /**
+     * Delete given data object from Elasticsearch
+     * @param tenant concerned tenant
+     * @param ipId id of Data object
+     * @return wether or not the data object has been deleted
+     */
+    boolean deleteDataObject(String tenant, String ipId);
+
+    /**
      * Create a notification for admin
      * @param tenant concerned tenant
      * @param buf Buffer containing message
