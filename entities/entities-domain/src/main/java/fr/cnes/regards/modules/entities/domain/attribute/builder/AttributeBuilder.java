@@ -18,13 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.domain.attribute.builder;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -60,7 +60,7 @@ public final class AttributeBuilder {
 
     /**
      * Method allowing to get an AbstractAttribute according to the AttributeType, for the given name and value. The
-     * type of pValue is expected to be coherant with the AttributeType. In particular, for intervals we are expecting
+     * type of pValue is expected to be coherent with the AttributeType. In particular, for intervals we are expecting
      * {@link Range} and as dates we are expecting {@link OffsetDateTime}
      * @param <U> type of the value
      * @param <T> type of the attribute generated
@@ -82,9 +82,8 @@ public final class AttributeBuilder {
                 return (T) buildBoolean(name, (Boolean) value);
             case DATE_ARRAY:
                 if (value instanceof String[]) {
-                    return (T) buildDateArray(name,
-                                              Arrays.stream((String[]) value).map(v -> OffsetDateTimeAdapter.parse(v))
-                                                      .toArray(size -> new OffsetDateTime[size]));
+                    return (T) buildDateArray(name, Arrays.stream((String[]) value)
+                            .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(size -> new OffsetDateTime[size]));
                 }
                 return (T) buildDateArray(name, (OffsetDateTime[]) value);
             case DATE_INTERVAL:
@@ -120,12 +119,80 @@ public final class AttributeBuilder {
             case URL:
                 return (T) buildUrl(name, (URL) value);
             default:
-                throw new IllegalArgumentException(
-                        attributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
-                                + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(attributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
         }
     }
 
+    /**
+     * Method allowing to get an AbstractAttribute for an <b>interval</b> AttributeType, for the given name and
+     * values. The type of values is expected to be coherent with the AttributeType :
+     * <ul>
+     * <li>we are expecting an ISO 8601 string for dates</li>
+     * <li>a number for double, integer and long</li>
+     * </ul>
+     * @param <U> type of the value
+     * @param <T> type of the attribute generated
+     * @param attributeType Type of the attribute created
+     * @param name name of the attribute to be created
+     * @param lowerBound value of the attribute to be created
+     * @param upperBound value of the attribute to be created
+     * @return a newly created AbstractAttribute according the given AttributeType, name and value
+     */
+    @SuppressWarnings("unchecked")
+    public static <U, T extends AbstractAttribute<U>> T forType(AttributeType attributeType, String name, U lowerBound,
+            U upperBound) {
+
+        if (!attributeType.isInterval()) {
+            throw new IllegalArgumentException(attributeType + " with name " + name + " is not an interval type");
+        }
+
+        if ((lowerBound == null) && (upperBound == null)) {
+            return forTypeWithNullValue(attributeType, name);
+        }
+
+        switch (attributeType) {
+            case DATE_INTERVAL:
+                OffsetDateTime lowerDateTime = lowerBound == null ? null
+                        : OffsetDateTimeAdapter.parse((String) lowerBound);
+                OffsetDateTime upperDateTime = upperBound == null ? null
+                        : OffsetDateTimeAdapter.parse((String) upperBound);
+                return (T) buildDateInterval(name, buildRange(lowerDateTime, upperDateTime));
+            case DOUBLE_INTERVAL:
+                Double lowerDouble = lowerBound == null ? null : ((Number) lowerBound).doubleValue();
+                Double upperDouble = upperBound == null ? null : ((Number) upperBound).doubleValue();
+                return (T) buildDoubleInterval(name, buildRange(lowerDouble, upperDouble));
+            case INTEGER_INTERVAL:
+                Integer lowerInteger = lowerBound == null ? null : ((Number) lowerBound).intValue();
+                Integer upperInteger = upperBound == null ? null : ((Number) upperBound).intValue();
+                return (T) buildIntegerInterval(name, buildRange(lowerInteger, upperInteger));
+            case LONG_INTERVAL:
+                Long lowerLong = lowerBound == null ? null : ((Number) lowerBound).longValue();
+                Long upperLong = upperBound == null ? null : ((Number) upperBound).longValue();
+                return (T) buildLongInterval(name, buildRange(lowerLong, upperLong));
+            default:
+                throw new IllegalArgumentException(attributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+        }
+    }
+
+    /**
+     * Build a range considering null value for one of the bound
+     * @param lowerBound lower bound
+     * @param upperBound upper bound
+     * @return a range representation
+     */
+    private static <U extends Comparable<?>> Range<U> buildRange(U lowerBound, U upperBound) {
+        if (lowerBound == null) {
+            return Range.atMost(upperBound);
+        } else if (upperBound == null) {
+            return Range.atLeast(lowerBound);
+        } else {
+            return Range.closed(lowerBound, upperBound);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public static <U, T extends AbstractAttribute<U>> T forTypeWithNullValue(AttributeType pAttributeType,
             String pName) {
         switch (pAttributeType) {
@@ -162,9 +229,8 @@ public final class AttributeBuilder {
             case URL:
                 return (T) buildUrl(pName, null);
             default:
-                throw new IllegalArgumentException(
-                        pAttributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
-                                + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(pAttributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
         }
     }
 

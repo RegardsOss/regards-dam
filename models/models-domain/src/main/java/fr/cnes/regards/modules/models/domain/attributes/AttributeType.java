@@ -28,6 +28,88 @@ public enum AttributeType {
     /**
      * Possible attribute type
      */
-    STRING, INTEGER, DOUBLE, DATE_ISO8601, URL, BOOLEAN, STRING_ARRAY, INTEGER_ARRAY, DOUBLE_ARRAY, DATE_ARRAY, //
-    INTEGER_INTERVAL, DOUBLE_INTERVAL, DATE_INTERVAL, LONG, LONG_INTERVAL, LONG_ARRAY
+    STRING,
+    INTEGER,
+    DOUBLE,
+    DATE_ISO8601,
+    URL,
+    BOOLEAN,
+    STRING_ARRAY {
+
+        @Override
+        public boolean isArray() {
+            return true;
+        }
+    },
+    INTEGER_ARRAY {
+
+        @Override
+        public boolean isArray() {
+            return true;
+        }
+    },
+    DOUBLE_ARRAY {
+
+        @Override
+        public boolean isArray() {
+            return true;
+        }
+    },
+    DATE_ARRAY {
+
+        @Override
+        public boolean isArray() {
+            return true;
+        }
+    }, //
+    INTEGER_INTERVAL {
+
+        @Override
+        public boolean isInterval() {
+            return true;
+        }
+    },
+    DOUBLE_INTERVAL {
+
+        @Override
+        public boolean isInterval() {
+            return true;
+        }
+    },
+    DATE_INTERVAL {
+
+        @Override
+        public boolean isInterval() {
+            return true;
+        }
+    },
+    LONG,
+    LONG_INTERVAL {
+
+        @Override
+        public boolean isInterval() {
+            return true;
+        }
+    },
+    LONG_ARRAY {
+
+        @Override
+        public boolean isArray() {
+            return true;
+        }
+    };
+
+    /**
+     * Tell whether or not specified type correspond to an interval
+     */
+    public boolean isInterval() {
+        return false;
+    }
+
+    /**
+     * Tell whether or not specified type correspond to an array
+     */
+    public boolean isArray() {
+        return false;
+    }
 }

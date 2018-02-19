@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -83,8 +84,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
     private String modelName;
 
-    @PluginParameter(name = BINDING_MAP, keylabel = "AIP property path", label = "Attribute path",
-            description = "Binding map between AIP and model ie property chain from AIP format and its associated property chain from model")
+    @PluginParameter(name = BINDING_MAP, keylabel = "Model property path", label = "AIP property path",
+            description = "Binding map between model and AIP (i.e. Property chain from model and its associated property chain from AIP format")
     private Map<String, String> bindingMap;
 
     @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
@@ -103,9 +104,16 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     private Model model;
 
     /**
-     * Association table between json path property and its type from model
+     * Association table between JSON path property and its type from model
      */
     private final Map<String, AttributeType> modelMappingMap = new HashMap<>();
+
+    /**
+     * Association table between JSON path property and its mapping values.<br/>
+     * In general, single value is mapped.<br/>
+     * For interval, two values has to be mapped.
+     */
+    private final Map<String, List<String>> modelBindingMap = new HashMap<>();
 
     /**
      * Ingestion refresh rate in seconds
@@ -131,22 +139,77 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             modelMappingMap.put(assoc.getAttribute().buildJsonPath(StaticProperties.PROPERTIES),
                                 assoc.getAttribute().getType());
         }
-        // All bindingMap values should be json path properties from model so each of them starting with "properties."
+
+        // Build binding map considering interval double mapping
+        for (Map.Entry<String, String> entry : bindingMap.entrySet()) {
+            if (entry.getKey().startsWith(PROPERTY_PREFIX)) {
+                String doPropertyPath = entry.getKey();
+                // Manage dynamic properties
+                if (doPropertyPath.endsWith(LOWER_BOUND_SUFFIX)) {
+                    // - interval lower bound
+                    String modelKey = entry.getKey().substring(0,
+                                                               doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
+                    if (modelBindingMap.containsKey(modelKey)) {
+                        // Add lower bound value at index 0
+                        modelBindingMap.get(modelKey).add(0, entry.getValue());
+                    } else {
+                        modelBindingMap.put(modelKey, Arrays.asList(entry.getValue()));
+                    }
+                } else if (doPropertyPath.endsWith(UPPER_BOUND_SUFFIX)) {
+                    // - interval upper bound
+                    String modelKey = entry.getKey().substring(0,
+                                                               doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
+                    if (modelBindingMap.containsKey(modelKey)) {
+                        // Add upper bound value at index 1
+                        modelBindingMap.get(modelKey).add(entry.getValue());
+                    } else {
+                        modelBindingMap.put(modelKey, Arrays.asList(entry.getValue()));
+                    }
+                } else {
+                    // - others : propagate properties
+                    modelBindingMap.put(doPropertyPath, Arrays.asList(entry.getValue()));
+                }
+            } else {
+                // Propagate properties
+                modelBindingMap.put(entry.getKey(), Arrays.asList(entry.getValue()));
+            }
+        }
+
+        // All bindingMap values should be JSON path properties from model so each of them starting with PROPERTY_PREFIX
         // must exist as a value into modelMappingMap
-        Set<String> notInModelProperties = bindingMap.values().stream().filter(name -> name.startsWith("properties."))
-                .filter(name -> !modelMappingMap.containsKey(name)).collect(Collectors.toSet());
+        Set<String> notInModelProperties = modelBindingMap.keySet().stream()
+                .filter(name -> name.startsWith(PROPERTY_PREFIX)).filter(name -> !modelMappingMap.containsKey(name))
+                .collect(Collectors.toSet());
         if (!notInModelProperties.isEmpty()) {
             throw new ModuleException(
                     "Following properties don't exist into model : " + Joiner.on(", ").join(notInModelProperties));
         }
         DataObject forIntrospection = new DataObject();
         PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
-        Set<String> notInModelStaticProperties = bindingMap.values().stream()
-                .filter(name -> !name.startsWith("properties."))
+        Set<String> notInModelStaticProperties = modelBindingMap.keySet().stream()
+                .filter(name -> !name.startsWith(PROPERTY_PREFIX))
                 .filter(name -> !propertyUtilsBean.isWriteable(forIntrospection, name)).collect(Collectors.toSet());
         if (!notInModelStaticProperties.isEmpty()) {
             throw new ModuleException(
                     "Following static properties don't exist : " + Joiner.on(", ").join(notInModelProperties));
+        }
+
+        // Check number of values mapped for each type
+        for (Map.Entry<String, List<String>> entry : modelBindingMap.entrySet()) {
+            if (entry.getKey().startsWith(PROPERTY_PREFIX)) {
+                AttributeType attributeType = modelMappingMap.get(entry.getKey());
+                if (attributeType.isInterval()) {
+                    if (entry.getValue().size() != 2) {
+                        throw new ModuleException(attributeType + " properties " + entry.getKey()
+                                + " has to be mapped to exactly 2 values");
+                    }
+                } else {
+                    if (entry.getValue().size() != 1) {
+                        throw new ModuleException(attributeType + " properties " + entry.getKey()
+                                + " has to be mapped to a single value");
+                    }
+                }
+            }
         }
     }
 
@@ -211,23 +274,33 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
         // Binded properties
         PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
-        for (Map.Entry<String, String> entry : bindingMap.entrySet()) {
-            String aipPropertyPath = entry.getKey();
-            String doPropertyPath = entry.getValue();
-
-            // Value from AIP
-            Object value = propertyUtilsBean.getNestedProperty(aip, aipPropertyPath);
+        for (Map.Entry<String, List<String>> entry : modelBindingMap.entrySet()) {
+            String doPropertyPath = entry.getKey();
 
             // Does property refers to a dynamic ("properties....") or static property ?
-            if (!doPropertyPath.startsWith("properties.")) {
+            if (!doPropertyPath.startsWith(PROPERTY_PREFIX)) {
+                // Value from AIP
+                Object value = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(0));
                 // Static, use propertyUtilsBean
                 propertyUtilsBean.setNestedProperty(obj, doPropertyPath, value);
             } else { // Dynamic
                 String dynamicPropertyPath = doPropertyPath.substring(doPropertyPath.indexOf('.') + 1);
                 // Property name in all cases (fragment or not)
                 String propName = dynamicPropertyPath.substring(dynamicPropertyPath.indexOf('.') + 1);
-                AbstractAttribute<?> propAtt = AttributeBuilder.forType(modelMappingMap.get(doPropertyPath), propName,
-                                                                        value);
+                // Retrieve attribute type to manage interval specific value
+                AttributeType attributeType = modelMappingMap.get(doPropertyPath);
+                AbstractAttribute<?> propAtt;
+                if (attributeType.isInterval()) {
+                    // Values from AIP
+                    Object lowerBound = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(0));
+                    Object upperBound = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(1));
+                    propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
+                } else {
+                    // Value from AIP
+                    Object value = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(0));
+                    propAtt = AttributeBuilder.forType(attributeType, propName, value);
+                }
+
                 // If it contains another '.', there is a fragment
                 if (dynamicPropertyPath.contains(".")) {
                     String fragmentName = dynamicPropertyPath.substring(0, dynamicPropertyPath.indexOf('.'));

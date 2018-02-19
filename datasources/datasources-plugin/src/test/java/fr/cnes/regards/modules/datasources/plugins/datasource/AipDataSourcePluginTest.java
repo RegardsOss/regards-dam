@@ -34,7 +34,6 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +74,7 @@ import fr.cnes.regards.modules.storage.domain.AIPBuilder;
  */
 @ContextConfiguration(classes = { AipDataSourceConfiguration.class })
 @TestPropertySource("classpath:aip-datasource-test.properties")
-@Ignore("Fails sometimes on Jenkins i don't why and i am fed up with")
+// @Ignore("Fails sometimes on Jenkins i don't why and i am fed up with")
 public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourceFromSingleTablePluginTest.class);
@@ -173,12 +172,13 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
      */
     private Map<String, String> createBindingMap() {
         HashMap<String, String> map = new HashMap<>();
-        map.put("properties.descriptiveInformation.label", "label");
-        map.put("properties.descriptiveInformation.START_DATE", "properties.START_DATE");
-        map.put("properties.descriptiveInformation.ALT_MAX", "properties.ALTITUDE.MAX");
-        map.put("properties.descriptiveInformation.ALT_MIN", "properties.ALTITUDE.MIN");
-        map.put("properties.descriptiveInformation.HISTORY", "properties.history");
-        map.put("properties.descriptiveInformation.NIMP", "properties.history");
+        map.put("label", "properties.descriptiveInformation.label");
+        map.put("properties.START_DATE", "properties.descriptiveInformation.START_DATE");
+        map.put("properties.ALTITUDE.MAX", "properties.descriptiveInformation.ALT_MAX");
+        map.put("properties.ALTITUDE.MIN", "properties.descriptiveInformation.ALT_MIN");
+        map.put("properties.history", "properties.descriptiveInformation.HISTORY");
+        // FIXME
+        // map.put("properties.history", "properties.descriptiveInformation.NIMP");
         return map;
     }
 
