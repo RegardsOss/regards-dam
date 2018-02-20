@@ -8,7 +8,9 @@ create table t_test_plugin_data_source (
     timestampwithtimezone timestamp,
     timestampwithouttimezone timestamp,
     timewithouttimezone time,
-    update boolean
+    update boolean,
+    dateStr varchar(255),
+    url text
 );
 create index index_test on t_test_plugin_data_source (altitude);
 create sequence seq_test_plugin start 1 increment 50;

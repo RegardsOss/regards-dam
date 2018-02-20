@@ -81,8 +81,14 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(AipDataSourcePlugin.class);
 
+    public static final String SUBSETTING_TAGS = "SUBSETTING_TAGS";
+
     @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
     private String modelName;
+
+    @PluginParameter(name = SUBSETTING_TAGS, label = "Subsetting tags", optional = true,
+            description = "The plugin will fetch data storage to find AIPs tagged with these specified tags to obtain an AIP subset. If no tag is specified, plugin will fetch all the available AIPs.")
+    private Set<String> subsettingTags;
 
     @PluginParameter(name = BINDING_MAP, keylabel = "Model property path", label = "AIP property path",
             description = "Binding map between model and AIP (i.e. Property chain from model and its associated property chain from AIP format")
@@ -226,8 +232,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
         FeignSecurityManager.asSystem();
         ResponseEntity<PagedResources<AipDataFiles>> responseEntity = aipClient
-                .retrieveAipDataFiles(AIPState.STORED, Collections.singleton(this.model.getName()), date,
-                                      pageable.getPageNumber(), pageable.getPageSize());
+                .retrieveAipDataFiles(AIPState.STORED, subsettingTags, date, pageable.getPageNumber(),
+                                      pageable.getPageSize());
         FeignSecurityManager.reset();
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             List<DataObject> list = new ArrayList<>();

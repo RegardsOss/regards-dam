@@ -115,6 +115,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         // Instantiate the data source plugin
         List<PluginParameter> parameters;
         parameters = PluginParametersFactory.build().addParameter(AipDataSourcePlugin.BINDING_MAP, createBindingMap())
+                .addParameter(AipDataSourcePlugin.SUBSETTING_TAGS, Arrays.asList(MODEL_NAME))
                 .addParameter(AipDataSourcePlugin.MODEL_NAME_PARAM, MODEL_NAME)
                 .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800)
                 .addParameter(IDataSourcePlugin.TAGS, Lists.newArrayList("TOTO", "TITI")).getParameters();
