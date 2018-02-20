@@ -295,7 +295,10 @@ public class CollectionController implements IResourceController<Collection> {
         final Resource<Collection> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "retrieveCollection", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "retrieveCollections", LinkRels.LIST);
+        resourceService.addLink(resource, this.getClass(), "retrieveCollections", LinkRels.LIST,
+                                MethodParamFactory.build(String.class, pElement.getLabel()),
+                                MethodParamFactory.build(Pageable.class),
+                                MethodParamFactory.build(PagedResourcesAssembler.class));
         resourceService.addLink(resource, this.getClass(), "deleteCollection", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateCollection", LinkRels.UPDATE,
