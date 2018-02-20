@@ -37,6 +37,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.event.PluginConfEvent;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
@@ -256,7 +257,15 @@ public class IngesterService
      * Create a task to launch datasource data objects deletion later (use a thread pool of size 1)
      */
     public void planDatasourceDataObjectsDeletion(String tenant, Long dataSourceId) {
-        threadPoolExecutor.submit(() -> esRepos.deleteByQuery(tenant, ICriterion.eq("dataSourceId", dataSourceId)));
+        threadPoolExecutor.submit(() -> {
+            try {
+                LOGGER.info("Removing all data objects associated to data source {}...", dataSourceId);
+                long deletedCount = esRepos.deleteByQuery(tenant, ICriterion.eq("dataSourceId", dataSourceId));
+                LOGGER.info("...{} data objects removed.", deletedCount);
+            } catch (RsRuntimeException e) {
+                LOGGER.error("...Cannot remove data objects associated to data source", e);
+            }
+        });
     }
 
     /**
