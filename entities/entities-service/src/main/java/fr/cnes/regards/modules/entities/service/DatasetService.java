@@ -18,6 +18,18 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
+import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriUtils;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -50,16 +62,6 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriUtils;
 
 /**
  * Specific EntityService for Datasets
@@ -115,9 +117,8 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             } catch (ModuleException e) {
                 logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
                 throw new EntityNotFoundException(
-                        "Unable to dejsonify model parameter from PluginConfiguration (" + e.getMessage()
-                                + ")",
-                        PluginConfiguration.class);
+                        String.format("Unable to dejsonify model parameter from PluginConfiguration (%s)",
+                                      e.getMessage()), PluginConfiguration.class);
             }
         }
         return dataset;
@@ -157,7 +158,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
         return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
-                modelAttributeService);
+                                              modelAttributeService);
     }
 
     @Override
@@ -224,5 +225,4 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return attModelPage;
     }
-
 }

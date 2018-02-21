@@ -81,7 +81,6 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find a dataset by its ip id with the description file loaded
-     * @param datasetIpId
      * @return the dataset with the description file loaded or null if none were found
      */
     @Query("from Dataset ds left join fetch ds.descriptionFile where ds.ipId=:ipId")
@@ -94,5 +93,4 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelId(Set<Long> pModelIds);
-
 }

@@ -39,6 +39,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
@@ -134,8 +135,9 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pluginConfId}")
-    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId) throws ModuleException {
-        dataSourceService.deleteDataSouce(pluginConfId);
+    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId) throws
+            AssociatedDatasetExistsException, ModuleException {
+        dataSourceService.deleteDataSource(pluginConfId);
         return ResponseEntity.noContent().build();
     }
 

@@ -26,6 +26,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 public class AssociatedDatasetExistsException extends ModuleException {
 
     public AssociatedDatasetExistsException() {
-        super("ASSOCIATED_DATASET_EXISTS");
+        super("Associated dataset(s) still exist, please remove it(them) first");
     }
 }

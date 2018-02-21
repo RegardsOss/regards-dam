@@ -26,6 +26,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 public class AssociatedAccessRightExistsException extends ModuleException {
 
     public AssociatedAccessRightExistsException() {
-        super("ASSOCIATED_ACCESS_RIGHT_EXISTS");
+        super("Associated access rights still exist, please remove them first");
     }
 }
