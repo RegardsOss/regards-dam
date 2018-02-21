@@ -167,7 +167,7 @@ public class AccessRightController implements IResourceController<AccessRight> {
     @ResourceAccess(description = "check if an user has access to a dataset")
     public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(@RequestParam(name = "dataset") UniformResourceName datasetIpId,
                                                                   @RequestParam(name = "user") String userEMail) throws EntityNotFoundException {
-        Boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
+        boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
         return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
     }
 
