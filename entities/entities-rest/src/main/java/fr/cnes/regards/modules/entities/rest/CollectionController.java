@@ -18,14 +18,18 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
@@ -43,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.net.HttpHeaders;
+
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -95,12 +100,12 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "endpoint to retrieve the list fo all collections")
-    public HttpEntity<List<Resource<Collection>>> retrieveCollections() {
-
-        final List<Collection> collections = collectionService.findAll();
-        final List<Resource<Collection>> resources = toResources(collections);
+    public ResponseEntity<PagedResources<Resource<Collection>>> retrieveCollections(
+            @RequestParam(name = "label", required = false) String label, final Pageable pPageable,
+            final PagedResourcesAssembler<Collection> pAssembler) {
+        Page<Collection> collections = collectionService.search(label, pPageable);
+        final PagedResources<Resource<Collection>> resources = toPagedResources(collections, pAssembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);
-
     }
 
     /**
@@ -290,7 +295,10 @@ public class CollectionController implements IResourceController<Collection> {
         final Resource<Collection> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "retrieveCollection", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "retrieveCollections", LinkRels.LIST);
+        resourceService.addLink(resource, this.getClass(), "retrieveCollections", LinkRels.LIST,
+                                MethodParamFactory.build(String.class, pElement.getLabel()),
+                                MethodParamFactory.build(Pageable.class),
+                                MethodParamFactory.build(PagedResourcesAssembler.class));
         resourceService.addLink(resource, this.getClass(), "deleteCollection", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
         resourceService.addLink(resource, this.getClass(), "updateCollection", LinkRels.UPDATE,

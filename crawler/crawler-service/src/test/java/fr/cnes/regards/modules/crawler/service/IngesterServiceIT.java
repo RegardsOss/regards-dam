@@ -31,9 +31,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +39,6 @@ import org.springframework.hateoas.PagedResources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -79,7 +76,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 
-@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { IngesterConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
 public class IngesterServiceIT extends AbstractRegardsServiceIT {
@@ -358,7 +354,6 @@ public class IngesterServiceIT extends AbstractRegardsServiceIT {
     }
 
     @Test
-    @Ignore
     public void test() throws InterruptedException {
         Mockito.when(aipClient.retrieveAipDataFiles(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyInt(),
                                                     Mockito.anyInt()))
