@@ -81,7 +81,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(AipDataSourcePlugin.class);
 
-    public static final String SUBSETTING_TAGS = "SUBSETTING_TAGS";
+    public static final String SUBSETTING_TAGS = "subsettingTags";
 
     @PluginParameter(name = MODEL_NAME_PARAM, label = "model name", description = "Associated data source model name")
     private String modelName;
