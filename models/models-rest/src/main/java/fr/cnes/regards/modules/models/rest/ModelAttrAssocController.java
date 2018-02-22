@@ -18,11 +18,10 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;

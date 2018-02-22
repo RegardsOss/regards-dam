@@ -28,8 +28,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedAccessRightExistsException;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
+import fr.cnes.regards.modules.datasources.rest.exception.AssociatedDatasetExistsException;
 
 /**
  * @author oroussel
@@ -44,9 +43,4 @@ public class DataSourceControllerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage()));
     }
 
-    @ExceptionHandler(AssociatedAccessRightExistsException.class)
-    public ResponseEntity<ServerErrorResponse> handleAssociatedAccessRightExistsException(
-            AssociatedAccessRightExistsException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage()));
-    }
 }

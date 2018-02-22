@@ -24,7 +24,6 @@ import java.util.Arrays;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;

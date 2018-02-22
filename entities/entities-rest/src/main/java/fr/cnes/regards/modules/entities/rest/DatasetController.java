@@ -18,11 +18,10 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -56,6 +55,7 @@ import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -239,8 +239,20 @@ public class DatasetController implements IResourceController<Dataset> {
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     @ResourceAccess(description = "Deletes a dataset")
     public ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") final Long pDatasetId)
-            throws EntityNotFoundException {
-        service.delete(pDatasetId);
+            throws EntityNotFoundException, AssociatedAccessRightExistsException {
+        try {
+            service.delete(pDatasetId);
+        } catch (RuntimeException e) {
+            // Ugliest method to manage constraints on entites which are associated to this datasource but because
+            // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
+            // do things cleanly so let's be pigs and do shit without any problems....
+            // And ugliest of the ugliest, this exception is thrown at transaction commit that's why it is done here and
+            // not into service
+            if (e.getMessage().contains("fk_access_right_access_dataset_id")) {
+                throw new AssociatedAccessRightExistsException();
+            }
+            throw e;
+        }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

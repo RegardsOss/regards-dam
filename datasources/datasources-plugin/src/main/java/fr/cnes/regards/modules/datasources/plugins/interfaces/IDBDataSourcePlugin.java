@@ -18,9 +18,9 @@
  */
 package fr.cnes.regards.modules.datasources.plugins.interfaces;
 
+import java.sql.SQLException;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import java.sql.SQLException;
 
 /**
  * Database specialization of data source plugin

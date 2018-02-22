@@ -36,8 +36,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedAccessRightExistsException;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
@@ -94,8 +92,7 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
     }
 
     @Override
-    public void deleteDataSource(Long id)
-            throws AssociatedDatasetExistsException, AssociatedAccessRightExistsException, ModuleException {
+    public void deleteDataSource(Long id) throws ModuleException {
         LOGGER.info("deleting DataSource {}", id);
         service.deletePluginConfiguration(id);
     }

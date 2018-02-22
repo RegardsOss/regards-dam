@@ -1,9 +1,8 @@
 package fr.cnes.regards.modules.crawler.service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
-
-import javax.annotation.PostConstruct;
 
 import org.junit.After;
 import org.junit.Assert;

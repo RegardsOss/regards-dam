@@ -39,10 +39,9 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedAccessRightExistsException;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.rest.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 
 /**
@@ -148,8 +147,6 @@ public class DataSourceController implements IResourceController<PluginConfigura
             // not into service
             if (e.getMessage().contains("fk_ds_plugin_conf_id")) {
                 throw new AssociatedDatasetExistsException();
-            } else if (e.getMessage().contains("fk_access_right_plugin_conf")) {
-                throw new AssociatedAccessRightExistsException();
             }
             throw e;
         }

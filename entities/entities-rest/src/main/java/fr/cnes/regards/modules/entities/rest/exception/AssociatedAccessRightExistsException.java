@@ -16,19 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.datasources.domain;
+package fr.cnes.regards.modules.entities.rest.exception;
 
-import java.util.UUID;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
  * @author oroussel
  */
-public class Test {
-    public static void main(String[] args) {
-        String datasourceId = "203";
-        //String sipId = "1342204930_spectrum_02570plus6028_SPIRE-FTS_12.0.2603_HR_unapod_0_0.fits";
-        String sipId = "14384";
-        System.out.println(UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()));
-        System.out.println(UUID.nameUUIDFromBytes((datasourceId + "$$" + sipId).getBytes()));
+public class AssociatedAccessRightExistsException extends ModuleException {
+
+    public AssociatedAccessRightExistsException() {
+        super("Associated access rights still exist, please remove them first");
     }
 }
