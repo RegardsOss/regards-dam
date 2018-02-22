@@ -194,7 +194,7 @@ public class AccessRightService implements IAccessRightService {
     }
 
     @Override
-    public Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
+    public boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
             throws EntityNotFoundException {
         User user = new User(userEMail);
 
@@ -203,7 +203,7 @@ public class AccessRightService implements IAccessRightService {
             throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
         }
         Set<AccessGroup> accessGroups = accessGroupService.retrieveAllUserAccessGroupsOrPublicAccessGroups(userEMail);
-        Boolean isAutorised = false;
+        boolean isAutorised = false;
         for (AccessGroup accessGroup : accessGroups) {
             // Check if the user is concerned by the accessGroup
             if (accessGroup.isPublic() || accessGroup.getUsers().contains(user)) {

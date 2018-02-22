@@ -65,5 +65,5 @@ public interface IDataSourceService {
      * Delete datasource {@link PluginConfiguration}.
      * @param id {@link PluginConfiguration} id
      */
-    void deleteDataSouce(Long id) throws ModuleException;
+    void deleteDataSource(Long id) throws ModuleException;
 }

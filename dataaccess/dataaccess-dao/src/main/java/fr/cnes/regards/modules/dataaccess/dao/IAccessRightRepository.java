@@ -31,53 +31,31 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 
 /**
  * @author Sylvain Vissiere-Guerinet
- *
  */
 public interface IAccessRightRepository extends JpaRepository<AccessRight, Long> {
 
     /**
-     *
      * Retrieve an AccessRight with the associated Dataset and AccessGroup.
-     *
-     * @param pId
-     *            the {@link AccessRight} to retrieve
+     * @param pId the {@link AccessRight} to retrieve
      * @return {@link AccessRight} with {@link Dataset} associated.
      * @since 1.0-SNAPSHOT
      */
     @EntityGraph(value = "graph.accessright.dataset.and.accesgroup")
     AccessRight findById(Long pId);
 
-    /**
-     * @param pDs
-     * @param pPageable
-     * @return
-     */
-    Page<AccessRight> findAllByDataset(Dataset pDs, Pageable pPageable);
+    Page<AccessRight> findAllByDataset(Dataset dataset, Pageable pageable);
 
-    /**
-     * @param pAg1
-     * @param pPageable
-     * @return
-     */
     @EntityGraph(value = "graph.accessright.dataset.and.accesgroup")
-    Page<AccessRight> findAllByAccessGroup(AccessGroup pAg1, Pageable pPageable);
-
+    Page<AccessRight> findAllByAccessGroup(AccessGroup accessGroup, Pageable pageable);
 
     /**
      * This method returns zero or one AccessRight
-     * @param pAg1
-     * @param pDs1
-     * @param pPageable
-     * @return
      */
-    Page<AccessRight> findAllByAccessGroupAndDataset(AccessGroup pAg1, Dataset pDs1, Pageable pPageable);
-
+    Page<AccessRight> findAllByAccessGroupAndDataset(AccessGroup accessGroup, Dataset dataset, Pageable pageable);
 
     /**
      * This methods return only zero or one AccessRight
-     * @param pAg1
-     * @param pDs1
-     * @return
      */
-    Optional<AccessRight> findAccessRightByAccessGroupAndDataset(AccessGroup pAg1, Dataset pDs1);
+    Optional<AccessRight> findAccessRightByAccessGroupAndDataset(AccessGroup accessGroup, Dataset dataset);
+
 }
