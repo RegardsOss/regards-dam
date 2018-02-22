@@ -206,6 +206,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     @Override
+    public Set<U> findAllBySipId(String sipId) {
+        return repository.findAllBySipId(sipId);
+    }
+
+    @Override
     public Page<U> search(String label, Pageable pageRequest) {
         EntitySpecifications<U> spec = new EntitySpecifications<>();
         return repository.findAll(spec.search(label), pageRequest);

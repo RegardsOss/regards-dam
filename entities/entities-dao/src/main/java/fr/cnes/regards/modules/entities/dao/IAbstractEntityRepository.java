@@ -89,4 +89,11 @@ public interface IAbstractEntityRepository<T extends AbstractEntity>
      * @return entities which contain given tag
      */
     List<T> findByTags(String pTagToSearch);
+
+    /**
+     * Find the all the entity with this specified SIP ID!
+     * @param sipId a SIP ID
+     * @return entities corresponding to the SIP ID
+     */
+    Set<T> findAllBySipId(String sipId);
 }
