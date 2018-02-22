@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.beanutils.NestedNullException;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,6 @@ import fr.cnes.regards.modules.storage.domain.DataFileDto;
         licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss")
 public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
-    @SuppressWarnings("unused")
     private static final Logger LOGGER = LoggerFactory.getLogger(AipDataSourcePlugin.class);
 
     public static final String SUBSETTING_TAGS = "subsettingTags";
@@ -107,6 +107,13 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     @Autowired
     private IAipClient aipClient;
 
+    // FIXME resolving circular dependency
+    // /**
+    // * Unparameterized entity repository
+    // */
+    // @Autowired
+    // protected AbstractEntityService<AbstractEntity> entityService;
+
     private Model model;
 
     /**
@@ -128,6 +135,11 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
+
+    /**
+     * Initialize AIP properties resolver
+     */
+    private final PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
 
     /**
      * Init method
@@ -280,17 +292,16 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
         // Tags
         obj.getTags().addAll(commonTags);
-        obj.getTags().addAll(aip.getTags());
+        obj.getTags().addAll(translateTags(aip.getTags()));
 
         // Binded properties
-        PropertyUtilsBean propertyUtilsBean = new PropertyUtilsBean();
         for (Map.Entry<String, List<String>> entry : modelBindingMap.entrySet()) {
             String doPropertyPath = entry.getKey();
 
             // Does property refers to a dynamic ("properties....") or static property ?
             if (!doPropertyPath.startsWith(PROPERTY_PREFIX)) {
                 // Value from AIP
-                Object value = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(0));
+                Object value = getNestedProperty(aip, entry.getValue().get(0));
                 // Static, use propertyUtilsBean
                 propertyUtilsBean.setNestedProperty(obj, doPropertyPath, value);
             } else { // Dynamic
@@ -302,12 +313,12 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 AbstractAttribute<?> propAtt;
                 if (attributeType.isInterval()) {
                     // Values from AIP
-                    Object lowerBound = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(0));
-                    Object upperBound = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(1));
+                    Object lowerBound = getNestedProperty(aip, entry.getValue().get(0));
+                    Object upperBound = getNestedProperty(aip, entry.getValue().get(1));
                     propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
                 } else {
                     // Value from AIP
-                    Object value = propertyUtilsBean.getNestedProperty(aip, entry.getValue().get(0));
+                    Object value = getNestedProperty(aip, entry.getValue().get(0));
                     propAtt = AttributeBuilder.forType(attributeType, propName, value);
                 }
 
@@ -331,5 +342,41 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         }
 
         return obj;
+    }
+
+    /**
+     * Get nested property managing null value
+     */
+    private Object getNestedProperty(AIP aip, String propertyJsonPath)
+            throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+        Object value = null;
+        try {
+            value = propertyUtilsBean.getNestedProperty(aip, propertyJsonPath);
+        } catch (NestedNullException e) {
+            LOGGER.debug("Property \"{}\" not found in AIP \"{}\"", propertyJsonPath, aip.getId());
+        }
+        return value;
+    }
+
+    /**
+     * Translate AIP tags in entity tags if found!
+     */
+    private Collection<String> translateTags(Collection<String> aipTags) {
+        return aipTags;
+        // FIXME resolving circular dependency
+        // Set<String> translatedTags = new java.util.HashSet<>();
+        // if (aipTags != null) {
+        // for (String tag : aipTags) {
+        // Set<AbstractEntity> entities = entityService.findAllBySipId(tag);
+        // if (entities.isEmpty()) {
+        // // Propagate tag
+        // translatedTags.add(tag);
+        // } else {
+        // // Translate tag
+        // entities.forEach(entity -> translatedTags.add(entity.getIpId().toString()));
+        // }
+        // }
+        // }
+        // return translatedTags;
     }
 }
