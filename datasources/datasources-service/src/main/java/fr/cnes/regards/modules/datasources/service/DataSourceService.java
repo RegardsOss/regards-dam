@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 
@@ -100,7 +99,7 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
         LOGGER.info("deleting DataSource {}", id);
         try {
             service.deletePluginConfiguration(id);
-        } catch (DataIntegrityViolationException e) {
+        } catch (RuntimeException e) {
             // Ugliest method to manage constraints on entites which are associated to this datasource but because
             // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
             // do things cleanly so let's be pigs and do shit without any problems....
