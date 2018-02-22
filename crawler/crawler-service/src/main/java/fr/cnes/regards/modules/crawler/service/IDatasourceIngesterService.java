@@ -8,7 +8,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 
 /**
  * @author oroussel

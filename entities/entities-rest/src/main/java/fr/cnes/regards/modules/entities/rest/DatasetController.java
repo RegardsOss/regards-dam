@@ -57,8 +57,8 @@ import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -327,7 +327,7 @@ public class DatasetController implements IResourceController<Dataset> {
         // we have to add "q=" to be able to parse the query
         try {
             ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
-            SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelName);
+            ICriterionVisitor<Boolean> visitor = service.getSubsettingCoherenceVisitor(dataModelName);
             return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
         } catch (OpenSearchParseException e) {
             return ResponseEntity.ok(new Validity(false));

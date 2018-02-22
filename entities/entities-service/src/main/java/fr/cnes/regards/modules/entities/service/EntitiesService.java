@@ -18,13 +18,14 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -119,7 +120,7 @@ public class EntitiesService implements IEntitiesService {
         try {
             for (ModelAttrAssoc attr : computedAttributes) {
                 try {
-                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf());
+                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId());
                     // here we have a plugin with no idea of the type of the generic parameter used by the "compute"
                     // method, lets check that it is a IComputedAttribute<Dataset,?>
                     plugin.getClass().getMethod("compute", Dataset.class);

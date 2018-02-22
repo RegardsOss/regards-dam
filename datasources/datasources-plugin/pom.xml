@@ -59,6 +59,10 @@
 			<artifactId>gson-regards</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-service-contract</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
 			<artifactId>datasources-domain</artifactId>
 		</dependency>

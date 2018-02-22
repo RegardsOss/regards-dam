@@ -25,7 +25,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;

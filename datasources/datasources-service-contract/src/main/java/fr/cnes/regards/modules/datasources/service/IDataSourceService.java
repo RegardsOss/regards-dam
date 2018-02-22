@@ -24,7 +24,6 @@ import java.util.List;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 
 /**
  * DataSource façade of PluginService ie a service specific to PluginConfigurations of type IDataSourcePlugin

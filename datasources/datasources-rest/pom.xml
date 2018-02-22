@@ -79,6 +79,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.models</groupId>
+			<artifactId>models-service</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-plugin</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>
 		</dependency>

@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 
 /**
  * A class to discover the tables and columns of a SQL Database.</br>

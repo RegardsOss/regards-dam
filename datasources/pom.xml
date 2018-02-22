@@ -61,6 +61,7 @@
 		<module>datasources-rest</module>
 		<module>datasources-service</module>
 		<module>datasources-plugin</module>
+		<module>datasources-service-contract</module>
 	</modules>
 
 	<dependencyManagement>
@@ -78,6 +79,11 @@
 			<dependency>
 				<groupId>fr.cnes.regards.modules.datasources</groupId>
 				<artifactId>datasources-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.datasources</groupId>
+				<artifactId>datasources-service-contract</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

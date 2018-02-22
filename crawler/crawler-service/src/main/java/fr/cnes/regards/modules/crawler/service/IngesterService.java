@@ -42,8 +42,8 @@ import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 

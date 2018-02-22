@@ -43,7 +43,7 @@ import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;

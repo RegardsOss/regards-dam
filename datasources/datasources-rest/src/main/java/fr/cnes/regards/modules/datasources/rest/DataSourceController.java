@@ -40,8 +40,8 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 
 /**
