@@ -39,6 +39,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.modules.datasources.domain.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
@@ -137,7 +138,21 @@ public class DataSourceController implements IResourceController<PluginConfigura
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pluginConfId}")
     public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId) throws
             AssociatedDatasetExistsException, ModuleException {
-        dataSourceService.deleteDataSource(pluginConfId);
+        try {
+            dataSourceService.deleteDataSource(pluginConfId);
+        } catch (RuntimeException e) {
+            // Ugliest method to manage constraints on entites which are associated to this datasource but because
+            // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
+            // do things cleanly so let's be pigs and do shit without any problems....
+            // And ugliest of the ugliest, this exception is thrown at transaction commit that's why it is done here and
+            // not into service
+            if (e.getMessage().contains("fk_ds_plugin_conf_id")) {
+                throw new AssociatedDatasetExistsException();
+            } else if (e.getMessage().contains("fk_access_right_plugin_conf")) {
+                throw new AssociatedAccessRightExistsException();
+            }
+            throw e;
+        }
         return ResponseEntity.noContent().build();
     }
 
