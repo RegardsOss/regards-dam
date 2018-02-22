@@ -89,6 +89,12 @@
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>fr.cnes.regards.modules.indexer</groupId>
+					<artifactId>indexer-dao</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>
