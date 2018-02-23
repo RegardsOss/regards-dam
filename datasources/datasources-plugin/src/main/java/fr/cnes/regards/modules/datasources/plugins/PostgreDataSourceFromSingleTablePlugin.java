@@ -19,7 +19,21 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
@@ -30,18 +44,6 @@ import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourceFromSingleT
 import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Class PostgreDataSourceFromSingleTablePlugin A {@link Plugin} to discover the tables, columns and indexes to a
@@ -77,7 +79,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
 
     @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
             description = "Common tags to be put on all data objects created by the data source")
-    private Collection<String> commonTags = Collections.emptyList();
+    private final Collection<String> commonTags = Collections.emptyList();
 
     /**
      * Init method

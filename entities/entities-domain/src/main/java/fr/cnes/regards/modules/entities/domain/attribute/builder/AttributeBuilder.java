@@ -24,7 +24,6 @@ import java.util.Arrays;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -77,13 +76,18 @@ public final class AttributeBuilder {
 
         switch (attributeType) {
             case INTEGER:
-                return (T) buildInteger(name, ((Number) value).intValue());
+                return (T) ((value instanceof Number) ?
+                        buildInteger(name, ((Number) value).intValue()) :
+                        buildInteger(name, new Integer((String) value)));
             case BOOLEAN:
-                return (T) buildBoolean(name, (Boolean) value);
+                return (T) ((value instanceof Boolean) ?
+                        buildBoolean(name, (Boolean) value) :
+                        buildBoolean(name, new Boolean((String) value)));
             case DATE_ARRAY:
                 if (value instanceof String[]) {
-                    return (T) buildDateArray(name, Arrays.stream((String[]) value)
-                            .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(size -> new OffsetDateTime[size]));
+                    return (T) buildDateArray(name,
+                                              Arrays.stream((String[]) value).map(v -> OffsetDateTimeAdapter.parse(v))
+                                                      .toArray(size -> new OffsetDateTime[size]));
                 }
                 return (T) buildDateArray(name, (OffsetDateTime[]) value);
             case DATE_INTERVAL:
@@ -94,7 +98,9 @@ public final class AttributeBuilder {
                 }
                 return (T) buildDate(name, (OffsetDateTime) value);
             case DOUBLE:
-                return (T) buildDouble(name, ((Number) value).doubleValue());
+                return (T) ((value instanceof Number) ?
+                        buildDouble(name, ((Number) value).doubleValue()) :
+                        buildDouble(name, new Double((String) value)));
             case DOUBLE_ARRAY:
                 return (T) buildDoubleArray(name, Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
                         .mapToObj(Double::new).toArray(size -> new Double[size]));
@@ -106,7 +112,9 @@ public final class AttributeBuilder {
             case INTEGER_INTERVAL:
                 return (T) buildIntegerInterval(name, (Range<Integer>) value);
             case LONG:
-                return (T) buildLong(name, ((Number) value).longValue());
+                return (T) ((value instanceof Number) ?
+                        buildLong(name, ((Number) value).longValue()) :
+                        buildLong(name, new Long((String) value)));
             case LONG_ARRAY:
                 return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
                         .mapToObj(Long::new).toArray(size -> new Long[size]));
@@ -119,8 +127,9 @@ public final class AttributeBuilder {
             case URL:
                 return (T) buildUrl(name, (URL) value);
             default:
-                throw new IllegalArgumentException(attributeType + " is not a handled value of "
-                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(
+                        attributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
+                                + AttributeBuilder.class.getName());
         }
     }
 
@@ -153,10 +162,10 @@ public final class AttributeBuilder {
 
         switch (attributeType) {
             case DATE_INTERVAL:
-                OffsetDateTime lowerDateTime = lowerBound == null ? null
-                        : OffsetDateTimeAdapter.parse((String) lowerBound);
-                OffsetDateTime upperDateTime = upperBound == null ? null
-                        : OffsetDateTimeAdapter.parse((String) upperBound);
+                OffsetDateTime lowerDateTime =
+                        lowerBound == null ? null : OffsetDateTimeAdapter.parse((String) lowerBound);
+                OffsetDateTime upperDateTime =
+                        upperBound == null ? null : OffsetDateTimeAdapter.parse((String) upperBound);
                 return (T) buildDateInterval(name, buildRange(lowerDateTime, upperDateTime));
             case DOUBLE_INTERVAL:
                 Double lowerDouble = lowerBound == null ? null : ((Number) lowerBound).doubleValue();
@@ -171,8 +180,9 @@ public final class AttributeBuilder {
                 Long upperLong = upperBound == null ? null : ((Number) upperBound).longValue();
                 return (T) buildLongInterval(name, buildRange(lowerLong, upperLong));
             default:
-                throw new IllegalArgumentException(attributeType + " is not a handled value of "
-                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(
+                        attributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
+                                + AttributeBuilder.class.getName());
         }
     }
 
@@ -229,8 +239,9 @@ public final class AttributeBuilder {
             case URL:
                 return (T) buildUrl(pName, null);
             default:
-                throw new IllegalArgumentException(pAttributeType + " is not a handled value of "
-                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(
+                        pAttributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
+                                + AttributeBuilder.class.getName());
         }
     }
 
@@ -327,7 +338,7 @@ public final class AttributeBuilder {
         return att;
     }
 
-    public static IntegerAttribute buildInteger(String pName, Integer pValue) {
+    public static AbstractAttribute<?> buildInteger(String pName, Integer pValue) {
         IntegerAttribute att = new IntegerAttribute();
         att.setName(pName);
         att.setValue(pValue);

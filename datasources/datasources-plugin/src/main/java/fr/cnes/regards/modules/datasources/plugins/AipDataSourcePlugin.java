@@ -45,12 +45,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
-
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IAipDataSourcePlugin;
@@ -166,8 +166,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 // Manage dynamic properties
                 if (doPropertyPath.endsWith(LOWER_BOUND_SUFFIX)) {
                     // - interval lower bound
-                    String modelKey = entry.getKey().substring(0,
-                                                               doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
+                    String modelKey = entry.getKey()
+                            .substring(0, doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
                     if (modelBindingMap.containsKey(modelKey)) {
                         // Add lower bound value at index 0
                         modelBindingMap.get(modelKey).add(0, entry.getValue());
@@ -178,8 +178,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                     }
                 } else if (doPropertyPath.endsWith(UPPER_BOUND_SUFFIX)) {
                     // - interval upper bound
-                    String modelKey = entry.getKey().substring(0,
-                                                               doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
+                    String modelKey = entry.getKey()
+                            .substring(0, doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
                     if (modelBindingMap.containsKey(modelKey)) {
                         // Add upper bound value at index 1
                         modelBindingMap.get(modelKey).add(entry.getValue());
@@ -224,12 +224,12 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 if (attributeType.isInterval()) {
                     if (entry.getValue().size() != 2) {
                         throw new ModuleException(attributeType + " properties " + entry.getKey()
-                                + " has to be mapped to exactly 2 values");
+                                                          + " has to be mapped to exactly 2 values");
                     }
                 } else {
                     if (entry.getValue().size() != 1) {
                         throw new ModuleException(attributeType + " properties " + entry.getKey()
-                                + " has to be mapped to a single value");
+                                                          + " has to be mapped to a single value");
                     }
                 }
             }
@@ -314,13 +314,27 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 AbstractAttribute<?> propAtt;
                 if (attributeType.isInterval()) {
                     // Values from AIP
-                    Object lowerBound = getNestedProperty(aip, entry.getValue().get(0));
-                    Object upperBound = getNestedProperty(aip, entry.getValue().get(1));
-                    propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
+                    String lowerBoundPropertyPath = entry.getValue().get(0);
+                    Object lowerBound = getNestedProperty(aip, lowerBoundPropertyPath);
+                    String upperBoundPropertyPath = entry.getValue().get(1);
+                    Object upperBound = getNestedProperty(aip, upperBoundPropertyPath);
+                    try {
+                        propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
+                    } catch (ClassCastException e) {
+                        String msg = String.format("Cannot map %s and to %s (values %s and %s)", lowerBoundPropertyPath,
+                                                   upperBoundPropertyPath, propName, lowerBound, upperBound);
+                        throw new RsRuntimeException(msg, e);
+                    }
                 } else {
                     // Value from AIP
-                    Object value = getNestedProperty(aip, entry.getValue().get(0));
-                    propAtt = AttributeBuilder.forType(attributeType, propName, value);
+                    String propertyPath = entry.getValue().get(0);
+                    Object value = getNestedProperty(aip, propertyPath);
+                    try {
+                        propAtt = AttributeBuilder.forType(attributeType, propName, value);
+                    } catch (ClassCastException e) {
+                        String msg = String.format("Cannot map %s to %s (value %s)", propertyPath, propName, value);
+                        throw new RsRuntimeException(msg, e);
+                    }
                 }
 
                 // If it contains another '.', there is a fragment

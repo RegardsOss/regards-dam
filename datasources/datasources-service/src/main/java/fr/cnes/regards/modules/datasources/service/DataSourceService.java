@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 
@@ -37,8 +36,6 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedAccessRightExistsException;
-import fr.cnes.regards.modules.datasources.domain.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 
@@ -94,22 +91,9 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
     }
 
     @Override
-    public void deleteDataSource(Long id)
-            throws AssociatedDatasetExistsException, AssociatedAccessRightExistsException, ModuleException {
+    public void deleteDataSource(Long id) throws ModuleException {
         LOGGER.info("deleting DataSource {}", id);
-        try {
-            service.deletePluginConfiguration(id);
-        } catch (DataIntegrityViolationException e) {
-            // Ugliest method to manage constraints on entites which are associated to this datasource but because
-            // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
-            // do things cleanly so let's be pigs and do shit without any problems....
-            if (e.getMessage().contains("fk_ds_plugin_conf_id")) {
-                throw new AssociatedDatasetExistsException();
-            } else if (e.getMessage().contains("fk_access_right_plugin_conf")) {
-                throw new AssociatedAccessRightExistsException();
-            }
-            throw e;
-        }
+        service.deletePluginConfiguration(id);
     }
 
     /**

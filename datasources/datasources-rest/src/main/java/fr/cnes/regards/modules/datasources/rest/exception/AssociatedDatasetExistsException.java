@@ -16,16 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.datasources.domain.exception;
+package fr.cnes.regards.modules.datasources.rest.exception;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
  * @author oroussel
  */
-public class AssociatedAccessRightExistsException extends ModuleException {
+public class AssociatedDatasetExistsException extends ModuleException {
 
-    public AssociatedAccessRightExistsException() {
-        super("Associated access rights still exist, please remove them first");
+    public AssociatedDatasetExistsException() {
+        super("Associated dataset(s) still exist, please remove it(them) first");
     }
 }

@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
+import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionTooLargeException;
 import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableCharsetException;
 import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableType;
@@ -37,7 +39,7 @@ import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacc
  *
  */
 @RestControllerAdvice(annotations = RestController.class)
-@Order(0)
+@Order(Ordered.LOWEST_PRECEDENCE - 300)
 public class EntityControllerAdvice {
 
     @ExceptionHandler(EntityDescriptionUnacceptableCharsetException.class)
@@ -60,4 +62,11 @@ public class EntityControllerAdvice {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ServerErrorResponse(pException.getMessage()));
     }
+
+    @ExceptionHandler(AssociatedAccessRightExistsException.class)
+    public ResponseEntity<ServerErrorResponse> handleAssociatedAccessRightExistsException(
+            AssociatedAccessRightExistsException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ServerErrorResponse(e.getMessage()));
+    }
+
 }

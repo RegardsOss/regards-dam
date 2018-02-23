@@ -33,6 +33,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -183,7 +184,7 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
             String datasourceId, Pageable pageable) throws DataSourceException {
         Page<DataObject> page = dsPlugin.findAll(tenant, pageable, date);
         // Generate IpId only if datasource plugin hasn't yet generate it
-        page.getContent().stream().filter(obj -> obj.getIpId() == null)
+        page.getContent().stream().filter(obj -> obj.getIpId().isRandomEntityId())
                 .forEach(obj -> obj.setIpId(buildIpId(tenant, obj.getSipId(), datasourceId)));
         return page;
     }
@@ -202,6 +203,6 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
 
     @Override
     public List<DatasourceIngestion> getDatasourceIngestions() {
-        return datasourceIngestionRepo.findAll();
+        return datasourceIngestionRepo.findAll(new Sort("label"));
     }
 }

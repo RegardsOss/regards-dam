@@ -58,7 +58,9 @@ public class DataObject extends AbstractDataEntity {
     private Boolean containsPhysicalData = null;
 
     public DataObject(Model model, String tenant, String label) {
-        super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant, UUID.randomUUID(), 1),
+        super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+                                             UUID.fromString("0-0-0-0-" + (int)(Math.random() * Integer.MAX_VALUE)),
+                                                             1),
               label);
     }
 
