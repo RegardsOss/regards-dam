@@ -119,7 +119,7 @@ public class EntitiesService implements IEntitiesService {
         try {
             for (ModelAttrAssoc attr : computedAttributes) {
                 try {
-                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf());
+                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId());
                     // here we have a plugin with no idea of the type of the generic parameter used by the "compute"
                     // method, lets check that it is a IComputedAttribute<Dataset,?>
                     plugin.getClass().getMethod("compute", Dataset.class);

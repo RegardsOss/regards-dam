@@ -205,4 +205,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     public List<DatasourceIngestion> getDatasourceIngestions() {
         return datasourceIngestionRepo.findAll(new Sort("label"));
     }
+
+    @Override
+    public void deleteDatasourceIngestion(Long id) {
+        datasourceIngestionRepo.delete(id);
+    }
 }
