@@ -22,13 +22,17 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
+import fr.cnes.regards.framework.hateoas.LinkRels;
+import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
@@ -45,6 +49,8 @@ import fr.cnes.regards.modules.crawler.service.ICrawlerAndIngesterService;
 public class CrawlerController implements IResourceController<DatasourceIngestion> {
 
     public static final String TYPE_MAPPING = "/crawler/datasourceIngestions";
+
+    public static final String INGESTION_ID = "/{ingestion_id}";
 
     /**
      * Crawler service
@@ -68,9 +74,22 @@ public class CrawlerController implements IResourceController<DatasourceIngestio
         return ResponseEntity.ok(toResources(crawlerService.getDatasourceIngestions()));
     }
 
+    /**
+     * Delete a {@link DatasourceIngestion}.
+     */
+    @ResourceAccess(description = "List all crawler datasources.")
+    @RequestMapping(method = RequestMethod.DELETE, value = INGESTION_ID)
+    public ResponseEntity<Void> deleteDatasourceIngestion(@PathVariable("ingestion_id") Long ingestionId) {
+        crawlerService.deleteDatasourceIngestion(ingestionId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @Override
     public Resource<DatasourceIngestion> toResource(DatasourceIngestion element, Object... extras) {
-        return resourceService.toResource(element);
+        Resource<DatasourceIngestion> resource = resourceService.toResource(element);
+        resourceService.addLink(resource, this.getClass(), "deleteDatasourceIngestion",
+                                LinkRels.DELETE, MethodParamFactory.build(Long.class, element.getId()));
+        return resource;
     }
 
 }

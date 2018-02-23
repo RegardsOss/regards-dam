@@ -36,7 +36,12 @@ public interface IDatasourceIngesterService {
 
     /**
      * Retrieve all {@link DatasourceIngestion}
-     * @return
      */
     List<DatasourceIngestion> getDatasourceIngestions();
+
+    /**
+     * Delete given {@link DatasourceIngestion}
+     * @param id DatasourceIngestion id
+     */
+    void deleteDatasourceIngestion(Long id);
 }
