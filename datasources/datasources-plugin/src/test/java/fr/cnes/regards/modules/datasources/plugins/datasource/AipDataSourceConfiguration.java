@@ -41,6 +41,8 @@ import fr.cnes.regards.framework.amqp.IInstanceSubscriber;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPState;
@@ -70,6 +72,11 @@ public class AipDataSourceConfiguration {
     }
 
     @Bean
+    public IEntityService<AbstractEntity> entityService() {
+        return Mockito.mock(IEntityService.class);
+    }
+
+    @Bean
     public IAipClient aipClient() {
         AipClientProxy aipClientProxy = new AipClientProxy();
         InvocationHandler handler = (proxy, method, args) -> {
@@ -80,8 +87,8 @@ public class AipDataSourceConfiguration {
             }
             return null;
         };
-        return (IAipClient) Proxy
-                .newProxyInstance(IAipClient.class.getClassLoader(), new Class<?>[] { IAipClient.class }, handler);
+        return (IAipClient) Proxy.newProxyInstance(IAipClient.class.getClassLoader(),
+                                                   new Class<?>[] { IAipClient.class }, handler);
     }
 
     private class AipClientProxy {
@@ -111,7 +118,8 @@ public class AipDataSourceConfiguration {
                 aipDataFiles.add(oneAipDataFiles);
 
             }
-            return ResponseEntity.ok(new PagedResources<>(aipDataFiles, new PagedResources.PageMetadata(aipDataFiles.size(), 0, aipDataFiles.size(), 1)));
+            return ResponseEntity.ok(new PagedResources<>(aipDataFiles,
+                    new PagedResources.PageMetadata(aipDataFiles.size(), 0, aipDataFiles.size(), 1)));
         }
 
     }

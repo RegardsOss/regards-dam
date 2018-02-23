@@ -63,6 +63,10 @@
 			<artifactId>entities-service-contract</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-domain</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
 			<artifactId>datasources-domain</artifactId>
 		</dependency>
@@ -130,16 +134,5 @@
 			<artifactId>gson-regards-starter</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>fr.cnes.regards.modules.entities</groupId>-->
-			<!--<artifactId>entities-gson</artifactId>-->
-			<!--<scope>test</scope>-->
-		<!--</dependency>-->
-		<!--<dependency>-->
-			<!--<groupId>fr.cnes.regards.modules.entities</groupId>-->
-			<!--<artifactId>entities-service</artifactId>-->
-			<!--<scope>test</scope>-->
-		<!--</dependency>-->
-
 	</dependencies>
 </project>
