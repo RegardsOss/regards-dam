@@ -71,6 +71,7 @@ public class AipDataSourceConfiguration {
         return Mockito.mock(ISubscriber.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Bean
     public IEntityService<AbstractEntity> entityService() {
         return Mockito.mock(IEntityService.class);
