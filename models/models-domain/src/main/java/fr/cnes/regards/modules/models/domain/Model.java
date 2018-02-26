@@ -100,7 +100,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     /**
      * Model type
      */
-    @NotNull
+    @NotNull(message="The EntityType must not be null")
     @Column(length = 10, nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private EntityType type;

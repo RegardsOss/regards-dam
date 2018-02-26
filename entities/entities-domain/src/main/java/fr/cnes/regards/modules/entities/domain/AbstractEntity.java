@@ -50,6 +50,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
+import org.hibernate.validator.constraints.NotBlank;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -93,14 +94,14 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * The entity label
      */
-    @NotNull
+    @NotBlank(message="The label must not be null and empty")
     @Column(length = 128, nullable = false)
     protected String label;
 
     /**
      * model that this entity is respecting
      */
-    @NotNull
+    @NotNull(message="The Model must not be null")
     @ManyToOne
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
@@ -109,7 +110,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * last time the entity was updated
      */
-    @PastOrNow
+    @PastOrNow(message="The lastUpdate date must be in the past or now")
     @Column(name = "update_date")
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime lastUpdate;
@@ -117,7 +118,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * time at which the entity was created
      */
-    @PastOrNow
+    @PastOrNow(message="The creationDate must be in the past or now")
     @Column(name = "creation_date", nullable = false)
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime creationDate;
