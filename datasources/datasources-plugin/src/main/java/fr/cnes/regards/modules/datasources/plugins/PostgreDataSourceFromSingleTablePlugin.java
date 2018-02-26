@@ -19,7 +19,6 @@
 
 package fr.cnes.regards.modules.datasources.plugins;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -34,12 +33,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nurkiewicz.jdbcrepository.sql.SqlGenerator;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.utils.AbstractDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.utils.PostgreSqlGenerator;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -79,7 +79,7 @@ public class PostgreDataSourceFromSingleTablePlugin extends AbstractDBDataSource
 
     @PluginParameter(name = TAGS, label = "data objects common tags", optional = true,
             description = "Common tags to be put on all data objects created by the data source")
-    private Collection<String> commonTags = Collections.emptyList();
+    private final Collection<String> commonTags = Collections.emptyList();
 
     /**
      * Init method

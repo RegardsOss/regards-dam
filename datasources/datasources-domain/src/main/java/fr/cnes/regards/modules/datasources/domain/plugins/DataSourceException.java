@@ -1,4 +1,4 @@
-package fr.cnes.regards.modules.datasources.plugins.exception;
+package fr.cnes.regards.modules.datasources.domain.plugins;
 
 /**
  * Generic datasource exception used to rethrow an internal datasource ingestion exception.

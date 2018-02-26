@@ -64,6 +64,7 @@
 		<module>entities-client</module>
 		<module>entities-plugin</module>
 		<module>entities-gson</module>
+		<module>entities-service-contract</module>
 	</modules>
 
 	<dependencyManagement>
@@ -81,6 +82,11 @@
 			<dependency>
 				<groupId>fr.cnes.regards.modules.entities</groupId>
 				<artifactId>entities-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.cnes.regards.modules.entities</groupId>
+				<artifactId>entities-service-contract</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

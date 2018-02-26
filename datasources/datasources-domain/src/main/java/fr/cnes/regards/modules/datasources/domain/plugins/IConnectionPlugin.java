@@ -17,29 +17,32 @@
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnes.regards.modules.datasources.plugins.interfaces;
+package fr.cnes.regards.modules.datasources.domain.plugins;
+
+import javax.sql.DataSource;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * Class IDBDataSourceFromSingleTablePlugin
+ * Class IConnectionPlugin
  *
- * Allows to search in a database, and to explore the database's tables, columns and indexes.
+ * Allows to manage a connection to a {@link DataSource}
+ *
  * @author Christophe Mertz
+ * @since 1.0-SNAPSHOT
  */
-@PluginInterface(description = "Plugin to explore a data source and search in a single table of the data source")
-public interface IDBDataSourceFromSingleTablePlugin extends IDBDataSourcePlugin {
+@PluginInterface(description = "Plugin to manage a connection to a datasource")
+public interface IConnectionPlugin {
+    /**
+     * Test the connection
+     *
+     * @return true if the connection is active
+     */
+    boolean testConnection();
 
     /**
-     * The table parameter name
+     * Close a connection
      */
-    String TABLE_PARAM = "table";
-
-    /**
-     * Allows to define the database table used, and the columns of this table.</br>
-     * The tables and columns are used to generate the SQL request used to execute statement on the database.
-     * @param pTable the name of the table
-     */
-    void initializePluginMapping(String pTable);
+    void closeConnection();
 
 }

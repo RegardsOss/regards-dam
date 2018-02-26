@@ -609,35 +609,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
-     * For all collections tagging specified urn, try to add specified group. If group was not already present, it is
-     * added and concerned collection is added to set, overwise it is removed from set (means that collection has
-     * already been updated with the group)
-     */
-
-    private void manageGroup(String group, Set<Collection> collectionsToUpdate, UniformResourceName urn,
-            AbstractEntity rootEntity, Set<UniformResourceName> pUpdatedIpIds) {
-        for (AbstractEntity e : entityRepository.findByTags(urn.toString())) {
-            if (e instanceof Collection) {
-                Collection coll = (Collection) e;
-                // To be sure the root entity object is updated instead of a copy from Hb9n
-                if (coll.getIpId().equals(rootEntity.getIpId())) {
-                    em.detach(e);
-                    e = rootEntity;
-                }
-                // if adding a new group
-                if (e.getGroups().add(group)) {
-                    coll = collectionRepository.save(coll);
-                    // add entity IpId to AMQP publishing events
-                    pUpdatedIpIds.add(coll.getIpId());
-                    collectionsToUpdate.add(coll);
-                } else { // Group has been already added, nothing more to do => remove collection from map
-                    collectionsToUpdate.remove(coll);
-                }
-            }
-        }
-    }
-
-    /**
      * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type saved in the
      * entity and not the multipart file content type because markdown is not yet a standardized MIMEType and
      * our front cannot modify the content type of the corresponding part
@@ -779,7 +750,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     @Override
     public U delete(Long pEntityId) throws EntityNotFoundException {
-        Assert.notNull(pEntityId);
+        Assert.notNull(pEntityId, "Entity identifier is required");
         final U toDelete = repository.findById(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId, this.getClass());

@@ -14,6 +14,8 @@ import fr.cnes.regards.framework.security.autoconfigure.MethodSecurityAutoConfig
 import fr.cnes.regards.framework.security.autoconfigure.SecurityVoterAutoConfiguration;
 import fr.cnes.regards.framework.security.autoconfigure.WebSecurityAutoConfiguration;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
@@ -31,6 +33,12 @@ import fr.cnes.regards.modules.storage.client.IAipClient;
 @PropertySource(value = { "classpath:test2.properties", "classpath:test2_${user.name}.properties" },
         ignoreResourceNotFound = true)
 public class IngesterConfiguration {
+
+    @SuppressWarnings("unchecked")
+    @Bean
+    public IEntityService<AbstractEntity> entityService() {
+        return Mockito.mock(IEntityService.class);
+    }
 
     @Bean
     public IAttributeModelClient attributeModelClient() {

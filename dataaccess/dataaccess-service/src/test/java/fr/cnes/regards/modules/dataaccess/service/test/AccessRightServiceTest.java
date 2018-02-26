@@ -41,6 +41,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import fr.cnes.regards.framework.amqp.IInstancePublisher;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
@@ -54,7 +55,6 @@ import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
@@ -99,9 +99,6 @@ public class AccessRightServiceTest {
     @Autowired
     private IDatasetService dsService;
 
-    @Autowired
-    private IPublisher eventPublisher;
-
     private AccessGroup AG1;
 
     private AccessGroup AG2;
@@ -109,10 +106,6 @@ public class AccessRightServiceTest {
     private Dataset DS1;
 
     private Dataset DS2;
-
-    private User USER1;
-
-    private User USER2;
 
     private AccessRight GAR11;
 
@@ -123,8 +116,9 @@ public class AccessRightServiceTest {
     private AccessRight GAR21;
 
     @Configuration
-    @ComponentScan(basePackages = { "fr.cnes.regards.modules.dataaccess"})
+    @ComponentScan(basePackages = { "fr.cnes.regards.modules.dataaccess" })
     static class Conf {
+
         @Bean
         public IAccessRightRepository accessRightRepository() {
             return Mockito.mock(IAccessRightRepository.class);

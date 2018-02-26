@@ -52,13 +52,15 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IAipDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IAipDataSourcePlugin;
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -107,12 +109,11 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     @Autowired
     private IAipClient aipClient;
 
-    // FIXME resolving circular dependency
-    // /**
-    // * Unparameterized entity repository
-    // */
-    // @Autowired
-    // protected AbstractEntityService<AbstractEntity> entityService;
+    /**
+     * Unparameterized entity repository
+     */
+    @Autowired
+    protected IEntityService<AbstractEntity> entityService;
 
     private Model model;
 
@@ -376,21 +377,19 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
      * Translate AIP tags in entity tags if found!
      */
     private Collection<String> translateTags(Collection<String> aipTags) {
-        return aipTags;
-        // FIXME resolving circular dependency
-        // Set<String> translatedTags = new java.util.HashSet<>();
-        // if (aipTags != null) {
-        // for (String tag : aipTags) {
-        // Set<AbstractEntity> entities = entityService.findAllBySipId(tag);
-        // if (entities.isEmpty()) {
-        // // Propagate tag
-        // translatedTags.add(tag);
-        // } else {
-        // // Translate tag
-        // entities.forEach(entity -> translatedTags.add(entity.getIpId().toString()));
-        // }
-        // }
-        // }
-        // return translatedTags;
+        Set<String> translatedTags = new java.util.HashSet<>();
+        if (aipTags != null) {
+            for (String tag : aipTags) {
+                Set<AbstractEntity> entities = entityService.findAllBySipId(tag);
+                if (entities.isEmpty()) {
+                    // Propagate tag
+                    translatedTags.add(tag);
+                } else {
+                    // Translate tag
+                    entities.forEach(entity -> translatedTags.add(entity.getIpId().toString()));
+                }
+            }
+        }
+        return translatedTags;
     }
 }

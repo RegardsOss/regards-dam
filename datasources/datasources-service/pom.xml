@@ -28,7 +28,7 @@
 	<name>Data Sources Service</name>
 	<description>Service layer of Data Sources module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
-	<inceptionYear>2016</inceptionYear>
+	<inceptionYear>2018</inceptionYear>
 	<licenses>
 		<license>
 			<name>GNU General Public License (GNU GPL)</name>
@@ -63,6 +63,10 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-service-contract</artifactId>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
@@ -72,6 +76,7 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.datasources</groupId>
 			<artifactId>datasources-plugin</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>

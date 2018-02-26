@@ -36,9 +36,8 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 
 /**
  * DataSource specific plugin service façade implementation
@@ -58,7 +57,7 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
     @Override
     @MultitenantTransactional(propagation = Propagation.SUPPORTS)
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        this.service.addPluginPackage(PostgreDataSourcePlugin.class.getPackage().getName());
+        this.service.addPluginPackage("fr.cnes.regards.modules.datasources");
     }
 
     @Override

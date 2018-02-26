@@ -18,8 +18,9 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
-import javax.validation.Valid;
 import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -39,8 +40,8 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.rest.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 
@@ -122,7 +123,7 @@ public class DataSourceController implements IResourceController<PluginConfigura
             @Valid @RequestBody PluginConfiguration dataSource) throws ModuleException {
         if (!pluginConfId.equals(dataSource.getId())) {
             throw new EntityInconsistentIdentifierException(pluginConfId, dataSource.getId(),
-                                                            PluginConfiguration.class);
+                    PluginConfiguration.class);
         }
         return ResponseEntity.ok(toResource(dataSourceService.updateDataSource(dataSource)));
     }
@@ -135,8 +136,8 @@ public class DataSourceController implements IResourceController<PluginConfigura
      */
     @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.DELETE, value = "/{pluginConfId}")
-    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId) throws
-            AssociatedDatasetExistsException, ModuleException {
+    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId)
+            throws AssociatedDatasetExistsException, ModuleException {
         try {
             dataSourceService.deleteDataSource(pluginConfId);
         } catch (RuntimeException e) {

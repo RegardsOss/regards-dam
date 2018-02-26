@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.dataaccess.service.test2;
 
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +34,6 @@ import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceTransactionalIT;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
@@ -55,11 +52,6 @@ import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 @DirtiesContext
 public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT {
 
-    /**
-     *
-     */
-    private static final long AG1_ID = 1L;
-
     @Autowired
     private IAccessGroupService accessGroupService;
 
@@ -74,9 +66,6 @@ public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT 
 
     @Autowired
     private IProjectUsersClient projectUserClient;
-
-    @Autowired
-    private ITenantResolver tenantResolver;
 
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
@@ -124,7 +113,7 @@ public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT 
     @Test
     public void testDocumentAccessGroupCreated() throws EntityAlreadyExistsException {
         final AccessGroup documentAccessGroup = dao.findOneByName(AccessGroupService.ACCESS_GROUP_PUBLIC_DOCUMENTS);
-        final List<AccessGroup> all = dao.findAll();
+        dao.findAll();
         Assert.assertEquals(documentAccessGroup.isPublic(), true);
     }
 
