@@ -365,7 +365,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Object value = null;
         try {
-            value = propertyUtilsBean.getNestedProperty(aip, propertyJsonPath);
+            value = propertyUtilsBean.getNestedProperty(aip, propertyJsonPath.trim());
         } catch (NestedNullException e) {
             LOGGER.debug("Property \"{}\" not found in AIP \"{}\"", propertyJsonPath, aip.getId());
         }
