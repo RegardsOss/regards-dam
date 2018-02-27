@@ -229,20 +229,6 @@ public class IngesterService
         Map<Long, DatasourceIngestion> dsIngestionsMap = dsIngestionRepos.findAll().stream()
                 .collect(Collectors.toMap(DatasourceIngestion::getId, Function.identity()));
 
-        LOGGER.info("---> all plugins conf");
-        pluginService.getAllPluginConfigurations().stream().forEach(pc -> LOGGER.info(pc.getLabel()));
-        pluginService.getAllPluginConfigurations().stream().forEach(pc -> {
-            if (pc.getInterfaceNames().contains(IDataSourcePlugin.class.getName())) {
-                LOGGER.info("%s contains %s", pc.getLabel(), IDataSourcePlugin.class.getName());
-            } else {
-                LOGGER.info("%s not contains %s", pc.getLabel(), IDataSourcePlugin.class.getName());
-                LOGGER.info("=============> interfaces for %s", pc.getLabel());
-                pc.getInterfaceNames().parallelStream().forEach(s -> LOGGER.info(s));
-                LOGGER.info("<=============");
-            }
-        });
-        LOGGER.info("<--- all plugins conf");
-
         // Find all datasource plugins less inactive ones => find all ACTIVE datasource plugins
         List<PluginConfiguration> pluginConfs = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)
                 .stream().filter(PluginConfiguration::isActive).collect(Collectors.toList());
