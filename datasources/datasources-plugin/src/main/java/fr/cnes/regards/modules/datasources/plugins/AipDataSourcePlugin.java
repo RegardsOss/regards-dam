@@ -56,10 +56,12 @@ import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IAipDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
+import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -113,7 +115,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
      * Unparameterized entity repository
      */
     @Autowired
-    protected IEntityService<AbstractEntity> entityService;
+    protected IDatasetService entityService;
 
     private Model model;
 
@@ -380,7 +382,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         Set<String> translatedTags = new java.util.HashSet<>();
         if (aipTags != null) {
             for (String tag : aipTags) {
-                Set<AbstractEntity> entities = entityService.findAllBySipId(tag);
+                Set<Dataset> entities = entityService.findAllBySipId(tag);
                 if (entities.isEmpty()) {
                     // Propagate tag
                     translatedTags.add(tag);

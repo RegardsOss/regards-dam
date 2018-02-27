@@ -42,6 +42,7 @@ import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
@@ -73,8 +74,8 @@ public class AipDataSourceConfiguration {
 
     @SuppressWarnings("unchecked")
     @Bean
-    public IEntityService<AbstractEntity> entityService() {
-        return Mockito.mock(IEntityService.class);
+    public IDatasetService entityService() {
+        return Mockito.mock(IDatasetService.class);
     }
 
     @Bean
