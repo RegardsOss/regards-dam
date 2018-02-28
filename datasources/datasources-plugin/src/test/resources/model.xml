@@ -41,6 +41,16 @@
         <type>STRING_ARRAY</type>
     </attribute>
     <attribute>
+        <label>History Set</label>
+        <name>history_set</name>
+        <type>STRING_ARRAY</type>
+    </attribute>
+    <attribute>
+        <label>History List</label>
+        <name>history_list</name>
+        <type>STRING_ARRAY</type>
+    </attribute>
+    <attribute>
         <label>forTests</label>
         <name>SPEED</name>
         <type>DOUBLE</type>

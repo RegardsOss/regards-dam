@@ -20,10 +20,15 @@ package fr.cnes.regards.modules.entities.domain.attribute.builder;
 
 import java.net.URL;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.BooleanAttribute;
@@ -76,20 +81,20 @@ public final class AttributeBuilder {
 
         switch (attributeType) {
             case INTEGER:
-                return (T) ((value instanceof Number) ?
-                        buildInteger(name, ((Number) value).intValue()) :
-                        buildInteger(name, new Integer((String) value)));
+                return (T) ((value instanceof Number) ? buildInteger(name, ((Number) value).intValue())
+                        : buildInteger(name, new Integer((String) value)));
             case BOOLEAN:
-                return (T) ((value instanceof Boolean) ?
-                        buildBoolean(name, (Boolean) value) :
-                        buildBoolean(name, new Boolean((String) value)));
+                return (T) ((value instanceof Boolean) ? buildBoolean(name, (Boolean) value)
+                        : buildBoolean(name, new Boolean((String) value)));
             case DATE_ARRAY:
-                if (value instanceof String[]) {
-                    return (T) buildDateArray(name,
-                                              Arrays.stream((String[]) value).map(v -> OffsetDateTimeAdapter.parse(v))
-                                                      .toArray(size -> new OffsetDateTime[size]));
+                if (value instanceof Collection) {
+                    return (T) buildStringCollection(name, (Collection) value);
+                } else if (value instanceof String[]) {
+                    return (T) buildDateArray(name, Arrays.stream((String[]) value)
+                            .map(v -> OffsetDateTimeAdapter.parse(v)).toArray(size -> new OffsetDateTime[size]));
+                } else {
+                    return (T) buildDateArray(name, (OffsetDateTime[]) value);
                 }
-                return (T) buildDateArray(name, (OffsetDateTime[]) value);
             case DATE_INTERVAL:
                 return (T) buildDateInterval(name, (Range<OffsetDateTime>) value);
             case DATE_ISO8601:
@@ -98,38 +103,51 @@ public final class AttributeBuilder {
                 }
                 return (T) buildDate(name, (OffsetDateTime) value);
             case DOUBLE:
-                return (T) ((value instanceof Number) ?
-                        buildDouble(name, ((Number) value).doubleValue()) :
-                        buildDouble(name, new Double((String) value)));
+                return (T) ((value instanceof Number) ? buildDouble(name, ((Number) value).doubleValue())
+                        : buildDouble(name, new Double((String) value)));
             case DOUBLE_ARRAY:
-                return (T) buildDoubleArray(name, Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
-                        .mapToObj(Double::new).toArray(size -> new Double[size]));
+                if (value instanceof Collection) {
+                    return (T) buildDoubleCollection(name, (Collection) value);
+                } else {
+                    return (T) buildDoubleArray(name, Arrays.stream((Number[]) value).mapToDouble(n -> n.doubleValue())
+                            .mapToObj(Double::new).toArray(size -> new Double[size]));
+                }
             case DOUBLE_INTERVAL:
                 return (T) buildDoubleInterval(name, (Range<Double>) value);
             case INTEGER_ARRAY:
-                return (T) buildIntegerArray(name, Arrays.stream(((Number[]) value)).mapToInt(v -> v.intValue())
-                        .mapToObj(Integer::new).toArray(size -> new Integer[size]));
+                if (value instanceof Collection) {
+                    return (T) buildIntegerCollection(name, (Collection) value);
+                } else {
+                    return (T) buildIntegerArray(name, Arrays.stream(((Number[]) value)).mapToInt(v -> v.intValue())
+                            .mapToObj(Integer::new).toArray(size -> new Integer[size]));
+                }
             case INTEGER_INTERVAL:
                 return (T) buildIntegerInterval(name, (Range<Integer>) value);
             case LONG:
-                return (T) ((value instanceof Number) ?
-                        buildLong(name, ((Number) value).longValue()) :
-                        buildLong(name, new Long((String) value)));
+                return (T) ((value instanceof Number) ? buildLong(name, ((Number) value).longValue())
+                        : buildLong(name, new Long((String) value)));
             case LONG_ARRAY:
-                return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
-                        .mapToObj(Long::new).toArray(size -> new Long[size]));
+                if (value instanceof Collection) {
+                    return (T) buildLongCollection(name, (Collection) value);
+                } else {
+                    return (T) buildLongArray(name, Arrays.stream(((Number[]) value)).mapToLong(v -> v.longValue())
+                            .mapToObj(Long::new).toArray(size -> new Long[size]));
+                }
             case LONG_INTERVAL:
                 return (T) buildLongInterval(name, (Range<Long>) value);
             case STRING:
                 return (T) buildString(name, (String) value);
             case STRING_ARRAY:
-                return (T) buildStringArray(name, (String[]) value);
+                if (value instanceof Collection) {
+                    return (T) buildStringCollection(name, (Collection) value);
+                } else {
+                    return (T) buildStringArray(name, (String[]) value);
+                }
             case URL:
                 return (T) buildUrl(name, (URL) value);
             default:
-                throw new IllegalArgumentException(
-                        attributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
-                                + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(attributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
         }
     }
 
@@ -162,10 +180,10 @@ public final class AttributeBuilder {
 
         switch (attributeType) {
             case DATE_INTERVAL:
-                OffsetDateTime lowerDateTime =
-                        lowerBound == null ? null : OffsetDateTimeAdapter.parse((String) lowerBound);
-                OffsetDateTime upperDateTime =
-                        upperBound == null ? null : OffsetDateTimeAdapter.parse((String) upperBound);
+                OffsetDateTime lowerDateTime = lowerBound == null ? null
+                        : OffsetDateTimeAdapter.parse((String) lowerBound);
+                OffsetDateTime upperDateTime = upperBound == null ? null
+                        : OffsetDateTimeAdapter.parse((String) upperBound);
                 return (T) buildDateInterval(name, buildRange(lowerDateTime, upperDateTime));
             case DOUBLE_INTERVAL:
                 Double lowerDouble = lowerBound == null ? null : ((Number) lowerBound).doubleValue();
@@ -180,9 +198,8 @@ public final class AttributeBuilder {
                 Long upperLong = upperBound == null ? null : ((Number) upperBound).longValue();
                 return (T) buildLongInterval(name, buildRange(lowerLong, upperLong));
             default:
-                throw new IllegalArgumentException(
-                        attributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
-                                + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(attributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
         }
     }
 
@@ -239,9 +256,8 @@ public final class AttributeBuilder {
             case URL:
                 return (T) buildUrl(pName, null);
             default:
-                throw new IllegalArgumentException(
-                        pAttributeType + " is not a handled value of " + AttributeType.class.getName() + " in "
-                                + AttributeBuilder.class.getName());
+                throw new IllegalArgumentException(pAttributeType + " is not a handled value of "
+                        + AttributeType.class.getName() + " in " + AttributeBuilder.class.getName());
         }
     }
 
@@ -294,6 +310,18 @@ public final class AttributeBuilder {
         return att;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static DateArrayAttribute buildDateCollection(String pName, Collection offsetDateTimes) {
+        DateArrayAttribute att = new DateArrayAttribute();
+        att.setName(pName);
+        if (offsetDateTimes instanceof HashSet<?>) {
+            att.setValue(((Set<OffsetDateTime>) offsetDateTimes).stream().toArray(OffsetDateTime[]::new));
+        } else if (offsetDateTimes instanceof ArrayList<?>) {
+            att.setValue(((ArrayList<OffsetDateTime>) offsetDateTimes).stream().toArray(OffsetDateTime[]::new));
+        }
+        return att;
+    }
+
     public static DateAttribute buildDate(String pName, OffsetDateTime pOffsetDateTime) {
         DateAttribute att = new DateAttribute();
         att.setName(pName);
@@ -313,6 +341,18 @@ public final class AttributeBuilder {
         DoubleArrayAttribute att = new DoubleArrayAttribute();
         att.setName(pName);
         att.setValue(pValues);
+        return att;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static DoubleArrayAttribute buildDoubleCollection(String pName, Collection values) {
+        DoubleArrayAttribute att = new DoubleArrayAttribute();
+        att.setName(pName);
+        if (values instanceof HashSet<?>) {
+            att.setValue(((Set<Double>) values).stream().toArray(Double[]::new));
+        } else if (values instanceof ArrayList<?>) {
+            att.setValue(((ArrayList<Double>) values).stream().toArray(Double[]::new));
+        }
         return att;
     }
 
@@ -338,6 +378,18 @@ public final class AttributeBuilder {
         return att;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static IntegerArrayAttribute buildIntegerCollection(String pName, Collection values) {
+        IntegerArrayAttribute att = new IntegerArrayAttribute();
+        att.setName(pName);
+        if (values instanceof HashSet<?>) {
+            att.setValue(((Set<Integer>) values).stream().toArray(Integer[]::new));
+        } else if (values instanceof ArrayList<?>) {
+            att.setValue(((ArrayList<Integer>) values).stream().toArray(Integer[]::new));
+        }
+        return att;
+    }
+
     public static AbstractAttribute<?> buildInteger(String pName, Integer pValue) {
         IntegerAttribute att = new IntegerAttribute();
         att.setName(pName);
@@ -357,6 +409,18 @@ public final class AttributeBuilder {
         LongArrayAttribute att = new LongArrayAttribute();
         att.setName(pName);
         att.setValue(pValues);
+        return att;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static LongArrayAttribute buildLongCollection(String pName, Collection values) {
+        LongArrayAttribute att = new LongArrayAttribute();
+        att.setName(pName);
+        if (values instanceof HashSet<?>) {
+            att.setValue(((Set<Long>) values).stream().toArray(Long[]::new));
+        } else if (values instanceof ArrayList<?>) {
+            att.setValue(((ArrayList<Long>) values).stream().toArray(Long[]::new));
+        }
         return att;
     }
 
@@ -385,6 +449,18 @@ public final class AttributeBuilder {
         StringArrayAttribute att = new StringArrayAttribute();
         att.setName(pName);
         att.setValue(pValues);
+        return att;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static StringArrayAttribute buildStringCollection(String pName, Collection values) {
+        StringArrayAttribute att = new StringArrayAttribute();
+        att.setName(pName);
+        if (values instanceof HashSet<?>) {
+            att.setValue(((Set<String>) values).stream().toArray(String[]::new));
+        } else if (values instanceof ArrayList<?>) {
+            att.setValue(((ArrayList<String>) values).stream().toArray(String[]::new));
+        }
         return att;
     }
 

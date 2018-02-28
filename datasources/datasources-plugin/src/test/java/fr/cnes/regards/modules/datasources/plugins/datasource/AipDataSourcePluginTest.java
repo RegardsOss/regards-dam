@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -147,7 +149,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         }
     }
 
-    // This method is called by Aip client proxy (from AipDataSOurceConfiguration) to provide some AIPs when calling
+    // This method is called by Aip client proxy (from AipDataSourceConfiguration) to provide some AIPs when calling
     // aip client method
     protected static List<AIP> createAIPs(int count, String... tags) {
         List<AIP> aips = new ArrayList<>();
@@ -161,6 +163,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
             builder.addDescriptiveInformation("START_DATE", OffsetDateTime.now());
             builder.addDescriptiveInformation("ALT_MAX", 1500 + i);
             builder.addDescriptiveInformation("HISTORY", new String[] { "H1", "H2", "H3" });
+            builder.addDescriptiveInformation("HISTORY_SET", Arrays.asList("aaaa", "bb","ccccc","dddd").stream().collect(Collectors.toSet()));
+            builder.addDescriptiveInformation("HISTORY_LIST", Arrays.asList("paris", "toulouse","lyon","nice","bordeaux").stream().collect(Collectors.toList()));
             builder.addDescriptiveInformation("POUET", "POUET");
 
             Map<String, String> dateBounds = new HashMap<>();
@@ -190,6 +194,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         map.put("properties.ALTITUDE.MAX", "properties.descriptiveInformation.ALT_MAX");
         map.put("properties.ALTITUDE.MIN", "properties.descriptiveInformation.ALT_MIN");
         map.put("properties.history", "properties.descriptiveInformation.HISTORY");
+        map.put("properties.history_set", "properties.descriptiveInformation.HISTORY_SET");
+        map.put("properties.history_list", "properties.descriptiveInformation.HISTORY_LIST");
 
         // Date interval
         map.put("properties.DATE_INTERVAL" + IDataSourcePlugin.LOWER_BOUND_SUFFIX,
