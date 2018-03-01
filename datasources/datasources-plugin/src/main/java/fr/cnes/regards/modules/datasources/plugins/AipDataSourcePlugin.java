@@ -168,8 +168,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 // Manage dynamic properties
                 if (doPropertyPath.endsWith(LOWER_BOUND_SUFFIX)) {
                     // - interval lower bound
-                    String modelKey = entry.getKey()
-                            .substring(0, doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
+                    String modelKey = entry.getKey().substring(0,
+                                                               doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
                     if (modelBindingMap.containsKey(modelKey)) {
                         // Add lower bound value at index 0
                         modelBindingMap.get(modelKey).add(0, entry.getValue());
@@ -180,8 +180,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                     }
                 } else if (doPropertyPath.endsWith(UPPER_BOUND_SUFFIX)) {
                     // - interval upper bound
-                    String modelKey = entry.getKey()
-                            .substring(0, doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
+                    String modelKey = entry.getKey().substring(0,
+                                                               doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
                     if (modelBindingMap.containsKey(modelKey)) {
                         // Add upper bound value at index 1
                         modelBindingMap.get(modelKey).add(entry.getValue());
@@ -226,12 +226,12 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 if (attributeType.isInterval()) {
                     if (entry.getValue().size() != 2) {
                         throw new ModuleException(attributeType + " properties " + entry.getKey()
-                                                          + " has to be mapped to exactly 2 values");
+                                + " has to be mapped to exactly 2 values");
                     }
                 } else {
                     if (entry.getValue().size() != 1) {
                         throw new ModuleException(attributeType + " properties " + entry.getKey()
-                                                          + " has to be mapped to a single value");
+                                + " has to be mapped to a single value");
                     }
                 }
             }
@@ -313,13 +313,14 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 String propName = dynamicPropertyPath.substring(dynamicPropertyPath.indexOf('.') + 1);
                 // Retrieve attribute type to manage interval specific value
                 AttributeType attributeType = modelMappingMap.get(doPropertyPath);
-                AbstractAttribute<?> propAtt;
+                AbstractAttribute<?> propAtt = null;
                 if (attributeType.isInterval()) {
                     // Values from AIP
                     String lowerBoundPropertyPath = entry.getValue().get(0);
                     Object lowerBound = getNestedProperty(aip, lowerBoundPropertyPath);
                     String upperBoundPropertyPath = entry.getValue().get(1);
                     Object upperBound = getNestedProperty(aip, upperBoundPropertyPath);
+                    if (lowerBound !=null || upperBound != null)
                     try {
                         propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
                     } catch (ClassCastException e) {
@@ -331,29 +332,32 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                     // Value from AIP
                     String propertyPath = entry.getValue().get(0);
                     Object value = getNestedProperty(aip, propertyPath);
-                    try {
-                        propAtt = AttributeBuilder.forType(attributeType, propName, value);
-                    } catch (ClassCastException e) {
-                        String msg = String.format("Cannot map %s to %s (value %s)", propertyPath, propName, value);
-                        throw new RsRuntimeException(msg, e);
+                    if (value != null) {
+                        try {
+                            propAtt = AttributeBuilder.forType(attributeType, propName, value);
+                        } catch (ClassCastException e) {
+                            String msg = String.format("Cannot map %s to %s (value %s)", propertyPath, propName, value);
+                            throw new RsRuntimeException(msg, e);
+                        }
                     }
                 }
+                if (propAtt != null) {
+                    // If it contains another '.', there is a fragment
+                    if (dynamicPropertyPath.contains(".")) {
+                        String fragmentName = dynamicPropertyPath.substring(0, dynamicPropertyPath.indexOf('.'));
 
-                // If it contains another '.', there is a fragment
-                if (dynamicPropertyPath.contains(".")) {
-                    String fragmentName = dynamicPropertyPath.substring(0, dynamicPropertyPath.indexOf('.'));
-
-                    Optional<AbstractAttribute<?>> opt = obj.getProperties().stream()
-                            .filter(p -> p.getName().equals(fragmentName)).findAny();
-                    ObjectAttribute fragmentAtt = opt.isPresent() ? (ObjectAttribute) opt.get() : null;
-                    if (fragmentAtt == null) {
-                        fragmentAtt = AttributeBuilder.buildObject(fragmentName, propAtt);
+                        Optional<AbstractAttribute<?>> opt = obj.getProperties().stream()
+                                .filter(p -> p.getName().equals(fragmentName)).findAny();
+                        ObjectAttribute fragmentAtt = opt.isPresent() ? (ObjectAttribute) opt.get() : null;
+                        if (fragmentAtt == null) {
+                            fragmentAtt = AttributeBuilder.buildObject(fragmentName, propAtt);
+                        } else {
+                            fragmentAtt.getValue().add(propAtt);
+                        }
+                        obj.addProperty(fragmentAtt);
                     } else {
-                        fragmentAtt.getValue().add(propAtt);
+                        obj.addProperty(propAtt);
                     }
-                    obj.addProperty(fragmentAtt);
-                } else {
-                    obj.addProperty(propAtt);
                 }
             }
         }
