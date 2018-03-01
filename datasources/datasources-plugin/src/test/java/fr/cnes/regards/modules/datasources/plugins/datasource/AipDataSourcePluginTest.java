@@ -224,7 +224,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         Assert.assertEquals("libellé du data object 0", do1.getLabel());
         Assert.assertNotNull(do1.getProperty("START_DATE"));
         Assert.assertNotNull(do1.getProperty("ALTITUDE.MAX"));
-        Assert.assertNotNull(do1.getProperty("ALTITUDE.MIN"));
+        Assert.assertNull(do1.getProperty("ALTITUDE.MIN"));
         Assert.assertNotNull(do1.getTags());
         Assert.assertTrue(do1.getTags().contains("tag1"));
         Assert.assertTrue(do1.getTags().contains("tag2"));
