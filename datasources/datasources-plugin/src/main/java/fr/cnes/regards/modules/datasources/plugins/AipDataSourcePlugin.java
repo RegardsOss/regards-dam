@@ -45,6 +45,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
+
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -54,15 +55,11 @@ import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IAipDataSourcePlugin;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.IEntityService;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -110,12 +107,6 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
     @Autowired
     private IAipClient aipClient;
-
-    /**
-     * Unparameterized entity repository
-     */
-    @Autowired
-    protected IDatasetService entityService;
 
     private Model model;
 
@@ -295,7 +286,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
 
         // Tags
         obj.getTags().addAll(commonTags);
-        obj.getTags().addAll(translateTags(aip.getTags()));
+        obj.getTags().addAll(aip.getTags());
 
         // Binded properties
         for (Map.Entry<String, List<String>> entry : modelBindingMap.entrySet()) {
@@ -320,13 +311,15 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                     Object lowerBound = getNestedProperty(aip, lowerBoundPropertyPath);
                     String upperBoundPropertyPath = entry.getValue().get(1);
                     Object upperBound = getNestedProperty(aip, upperBoundPropertyPath);
-                    if (lowerBound !=null || upperBound != null)
-                    try {
-                        propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
-                    } catch (ClassCastException e) {
-                        String msg = String.format("Cannot map %s and to %s (values %s and %s)", lowerBoundPropertyPath,
-                                                   upperBoundPropertyPath, propName, lowerBound, upperBound);
-                        throw new RsRuntimeException(msg, e);
+                    if (lowerBound != null || upperBound != null) {
+                        try {
+                            propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
+                        } catch (ClassCastException e) {
+                            String msg = String.format("Cannot map %s and to %s (values %s and %s)",
+                                                       lowerBoundPropertyPath, upperBoundPropertyPath, propName,
+                                                       lowerBound, upperBound);
+                            throw new RsRuntimeException(msg, e);
+                        }
                     }
                 } else {
                     // Value from AIP
@@ -379,23 +372,4 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         return value;
     }
 
-    /**
-     * Translate AIP tags in entity tags if found!
-     */
-    private Collection<String> translateTags(Collection<String> aipTags) {
-        Set<String> translatedTags = new java.util.HashSet<>();
-        if (aipTags != null) {
-            for (String tag : aipTags) {
-                Set<Dataset> entities = entityService.findAllBySipId(tag);
-                if (entities.isEmpty()) {
-                    // Propagate tag
-                    translatedTags.add(tag);
-                } else {
-                    // Translate tag
-                    entities.forEach(entity -> translatedTags.add(entity.getIpId().toString()));
-                }
-            }
-        }
-        return translatedTags;
-    }
 }
