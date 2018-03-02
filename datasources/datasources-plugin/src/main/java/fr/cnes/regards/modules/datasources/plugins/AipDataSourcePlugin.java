@@ -51,6 +51,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
@@ -129,6 +130,10 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             label = "refresh rate",
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
+
+//    @PluginParameter(name = FILE_SIZE, optional = true, label = "file size",
+//            description = "Parameter used to calculate the RAW DATA size")
+//    private Long fileSize;
 
     /**
      * Initialize AIP properties resolver
@@ -268,6 +273,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         obj.setIpId(aip.getId());
         obj.setSipId(aip.getSipId());
 
+        Long fileSize = 0L;
+        
         // Data files
         for (DataFileDto dataFileDto : aipDataFiles.getDataFiles()) {
             DataFile dataFile = new DataFile();
@@ -282,7 +289,14 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             dataFile.setImageHeight(dataFileDto.getHeight());
             dataFile.setImageWidth(dataFileDto.getWidth());
             obj.getFiles().put(dataFileDto.getDataType(), dataFile);
+
+            if (dataFileDto.getDataType().equals(DataType.RAWDATA)) {
+                fileSize += dataFile.getSize();
+            }
+            
         }
+        
+        obj.setFileSize(fileSize);
 
         // Tags
         obj.getTags().addAll(commonTags);
