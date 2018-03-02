@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
@@ -59,6 +60,8 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
      * Class logger
      */
     private static final Logger LOG = LoggerFactory.getLogger(SubsettingCoherenceVisitor.class);
+
+    private static final String NOT_HANDLED_STATIC_PROPERTY = "Static attribute %s cannot be used as subsetting clause";
 
     /**
      * Attribute does not exist message format
@@ -179,14 +182,24 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
 
     /**
      * extract the {@link AttributeModel} from the criterion if it is possible and check if it is a attribute from the
-     * right model and it is queryable
+     * right model
      * @param criterion {@link AbstractPropertyCriterion} from which extract the attribute
      * @return extracted {@link AttributeModel} or null
      */
     private AttributeModel extractAttribute(AbstractPropertyCriterion criterion) {
-        // contains attributes.attributeFullname
+        // contains properties.attributeFullname if it is not a static property
         String attributeFullName = criterion.getName();
-        // remove the "attributes."
+        // first, lets check if it is a static property:
+        if (StaticProperties.isStaticProperty(attributeFullName)) {
+            AttributeModel fakeAttribute = StaticProperties.buildStaticAttributeModel(attributeFullName);
+            if (fakeAttribute != null) {
+                return fakeAttribute;
+            } else {
+                LOG.error(String.format(NOT_HANDLED_STATIC_PROPERTY, attributeFullName));
+                return null;
+            }
+        }
+        // remove the "properties."
         int indexOfPoint = attributeFullName.indexOf('.');
         attributeFullName = attributeFullName.substring(indexOfPoint + 1);
         indexOfPoint = attributeFullName.indexOf('.');
