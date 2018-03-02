@@ -28,5 +28,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 public interface IAipDataSourcePlugin extends IDataSourcePlugin {
 
     String BINDING_MAP = "binding map";
+    
+    String MODEL_ATTR_FILE_SIZE ="attribue file size";
 
 }

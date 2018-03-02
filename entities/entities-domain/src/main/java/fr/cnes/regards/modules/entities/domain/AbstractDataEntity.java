@@ -22,13 +22,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.Transient;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -56,9 +56,6 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
     @Column(columnDefinition = "jsonb", name = "files")
     private Multimap<DataType, DataFile> files = HashMultimap.create();
 
-    @Transient
-    private Long fileSize;
-
     protected AbstractDataEntity() {
         this(null, null, null);
     }
@@ -73,14 +70,6 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
 
     public void setFiles(Multimap<DataType, DataFile> files) {
         this.files = files;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(Long fileSize) {
-        this.fileSize = fileSize;
     }
 
     /**

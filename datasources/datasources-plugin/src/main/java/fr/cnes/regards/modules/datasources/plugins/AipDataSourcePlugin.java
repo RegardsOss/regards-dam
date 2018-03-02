@@ -131,9 +131,9 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
 
-//    @PluginParameter(name = FILE_SIZE, optional = true, label = "file size",
-//            description = "Parameter used to calculate the RAW DATA size")
-//    private Long fileSize;
+    @PluginParameter(name = MODEL_ATTR_FILE_SIZE, optional = true, label = "Attribute model for file size",
+            description = "This parameter is used to define which model's attribute is used to map the RAW DATA file size")
+    private String modelAttrNameFileSize;
 
     /**
      * Initialize AIP properties resolver
@@ -274,7 +274,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         obj.setSipId(aip.getSipId());
 
         Long fileSize = 0L;
-        
+
         // Data files
         for (DataFileDto dataFileDto : aipDataFiles.getDataFiles()) {
             DataFile dataFile = new DataFile();
@@ -291,12 +291,11 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             obj.getFiles().put(dataFileDto.getDataType(), dataFile);
 
             if (dataFileDto.getDataType().equals(DataType.RAWDATA)) {
-                fileSize += dataFile.getSize();
+                fileSize += dataFileDto.getFileSize();
             }
-            
         }
-        
-        obj.setFileSize(fileSize);
+
+        processFileSizeAttribute(obj, fileSize);
 
         // Tags
         obj.getTags().addAll(commonTags);
@@ -370,6 +369,16 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         }
 
         return obj;
+    }
+
+    /**
+     * 
+     * @param obj
+     * @param fileSize
+     */
+    private void processFileSizeAttribute(DataObject obj, Long fileSize) {
+        AbstractAttribute<?> longAttr = AttributeBuilder.forType(AttributeType.LONG, modelAttrNameFileSize, fileSize);
+        obj.addProperty(longAttr);
     }
 
     /**
