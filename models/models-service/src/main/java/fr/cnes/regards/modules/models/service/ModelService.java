@@ -401,7 +401,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         List<PluginConfiguration> plgConfigurations = new ArrayList<>();
         // Import model from input stream
         final List<ModelAttrAssoc> modelAtts = XmlImportHelper.importModel(is, plgConfigurations);
-        // Create/update PLuginConfigurations if the are some
+        // Create/update PluginConfigurations if there are some
         if (!plgConfigurations.isEmpty()) {
             this.eventualyCreatePluginConfigurations(plgConfigurations);
         }
