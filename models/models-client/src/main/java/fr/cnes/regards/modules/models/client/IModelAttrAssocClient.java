@@ -42,28 +42,27 @@ public interface IModelAttrAssocClient {
     /**
      * Client base path
      */
-    public static final String BASE_MAPPING = "/models";
+    String BASE_MAPPING = "/models";
 
     /**
      * Client type path
      */
-    public static final String TYPE_MAPPING = "/{pModelId}/attributes";
+    String TYPE_MAPPING = "/{pModelId}/attributes";
 
     /**
      * Client association path
      */
-    public static final String ASSOCS_MAPPING = "/assocs";
+    String ASSOCS_MAPPING = "/assocs";
 
     @RequestMapping(method = RequestMethod.GET, path = TYPE_MAPPING)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId);
+    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId);
 
     /**
      * Retrieve model attribute associations for a given entity type (optional)
-     * @param type
      * @return the model attribute associations
      */
     @RequestMapping(path = ASSOCS_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(
+    ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(
             @RequestParam(name = "type", required = false) EntityType type);
 
 }

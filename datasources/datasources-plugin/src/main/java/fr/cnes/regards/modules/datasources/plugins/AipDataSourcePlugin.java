@@ -46,6 +46,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
 
+import com.google.common.base.Strings;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
@@ -164,8 +165,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 // Manage dynamic properties
                 if (doPropertyPath.endsWith(LOWER_BOUND_SUFFIX)) {
                     // - interval lower bound
-                    String modelKey = entry.getKey().substring(0,
-                                                               doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
+                    String modelKey = entry.getKey()
+                            .substring(0, doPropertyPath.length() - LOWER_BOUND_SUFFIX.length());
                     if (modelBindingMap.containsKey(modelKey)) {
                         // Add lower bound value at index 0
                         modelBindingMap.get(modelKey).add(0, entry.getValue());
@@ -176,8 +177,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                     }
                 } else if (doPropertyPath.endsWith(UPPER_BOUND_SUFFIX)) {
                     // - interval upper bound
-                    String modelKey = entry.getKey().substring(0,
-                                                               doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
+                    String modelKey = entry.getKey()
+                            .substring(0, doPropertyPath.length() - UPPER_BOUND_SUFFIX.length());
                     if (modelBindingMap.containsKey(modelKey)) {
                         // Add upper bound value at index 1
                         modelBindingMap.get(modelKey).add(entry.getValue());
@@ -222,12 +223,12 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                 if (attributeType.isInterval()) {
                     if (entry.getValue().size() != 2) {
                         throw new ModuleException(attributeType + " properties " + entry.getKey()
-                                + " has to be mapped to exactly 2 values");
+                                                          + " has to be mapped to exactly 2 values");
                     }
                 } else {
                     if (entry.getValue().size() != 1) {
                         throw new ModuleException(attributeType + " properties " + entry.getKey()
-                                + " has to be mapped to a single value");
+                                                          + " has to be mapped to a single value");
                     }
                 }
             }
@@ -290,7 +291,7 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             dataFile.setImageWidth(dataFileDto.getWidth());
             obj.getFiles().put(dataFileDto.getDataType(), dataFile);
 
-            if (dataFileDto.getDataType().equals(DataType.RAWDATA)) {
+            if (dataFileDto.getDataType() == DataType.RAWDATA) {
                 fileSize += dataFileDto.getFileSize();
             }
         }
@@ -328,9 +329,9 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
                         try {
                             propAtt = AttributeBuilder.forType(attributeType, propName, lowerBound, upperBound);
                         } catch (ClassCastException e) {
-                            String msg = String.format("Cannot map %s and to %s (values %s and %s)",
-                                                       lowerBoundPropertyPath, upperBoundPropertyPath, propName,
-                                                       lowerBound, upperBound);
+                            String msg = String
+                                    .format("Cannot map %s and to %s (values %s and %s)", lowerBoundPropertyPath,
+                                            upperBoundPropertyPath, propName, lowerBound, upperBound);
                             throw new RsRuntimeException(msg, e);
                         }
                     }
@@ -372,13 +373,16 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
     }
 
     /**
-     * 
+     *
      * @param obj
      * @param fileSize
      */
     private void processFileSizeAttribute(DataObject obj, Long fileSize) {
-        AbstractAttribute<?> longAttr = AttributeBuilder.forType(AttributeType.LONG, modelAttrNameFileSize, fileSize);
-        obj.addProperty(longAttr);
+        if (!Strings.isNullOrEmpty(modelAttrNameFileSize)) {
+            AbstractAttribute<?> longAttr = AttributeBuilder
+                    .forType(AttributeType.LONG, modelAttrNameFileSize, fileSize);
+            obj.addProperty(longAttr);
+        }
     }
 
     /**
