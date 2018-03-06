@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,15 +49,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.gson.stream.JsonReader;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.Table;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
@@ -334,11 +335,11 @@ public abstract class AbstractDataObjectMapping {
         if (LOG.isDebugEnabled() && (attr != null)) {
             if ((attrMapping.getName() != null) && attrMapping.getName().equals(attrMapping.getNameDS())) {
                 LOG.debug("the value for <" + attrMapping.getName() + "> of type <" + attrMapping.getType() + "> is :"
-                                  + attr.getValue());
+                        + attr.getValue());
 
             } else {
                 LOG.debug("the value for <" + attrMapping.getName() + "|" + attrMapping.getNameDS() + "> of type <"
-                                  + attrMapping.getType() + "> is :" + attr.getValue());
+                        + attrMapping.getType() + "> is :" + attr.getValue());
             }
         }
 
@@ -412,7 +413,7 @@ public abstract class AbstractDataObjectMapping {
                 LOG.error(e.getMessage(), e);
             }
         }
-/*        if (attrMapping.isRawDataSize()) {
+        /*        if (attrMapping.isRawDataSize()) {
             Long size = ((LongAttribute) attr).getValue();
             Collection<DataFile> rawDatas = dataObject.getFiles().get(DataType.RAWDATA);
             // When external mapping, only one file per type is authorized so dataFiles is a singleton or empty

@@ -68,10 +68,6 @@
 			<artifactId>plugins-domain</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-domain</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards</artifactId>
 		</dependency>

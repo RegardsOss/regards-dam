@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,6 +53,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @Service
 @MultitenantTransactional
 public class DocumentService extends AbstractEntityService<Document> implements IDocumentService {
+
     /**
      * Attribute {@link PluginService}
      */
@@ -79,7 +81,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
         Document doc = getDocument(documentId);
         Collection<DataFile> docFiles = documentFilesService.handleFiles(doc, files, fileLsUriTemplate);
         // Merge previous files with new ones
-        if (doc.getDocumentFiles() != null && !doc.getDocumentFiles().isEmpty()) {
+        if ((doc.getDocumentFiles() != null) && !doc.getDocumentFiles().isEmpty()) {
             docFiles.addAll(doc.getDocumentFiles());
         }
         doc.getFiles().putAll(DataType.DOCUMENT, docFiles);

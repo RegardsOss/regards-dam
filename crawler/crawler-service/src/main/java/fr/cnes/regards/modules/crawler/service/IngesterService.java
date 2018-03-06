@@ -42,8 +42,8 @@ import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
@@ -228,6 +228,7 @@ public class IngesterService
         // Find all current datasource ingestions
         Map<Long, DatasourceIngestion> dsIngestionsMap = dsIngestionRepos.findAll().stream()
                 .collect(Collectors.toMap(DatasourceIngestion::getId, Function.identity()));
+
         // Find all datasource plugins less inactive ones => find all ACTIVE datasource plugins
         List<PluginConfiguration> pluginConfs = pluginService.getPluginConfigurationsByType(IDataSourcePlugin.class)
                 .stream().filter(PluginConfiguration::isActive).collect(Collectors.toList());
@@ -235,10 +236,7 @@ public class IngesterService
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
-                                                                                 OffsetDateTime.now()
-                                                                                         .withOffsetSameInstant(
-                                                                                                 ZoneOffset.UTC),
-                                                                                 pluginConf.getLabel())))
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -277,15 +275,14 @@ public class IngesterService
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
-                        dsIngestion.getLastIngestDate();
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
+                        ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) : dsIngestion.getLastIngestDate();
                 dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(
-                        dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
+                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
+                                                                                          ChronoUnit.SECONDS));
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case STARTED: // Already in progress

@@ -25,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import fr.cnes.regards.framework.module.rest.representation.ServerErrorResponse;
 import fr.cnes.regards.modules.datasources.rest.exception.AssociatedDatasetExistsException;
@@ -35,7 +34,7 @@ import fr.cnes.regards.modules.datasources.rest.exception.AssociatedDatasetExist
  */
 @RestControllerAdvice(annotations = RestController.class)
 @Order(Ordered.LOWEST_PRECEDENCE - 200)
-public class DataSourceControllerAdvice extends ResponseEntityExceptionHandler {
+public class DataSourceControllerAdvice {
 
     @ExceptionHandler(AssociatedDatasetExistsException.class)
     public ResponseEntity<ServerErrorResponse> handleAssociatedDatasetExistsException(

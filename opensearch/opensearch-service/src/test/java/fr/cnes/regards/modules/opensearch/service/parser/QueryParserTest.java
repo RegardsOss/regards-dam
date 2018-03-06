@@ -228,6 +228,22 @@ public class QueryParserTest {
     }
 
     @Test
+    @Purpose("Tests queries like tag:<ip id containing :>")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    public void ipIdParsing() throws OpenSearchParseException, UnsupportedEncodingException {
+        String key = StaticProperties.TAGS;
+        String val = "\"URN\\:PROJECT\\:DATA\\:patati\\:V1\"";
+        String term = key + ":" + val;
+        ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof StringMatchCriterion);
+
+        final StringMatchCriterion crit = (StringMatchCriterion) criterion;
+        Assert.assertEquals(key, crit.getName());
+    }
+
+    @Test
     @Purpose("Tests queries like title:*rry*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void wildcardsAround() throws OpenSearchParseException {

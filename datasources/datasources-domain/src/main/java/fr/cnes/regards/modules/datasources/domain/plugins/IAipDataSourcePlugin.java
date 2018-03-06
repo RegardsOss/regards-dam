@@ -16,30 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-
-package fr.cnes.regards.modules.datasources.plugins.interfaces;
+package fr.cnes.regards.modules.datasources.domain.plugins;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 
 /**
- * Class IDBDataSourceFromSingleTablePlugin
- *
- * Allows to search in a database, and to explore the database's tables, columns and indexes.
- * @author Christophe Mertz
+ * Aip specialization of data source plugin
+ * @author oroussel
  */
-@PluginInterface(description = "Plugin to explore a data source and search in a single table of the data source")
-public interface IDBDataSourceFromSingleTablePlugin extends IDBDataSourcePlugin {
+@PluginInterface(description = "Plugin to search in a data source that consumes AIPs")
+public interface IAipDataSourcePlugin extends IDataSourcePlugin {
 
-    /**
-     * The table parameter name
-     */
-    String TABLE_PARAM = "table";
-
-    /**
-     * Allows to define the database table used, and the columns of this table.</br>
-     * The tables and columns are used to generate the SQL request used to execute statement on the database.
-     * @param pTable the name of the table
-     */
-    void initializePluginMapping(String pTable);
+    String BINDING_MAP = "binding map";
+    
+    String MODEL_ATTR_FILE_SIZE ="attribue file size";
 
 }

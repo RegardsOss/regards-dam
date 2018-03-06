@@ -155,7 +155,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultGet(DatasetController.DATASET_PATH, expectations, "Failed to fetch dataset list");
     }
 
-    @Ignore
+
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_010")
     @Requirement("REGARDS_DSL_DAM_SET_020")
@@ -176,13 +176,13 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         dataSet2.setCreationDate(OffsetDateTime.now());
         dataSet2.setSipId("SipId2");
         dataSet2.setDataModel(dataModel.getName());
-        dataSet2.getProperties().add(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
-        dataSet2.getProperties().add(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
-        dataSet2.getProperties().add(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
-        dataSet2.getProperties().add(AttributeBuilder.buildLong("count", 454L));
+        dataSet2.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusDays(1)));
+        dataSet2.addProperty(AttributeBuilder.buildDate("STOP_DATE", OffsetDateTime.now().plusDays(1)));
+        dataSet2.addProperty(AttributeBuilder.buildInteger("FILE_SIZE", 445445));
+        dataSet2.addProperty(AttributeBuilder.buildLong("count", 454L));
 
         // Set test case
-        dataSet2.setOpenSearchSubsettingClause("properties.FILE_SIZE:10");
+        dataSet2.setOpenSearchSubsettingClause("tags:10");
         expectations.add(MockMvcResultMatchers.status().isCreated());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
 
@@ -334,7 +334,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
 
-        DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10");
+        DatasetController.Query query = new DatasetController.Query("properties.FILE_SIZE:10%20AND%20tags:abc");
         performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
                 + "?dataModelName=" + dataModel.getName(), query, expectations,
                            "Could not validate that subsetting clause");
@@ -345,7 +345,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(false)));
         performDefaultPost(DatasetController.DATASET_PATH + DatasetController.DATA_SUB_SETTING_VALIDATION
                 + "?dataModelName=" + dataModel.getName(), query, expectations,
-                           "Could not validate that subsetting clause");
+                           "Could validate that subsetting clause");
     }
 
     /**

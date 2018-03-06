@@ -43,7 +43,7 @@ import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 import fr.cnes.regards.modules.models.domain.Model;
 

@@ -29,7 +29,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
-import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
@@ -75,5 +75,5 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @return visitor to perform a coherence check
      * @throws ModuleException if the model cannot be retrieve
      */
-    SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException;
+    ICriterionVisitor<Boolean> getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException;
 }

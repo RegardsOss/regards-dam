@@ -23,6 +23,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
@@ -57,8 +59,8 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.rest.exception.AssociatedAccessRightExistsException;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -108,6 +110,8 @@ public class DatasetController implements IResourceController<Dataset> {
      * Controller path for subsetting clause validation
      */
     public static final String DATA_SUB_SETTING_VALIDATION = "/isValidSubsetting";
+
+    private static final Logger LOG = LoggerFactory.getLogger(DatasetController.class);
 
     /**
      * Service handling hypermedia resources
@@ -339,9 +343,10 @@ public class DatasetController implements IResourceController<Dataset> {
         // we have to add "q=" to be able to parse the query
         try {
             ICriterion criterionToBeVisited = openSearchService.parse("q=" + query.getQuery());
-            SubsettingCoherenceVisitor visitor = service.getSubsettingCoherenceVisitor(dataModelName);
+            ICriterionVisitor<Boolean> visitor = service.getSubsettingCoherenceVisitor(dataModelName);
             return ResponseEntity.ok(new Validity(criterionToBeVisited.accept(visitor)));
         } catch (OpenSearchParseException e) {
+            LOG.error(e.getMessage(), e);
             return ResponseEntity.ok(new Validity(false));
         }
     }
@@ -349,22 +354,41 @@ public class DatasetController implements IResourceController<Dataset> {
     @Override
     public Resource<Dataset> toResource(final Dataset pElement, final Object... pExtras) {
         final Resource<Dataset> resource = resourceService.toResource(pElement);
-        resourceService.addLink(resource, this.getClass(), "retrieveDataset", LinkRels.SELF,
+        resourceService.addLink(resource,
+                                this.getClass(),
+                                "retrieveDataset",
+                                LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "retrieveDatasets", LinkRels.LIST,
+        resourceService.addLink(resource,
+                                this.getClass(),
+                                "retrieveDatasets",
+                                LinkRels.LIST,
                                 MethodParamFactory.build(String.class, pElement.getLabel()),
                                 MethodParamFactory.build(Pageable.class),
                                 MethodParamFactory.build(PagedResourcesAssembler.class));
-        resourceService.addLink(resource, this.getClass(), "deleteDataset", LinkRels.DELETE,
+        resourceService.addLink(resource,
+                                this.getClass(),
+                                "deleteDataset",
+                                LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
+        resourceService.addLink(resource,
+                                this.getClass(),
+                                "updateDataset",
+                                LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(MultipartFile.class),
+                                MethodParamFactory.build(Dataset.class),
+                                MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
-        resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
+        resourceService.addLink(resource,
+                                this.getClass(),
+                                "dissociate",
+                                "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
-        resourceService.addLink(resource, this.getClass(), "associate", "associate",
+        resourceService.addLink(resource,
+                                this.getClass(),
+                                "associate",
+                                "associate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
         return resource;

@@ -26,7 +26,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.modules.datasources.domain.Column;
 import fr.cnes.regards.modules.datasources.domain.Table;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
 
 /**
  * This class allows to the {@link PluginConfiguration} associated to the plugintype {@link IDBConnectionPlugin}.</br>
@@ -76,7 +76,7 @@ public interface IDBConnectionService {
      * Querying the status of a database connection pools.
      * @param configurationId a {@link PluginConfiguration} identifier
      * @return true success to the connection to the database.</br>
-     * false unable to connect to the database
+     *         false unable to connect to the database
      * @throws ModuleException throw if an error occurs
      */
     Boolean testDBConnection(Long configurationId) throws ModuleException;

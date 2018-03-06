@@ -17,7 +17,7 @@
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package fr.cnes.regards.modules.datasources.plugins.interfaces;
+package fr.cnes.regards.modules.datasources.domain.plugins;
 
 import java.time.OffsetDateTime;
 
@@ -25,7 +25,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 

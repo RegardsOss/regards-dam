@@ -28,6 +28,7 @@ import org.hibernate.annotations.Type;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;

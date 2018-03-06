@@ -27,8 +27,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.models.domain.Model;

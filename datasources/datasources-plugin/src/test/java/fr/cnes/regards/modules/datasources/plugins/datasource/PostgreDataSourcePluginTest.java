@@ -61,10 +61,10 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.DataSourceEntity;
 import fr.cnes.regards.modules.datasources.utils.IDataSourceRepositoryTest;
 import fr.cnes.regards.modules.datasources.utils.PostgreDataSourcePluginTestConfiguration;
@@ -85,7 +85,7 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgreDataSourcePluginTest.class);
 
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources";
 
     // private static final String TENANT = "PG_TENANT";
     private static final String TENANT = DEFAULT_TENANT;
@@ -152,10 +152,12 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
         repository.deleteAll();
         repository.save(new DataSourceEntity("azertyuiop", 12345, 1.10203045607080901234568790123456789, 45.5444544454,
                 LocalDate.now().minusDays(10), LocalTime.now().minusHours(9), LocalDateTime.now(),
-                OffsetDateTime.now().minusMinutes(33), OffsetDateTime.now().minusMinutes(12132125).toString(), true, new URL("file", "localhost", "")));
+                OffsetDateTime.now().minusMinutes(33), OffsetDateTime.now().minusMinutes(12132125).toString(), true,
+                new URL("file", "localhost", "")));
         repository.save(new DataSourceEntity("Toulouse", 110, 3.141592653589793238462643383279, -15.2323654654564654,
                 LocalDate.now().minusMonths(1), LocalTime.now().minusMinutes(10), LocalDateTime.now().plusHours(33),
-                OffsetDateTime.now().minusSeconds(22), OffsetDateTime.now().minusSeconds(4464654).toString(), true, new URL("http", "localhost", "")));
+                OffsetDateTime.now().minusSeconds(22), OffsetDateTime.now().minusSeconds(4464654).toString(), true,
+                new URL("http", "localhost", "")));
         repository.save(new DataSourceEntity("Paris", 350, -3.141592653589793238462643383279502884197169399375105,
                 25.565465465454564654654654, LocalDate.now().minusDays(10), LocalTime.now().minusHours(9),
                 LocalDateTime.now().minusMonths(2), OffsetDateTime.now().minusHours(7),
@@ -283,7 +285,8 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
 
         attributesMapping.add(new DynamicAttributeMapping(NAME_ATTR, AttributeType.STRING,
                 "'" + HELLO + "--> '||label as label"));
-        attributesMapping.add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
+        attributesMapping
+                .add(new DynamicAttributeMapping("alt", "geometry", AttributeType.INTEGER, "altitude AS altitude"));
         attributesMapping.add(new DynamicAttributeMapping("lat", "geometry", AttributeType.DOUBLE, "latitude"));
         attributesMapping.add(new DynamicAttributeMapping("long", "geometry", AttributeType.DOUBLE, "longitude"));
         attributesMapping.add(new DynamicAttributeMapping("creationDate1", "hello", AttributeType.DATE_ISO8601,
@@ -291,12 +294,13 @@ public class PostgreDataSourcePluginTest extends AbstractRegardsServiceIT {
         attributesMapping.add(new DynamicAttributeMapping("creationDate2", "hello", AttributeType.DATE_ISO8601,
                 "timeStampWithoutTimeZone"));
         attributesMapping.add(new DynamicAttributeMapping("date", "hello", AttributeType.DATE_ISO8601, "date"));
-        attributesMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE, AttributeType.DATE_ISO8601,
-                "timeStampWithTimeZone"));
+        attributesMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.LAST_UPDATE,
+                AttributeType.DATE_ISO8601, "timeStampWithTimeZone"));
         attributesMapping.add(new DynamicAttributeMapping("isUpdate", "hello", AttributeType.BOOLEAN, "update"));
         attributesMapping.add(new DynamicAttributeMapping("date_string", AttributeType.DATE_ISO8601,
                 "to_timestamp(dateStr, 'YYYY-MM-DD HH24:MI:SS:US')"));
-        attributesMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
+        attributesMapping
+                .add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.LONG, "id"));
     }
 
 }

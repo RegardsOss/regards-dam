@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -45,6 +46,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -58,13 +60,14 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.plugins.AipDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.exception.DataSourceException;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.utils.exceptions.DataSourcesPluginException;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.attribute.DateIntervalAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.IntegerIntervalAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.StringArrayAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -117,7 +120,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
                 .addParameter(AipDataSourcePlugin.SUBSETTING_TAGS, Arrays.asList(MODEL_NAME))
                 .addParameter(AipDataSourcePlugin.MODEL_NAME_PARAM, MODEL_NAME)
                 .addParameter(IDataSourcePlugin.REFRESH_RATE, 1800)
-                .addParameter(IDataSourcePlugin.TAGS, Lists.newArrayList("TOTO", "TITI")).getParameters();
+                .addParameter(IDataSourcePlugin.TAGS, Lists.newArrayList("TOTO", "TITI"))
+                .addParameter(AipDataSourcePlugin.MODEL_ATTR_FILE_SIZE, "SIZE").getParameters();
 
         PluginMetaData metadata = PluginUtils.createPluginMetaData(AipDataSourcePlugin.class,
                                                                    IDataSourcePlugin.class.getPackage().getName(),
@@ -147,7 +151,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         }
     }
 
-    // This method is called by Aip client proxy (from AipDataSOurceConfiguration) to provide some AIPs when calling
+    // This method is called by Aip client proxy (from AipDataSourceConfiguration) to provide some AIPs when calling
     // aip client method
     protected static List<AIP> createAIPs(int count, String... tags) {
         List<AIP> aips = new ArrayList<>();
@@ -161,6 +165,10 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
             builder.addDescriptiveInformation("START_DATE", OffsetDateTime.now());
             builder.addDescriptiveInformation("ALT_MAX", 1500 + i);
             builder.addDescriptiveInformation("HISTORY", new String[] { "H1", "H2", "H3" });
+            builder.addDescriptiveInformation("HISTORY_SET", Arrays.asList("aaaa", "bb", "ccccc", "dddd").stream()
+                    .collect(Collectors.toSet()));
+            builder.addDescriptiveInformation("HISTORY_LIST", Arrays
+                    .asList("paris", "toulouse", "lyon", "nice", "bordeaux").stream().collect(Collectors.toList()));
             builder.addDescriptiveInformation("POUET", "POUET");
 
             Map<String, String> dateBounds = new HashMap<>();
@@ -190,6 +198,8 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         map.put("properties.ALTITUDE.MAX", "properties.descriptiveInformation.ALT_MAX");
         map.put("properties.ALTITUDE.MIN", "properties.descriptiveInformation.ALT_MIN");
         map.put("properties.history", "properties.descriptiveInformation.HISTORY");
+        map.put("properties.history_set", "properties.descriptiveInformation.HISTORY_SET");
+        map.put("properties.history_list", "properties.descriptiveInformation.HISTORY_LIST");
 
         // Date interval
         map.put("properties.DATE_INTERVAL" + IDataSourcePlugin.LOWER_BOUND_SUFFIX,
@@ -218,7 +228,7 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
         Assert.assertEquals("libellé du data object 0", do1.getLabel());
         Assert.assertNotNull(do1.getProperty("START_DATE"));
         Assert.assertNotNull(do1.getProperty("ALTITUDE.MAX"));
-        Assert.assertNotNull(do1.getProperty("ALTITUDE.MIN"));
+        Assert.assertNull(do1.getProperty("ALTITUDE.MIN"));
         Assert.assertNotNull(do1.getTags());
         Assert.assertTrue(do1.getTags().contains("tag1"));
         Assert.assertTrue(do1.getTags().contains("tag2"));
@@ -235,6 +245,9 @@ public class AipDataSourcePluginTest extends AbstractRegardsServiceIT {
 
         Assert.assertTrue(do1.getTags().contains("TOTO"));
         Assert.assertTrue(do1.getTags().contains("TITI"));
+        
+        Assert.assertTrue(do1.getProperty("SIZE") instanceof LongAttribute);
+        
     }
 
     @After
