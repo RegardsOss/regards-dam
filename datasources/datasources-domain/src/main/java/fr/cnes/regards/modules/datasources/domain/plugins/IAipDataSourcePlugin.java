@@ -29,6 +29,6 @@ public interface IAipDataSourcePlugin extends IDataSourcePlugin {
 
     String BINDING_MAP = "binding map";
     
-    String MODEL_ATTR_FILE_SIZE ="attribue file size";
+    String MODEL_ATTR_FILE_SIZE ="attribute file size";
 
 }

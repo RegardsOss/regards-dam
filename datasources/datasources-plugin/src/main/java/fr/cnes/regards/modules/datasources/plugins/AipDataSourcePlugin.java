@@ -45,7 +45,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Joiner;
-
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -132,8 +131,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             description = "Ingestion refresh rate in seconds (minimum delay between two consecutive ingestions)")
     private Integer refreshRate;
 
-    @PluginParameter(name = MODEL_ATTR_FILE_SIZE, optional = true, label = "Attribute model for file size",
-            description = "This parameter is used to define which model's attribute is used to map the RAW DATA file size")
+    @PluginParameter(name = MODEL_ATTR_FILE_SIZE, optional = true, label = "Attribute model for RAW DATA files size",
+            description = "This parameter is used to define which model attribute is used to map the RAW DATA files sizes")
     private String modelAttrNameFileSize;
 
     /**
@@ -274,7 +273,8 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         obj.setIpId(aip.getId());
         obj.setSipId(aip.getSipId());
 
-        Long fileSize = 0L;
+        // Sum size of all RAW DATA Files
+        Long rawDataFilesSize = 0L;
 
         // Data files
         for (DataFileDto dataFileDto : aipDataFiles.getDataFiles()) {
@@ -292,11 +292,14 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
             obj.getFiles().put(dataFileDto.getDataType(), dataFile);
 
             if (dataFileDto.getDataType() == DataType.RAWDATA) {
-                fileSize += dataFileDto.getFileSize();
+                rawDataFilesSize += dataFileDto.getFileSize();
             }
         }
 
-        processFileSizeAttribute(obj, fileSize);
+        // Create attribute containing all RAW DATA files size
+        if (!Strings.isNullOrEmpty(modelAttrNameFileSize)) {
+            obj.addProperty(AttributeBuilder.forType(AttributeType.LONG, modelAttrNameFileSize, rawDataFilesSize));
+        }
 
         // Tags
         obj.getTags().addAll(commonTags);
@@ -370,19 +373,6 @@ public class AipDataSourcePlugin implements IAipDataSourcePlugin {
         }
 
         return obj;
-    }
-
-    /**
-     *
-     * @param obj
-     * @param fileSize
-     */
-    private void processFileSizeAttribute(DataObject obj, Long fileSize) {
-        if (!Strings.isNullOrEmpty(modelAttrNameFileSize)) {
-            AbstractAttribute<?> longAttr = AttributeBuilder
-                    .forType(AttributeType.LONG, modelAttrNameFileSize, fileSize);
-            obj.addProperty(longAttr);
-        }
     }
 
     /**
