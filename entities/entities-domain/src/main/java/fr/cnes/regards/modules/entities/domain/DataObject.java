@@ -54,8 +54,15 @@ public class DataObject extends AbstractDataEntity {
 
     /**
      * This field only exists for Gson serialization (used by frontent)
+     * Indicates if a physical file (ie a RAWDATA) exists with this data object
      */
     private Boolean containsPhysicalData = null;
+
+    /**
+     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search.
+     * Indicates if user who made the search has the RIGHT to download associated DATA
+     */
+    private Boolean downloadable = false;
 
     public DataObject(Model model, String tenant, String label) {
         super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
@@ -90,6 +97,14 @@ public class DataObject extends AbstractDataEntity {
 
     public void setMetadata(DataObjectMetadata metadata) {
         this.metadata = metadata;
+    }
+
+    public Boolean getDownloadable() {
+        return downloadable;
+    }
+
+    public void setDownloadable(Boolean downloadable) {
+        this.downloadable = downloadable;
     }
 
     @Override
