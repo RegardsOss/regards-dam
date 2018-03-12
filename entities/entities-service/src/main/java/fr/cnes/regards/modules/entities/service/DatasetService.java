@@ -191,7 +191,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 final List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
-                final Set<Dataset> datasets = datasetRepository.findAllByModelId(modelIds);
+                final Set<Dataset> datasets = datasetRepository.findAllByModelIdIn(modelIds);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             }
         }
