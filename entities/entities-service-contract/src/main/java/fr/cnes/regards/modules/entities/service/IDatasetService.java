@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -30,6 +31,7 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterionVisitor;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
@@ -51,6 +53,17 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @param pPageable
      */
     Page<AttributeModel> getDataAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
+            throws ModuleException;
+
+    /**
+     * Retrieve {@link AttributeModel}s associated to the given {@link Dataset}s or {@link Model}s given.
+     * @param pUrns
+     * @param pModelIds
+     * @param pPageable
+     * @return
+     * @throws ModuleException
+     */
+    Page<AttributeModel> getAttributeModels(Set<UniformResourceName> pUrns, List<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
 
     /**
