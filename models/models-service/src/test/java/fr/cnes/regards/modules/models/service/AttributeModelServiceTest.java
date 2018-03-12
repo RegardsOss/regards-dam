@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.jpa.domain.Specification;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
@@ -107,9 +108,9 @@ public class AttributeModelServiceTest {
         expectedAttModels.add(AttributeModelBuilder.build("FIRST", AttributeType.STRING, "ForTests").get());
         expectedAttModels.add(AttributeModelBuilder.build("SECOND", AttributeType.BOOLEAN, "ForTests").get());
 
-        Mockito.when(mockAttModelR.findAll()).thenReturn(expectedAttModels);
+        Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(null, null);
+        final List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null);
         Assert.assertEquals(2, attModels.size());
     }
 
@@ -121,9 +122,9 @@ public class AttributeModelServiceTest {
         final List<AttributeModel> expectedAttModels = new ArrayList<>();
         expectedAttModels.add(AttributeModelBuilder.build("FIRST_STRING", AttributeType.STRING, "ForTests").get());
 
-        Mockito.when(mockAttModelR.findByType(AttributeType.STRING)).thenReturn(expectedAttModels);
+        Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null);
+        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null);
         Assert.assertEquals(1, attModels.size());
     }
 
