@@ -92,5 +92,5 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
-    Set<Dataset> findAllByModelId(Set<Long> pModelIds);
+    Set<Dataset> findAllByModelIdIn(Set<Long> pModelIds);
 }

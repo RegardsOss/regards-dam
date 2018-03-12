@@ -81,7 +81,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity>
      * @return entities complient with the given model
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<T> findAllByModelId(Set<Long> pModelIds);
+    Set<T> findAllByModelIdIn(Set<Long> pModelIds);
 
     /**
      * Find all entities containing given tag
