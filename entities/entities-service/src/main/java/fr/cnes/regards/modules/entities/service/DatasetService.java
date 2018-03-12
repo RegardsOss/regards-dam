@@ -198,18 +198,18 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, List<Long> modelIds,
-            Pageable pageable) throws ModuleException {
+    public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
+            throws ModuleException {
         if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             // Retrieve all dataset models attributes
             List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
-            List<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toList());
+            Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
             return modelAttributeService.getAttributeModels(dsModelIds, pageable);
         } else {
             if ((modelIds == null) || modelIds.isEmpty()) {
                 // Retrieve all attributes associated to the given datasets
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
-                List<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toList());
+                Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());
                 return modelAttributeService.getAttributeModels(dsModelIds, pageable);
             } else {
                 // Retrieve all attributes associated to the given models.

@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -63,7 +62,7 @@ public interface IDatasetService extends IEntityService<Dataset> {
      * @return
      * @throws ModuleException
      */
-    Page<AttributeModel> getAttributeModels(Set<UniformResourceName> pUrns, List<Long> pModelIds, Pageable pPageable)
+    Page<AttributeModel> getAttributeModels(Set<UniformResourceName> pUrns, Set<Long> pModelIds, Pageable pPageable)
             throws ModuleException;
 
     /**

@@ -107,5 +107,5 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      * @param pageable
      * @return {@link AttributeModel}s
      */
-    Page<AttributeModel> getAttributeModels(List<Long> modelIds, Pageable pageable);
+    Page<AttributeModel> getAttributeModels(Set<Long> modelIds, Pageable pageable);
 }

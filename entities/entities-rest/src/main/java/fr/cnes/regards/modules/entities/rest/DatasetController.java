@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.entities.rest;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import javax.validation.Valid;
@@ -348,7 +347,7 @@ public class DatasetController implements IResourceController<Dataset> {
     @ResourceAccess(description = "Retrieves data attributes of given datasets")
     public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveAttributes(
             @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> pUrns,
-            @RequestParam(name = "modelIds", required = false) final List<Long> pModelIds, final Pageable pPageable,
+            @RequestParam(name = "modelIds", required = false) final Set<Long> pModelIds, final Pageable pPageable,
             final PagedResourcesAssembler<AttributeModel> pAssembler) throws ModuleException {
         final Page<AttributeModel> result = service.getAttributeModels(pUrns, pModelIds, pPageable);
         return new ResponseEntity<>(pAssembler.toResource(result), HttpStatus.OK);

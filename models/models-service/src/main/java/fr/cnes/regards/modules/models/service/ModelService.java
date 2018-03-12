@@ -201,7 +201,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModels(List<Long> modelIds, Pageable pageable) {
+    public Page<AttributeModel> getAttributeModels(Set<Long> modelIds, Pageable pageable) {
         return modelAttributeRepository.findAllAttributeByModelIdIn(modelIds, pageable);
     }
 
