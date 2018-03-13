@@ -30,6 +30,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Preconditions;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -87,6 +88,16 @@ public class AccessRightService implements IAccessRightService {
         return repository.findAll(pageable);
     }
 
+    @Override
+    public Optional<AccessRight> retrieveAccessRight(String accessGroupName, UniformResourceName datasetIpId)
+            throws EntityNotFoundException {
+        Preconditions.checkNotNull(accessGroupName);
+        Preconditions.checkNotNull(datasetIpId);
+        AccessGroup ag = accessGroupService.retrieveAccessGroup(accessGroupName);
+        Dataset dataset = datasetService.load(datasetIpId);
+
+        return repository.findAccessRightByAccessGroupAndDataset(ag, dataset);
+    }
 
     @Override
     public Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)

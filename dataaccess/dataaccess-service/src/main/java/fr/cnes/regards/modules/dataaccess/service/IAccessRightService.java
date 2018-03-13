@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.dataaccess.service;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,8 +36,22 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
  */
 public interface IAccessRightService {
 
+    /**
+     * Retrieve access rights for given group and dataset
+     * @param accessGroupName optional access group name
+     * @param datasetIpId optional dataset ipId
+     * @throws EntityNotFoundException
+     */
     Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
             Pageable pageable) throws EntityNotFoundException;
+
+    /**
+     * Retrieve access right for both given access group and dataset
+     * @param accessGroupName mandatory access group name
+     * @param datasetIpId mandatory dataset IPID
+     */
+    Optional<AccessRight> retrieveAccessRight(String accessGroupName, UniformResourceName datasetIpId)
+            throws EntityNotFoundException;
 
     /**
      * Retrieve groups access levels of a specified dataset

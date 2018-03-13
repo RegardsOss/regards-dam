@@ -51,6 +51,10 @@ public class DataObjectMetadata {
         return groups.keySet();
     }
 
+    public Multimap<String, String> getGroupsMultimap() {
+        return groups;
+    }
+
     public void addModelId(long modelId, String datasetIpId) {
         modelIds.put(modelId, datasetIpId);
     }

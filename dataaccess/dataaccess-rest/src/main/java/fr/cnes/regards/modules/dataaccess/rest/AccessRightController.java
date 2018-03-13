@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.dataaccess.rest;
 
 import javax.validation.Valid;
 import java.beans.PropertyEditorSupport;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -48,12 +49,12 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 
 /**
  * Access right REST controller
- *
  * @author Sylvain Vissiere-Guerinet
  * @author Léo Mieulet
  */
@@ -65,6 +66,11 @@ public class AccessRightController implements IResourceController<AccessRight> {
      * Controller base path
      */
     public static final String PATH_ACCESS_RIGHTS = "/accessrights";
+
+    /**
+     * Controller path to retrieve ONE access right of group / dataset pair
+     */
+    public static final String ACCESS_RIGHT = "/accessright";
 
     /**
      * Controller path using an access right id as path variable
@@ -87,108 +93,118 @@ public class AccessRightController implements IResourceController<AccessRight> {
 
     /**
      * Retrieve a page of access rights according to the parameters
-     * @param pAccessGroupName name of the access group which the access rights belongs to
-     * @param pDatasetIpId ip id of the dataset which is constrained by the access rights
-     * @param pPageable page information
-     * @param pAssembler page assembler
+     * @param accessGroupName name of the access group which the access rights belongs to
+     * @param datasetIpId ip id of the dataset which is constrained by the access rights
+     * @param pageable page information
+     * @param assembler page assembler
      * @return page of access rights
-     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the list, or subset asked, of accessRight")
     public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
-            @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
-            @RequestParam(name = "dataset", required = false) UniformResourceName pDatasetIpId,
-            final Pageable pPageable, final PagedResourcesAssembler<AccessRight> pAssembler)
-            throws EntityNotFoundException {
-        Page<AccessRight> accessRights = accessRightService.retrieveAccessRights(pAccessGroupName, pDatasetIpId,
-                pPageable);
-        return new ResponseEntity<>(toPagedResources(accessRights, pAssembler), HttpStatus.OK);
+            @RequestParam(name = "accessgroup", required = false) String accessGroupName,
+            @RequestParam(name = "dataset", required = false) UniformResourceName datasetIpId, final Pageable pageable,
+            final PagedResourcesAssembler<AccessRight> assembler) throws EntityNotFoundException {
+        Page<AccessRight> accessRights = accessRightService
+                .retrieveAccessRights(accessGroupName, datasetIpId, pageable);
+        return new ResponseEntity<>(toPagedResources(accessRights, assembler), HttpStatus.OK);
+    }
+
+    /**
+     * Retrieve access group and dataset pair access right or nothing
+     */
+    @RequestMapping(method = RequestMethod.GET, path = ACCESS_RIGHT)
+    @ResponseBody
+    @ResourceAccess(description = "Retrieve accessRight of given access group / dataset if there is one",
+            role = DefaultRole.REGISTERED_USER)
+    public ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
+            @RequestParam(name = "dataset") UniformResourceName datasetIpId) {
+        try {
+            Optional<AccessRight> accessRightOpt = accessRightService.retrieveAccessRight(accessGroupName, datasetIpId);
+            if (accessRightOpt.isPresent()) {
+                return new ResponseEntity<>(accessRightOpt.get(), HttpStatus.OK);
+            }
+        } finally {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
     }
 
     /**
      * Create an access right
-     * @param pAccessRight
      * @return created access right
-     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     @ResourceAccess(description = "create an accessRight according to the argument")
-    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight pAccessRight)
+    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight accessRight)
             throws ModuleException {
-        AccessRight created = accessRightService.createAccessRight(pAccessRight);
+        AccessRight created = accessRightService.createAccessRight(accessRight);
         return new ResponseEntity<>(toResource(created), HttpStatus.CREATED);
     }
 
     /**
      * Retrieve an access right by its id
-     * @param pId
      * @return retrieved access right
-     * @throws EntityNotFoundException
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "send the access right of id requested")
-    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long pId)
+    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws EntityNotFoundException {
-        AccessRight requested = accessRightService.retrieveAccessRight(pId);
+        AccessRight requested = accessRightService.retrieveAccessRight(id);
         return new ResponseEntity<>(toResource(requested), HttpStatus.OK);
     }
 
     /**
      * Update an access right.
-     * @param pId
-     * @param pToBe
      * @return updated access right
-     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "modify the access right of id requested according to the argument")
-    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
-                                                                   @Valid @RequestBody AccessRight pToBe) throws ModuleException {
-        AccessRight updated = accessRightService.updateAccessRight(pId, pToBe);
+    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long id,
+            @Valid @RequestBody AccessRight toBe) throws ModuleException {
+        AccessRight updated = accessRightService.updateAccessRight(id, toBe);
         return new ResponseEntity<>(toResource(updated), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
     @ResourceAccess(description = "delete the access right of id requested")
-    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId)
+    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long id)
             throws ModuleException {
-        accessRightService.deleteAccessRight(pId);
+        accessRightService.deleteAccessRight(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
     @ResponseBody
     @ResourceAccess(description = "check if an user has access to a dataset")
-    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(@RequestParam(name = "dataset") UniformResourceName datasetIpId,
-                                                                  @RequestParam(name = "user") String userEMail) throws EntityNotFoundException {
+    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
+            @RequestParam(name = "dataset") UniformResourceName datasetIpId,
+            @RequestParam(name = "user") String userEMail) throws EntityNotFoundException {
         boolean hasAccessToDataset = accessRightService.isUserAutorisedToAccessDataset(datasetIpId, userEMail);
         return new ResponseEntity<>(hasAccessToDataset, HttpStatus.OK);
     }
 
     @Override
-    public Resource<AccessRight> toResource(AccessRight pElement, Object... pExtras) {
-        Resource<AccessRight> resource = new Resource<>(pElement);
+    public Resource<AccessRight> toResource(AccessRight accessRight, Object... extras) {
+        Resource<AccessRight> resource = new Resource<>(accessRight);
         resourceService.addLink(resource, this.getClass(), "createAccessRight", LinkRels.CREATE,
-                MethodParamFactory.build(AccessRight.class, pElement));
+                                MethodParamFactory.build(AccessRight.class, accessRight));
         resourceService.addLink(resource, this.getClass(), "deleteAccessRight", LinkRels.DELETE,
-                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(Long.class, accessRight.getId()));
         resourceService.addLink(resource, this.getClass(), "updateAccessRight", LinkRels.UPDATE,
-                MethodParamFactory.build(Long.class, pElement.getId()),
-                MethodParamFactory.build(AccessRight.class, pElement));
+                                MethodParamFactory.build(Long.class, accessRight.getId()),
+                                MethodParamFactory.build(AccessRight.class, accessRight));
         resourceService.addLink(resource, this.getClass(), "retrieveAccessRight", LinkRels.SELF,
-                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(Long.class, accessRight.getId()));
         return resource;
     }
 
     /**
      * Data binder to recognize {@link UniformResourceName}
-     * @param dataBinder
      */
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
