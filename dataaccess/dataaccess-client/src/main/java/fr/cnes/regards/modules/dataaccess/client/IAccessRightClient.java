@@ -81,6 +81,7 @@ public interface IAccessRightClient { // NOSONAR
     ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
             @RequestParam(name = "dataset") UniformResourceName datasetIpId);
 
+
     /**
      * Create an access right
      * @param pAccessRight

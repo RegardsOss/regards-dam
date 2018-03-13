@@ -18,13 +18,12 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -243,7 +242,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
                                     MethodParamFactory.build(Long.class, attributeModel.getId()));
         }
         resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
-                                MethodParamFactory.build(AttributeType.class), MethodParamFactory.build(String.class));
+                                MethodParamFactory.build(AttributeType.class),
+                                MethodParamFactory.build(String.class),
+                                MethodParamFactory.build(Set.class));
         return resource;
     }
 

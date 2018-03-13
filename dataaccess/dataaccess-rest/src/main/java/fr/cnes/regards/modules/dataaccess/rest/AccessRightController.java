@@ -22,6 +22,8 @@ import javax.validation.Valid;
 import java.beans.PropertyEditorSupport;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -61,6 +63,7 @@ import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 @RestController
 @RequestMapping(path = AccessRightController.PATH_ACCESS_RIGHTS, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class AccessRightController implements IResourceController<AccessRight> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccessRightController.class);
 
     /**
      * Controller base path
@@ -125,9 +128,10 @@ public class AccessRightController implements IResourceController<AccessRight> {
             if (accessRightOpt.isPresent()) {
                 return new ResponseEntity<>(accessRightOpt.get(), HttpStatus.OK);
             }
-        } finally {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (EntityNotFoundException e) {
+            LOGGER.info("Either group or dataset does not exist", e);
         }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
