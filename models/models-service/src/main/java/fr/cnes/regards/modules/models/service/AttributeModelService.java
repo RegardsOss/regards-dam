@@ -19,8 +19,8 @@
 package fr.cnes.regards.modules.models.service;
 
 import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +28,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.models.dao.AttributeModelSpecifications;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
@@ -109,22 +110,8 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName) {
-        final Iterable<AttributeModel> attModels;
-        if (pFragmentName != null) {
-            if (pType != null) {
-                attModels = attModelRepository.findByTypeAndFragmentName(pType, pFragmentName);
-            } else {
-                attModels = attModelRepository.findByFragmentName(pFragmentName);
-            }
-        } else {
-            if (pType != null) {
-                attModels = attModelRepository.findByType(pType);
-            } else {
-                attModels = attModelRepository.findAll();
-            }
-        }
-        return (attModels != null) ? Lists.newArrayList(attModels) : Collections.emptyList();
+    public List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds) {
+        return attModelRepository.findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds));
     }
 
     @Override
@@ -239,9 +226,9 @@ public class AttributeModelService implements IAttributeModelService {
         if (fragment == null) {
             pFragment.setId(null);
             if (!isFragmentCreatable(pFragment.getName())) {
-                throw new EntityAlreadyExistsException(String
-                        .format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                                pFragment.getName()));
+                throw new EntityAlreadyExistsException(
+                        String.format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                                      pFragment.getName()));
             }
             fragment = fragmentRepository.save(pFragment);
         }
@@ -269,18 +256,18 @@ public class AttributeModelService implements IAttributeModelService {
                                                    pAttributeModel.getName());
                 } else {
                     // CHECKSTYLE:OFF
-                    message = MessageFormat
-                            .format("Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
-                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                    message = MessageFormat.format(
+                                                   "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
+                                                   pAttributeModel.getName(), pAttributeModel.getFragment().getName());
                     // CHECKSTYLE:ON
                 }
                 LOGGER.error(message);
                 throw new EntityAlreadyExistsException(message);
             }
             if (fragmentRepository.findByName(pAttributeModel.getName()) != null) {
-                throw new EntityAlreadyExistsException(MessageFormat
-                        .format("Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
-                                pAttributeModel.getName()));
+                throw new EntityAlreadyExistsException(MessageFormat.format(
+                                                                            "Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
+                                                                            pAttributeModel.getName()));
             }
         }
         return attModelRepository.save(pAttributeModel);

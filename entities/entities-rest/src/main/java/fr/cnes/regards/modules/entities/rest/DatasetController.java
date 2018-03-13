@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +84,11 @@ public class DatasetController implements IResourceController<Dataset> {
      * Endpoint for data attributes
      */
     public static final String DATASET_DATA_ATTRIBUTES_PATH = "/data/attributes";
+
+    /**
+     * Endpoint for dataset attributes
+     */
+    public static final String DATASET_ATTRIBUTES_PATH = "/attributes";
 
     /**
      * Endpoint for a specific dataset
@@ -330,6 +336,24 @@ public class DatasetController implements IResourceController<Dataset> {
     }
 
     /**
+     * Retrieve data attributes of datasets of given URNs and given model name
+     * @param pUrns the URNs of datasets
+     * @param pModelIds the id of dataset models
+     * @param pPageable the page
+     * @param pAssembler the resources assembler
+     * @return the page of attribute models wrapped in an HTTP response
+     */
+    @RequestMapping(method = RequestMethod.GET, value = DATASET_ATTRIBUTES_PATH)
+    @ResourceAccess(description = "Retrieves data attributes of given datasets")
+    public ResponseEntity<PagedResources<Resource<AttributeModel>>> retrieveAttributes(
+            @RequestParam(name = "datasetIds", required = false) final Set<UniformResourceName> pUrns,
+            @RequestParam(name = "modelIds", required = false) final Set<Long> pModelIds, final Pageable pPageable,
+            final PagedResourcesAssembler<AttributeModel> pAssembler) throws ModuleException {
+        final Page<AttributeModel> result = service.getAttributeModels(pUrns, pModelIds, pPageable);
+        return new ResponseEntity<>(pAssembler.toResource(result), HttpStatus.OK);
+    }
+
+    /**
      * Validate an open search query for the given data model, represented by its id
      * @param dataModelName
      * @param query
@@ -354,41 +378,22 @@ public class DatasetController implements IResourceController<Dataset> {
     @Override
     public Resource<Dataset> toResource(final Dataset pElement, final Object... pExtras) {
         final Resource<Dataset> resource = resourceService.toResource(pElement);
-        resourceService.addLink(resource,
-                                this.getClass(),
-                                "retrieveDataset",
-                                LinkRels.SELF,
+        resourceService.addLink(resource, this.getClass(), "retrieveDataset", LinkRels.SELF,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource,
-                                this.getClass(),
-                                "retrieveDatasets",
-                                LinkRels.LIST,
+        resourceService.addLink(resource, this.getClass(), "retrieveDatasets", LinkRels.LIST,
                                 MethodParamFactory.build(String.class, pElement.getLabel()),
                                 MethodParamFactory.build(Pageable.class),
                                 MethodParamFactory.build(PagedResourcesAssembler.class));
-        resourceService.addLink(resource,
-                                this.getClass(),
-                                "deleteDataset",
-                                LinkRels.DELETE,
+        resourceService.addLink(resource, this.getClass(), "deleteDataset", LinkRels.DELETE,
                                 MethodParamFactory.build(Long.class, pElement.getId()));
-        resourceService.addLink(resource,
-                                this.getClass(),
-                                "updateDataset",
-                                LinkRels.UPDATE,
+        resourceService.addLink(resource, this.getClass(), "updateDataset", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, pElement.getId()),
-                                MethodParamFactory.build(Dataset.class),
-                                MethodParamFactory.build(MultipartFile.class),
+                                MethodParamFactory.build(Dataset.class), MethodParamFactory.build(MultipartFile.class),
                                 MethodParamFactory.build(BindingResult.class));
-        resourceService.addLink(resource,
-                                this.getClass(),
-                                "dissociate",
-                                "dissociate",
+        resourceService.addLink(resource, this.getClass(), "dissociate", "dissociate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
-        resourceService.addLink(resource,
-                                this.getClass(),
-                                "associate",
-                                "associate",
+        resourceService.addLink(resource, this.getClass(), "associate", "associate",
                                 MethodParamFactory.build(Long.class, pElement.getId()),
                                 MethodParamFactory.build(Set.class));
         return resource;

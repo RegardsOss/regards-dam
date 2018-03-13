@@ -308,7 +308,7 @@ public class ValidationIT {
                                                "validationDataModel2.xml"));
         modelService.importModel(input);
 
-        final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
+        final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null, null);
         gsonAttributeFactory.refresh(tenant, attributes);
     }
 

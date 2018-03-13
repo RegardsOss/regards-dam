@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -200,23 +201,25 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public Page<AttributeModel> getAttributeModels(List<String> pModelNames, Pageable pageable) {
-        if (pModelNames.isEmpty()) {
+    public Page<AttributeModel> getAttributeModels(Set<Long> modelIds, Pageable pageable) {
+        return modelAttributeRepository.findAllAttributeByModelIdIn(modelIds, pageable);
+    }
+
+    @Override
+    public Page<AttributeModel> getAttributeModelsByName(List<String> modelNames, Pageable pageable) {
+        if (modelNames.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
-
-        List<Long> pModelIds = pModelNames.stream()
-                .map(modelName -> {
-                    Model m = modelRepository.findByName(modelName);
-                    if (m != null) {
-                        return m.getId();
-                    }
-                    LOGGER.error("The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.", modelName);
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        return modelAttributeRepository.findAllAttributeByModelIdIn(pModelIds, pageable);
+        List<Long> modelIds = modelNames.stream().map(modelName -> {
+            Model m = modelRepository.findByName(modelName);
+            if (m != null) {
+                return m.getId();
+            }
+            LOGGER.error("The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.",
+                         modelName);
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        return modelAttributeRepository.findAllAttributeByModelIdIn(modelIds, pageable);
     }
 
     @Override
@@ -669,4 +672,5 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         }
         return mapping;
     }
+
 }

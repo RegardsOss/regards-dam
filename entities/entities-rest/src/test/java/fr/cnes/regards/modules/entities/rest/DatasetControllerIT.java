@@ -47,6 +47,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.google.common.net.HttpHeaders;
+
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -155,7 +156,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         performDefaultGet(DatasetController.DATASET_PATH, expectations, "Failed to fetch dataset list");
     }
 
-
     @Test
     @Requirement("REGARDS_DSL_DAM_SET_010")
     @Requirement("REGARDS_DSL_DAM_SET_020")
@@ -168,8 +168,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         importModel("datasetModel.xml");
         final Model dataModel = modelService.getModelByName("dataModel");
         final Model datasetModel = modelService.getModelByName("datasetModel");
-        Mockito.when(attributeModelClient.getAttributes(null, null))
-                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
+        Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
+                .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
 
         final Dataset dataSet2 = new Dataset(datasetModel, DEFAULT_TENANT, "Coucou");
         dataSet2.setLicence("licence");
@@ -263,8 +263,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(dataset);
 
-        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
-                                 parts, expectations, "Failed to update a specific dataset using its id",
+        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, parts,
+                                 expectations, "Failed to update a specific dataset using its id",
                                  dataSetClone.getId());
 
     }
@@ -286,8 +286,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(dataset);
 
-        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH,
-                                 parts, expectations, "Failed to update a specific dataset using its id",
+        performDefaultFileUpload(DatasetController.DATASET_PATH + DatasetController.DATASET_ID_PATH, parts,
+                                 expectations, "Failed to update a specific dataset using its id",
                                  dataSetClone.getId());
     }
 
@@ -328,8 +328,8 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     public void testSubsettingValidation() throws ModuleException {
 
         importModel("dataModel.xml");
-        Mockito.when(attributeModelClient.getAttributes(null, null))
-                .thenReturn(ResponseEntity.ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null))));
+        Mockito.when(attributeModelClient.getAttributes(null, null)).thenReturn(ResponseEntity
+                .ok(HateoasUtils.wrapList(attributeModelService.getAttributes(null, null, null))));
         final Model dataModel = modelService.getModelByName("dataModel");
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath("$.validity", Matchers.equalTo(true)));
@@ -361,7 +361,7 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         try {
             final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
             modelService.importModel(input);
-            final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+            final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
             gsonAttributeFactory.refresh(DEFAULT_TENANT, atts);
         } catch (final IOException e) {
             final String errorMessage = "Cannot import " + pFilename;

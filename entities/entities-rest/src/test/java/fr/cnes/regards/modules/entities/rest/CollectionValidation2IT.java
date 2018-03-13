@@ -39,6 +39,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -197,7 +198,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
 
-        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
         attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);
     }
 
@@ -241,7 +242,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         String collectionStr = gson.toJson(collection);
         MockMultipartFile collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                 collectionStr.getBytes());
+                collectionStr.getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
@@ -262,7 +263,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         collectionStr = gson.toJson(collection);
         collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                               collectionStr.getBytes());
+                collectionStr.getBytes());
         parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
@@ -291,7 +292,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
         collectionStr = gson.toJson(newCollection);
         collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                               collectionStr.getBytes());
+                collectionStr.getBytes());
         parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
@@ -301,9 +302,9 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     @Test
     public void testOptionalNonAlterable() throws ModuleException {
         importModel("simpleCollectionOptional.xml");
-        Model model=modelRepository.findByName("TestOptionalNonAlterable");
+        Model model = modelRepository.findByName("TestOptionalNonAlterable");
         //lets first create a collection with the optional non alterable attribute given.
-        Collection optionalNonAlterable=new Collection(model, DEFAULT_TENANT, "optionalNonAlterable");
+        Collection optionalNonAlterable = new Collection(model, DEFAULT_TENANT, "optionalNonAlterable");
         optionalNonAlterable.setSipId(sipId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
         Set<AbstractAttribute<?>> atts = new HashSet<>();
@@ -313,7 +314,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         String collectionStr = gson.toJson(optionalNonAlterable);
         MockMultipartFile collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                 collectionStr.getBytes());
+                collectionStr.getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
 
@@ -343,7 +344,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
         collectionStr = gson.toJson(optionalAltered);
         collectionPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                               collectionStr.getBytes());
+                collectionStr.getBytes());
         parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
@@ -351,14 +352,14 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
 
         //now lets try again without giving the value on the creation
 
-        Collection optionalNotGivenNonAlterable=new Collection(model, DEFAULT_TENANT, "optionalNotGivenNonAlterable");
+        Collection optionalNotGivenNonAlterable = new Collection(model, DEFAULT_TENANT, "optionalNotGivenNonAlterable");
         optionalNonAlterable.setSipId(sipId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
 
         tenantResolver.forceTenant(DEFAULT_TENANT);
         String collectionNotGivenStr = gson.toJson(optionalNotGivenNonAlterable);
-        MockMultipartFile collectionNotGivenPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                 collectionNotGivenStr.getBytes());
+        MockMultipartFile collectionNotGivenPart = new MockMultipartFile("collection", "",
+                MediaType.APPLICATION_JSON_VALUE, collectionNotGivenStr.getBytes());
         List<MockMultipartFile> partsNotGiven = new ArrayList<>();
         partsNotGiven.add(collectionNotGivenPart);
 
@@ -388,11 +389,12 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         expectationsNotGiven.add(MockMvcResultMatchers.status().isOk());
         collectionNotGivenStr = gson.toJson(optionalAlteredNotGiven);
         collectionNotGivenPart = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                               collectionNotGivenStr.getBytes());
+                collectionNotGivenStr.getBytes());
         partsNotGiven = new ArrayList<>();
         partsNotGiven.add(collectionNotGivenPart);
-        performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", partsNotGiven, expectationsNotGiven,
-                                 "Failed to update a collection", optionalNotGivenNonAlterable.getId());
+        performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", partsNotGiven,
+                                 expectationsNotGiven, "Failed to update a collection",
+                                 optionalNotGivenNonAlterable.getId());
     }
 
     /**
@@ -432,8 +434,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                                                                       MediaType.APPLICATION_JSON_VALUE,
-                                                                       collectionStr.getBytes());
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
@@ -473,8 +474,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                                                                       MediaType.APPLICATION_JSON_VALUE,
-                                                                       collectionStr.getBytes());
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
@@ -515,8 +515,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         tenantResolver.forceTenant(DEFAULT_TENANT);
         final String collectionStr = gson.toJson(collection);
         final MockMultipartFile collectionPart = new MockMultipartFile("collection", "",
-                                                                       MediaType.APPLICATION_JSON_VALUE,
-                                                                       collectionStr.getBytes());
+                MediaType.APPLICATION_JSON_VALUE, collectionStr.getBytes());
         final List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
         performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,

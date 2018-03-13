@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.models.dao;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -35,7 +36,8 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  *
  */
 @Repository
-public interface IAttributeModelRepository extends CrudRepository<AttributeModel, Long> {
+public interface IAttributeModelRepository
+        extends CrudRepository<AttributeModel, Long>, JpaSpecificationExecutor<AttributeModel> {
 
     List<AttributeModel> findByType(AttributeType pType);
 

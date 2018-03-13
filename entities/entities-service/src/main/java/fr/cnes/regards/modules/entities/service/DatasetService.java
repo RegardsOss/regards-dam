@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -41,6 +43,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
@@ -116,9 +119,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 dataset.setDataModel(model.getName());
             } catch (ModuleException e) {
                 logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
-                throw new EntityNotFoundException(
-                        String.format("Unable to dejsonify model parameter from PluginConfiguration (%s)",
-                                      e.getMessage()), PluginConfiguration.class);
+                throw new EntityNotFoundException(String
+                        .format("Unable to dejsonify model parameter from PluginConfiguration (%s)", e.getMessage()),
+                        PluginConfiguration.class);
             }
         }
         return dataset;
@@ -158,7 +161,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
         return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
-                                              modelAttributeService);
+                modelAttributeService);
     }
 
     @Override
@@ -188,8 +191,29 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
                 final List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
-                final Set<Dataset> datasets = datasetRepository.findAllByModelId(modelIds);
+                final Set<Dataset> datasets = datasetRepository.findAllByModelIdIn(modelIds);
                 return getDataAttributeModelsFromDatasets(datasets, pageable);
+            }
+        }
+    }
+
+    @Override
+    public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
+            throws ModuleException {
+        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
+            // Retrieve all dataset models attributes
+            List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
+            Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
+            return modelAttributeService.getAttributeModels(dsModelIds, pageable);
+        } else {
+            if ((modelIds == null) || modelIds.isEmpty()) {
+                // Retrieve all attributes associated to the given datasets
+                List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
+                Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());
+                return modelAttributeService.getAttributeModels(dsModelIds, pageable);
+            } else {
+                // Retrieve all attributes associated to the given models.
+                return modelAttributeService.getAttributeModels(modelIds, pageable);
             }
         }
     }
@@ -220,7 +244,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(final Collection<Dataset> datasets,
             final Pageable pageable) throws ModuleException {
         final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
-        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelNames, pageable);
+        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
         // Build JSON path
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return attModelPage;

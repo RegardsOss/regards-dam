@@ -18,11 +18,13 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -123,8 +125,9 @@ public class AttributeModelController implements IResourceController<AttributeMo
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
             @RequestParam(value = PARAM_TYPE, required = false) final AttributeType pType,
-            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) final String pFragmentName) {
-        final List<AttributeModel> attributes = attributeService.getAttributes(pType, pFragmentName);
+            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) final String pFragmentName,
+            @RequestParam(name = "modelIds", required = false) final Set<Long> pModelIds) {
+        final List<AttributeModel> attributes = attributeService.getAttributes(pType, pFragmentName, pModelIds);
         // Build JSON path
         attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
