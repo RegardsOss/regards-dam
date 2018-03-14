@@ -119,8 +119,8 @@ public class AccessRightController implements IResourceController<AccessRight> {
      */
     @RequestMapping(method = RequestMethod.GET, path = ACCESS_RIGHT)
     @ResponseBody
-    @ResourceAccess(description = "Retrieve accessRight of given access group / dataset if there is one",
-            role = DefaultRole.REGISTERED_USER)
+    @ResourceAccess(description = "Retrieve access right of given access group / dataset if there is one",
+            role = DefaultRole.PUBLIC)
     public ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
             @RequestParam(name = "dataset") UniformResourceName datasetIpId) {
         try {
