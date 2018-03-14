@@ -307,7 +307,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable) {
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                                                                    saveDataObjectsCallable, executor);
+                                                                    saveDataObjectsCallable, executor,
+                                                                    accessRightService);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {
@@ -510,19 +511,20 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     private class AIPEventHandler implements IHandler<AIPEvent> {
+
         @Override
         public void handle(TenantWrapper<AIPEvent> wrapper) {
-                AIPEvent event = wrapper.getContent();
-                if (event.getAipState() == AIPState.DELETED) {
-                    runtimeTenantResolver.forceTenant(wrapper.getTenant());
-                    try {
-                        deleteDataObject(wrapper.getTenant(), event.getIpId());
-                    } catch (RsRuntimeException e) {
-                        String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
-                        LOGGER.error(msg, e);
-                    }
-
+            AIPEvent event = wrapper.getContent();
+            if (event.getAipState() == AIPState.DELETED) {
+                runtimeTenantResolver.forceTenant(wrapper.getTenant());
+                try {
+                    deleteDataObject(wrapper.getTenant(), event.getIpId());
+                } catch (RsRuntimeException e) {
+                    String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
+                    LOGGER.error(msg, e);
                 }
+
+            }
         }
     }
 }
