@@ -64,7 +64,7 @@ public class DataObjectMetadata {
     }
 
     /**
-     * Retrieve a map of { group -> data access}. data access is a tru boolean if at least one associated dataset grants
+     * Retrieve a map of { group -> data access}. data access is a true boolean if at least one associated dataset grants
      * data access, false otherwise
      */
     public Map<String, Boolean> getGroupsAccessRightsMap() {
