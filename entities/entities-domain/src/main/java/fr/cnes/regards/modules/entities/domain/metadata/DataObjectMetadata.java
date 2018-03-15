@@ -25,11 +25,6 @@ public class DataObjectMetadata {
      */
     private final Multimap<Long, String> modelIds = HashMultimap.create();
 
-    private final Map<String, Boolean> groupsAccessRights = Maps.transformValues(groups.asMap(),
-                                                                                 rights -> rights.stream().anyMatch(
-                                                                                         datasetAccessRight -> datasetAccessRight
-                                                                                                 .isAccessRight()));
-
     /**
      * @param accessRight true if data access is granted for (group, dataset ip id)
      */
@@ -68,7 +63,8 @@ public class DataObjectMetadata {
      * data access, false otherwise
      */
     public Map<String, Boolean> getGroupsAccessRightsMap() {
-        return groupsAccessRights;
+        return Maps.transformValues(groups.asMap(), rights -> rights.stream()
+                .anyMatch(datasetAccessRight -> datasetAccessRight.isAccessRight()));
     }
 
     public void addModelId(long modelId, String datasetIpId) {

@@ -62,7 +62,7 @@ public class DataObject extends AbstractDataEntity {
      * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search.
      * Indicates if user who made the search has the RIGHT to download associated DATA
      */
-    private Boolean downloadable = false;
+    private Boolean downloadable = null;
 
     public DataObject(Model model, String tenant, String label) {
         super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
