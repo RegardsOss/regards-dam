@@ -15,8 +15,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +51,7 @@ import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -162,23 +165,25 @@ public class EntityIndexerService implements IEntityIndexerService {
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
                 // Retrieve map of { group, AccessLevel }
-                Map<String, AccessLevel> volatileMap;
+                Map<String, Pair<AccessLevel, DataAccessLevel>> volatileMap;
                 try {
                     volatileMap = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
                 } catch (EntityNotFoundException e) {
                     volatileMap = Collections.emptyMap();
                 }
                 // Need to be final to be used into following lambda
-                final Map<String, AccessLevel> map = volatileMap;
+                final Map<String, Pair<AccessLevel, DataAccessLevel>> map = volatileMap;
                 // Compute groups for associated data objects
                 dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
                                                                    .filter(group -> map.containsKey(group)
-                                                                           && map.get(group) == AccessLevel.FULL_ACCESS)
-                                                                   .collect(Collectors.toSet()));
+                                                                           && map.get(group).getLeft()
+                                                                           == AccessLevel.FULL_ACCESS).collect(
+                                Collectors.toMap(Function.identity(),
+                                                 g -> map.get(g).getRight() == DataAccessLevel.INHERITED_ACCESS)));
                 // update dataset groups
-                for (Map.Entry<String, AccessLevel> entry : map.entrySet()) {
+                for (Map.Entry<String, Pair<AccessLevel, DataAccessLevel>> entry : map.entrySet()) {
                     // remove group if no access
-                    if (entry.getValue() == AccessLevel.NO_ACCESS) {
+                    if (entry.getValue().getLeft() == AccessLevel.NO_ACCESS) {
                         dataset.getGroups().remove(entry.getKey());
                     } else { // add (or let) group if FULL_ACCESS or RESTRICTED_ACCESS
                         dataset.getGroups().add(entry.getKey());
@@ -219,8 +224,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             return true;
         }
         return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
-                || !newDataset.getMetadata().getDataObjectsGroups()
-                .equals(curDataset.getMetadata().getDataObjectsGroups());
+                || !newDataset.getMetadata().getDataObjectsGroupsMap()
+                .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
     }
 
     /**
@@ -307,8 +312,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable) {
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
-                                                                    saveDataObjectsCallable, executor,
-                                                                    accessRightService);
+                                                                    saveDataObjectsCallable, executor);
         ICriterion subsettingCrit = dataset.getSubsettingClause();
         // Add lastUpdate restriction if a date is provided
         if (lastUpdateDate != null) {

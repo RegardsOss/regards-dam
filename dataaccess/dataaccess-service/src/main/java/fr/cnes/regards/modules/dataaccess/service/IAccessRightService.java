@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.dataaccess.service;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -29,6 +30,7 @@ import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
 
 /**
  * Access right service
@@ -56,10 +58,10 @@ public interface IAccessRightService {
     /**
      * Retrieve groups access levels of a specified dataset
      * @param datasetIpId concerned datasetIpId, must not be null
-     * @return a map { groupName, accessLevel }
+     * @return a map { groupName, Pair(accessLevel, dataAccessLevel) }
      * @throws EntityNotFoundException if dataset doesn't exist
      */
-    Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
+    Map<String, Pair<AccessLevel, DataAccessLevel>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
             throws EntityNotFoundException;
 
     AccessRight createAccessRight(AccessRight accessRight) throws ModuleException;

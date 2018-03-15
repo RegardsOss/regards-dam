@@ -83,7 +83,7 @@ public class DataObjectMetadata {
         return modelIds.keySet();
     }
 
-    private static class DatasetAccessRight {
+    private static final class DatasetAccessRight {
 
         private String dataset;
 

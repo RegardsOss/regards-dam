@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +43,7 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEventType;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -54,6 +56,7 @@ import fr.cnes.regards.modules.entities.service.IDatasetService;
 @Service
 @MultitenantTransactional
 public class AccessRightService implements IAccessRightService {
+
     @Autowired
     private IAccessRightRepository repository;
 
@@ -100,13 +103,14 @@ public class AccessRightService implements IAccessRightService {
     }
 
     @Override
-    public Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
+    public Map<String, Pair<AccessLevel, DataAccessLevel>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
             throws EntityNotFoundException {
         if (datasetIpId == null) {
             throw new IllegalArgumentException("datasetIpId must not be null");
         }
         return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
-                .collect(Collectors.toMap(r -> r.getAccessGroup().getName(), AccessRight::getAccessLevel));
+                .collect(Collectors.toMap(r -> r.getAccessGroup().getName(), accessRight -> Pair
+                        .of(accessRight.getAccessLevel(), accessRight.getDataAccessRight().getDataAccessLevel())));
     }
 
     private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
