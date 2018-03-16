@@ -18,5 +18,5 @@ public interface IFacet<T> extends Serializable {
 
     T getValues();
 
-
+    long getOthers();
 }
