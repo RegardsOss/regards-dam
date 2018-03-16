@@ -17,4 +17,11 @@ public interface IFacet<T> extends Serializable {
     FacetType getType();
 
     T getValues();
+
+    /**
+     * Number of values not covered by facet (0 by default, most of facets cover all values)
+     */
+    default long getOthers() {
+        return 0;
+    }
 }

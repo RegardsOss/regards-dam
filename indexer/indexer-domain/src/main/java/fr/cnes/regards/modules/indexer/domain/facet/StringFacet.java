@@ -18,9 +18,15 @@ public class StringFacet extends AbstractFacet<Map<String, Long>> {
      */
     private final Map<String, Long> valueMap;
 
-    public StringFacet(String attName, Map<String, Long> valueMap) {
+    /**
+     * Number of values not covered by facet
+     */
+    private final long others;
+
+    public StringFacet(String attName, Map<String, Long> valueMap, long others) {
         super(attName);
         this.valueMap = valueMap;
+        this.others = others;
     }
 
     @Override
@@ -33,4 +39,8 @@ public class StringFacet extends AbstractFacet<Map<String, Long>> {
         return this.valueMap;
     }
 
+    @Override
+    public long getOthers() {
+        return others;
+    }
 }

@@ -38,7 +38,7 @@ public class StringFacetSerializerTest {
     public final void shouldBuilProperOpenSearchQuery() {
         Map<String, Long> values = new HashMap<>();
         values.put("toto", 1L);
-        StringFacet facet = new StringFacet("myattributename", values);
+        StringFacet facet = new StringFacet("myattributename", values, 12);
 
         AdaptedFacet adapted = new StringFacetSerializer.AdaptedFacet(facet);
         String openSearchQuery = adapted.getValues().get(0).getOpenSearchQuery();
@@ -50,7 +50,7 @@ public class StringFacetSerializerTest {
     public final void shouldAddQuotesForPhraseQueries() {
         Map<String, Long> values = new HashMap<>();
         values.put("Harry Potter", 1L);
-        StringFacet facet = new StringFacet("myattributename", values);
+        StringFacet facet = new StringFacet("myattributename", values, 23);
 
         AdaptedFacet adapted = new StringFacetSerializer.AdaptedFacet(facet);
         String openSearchQuery = adapted.getValues().get(0).getOpenSearchQuery();

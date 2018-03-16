@@ -1202,7 +1202,7 @@ public class EsRepository implements IEsRepository {
         }
         Map<String, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
         terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
-        facets.add(new StringFacet(attributeName, valueMap));
+        facets.add(new StringFacet(attributeName, valueMap, terms.getSumOfOtherDocCounts()));
     }
 
     @Override
