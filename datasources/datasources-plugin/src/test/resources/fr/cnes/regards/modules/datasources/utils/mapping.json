@@ -1,0 +1,44 @@
+[
+    {
+        "name": "sipId",
+        "type": "",
+        "namespace": "",
+        "attributeType": "STATIC",
+        "nameDS": "DATA_OBJECTS_ID"
+    },
+    {
+        "name": "label",
+        "type": "",
+        "namespace": "",
+        "attributeType": "STATIC",
+        "nameDS": "NODE_IDENTIFIER"
+    },
+    {
+        "name": "FILE_SIZE",
+        "type": "LONG",
+        "namespace": "",
+        "attributeType": "DYNAMIC",
+        "nameDS": "FILE_SIZE"
+    },
+    {
+        "name": "SIPAD_DATASET",
+        "type": "STRING",
+        "namespace": "",
+        "attributeType": "DYNAMIC",
+        "nameDS": "NODE_IDENTIFIER"
+    },
+    {
+        "name": "START_DATE",
+        "type": "DATE_ISO8601",
+        "namespace": "TIME_PERIOD",
+        "attributeType": "DYNAMIC",
+        "nameDS": "START_DATE"
+    },
+    {
+        "name": "STOP_DATE",
+        "type": "DATE_ISO8601",
+        "namespace": "TIME_PERIOD",
+        "attributeType": "DYNAMIC",
+        "nameDS": "STOP_DATE"
+    }
+]
