@@ -13,8 +13,18 @@ public abstract class AbstractFacet<T> implements IFacet<T> {
      */
     private final String attributeName;
 
-    public AbstractFacet(String attName) {
+    /**
+     * Number of values not covered by facet
+     */
+    private final long others;
+
+    public AbstractFacet(String attributeName) {
+        this(attributeName, 0);
+    }
+
+    public AbstractFacet(String attName, long others) {
         this.attributeName = attName;
+        this.others = others;
     }
 
     @Override
@@ -22,4 +32,10 @@ public abstract class AbstractFacet<T> implements IFacet<T> {
         return this.attributeName;
     }
 
+    /**
+     * Number of values not covered by facet (0 by default, most of facets cover all values)
+     */
+    long getOthers() {
+        return this.others;
+    }
 }
