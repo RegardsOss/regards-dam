@@ -35,7 +35,8 @@ public abstract class AbstractFacet<T> implements IFacet<T> {
     /**
      * Number of values not covered by facet (0 by default, most of facets cover all values)
      */
-    long getOthers() {
+    @Override
+    public long getOthers() {
         return this.others;
     }
 }
