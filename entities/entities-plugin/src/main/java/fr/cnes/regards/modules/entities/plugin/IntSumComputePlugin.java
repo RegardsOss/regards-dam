@@ -58,15 +58,6 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
     @Autowired
     private IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
-            description = "Name of attribute to compute (ie result attribute).")
-    private String attributeToComputeName;
-
-    @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
-            description = "Name of attribute to compute fragment. If computed attribute belongs to default fragment, this value can be set to null.",
-            optional = true)
-    private String attributeToComputeFragmentName;
-
     @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
             description = "Name of parameter attribute used to compute result attribute.")
     private String parameterAttributeName;

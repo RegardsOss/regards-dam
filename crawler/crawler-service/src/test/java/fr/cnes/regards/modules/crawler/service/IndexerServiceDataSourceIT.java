@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -40,13 +41,18 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
+import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
 import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
+import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
 import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
+import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -58,25 +64,30 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
+import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
+import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -109,10 +120,18 @@ import fr.cnes.regards.modules.models.service.IModelService;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
-@Ignore
+@TestPropertySource(locations = { "classpath:test.properties" })
 public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
+
+    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+
+    private static final String TABLE_NAME_TEST = "t_validation_1";
+
+    private static final String DATA_MODEL_FILE_NAME = "validationDataModel1.xml";
+
+    private static final String DATASET_MODEL_FILE_NAME = "validationDatasetModel1.xml";
 
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactoryEventHandler gsonAttributeFactoryHandler;
@@ -120,34 +139,26 @@ public class IndexerServiceDataSourceIT {
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-
-    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
-
-    private static final String DATA_MODEL_FILE_NAME = "dataModel.xml";
-
-    private static final String DATASET_MODEL_FILE_NAME = "datasetModel.xml";
-
     @Value("${regards.tenant}")
     private String tenant;
 
-    @Value("${oracle.datasource.host}")
+    @Value("${postgresql.datasource.host}")
     private String dbHost;
 
-    @Value("${oracle.datasource.port}")
+    @Value("${postgresql.datasource.port}")
     private String dbPort;
 
-    @Value("${oracle.datasource.name}")
+    @Value("${postgresql.datasource.name}")
     private String dbName;
 
-    @Value("${oracle.datasource.username}")
+    @Value("${postgresql.datasource.username}")
     private String dbUser;
 
-    @Value("${oracle.datasource.password}")
+    @Value("${postgresql.datasource.password}")
     private String dbPpassword;
 
-    @Value("${oracle.datasource.driver}")
-    private String driver;
+    @Value("${postgresql.datasource.schema}")
+    private String dbSchema;
 
     @Value("${regards.elasticsearch.host:}")
     private String esHost;
@@ -155,7 +166,7 @@ public class IndexerServiceDataSourceIT {
     @Value("${regards.elasticsearch.address:}")
     private String esAddress;
 
-    @Value("${regards.elasticsearch.tcp.port}")
+    @Value("${regards.elasticsearch.http.port}")
     private int esPort;
 
     @Autowired
@@ -175,12 +186,6 @@ public class IndexerServiceDataSourceIT {
 
     @Autowired
     private IDatasetService dsService;
-
-    // @Autowired
-    // private ICollectionService collService;
-    //
-    // @Autowired
-    // private IIndexerService indexerService;
 
     @Autowired
     private IAttributeModelService attributeModelService;
@@ -204,9 +209,7 @@ public class IndexerServiceDataSourceIT {
     private IEsRepository esRepos;
 
     @Autowired
-    private IRuntimeTenantResolver tenantResolver;
-
-    private List<AbstractAttributeMapping> modelAttrMapping;
+    private IRuntimeTenantResolver runtimeTenantResolver;
 
     @Autowired
     private IPluginService pluginService;
@@ -215,10 +218,12 @@ public class IndexerServiceDataSourceIT {
     private IPluginConfigurationRepository pluginConfRepo;
 
     @Autowired
-    private IRabbitVirtualHostAdmin rabbitVhostAdmin;
+    private IPublisher publisher;
 
     @Autowired
-    private IPublisher publisher;
+    private Flyway flyway;
+
+    private List<AbstractAttributeMapping> modelAttrMapping;
 
     private Model dataModel;
 
@@ -240,7 +245,7 @@ public class IndexerServiceDataSourceIT {
         // Simulate spring boot ApplicationStarted event to start mapping for each tenants.
         gsonAttributeFactoryHandler.onApplicationEvent(null);
 
-        tenantResolver.forceTenant(tenant);
+        runtimeTenantResolver.forceTenant(tenant);
         if (esRepos.indexExists(tenant)) {
             esRepos.deleteAll(tenant);
         } else {
@@ -262,32 +267,42 @@ public class IndexerServiceDataSourceIT {
         fragRepo.deleteAll();
         pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
 
-        // get the plugin configuration for computed attributes
-        initPluginConfForComputedAttributes();
+        initData();
+
         // get a model for DataObject, by importing them it also register them for (de)serialization
         importModel(DATA_MODEL_FILE_NAME);
-        dataModel = modelService.getModelByName("model_1");
+        dataModel = modelService.getModelByName("VALIDATION_DATA_MODEL_1");
 
         // get a model for Dataset
         importModel(DATASET_MODEL_FILE_NAME);
-        datasetModel = modelService.getModelByName("model_ds_1");
+        datasetModel = modelService.getModelByName("VALIDATION_DATASET_MODEL_1");
 
         // Initialize the AbstractAttributeMapping
         buildModelAttributes();
 
         // Connection PluginConf
-        dBConnectionConf = getOracleConnectionConfiguration();
+        dBConnectionConf = getPostgresConnectionConfiguration();
         pluginService.savePluginConfiguration(dBConnectionConf);
 
-        // final DefaultOracleConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
-        // Assume.assumeTrue(dbCtx.testConnection());
+        final DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
+        Assume.assumeTrue(dbCtx.testConnection());
 
         // DataSource PluginConf
-        // dataSourcePluginConf = getOracleDataSource(dBConnectionConf);
-        // pluginService.savePluginConfiguration(dataSourcePluginConf);
+        dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
+        pluginService.savePluginConfiguration(dataSourcePluginConf);
     }
 
-    private void initPluginConfForComputedAttributes() throws ModuleException {
+    private void initData() {
+        runtimeTenantResolver.forceTenant(tenant);
+        flyway.setLocations(
+                "filesystem:" + Paths.get("src", "test", "resources", "validation", "scripts").toAbsolutePath()
+                        .toString());
+        flyway.setDataSource("jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPpassword);
+        flyway.setSchemas(dbSchema);
+        flyway.setBaselineOnMigrate(true);
+        // When creating module metadata table, set beginning version to 0 in order to properly apply all init scripts
+        flyway.setBaselineVersion(MigrationVersion.fromVersion("0"));
+        flyway.migrate();
     }
 
     @After
@@ -300,82 +315,56 @@ public class IndexerServiceDataSourceIT {
         fragRepo.deleteAll();
     }
 
-    private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-        // final List<PluginParameter> parameters = PluginParametersFactory.build()
-        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-        // .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
-        // .getParameters();
-        //
-        // return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO use portgres plugin
-        return null;
+    private PluginConfiguration getPostgresDataSource(final PluginConfiguration pluginConf) {
+        List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, dbSchema + "." + TABLE_NAME_TEST)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800)
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, dataModel.getName())
+                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
+                .getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters,
+                                                  PostgreDataSourceFromSingleTablePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
-    private PluginConfiguration getOracleConnectionConfiguration() {
-        // final List<PluginParameter> parameters = PluginParametersFactory.build()
-        // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, dbUser)
-        // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-        // .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, dbHost)
-        // .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, dbPort)
-        // .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, dbName)
-        // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "3")
-        // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-        //
-        // return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO use Postgres
-        return null;
+    private PluginConfiguration getPostgresConnectionConfiguration() {
+        final List<PluginParameter> parameters = PluginParametersFactory.build()
+                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPpassword)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
+
+        return PluginUtils.getPluginConfiguration(parameters,
+                                                  DefaultPostgreConnectionPlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
     }
 
     private void buildModelAttributes() {
-        modelAttrMapping = new ArrayList<AbstractAttributeMapping>();
-
-        modelAttrMapping.add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                "DATA_OBJECTS_ID"));
-
-        modelAttrMapping.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
-
-        modelAttrMapping.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
-        modelAttrMapping.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
-        modelAttrMapping.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
-
-        modelAttrMapping.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("DATA_CREATION_DATE", AttributeType.DATE_ISO8601,
-                "DATA_CREATION_DATE"));
-
-        modelAttrMapping.add(new DynamicAttributeMapping("MIN", "LONGITUDE", AttributeType.INTEGER, "MIN_LONGITUDE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("MAX", "LONGITUDE", AttributeType.INTEGER, "MAX_LONGITUDE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("MIN", "LATITUDE", AttributeType.INTEGER, "MIN_LATITUDE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("MAX", "LATITUDE", AttributeType.INTEGER, "MAX_LATITUDE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("MIN", "ALTITUDE", AttributeType.INTEGER, "MIN_ALTITUDE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("MAX", "ALTITUDE", AttributeType.INTEGER, "MAX_ALTITUDE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSA5_REAL", AttributeType.DOUBLE, "ANSA5_REAL"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSR5_REAL", AttributeType.DOUBLE, "ANSR5_REAL"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSE5_REAL", AttributeType.DOUBLE, "ANSE5_REAL"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSE6_STRING", AttributeType.STRING, "ANSE6_STRING"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSL6_2_STRING", AttributeType.STRING, "ANSL6_2_STRING"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSR3_INT", "frag3", AttributeType.INTEGER, "ANSR3_INT"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSL3_1_INT", "frag3", AttributeType.INTEGER, "ANSL3_1_INT"));
-        modelAttrMapping.add(new DynamicAttributeMapping("ANSL3_2_INT", "frag3", AttributeType.INTEGER, "ANSL3_2_INT"));
+        modelAttrMapping = new ArrayList<>();
 
         modelAttrMapping
-                .add(new StaticAttributeMapping(AbstractAttributeMapping.THUMBNAIL, AttributeType.STRING, "ANSA7_URL"));
+                .add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER, "id"));
+
+        modelAttrMapping.add(new DynamicAttributeMapping("weight", AttributeType.INTEGER, "weight"));
+        modelAttrMapping.add(new DynamicAttributeMapping("date", AttributeType.DATE_ISO8601, "creation_date"));
+        modelAttrMapping.add(new DynamicAttributeMapping("description", AttributeType.STRING, "description"));
+        modelAttrMapping.add(new DynamicAttributeMapping("value_l1", AttributeType.LONG, "value_l1"));
+        modelAttrMapping.add(new DynamicAttributeMapping("value_d1", AttributeType.DOUBLE, "value_d1"));
         modelAttrMapping
-                .add(new StaticAttributeMapping(AbstractAttributeMapping.RAW_DATA, AttributeType.STRING, "ANSE7_URL"));
+                .add(new DynamicAttributeMapping("DATASET_VALIDATION_TYPE", AttributeType.STRING, "type"));
+        modelAttrMapping.add(new DynamicAttributeMapping("url", AttributeType.URL, "url"));
+        modelAttrMapping.add(new DynamicAttributeMapping("activated","fragment1",  AttributeType.BOOLEAN, "activated"));
+        modelAttrMapping.add(new DynamicAttributeMapping("state", "fragment1", AttributeType.STRING, "state"));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")
     @Purpose("Requirement is for collection. Multi search field is used here on data objects but the code is the same")
     @Test
     public void test() throws Exception {
-        final String tenant = tenantResolver.getTenant();
+        final String tenant = runtimeTenantResolver.getTenant();
 
         // Creation
         long start = System.currentTimeMillis();
@@ -393,6 +382,7 @@ public class IndexerServiceDataSourceIT {
         dataset1 = new Dataset(datasetModel, tenant, "dataset label 1");
         dataset1.setDataModel(dataModel.getName());
         dataset1.setSubsettingClause(ICriterion.all());
+        dataset1.setOpenSearchSubsettingClause("");
         dataset1.setLicence("licence");
         dataset1.setDataSource(dataSourcePluginConf);
         dataset1.setTags(Sets.newHashSet("BULLSHIT"));
@@ -403,6 +393,7 @@ public class IndexerServiceDataSourceIT {
         dataset2 = new Dataset(datasetModel, tenant, "dataset label 2");
         dataset2.setDataModel(dataModel.getName());
         dataset2.setSubsettingClause(ICriterion.all());
+        dataset2.setOpenSearchSubsettingClause("");
         dataset2.setTags(Sets.newHashSet("BULLSHIT"));
         dataset2.setLicence("licence");
         dataset2.setDataSource(dataSourcePluginConf);
@@ -414,6 +405,7 @@ public class IndexerServiceDataSourceIT {
         dataset3 = new Dataset(datasetModel, tenant, "dataset label 3");
         dataset3.setDataModel(dataModel.getName());
         dataset3.setSubsettingClause(ICriterion.all());
+        dataset3.setOpenSearchSubsettingClause("");
         dataset3.setLicence("licence");
         dataset3.setDataSource(dataSourcePluginConf);
         dataset3.setGroups(Sets.newHashSet("group2"));
@@ -433,18 +425,10 @@ public class IndexerServiceDataSourceIT {
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
-        Page<DataObject> objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                                            ICriterion.eq("tags", dataset1.getIpId().toString()));
+        Page<DataObject> objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
-        // All data are associated with the 3 datasets so they must all have the 4 groups
-        for (final DataObject object : objectsPage.getContent()) {
-            Assert.assertTrue(object.getGroups().contains("group0"));
-            Assert.assertTrue(object.getGroups().contains("group11"));
-            Assert.assertTrue(object.getGroups().contains("group12"));
-            Assert.assertTrue(object.getGroups().contains("group2"));
-            Assert.assertEquals(object.getDatasetModelIds().iterator().next(), datasetModel.getId());
-        }
 
         crawlerService.startWork();
         // Delete dataset1
@@ -454,8 +438,8 @@ public class IndexerServiceDataSourceIT {
         crawlerService.waitForEndOfWork();
 
         // Search again for DataObjects tagging this dataset
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset1.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset1.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().isEmpty());
         // Adding some free tag
         objectsPage.getContent().forEach(object -> object.getTags().add("TOTO"));
@@ -464,18 +448,11 @@ public class IndexerServiceDataSourceIT {
         esRepos.refresh(tenant);
 
         // Search for DataObjects tagging dataset2
-        objectsPage = searchService.search(objectSearchKey, IEsRepository.BULK_SIZE,
-                                           ICriterion.eq("tags", dataset2.getIpId().toString()));
+        objectsPage = searchService
+                .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
-        // dataset1 has bee removed so objects must have "group11", "group12" (from dataset2), "group2" (from dataset3)
-        // but not "group0" (only on dataset1)
-        for (final DataObject object : objectsPage.getContent()) {
-            Assert.assertFalse(object.getGroups().contains("group0"));
-            Assert.assertTrue(object.getGroups().contains("group11"));
-            Assert.assertTrue(object.getGroups().contains("group12"));
-            Assert.assertTrue(object.getGroups().contains("group2"));
-        }
+
 
         // Search for Dataset but with criterion on DataObjects
         // SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
@@ -505,12 +482,6 @@ public class IndexerServiceDataSourceIT {
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
         Assert.assertEquals(1, dsPage.getContent().size());
-
-        objectsPage = searchService.multiFieldsSearch(objectSearchKey, IEsRepository.BULK_SIZE, 13,
-                                                      "properties.DATA_OBJECTS_ID", "properties.FILE_SIZE",
-                                                      "properties.LONGITUDE.MAX", "properties.LATITUDE.MAX");
-        Assert.assertFalse(objectsPage.getContent().isEmpty());
-        Assert.assertEquals(3092, objectsPage.getContent().size());
     }
 
     private void checkDatasetComputedAttribute(final Dataset pDataset,
@@ -520,8 +491,7 @@ public class IndexerServiceDataSourceIT {
         try {
             restClient = RestClient
                     .builder(new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress),
-                            esPort))
-                    .build();
+                                          esPort)).build();
             client = new RestHighLevelClient(restClient);
 
         } catch (final UnknownHostException e) {
@@ -541,11 +511,11 @@ public class IndexerServiceDataSourceIT {
         builder.query(qb).size(0);
         // lets build the aggregations
         // aggregation for the min
-        builder.aggregation(AggregationBuilders.min("min_start_date").field("properties.START_DATE"));
+        builder.aggregation(AggregationBuilders.min("min_start_date").field("properties.date"));
         // aggregation for the max
-        builder.aggregation(AggregationBuilders.max("max_stop_date").field("properties.STOP_DATE"));
+        builder.aggregation(AggregationBuilders.max("max_stop_date").field("properties.date"));
         // aggregation for the sum
-        builder.aggregation(AggregationBuilders.sum("sum_file_size").field("properties.FILE_SIZE"));
+        builder.aggregation(AggregationBuilders.sum("sum_values_l1").field("properties.value_l1"));
         SearchRequest request = new SearchRequest(pObjectSearchKey.getSearchIndex().toLowerCase())
                 .types(pObjectSearchKey.getSearchTypes()).source(builder);
 
@@ -555,13 +525,13 @@ public class IndexerServiceDataSourceIT {
 
         // now lets actually test things
         Assert.assertEquals(objectsCreationCount, getDatasetProperty(pDataset, "count").getValue());
-        Assert.assertEquals((int) ((InternalSum) aggregations.get("sum_file_size")).getValue(),
-                            getDatasetProperty(pDataset, "FILE_SIZE").getValue());
+        Assert.assertEquals((long) ((ParsedSum) aggregations.get("sum_values_l1")).getValue(),
+                            getDatasetProperty(pDataset, "values_l1_sum").getValue());
         // lets convert both dates to instant, it is the simpliest way to compare them
-        Assert.assertEquals(Instant.parse(((InternalMin) aggregations.get("min_start_date")).getValueAsString()),
-                            ((OffsetDateTime) getDatasetProperty(pDataset, "START_DATE").getValue()).toInstant());
-        Assert.assertEquals(Instant.parse(((InternalMax) aggregations.get("max_stop_date")).getValueAsString()),
-                            ((OffsetDateTime) getDatasetProperty(pDataset, "STOP_DATE").getValue()).toInstant());
+        Assert.assertEquals(Instant.parse(((ParsedMin) aggregations.get("min_start_date")).getValueAsString()),
+                            ((OffsetDateTime) getDatasetProperty(pDataset, "start_date").getValue()).toInstant());
+        Assert.assertEquals(Instant.parse(((ParsedMax) aggregations.get("max_stop_date")).getValueAsString()),
+                            ((OffsetDateTime) getDatasetProperty(pDataset, "end_date").getValue()).toInstant());
         restClient.close();
     }
 
@@ -577,7 +547,8 @@ public class IndexerServiceDataSourceIT {
      */
     private void importModel(final String pFilename) throws ModuleException {
         try {
-            final InputStream input = Files.newInputStream(Paths.get("src", "test", "resources", pFilename));
+            final InputStream input = Files
+                    .newInputStream(Paths.get("src", "test", "resources", "validation", "models", pFilename));
             modelService.importModel(input);
 
             final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);

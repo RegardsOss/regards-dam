@@ -246,11 +246,6 @@ public final class XmlImportHelper {
             PluginConfiguration compConf = new PluginConfiguration(plgMetaData, xmlAtt.getComputation().getLabel());
             // Add plugin parameters (from attribute and associated fragment)
             PluginParametersFactory ppf = PluginParametersFactory.build();
-            // All compute plugins need result parameter(s)
-            ppf.addParameter("resultAttributeName", modelAtt.getAttribute().getName());
-            if (!modelAtt.getAttribute().getFragment().isDefaultFragment()) {
-                ppf.addParameter("resultAttributeFragmentName", modelAtt.getAttribute().getFragment().getName());
-            }
             // Some plugins need parameters (in this case, xmlParamPluginType contains them as attributes)
             if (xmlParamPluginType != null) {
                 ppf.addParameter("parameterAttributeName", xmlParamPluginType.getParameterAttributeName());

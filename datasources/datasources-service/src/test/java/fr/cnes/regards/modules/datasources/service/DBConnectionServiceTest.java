@@ -162,10 +162,10 @@ public class DBConnectionServiceTest {
     private List<PluginParameterType> initializePluginParameterType() {
 
         return Arrays
-                .asList(PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE, false),
+                .asList(PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE, false, false),
                         PluginParameterType
                                 .create("connection", "connection", null, IDBConnectionPlugin.class, ParamType.PLUGIN,
-                                        false));
+                                        false, false));
     }
 
 }
