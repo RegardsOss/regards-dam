@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
 /**
@@ -50,12 +51,15 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
 
         private final List<AdaptedFacetValue> values;
 
+        private final long others;
+
         public AdaptedFacet(StringFacet facet) {
             super();
             attributeName = facet.getAttributeName();
             values = facet.getValues().entrySet().stream()
                     .map(entry -> new AdaptedFacetValue(entry.getKey(), entry.getValue(), facet.getAttributeName()))
                     .collect(Collectors.toList());
+            others = facet.getOthers();
         }
 
         /**
@@ -70,6 +74,10 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
          */
         public List<AdaptedFacetValue> getValues() {
             return values;
+        }
+
+        public long getOthers() {
+            return others;
         }
 
     }
