@@ -27,7 +27,7 @@ public interface IEntityIndexerService {
      */
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate,
             boolean forceAssociatedEntitiesUpdate) {
-        this.updateEntityIntoEs(tenant, ipId, null, forceAssociatedEntitiesUpdate);
+        this.updateEntityIntoEs(tenant, ipId, null, updateDate, forceAssociatedEntitiesUpdate);
     }
 
     /**
