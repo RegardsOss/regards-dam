@@ -15,6 +15,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
  * @author oroussel
  */
 public interface IEntityIndexerService {
+
     void handleApplicationReady(ApplicationReadyEvent event);
 
     /**
@@ -22,9 +23,11 @@ public interface IEntityIndexerService {
      * @param tenant concerned tenant
      * @param ipId concerned entity id
      * @param updateDate current update date (usually now)
+     * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
      */
-    default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate) {
-        this.updateEntityIntoEs(tenant, ipId, null, updateDate);
+    default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate,
+            boolean forceAssociatedEntitiesUpdate) {
+        this.updateEntityIntoEs(tenant, ipId, null, forceAssociatedEntitiesUpdate);
     }
 
     /**
@@ -33,9 +36,10 @@ public interface IEntityIndexerService {
      * @param ipId concerned entity id
      * @param lastUpdateDate last ingestion update date
      * @param updateDate current update date (usually now)
+     * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
      */
     void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate);
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate);
 
     /**
      * Create index it doesn't exist
