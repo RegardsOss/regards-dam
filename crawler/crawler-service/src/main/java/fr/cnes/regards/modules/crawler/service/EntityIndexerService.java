@@ -136,10 +136,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param ipId concerned entity IpId
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
      * into account
+     * @param forceAssociatedEntitiesUpdate for dataset entity, force associated entities (ie data objects) update
      */
     @Override
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate) {
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate) {
         LOGGER.info("Updating {}", ipId.toString());
         runtimeTenantResolver.forceTenant(tenant);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
@@ -196,8 +197,13 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
             // If lastUpdateDate is provided, this means that update comes from an ingestion, in this case all data
-            // objects must be updated
-            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null);
+            // objects must be updated.
+            // If lastUpdatedDate isn't provided it means update come from a change into dataset
+            // (cf. DatasetCrawlerService.handle(...)) and so it is necessary to check if differences exist between
+            // previous version of dataset and current one.
+            // It may also mean that it comes from a first ingestion. In this case, lastUpdateDate is null but all
+            // data objects must be updated
+            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null) || forceAssociatedEntitiesUpdate;
             // A dataset change may need associated data objects update
             if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
                 Dataset dataset = (Dataset) entity;
@@ -396,7 +402,8 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate) {
         OffsetDateTime now = OffsetDateTime.now();
-        datasets.forEach(dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now));
+        datasets.forEach(
+                dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate));
     }
 
     @Override
@@ -444,8 +451,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, StringBuilder buf) {
         Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
-        validator.validate(dataObject, errors);
         // If some validation errors occur, don't index data object
+        validator.validate(dataObject, errors);
         if (errors.getErrorCount() == 0) {
             toSaveObjects.add(dataObject);
         } else {
