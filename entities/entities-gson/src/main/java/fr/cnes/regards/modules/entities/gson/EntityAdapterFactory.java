@@ -37,11 +37,8 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 
 /**
- *
  * Entity adapter factory
- *
  * @author Marc Sordi
- *
  */
 @GsonTypeAdapterFactory
 public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<AbstractEntity> {
@@ -68,10 +65,10 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
     }
 
     @Override
-    protected JsonElement beforeWrite(JsonElement pJsonElement, Class<?> pSubType) {
+    protected JsonElement beforeWrite(JsonElement jsonElement, Class<?> subType) {
 
         // Do injection
-        JsonElement clone = super.beforeWrite(pJsonElement, pSubType);
+        JsonElement clone = super.beforeWrite(jsonElement, subType);
 
         LOGGER.debug("Before write");
 
@@ -94,14 +91,14 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
     }
 
     @Override
-    protected JsonElement beforeRead(JsonElement pJsonElement, String pDiscriminator, Class<?> pSubType) {
+    protected JsonElement beforeRead(JsonElement jsonElement, String discriminator, Class<?> subType) {
         LOGGER.debug("Before read");
 
-        if (!pJsonElement.isJsonObject()) {
-            throw objectRequiredException(pJsonElement);
+        if (!jsonElement.isJsonObject()) {
+            throw objectRequiredException(jsonElement);
         }
 
-        JsonObject entity = pJsonElement.getAsJsonObject();
+        JsonObject entity = jsonElement.getAsJsonObject();
         JsonElement attEl = entity.get(PROPERTIES_FIELD_NAME);
         if (attEl != null) {
             if (attEl.isJsonObject()) {
@@ -115,14 +112,12 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
 
     /**
      * Merge {@link JsonArray} flattening elements in a single {@link JsonObject}
-     *
-     * @param pJsonArray
-     *            {@link JsonArray} to flatten
+     * @param jsonArray {@link JsonArray} to flatten
      * @return {@link JsonObject}
      */
-    private JsonObject mergeArray(JsonArray pJsonArray) {
+    private JsonObject mergeArray(JsonArray jsonArray) {
         JsonObject mergedObject = new JsonObject();
-        Iterator<JsonElement> nestedIter = pJsonArray.iterator();
+        Iterator<JsonElement> nestedIter = jsonArray.iterator();
         while (nestedIter.hasNext()) {
             JsonElement nested = nestedIter.next();
             if (nested.isJsonObject()) {
@@ -139,14 +134,12 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
 
     /**
      * Restore {@link JsonArray} from flattened {@link JsonObject} elements (reverse merge)
-     *
-     * @param pJsonObject
-     *            {@link JsonObject} to transform
+     * @param jsonObject {@link JsonObject} to transform
      * @return {@link JsonArray}
      */
-    private JsonArray restoreArray(JsonObject pJsonObject) {
+    private JsonArray restoreArray(JsonObject jsonObject) {
         JsonArray restoredArray = new JsonArray();
-        for (Map.Entry<String, JsonElement> nestedEntry : pJsonObject.entrySet()) {
+        for (Map.Entry<String, JsonElement> nestedEntry : jsonObject.entrySet()) {
             JsonObject nestedObject = new JsonObject();
             nestedObject.add(nestedEntry.getKey(), nestedEntry.getValue());
             restoredArray.add(nestedObject);
@@ -154,8 +147,8 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
         return restoredArray;
     }
 
-    private IllegalArgumentException objectRequiredException(JsonElement pJsonElement) {
-        String errorMessage = String.format("Unexpected JSON element %s. Object required.", pJsonElement.toString());
+    private IllegalArgumentException objectRequiredException(JsonElement jsonElement) {
+        String errorMessage = String.format("Unexpected JSON element %s. Object required.", jsonElement.toString());
         LOGGER.error(errorMessage);
         return new IllegalArgumentException(errorMessage);
     }

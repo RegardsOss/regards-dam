@@ -36,8 +36,8 @@ public class CoordinateArrayToArray implements Converter<Coordinate[], Double[][
      * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
      */
     @Override
-    public Double[][] convert(Coordinate[] pCoordinates) {
-        return Stream.of(pCoordinates).map(COORDINATE_TO_ARRAY::convert).toArray(Double[][]::new);
+    public Double[][] convert(Coordinate[] coordinates) {
+        return Stream.of(coordinates).map(COORDINATE_TO_ARRAY::convert).toArray(Double[][]::new);
     }
 
 }

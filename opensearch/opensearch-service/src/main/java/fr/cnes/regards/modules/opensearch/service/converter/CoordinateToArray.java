@@ -32,8 +32,8 @@ public class CoordinateToArray implements Converter<Coordinate, Double[]> {
      * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
      */
     @Override
-    public Double[] convert(Coordinate pSource) {
-        return new Double[] { pSource.getOrdinate(0), pSource.getOrdinate(1) };
+    public Double[] convert(Coordinate source) {
+        return new Double[] { source.getOrdinate(0), source.getOrdinate(1) };
     }
 
 }
