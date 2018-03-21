@@ -41,7 +41,6 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 
 /**
  * Unit testing of {@link DBConnectionService}.
@@ -96,9 +95,9 @@ public class DBConnectionServiceTest {
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameters();
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
-                                             parameters));
+                parameters));
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "second configuration",
-                                             parameters, 5));
+                parameters, 5));
     }
 
     @Test
@@ -142,7 +141,7 @@ public class DBConnectionServiceTest {
 
     private PluginMetaData initializePluginMetaDataPostGre(String pluginId) {
         final PluginMetaData pluginMetaData = new PluginMetaData();
-        pluginMetaData.setPluginClassName(DefaultPostgreConnectionPlugin.class.getName());
+        pluginMetaData.setPluginClassName("fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin");
         pluginMetaData.setPluginId(pluginId);
         pluginMetaData.setAuthor("CS-SI");
         pluginMetaData.setVersion("1.1");
@@ -163,9 +162,8 @@ public class DBConnectionServiceTest {
 
         return Arrays
                 .asList(PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE, false),
-                        PluginParameterType
-                                .create("connection", "connection", null, IDBConnectionPlugin.class, ParamType.PLUGIN,
-                                        false));
+                        PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
+                                                   ParamType.PLUGIN, false));
     }
 
 }

@@ -60,7 +60,6 @@
 		<module>datasources-domain</module>
 		<module>datasources-rest</module>
 		<module>datasources-service</module>
-		<module>datasources-plugin</module>
 		<module>datasources-service-contract</module>
 	</modules>
 
