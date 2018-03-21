@@ -172,10 +172,10 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.POST, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "Update a collection")
-    public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") final Long id,
-            @Valid @RequestPart(name = "collection") final Collection inCollection,
-            @RequestPart(name = "file", required = false) final MultipartFile descriptionFile,
-            final BindingResult result) throws ModuleException, IOException {
+    public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long id,
+            @Valid @RequestPart(name = "collection") Collection inCollection,
+            @RequestPart(name = "file", required = false) MultipartFile descriptionFile, BindingResult result)
+            throws ModuleException, IOException {
         collectionService.checkAndOrSetModel(inCollection);
         // Validate dynamic model
         collectionService.validate(inCollection, result, true);
