@@ -53,7 +53,7 @@ public class MockConnectionPlugin implements IDBConnectionPlugin {
     }
 
     @Override
-    public Map<String, Table> getTables() {
+    public Map<String, Table> getTables(String schemaPattern, String tableNamePattern) {
         return null;
     }
 
