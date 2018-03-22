@@ -82,6 +82,13 @@ public interface IEntityService<U extends AbstractEntity> {
 
     Page<U> search(String label, Pageable pageRequest);
 
+    /**
+     * Check if model is loaded else load it then set it on entity.
+     * @param entity cocnerned entity
+     * @throws ModuleException
+     */
+    void checkAndOrSetModel(U entity) throws ModuleException;
+
     void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 
     /**

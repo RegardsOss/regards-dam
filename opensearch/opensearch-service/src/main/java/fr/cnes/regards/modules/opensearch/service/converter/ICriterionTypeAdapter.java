@@ -55,8 +55,8 @@ public class ICriterionTypeAdapter extends TypeAdapter<ICriterion> {
     }
 
     @Override
-    public void write(JsonWriter pOut, ICriterion pValue) throws IOException {
-        pOut.jsonValue(gson.toJson(pValue));
+    public void write(JsonWriter out, ICriterion value) throws IOException {
+        out.jsonValue(gson.toJson(value));
     }
 
 }
