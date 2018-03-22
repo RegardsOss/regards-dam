@@ -55,6 +55,7 @@ import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
  * Test DBConnnection controller
  * @author Christophe Mertz
  */
+@Ignore
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
