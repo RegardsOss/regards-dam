@@ -33,10 +33,8 @@ import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacc
 import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableType;
 
 /**
- *
  * Advice for specific entity exceptions
  * @author Marc Sordi
- *
  */
 @RestControllerAdvice(annotations = RestController.class)
 @Order(Ordered.LOWEST_PRECEDENCE - 300)
@@ -44,23 +42,23 @@ public class EntityControllerAdvice {
 
     @ExceptionHandler(EntityDescriptionUnacceptableCharsetException.class)
     public ResponseEntity<ServerErrorResponse> entityDescriptionUnacceptableCharset(
-            final EntityDescriptionUnacceptableCharsetException pException) {
+            EntityDescriptionUnacceptableCharsetException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(pException.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(EntityDescriptionUnacceptableType.class)
     public ResponseEntity<ServerErrorResponse> entityDescriptionUnacceptableType(
-            final EntityDescriptionUnacceptableType pException) {
+            EntityDescriptionUnacceptableType exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(pException.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(EntityDescriptionTooLargeException.class)
     public ResponseEntity<ServerErrorResponse> entityDescriptionTooLargeCharset(
-            final EntityDescriptionTooLargeException pException) {
+            EntityDescriptionTooLargeException exception) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new ServerErrorResponse(pException.getMessage()));
+                .body(new ServerErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(AssociatedAccessRightExistsException.class)

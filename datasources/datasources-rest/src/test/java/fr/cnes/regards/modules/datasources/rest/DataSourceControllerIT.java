@@ -18,6 +18,8 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,14 +56,10 @@ import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourcePlugin;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test sata source PluginConfiguration controller
@@ -124,7 +122,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration pluginPostgreDbConnection;
 
     private List<AbstractAttributeMapping> modelAttrMapping;
-
 
     @Override
     protected Logger getLogger() {
@@ -344,7 +341,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection)
                 .getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
-        dataSource.setPluginClassName(PostgreDataSourcePlugin.class.getName());
+        dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
         return dataSource;
 
         // final DataSource dataSource = new DataSource();
@@ -366,7 +363,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         factory.addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection);
         dataSource.setParameters(factory.getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
-        dataSource.setPluginClassName(PostgreDataSourceFromSingleTablePlugin.class.getName());
+        dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
 
         return dataSource;
     }
@@ -405,13 +402,13 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
 
     private PluginConfiguration getPostGreSqlConnectionConfiguration() {
         final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
+                .addParameter(MockConnectionPlugin.USER_PARAM, dbUser)
+                .addParameter(MockConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(MockConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(MockConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(MockConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
 
-        return PluginUtils.getPluginConfiguration(parameters, DefaultPostgreConnectionPlugin.class,
+        return PluginUtils.getPluginConfiguration(parameters, MockConnectionPlugin.class,
                                                   Arrays.asList(PLUGIN_PACKAGE));
     }
 

@@ -40,7 +40,6 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -171,7 +170,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     // To perform quick access to attribute from its name
     @Transient
     @GsonIgnore
-    private Map<String, AbstractAttribute<?>> propertyMap = Collections.emptyMap();
+    private Map<String, AbstractAttribute<?>> propertyMap = null;
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
@@ -268,6 +267,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     }
 
     public AbstractAttribute<?> getProperty(String name) {
+        if (propertyMap == null) {
+            propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        }
         if (!name.contains(".")) {
             return this.propertyMap.get(name);
         } else {

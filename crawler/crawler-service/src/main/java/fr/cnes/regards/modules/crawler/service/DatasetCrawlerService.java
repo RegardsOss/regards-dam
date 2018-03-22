@@ -48,7 +48,8 @@ public class DatasetCrawlerService extends AbstractCrawlerService<DatasetEvent>
     public void handle(TenantWrapper<AccessRightEvent> wrapper) {
         if (wrapper.getContent() != null) {
             AccessRightEvent event = wrapper.getContent();
-            entityIndexerService.updateEntityIntoEs(wrapper.getTenant(), event.getDatasetIpId(), OffsetDateTime.now());
+            entityIndexerService
+                    .updateEntityIntoEs(wrapper.getTenant(), event.getDatasetIpId(), OffsetDateTime.now(), false);
         }
     }
 }

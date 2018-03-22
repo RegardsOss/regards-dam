@@ -109,7 +109,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
         stopAsked = true;
     }
 
-
     /**
      * Daemon process. Poll entity events on all tenants and update Elasticsearch to reflect Postgres database
      */
@@ -152,7 +151,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     /**
      * Try to do a transactional poll. If a poll is done but an exception occurs, the transaction is rolbacked and the
      * event is still present into AMQP
-     *
      * @return true if a poll has been done, false otherwise
      */
     @MultitenantTransactional
@@ -174,7 +172,7 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                 }
                 inProgress = true;
                 OffsetDateTime now = OffsetDateTime.now();
-                Arrays.stream(ipIds).forEach(ipId -> entityIndexerService.updateEntityIntoEs(tenant, ipId, now));
+                Arrays.stream(ipIds).forEach(ipId -> entityIndexerService.updateEntityIntoEs(tenant, ipId, now, false));
                 somethingDone = true;
             }
         }

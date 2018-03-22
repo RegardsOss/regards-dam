@@ -49,7 +49,6 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.plugins.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
@@ -108,7 +107,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Test
     public void createPostgresDBConnection() throws ModuleException {
 
-        pluginService.addPluginPackage(DefaultPostgreConnectionPlugin.class.getPackage().getName());
+        pluginService.addPluginPackage(MockConnectionPlugin.class.getPackage().getName());
 
         RequestBuilderCustomizer customizer = getNewRequestBuilderCustomizer();
         customizer.addExpectation(MockMvcResultMatchers.status().is2xxSuccessful());
@@ -177,7 +176,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("The system allows to create a connection by the configuration of a plugin's type IDBConnectionPlugin")
     public void createDBConnection() {
         PluginConfiguration dbConnection = createADbConnection("hello world!",
-                                                               DefaultPostgreConnectionPlugin.class.getCanonicalName());
+                                                               MockConnectionPlugin.class.getCanonicalName());
         // Define expectations
         List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -390,11 +389,10 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     private PluginConfiguration createADbConnection(String label, String pluginClassName) {
         PluginConfiguration dbConnection = new PluginConfiguration();
         dbConnection.setParameters(PluginParametersFactory.build().addParameter(IDBConnectionPlugin.USER_PARAM, dbUser)
-                                           .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
-                                           .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
-                                           .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
-                                           .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName)
-                                           .getParameters());
+                .addParameter(IDBConnectionPlugin.PASSWORD_PARAM, dbPassword)
+                .addParameter(IDBConnectionPlugin.DB_HOST_PARAM, dbHost)
+                .addParameter(IDBConnectionPlugin.DB_PORT_PARAM, dbPort)
+                .addParameter(IDBConnectionPlugin.DB_NAME_PARAM, dbName).getParameters());
         dbConnection.setLabel(label);
         dbConnection.setPluginClassName(pluginClassName);
         return dbConnection;
