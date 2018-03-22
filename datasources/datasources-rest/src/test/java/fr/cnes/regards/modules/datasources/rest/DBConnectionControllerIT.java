@@ -49,13 +49,13 @@ import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.datasources.domain.plugins.IConnectionPlugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
 import fr.cnes.regards.modules.datasources.service.IDBConnectionService;
 
 /**
  * Test DBConnnection controller
  * @author Christophe Mertz
  */
+@Ignore
 @TestPropertySource(locations = { "classpath:datasource-test.properties" })
 @MultitenantTransactional
 public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
@@ -177,7 +177,7 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
     @Purpose("The system allows to create a connection by the configuration of a plugin's type IDBConnectionPlugin")
     public void createDBConnection() {
         PluginConfiguration dbConnection = createADbConnection("hello world!",
-                                                               DefaultPostgreConnectionPlugin.class.getCanonicalName());
+                                                               MockConnectionPlugin.class.getCanonicalName());
         // Define expectations
         List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
