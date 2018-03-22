@@ -90,6 +90,7 @@ import org.elasticsearch.search.aggregations.metrics.percentiles.Percentiles;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCount;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1015,8 +1016,14 @@ public class EsRepository implements IEsRepository {
                 }
 
                 // Add sort to request
-                updatedAscSortMap.entrySet().forEach(
-                        entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
+                updatedAscSortMap.entrySet().forEach(entry -> builder.sort(SortBuilders.fieldSort(entry.getKey())
+                                                                                   .order(entry.getValue() ?
+                                                                                                  SortOrder.ASC :
+                                                                                                  SortOrder.DESC)
+                                                                                   .unmappedType("double")));
+                // "double" because a type is necessary. This has only an impact when seaching on several indices if
+                // property is mapped on one and no on the other(s). Will see this when it happens (if it happens a day)
+                //                        entry -> builder.sort(entry.getKey(), entry.getValue() ? SortOrder.ASC : SortOrder.DESC));
             }
         }
     }
