@@ -16,5 +16,5 @@
  */
 @Library('regards/standardPipeline') _
 standardPipeline {
-	upstreamProjects = 'rs-admin-multi-branch/release/V2.0.0'
+	upstreamProjects = 'rs-storage-multi-branch/release/V2.0.0'
 }
