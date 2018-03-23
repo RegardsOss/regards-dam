@@ -415,8 +415,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
         // IpIds of entities that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
-        this.manageGroups(entity, updatedIpIds);
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+        this.manageGroups(entity, updatedIpIds);
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
         entity = getStorageService().storeAIP(entity);
@@ -510,6 +510,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 this.manageGroups(coll, updatedIpIds);
             }
         }
+        entityRepository.save(entity);
         /*
          * UniformResourceName urn = entity.getIpId();
          * // If entity contains groups => update all entities tagging this entity (recursively)
@@ -693,21 +694,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Really do the update of entities
-     * @param pEntity updated entity to be saved
+     * @param entity updated entity to be saved
      * @param entityInDb only there for comparison for group management
      * @return updated entity with group set correclty
      */
-    private U updateWithoutCheck(U pEntity, U entityInDb) {
+    private U updateWithoutCheck(U entity, U entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
-        Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
+        Set<UniformResourceName> newLinks = extractUrns(entity.getTags());
         Set<String> oldGroups = entityInDb.getGroups();
-        Set<String> newGroups = pEntity.getGroups();
+        Set<String> newGroups = entity.getGroups();
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put
         // pEntity into the DB.
-        pEntity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
-        U updated = repository.save(pEntity);
+        entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+        U updated = repository.save(entity);
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks) || !oldGroups.equals(newGroups)) {
