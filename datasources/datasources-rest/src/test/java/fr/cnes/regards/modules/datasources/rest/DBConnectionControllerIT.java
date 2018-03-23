@@ -403,8 +403,6 @@ public class DBConnectionControllerIT extends AbstractRegardsTransactionalIT {
         List<PluginConfiguration> plgConfs = new ArrayList<>();
         plgConfs.add(service.createDBConnection(createADbConnection("Hello Toulouse", POSTGRESQL_PLUGIN_CONNECTION)));
         plgConfs.add(service.createDBConnection(createADbConnection("Hello Paris", POSTGRESQL_PLUGIN_CONNECTION)));
-        // Feel free to uncomment if you want to test oracle DB
-        // plgConfs.add(service.createDBConnection(createADbConnection("Hello Bordeaux", ORACLE_PLUGIN_CONNECTION)));
         pluginConfCount = plgConfs.size();
         return plgConfs;
     }

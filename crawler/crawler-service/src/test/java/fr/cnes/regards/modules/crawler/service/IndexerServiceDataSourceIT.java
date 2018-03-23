@@ -64,7 +64,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.amqp.configuration.IRabbitVirtualHostAdmin;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -121,34 +120,12 @@ public class IndexerServiceDataSourceIT {
     @Autowired
     private MultitenantFlattenedAttributeAdapterFactory gsonAttributeFactory;
 
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
-
-    private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
-
     private static final String DATA_MODEL_FILE_NAME = "dataModel.xml";
 
     private static final String DATASET_MODEL_FILE_NAME = "datasetModel.xml";
 
     @Value("${regards.tenant}")
     private String tenant;
-
-    @Value("${oracle.datasource.host}")
-    private String dbHost;
-
-    @Value("${oracle.datasource.port}")
-    private String dbPort;
-
-    @Value("${oracle.datasource.name}")
-    private String dbName;
-
-    @Value("${oracle.datasource.username}")
-    private String dbUser;
-
-    @Value("${oracle.datasource.password}")
-    private String dbPpassword;
-
-    @Value("${oracle.datasource.driver}")
-    private String driver;
 
     @Value("${regards.elasticsearch.host:}")
     private String esHost;
@@ -214,9 +191,6 @@ public class IndexerServiceDataSourceIT {
 
     @Autowired
     private IPluginConfigurationRepository pluginConfRepo;
-
-    @Autowired
-    private IRabbitVirtualHostAdmin rabbitVhostAdmin;
 
     @Autowired
     private IPublisher publisher;
@@ -299,20 +273,6 @@ public class IndexerServiceDataSourceIT {
         attrModelRepo.deleteAll();
         modelRepository.deleteAll();
         fragRepo.deleteAll();
-    }
-
-    private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-        // final List<PluginParameter> parameters = PluginParametersFactory.build()
-        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-        // .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, "1800")
-        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
-        // .getParameters();
-        //
-        // return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-        // TODO use portgres plugin
-        return null;
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() {

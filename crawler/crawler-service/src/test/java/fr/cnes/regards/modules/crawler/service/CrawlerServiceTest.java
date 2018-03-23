@@ -33,7 +33,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
@@ -41,6 +40,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
@@ -73,24 +73,6 @@ public class CrawlerServiceTest {
     private static final String TABLE_NAME_TEST = "T_DATA_OBJECTS";
 
     private static final String TENANT = "default";
-
-    @Value("${oracle.datasource.host}")
-    private String dbHost;
-
-    @Value("${oracle.datasource.port}")
-    private String dbPort;
-
-    @Value("${oracle.datasource.name}")
-    private String dbName;
-
-    @Value("${oracle.datasource.username}")
-    private String dbUser;
-
-    @Value("${oracle.datasource.password}")
-    private String dbPpassword;
-
-    @Value("${oracle.datasource.driver}")
-    private String driver;
 
     @Autowired
     private IIndexerService indexerService;
@@ -184,12 +166,14 @@ public class CrawlerServiceTest {
 
         modelAttrMapping.add(new DynamicAttributeMapping("FILE_SIZE", AttributeType.INTEGER, "FILE_SIZE"));
         modelAttrMapping.add(new DynamicAttributeMapping("FILE_TYPE", AttributeType.STRING, "FILE_TYPE"));
-        modelAttrMapping.add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
+        modelAttrMapping
+                .add(new DynamicAttributeMapping("FILE_NAME_ORIGINE", AttributeType.STRING, "FILE_NAME_ORIGINE"));
 
         modelAttrMapping.add(new DynamicAttributeMapping("DATA_SET_ID", AttributeType.INTEGER, "DATA_SET_ID"));
         modelAttrMapping.add(new DynamicAttributeMapping("DATA_TITLE", AttributeType.STRING, "DATA_TITLE"));
         modelAttrMapping.add(new DynamicAttributeMapping("DATA_AUTHOR", AttributeType.STRING, "DATA_AUTHOR"));
-        modelAttrMapping.add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
+        modelAttrMapping
+                .add(new DynamicAttributeMapping("DATA_AUTHOR_COMPANY", AttributeType.STRING, "DATA_AUTHOR_COMPANY"));
 
         modelAttrMapping.add(new DynamicAttributeMapping("START_DATE", AttributeType.DATE_ISO8601, "START_DATE"));
         modelAttrMapping.add(new DynamicAttributeMapping("STOP_DATE", AttributeType.DATE_ISO8601, "STOP_DATE"));
