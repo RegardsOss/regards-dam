@@ -52,7 +52,6 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchUnknownPar
 /**
  * In this implementation, we choose to repopulate (and not only evict) the cache for a tenant in response to "create" and "delete" events.<br>
  * This way the cache "anticipates" by repopulating immediately instead of waiting for the next user call.
- *
  * @author Xavier-Alexandre Brochard
  */
 @Service
@@ -88,13 +87,11 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
      * Store dynamic properties by tenant and name (including namespace (i.e.) fragment name)
      *
      * All dynamic properties is wrapped in <code>properties</code> namespace.
-     *
      */
     private final Map<String, Map<String, AttributeModel>> dynamicPropertyMap;
 
     /**
      * Creates a new instance of the service with passed services/repos
-     *
      * @param attributeModelClient Service returning the list of attribute models
      * @param pSubscriber the AMQP events subscriber
      * @param pRuntimeTenantResolver the runtime tenant resolver
@@ -127,6 +124,10 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         staticPropertyMap.put(StaticProperties.IP_ID,
                               AttributeModelBuilder.build(StaticProperties.IP_ID, AttributeType.STRING, null).isStatic()
                                       .get());
+        staticPropertyMap.put(StaticProperties.SIP_ID,
+                              AttributeModelBuilder.build(StaticProperties.SIP_ID, AttributeType.STRING, null)
+                                      .isStatic().get());
+
         staticPropertyMap.put(StaticProperties.GEOMETRY,
                               AttributeModelBuilder.build(StaticProperties.GEOMETRY, AttributeType.STRING, null)
                                       .isStatic().get());
@@ -136,34 +137,28 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         staticPropertyMap.put(StaticProperties.MODEL_NAME,
                               AttributeModelBuilder.build(StaticProperties.MODEL_NAME, AttributeType.STRING, null)
                                       .isStatic().get());
-        staticPropertyMap.put(StaticProperties.LAST_UPDATE,
-                              AttributeModelBuilder
-                                      .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic()
-                                      .get());
-        staticPropertyMap.put(StaticProperties.CREATION_DATE,
-                              AttributeModelBuilder
-                                      .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null)
-                                      .isStatic().get());
+        staticPropertyMap.put(StaticProperties.LAST_UPDATE, AttributeModelBuilder
+                .build(StaticProperties.LAST_UPDATE, AttributeType.DATE_ISO8601, null).isStatic().get());
+        staticPropertyMap.put(StaticProperties.CREATION_DATE, AttributeModelBuilder
+                .build(StaticProperties.CREATION_DATE, AttributeType.DATE_ISO8601, null).isStatic().get());
         staticPropertyMap.put(StaticProperties.TAGS,
                               AttributeModelBuilder.build(StaticProperties.TAGS, AttributeType.STRING, null).isStatic()
                                       .get());
         staticPropertyMap.put(StaticProperties.ENTITY_TYPE,
                               AttributeModelBuilder.build(StaticProperties.ENTITY_TYPE, AttributeType.STRING, null)
                                       .isStatic().get());
-        staticPropertyMap.put(StaticProperties.DATASET_MODEL_IDS,
-                              AttributeModelBuilder
-                                      .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.STRING, null).isStatic()
-                                      .get());
+        staticPropertyMap.put(StaticProperties.DATASET_MODEL_IDS, AttributeModelBuilder
+                .build(StaticProperties.DATASET_MODEL_IDS, AttributeType.STRING, null).isStatic().get());
     }
 
     @Override
-    public List<AttributeModel> getAttributeModels(String pTenant) {
-        return doGetAttributeModels(pTenant);
+    public List<AttributeModel> getAttributeModels(String tenant) {
+        return doGetAttributeModels(tenant);
     }
 
     @Override
-    public List<AttributeModel> getAttributeModelsThenCache(String pTenant) {
-        return doGetAttributeModels(pTenant);
+    public List<AttributeModel> getAttributeModelsThenCache(String tenant) {
+        return doGetAttributeModels(tenant);
     }
 
     /**
@@ -209,10 +204,10 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
     }
 
     @Override
-    public AttributeModel findByName(String pName) throws OpenSearchUnknownParameter {
+    public AttributeModel findByName(String name) throws OpenSearchUnknownParameter {
 
         // Check queryable static properties
-        AttributeModel attModel = staticPropertyMap.get(pName);
+        AttributeModel attModel = staticPropertyMap.get(name);
         if (attModel != null) {
             return attModel;
         }
@@ -222,15 +217,15 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         Map<String, AttributeModel> tenantMap = dynamicPropertyMap.get(tenant);
 
         if (tenantMap == null) {
-            String errorMessage = String.format("No property found for tenant %s. Unknown parameter %s", tenant, pName);
+            String errorMessage = String.format("No property found for tenant %s. Unknown parameter %s", tenant, name);
             LOGGER.error(errorMessage);
             throw new OpenSearchUnknownParameter(errorMessage);
         }
 
-        attModel = tenantMap.get(pName);
+        attModel = tenantMap.get(name);
 
         if (attModel == null) {
-            String errorMessage = String.format("Unknown parameter %s for tenant %s", pName, tenant);
+            String errorMessage = String.format("Unknown parameter %s for tenant %s", name, tenant);
             LOGGER.error(errorMessage);
             throw new OpenSearchUnknownParameter(errorMessage);
         }
@@ -240,7 +235,6 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
 
     /**
      * Handle {@link AttributeModel} creation
-     *
      * @author Xavier-Alexandre Brochard
      */
     private class CreatedHandler implements IHandler<AttributeModelCreated> {
@@ -254,7 +248,6 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
 
     /**
      * Handle {@link AttributeModel} deletion
-     *
      * @author Xavier-Alexandre Brochard
      */
     private class DeletedHandler implements IHandler<AttributeModelDeleted> {
