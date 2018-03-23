@@ -133,6 +133,24 @@ public class QueryParserTest {
     }
 
     @Test
+    @Purpose("Tests queries like altitude:-8848")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    public void negativeIntMatchTest() throws OpenSearchParseException {
+        final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final Integer value = -8848;
+        final String term = field + ":%5C" + value;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof IntMatchCriterion);
+
+        final IntMatchCriterion crit = (IntMatchCriterion) criterion;
+        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(MatchType.EQUALS, crit.getType());
+        Assert.assertEquals(value, crit.getValue());
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     @Purpose("Tests queries like bpm:128.0")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
