@@ -74,27 +74,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-plugin</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
 			<artifactId>plugins-service</artifactId>
 		</dependency>
 	</dependencies>
-	
-	<profiles>
-		<profile>
-			<id>oracle</id>
-			<dependencies>
-				<dependency>
-					<groupId>fr.cnes.regards.modules.datasources</groupId>
-					<artifactId>datasource-oracle-plugins</artifactId>
-					<scope>test</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
 	
 </project>

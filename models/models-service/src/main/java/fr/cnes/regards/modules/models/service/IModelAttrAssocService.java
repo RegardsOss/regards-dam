@@ -87,7 +87,7 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      * @param pPageable
      * @return a page of attribute which are associated to at least one of the models
      */
-    Page<AttributeModel> getAttributeModels(List<String> pModelNames, Pageable pPageable) throws ModuleException;
+    Page<AttributeModel> getAttributeModelsByName(List<String> pModelNames, Pageable pPageable) throws ModuleException;
 
     /**
      * Find the model attribute associations for a given entity type(or all if none is given)
@@ -100,4 +100,12 @@ public interface IModelAttrAssocService extends ApplicationListener<NewFragmentA
      * @return the possible mappings between an attribute, computation plugin configurations and their metadata
      */
     List<TypeMetadataConfMapping> retrievePossibleMappingsForComputed();
+
+    /**
+     * Retrieve {@link AttributeModel} for the given {@link Model}s identifier.
+     * @param modelIds List of {@link Model}s identifier
+     * @param pageable
+     * @return {@link AttributeModel}s
+     */
+    Page<AttributeModel> getAttributeModels(Set<Long> modelIds, Pageable pageable);
 }

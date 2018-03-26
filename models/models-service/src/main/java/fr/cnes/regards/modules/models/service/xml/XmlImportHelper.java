@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
-import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.plugin.CountPlugin;
 import fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin;
@@ -54,9 +54,7 @@ import fr.cnes.regards.modules.models.service.exception.ImportException;
 
 /**
  * Help to manage model XML import based on XML schema definition
- *
  * @author Marc Sordi
- *
  */
 public final class XmlImportHelper {
 
@@ -70,19 +68,16 @@ public final class XmlImportHelper {
 
     /**
      * Import fragment {@link AttributeModel} from input stream
-     *
-     * @param pInputStream
-     *            input stream
+     * @param pInputStream input stream
      * @return list of {@link AttributeModel} linked to same {@link Fragment}
-     * @throws ImportException
-     *             if error occurs!
+     * @throws ImportException if error occurs!
      */
     public static List<AttributeModel> importFragment(InputStream pInputStream) throws ImportException {
         final Fragment xmlFragment = read(pInputStream, Fragment.class);
 
         if (xmlFragment.getAttribute().isEmpty()) {
-            final String message = String.format("Import for fragment %s is skipped because no attribute is bound!",
-                                                 xmlFragment.getName());
+            final String message = String
+                    .format("Import for fragment %s is skipped because no attribute is bound!", xmlFragment.getName());
             LOGGER.error(message);
             throw new ImportException(message);
         }
@@ -107,20 +102,17 @@ public final class XmlImportHelper {
 
     /**
      * Import model {@link ModelAttrAssoc} from input stream
-     *
-     * @param pInputStream
-     *            input stream
+     * @param pInputStream input stream
      * @return list of {@link ModelAttrAssoc}
-     * @throws ImportException
-     *             if error occurs!
+     * @throws ImportException if error occurs!
      */
     public static List<ModelAttrAssoc> importModel(InputStream pInputStream,
             List<PluginConfiguration> plgConfigurations) throws ImportException {
         final Model xmlModel = read(pInputStream, Model.class);
 
         if (xmlModel.getAttribute().isEmpty() && xmlModel.getFragment().isEmpty()) {
-            final String message = String.format("Import for model %s is skipped because no attribute is bound!",
-                                                 xmlModel.getName());
+            final String message = String
+                    .format("Import for model %s is skipped because no attribute is bound!", xmlModel.getName());
             LOGGER.error(message);
             throw new ImportException(message);
         }
@@ -199,7 +191,7 @@ public final class XmlImportHelper {
                 default:
                     String message = String
                             .format("Only LONG and INTEGER attribute types are supported for sum_compute plugin"
-                                    + " (attribute %s with type %s)", xmlAtt.getName(), xmlAtt.getType());
+                                            + " (attribute %s with type %s)", xmlAtt.getName(), xmlAtt.getType());
                     LOGGER.error(message);
                     throw new ImportException(message);
             }
@@ -211,10 +203,9 @@ public final class XmlImportHelper {
                     pluginClass = MinDateComputePlugin.class;
                     break;
                 default:
-                    String message = String.format(
-                                                   "Only DATE attribute types are supported for min_compute plugin"
-                                                           + " (attribute %s with type %s)",
-                                                   xmlAtt.getName(), xmlAtt.getType());
+                    String message = String.format("Only DATE attribute types are supported for min_compute plugin"
+                                                           + " (attribute %s with type %s)", xmlAtt.getName(),
+                                                   xmlAtt.getType());
                     LOGGER.error(message);
                     throw new ImportException(message);
             }
@@ -226,10 +217,9 @@ public final class XmlImportHelper {
                     pluginClass = MaxDateComputePlugin.class;
                     break;
                 default:
-                    String message = String.format(
-                                                   "Only DATE attribute types are supported for max_compute plugin"
-                                                           + " (attribute %s with type %s)",
-                                                   xmlAtt.getName(), xmlAtt.getType());
+                    String message = String.format("Only DATE attribute types are supported for max_compute plugin"
+                                                           + " (attribute %s with type %s)", xmlAtt.getName(),
+                                                   xmlAtt.getType());
                     LOGGER.error(message);
                     throw new ImportException(message);
             }
@@ -245,14 +235,15 @@ public final class XmlImportHelper {
                     .createPluginMetaData(pluginClass, IComputedAttribute.class.getPackage().getName());
             PluginConfiguration compConf = new PluginConfiguration(plgMetaData, xmlAtt.getComputation().getLabel());
             // Add plugin parameters (from attribute and associated fragment)
-            PluginParametersFactory ppf = PluginParametersFactory.build();
+            List<PluginParameter> parameters = new ArrayList<>();
             // Some plugins need parameters (in this case, xmlParamPluginType contains them as attributes)
             if (xmlParamPluginType != null) {
-                ppf.addParameter("parameterAttributeName", xmlParamPluginType.getParameterAttributeName());
-                ppf.addParameter("parameterAttributeFragmentName",
-                                 xmlParamPluginType.getParameterAttributeFragmentName());
+                parameters.add(new PluginParameter("parameterAttributeName",
+                                                   xmlParamPluginType.getParameterAttributeName()));
+                parameters.add(new PluginParameter("parameterAttributeFragmentName",
+                                                   xmlParamPluginType.getParameterAttributeFragmentName()));
             }
-            compConf.setParameters(ppf.getParameters());
+            compConf.setParameters(parameters);
             modelAtt.setComputationConf(compConf);
             // And create/update PluginConfiguration
             plgConfigurations.add(compConf);
@@ -265,16 +256,11 @@ public final class XmlImportHelper {
 
     /**
      * Read {@link JAXBElement} from {@link InputStream}
-     *
-     * @param <T>
-     *            JAXB annotated class
-     * @param pInputStream
-     *            {@link InputStream}
-     * @param pClass
-     *            type of {@link JAXBElement} to read
+     * @param <T> JAXB annotated class
+     * @param pInputStream {@link InputStream}
+     * @param pClass type of {@link JAXBElement} to read
      * @return {@link JAXBElement}
-     * @throws ImportException
-     *             if error occurs!
+     * @throws ImportException if error occurs!
      */
     @SuppressWarnings("unchecked")
     private static <T> T read(InputStream pInputStream, Class<T> pClass) throws ImportException {

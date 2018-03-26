@@ -45,85 +45,71 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 public interface ICollectionsClient {
 
     /**
-     * @summary Entry point to retrieve all collections
      * @return list of all {@link Collection}
+     * @summary Entry point to retrieve all collections
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public HttpEntity<List<Resource<Collection>>> retrieveCollections();
+    HttpEntity<List<Resource<Collection>>> retrieveCollections();
 
     /**
-     * @summary Entry point to retrieve a {@link Collection} using its id
-     * @param pCollectionId
-     *            Identifier of the {@link Collection} wanted
+     * @param collectionId Identifier of the {@link Collection} wanted
      * @return the specified {@link Collection}
+     * @summary Entry point to retrieve a {@link Collection} using its id
      */
     @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}")
     @ResponseBody
-    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long pCollectionId);
+    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") Long collectionId);
 
     /**
-     *
-     * @summary Entry point to update a {@link Collection} using its id
-     * @param pCollectionId
-     *            id of the {@link Collection} to update
-     * @param pCollection
-     *            updated {@link Collection}
+     * @param collectionId id of the {@link Collection} to update
+     * @param collection updated {@link Collection}
      * @return Updated {@link Collection}
-     * @throws EntityInconsistentIdentifierException
-     *             thrown if Ids mismatch
-     *
+     * @throws EntityInconsistentIdentifierException thrown if Ids mismatch
+     * @summary Entry point to update a {@link Collection} using its id
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}")
     @ResponseBody
-    public HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @RequestBody Collection pCollection);
+    HttpEntity<Resource<Collection>> updateCollection(@PathVariable("collection_id") Long collectionId,
+            @RequestBody Collection collection);
 
     /**
-     * @summary Entry point to delete a collection using its id
-     * @param pCollectionId
-     *            id of the {@link Collection} to delete
+     * @param collectionId id of the {@link Collection} to delete
      * @return Void
+     * @summary Entry point to delete a collection using its id
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
     @ResponseBody
-    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long pCollectionId);
+    HttpEntity<Void> deleteCollection(@PathVariable("collection_id") Long collectionId);
 
     /**
-     * @summary Entry point to create a collection
-     * @param pCollection
-     *            {@link Collection} to create
+     * @param collection {@link Collection} to create
      * @return created {@link Collection}
+     * @summary Entry point to create a collection
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public HttpEntity<Resource<Collection>> createCollection(@RequestBody Collection pCollection);
+    HttpEntity<Resource<Collection>> createCollection(@RequestBody Collection collection);
 
     /**
      * Entry point to handle dissociation of {@link Collection} specified by its id to other entities
-     *
-     * @param pCollectionId
-     *            {@link Collection} id
-     * @param pToBeDissociated
-     *            entity to dissociate
+     * @param collectionId {@link Collection} id
+     * @param toBeDissociated entity to dissociate
      * @return {@link Collection} as a {@link Resource}
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/dissociate")
     @ResponseBody
-    public HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long pCollectionId,
-            @RequestBody Set<UniformResourceName> pToBeDissociated);
+    HttpEntity<Resource<Collection>> dissociateCollection(@PathVariable("collection_id") Long collectionId,
+            @RequestBody Set<UniformResourceName> toBeDissociated);
 
     /**
      * Entry point to handle association of {@link Collection} specified by its id to other entities
-     *
-     * @param pCollectionId
-     *            {@link Collection} id
-     * @param pToBeAssociatedWith
-     *            entities to be associated
+     * @param collectionId {@link Collection} id
+     * @param toBeAssociatedWith entities to be associated
      * @return {@link Collection} as a {@link Resource}
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/{collection_id}/associate")
     @ResponseBody
-    public HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long pCollectionId,
-            @RequestBody Set<UniformResourceName> pToBeAssociatedWith);
+    HttpEntity<Resource<Collection>> associateCollections(@PathVariable("collection_id") Long collectionId,
+            @RequestBody Set<UniformResourceName> toBeAssociatedWith);
 }

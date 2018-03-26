@@ -85,6 +85,9 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
         // Manage the label change
         dataSourceFromDb.setLabel(dataSource.getLabel());
 
+        // Manage the activation change
+        dataSourceFromDb.setIsActive(dataSource.isActive());
+
         // Update all PluginParameters
         dataSourceFromDb.getParameters().replaceAll(param -> mergeParameter(param, dataSource));
         return service.updatePluginConfiguration(dataSourceFromDb);

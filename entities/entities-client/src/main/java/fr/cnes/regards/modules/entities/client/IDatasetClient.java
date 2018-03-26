@@ -54,12 +54,10 @@ public interface IDatasetClient {
 
     String DATASET_ID_DISSOCIATE_PATH = DATASET_ID_PATH + "/dissociate";
 
-    public static final String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
+    String DATASET_IPID_PATH_FILE = "/{dataset_ipId}/file";
 
     /**
      * Retrieve a page of datasets
-     * @param page
-     * @param size
      * @return a page of datasets
      */
     @RequestMapping(method = RequestMethod.GET)
@@ -68,37 +66,24 @@ public interface IDatasetClient {
 
     /**
      * Retrieve a dataset using its id
-     *
-     * @param datasetId
-     * @return
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
     ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_id") Long datasetId);
 
     /**
      * Retrieve a dataset using its ip id
-     *
-     * @param datasetId
-     * @return
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_ID_PATH)
     ResponseEntity<Resource<Dataset>> retrieveDataset(@PathVariable("dataset_ipId") String datasetIpId);
 
     /**
      * Delete dataset
-     *
-     * @param datasetId
-     * @return
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DATASET_ID_PATH)
     ResponseEntity<Void> deleteDataset(@PathVariable("dataset_id") Long datasetId);
 
     /**
      * Update dataset
-     *
-     * @param datasetId
-     * @param dataset
-     * @return
      */
     @RequestMapping(method = RequestMethod.PUT, value = DATASET_ID_PATH)
     ResponseEntity<Resource<Dataset>> updateDataset(@PathVariable("dataset_id") Long datasetId,
@@ -106,8 +91,7 @@ public interface IDatasetClient {
 
     /**
      * Entry point to handle dissociation of {@link Dataset} specified by its id to other entities
-     *
-     * @param datasetId       {@link Dataset} id
+     * @param datasetId {@link Dataset} id
      * @param toBeDissociated entity to dissociate
      * @return {@link Dataset} as a {@link Resource}
      * @throws ModuleException if error occurs
@@ -118,8 +102,7 @@ public interface IDatasetClient {
 
     /**
      * Entry point to handle association of {@link Dataset} specified by its id to other entities
-     *
-     * @param datasetId          {@link Dataset} id
+     * @param datasetId {@link Dataset} id
      * @param toBeAssociatedWith entities to be associated
      * @return {@link Dataset} as a {@link Resource}
      * @throws ModuleException if error occurs
@@ -130,11 +113,6 @@ public interface IDatasetClient {
 
     /**
      * Returns the dataset description file
-     *
-     * @param datasetIpId
-     * @return
-     * @throws EntityNotFoundException
-     * @throws IOException
      */
     @RequestMapping(method = RequestMethod.GET, value = DATASET_IPID_PATH_FILE,
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

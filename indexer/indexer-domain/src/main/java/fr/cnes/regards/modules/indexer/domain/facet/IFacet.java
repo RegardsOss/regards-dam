@@ -17,4 +17,6 @@ public interface IFacet<T> extends Serializable {
     FacetType getType();
 
     T getValues();
+
+    long getOthers();
 }

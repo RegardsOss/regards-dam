@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.entities.domain.metadata;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -13,13 +14,17 @@ public class DatasetMetadata {
      * Associated data objects groups.
      * Same groups as dataset ones except some if rights don't permit access to data objects
      */
-    private Set<String> dataObjectsGroups = new HashSet<>();
+    private Map<String, Boolean> dataObjectsGroups = new HashMap<>();
 
     public Set<String> getDataObjectsGroups() {
-        return dataObjectsGroups;
+        return dataObjectsGroups.keySet();
     }
 
-    public void setDataObjectsGroups(Set<String> dataObjectsGroups) {
+    public void setDataObjectsGroups(Map<String, Boolean> dataObjectsGroups) {
         this.dataObjectsGroups = dataObjectsGroups;
+    }
+
+    public Map<String, Boolean> getDataObjectsGroupsMap() {
+        return dataObjectsGroups;
     }
 }

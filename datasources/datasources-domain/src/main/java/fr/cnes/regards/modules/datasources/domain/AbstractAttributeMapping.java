@@ -51,7 +51,7 @@ public abstract class AbstractAttributeMapping {
     /**
      * Constant used for the raw data size attribute
      */
-/*    public static final String RAW_DATA_SIZE = "rawdata_size";*/
+    /* public static final String RAW_DATA_SIZE = "rawdata_size"; */
 
     /**
      * Constant used for the thumbnail attribute
@@ -76,7 +76,7 @@ public abstract class AbstractAttributeMapping {
     /**
      * The attribute namespace in the model
      */
-    protected String nameSpace = null;
+    protected String namespace = null;
 
     /**
      * The attribute name in the data source
@@ -97,9 +97,9 @@ public abstract class AbstractAttributeMapping {
      */
     protected AbstractAttributeMapping(String name, String nameSpace, AttributeType type, String mappingDS) {
         this.name = name;
-        this.nameSpace = nameSpace;
+        this.namespace = nameSpace;
         this.nameDS = mappingDS;
-        if (type == null && isMappedToStaticProperty()) {
+        if ((type == null) && isMappedToStaticProperty()) {
             this.type = getStaticAttributeType(name);
         } else {
             this.type = type;
@@ -109,18 +109,18 @@ public abstract class AbstractAttributeMapping {
     /**
      * Get the {@link AttributeType} for a static attribute
      * @param staticAttrName of one of the static attribute :
-     * <li>{@value #PRIMARY_KEY}
-     * <li>{@value #LAST_UPDATE}
-     * <li>{@value #LABEL}
-     * <li>{@value #RAW_DATA}
-     * <li>{@value #THUMBNAIL}
-     * <li>{@value #GEOMETRY}
+     *            <li>{@value #PRIMARY_KEY}
+     *            <li>{@value #LAST_UPDATE}
+     *            <li>{@value #LABEL}
+     *            <li>{@value #RAW_DATA}
+     *            <li>{@value #THUMBNAIL}
+     *            <li>{@value #GEOMETRY}
      * @return the {@link AttributeType}
      */
     protected AttributeType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
-//            case RAW_DATA_SIZE:
+                // case RAW_DATA_SIZE:
                 return AttributeType.LONG;
             case LABEL:
             case RAW_DATA:
@@ -152,11 +152,11 @@ public abstract class AbstractAttributeMapping {
     }
 
     public String getNameSpace() {
-        return nameSpace;
+        return namespace;
     }
 
     public void setNameSpace(String nameSpace) {
-        this.nameSpace = nameSpace;
+        this.namespace = nameSpace;
     }
 
     public String getNameDS() {
@@ -183,9 +183,11 @@ public abstract class AbstractAttributeMapping {
         return name.equals(RAW_DATA);
     }
 
-/*    public boolean isRawDataSize() {
-        return name.equals(RAW_DATA_SIZE);
-    }*/
+    /*
+     * public boolean isRawDataSize() {
+     * return name.equals(RAW_DATA_SIZE);
+     * }
+     */
 
     public boolean isThumbnail() {
         return name.equals(THUMBNAIL);
@@ -196,7 +198,7 @@ public abstract class AbstractAttributeMapping {
     }
 
     public final boolean isMappedToStaticProperty() {
-        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() /*|| isRawDataSize()*/ || isThumbnail()
+        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() /* || isRawDataSize() */ || isThumbnail()
                 || isGeometry();
     }
 }

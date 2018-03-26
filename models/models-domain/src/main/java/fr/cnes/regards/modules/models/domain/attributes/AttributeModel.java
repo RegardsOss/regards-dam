@@ -83,8 +83,9 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
-            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE,
+            message = "Attribute name must be between " + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE
+                    + " length.")
     @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
@@ -139,7 +140,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Whether this attribute can be altered by users
      */
     @Column
-    private boolean alterable=true;
+    private boolean alterable = true;
 
     /**
      * Whether this attribute is optional
@@ -255,7 +256,6 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     /**
      * Set the label
-     * @param label
      */
     public void setLabel(String label) {
         this.label = label;

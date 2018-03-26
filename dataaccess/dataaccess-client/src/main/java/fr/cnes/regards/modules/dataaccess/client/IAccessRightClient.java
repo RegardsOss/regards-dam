@@ -46,17 +46,19 @@ public interface IAccessRightClient { // NOSONAR
     /**
      * Client base path
      */
-    public static final String PATH_ACCESS_RIGHTS = "/accessrights";
+    String PATH_ACCESS_RIGHTS = "/accessrights";
+
+    String PATH_ACCESS_RIGHT = "/accessright";
 
     /**
      * Client path using an access right id as path variable
      */
-    public static final String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
+    String PATH_ACCESS_RIGHTS_ID = "/{accessright_id}";
 
     /**
      * Client path to know if a dataset is accessible
      */
-    public static final String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
+    String PATH_IS_DATASET_ACCESSIBLE = "/isAccessible";
 
     /**
      * Retrieve access rights
@@ -68,11 +70,17 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
+    ResponseEntity<PagedResources<Resource<AccessRight>>> retrieveAccessRightsList(
             @RequestParam(name = "accessgroup", required = false) String pAccessGroupName,
             @RequestParam(name = "dataset", required = false) UniformResourceName pDatasetIpId,
             @RequestParam("page") int pPage,
             @RequestParam("size") int pSize);
+
+    @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHT)
+    @ResponseBody
+    ResponseEntity<AccessRight> retrieveAccessRight(@RequestParam(name = "accessgroup") String accessGroupName,
+            @RequestParam(name = "dataset") UniformResourceName datasetIpId);
+
 
     /**
      * Create an access right
@@ -81,7 +89,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight pAccessRight);
+    ResponseEntity<Resource<AccessRight>> createAccessRight(@Valid @RequestBody AccessRight pAccessRight);
 
     /**
      * Retrieve an access right by its id
@@ -90,7 +98,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.GET, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    public ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long pId);
+    ResponseEntity<Resource<AccessRight>> retrieveAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
     /**
      * Update an access right. pToBe id should be the same as pId
@@ -100,7 +108,7 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.PUT, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    public ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
+    ResponseEntity<Resource<AccessRight>> updateAccessRight(@Valid @PathVariable("accessright_id") Long pId,
             @Valid AccessRight pToBe);
 
     /**
@@ -109,11 +117,11 @@ public interface IAccessRightClient { // NOSONAR
      */
     @RequestMapping(method = RequestMethod.DELETE, path = PATH_ACCESS_RIGHTS_ID)
     @ResponseBody
-    public ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId);
+    ResponseEntity<Void> deleteAccessRight(@Valid @PathVariable("accessright_id") Long pId);
 
     @RequestMapping(method = RequestMethod.GET, path = PATH_IS_DATASET_ACCESSIBLE)
     @ResponseBody
-    public ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
+    ResponseEntity<Boolean> isUserAutorisedToAccessDataset(
             @RequestParam(name = "dataset") UniformResourceName datasetIpId,
             @RequestParam(name = "user") String userEMail);
 }

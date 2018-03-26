@@ -37,7 +37,6 @@ import fr.cnes.regards.modules.entities.domain.Document;
 @Repository
 public interface IDocumentRepository extends IAbstractEntityRepository<Document> {
 
-
     List<Document> findByGroups(String group);
 
     /**
@@ -93,6 +92,6 @@ public interface IDocumentRepository extends IAbstractEntityRepository<Document>
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<Document> findAllByModelId(Set<Long> pModelIds);
+    Set<Document> findAllByModelIdIn(Set<Long> pModelIds);
 
 }

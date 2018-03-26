@@ -18,8 +18,8 @@ public class StringFacet extends AbstractFacet<Map<String, Long>> {
      */
     private final Map<String, Long> valueMap;
 
-    public StringFacet(String attName, Map<String, Long> valueMap) {
-        super(attName);
+    public StringFacet(String attName, Map<String, Long> valueMap, long others) {
+        super(attName, others);
         this.valueMap = valueMap;
     }
 
@@ -32,5 +32,4 @@ public class StringFacet extends AbstractFacet<Map<String, Long>> {
     public Map<String, Long> getValues() {
         return this.valueMap;
     }
-
 }

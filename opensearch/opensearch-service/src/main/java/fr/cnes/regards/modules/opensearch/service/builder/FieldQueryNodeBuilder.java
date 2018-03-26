@@ -37,7 +37,6 @@ import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
  * Builds a {@link StringMatchCriterion} from a {@link FieldQueryNode} object when the value is a String.<br>
  * Builds a {@link IntMatchCriterion} from a {@link PointQueryNode} object when the value is an Integer.<br>
  * Builds a {@link RangeCriterion} from a {@link PointQueryNode} object when the value is a double.<br>
- *
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
@@ -49,8 +48,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
     private final IAttributeFinder finder;
 
     /**
-     * @param pAttributeModelCache
-     *            Service retrieving the up-to-date list of {@link AttributeModel}s
+     * @param finder Service permitting to retrieve up-to-date list of {@link AttributeModel}s
      */
     public FieldQueryNodeBuilder(IAttributeFinder finder) {
         super();
@@ -58,8 +56,8 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
     }
 
     @Override
-    public ICriterion build(final QueryNode pQueryNode) throws QueryNodeException { // NOSONAR
-        final FieldQueryNode fieldNode = (FieldQueryNode) pQueryNode;
+    public ICriterion build(final QueryNode queryNode) throws QueryNodeException { // NOSONAR
+        final FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
 
         final String field = fieldNode.getFieldAsString();
         final String value = fieldNode.getValue().toString();
@@ -69,7 +67,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
             attributeModel = finder.findByName(field);
         } catch (OpenSearchUnknownParameter e) {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()),
-                    e);
+                                         e);
         }
 
         switch (attributeModel.getType()) {

@@ -19,10 +19,11 @@
 
 package fr.cnes.regards.modules.datasources.domain.plugins;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+
+import javax.sql.DataSource;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInterface;
 import fr.cnes.regards.modules.datasources.domain.Column;
@@ -75,9 +76,11 @@ public interface IDBConnectionPlugin extends IConnectionPlugin {
 
     /**
      * Requests the database to get the tables of a data source.
+     * @param schemaPattern schema pattern or null
+     * @param tableNamePattern table name pattern or null
      * @return a {@link Map} of the database's table
      */
-    Map<String, Table> getTables();
+    Map<String, Table> getTables(String schemaPattern, String tableNamePattern);
 
     /**
      * Requests the database to get the columns of a specific table.

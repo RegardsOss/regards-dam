@@ -45,38 +45,38 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     private static final String KEYWORD = ".keyword";
 
     @Override
-    public QueryBuilder visitEmptyCriterion(EmptyCriterion pCriterion) {
+    public QueryBuilder visitEmptyCriterion(EmptyCriterion criterion) {
         return QueryBuilders.matchAllQuery();
     }
 
     @Override
-    public QueryBuilder visitAndCriterion(AbstractMultiCriterion pCriterion) {
+    public QueryBuilder visitAndCriterion(AbstractMultiCriterion criterion) {
         BoolQueryBuilder andQueryBuilder = QueryBuilders.boolQuery();
-        for (ICriterion criterion : pCriterion.getCriterions()) {
-            andQueryBuilder.must(criterion.accept(this));
+        for (ICriterion crit : criterion.getCriterions()) {
+            andQueryBuilder.must(crit.accept(this));
         }
         return andQueryBuilder;
     }
 
     @Override
-    public QueryBuilder visitOrCriterion(AbstractMultiCriterion pCriterion) {
+    public QueryBuilder visitOrCriterion(AbstractMultiCriterion criterion) {
         BoolQueryBuilder orQueryBuilder = QueryBuilders.boolQuery();
-        for (ICriterion criterion : pCriterion.getCriterions()) {
-            orQueryBuilder.should(criterion.accept(this));
+        for (ICriterion crit : criterion.getCriterions()) {
+            orQueryBuilder.should(crit.accept(this));
         }
         return orQueryBuilder;
     }
 
     @Override
-    public QueryBuilder visitNotCriterion(NotCriterion pCriterion) {
-        return QueryBuilders.boolQuery().mustNot(pCriterion.getCriterion().accept(this));
+    public QueryBuilder visitNotCriterion(NotCriterion criterion) {
+        return QueryBuilders.boolQuery().mustNot(criterion.getCriterion().accept(this));
     }
 
     @Override
-    public QueryBuilder visitStringMatchCriterion(StringMatchCriterion pCriterion) {
-        String searchValue = pCriterion.getValue();
-        String attName = pCriterion.getName();
-        switch (pCriterion.getType()) {
+    public QueryBuilder visitStringMatchCriterion(StringMatchCriterion criterion) {
+        String searchValue = criterion.getValue();
+        String attName = criterion.getName();
+        switch (criterion.getType()) {
             case EQUALS:
                 return QueryBuilders.matchPhraseQuery(attName, searchValue);
             case STARTS_WITH:
@@ -91,25 +91,25 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     }
 
     @Override
-    public QueryBuilder visitStringMatchAnyCriterion(StringMatchAnyCriterion pCriterion) {
-        return QueryBuilders.matchQuery(pCriterion.getName(), Joiner.on(" ").join(pCriterion.getValue()));
+    public QueryBuilder visitStringMatchAnyCriterion(StringMatchAnyCriterion criterion) {
+        return QueryBuilders.matchQuery(criterion.getName(), Joiner.on(" ").join(criterion.getValue()));
     }
 
     @Override
-    public QueryBuilder visitIntMatchCriterion(IntMatchCriterion pCriterion) {
-        return QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue());
+    public QueryBuilder visitIntMatchCriterion(IntMatchCriterion criterion) {
+        return QueryBuilders.termQuery(criterion.getName(), criterion.getValue());
     }
 
     @Override
-    public QueryBuilder visitLongMatchCriterion(LongMatchCriterion pCriterion) {
-        return QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue());
+    public QueryBuilder visitLongMatchCriterion(LongMatchCriterion criterion) {
+        return QueryBuilders.termQuery(criterion.getName(), criterion.getValue());
     }
 
     @Override
-    public <U extends Comparable<? super U>> QueryBuilder visitRangeCriterion(RangeCriterion<U> pCriterion) {
-        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(pCriterion.getName());
+    public <U extends Comparable<? super U>> QueryBuilder visitRangeCriterion(RangeCriterion<U> criterion) {
+        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(criterion.getName());
 
-        for (ValueComparison<U> valueComp : pCriterion.getValueComparisons()) {
+        for (ValueComparison<U> valueComp : criterion.getValueComparisons()) {
             U value = valueComp.getValue();
             switch (valueComp.getOperator()) {
                 case GREATER:
@@ -131,10 +131,10 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     }
 
     @Override
-    public QueryBuilder visitDateRangeCriterion(DateRangeCriterion pCriterion) {
-        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(pCriterion.getName());
+    public QueryBuilder visitDateRangeCriterion(DateRangeCriterion criterion) {
+        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(criterion.getName());
 
-        for (ValueComparison<OffsetDateTime> valueComp : pCriterion.getValueComparisons()) {
+        for (ValueComparison<OffsetDateTime> valueComp : criterion.getValueComparisons()) {
             OffsetDateTime date = valueComp.getValue();
             switch (valueComp.getOperator()) {
                 case GREATER:
@@ -156,8 +156,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     }
 
     @Override
-    public QueryBuilder visitBooleanMatchCriterion(BooleanMatchCriterion pCriterion) {
-        return QueryBuilders.boolQuery().must(QueryBuilders.termQuery(pCriterion.getName(), pCriterion.getValue()));
+    public QueryBuilder visitBooleanMatchCriterion(BooleanMatchCriterion criterion) {
+        return QueryBuilders.termQuery(criterion.getName(), criterion.getValue());
     }
 
     @Override

@@ -69,6 +69,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -551,7 +552,7 @@ public class IndexerServiceDataSourceIT {
                     .newInputStream(Paths.get("src", "test", "resources", "validation", "models", pFilename));
             modelService.importModel(input);
 
-            final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null);
+            final List<AttributeModel> attributes = attributeModelService.getAttributes(null, null, null);
             gsonAttributeFactory.refresh(tenant, attributes);
         } catch (final IOException e) {
             final String errorMessage = "Cannot import " + pFilename;

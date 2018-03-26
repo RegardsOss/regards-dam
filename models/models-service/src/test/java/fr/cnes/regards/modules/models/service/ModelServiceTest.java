@@ -32,11 +32,14 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
@@ -211,7 +214,6 @@ public class ModelServiceTest {
 
     /**
      * Do not bind an attribute that is part of fragment
-     *
      * @throws ModuleException if error occurs!
      */
     @Test(expected = FragmentAttributeException.class)
@@ -243,7 +245,6 @@ public class ModelServiceTest {
 
     /**
      * Do not unbind an attribute that is part of fragment
-     *
      * @throws ModuleException if error occurs!
      */
     @Test(expected = FragmentAttributeException.class)
@@ -277,7 +278,6 @@ public class ModelServiceTest {
 
     /**
      * Test model export
-     *
      * @throws ModuleException if error occurs!
      */
     @Test
@@ -291,19 +291,19 @@ public class ModelServiceTest {
         model.setDescription("Model description");
         model.setType(EntityType.COLLECTION);
 
-        final List<ModelAttrAssoc> modAtts = new ArrayList<>();
+        final List<ModelAttrAssoc> modelAttrAssocs = new ArrayList<>();
 
         // Attribute #1 in default fragment
         AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests")
                 .fragment(Fragment.buildDefault()).withoutRestriction();
         ModelAttrAssoc modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Attribute #2 in default fragment
         attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests")
                 .fragment(Fragment.buildDefault()).withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Geo fragment
         final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
@@ -312,7 +312,7 @@ public class ModelServiceTest {
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Geo fragment
         final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
@@ -321,17 +321,31 @@ public class ModelServiceTest {
         attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Attribute #6 in contact fragment
         attMod = AttributeModelBuilder.build("date", AttributeType.DATE_ISO8601, "ForTests").fragment(contact)
                 .withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
+
+        // Attribute #7 (computed) in default fragment
+        attMod = AttributeModelBuilder.build("value_sum", AttributeType.LONG, "ForTests").defaultFragment()
+                .withoutRestriction();
+        modAtt = new ModelAttrAssoc(attMod, model);
+        PluginConfiguration sumComputeConf = new PluginConfiguration();
+        sumComputeConf.setLabel("SumComputeValue");
+        sumComputeConf.setPluginClassName("fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin");
+        sumComputeConf.setParameters(Lists.newArrayList(new PluginParameter("parameterAttributeName", "\"paramName\""),
+                                                        // No parameter fragment => default value => "" => stripped as """"
+                                                        new PluginParameter("parameterAttributeFragmentName", "\"\"")));
+
+        modAtt.setComputationConf(sumComputeConf);
+        modelAttrAssocs.add(modAtt);
 
         Mockito.when(mockModelR.findByName(modelName)).thenReturn(model);
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
-        Mockito.when(mockModelAttR.findByModelId(modelId)).thenReturn(modAtts);
+        Mockito.when(mockModelAttR.findByModelName(modelName)).thenReturn(modelAttrAssocs);
 
         try {
             final OutputStream output = Files.newOutputStream(Paths.get("target", model.getName() + ".xml"));

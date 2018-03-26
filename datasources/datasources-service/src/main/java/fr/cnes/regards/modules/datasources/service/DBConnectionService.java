@@ -99,7 +99,7 @@ public class DBConnectionService implements IDBConnectionService {
     @Override
     public Map<String, Table> getTables(Long id) throws ModuleException {
         IDBConnectionPlugin plg = pluginService.getPlugin(id);
-        return (plg == null) ? null : plg.getTables();
+        return (plg == null) ? null : plg.getTables(null, null);
     }
 
     @Override

@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.google.gson.Gson;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
@@ -108,7 +109,7 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
                                  "Should be able to import a fragment");
 
-        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
         attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);
     }
 

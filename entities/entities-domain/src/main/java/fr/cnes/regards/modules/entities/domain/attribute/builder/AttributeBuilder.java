@@ -75,6 +75,9 @@ public final class AttributeBuilder {
      */
     @SuppressWarnings("unchecked")
     public static <U, T extends AbstractAttribute<U>> T forType(AttributeType attributeType, String name, U value) {
+        if (name == null) {
+            throw new IllegalArgumentException("An attribute cannot have a null name");
+        }
         if (value == null) {
             return forTypeWithNullValue(attributeType, name);
         }

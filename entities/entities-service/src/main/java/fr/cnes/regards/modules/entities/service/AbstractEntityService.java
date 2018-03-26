@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
@@ -99,11 +99,6 @@ import fr.cnes.regards.modules.models.service.IModelService;
 public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    /**
-     * Namespace separator
-     */
-    private static final String NAMESPACE_SEPARATOR = ".";
 
     /**
      * Max description file acceptable byte size
@@ -224,11 +219,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         Assert.notNull(entity, "Entity must not be null.");
 
         Model model = entity.getModel();
-        // Load model by name if id not specified
-        if ((model.getId() == null) && (model.getName() != null)) {
-            model = modelService.getModelByName(model.getName());
-            entity.setModel(model);
-        }
 
         Assert.notNull(model, "Model must be set on entity in order to be validated.");
         Assert.notNull(model.getId(), "Model identifier must be specified.");
@@ -237,21 +227,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getName());
 
         // Check model not empty
-        if (((modAtts == null) || modAtts.isEmpty())
-                && ((entity.getProperties() != null) && (!entity.getProperties().isEmpty()))) {
+        if (CollectionUtils.isEmpty(modAtts) && !CollectionUtils.isEmpty(entity.getProperties())) {
             inErrors.rejectValue("properties", "error.no.properties.defined.but.set",
                                  "No properties defined in corresponding model but trying to create.");
         }
 
-        // Prepare attributes for validation check
-        Map<String, AbstractAttribute<?>> attMap = new HashMap<>();
-
-        // Build attribute map
-        buildAttributeMap(attMap, Fragment.getDefaultName(), entity.getProperties());
-
         // Loop over model attributes ... to validate each attribute
         for (ModelAttrAssoc modelAtt : modAtts) {
-            checkModelAttribute(attMap, modelAtt, inErrors, manageAlterable, entity);
+            checkModelAttribute(modelAtt, inErrors, manageAlterable, entity);
         }
 
         if (inErrors.hasErrors()) {
@@ -266,48 +249,62 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
     }
 
     /**
+     * Check if model is loaded else load it then set it on entity.
+     * @param entity cocnerned entity
+     * @throws ModuleException
+     */
+    public void checkAndOrSetModel(U entity) throws ModuleException {
+        Model model = entity.getModel();
+        // Load model by name if id not specified
+        if ((model.getId() == null) && (model.getName() != null)) {
+            model = modelService.getModelByName(model.getName());
+            entity.setModel(model);
+        }
+    }
+
+    /**
      * Validate an attribute with its corresponding model attribute
-     * @param attMap attribue map
      * @param modelAttribute model attribute
      * @param errors validation errors
      * @param manageAlterable manage update or not
      */
-    protected void checkModelAttribute(Map<String, AbstractAttribute<?>> attMap, ModelAttrAssoc modelAttribute,
+    protected void checkModelAttribute(ModelAttrAssoc modelAttribute,
             Errors errors, boolean manageAlterable, AbstractEntity entity) {
 
         // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
         // missing and is added during the crawling process
         if (ComputationMode.GIVEN.equals(modelAttribute.getMode())) {
             AttributeModel attModel = modelAttribute.getAttribute();
-            String key = attModel.getName();
+            String attPath = attModel.getName();
             if (!attModel.getFragment().isDefaultFragment()) {
-                key = attModel.getFragment().getName().concat(NAMESPACE_SEPARATOR).concat(key);
+                attPath = attModel.getFragment().getName().concat(".").concat(attPath);
             }
-            logger.debug(String.format("Computed key : \"%s\"", key));
+            logger.debug(String.format("Computed key : \"%s\"", attPath));
 
             // Retrieve attribute
-            AbstractAttribute<?> att = attMap.get(key);
+            AbstractAttribute<?> att = entity.getProperty(attPath);
 
             // Null value check
             if (att == null) {
                 String messageKey = "error.missing.required.attribute.message";
-                String defaultMessage = String.format("Missing required attribute \"%s\".", key);
+                String defaultMessage = String.format("Missing required attribute \"%s\".", attPath);
                 // if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
                 if (!attModel.isOptional()) {
                     errors.reject(messageKey, defaultMessage);
                     return;
                 }
-                logger.debug(String.format("Attribute \"%s\" not required in current context.", key));
+                logger.debug(String.format("Attribute \"%s\" not required in current context.", attPath));
                 return;
             }
 
             // Do validation
-            for (Validator validator : getValidators(modelAttribute, key, manageAlterable, entity)) {
+            for (Validator validator : getValidators(modelAttribute, attPath, manageAlterable, entity)) {
                 if (validator.supports(att.getClass())) {
                     validator.validate(att, errors);
                 } else {
-                    String defaultMessage = String.format("Unsupported validator \"%s\" for attribute \"%s\"",
-                                                          validator.getClass().getName(), key);
+                    String defaultMessage = String
+                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
+                                    attPath);
                     errors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
@@ -334,8 +331,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         if (manageAlterable && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
             AbstractEntity fromDb = entityRepository.findByIpId(entity.getIpId());
-            Optional<AbstractAttribute<?>> propertyFromDb = extractProperty(fromDb, attModel);
-            Optional<AbstractAttribute<?>> property = extractProperty(entity, attModel);
+            AbstractAttribute<?> propertyFromDb = extractProperty(fromDb, attModel);
+            AbstractAttribute<?> property = extractProperty(entity, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
             validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, propertyFromDb, property));
         }
@@ -348,18 +345,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return validators;
     }
 
-    protected Optional<AbstractAttribute<?>> extractProperty(AbstractEntity entity, AttributeModel attribute) { // NOSONAR
-        if (attribute.getFragment().isDefaultFragment()) {
-            // the attribute is in the default fragment so it has at the root level of properties
-            return entity.getProperties().stream().filter(p -> p.getName().equals(attribute.getName())).findFirst();
-        }
-        // the attribute is in a fragment so :
-        // filter the fragment property then filter the right property on fragment properties
-        return entity.getProperties().stream()
-                .filter(p -> (p instanceof ObjectAttribute) && p.getName().equals(attribute.getFragment().getName()))
-                .limit(1) // Only one fragment with searched name
-                .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
-                .filter(p -> p.getName().equals(attribute.getName())).findFirst();
+    protected AbstractAttribute<?> extractProperty(AbstractEntity entity,
+            AttributeModel attribute) { // NOSONAR
+        Fragment fragment = attribute.getFragment();
+        String attName = attribute.getName();
+        String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;
+        return entity.getProperty(attPath);
     }
 
     /**
@@ -369,7 +360,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param attributes {@link AbstractAttribute} list to analyze
      */
     protected void buildAttributeMap(Map<String, AbstractAttribute<?>> attMap, String namespace,
-            final Set<AbstractAttribute<?>> attributes) {
+            Set<AbstractAttribute<?>> attributes) {
         if (attributes != null) {
             for (AbstractAttribute<?> att : attributes) {
                 // Compute value
@@ -380,7 +371,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     // Compute key
                     String key = att.getName();
                     if (!namespace.equals(Fragment.getDefaultName())) {
-                        key = namespace.concat(NAMESPACE_SEPARATOR).concat(key);
+                        key = namespace.concat(".").concat(key);
                     }
                     logger.debug(String.format("Key \"%s\" -> \"%s\".", key, att.toString()));
                     attMap.put(key, att);
@@ -415,7 +406,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
+                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
         // Set description
         if (entity instanceof AbstractDescEntity) {
@@ -424,8 +415,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
         // IpIds of entities that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
-        this.manageGroups(entity, updatedIpIds);
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+        this.manageGroups(entity, updatedIpIds);
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
         entity = getStorageService().storeAIP(entity);
@@ -519,6 +510,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                 this.manageGroups(coll, updatedIpIds);
             }
         }
+        entityRepository.save(entity);
         /*
          * UniformResourceName urn = entity.getIpId();
          * // If entity contains groups => update all entities tagging this entity (recursively)
@@ -556,7 +548,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param updatedEntity entity being created/updated
      * @param pFile the description of the entity
      * @param oldOne previous description file of updatedEntity
-     * @throws IOException if description cannot be read
+     * @throws IOException     if description cannot be read
      * @throws ModuleException if description not conform to REGARDS requirements
      */
     private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,
@@ -588,8 +580,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
                     updatedEntity.setDescriptionFile(oldOne);
                 } else {
                     // if there is no descriptionFile existing then lets create one
-                    updatedEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
-                            updatedEntity.getDescriptionFile().getType()));
+                    updatedEntity.setDescriptionFile(
+                            new DescriptionFile(pFile.getBytes(), updatedEntity.getDescriptionFile().getType()));
                 }
             } else { // pFile is null
                 // this is an url
@@ -619,8 +611,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             String fileContentType = pEntity.getDescriptionFile().getType().toString();
             int charsetIdx = fileContentType.indexOf(";charset");
             String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-            return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
-                    || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
+                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
         }
         return false;
     }
@@ -702,21 +694,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
 
     /**
      * Really do the update of entities
-     * @param pEntity updated entity to be saved
+     * @param entity updated entity to be saved
      * @param entityInDb only there for comparison for group management
      * @return updated entity with group set correclty
      */
-    private U updateWithoutCheck(U pEntity, U entityInDb) {
+    private U updateWithoutCheck(U entity, U entityInDb) {
         Set<UniformResourceName> oldLinks = extractUrns(entityInDb.getTags());
-        Set<UniformResourceName> newLinks = extractUrns(pEntity.getTags());
+        Set<UniformResourceName> newLinks = extractUrns(entity.getTags());
         Set<String> oldGroups = entityInDb.getGroups();
-        Set<String> newGroups = pEntity.getGroups();
+        Set<String> newGroups = entity.getGroups();
         // IpId URNs of updated entities (those which need an AMQP event publish)
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put
         // pEntity into the DB.
-        pEntity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
-        U updated = repository.save(pEntity);
+        entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
+        U updated = repository.save(entity);
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks) || !oldGroups.equals(newGroups)) {

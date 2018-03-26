@@ -29,6 +29,7 @@ import org.hibernate.annotations.Type;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import com.google.common.collect.Multimaps;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -38,7 +39,6 @@ import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Abstraction for entities managing data files
- *
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
@@ -73,10 +73,21 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
     }
 
     /**
-     * @return true if at least one associated file (through "files" property) is physically available (scf. Storage)
+     * @return true if at least one associated file (through "files" property) is physically available (cf. Storage).
+     * This concerns only RAW_DATA and all QUICKLOOKS
      */
     public boolean containsPhysicalData() {
-        return files.values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
+        return Multimaps.filterKeys(files, k -> {
+            switch (k) {
+                case RAWDATA:
+                case QUICKLOOK_SD:
+                case QUICKLOOK_MD:
+                case QUICKLOOK_HD:
+                    return true;
+                default:
+                    return false;
+            }
+        }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
     }
 
     @Override

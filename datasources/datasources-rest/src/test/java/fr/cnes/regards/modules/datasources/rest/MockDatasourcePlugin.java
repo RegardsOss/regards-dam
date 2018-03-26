@@ -16,43 +16,42 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.crawler.service.ds.plugin;
+package fr.cnes.regards.modules.datasources.rest;
 
+import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
-import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
-import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
-import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * @author oroussel
+ * For testing purpose
+ * @author Marc Sordi
+ *
  */
-@Plugin(id = "test-datasource", version = "1.0-SNAPSHOT", description = "Allows invalid data extraction from nothing",
-        author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
-        url = "https://github.com/RegardsOss")
-public class TestDsPlugin implements IDataSourcePlugin {
+@Plugin(id = "MockDatasourcePlugin", author = "CSSI", contact = "CSSI", description = "MockDatasourcePlugin",
+        version = "alpha", url = "none", owner = "CSSI", licence = "none")
+public class MockDatasourcePlugin implements IDBDataSourcePlugin {
 
     @Override
     public int getRefreshRate() {
-        return 1000000;
+        return 0;
     }
 
     @Override
     public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
-        List<DataObject> list = new ArrayList<>();
-        DataObject o = new DataObject();
-        o.setModel(new Model());
-        o.addProperty(AttributeBuilder.buildString(null, "texte"));
-        list.add(o);
-        return new PageImpl<>(list);
+        return null;
     }
+
+    @Override
+    public IDBConnectionPlugin getDBConnection() throws SQLException {
+        return null;
+    }
+
 }

@@ -35,17 +35,17 @@ public class PolygonToArray implements Converter<Polygon, Double[][][]> {
      * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
      */
     @Override
-    public Double[][][] convert(Polygon pPolygon) {
-        Double[][][] result = new Double[pPolygon.getNumInteriorRing() + 1][][];
+    public Double[][][] convert(Polygon polygon) {
+        Double[][][] result = new Double[polygon.getNumInteriorRing() + 1][][];
 
         // Add the exterior ring
-        Coordinate[] exteriorRingCoordinates = pPolygon.getExteriorRing().getCoordinates();
+        Coordinate[] exteriorRingCoordinates = polygon.getExteriorRing().getCoordinates();
         Double[][] exteriorRingCoordinatesAsArray = COORDINATE_ARRAY_TO_ARRAY.convert(exteriorRingCoordinates);
         result[0] = exteriorRingCoordinatesAsArray;
 
         // Add all interior rings
-        for (int i = 0; i < (pPolygon.getNumInteriorRing()); i++) {
-            Coordinate[] coordinates = pPolygon.getInteriorRingN(i).getCoordinates();
+        for (int i = 0; i < (polygon.getNumInteriorRing()); i++) {
+            Coordinate[] coordinates = polygon.getInteriorRingN(i).getCoordinates();
             Double[][] asArray = COORDINATE_ARRAY_TO_ARRAY.convert(coordinates);
             result[i + 1] = asArray;
         }

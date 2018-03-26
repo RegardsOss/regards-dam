@@ -15,8 +15,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +51,7 @@ import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -136,10 +139,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param ipId concerned entity IpId
      * @param lastUpdateDate for dataset entity, if this date is provided, only more recent data objects must be taken
      * into account
+     * @param forceAssociatedEntitiesUpdate for dataset entity, force associated entities (ie data objects) update
      */
     @Override
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate) {
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate) {
         LOGGER.info("Updating {}", ipId.toString());
         runtimeTenantResolver.forceTenant(tenant);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
@@ -165,23 +169,25 @@ public class EntityIndexerService implements IEntityIndexerService {
                 savedSubsettingClause = dataset.getSubsettingClause();
                 dataset.setSubsettingClause(null);
                 // Retrieve map of { group, AccessLevel }
-                Map<String, AccessLevel> volatileMap;
+                Map<String, Pair<AccessLevel, DataAccessLevel>> volatileMap;
                 try {
                     volatileMap = accessRightService.retrieveGroupAccessLevelMap(dataset.getIpId());
                 } catch (EntityNotFoundException e) {
                     volatileMap = Collections.emptyMap();
                 }
                 // Need to be final to be used into following lambda
-                final Map<String, AccessLevel> map = volatileMap;
+                final Map<String, Pair<AccessLevel, DataAccessLevel>> map = volatileMap;
                 // Compute groups for associated data objects
                 dataset.getMetadata().setDataObjectsGroups(dataset.getGroups().stream()
                                                                    .filter(group -> map.containsKey(group)
-                                                                           && map.get(group) == AccessLevel.FULL_ACCESS)
-                                                                   .collect(Collectors.toSet()));
+                                                                           && map.get(group).getLeft()
+                                                                           == AccessLevel.FULL_ACCESS).collect(
+                                Collectors.toMap(Function.identity(),
+                                                 g -> map.get(g).getRight() == DataAccessLevel.INHERITED_ACCESS)));
                 // update dataset groups
-                for (Map.Entry<String, AccessLevel> entry : map.entrySet()) {
+                for (Map.Entry<String, Pair<AccessLevel, DataAccessLevel>> entry : map.entrySet()) {
                     // remove group if no access
-                    if (entry.getValue() == AccessLevel.NO_ACCESS) {
+                    if (entry.getValue().getLeft() == AccessLevel.NO_ACCESS) {
                         dataset.getGroups().remove(entry.getKey());
                     } else { // add (or let) group if FULL_ACCESS or RESTRICTED_ACCESS
                         dataset.getGroups().add(entry.getKey());
@@ -194,8 +200,13 @@ public class EntityIndexerService implements IEntityIndexerService {
             // Then save entity
             LOGGER.debug("Saving entity {}", entity);
             // If lastUpdateDate is provided, this means that update comes from an ingestion, in this case all data
-            // objects must be updated
-            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null);
+            // objects must be updated.
+            // If lastUpdatedDate isn't provided it means update come from a change into dataset
+            // (cf. DatasetCrawlerService.handle(...)) and so it is necessary to check if differences exist between
+            // previous version of dataset and current one.
+            // It may also mean that it comes from a first ingestion. In this case, lastUpdateDate is null but all
+            // data objects must be updated
+            boolean needAssociatedDataObjectsUpdate = (lastUpdateDate != null) || forceAssociatedEntitiesUpdate;
             // A dataset change may need associated data objects update
             if (!needAssociatedDataObjectsUpdate && (entity instanceof Dataset)) {
                 Dataset dataset = (Dataset) entity;
@@ -222,8 +233,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             return true;
         }
         return !newDataset.getOpenSearchSubsettingClause().equals(curDataset.getOpenSearchSubsettingClause())
-                || !newDataset.getMetadata().getDataObjectsGroups()
-                .equals(curDataset.getMetadata().getDataObjectsGroups());
+                || !newDataset.getMetadata().getDataObjectsGroupsMap()
+                .equals(curDataset.getMetadata().getDataObjectsGroupsMap());
     }
 
     /**
@@ -394,7 +405,8 @@ public class EntityIndexerService implements IEntityIndexerService {
     public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
             boolean forceDataObjectsUpdate) {
         OffsetDateTime now = OffsetDateTime.now();
-        datasets.forEach(dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now));
+        datasets.forEach(
+                dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate));
     }
 
     @Override
@@ -442,8 +454,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, StringBuilder buf) {
         Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
-        validator.validate(dataObject, errors);
         // If some validation errors occur, don't index data object
+        validator.validate(dataObject, errors);
         if (errors.getErrorCount() == 0) {
             toSaveObjects.add(dataObject);
         } else {
@@ -513,19 +525,20 @@ public class EntityIndexerService implements IEntityIndexerService {
     }
 
     private class AIPEventHandler implements IHandler<AIPEvent> {
+
         @Override
         public void handle(TenantWrapper<AIPEvent> wrapper) {
-                AIPEvent event = wrapper.getContent();
-                if (event.getAipState() == AIPState.DELETED) {
-                    runtimeTenantResolver.forceTenant(wrapper.getTenant());
-                    try {
-                        deleteDataObject(wrapper.getTenant(), event.getIpId());
-                    } catch (RsRuntimeException e) {
-                        String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
-                        LOGGER.error(msg, e);
-                    }
-
+            AIPEvent event = wrapper.getContent();
+            if (event.getAipState() == AIPState.DELETED) {
+                runtimeTenantResolver.forceTenant(wrapper.getTenant());
+                try {
+                    deleteDataObject(wrapper.getTenant(), event.getIpId());
+                } catch (RsRuntimeException e) {
+                    String msg = String.format("Cannot delete DataObject (%s)", event.getIpId());
+                    LOGGER.error(msg, e);
                 }
+
+            }
         }
     }
 }

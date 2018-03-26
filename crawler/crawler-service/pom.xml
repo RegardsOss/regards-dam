@@ -87,10 +87,6 @@
 			<artifactId>dataaccess-service</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasources-plugin</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-regards</artifactId>
 		</dependency>
@@ -109,6 +105,10 @@
 		<dependency>
 			<groupId>fr.cnes.regards.modules.notification</groupId>
 			<artifactId>notification-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>fr.cnes.regards.modules.storage</groupId>
+			<artifactId>storage-domain</artifactId>
 		</dependency>
 
 		<!-- TODO : slf4j -->
@@ -146,11 +146,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.cnes.regards.modules.datasources</groupId>
-			<artifactId>datasource-oracle-plugins</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>fr.cnes.regards.framework.test</groupId>
 			<artifactId>regards-integration-test</artifactId>
 			<scope>test</scope>
@@ -163,19 +158,5 @@
 			<scope>runtime</scope>
 		</dependency>
 
-	</dependencies>
-	
-	<profiles>
-		<profile>
-			<id>oracle</id>
-			<dependencies>
-				<dependency>
-					<groupId>fr.cnes.regards.modules.datasources</groupId>
-					<artifactId>datasource-oracle-plugins</artifactId>
-					<scope>test</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
-	
+	</dependencies>	
 </project>

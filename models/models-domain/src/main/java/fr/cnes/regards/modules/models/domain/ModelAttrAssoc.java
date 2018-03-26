@@ -49,7 +49,6 @@ import fr.cnes.regards.modules.models.schema.ParamPluginType;
  * manually or calculated through a calculation plugin.<<br/>
  * Thus, a same {@link AttributeModel} may be linked to different model and can either be set manually or calculated
  * depending on the model.
- *
  * @author msordi
  */
 @Entity
@@ -100,10 +99,6 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     /**
      * Constructor
-     * @param pAttributeModel
-     * @param pModel
-     * @param pPosition
-     * @param pIsCalculated
      */
     public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition,
             Boolean pIsCalculated) {// NOSONAR
@@ -219,14 +214,20 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             if ("fr.cnes.regards.modules.entities.plugin.CountPlugin".equals(pluginClassName)) {
                 computation.setCount(new NoParamPluginType());
             } else {
-                // For plugins which are calculated according to a data object property, lets set the parameters and then the type
+                // For plugins which are calculated according to a data object property, let's set the parameters and then the type
                 ParamPluginType paramPluginType = new ParamPluginType();
-                paramPluginType
-                        .setParameterAttributeName(computationConf.getParameter("parameterAttributeName").getValue());
-                String parameterAttributeFragmentName = computationConf.getParameter("parameterAttributeFragmentName")
+                String parameterAttributeName = computationConf.getParameter("parameterAttributeName").getValue();
+                if (parameterAttributeName.matches("^\"[^\"]*\"$")) {
+                    parameterAttributeName = parameterAttributeName.substring(1, parameterAttributeName.length() - 1);
+                }
+                paramPluginType.setParameterAttributeName(parameterAttributeName);
+                String paramAttrFragmentName = computationConf.getParameter("parameterAttributeFragmentName")
                         .getValue();
-                if (parameterAttributeFragmentName != null) {
-                    paramPluginType.setParameterAttributeFragmentName(parameterAttributeFragmentName);
+                if (paramAttrFragmentName != null) {
+                    if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
+                        paramAttrFragmentName = paramAttrFragmentName.substring(1, paramAttrFragmentName.length() - 1);
+                    }
+                    paramPluginType.setParameterAttributeFragmentName(paramAttrFragmentName);
                 }
                 switch (pluginClassName) {
                     case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
@@ -266,7 +267,6 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     /**
      * Set the computation plugin configuration
-     * @param pComputationConf
      */
     public void setComputationConf(PluginConfiguration pComputationConf) {
         computationConf = pComputationConf;
