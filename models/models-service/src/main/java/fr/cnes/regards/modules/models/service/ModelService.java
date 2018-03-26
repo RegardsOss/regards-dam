@@ -429,14 +429,14 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                 // from database
                 // so only plugin parameters should be consistently checked
                 for (PluginParameter param : plgConf.getParameters()) {
-                    String curValue = currentPlgConf.getParameterValue(param.getName());
+                    String curValue = currentPlgConf.getStripParameterValue(param.getName());
                     // Plugin parameter found
                     if (curValue != null) {
-                        if (!Objects.equals(param.getValue(), curValue)) {
+                        if (!Objects.equals(param.getStripParameterValue(), curValue)) {
                             String msg = String
                                     .format("Compute plugin with label %s is inconsistent with existing one : "
-                                            + "plugin parameter %s with value %s differs from existing " + "value (%s)",
-                                            plgConf.getLabel(), param.getName(), param.getValue(), curValue);
+                                            + "plugin parameter %s with value %s differs from existing value (%s)",
+                                            plgConf.getLabel(), param.getName(), curValue, param.getStripParameterValue());
                             LOGGER.error(msg);
                             throw new ImportException(msg);
                         }
