@@ -95,9 +95,9 @@ public class DBConnectionServiceTest {
         // create PluginConfiguration
         List<PluginParameter> parameters = initializePluginParameters();
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "first configuration",
-                parameters));
+                                             parameters));
         plgConfs.add(new PluginConfiguration(initializePluginMetaDataPostGre("plugin-id-2"), "second configuration",
-                parameters, 5));
+                                             parameters, 5));
     }
 
     @Test
@@ -160,11 +160,10 @@ public class DBConnectionServiceTest {
 
     private List<PluginParameterType> initializePluginParameterType() {
 
-        return Arrays
-                .asList(PluginParameterType.create("model", "model", null, String.class, ParamType.PRIMITIVE, false, false),
-                        PluginParameterType
-                                .create("connection", "connection", null, IDBConnectionPlugin.class, ParamType.PLUGIN,
-                                        false, false));
+        return Arrays.asList(PluginParameterType
+                                     .create("model", "model", null, String.class, ParamType.PRIMITIVE, false, false),
+                             PluginParameterType.create("connection", "connection", null, IDBConnectionPlugin.class,
+                                                        ParamType.PLUGIN, false, false));
     }
 
 }
