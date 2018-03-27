@@ -40,18 +40,13 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.max.ParsedMax;
-import org.elasticsearch.search.aggregations.metrics.min.InternalMin;
 import org.elasticsearch.search.aggregations.metrics.min.ParsedMin;
-import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
 import org.elasticsearch.search.aggregations.metrics.sum.ParsedSum;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.MigrationVersion;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,7 +64,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
@@ -83,12 +77,10 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DynamicAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultPostgreConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.PostgreDataSourceFromSingleTablePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -114,7 +106,6 @@ import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
-import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -126,7 +117,7 @@ public class IndexerServiceDataSourceIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IndexerServiceDataSourceIT.class);
 
-    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.datasources.plugins";
+    private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.crawler.plugins";
 
     private static final String TABLE_NAME_TEST = "t_validation_1";
 
@@ -266,9 +257,8 @@ public class IndexerServiceDataSourceIT {
         attrModelRepo.deleteAll();
         modelRepository.deleteAll();
         fragRepo.deleteAll();
-        pluginService.addPluginPackage("fr.cnes.regards.modules.datasources.plugins");
-
-        initData();
+        pluginService.addPluginPackage(IDataSourcePlugin.class.getPackage().getName());
+        pluginService.addPluginPackage(PLUGIN_CURRENT_PACKAGE);
 
         // get a model for DataObject, by importing them it also register them for (de)serialization
         importModel(DATA_MODEL_FILE_NAME);
@@ -278,32 +268,9 @@ public class IndexerServiceDataSourceIT {
         importModel(DATASET_MODEL_FILE_NAME);
         datasetModel = modelService.getModelByName("VALIDATION_DATASET_MODEL_1");
 
-        // Initialize the AbstractAttributeMapping
-        buildModelAttributes();
-
-        // Connection PluginConf
-        dBConnectionConf = getPostgresConnectionConfiguration();
-        pluginService.savePluginConfiguration(dBConnectionConf);
-
-        final DefaultPostgreConnectionPlugin dbCtx = pluginService.getPlugin(dBConnectionConf);
-        Assume.assumeTrue(dbCtx.testConnection());
-
         // DataSource PluginConf
-        dataSourcePluginConf = getPostgresDataSource(dBConnectionConf);
+        dataSourcePluginConf = getPostgresDataSource();
         pluginService.savePluginConfiguration(dataSourcePluginConf);
-    }
-
-    private void initData() {
-        runtimeTenantResolver.forceTenant(tenant);
-        flyway.setLocations(
-                "filesystem:" + Paths.get("src", "test", "resources", "validation", "scripts").toAbsolutePath()
-                        .toString());
-        flyway.setDataSource("jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName, dbUser, dbPpassword);
-        flyway.setSchemas(dbSchema);
-        flyway.setBaselineOnMigrate(true);
-        // When creating module metadata table, set beginning version to 0 in order to properly apply all init scripts
-        flyway.setBaselineVersion(MigrationVersion.fromVersion("0"));
-        flyway.migrate();
     }
 
     @After
@@ -316,49 +283,14 @@ public class IndexerServiceDataSourceIT {
         fragRepo.deleteAll();
     }
 
-    private PluginConfiguration getPostgresDataSource(final PluginConfiguration pluginConf) {
-        List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addPluginConfiguration(PostgreDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.TABLE_PARAM, dbSchema + "." + TABLE_NAME_TEST)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.REFRESH_RATE, 1800)
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_NAME_PARAM, dataModel.getName())
-                .addParameter(PostgreDataSourceFromSingleTablePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
-                .getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters,
-                                                  PostgreDataSourceFromSingleTablePlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-    }
-
-    private PluginConfiguration getPostgresConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultPostgreConnectionPlugin.USER_PARAM, dbUser)
-                .addParameter(DefaultPostgreConnectionPlugin.PASSWORD_PARAM, dbPpassword)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_HOST_PARAM, dbHost)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_PORT_PARAM, dbPort)
-                .addParameter(DefaultPostgreConnectionPlugin.DB_NAME_PARAM, dbName).getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters,
-                                                  DefaultPostgreConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
-    }
-
-    private void buildModelAttributes() {
-        modelAttrMapping = new ArrayList<>();
-
-        modelAttrMapping
-                .add(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER, "id"));
-
-        modelAttrMapping.add(new DynamicAttributeMapping("weight", AttributeType.INTEGER, "weight"));
-        modelAttrMapping.add(new DynamicAttributeMapping("date", AttributeType.DATE_ISO8601, "creation_date"));
-        modelAttrMapping.add(new DynamicAttributeMapping("description", AttributeType.STRING, "description"));
-        modelAttrMapping.add(new DynamicAttributeMapping("value_l1", AttributeType.LONG, "value_l1"));
-        modelAttrMapping.add(new DynamicAttributeMapping("value_d1", AttributeType.DOUBLE, "value_d1"));
-        modelAttrMapping
-                .add(new DynamicAttributeMapping("DATASET_VALIDATION_TYPE", AttributeType.STRING, "type"));
-        modelAttrMapping.add(new DynamicAttributeMapping("url", AttributeType.URL, "url"));
-        modelAttrMapping.add(new DynamicAttributeMapping("activated","fragment1",  AttributeType.BOOLEAN, "activated"));
-        modelAttrMapping.add(new DynamicAttributeMapping("state", "fragment1", AttributeType.STRING, "state"));
+    private PluginConfiguration getPostgresDataSource() {
+        List<PluginParameter> param = PluginParametersFactory.build()
+                .addParameter(TestDataSourcePlugin.MODEL, dataModel)
+                .addParameter(IDataSourcePlugin.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
+        return PluginUtils.getPluginConfiguration(param,
+                                                  TestDataSourcePlugin.class,
+                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE,
+                                                                IDataSourcePlugin.class.getPackage().getName()));
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_420")
@@ -453,7 +385,6 @@ public class IndexerServiceDataSourceIT {
                 .search(objectSearchKey, IEsRepository.BULK_SIZE, ICriterion.eq("tags", dataset2.getIpId().toString()));
         Assert.assertTrue(objectsPage.getContent().size() > 0);
         Assert.assertEquals(summary1.getSavedObjectsCount(), objectsPage.getContent().size());
-
 
         // Search for Dataset but with criterion on DataObjects
         // SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
