@@ -365,7 +365,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
         dataSource.setVersion("alpha");
-
+        
         return dataSource;
     }
 
