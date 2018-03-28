@@ -68,6 +68,7 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
+import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.notification.domain.NotificationType;
 import fr.cnes.regards.modules.notification.domain.dto.NotificationDTO;
@@ -124,6 +125,8 @@ public class EntityIndexerService implements IEntityIndexerService {
 
     @Autowired
     private INotificationClient notifClient;
+
+    private IModelAttrAssocService modelService;
 
     @EventListener
     public void handleApplicationReady(ApplicationReadyEvent event) {

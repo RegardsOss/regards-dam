@@ -189,7 +189,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     }
 
     @Override
-    public List<ModelAttrAssoc> getModelAttrAssocs(String modelName) throws ModuleException {
+    public List<ModelAttrAssoc> getModelAttrAssocs(String modelName) {
         Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelName(modelName);
 
         if (modelAttributes != null) {
@@ -278,6 +278,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         if (!modelAttributeRepository.exists(attributeId)) {
             throw new EntityNotFoundException(attributeId, ModelAttrAssoc.class);
         }
+        modelAttrAssoc.getAttribute().getFragment().getName();
+        modelAttrAssoc.getAttribute().getName();
         return modelAttributeRepository.save(modelAttrAssoc);
     }
 

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -68,6 +69,15 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     protected AttributeModel parameterAttribute;
 
     private AttributeModel attributeToCompute;
+
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
+            description = "Name of attribute to compute (ie result attribute).", onlyDynamic = true)
+    protected String attributeToComputeName;
+
+    @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
+            description = "Name of attribute to compute fragment. If computed attribute belongs to default fragment, this value can be set to null.",
+            optional = true, onlyDynamic = true)
+    protected String attributeToComputeFragmentName;
 
     protected R result;
 
