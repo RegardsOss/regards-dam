@@ -54,4 +54,8 @@ public class MockDatasourcePlugin implements IDBDataSourcePlugin {
         return null;
     }
 
+    @Override
+    public String getModelName() {
+        return "Cindy Crawford";
+    }
 }
