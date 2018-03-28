@@ -46,6 +46,11 @@ public class TestDataSourcePlugin implements IDataSourcePlugin {
     }
 
     @Override
+    public String getModelName() {
+        return dataModel.getName();
+    }
+
+    @Override
     public Page<DataObject> findAll(String tenant, Pageable pageable, OffsetDateTime date) throws DataSourceException {
         File file = Paths.get("src", "test", "resources", "validation", "json", "validationData1.json").toFile();
         List<DataObject> content;
