@@ -71,12 +71,12 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     private AttributeModel attributeToCompute;
 
     @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
-            description = "Name of attribute to compute (ie result attribute).", onlyDynamic = true)
+            description = "Name of attribute to compute (ie result attribute).", unconfigurable = true)
     protected String attributeToComputeName;
 
     @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
             description = "Name of attribute to compute fragment. If computed attribute belongs to default fragment, this value can be set to null.",
-            optional = true, onlyDynamic = true)
+            optional = true, unconfigurable = true)
     protected String attributeToComputeFragmentName;
 
     protected R result;
