@@ -47,8 +47,6 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 @EnableAutoConfiguration(
         exclude = { MethodAuthorizationServiceAutoConfiguration.class, MethodSecurityAutoConfiguration.class,
                 SecurityVoterAutoConfiguration.class, WebSecurityAutoConfiguration.class })
-@PropertySource(value = { "classpath:test.properties", "classpath:test_${user.name}.properties" },
-        ignoreResourceNotFound = true)
 public class CrawlerConfiguration {
 
     @Bean

@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
@@ -73,6 +74,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
+@TestPropertySource(locations = { "classpath:test.properties" })
 public class IndexerServiceIT {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexerServiceIT.class);

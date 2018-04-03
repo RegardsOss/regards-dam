@@ -18,13 +18,12 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
+import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +32,6 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -87,14 +85,14 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IPluginService pluginService;
 
-    public DatasetService(IDatasetRepository pRepository, IAttributeModelService attributeService,
-            IModelAttrAssocService pModelAttributeService, IAbstractEntityRepository<AbstractEntity> pEntityRepository,
-            IModelService pModelService, IDeletedEntityRepository deletedEntityRepository,
-            ICollectionRepository pCollectionRepository, EntityManager pEm, IPublisher pPublisher,
+    public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
+            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity> entityRepository,
+            IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
+            ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
             IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
             IOpenSearchService openSearchService, IPluginService pluginService) {
-        super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
-              pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
+        super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
+              repository, repository, em, publisher, runtimeTenantResolver, descriptionFileRepository);
         this.attributeService = attributeService;
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
@@ -107,13 +105,9 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      */
     private Dataset checkDataSource(final Dataset dataset) throws ModuleException {
         if (dataset.getDataSource() != null) {
-            // Retrieve DataModel from associated datasource
-            // First : pluginConf id
-            Long datasourceId = dataset.getDataSource().getId();
-            // Then PluginConf...
-            PluginConfiguration pluginConf = pluginService.getPluginConfiguration(datasourceId);
-            // ...then retrieve data model id and set it onto dataset
-            String modelName = pluginConf.getStripParameterValue(IDataSourcePlugin.MODEL_NAME_PARAM);
+            // Retrieve plugin from associated datasource
+            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getId());
+            String modelName = datasourcePlugin.getModelName();
             try {
                 Model model = modelService.getModelByName(modelName);
                 dataset.setDataModel(model.getName());
