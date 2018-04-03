@@ -34,7 +34,7 @@ public interface IDataSourceService {
 
     /**
      * Get all {@link PluginConfiguration} datasources.</br>
-     * @return all {@link PluginConfiguration} of type {@link IDataSourcePlugin}.
+     * @return all PluginConfigurations of type IDataSourcePlugin.
      */
     List<PluginConfiguration> getAllDataSources();
 
