@@ -102,6 +102,12 @@
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>amqp-monitoring-regards-starter</artifactId>
 		</dependency>
+		<!-- Test -->
+		<dependency>
+			<groupId>fr.cnes.regards.framework.test</groupId>
+			<artifactId>regards-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<profiles>
