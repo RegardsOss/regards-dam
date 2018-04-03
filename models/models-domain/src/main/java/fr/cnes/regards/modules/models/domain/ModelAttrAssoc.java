@@ -34,6 +34,7 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.validation.ComputedAttribute;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
@@ -221,13 +222,15 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                     parameterAttributeName = parameterAttributeName.substring(1, parameterAttributeName.length() - 1);
                 }
                 paramPluginType.setParameterAttributeName(parameterAttributeName);
-                String paramAttrFragmentName = computationConf.getParameter("parameterAttributeFragmentName")
-                        .getValue();
-                if (paramAttrFragmentName != null) {
-                    if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
-                        paramAttrFragmentName = paramAttrFragmentName.substring(1, paramAttrFragmentName.length() - 1);
+                PluginParameter paramAttrFragment = computationConf.getParameter("parameterAttributeFragmentName");
+                if(paramAttrFragment != null) {
+                    String paramAttrFragmentName = paramAttrFragment.getValue();
+                    if (paramAttrFragmentName != null) {
+                        if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
+                            paramAttrFragmentName = paramAttrFragmentName.substring(1, paramAttrFragmentName.length() - 1);
+                        }
+                        paramPluginType.setParameterAttributeFragmentName(paramAttrFragmentName);
                     }
-                    paramPluginType.setParameterAttributeFragmentName(paramAttrFragmentName);
                 }
                 switch (pluginClassName) {
                     case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
