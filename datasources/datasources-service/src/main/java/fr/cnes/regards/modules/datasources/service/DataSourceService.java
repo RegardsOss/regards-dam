@@ -22,6 +22,8 @@ package fr.cnes.regards.modules.datasources.service;
 
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,10 @@ public class DataSourceService implements IDataSourceService, ApplicationListene
     @Override
     @MultitenantTransactional(propagation = Propagation.SUPPORTS)
     public void onApplicationEvent(ApplicationReadyEvent event) {
+    }
+
+    @PostConstruct
+    public void init() {
         this.service.addPluginPackage("fr.cnes.regards.modules.datasources");
     }
 
