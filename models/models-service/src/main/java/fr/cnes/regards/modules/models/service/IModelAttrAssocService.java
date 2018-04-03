@@ -43,7 +43,7 @@ import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
  */
 public interface IModelAttrAssocService extends ApplicationListener<NewFragmentAttributeEvent> {
 
-    List<ModelAttrAssoc> getModelAttrAssocs(String modelName) throws ModuleException;
+    List<ModelAttrAssoc> getModelAttrAssocs(String modelName);
 
     ModelAttrAssoc bindAttributeToModel(String modelName, ModelAttrAssoc pModelAttribute) throws ModuleException;
 

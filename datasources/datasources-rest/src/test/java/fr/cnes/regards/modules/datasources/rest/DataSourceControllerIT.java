@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.datasources.rest;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +58,7 @@ import fr.cnes.regards.modules.datasources.service.IDataSourceService;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test sata source PluginConfiguration controller
@@ -342,6 +341,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
+        dataSource.setVersion("alpha");
         return dataSource;
 
         // final DataSource dataSource = new DataSource();
@@ -364,7 +364,8 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         dataSource.setParameters(factory.getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
-
+        dataSource.setVersion("alpha");
+        
         return dataSource;
     }
 

@@ -82,6 +82,11 @@ public interface IDataSourcePlugin {
     int getRefreshRate();
 
     /**
+     * The model name
+     */
+    String getModelName();
+
+    /**
      * Returns a {@link Page} of new entities meeting the paging restriction provided in the {@code Pageable} object.
      * @param tenant tenant to build URN
      * @param pageable the pagination information
