@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
@@ -194,22 +196,27 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
             throws ModuleException {
+        Page<AttributeModel> attModelPage;
         if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             // Retrieve all dataset models attributes
             List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
             Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
-            return modelAttributeService.getAttributeModels(dsModelIds, pageable);
+            attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
         } else {
             if ((modelIds == null) || modelIds.isEmpty()) {
                 // Retrieve all attributes associated to the given datasets
                 List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
                 Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());
-                return modelAttributeService.getAttributeModels(dsModelIds, pageable);
+                attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
             } else {
                 // Retrieve all attributes associated to the given models.
-                return modelAttributeService.getAttributeModels(modelIds, pageable);
+                attModelPage = modelAttributeService.getAttributeModels(modelIds, pageable);
             }
         }
+
+        // Add jsonpath to each attribute
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        return attModelPage;
     }
 
     @Override

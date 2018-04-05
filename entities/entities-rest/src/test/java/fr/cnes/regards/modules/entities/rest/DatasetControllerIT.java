@@ -325,6 +325,32 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
+    public void testGetDataSetAttributes() throws ModuleException {
+        importModel("dataModel.xml");
+        importModel("datasetModel.xml");
+        final Model dataModel = modelService.getModelByName("dataModel");
+        final Model datasetModel = modelService.getModelByName("datasetModel");
+        Dataset ds = new Dataset(datasetModel, DEFAULT_TENANT, "dataset for getDataAttribute tests");
+        ds.setCreationDate(OffsetDateTime.now());
+        ds.setLicence("pLicence");
+        ds.setDataModel(dataModel.getName());
+        ds = datasetRepository.save(ds);
+        final StringJoiner sj = new StringJoiner("&", "?", "");
+        sj.add("modelIds=" + datasetModel.getId());
+        String queryParams = sj.toString();
+
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
+                          expectations, "failed to fetch the data attributes");
+        sj.add("page=0");
+        queryParams = sj.toString();
+        expectations.set(expectations.size() - 1, MockMvcResultMatchers.jsonPath("$.content", Matchers.hasSize(4)));
+        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_ATTRIBUTES_PATH + queryParams,
+                          expectations, "failed to fetch the data attributes");
+    }
+
+    @Test
     public void testSubsettingValidation() throws ModuleException {
 
         importModel("dataModel.xml");
