@@ -787,12 +787,12 @@ public class EsRepository implements IEsRepository {
      * @param crit criterion
      * @param attName string attribute name (full path)
      * @param <T> search type
-     * @return a TreeSet
+     * @return a TreeSet&lt;String>
      */
     @Override
     public <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit,
-            String attName) {
-        return unique(searchKey, crit, attName, Integer.MAX_VALUE, new TreeSet<String>());
+            String attName, int maxCount) {
+        return unique(searchKey, crit, attName, maxCount, new TreeSet<>());
     }
 
     /**

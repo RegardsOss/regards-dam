@@ -94,10 +94,11 @@ public class SearchService implements ISearchService {
 
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         final SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(),
-                searchKey.getSearchTypeMap(), String[].class);
+                                                                    searchKey.getSearchTypeMap(), String[].class);
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
-        final Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
-                .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
+        final Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (
+                Searches.TYPE_MAP.get(UniformResourceName.fromString(tag).getEntityType()) == searchKey
+                        .getResultClass());
         // Function to get Entity from its ipId (URN) (from Elasticsearch)
         final Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
@@ -127,8 +128,8 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit, String attName,
-            int maxCount) {
+    public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+            String attName, int maxCount) {
         SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, crit, attName);
         return values.stream().limit(maxCount).collect(Collectors.toList());
     }

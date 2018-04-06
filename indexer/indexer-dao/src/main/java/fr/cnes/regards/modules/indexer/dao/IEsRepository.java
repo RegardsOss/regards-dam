@@ -208,8 +208,8 @@ public interface IEsRepository {
     default <T extends IIndexable> Page<T> search(final SearchKey<T, T> searchKey, final int pageSize,
             final ICriterion crit, final Map<String, FacetType> facetsMap,
             final LinkedHashMap<String, Boolean> ascSortMap) {
-        return this.search(searchKey, new PageRequest(0, pageSize, new LinkedHashMapToSort().convert(ascSortMap)),
-                           crit, facetsMap);
+        return this.search(searchKey, new PageRequest(0, pageSize, new LinkedHashMapToSort().convert(ascSortMap)), crit,
+                           facetsMap);
     }
 
     /**
@@ -351,13 +351,28 @@ public interface IEsRepository {
     <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion crit, String attName);
 
     /**
-     * Retrieve unique sorted string attribute values following given request
+     * Retrieve unique sorted string attribute values following given request.
+     * <b>Limited to Integer.MAX_VALUE results</b>
      * @param searchKey the search key
      * @param crit search criterion
      * @param attName complete string attribute path
      * @return a soprted set of values
      */
-    <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit, String attName);
+    default <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit,
+            String attName) {
+        return uniqueAlphaSorted(searchKey, crit, attName, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Retrieve unique sorted string attribute values following given request
+     * @param searchKey the search key
+     * @param crit search criterion
+     * @param attName complete string attribute path
+     * @param maxCount maximum count of values
+     * @return a soprted set of values
+     */
+    <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit,
+            String attName, int maxCount);
 
     /**
      * Searching first page of elements from index giving page size
