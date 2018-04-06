@@ -351,19 +351,6 @@ public interface IEsRepository {
     <T extends IIndexable> OffsetDateTime maxDate(SearchKey<?, T> searchKey, ICriterion crit, String attName);
 
     /**
-     * Retrieve unique sorted string attribute values following given request.
-     * <b>Limited to Integer.MAX_VALUE results</b>
-     * @param searchKey the search key
-     * @param crit search criterion
-     * @param attName complete string attribute path
-     * @return a soprted set of values
-     */
-    default <T extends IIndexable> SortedSet<String> uniqueAlphaSorted(SearchKey<?, T> searchKey, ICriterion crit,
-            String attName) {
-        return uniqueAlphaSorted(searchKey, crit, attName, Integer.MAX_VALUE);
-    }
-
-    /**
      * Retrieve unique sorted string attribute values following given request
      * @param searchKey the search key
      * @param crit search criterion

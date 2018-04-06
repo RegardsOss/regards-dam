@@ -130,7 +130,7 @@ public class SearchService implements ISearchService {
     @Override
     public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
             String attName, int maxCount) {
-        SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, crit, attName);
+        SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, crit, attName, maxCount);
         return values.stream().limit(maxCount).collect(Collectors.toList());
     }
 }
