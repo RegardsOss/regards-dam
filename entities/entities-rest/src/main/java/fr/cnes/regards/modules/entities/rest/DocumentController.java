@@ -18,10 +18,11 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.net.HttpHeaders;
+
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
@@ -54,6 +56,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
+import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.service.DocumentLSService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
@@ -215,10 +218,11 @@ public class DocumentController implements IResourceController<Document> {
     @ResourceAccess(description = "Add files to a document using its id")
     public ResponseEntity<Resource<Document>> addFiles(@PathVariable("document_id") Long id,
             @RequestPart MultipartFile[] files) throws ModuleException, IOException, NoSuchMethodException {
-        ControllerLinkBuilder controllerLinkBuilder = ControllerLinkBuilder.linkTo(this.getClass(), this.getClass()
-                                                                                           .getMethod("retrieveDocumentFile", String.class, Long.class, String.class, HttpServletResponse.class),
-                                                                                   id,
-                                                                                   DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE);
+        ControllerLinkBuilder controllerLinkBuilder = ControllerLinkBuilder
+                .linkTo(this.getClass(),
+                        this.getClass().getMethod("retrieveDocumentFile", String.class, Long.class, String.class,
+                                                  HttpServletResponse.class),
+                        id, DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE);
         Link link = controllerLinkBuilder.withSelfRel();
         String fileLsUriTemplate = link.getHref();
 
@@ -236,7 +240,8 @@ public class DocumentController implements IResourceController<Document> {
      */
     @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_FILES_SINGLE_MAPPING)
     @ResponseBody
-    @ResourceAccess(description = "Retrieve the file in given document with given checksum")
+    @ResourceAccess(description = "Retrieve the file in given document with given checksum",
+            role = DefaultRole.REGISTERED_USER)
     public void retrieveDocumentFile(@RequestParam(name = "origin", required = false) String origin,
             @PathVariable("document_id") Long id, @PathVariable("file_checksum") String fileChecksum,
             HttpServletResponse response) throws ModuleException, IOException {
