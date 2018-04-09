@@ -31,6 +31,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -44,6 +45,7 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 @Plugin(id = "CountPlugin", description = "allows to compute the number of data of a Dataset", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss",
         version = "1.0.0")
+@ComputationPlugin(supportedType = AttributeType.LONG)
 public class CountPlugin implements IComputedAttribute<Dataset, Long> {
 
     @Autowired
@@ -93,11 +95,6 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     @Override
     public AttributeModel getAttributeToCompute() {
         return attributeToCompute;
-    }
-
-    @Override
-    public AttributeType getSupported() {
-        return AttributeType.LONG;
     }
 
 }
