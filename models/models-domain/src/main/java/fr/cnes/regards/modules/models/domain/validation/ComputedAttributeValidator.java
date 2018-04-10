@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 
@@ -65,20 +66,19 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
         if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null) && computationConf
                 .getInterfaceNames().contains(IComputedAttribute.class.getName())) {
 
-            IComputedAttribute<?, ?> plugin;
             try {
                 // Retrieve computation plugin and instance it
-                plugin = (IComputedAttribute<?, ?>) Class.forName(computationConf.getPluginClassName()).newInstance();
+                ComputationPlugin computationPlugin = Class.forName(computationConf.getPluginClassName())
+                        .getAnnotation(ComputationPlugin.class);
                 // Check validated attribute type is the same as plugin managed attribute type
-                boolean ok = (plugin.getSupported() == modelAttrAssoc.getAttribute().getType());
+                boolean ok = (computationPlugin.supportedType() == modelAttrAssoc.getAttribute().getType());
                 if (!ok) {
-                    String msg = String.format(template, modelAttrAssoc.getAttribute().getName(),
-                                               computationConf);
+                    String msg = String.format(template, modelAttrAssoc.getAttribute().getName(), computationConf);
                     context.disableDefaultConstraintViolation();
                     context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
                 }
                 return ok;
-            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 LOG.error("ModelAttrAssoc of id: " + modelAttrAssoc.getId()
                                   + " cannot be validated because we couldn't instanciate the associated plugin to check the "
                                   + "coherence of its return type.");
@@ -88,8 +88,7 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
         // It is not a computed attribute so it must be GIVEN one
         boolean ok = (modelAttrAssoc.getMode() == ComputationMode.GIVEN);
         if (!ok) {
-            String msg = String.format(template, modelAttrAssoc.getAttribute().getName(),
-                                       computationConf);
+            String msg = String.format(template, modelAttrAssoc.getAttribute().getName(), computationConf);
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
         }

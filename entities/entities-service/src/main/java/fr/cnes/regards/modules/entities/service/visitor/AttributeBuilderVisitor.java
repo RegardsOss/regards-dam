@@ -20,9 +20,11 @@ package fr.cnes.regards.modules.entities.service.visitor;
 
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.IComputedAttributeVisitor;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * Visitor handling the logic of creating an AbstractAttribute according to the AttributeModel computed by the
@@ -33,14 +35,16 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 public class AttributeBuilderVisitor implements IComputedAttributeVisitor<AbstractAttribute<?>> {
 
     @Override
-    public <P, U> AbstractAttribute<?> visit(IComputedAttribute<P, U> pPlugin) {
-        AttributeModel attr = pPlugin.getAttributeToCompute();
+    public <P, U> AbstractAttribute<?> visit(IComputedAttribute<P, U> plugin) {
+        AttributeModel attr = plugin.getAttributeToCompute();
+        ComputationPlugin computationPlugin = plugin.getClass().getAnnotation(ComputationPlugin.class);
+        AttributeType attributeType = computationPlugin.supportedType();
         if (attr.getFragment().isDefaultFragment()) {
-            return AttributeBuilder.forType(pPlugin.getSupported(), attr.getName(), pPlugin.getResult());
+            return AttributeBuilder.forType(attributeType, attr.getName(), plugin.getResult());
         } else {
-            return AttributeBuilder
-                    .buildObject(attr.getFragment().getName(),
-                                 AttributeBuilder.forType(pPlugin.getSupported(), attr.getName(), pPlugin.getResult()));
+            return AttributeBuilder.buildObject(attr.getFragment().getName(),
+                                                AttributeBuilder
+                                                        .forType(attributeType, attr.getName(), plugin.getResult()));
         }
     }
 
