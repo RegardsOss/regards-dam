@@ -35,6 +35,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.LongAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -47,6 +48,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
         description = "allows to compute the sum of LongAttribute according to a collection of data using the same LongAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
+@ComputationPlugin(supportedType = AttributeType.LONG)
 public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> {
 
     @Autowired
@@ -101,11 +103,6 @@ public class LongSumComputePlugin extends AbstractDataObjectComputePlugin<Long> 
         result = doubleResult.longValue();
         LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
                   dataset.getIpId().toString(), result);
-    }
-
-    @Override
-    public AttributeType getSupported() {
-        return AttributeType.LONG;
     }
 
     @Override

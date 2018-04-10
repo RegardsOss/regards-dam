@@ -36,6 +36,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.DateAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -48,6 +49,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
         description = "allows to compute the maximum of a DateAttribute according to a collection of data",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss", version = "1.0.0")
+@ComputationPlugin(supportedType = AttributeType.DATE_ISO8601)
 public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<OffsetDateTime> {
 
     @Autowired
@@ -104,11 +106,6 @@ public class MaxDateComputePlugin extends AbstractDataObjectComputePlugin<Offset
                 }
             }
         }
-    }
-
-    @Override
-    public AttributeType getSupported() {
-        return AttributeType.DATE_ISO8601;
     }
 
     @Override
