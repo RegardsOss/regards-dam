@@ -505,9 +505,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             List<AbstractEntity> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
             for (AbstractEntity coll : taggedColls) {
-                coll.getGroups().addAll(entity.getGroups());
-                updatedIpIds.add(coll.getIpId());
-                this.manageGroups(coll, updatedIpIds);
+                if (coll.getGroups().addAll(entity.getGroups())) {
+                    // If collection has already been updated, stop recursion !!! (else StackOverflow)
+                    updatedIpIds.add(coll.getIpId());
+                    this.manageGroups(coll, updatedIpIds);
+                }
             }
         }
         entityRepository.save(entity);
