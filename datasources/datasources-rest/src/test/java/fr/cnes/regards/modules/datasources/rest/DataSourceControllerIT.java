@@ -339,7 +339,7 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
                 .addParameter(IDBDataSourcePlugin.MODEL_MAPPING_PARAM, modelAttrMapping)
                 .addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection)
                 .getParameters());
-        dataSource.setPluginId("dataSourceTest");
+//        dataSource.setPluginId("dataSourceTest");
         dataSource.setLabel(LABEL_DATA_SOURCE + " with from clause");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());
         dataSource.setVersion("alpha");
@@ -362,7 +362,6 @@ public class DataSourceControllerIT extends AbstractRegardsTransactionalIT {
         factory.addParameter(IDBDataSourcePlugin.MODEL_NAME_PARAM, DEFAULT_MODEL_NAME);
         factory.addParameter(IDBDataSourcePlugin.MODEL_MAPPING_PARAM, modelAttrMapping);
         factory.addPluginConfiguration(IDBDataSourcePlugin.CONNECTION_PARAM, pluginPostgreDbConnection);
-        dataSource.setPluginId("dataSourceTest");
         dataSource.setParameters(factory.getParameters());
         dataSource.setLabel(LABEL_DATA_SOURCE + " with table name");
         dataSource.setPluginClassName(MockDatasourcePlugin.class.getName());

@@ -465,31 +465,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      * @param entity entity to manage the add of groups
      */
     private <T extends AbstractEntity> void manageGroups(final T entity, Set<UniformResourceName> updatedIpIds) {
-        /*
-         * // If entity tags entities => retrieve all groups of tagged entities (only for collection)
-         * if ((entity instanceof Collection) && !entity.getTags().isEmpty()) {
-         * List<AbstractEntity> taggedEntities = entityRepository.findByIpIdIn(extractUrns(entity.getTags()));
-         * final T finalEntity = entity;
-         * taggedEntities.forEach(e -> finalEntity.getGroups().addAll(e.getGroups()));
-         * updatedIpIds.add(finalEntity.getIpId());
-         * }
-         * UniformResourceName urn = entity.getIpId();
-         * // If entity contains groups => update all entities tagging this entity (recursively)
-         * // Need to manage groups one by one
-         * for (String group : entity.getGroups()) {
-         * Set<Collection> collectionsToUpdate = new HashSet<>();
-         * // Find all collections tagging this entity and try adding group
-         * manageGroup(group, collectionsToUpdate, urn, entity, updatedIpIds);
-         * // Recursively continue to collections tagging updated collections and so on until no more collections
-         * // has to be updated
-         * while (!collectionsToUpdate.isEmpty()) {
-         * Collection firstColl = collectionsToUpdate.iterator().next();
-         * manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, updatedIpIds);
-         * collectionsToUpdate.remove(firstColl);
-         * }
-         * }
-         */
-
         // Search Datasets and collections which tag this entity (if entity is a collection)
         if (entity instanceof Collection) {
             List<AbstractEntity> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
@@ -505,30 +480,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
             List<AbstractEntity> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
             for (AbstractEntity coll : taggedColls) {
-                coll.getGroups().addAll(entity.getGroups());
-                updatedIpIds.add(coll.getIpId());
-                this.manageGroups(coll, updatedIpIds);
+                if (coll.getGroups().addAll(entity.getGroups())) {
+                    // If collection has already been updated, stop recursion !!! (else StackOverflow)
+                    updatedIpIds.add(coll.getIpId());
+                    this.manageGroups(coll, updatedIpIds);
+                }
             }
         }
         entityRepository.save(entity);
-        /*
-         * UniformResourceName urn = entity.getIpId();
-         * // If entity contains groups => update all entities tagging this entity (recursively)
-         * // Need to manage groups one by one
-         * for (String group : entity.getGroups()) {
-         * Set<Collection> collectionsToUpdate = new HashSet<>();
-         * // Find all collections tagging this entity and try adding group
-         * manageGroup(group, collectionsToUpdate, urn, entity, updatedIpIds);
-         * // Recursively continue to collections tagging updated collections and so on until no more collections
-         * // has to be updated
-         * while (!collectionsToUpdate.isEmpty()) {
-         * Collection firstColl = collectionsToUpdate.iterator().next();
-         * manageGroup(group, collectionsToUpdate, firstColl.getIpId(), entity, updatedIpIds);
-         * collectionsToUpdate.remove(firstColl);
-         * }
-         * }
-         */
-
     }
 
     /**
