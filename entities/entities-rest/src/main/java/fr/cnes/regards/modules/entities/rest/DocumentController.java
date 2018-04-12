@@ -251,6 +251,7 @@ public class DocumentController implements IResourceController<Document> {
             if (origin != null) {
                 response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
             }
+            response.setHeader("Content-Disposition", "attachement;filename=" + dataFile.getName());
             response.setContentType(dataFile.getMimeType().toString());
             response.setContentLength(fileContent.length);
             response.getOutputStream().write(fileContent);
