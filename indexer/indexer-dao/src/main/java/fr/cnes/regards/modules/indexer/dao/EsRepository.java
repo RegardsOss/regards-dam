@@ -1192,7 +1192,7 @@ public class EsRepository implements IEsRepository {
                     valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
                 } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
                     // range is then [value, max]
-                    valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaled(max.getValue()));
+                    valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaledUp(max.getValue()));
                 } else { // [value -> value [
                     valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());
                 }
