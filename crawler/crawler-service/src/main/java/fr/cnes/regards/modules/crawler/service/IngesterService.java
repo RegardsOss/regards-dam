@@ -143,7 +143,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
         runtimeTenantResolver.forceTenant(event.getTenant());
         Long dsId = event.getEntityId();
         String msg = event.getMessage();
-        DatasourceIngestion dsi = dsIngestionRepos.getOne(dsId);
+        DatasourceIngestion dsi = dsIngestionRepos.findOne(dsId);
         dsi.setStackTrace((dsi.getStackTrace() == null) ? msg : dsi.getStackTrace() + "\n" + msg);
         dsIngestionRepos.save(dsi);
     }
