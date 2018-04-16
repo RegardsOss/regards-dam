@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -42,14 +42,14 @@ import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.domain.IngestionStatus;
+import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 
 @Service // Transactionnal is handle by hand on the right method, do not specify Multitenant or InstanceTransactionnal
-public class IngesterService
-        implements IIngesterService, IHandler<PluginConfEvent>, ApplicationListener<ApplicationReadyEvent> {
+public class IngesterService implements IIngesterService, IHandler<PluginConfEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngesterService.class);
 
@@ -128,9 +128,21 @@ public class IngesterService
 
     private final ExecutorService threadPoolExecutor = Executors.newFixedThreadPool(1);
 
-    @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    @EventListener
+    public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
         subscriber.subscribeTo(PluginConfEvent.class, this);
+    }
+
+    /**
+     * Receiving a message from crawler
+     */
+    @EventListener
+    public void handleMessageEvent(MessageEvent event) {
+        Long dsId = event.getEntityId();
+        String msg = event.getMessage();
+        DatasourceIngestion dsi = dsIngestionRepos.getOne(dsId);
+        dsi.setStackTrace((dsi.getStackTrace() == null) ? msg : dsi.getStackTrace() + "\n" + msg);
+        dsIngestionRepos.save(dsi);
     }
 
     @Override
@@ -189,21 +201,26 @@ public class IngesterService
                                 // Launch datasource ingestion
                                 IngestionResult summary = datasourceIngester
                                         .ingest(pluginService.loadPluginConfiguration(dsIngestion.getId()),
-                                                dsIngestion.getLastIngestDate());
+                                                dsIngestion);
                                 dsIngestion.setStatus(IngestionStatus.FINISHED);
                                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
                                 dsIngestion.setLastIngestDate(summary.getDate());
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
-                                dsIngestion.setStackTrace(ide.getMessage());
-                            } catch (RuntimeException | InterruptedException | ExecutionException | DataSourceException
-                                    | ModuleException e) {
+                                String stackTrace = (dsIngestion.getStackTrace() == null) ?
+                                        ide.getMessage() :
+                                        dsIngestion.getStackTrace() + "\n" + ide.getMessage();
+                                dsIngestion.setStackTrace(stackTrace);
+                            } catch (RuntimeException | InterruptedException | ExecutionException | DataSourceException | ModuleException | NoClassDefFoundError e) {
                                 // Set Status to Error... (and status date)
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
                                 e.printStackTrace(new PrintWriter(sw));
-                                dsIngestion.setStackTrace(sw.toString());
+                                String stackTrace = (dsIngestion.getStackTrace() == null) ?
+                                        sw.toString() :
+                                        dsIngestion.getStackTrace() + "\n" + sw.toString();
+                                dsIngestion.setStackTrace(stackTrace);
                             }
                             // To avoid redoing an ingestion in this "do...while" (must be at next call to manage)
                             dsIngestion.setNextPlannedIngestDate(null);
@@ -237,7 +254,10 @@ public class IngesterService
         // Add DatasourceIngestion for unmanaged datasource with immediate next planned ingestion date
         pluginConfs.stream().filter(pluginConf -> !dsIngestionRepos.exists(pluginConf.getId()))
                 .map(pluginConf -> dsIngestionRepos.save(new DatasourceIngestion(pluginConf.getId(),
-                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC), pluginConf.getLabel())))
+                                                                                 OffsetDateTime.now()
+                                                                                         .withOffsetSameInstant(
+                                                                                                 ZoneOffset.UTC),
+                                                                                 pluginConf.getLabel())))
                 .forEach(dsIngestion -> dsIngestionsMap.put(dsIngestion.getId(), dsIngestion));
         // Remove DatasourceIngestion for removed datasources and plan data objects deletion from Elasticsearch
         dsIngestionsMap.keySet().stream().filter(id -> !pluginService.exists(id))
@@ -276,14 +296,15 @@ public class IngesterService
         int refreshRate = ((IDataSourcePlugin) pluginService.getPlugin(pluginConfId)).getRefreshRate();
         switch (dsIngestion.getStatus()) {
             case ERROR: // las ingest in error, launch as soon as possible with same ingest date (last one with no error)
-                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null)
-                        ? OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) : dsIngestion.getLastIngestDate();
+                OffsetDateTime nextPlannedIngestDate = (dsIngestion.getLastIngestDate() == null) ?
+                        OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC) :
+                        dsIngestion.getLastIngestDate();
                 dsIngestion.setNextPlannedIngestDate(nextPlannedIngestDate);
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case FINISHED: // last ingest + refreshRate
-                dsIngestion.setNextPlannedIngestDate(dsIngestion.getLastIngestDate().plus(refreshRate,
-                                                                                          ChronoUnit.SECONDS));
+                dsIngestion.setNextPlannedIngestDate(
+                        dsIngestion.getLastIngestDate().plus(refreshRate, ChronoUnit.SECONDS));
                 dsIngestionRepos.save(dsIngestion);
                 break;
             case STARTED: // Already in progress

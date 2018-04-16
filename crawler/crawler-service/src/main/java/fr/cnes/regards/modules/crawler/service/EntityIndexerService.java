@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -50,6 +52,7 @@ import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectAssocRemover;
 import fr.cnes.regards.modules.crawler.service.consumer.DataObjectUpdater;
 import fr.cnes.regards.modules.crawler.service.consumer.SaveDataObjectsCallable;
+import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
@@ -125,6 +128,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Autowired
     private INotificationClient notifClient;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     @EventListener
     public void handleApplicationReady(ApplicationReadyEvent event) {
         subscriber.subscribeTo(AIPEvent.class, new AIPEventHandler());
@@ -140,7 +146,7 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     @Override
     public void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate) {
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) {
         LOGGER.info("Updating {}", ipId.toString());
         runtimeTenantResolver.forceTenant(tenant);
         AbstractEntity entity = entitiesService.loadWithRelations(ipId);
@@ -148,9 +154,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (entity == null) {
             LOGGER.debug("Entity is null !!");
             if (ipId.getEntityType() == EntityType.DATASET) {
-                manageDatasetDelete(tenant, ipId.toString());
+                sendMessage(String.format("Dataset %s no more exists..."), dsiId);
+                manageDatasetDelete(tenant, ipId.toString(), dsiId);
             }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
+            sendMessage(String.format("...Dataset %s de-indexed."), dsiId);
         } else { // entity has been created or updated, it must be saved into ES
             createIndexIfNeeded(tenant);
             ICriterion savedSubsettingClause = null;
@@ -215,7 +223,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             if ((entity instanceof Dataset) && needAssociatedDataObjectsUpdate) {
                 // Subsetting clause is needed by many things
                 ((Dataset) entity).setSubsettingClause(savedSubsettingClause);
-                manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate);
+                manageDatasetUpdate((Dataset) entity, lastUpdateDate, updateDate, dsiId);
             }
         }
         LOGGER.info(ipId.toString() + " managed into Elasticsearch");
@@ -239,9 +247,11 @@ public class EntityIndexerService implements IEntityIndexerService {
      * @param tenant concerned tenant
      * @param ipId dataset identifier
      */
-    private void manageDatasetDelete(String tenant, String ipId) {
+    private void manageDatasetDelete(String tenant, String ipId, Long dsiId) {
         // Search all DataObjects tagging this Dataset (only DataObjects because all other entities are already managed
         // with the system Postgres/RabbitMQ)
+        sendMessage(String.format("Searching for all data objects tagging dataset IP_ID %s", ipId), dsiId);
+        AtomicInteger objectsCount = new AtomicInteger(0);
         ICriterion taggingObjectsCrit = ICriterion.eq("tags", ipId);
 
         Set<DataObject> toSaveObjects = new HashSet<>();
@@ -261,6 +271,7 @@ public class EntityIndexerService implements IEntityIndexerService {
             toSaveObjects.add(object);
             if (toSaveObjects.size() == IEsRepository.BULK_SIZE) {
                 esRepos.saveBulk(tenant, toSaveObjects);
+                objectsCount.addAndGet(toSaveObjects.size());
                 toSaveObjects.clear();
             }
         };
@@ -271,15 +282,21 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
             esRepos.saveBulk(tenant, toSaveObjects);
+            objectsCount.addAndGet(toSaveObjects.size());
         }
+        sendMessage(String.format("...Removed dataset IP_ID from %d data objects tags.", objectsCount.get()), dsiId);
     }
 
     /**
      * Search and update associated dataset data objects (ie add dataset IpId into tags)
      * @param dataset concerned dataset
      */
-    private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate) {
+    private void manageDatasetUpdate(Dataset dataset, OffsetDateTime lastUpdateDate, OffsetDateTime updateDate,
+            Long dsiId) {
         String tenant = runtimeTenantResolver.getTenant();
+        sendMessage(String.format("Updating dataset %s indexation and all its associated data objects...",
+                                  dataset.getLabel()), dsiId);
+        sendMessage(String.format("Searching for dataset %d associated data objects...", dataset.getLabel()), dsiId);
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                                                                       DataObject.class);
         // A set used to accumulate data objects to save into ES
@@ -290,14 +307,15 @@ public class EntityIndexerService implements IEntityIndexerService {
         SaveDataObjectsCallable saveDataObjectsCallable = new SaveDataObjectsCallable(runtimeTenantResolver, esRepos,
                                                                                       tenant, dataset.getId());
         removeOldDatasetDataObjectsAssoc(dataset, updateDate, searchKey, toSaveObjects, executor,
-                                         saveDataObjectsCallable);
+                                         saveDataObjectsCallable, dsiId);
         addOrUpdateDatasetDataObjectsAssoc(dataset, lastUpdateDate, updateDate, searchKey, toSaveObjects, executor,
-                                           saveDataObjectsCallable);
+                                           saveDataObjectsCallable, dsiId);
 
         // lets compute computed attributes from the dataset model
         Set<IComputedAttribute<Dataset, ?>> computationPlugins = entitiesService.getComputationPlugins(dataset);
         LOGGER.info("Starting parallel computing of {} attributes (dataset {})...", computationPlugins.size(),
                     dataset.getId());
+        sendMessage(String.format("Starting computing of %d attributes...", computationPlugins.size()), dsiId);
         computationPlugins.parallelStream().forEach(p -> {
             runtimeTenantResolver.forceTenant(tenant);
             p.compute(dataset);
@@ -305,9 +323,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         // Once computations has been done, associated attributes are created or updated
         createComputedAttributes(dataset, computationPlugins);
         LOGGER.info("...computing OK");
+        sendMessage(String.format("...Computing ended.", computationPlugins.size()), dsiId);
 
         esRepos.save(tenant, dataset);
         LOGGER.info("Dataset {} updated", dataset.getId());
+        sendMessage("...Dataset indexation updated.", dsiId);
     }
 
     /**
@@ -315,7 +335,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     private void addOrUpdateDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime lastUpdateDate,
             OffsetDateTime updateDate, SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects,
-            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable) {
+            ExecutorService executor, SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        sendMessage("Adding or updating dataset data objects association...", dsiId);
         // Create an updater to be executed on each data object of dataset subsetting criteria results
         DataObjectUpdater dataObjectUpdater = new DataObjectUpdater(dataset, updateDate, toSaveObjects,
                                                                     saveDataObjectsCallable, executor);
@@ -327,6 +348,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.searchAll(searchKey, dataObjectUpdater, subsettingCrit);
         // Saving remaining objects...
         dataObjectUpdater.finalSave();
+        sendMessage(String.format("...%d data objects dataset association saved.", dataObjectUpdater.getObjectsCount()),
+                    dsiId);
     }
 
     /**
@@ -334,7 +357,8 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     private void removeOldDatasetDataObjectsAssoc(Dataset dataset, OffsetDateTime updateDate,
             SimpleSearchKey<DataObject> searchKey, HashSet<DataObject> toSaveObjects, ExecutorService executor,
-            SaveDataObjectsCallable saveDataObjectsCallable) {
+            SaveDataObjectsCallable saveDataObjectsCallable, Long dsiId) {
+        sendMessage("Removing old dataset data objects association...", dsiId);
         // First : remove association between dataset and data objects for data objects that are no more associated to
         // new subsetting clause so search data objects that are tagged with dataset IPID and with NOT(user subsetting
         // clause)
@@ -346,6 +370,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         esRepos.searchAll(searchKey, dataObjectAssocRemover, oldAssociatedObjectsCrit);
         // Saving remaining objects...
         dataObjectAssocRemover.finalSave();
+        sendMessage(String.format("...%d data objects dataset association removed.",
+                                  dataObjectAssocRemover.getObjectsCount()), dsiId);
     }
 
     /**
@@ -400,10 +426,14 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     @MultitenantTransactional
     public void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate) {
+            boolean forceDataObjectsUpdate, Long dsiId) {
         OffsetDateTime now = OffsetDateTime.now();
-        datasets.forEach(
-                dataset -> updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate));
+
+        for (Dataset dataset : datasets) {
+            sendMessage(String.format("Updating dataset %s...", dataset.getLabel()), dsiId);
+            updateEntityIntoEs(tenant, dataset.getIpId(), lastUpdateDate, now, forceDataObjectsUpdate, dsiId);
+            sendMessage(String.format("...Dataset %s updated.", dataset.getLabel()), dsiId);
+        }
     }
 
     @Override
@@ -519,6 +549,15 @@ public class EntityIndexerService implements IEntityIndexerService {
     @Override
     public boolean deleteDataObject(String tenant, String ipId) {
         return esRepos.delete(tenant, EntityType.DATA.toString(), ipId);
+    }
+
+    /**
+     * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
+     */
+    public void sendMessage(String message, Long dsId) {
+        if (dsId != null) {
+            eventPublisher.publishEvent(new MessageEvent(this, message, dsId));
+        }
     }
 
     private class AIPEventHandler implements IHandler<AIPEvent> {

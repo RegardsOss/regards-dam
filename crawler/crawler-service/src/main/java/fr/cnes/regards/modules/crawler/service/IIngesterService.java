@@ -2,8 +2,11 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.util.Optional;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
+import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 
 /**
  * Ingester service interface.<br/>
@@ -24,4 +27,8 @@ public interface IIngesterService {
     void setConsumeOnlyMode(boolean b);
 
     void updatePlannedDate(DatasourceIngestion dsIngestion, Long pluginConfId) throws ModuleException;
+
+    void handleApplicationReadyEvent(ApplicationReadyEvent event);
+
+    void handleMessageEvent(MessageEvent event);
 }

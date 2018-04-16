@@ -44,6 +44,11 @@ public abstract class AbstractDataObjectBulkSaver {
      */
     private final long datasetId;
 
+    /**
+     * Saved objects count
+     */
+    private int objectsCount = 0;
+
     protected AbstractDataObjectBulkSaver(SaveDataObjectsCallable saveDataObjectsCallable, ExecutorService executor,
             HashSet<DataObject> toSaveObjects, long datasetId) {
         this.saveDataObjectsCallable = saveDataObjectsCallable;
@@ -66,6 +71,7 @@ public abstract class AbstractDataObjectBulkSaver {
     protected void saveSet() {
         this.waitForEndOfTask();
         LOGGER.info("Launching Saving of {} data objects task (dataset {})...", toSaveObjects.size(), datasetId);
+        this.objectsCount += toSaveObjects.size();
         // Give a clone of data objects to save set
         saveDataObjectsCallable.setSet((Set<DataObject>) toSaveObjects.clone());
         // Clear data objects to save set
@@ -96,6 +102,7 @@ public abstract class AbstractDataObjectBulkSaver {
         this.waitForEndOfTask();
         if (!toSaveObjects.isEmpty()) {
             try {
+                this.objectsCount += toSaveObjects.size();
                 // Directly call on current thread without doing a clone
                 saveDataObjectsCallable.setSet(toSaveObjects);
                 saveDataObjectsCallable.call();
@@ -103,5 +110,9 @@ public abstract class AbstractDataObjectBulkSaver {
                 LOGGER.error(String.format("Unable to save data objects (dataset %d)", datasetId), e);
             }
         }
+    }
+
+    public int getObjectsCount() {
+        return objectsCount;
     }
 }
