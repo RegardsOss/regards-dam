@@ -205,17 +205,17 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
                                 IngestionResult summary = datasourceIngester
                                         .ingest(pluginService.loadPluginConfiguration(dsIngestion.getId()),
                                                 dsIngestion);
+                                // dsIngestion.stackTrace has been updated by handleMessageEvent transactional method
+                                dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
                                 dsIngestion.setStatus(IngestionStatus.FINISHED);
                                 dsIngestion.setSavedObjectsCount(summary.getSavedObjectsCount());
                                 dsIngestion.setLastIngestDate(summary.getDate());
                             } catch (InactiveDatasourceException ide) {
                                 dsIngestion.setStatus(IngestionStatus.INACTIVE);
-                                String stackTrace = (dsIngestion.getStackTrace() == null) ?
-                                        ide.getMessage() :
-                                        dsIngestion.getStackTrace() + "\n" + ide.getMessage();
-                                dsIngestion.setStackTrace(stackTrace);
+                                dsIngestion.setStackTrace(ide.getMessage());
                             } catch (RuntimeException | InterruptedException | ExecutionException | DataSourceException | ModuleException | NoClassDefFoundError e) {
                                 // Set Status to Error... (and status date)
+                                dsIngestion = dsIngestionRepos.findOne(dsIngestion.getId());
                                 dsIngestion.setStatus(IngestionStatus.ERROR);
                                 // and log stack trace into database
                                 StringWriter sw = new StringWriter();
