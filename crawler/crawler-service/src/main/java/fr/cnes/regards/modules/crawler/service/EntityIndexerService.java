@@ -296,7 +296,7 @@ public class EntityIndexerService implements IEntityIndexerService {
         String tenant = runtimeTenantResolver.getTenant();
         sendMessage(String.format("Updating dataset %s indexation and all its associated data objects...",
                                   dataset.getLabel()), dsiId);
-        sendMessage(String.format("Searching for dataset %d associated data objects...", dataset.getLabel()), dsiId);
+        sendMessage(String.format("Searching for dataset %s associated data objects...", dataset.getLabel()), dsiId);
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
                                                                       DataObject.class);
         // A set used to accumulate data objects to save into ES
