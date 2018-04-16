@@ -30,6 +30,7 @@ import fr.cnes.regards.framework.amqp.ISubscriber;
 import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.jpa.utils.RegardsTransactional;
 import fr.cnes.regards.framework.module.rest.exception.InactiveDatasourceException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
@@ -137,6 +138,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
      * Receiving a message from crawler
      */
     @EventListener
+    @RegardsTransactional
     public void handleMessageEvent(MessageEvent event) {
         Long dsId = event.getEntityId();
         String msg = event.getMessage();
