@@ -259,6 +259,6 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
      * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
      */
     public void sendMessage(String message, Long dsId) {
-        eventPublisher.publishEvent(new MessageEvent(this, message, dsId));
+        eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), message, dsId));
     }
 }

@@ -140,6 +140,7 @@ public class IngesterService implements IIngesterService, IHandler<PluginConfEve
     @EventListener
     @RegardsTransactional
     public void handleMessageEvent(MessageEvent event) {
+        runtimeTenantResolver.forceTenant(event.getTenant());
         Long dsId = event.getEntityId();
         String msg = event.getMessage();
         DatasourceIngestion dsi = dsIngestionRepos.getOne(dsId);

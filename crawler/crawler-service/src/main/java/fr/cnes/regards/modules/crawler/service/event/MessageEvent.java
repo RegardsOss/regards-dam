@@ -22,18 +22,20 @@ import org.springframework.context.ApplicationEvent;
 
 /**
  * Message event used to transmit message from CrawlerService to IngesterService while ingesting data in order to make
- * ingester updating DatasourceIngestion (these messages are enqueued into stacktrace attribute and so removed one
- * ingestion is done)
+ * ingester updating DatasourceIngestion (these messages are enqueued into stacktrace attribute)
  * @author oroussel
  */
 public class MessageEvent extends ApplicationEvent {
+    private String tenant;
+
     private String message;
 
     // Entity concerned by the message
     private Long entityId;
 
-    public MessageEvent(Object source, String message, Long entityId) {
+    public MessageEvent(Object source, String tenant, String message, Long entityId) {
         super(source);
+        this.tenant = tenant;
         this.message = message;
         this.entityId = entityId;
     }
@@ -44,5 +46,9 @@ public class MessageEvent extends ApplicationEvent {
 
     public Long getEntityId() {
         return entityId;
+    }
+
+    public String getTenant() {
+        return tenant;
     }
 }

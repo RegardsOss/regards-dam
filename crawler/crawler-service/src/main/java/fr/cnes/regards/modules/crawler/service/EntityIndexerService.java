@@ -556,7 +556,7 @@ public class EntityIndexerService implements IEntityIndexerService {
      */
     public void sendMessage(String message, Long dsId) {
         if (dsId != null) {
-            eventPublisher.publishEvent(new MessageEvent(this, message, dsId));
+            eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), message, dsId));
         }
     }
 
