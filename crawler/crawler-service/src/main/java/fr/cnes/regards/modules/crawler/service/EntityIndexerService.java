@@ -154,11 +154,11 @@ public class EntityIndexerService implements IEntityIndexerService {
         if (entity == null) {
             LOGGER.debug("Entity is null !!");
             if (ipId.getEntityType() == EntityType.DATASET) {
-                sendMessage(String.format("Dataset %s no more exists..."), dsiId);
+                sendMessage(String.format("Dataset with IP_ID %s no more exists...", ipId.toString()), dsiId);
                 manageDatasetDelete(tenant, ipId.toString(), dsiId);
             }
             esRepos.delete(tenant, ipId.getEntityType().toString(), ipId.toString());
-            sendMessage(String.format("...Dataset %s de-indexed."), dsiId);
+            sendMessage(String.format("...Dataset with IP_ID %s de-indexed.", ipId.toString()), dsiId);
         } else { // entity has been created or updated, it must be saved into ES
             createIndexIfNeeded(tenant);
             ICriterion savedSubsettingClause = null;
@@ -510,6 +510,8 @@ public class EntityIndexerService implements IEntityIndexerService {
 
         for (DataObject dataObject : objects) {
             DataObject curObject = esRepos.get(tenant, dataObject);
+            // Be careful : in some case, some data objects from another datasource can be retrieved (AipDataSource
+            // search objects from storage only using tags so if this tag has been used
             // if current object does already exist into ES, the new one wins. It is then mandatory to retrieve from
             // current creationDate, groups, tags and modelIds
             if (curObject != null) {
