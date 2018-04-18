@@ -27,7 +27,7 @@ public interface IEntityIndexerService {
      */
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate,
             boolean forceAssociatedEntitiesUpdate) {
-        this.updateEntityIntoEs(tenant, ipId, null, updateDate, forceAssociatedEntitiesUpdate);
+        this.updateEntityIntoEs(tenant, ipId, null, updateDate, forceAssociatedEntitiesUpdate, null);
     }
 
     /**
@@ -39,7 +39,7 @@ public interface IEntityIndexerService {
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
      */
     void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate);
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId);
 
     /**
      * Create index it doesn't exist
@@ -52,9 +52,10 @@ public interface IEntityIndexerService {
      * Transactional method updating a set of datasets
      * @param lastUpdateDate Take into account only more recent lastUpdateDate than provided
      * @param forceDataObjectsUpdate true to force all associated data objects update
+     * @param dsiId datasetIngestion id
      */
     void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate);
+            boolean forceDataObjectsUpdate, Long dsiId);
 
     /**
      * Create given data objects into Elasticsearch

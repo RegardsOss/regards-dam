@@ -1,6 +1,5 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -18,20 +17,10 @@ public interface IDatasourceIngesterService {
     /**
      * Ingest provided datasource (from plugin configuration) data objects into Elasticsearch
      * @param pluginConfiguration datasource plugin configuration
+     * @param dsi datasource ingestion status object
      * @return a summary containing the count of DataObjects ingested from given datasource and the ingestion date
      */
-    default IngestionResult ingest(PluginConfiguration pluginConfiguration)
-            throws ModuleException, InterruptedException, ExecutionException, DataSourceException {
-        return this.ingest(pluginConfiguration, null);
-    }
-
-    /**
-     * Ingest provided datasource (from plugin configuration) data objects into Elasticsearch
-     * @param pluginConfiguration datasource plugin configuration
-     * @param date date used for finding objects on datasource (strictly greatest than)
-     * @return a summary containing the count of DataObjects ingested from given datasource and the ingestion date
-     */
-    IngestionResult ingest(PluginConfiguration pluginConfiguration, OffsetDateTime date)
+    IngestionResult ingest(PluginConfiguration pluginConfiguration, DatasourceIngestion dsi)
             throws ModuleException, InterruptedException, ExecutionException, DataSourceException;
 
     /**

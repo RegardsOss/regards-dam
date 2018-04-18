@@ -26,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +75,8 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
+import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
+import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
 import fr.cnes.regards.modules.crawler.plugins.TestDataSourcePlugin;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
@@ -215,6 +216,9 @@ public class IndexerServiceDataSourceIT {
     @Autowired
     private Flyway flyway;
 
+    @Autowired
+    private IDatasourceIngestionRepository dsIngestionRepos;
+
     private List<AbstractAttributeMapping> modelAttrMapping;
 
     private Model dataModel;
@@ -301,12 +305,16 @@ public class IndexerServiceDataSourceIT {
 
         // Creation
         long start = System.currentTimeMillis();
-        final IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf);
+        DatasourceIngestion dsi = new DatasourceIngestion(dataSourcePluginConf.getId());
+        dsi.setLabel("Label");
+        dsIngestionRepos.save(dsi);
+
+        final IngestionResult summary1 = crawlerService.ingest(dataSourcePluginConf, dsi);
         System.out.println("Insertion : " + (System.currentTimeMillis() - start) + " ms");
 
         // Update
         start = System.currentTimeMillis();
-        final IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf);
+        final IngestionResult summary2 = crawlerService.ingest(dataSourcePluginConf, dsi);
         System.out.println("Update : " + (System.currentTimeMillis() - start) + " ms");
         Assert.assertEquals(summary1.getSavedObjectsCount(), summary2.getSavedObjectsCount());
 

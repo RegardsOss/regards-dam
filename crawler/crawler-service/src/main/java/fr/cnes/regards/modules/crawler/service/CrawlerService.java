@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +48,7 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.crawler.dao.IDatasourceIngestionRepository;
 import fr.cnes.regards.modules.crawler.domain.DatasourceIngestion;
 import fr.cnes.regards.modules.crawler.domain.IngestionResult;
+import fr.cnes.regards.modules.crawler.service.event.MessageEvent;
 import fr.cnes.regards.modules.datasources.domain.plugins.DataSourceException;
 import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -82,6 +84,9 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     @Autowired
     private IDatasourceIngestionRepository datasourceIngestionRepo;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     @Override
     @Async
     public void crawl() {
@@ -89,26 +94,31 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     }
 
     @Override
-    public IngestionResult ingest(PluginConfiguration pluginConf, OffsetDateTime lastUpdateDate)
+    public IngestionResult ingest(PluginConfiguration pluginConf, DatasourceIngestion dsi)
             throws ModuleException, InterruptedException, ExecutionException, DataSourceException {
         String tenant = runtimeTenantResolver.getTenant();
+        OffsetDateTime lastUpdateDate = dsi.getLastIngestDate();
+        Long dsiId = dsi.getId();
 
         if (!pluginConf.isActive()) {
             throw new InactiveDatasourceException();
         }
         IDataSourcePlugin dsPlugin = pluginService.getPlugin(pluginConf.getId());
 
-        int savedObjectsCount = 0;
+        int savedObjectsCount;
         OffsetDateTime now = OffsetDateTime.now();
         String datasourceId = pluginConf.getId().toString();
         // If index doesn't exist, just create all data objects
         if (entityIndexerService.createIndexIfNeeded(tenant)) {
-            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, savedObjectsCount,
-                                                                   now, datasourceId);
+            sendMessage("Start reading datasource and creating objects...", dsiId);
+            savedObjectsCount = readDatasourceAndCreateDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+                                                                   dsiId);
         } else { // index exists, data objects may also exist
-            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, savedObjectsCount,
-                                                                  now, datasourceId);
+            sendMessage("Start reading datasource and merging/creating objects...", dsiId);
+            savedObjectsCount = readDatasourceAndMergeDataObjects(lastUpdateDate, tenant, dsPlugin, now, datasourceId,
+                                                                  dsiId);
         }
+        sendMessage(String.format("...End reading datasource %s.", dsi.getLabel()), dsiId);
         // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
         // and its ingestion), we must search for it and do as it has been updated (to update all associated data
         // objects which have a lastUpdate date >= now)
@@ -118,61 +128,95 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {
             // transactional method => use self, not this
-            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true);
+            sendMessage("Start updating datasets associated to datasource...", dsiId);
+            entityIndexerService.updateDatasets(tenant, datasetsToUpdate, lastUpdateDate, true, dsiId);
+            sendMessage("...End updating datasets.", dsiId);
         }
 
         return new IngestionResult(now, savedObjectsCount);
     }
 
     private int readDatasourceAndMergeDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, int savedObjectsCount, OffsetDateTime now, String datasourceId)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId)
             throws DataSourceException, InterruptedException, ExecutionException {
+        int savedObjectsCount = 0;
+        int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
+        sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
+        sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
+        availableRecordsCount += page.getTotalElements();
         final List<DataObject> list = page.getContent();
         Future<Integer> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
-            return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
+            int count = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
+            return count;
         });
 
         while (page.hasNext()) {
+            sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+            sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
+            availableRecordsCount += page.getTotalElements();
             savedObjectsCount += task.get();
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
                 runtimeTenantResolver.forceTenant(tenant);
-                return entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
+                sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
+                int count = entityIndexerService.mergeDataObjects(tenant, datasourceId, now, otherList);
+                sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
+                return count;
             });
         }
         savedObjectsCount += task.get();
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
+                                  availableRecordsCount), dsiId);
         return savedObjectsCount;
     }
 
     private int readDatasourceAndCreateDataObjects(OffsetDateTime lastUpdateDate, String tenant,
-            IDataSourcePlugin dsPlugin, int savedObjectsCount, OffsetDateTime now, String datasourceId)
+            IDataSourcePlugin dsPlugin, OffsetDateTime now, String datasourceId, Long dsiId)
             throws DataSourceException, InterruptedException, ExecutionException {
+        int savedObjectsCount = 0;
+        int availableRecordsCount = 0;
         // Use a thread pool of size 1 to merge data while datasource pull other data
         ExecutorService executor = Executors.newFixedThreadPool(1);
+        sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
+        sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
+        availableRecordsCount += page.getTotalElements();
         final List<DataObject> list = page.getContent();
         Future<Integer> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
-            return entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("Indexing %d objects...", list.size()), dsiId);
+            int count = entityIndexerService.createDataObjects(tenant, datasourceId, now, list);
+            sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
+            return count;
         });
 
         while (page.hasNext()) {
+            sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
+            sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
+            availableRecordsCount += page.getTotalElements();
             savedObjectsCount += task.get();
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
                 runtimeTenantResolver.forceTenant(tenant);
-                return entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
+                sendMessage(String.format("Indexing %d objects...", otherList.size()), dsiId);
+                int count = entityIndexerService.createDataObjects(tenant, datasourceId, now, otherList);
+                sendMessage(String.format("...%d objects effectively indexed.", count), dsiId);
+                return count;
             });
         }
         savedObjectsCount += task.get();
+        sendMessage(String.format("...Finally indexed %d objects for %d availables records.", savedObjectsCount,
+                                  availableRecordsCount), dsiId);
         return savedObjectsCount;
     }
 
@@ -209,5 +253,12 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
     @Override
     public void deleteDatasourceIngestion(Long id) {
         datasourceIngestionRepo.delete(id);
+    }
+
+    /**
+     * Send a message to IngesterService (or whoever want to listen to it) concerning given datasourceIngestionId
+     */
+    public void sendMessage(String message, Long dsId) {
+        eventPublisher.publishEvent(new MessageEvent(this, runtimeTenantResolver.getTenant(), message, dsId));
     }
 }
