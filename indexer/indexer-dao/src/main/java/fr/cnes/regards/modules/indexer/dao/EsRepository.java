@@ -1188,10 +1188,11 @@ public class EsRepository implements IEsRepository {
                         // Better not return a facet
                         return;
                     } // (-∞ -> value [
-                    // range is then [min -> value [
-                    valueRange = Range.closedOpen(EsHelper.scaled(min.getValue()), (Double) bucket.getTo());
+                    // range is then [min -> value [, because min value is scaled it is necessary to choose a little
+                    // less
+                    valueRange = Range.closedOpen(EsHelper.scaledDown(min.getValue()), (Double) bucket.getTo());
                 } else if (Objects.equals(bucket.getTo(), Double.POSITIVE_INFINITY)) { // [value -> +∞)
-                    // range is then [value, max]
+                    // range is then [value, max], because max value is scaled it is necessary to choose a little more
                     valueRange = Range.closed((Double) bucket.getFrom(), EsHelper.scaledUp(max.getValue()));
                 } else { // [value -> value [
                     valueRange = Range.closedOpen((Double) bucket.getFrom(), (Double) bucket.getTo());

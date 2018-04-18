@@ -17,6 +17,8 @@ public class EsHelper {
 
     private static final MathContext mathContextUp = new MathContext(PRECISION, RoundingMode.CEILING);
 
+    private static final MathContext mathContextDown = new MathContext(PRECISION, RoundingMode.FLOOR);
+
     private EsHelper() {
     }
 
@@ -46,4 +48,20 @@ public class EsHelper {
         }
         return BigDecimal.valueOf(n).round(mathContextUp).doubleValue();
     }
+
+    /**
+     * 2 decimal scaled and always decrements to the previous digit if the parameter value is positive
+     * otherwise increments to the next digit if the parameter value is negative
+     * 3.4902 --> 3.50
+     * 3.001  --> 3.01
+     * @param n value to scale
+     * @return 2 decimal scaled value
+     */
+    public static final double scaledDown(double n) {
+        if (!Double.isFinite(n)) {
+            return n;
+        }
+        return BigDecimal.valueOf(n).round(mathContextDown).doubleValue();
+    }
+
 }
