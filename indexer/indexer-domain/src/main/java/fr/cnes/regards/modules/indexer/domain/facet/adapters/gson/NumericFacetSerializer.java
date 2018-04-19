@@ -97,7 +97,9 @@ public class NumericFacetSerializer implements JsonSerializer<NumericFacet> {
             }
             count = entry.getValue();
             if (lowerBound.equals(upperBound)) {
-                openSearchQuery = attributeName + ":" + lowerBound;
+                // In case value is negative, \ the -
+                String value = (lowerBound.startsWith("-") ? "\\" + lowerBound : lowerBound);
+                openSearchQuery = attributeName + ":" + value;
             } else {
                 openSearchQuery = attributeName + ":[" + lowerBound + " TO " + upperBound + "}";
             }
