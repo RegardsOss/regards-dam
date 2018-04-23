@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
@@ -31,13 +31,13 @@ import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
 @Service
-public class IndexerService implements IIndexerService {
+public class IndexerService implements IIndexerService, ApplicationListener<TenantConnectionReady> {
 
     @Autowired
     private IEsRepository repository;
 
-    @EventListener
-    public void handleTenantConnectionReady(TenantConnectionReady event) {
+    @Override
+    public void onApplicationEvent(TenantConnectionReady event) {
         this.createIndex(event.getTenant());
     }
 

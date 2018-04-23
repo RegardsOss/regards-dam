@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.indexer.service;
 
 import java.util.Collection;
 
-import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
@@ -31,11 +30,6 @@ import fr.cnes.regards.modules.indexer.domain.IIndexable;
 public interface IIndexerService {
 
     int BULK_SIZE = IEsRepository.BULK_SIZE;
-
-    /**
-     * Handle project creation event
-     */
-    void handleTenantConnectionReady(TenantConnectionReady event);
 
     /**
      * Create index if not already exists
