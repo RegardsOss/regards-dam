@@ -20,17 +20,13 @@
  */
 package fr.cnes.regards.modules.datasources.service;
 
-import java.util.List;
-
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -49,17 +45,12 @@ import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
  */
 @Service
 @MultitenantTransactional
-public class DataSourceService implements IDataSourceService, ApplicationListener<ApplicationReadyEvent> {
+public class DataSourceService implements IDataSourceService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceService.class);
 
     @Autowired
     private IPluginService service;
-
-    @Override
-    @MultitenantTransactional(propagation = Propagation.SUPPORTS)
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-    }
 
     @PostConstruct
     public void init() {
