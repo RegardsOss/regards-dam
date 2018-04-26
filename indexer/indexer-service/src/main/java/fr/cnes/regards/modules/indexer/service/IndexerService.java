@@ -22,24 +22,22 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.jpa.multitenant.event.spring.TenantConnectionReady;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 
+/**
+ * To be removed, obviously this service is no more used by microservices, only by tests
+ * @deprecated
+ */
+@Deprecated
 @Service
-public class IndexerService implements IIndexerService, ApplicationListener<TenantConnectionReady> {
+public class IndexerService implements IIndexerService {
 
     @Autowired
     private IEsRepository repository;
-
-    @Override
-    public void onApplicationEvent(TenantConnectionReady event) {
-        this.createIndex(event.getTenant());
-    }
 
     @Override
     public boolean createIndex(String pIndex) {
