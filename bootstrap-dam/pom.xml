@@ -57,7 +57,7 @@
 
 	<properties>
 		<fr.cnes.regards.docker.image.name>rs-dam</fr.cnes.regards.docker.image.name>
-		<docker.entryPoint>["./wait-for-it.sh", "rs_config:9031", "-t", "0", "--", "./wait-for-it.sh", "rs_registry:9032", "-t", "0", "--","./wait-for-it.sh", "rs_admin:9033", "-t", "0", "--", "java", "-Xmx1500m", "-Djava.security.egd=file:/dev/./urandom", "-agentlib:jdwp=transport=dt_socket,address=10500,server=y,suspend=n", "-Dloader.path=/regards-plugins", "-jar", "/${project.build.finalName}.${project.packaging}"]</docker.entryPoint>
+		<docker.entryPoint>["./wait-for-it.sh", "rs_config:9031", "-t", "0", "--", "./wait-for-it.sh", "rs_registry:9032", "-t", "0", "--","./wait-for-it.sh", "rs_admin:9033", "-t", "0", "--", "./start.sh","${project.build.finalName}.${project.packaging}","-Xmx1500m"]</docker.entryPoint>
 	</properties>
 
 	<dependencies>

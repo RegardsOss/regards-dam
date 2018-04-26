@@ -88,7 +88,7 @@ public final class AttributeBuilder {
                         : buildInteger(name, new Integer((String) value)));
             case BOOLEAN:
                 return (T) ((value instanceof Boolean) ? buildBoolean(name, (Boolean) value)
-                        : buildBoolean(name, new Boolean((String) value)));
+                        : buildBoolean(name, Boolean.valueOf((String) value)));
             case DATE_ARRAY:
                 if (value instanceof Collection) {
                     return (T) buildStringCollection(name, (Collection) value);

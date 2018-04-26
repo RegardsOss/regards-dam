@@ -55,6 +55,11 @@
 	</parent>
 
 	<dependencies>
+		<!-- Do not remove, service doesn't need it but plugins do -->
+		<dependency>
+			<groupId>fr.cnes.regards.modules.datasources</groupId>
+			<artifactId>datasources-domain</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>module-regards</artifactId>
