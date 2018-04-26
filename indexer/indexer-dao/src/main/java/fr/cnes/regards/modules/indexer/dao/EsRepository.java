@@ -1086,9 +1086,9 @@ public class EsRepository implements IEsRepository {
                         FacetType.RANGE_DATE.accept(aggBuilderFacetTypeVisitor, attributeName, percentiles);
                 // In case range contains only one value, better remove facet
                 if (aggBuilder != null) {
-                    // And add max and min aggregagtions
+                    // And add max and min aggregations
                     builder.aggregation(aggBuilder);
-                    // And add max and min aggregagtions
+                    // And add max and min aggregations
                     builder.aggregation(FacetType.MIN.accept(aggBuilderFacetTypeVisitor, attributeName));
                     builder.aggregation(FacetType.MAX.accept(aggBuilderFacetTypeVisitor, attributeName));
                 }
