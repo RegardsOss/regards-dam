@@ -126,8 +126,8 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
                 }
             }
             if (!i.hasNext()) { // last value
-                if (rangeAggBuilder.ranges().size() <= 1) {
-                    // Only one range (-∞, previousValue) => only one value => facet is useless
+                if (rangeAggBuilder.ranges().size() < 1) {
+                    // No range => no facet
                     return null;
                 }
                 rangeAggBuilder.addUnboundedFrom(previousValue);
