@@ -33,6 +33,6 @@ public class DateMatchCriterion extends AbstractMatchCriterion<OffsetDateTime> {
 
     @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
-        return null;
+        return visitor.visitDateMatchCriterion(this);
     }
 }
