@@ -241,7 +241,7 @@ public class DocumentController implements IResourceController<Document> {
     @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_FILES_SINGLE_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "Retrieve the file in given document with given checksum",
-            role = DefaultRole.REGISTERED_USER)
+            role = DefaultRole.PUBLIC)
     public void retrieveDocumentFile(@RequestParam(name = "origin", required = false) String origin,
             @PathVariable("document_id") Long id, @PathVariable("file_checksum") String fileChecksum,
             HttpServletResponse response) throws ModuleException, IOException {

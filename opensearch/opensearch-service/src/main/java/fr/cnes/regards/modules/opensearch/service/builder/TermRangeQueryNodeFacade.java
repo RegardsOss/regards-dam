@@ -27,7 +27,6 @@ import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 
 /**
  * Facade class wrapping a {@link TermRangeQueryNode} for simplifiying access to usefull parameters.
- *
  * @author Xavier-Alexandre Brochard
  */
 class TermRangeQueryNodeFacade {
@@ -45,13 +44,13 @@ class TermRangeQueryNodeFacade {
     /**
      * Constructor
      */
-    public TermRangeQueryNodeFacade(TermRangeQueryNode pTermRangeQueryNode) {
+    public TermRangeQueryNodeFacade(TermRangeQueryNode termRangeQueryNode) {
         super();
-        field = StringUtils.toString(pTermRangeQueryNode.getField());
-        lowerBound = pTermRangeQueryNode.getLowerBound().getTextAsString();
-        upperBound = pTermRangeQueryNode.getUpperBound().getTextAsString();
-        isLowerInclusive = pTermRangeQueryNode.isLowerInclusive();
-        isUpperInclusive = pTermRangeQueryNode.isUpperInclusive();
+        field = StringUtils.toString(termRangeQueryNode.getField());
+        lowerBound = termRangeQueryNode.getLowerBound().getTextAsString();
+        upperBound = termRangeQueryNode.getUpperBound().getTextAsString();
+        isLowerInclusive = termRangeQueryNode.isLowerInclusive();
+        isUpperInclusive = termRangeQueryNode.isUpperInclusive();
     }
 
     /**

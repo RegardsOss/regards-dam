@@ -175,6 +175,17 @@ public interface ICriterion {
     }
 
     /**
+     * Criterion to test if a parameter is exactly the provided date
+     * @param attName Date attribute
+     * @param date provided text
+     * @return criterion
+     */
+    static ICriterion eq(String attName, OffsetDateTime date) {
+        return new DateMatchCriterion(attName, date);
+    }
+
+
+    /**
      * Criterion to test if a parameter starts with the provided text or if a String array parameter contains an element
      * that starts with the provided text
      * @param attName String or String array attribute

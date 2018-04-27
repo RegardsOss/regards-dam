@@ -18,6 +18,7 @@ import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.FieldExistsCriterion;
@@ -102,6 +103,11 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitLongMatchCriterion(LongMatchCriterion criterion) {
+        return QueryBuilders.termQuery(criterion.getName(), criterion.getValue());
+    }
+
+    @Override
+    public QueryBuilder visitDateMatchCriterion(DateMatchCriterion criterion) {
         return QueryBuilders.termQuery(criterion.getName(), criterion.getValue());
     }
 
