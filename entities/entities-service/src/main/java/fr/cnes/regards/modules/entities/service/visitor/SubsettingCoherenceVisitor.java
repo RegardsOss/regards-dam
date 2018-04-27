@@ -29,6 +29,7 @@ import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.EmptyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.FieldExistsCriterion;
@@ -150,6 +151,12 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     public Boolean visitLongMatchCriterion(LongMatchCriterion criterion) {
         AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null) && (attribute.getType().equals(AttributeType.LONG));
+    }
+
+    @Override
+    public Boolean visitDateMatchCriterion(DateMatchCriterion criterion) {
+        AttributeModel attribute = extractAttribute(criterion);
+        return (attribute != null) && (attribute.getType().equals(AttributeType.DATE_ISO8601));
     }
 
     @Override

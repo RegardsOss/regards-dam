@@ -13,8 +13,8 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 public class BooleanNodeQueryBuilder implements ICriterionQueryBuilder {
 
     @Override
-    public ICriterion build(QueryNode pQueryNode) throws QueryNodeException {
-        BooleanQueryNode booleanNode = (BooleanQueryNode) pQueryNode;
+    public ICriterion build(QueryNode queryNode) throws QueryNodeException {
+        BooleanQueryNode booleanNode = (BooleanQueryNode) queryNode;
         List<QueryNode> children = booleanNode.getChildren();
 
         // Build criterions

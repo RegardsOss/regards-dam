@@ -267,6 +267,11 @@ public class CriterionTest {
         public String visitFieldExistsCriterion(FieldExistsCriterion criterion) {
             return null;
         }
+
+        @Override
+        public String visitDateMatchCriterion(DateMatchCriterion criterion) {
+            return null;
+        }
     }
 }
 //CHECKSTYLE:ON

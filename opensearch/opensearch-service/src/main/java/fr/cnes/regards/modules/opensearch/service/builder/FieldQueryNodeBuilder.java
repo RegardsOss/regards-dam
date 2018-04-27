@@ -24,6 +24,7 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.PointQueryNode;
 
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
@@ -99,6 +100,8 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 return ICriterion.eq(field, value);
             case STRING_ARRAY:
                 return ICriterion.contains(field, value);
+            case DATE_ISO8601:
+                return ICriterion.eq(field, OffsetDateTimeAdapter.parse(value));
             default:
                 throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
         }

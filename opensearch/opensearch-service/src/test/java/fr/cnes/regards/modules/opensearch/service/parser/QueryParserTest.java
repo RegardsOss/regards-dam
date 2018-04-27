@@ -21,6 +21,9 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +45,7 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ComparisonOperator;
+import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
@@ -61,7 +65,6 @@ import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
 
 /**
  * Unit test for {@link QueryParser}.
- *
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
@@ -91,7 +94,7 @@ public class QueryParserTest {
         Mockito.when(attributeModelClient.getAttributes(null, null))
                 .thenReturn(new ResponseEntity<>(HateoasUtils.wrapList(SampleDataUtils.LIST), HttpStatus.OK));
         IAttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelClient, subscriber,
-                runtimeTenantResolver);
+                                                                           runtimeTenantResolver);
         IAttributeFinder finder = new AttributeFinder(runtimeTenantResolver, attributeModelCache);
 
         parser = new QueryParser(finder);
@@ -561,6 +564,28 @@ public class QueryParserTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    @Purpose("Tests queries like date:2007-12-03T10:15:30.166Z")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
+    public void OffsetDateTimeEqTest() throws OpenSearchParseException, UnsupportedEncodingException {
+        final String field = SampleDataUtils.LOCAL_DATE_TIME_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.PROPERTIES);
+        final OffsetDateTime lowerValue = OffsetDateTime.now();
+        DateTimeFormatter ISO_DATE_TIME_UTC = new DateTimeFormatterBuilder().parseCaseInsensitive()
+                .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).optionalStart().appendOffset("+HH:MM", "Z")
+                .toFormatter();
+        final String term = field + ": \"" + ISO_DATE_TIME_UTC.format(lowerValue.withOffsetSameInstant(ZoneOffset.UTC)) + "\"";
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof DateMatchCriterion);
+        final DateMatchCriterion crit = (DateMatchCriterion) criterion;
+
+        Assert.assertEquals(field, crit.getName());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     @Purpose("Tests queries like altitude:{* TO 1}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
@@ -788,8 +813,8 @@ public class QueryParserTest {
 
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final String val = "harrypotter";
-        final ICriterion criterion = parser.parse(QUERY_PREFIX
-                + URLEncoder.encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder
+                .encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof NotCriterion);
 

@@ -101,7 +101,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
             }
             count = entry.getValue();
             if (lowerBound.equals(upperBound)) {
-                openSearchQuery = attributeName + ":" + lowerBound;
+                openSearchQuery = attributeName + ":\"" + lowerBound + "\"";
             } else {
                 openSearchQuery = attributeName + ":[" + lowerBound + " TO " + upperBound + "}";
             }
