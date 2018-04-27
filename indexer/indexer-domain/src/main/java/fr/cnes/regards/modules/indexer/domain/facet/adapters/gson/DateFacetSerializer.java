@@ -80,6 +80,11 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
 
         private final String openSearchQuery;
 
+        /**
+         * Be careful, the range must be closed-opened => [ date1 TO date2 }
+         * @param pEntry
+         * @param pAttributeName
+         */
         public AdaptedFacetValue(Entry<Range<OffsetDateTime>, Long> pEntry, String pAttributeName) {
             Range<OffsetDateTime> key = pEntry.getKey();
             if (key.hasLowerBound()) {
@@ -95,7 +100,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
                 upperBound = OPENSEARCH_WILDCARD;
             }
             count = pEntry.getValue();
-            openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "]";
+            openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "}";
         }
 
     }
