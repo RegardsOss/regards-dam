@@ -90,6 +90,20 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
     }
 
+    public boolean canBeExternallyDownloaded() {
+        return Multimaps.filterKeys(files, k -> {
+            switch (k) {
+                case RAWDATA:
+                case QUICKLOOK_SD:
+                case QUICKLOOK_MD:
+                case QUICKLOOK_HD:
+                    return true;
+                default:
+                    return false;
+            }
+        }).values().stream().filter(DataFile::canBeExternallyDownloaded).findAny().isPresent();
+    }
+
     @Override
     public boolean equals(Object obj) {
         return super.equals(obj);
