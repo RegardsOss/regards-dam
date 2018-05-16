@@ -13,6 +13,11 @@ public class LongMatchCriterion extends AbstractMatchCriterion<Long> {
     }
 
     @Override
+    public LongMatchCriterion copy() {
+        return new LongMatchCriterion(super.name, super.value);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitLongMatchCriterion(this);
     }

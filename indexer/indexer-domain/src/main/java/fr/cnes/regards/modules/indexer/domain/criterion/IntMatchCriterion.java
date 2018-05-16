@@ -13,6 +13,11 @@ public class IntMatchCriterion extends AbstractMatchCriterion<Integer> {
     }
 
     @Override
+    public IntMatchCriterion copy() {
+        return new IntMatchCriterion(super.name, super.value);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitIntMatchCriterion(this);
     }

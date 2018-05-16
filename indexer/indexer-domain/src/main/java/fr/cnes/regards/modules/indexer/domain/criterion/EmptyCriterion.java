@@ -12,6 +12,11 @@ public final class EmptyCriterion implements ICriterion {
     }
 
     @Override
+    public EmptyCriterion copy() {
+        return INSTANCE;
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitEmptyCriterion(this);
     }

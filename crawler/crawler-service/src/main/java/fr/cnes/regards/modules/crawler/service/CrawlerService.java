@@ -146,8 +146,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
-        sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
-        availableRecordsCount += page.getTotalElements();
+        sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+        availableRecordsCount += page.getNumberOfElements();
         final List<DataObject> list = page.getContent();
         Future<Integer> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
@@ -160,8 +160,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         while (page.hasNext()) {
             sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-            sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
-            availableRecordsCount += page.getTotalElements();
+            sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+            availableRecordsCount += page.getNumberOfElements();
             savedObjectsCount += task.get();
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {
@@ -188,8 +188,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
         Page<DataObject> page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId,
                                                       new PageRequest(0, IEsRepository.BULK_SIZE));
-        sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
-        availableRecordsCount += page.getTotalElements();
+        sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+        availableRecordsCount += page.getNumberOfElements();
         final List<DataObject> list = page.getContent();
         Future<Integer> task = executor.submit(() -> {
             runtimeTenantResolver.forceTenant(tenant);
@@ -202,8 +202,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         while (page.hasNext()) {
             sendMessage(String.format("Finding at most %d records from datasource...", IEsRepository.BULK_SIZE), dsiId);
             page = findAllFromDatasource(lastUpdateDate, tenant, dsPlugin, datasourceId, page.nextPageable());
-            sendMessage(String.format("...Found %d records from datasource", page.getTotalElements()), dsiId);
-            availableRecordsCount += page.getTotalElements();
+            sendMessage(String.format("...Found %d records from datasource", page.getNumberOfElements()), dsiId);
+            availableRecordsCount += page.getNumberOfElements();
             savedObjectsCount += task.get();
             final List<DataObject> otherList = page.getContent();
             task = executor.submit(() -> {

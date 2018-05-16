@@ -11,6 +11,11 @@ public class StringMatchCriterion extends AbstractMatchCriterion<String> {
     }
 
     @Override
+    public StringMatchCriterion copy() {
+        return new StringMatchCriterion(super.name, super.type, super.value);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitStringMatchCriterion(this);
     }

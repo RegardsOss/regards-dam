@@ -33,6 +33,10 @@ import fr.cnes.regards.modules.indexer.domain.IMapping;
  */
 @Gsonable
 public interface ICriterion {
+    /**
+     * @return a copy of the criterion
+     */
+    ICriterion copy();
 
     <U> U accept(ICriterionVisitor<U> visitor);
 
@@ -216,6 +220,17 @@ public interface ICriterion {
      */
     static ICriterion contains(String attName, String text) {
         return new StringMatchCriterion(attName, MatchType.CONTAINS, text);
+    }
+
+    /**
+     * Criterion to test if a parameter follows given regular expression or if a String array parameter contains an
+     * element which follows given regular expression
+     * @param attName String or String array attribute
+     * @param text provided regular expression
+     * @return criterion
+     */
+    static ICriterion likes(String attName, String text) {
+        return new StringMatchCriterion(attName, MatchType.LIKE, text);
     }
 
     /**

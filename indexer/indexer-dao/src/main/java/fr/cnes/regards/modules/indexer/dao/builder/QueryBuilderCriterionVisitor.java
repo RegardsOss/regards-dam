@@ -86,6 +86,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
                 return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue);
             case CONTAINS:
                 return QueryBuilders.regexpQuery(attName + KEYWORD, ".*" + searchValue + ".*");
+            case LIKE:
+                return QueryBuilders.regexpQuery(attName + KEYWORD, searchValue);
             default:
                 return null;
         }

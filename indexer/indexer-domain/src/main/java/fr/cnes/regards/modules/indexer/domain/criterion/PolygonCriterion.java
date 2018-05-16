@@ -22,6 +22,11 @@ public class PolygonCriterion implements ICriterion {
     }
 
     @Override
+    public ICriterion copy() {
+        return new PolygonCriterion(this.coordinates.clone());
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitPolygonCriterion(this);
     }

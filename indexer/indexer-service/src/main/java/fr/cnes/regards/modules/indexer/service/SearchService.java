@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +27,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,17 +50,12 @@ import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 @Service
 public class SearchService implements ISearchService {
 
-    /**
-     * Class logger
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
-
     @Autowired
     private IEsRepository repository;
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends IIndexable> T get(final UniformResourceName urn) {
+    public <T extends IIndexable> T get(UniformResourceName urn) {
         Class<? extends IIndexable> clazz;
         switch (urn.getEntityType()) {
             case COLLECTION:
@@ -83,31 +77,31 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public <T extends IIndexable> FacetPage<T> search(final SimpleSearchKey<T> searchKey, final Pageable pPageRequest,
-            final ICriterion pCriterion, final Map<String, FacetType> pFacetsMap) {
-        return repository.search(searchKey, pPageRequest, pCriterion, pFacetsMap);
+    public <T extends IIndexable> FacetPage<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,
+            ICriterion criterion, Map<String, FacetType> facetsMap) {
+        return repository.search(searchKey, pageRequest, criterion, facetsMap);
     }
 
     @Override
-    public <S, T extends IIndexable> FacetPage<T> search(final JoinEntitySearchKey<S, T> searchKey,
-            final Pageable pageRequest, final ICriterion pCriterion, Predicate<T> searchResultFilter) {
+    public <S, T extends IIndexable> FacetPage<T> search(JoinEntitySearchKey<S, T> searchKey, Pageable pageRequest,
+            ICriterion criterion, Predicate<T> searchResultFilter) {
 
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
-        final SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(),
-                                                                    searchKey.getSearchTypeMap(), String[].class);
+        SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(), searchKey.getSearchTypeMap(),
+                                                              String[].class);
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
-        final Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (
+        Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (
                 Searches.TYPE_MAP.get(UniformResourceName.fromString(tag).getEntityType()) == searchKey
                         .getResultClass());
         // Function to get Entity from its ipId (URN) (from Elasticsearch)
-        final Function<String, T> toAskedEntityFct = tag -> repository
+        Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
                      tag, searchKey.getResultClass());
-        List<T> objects = repository.search(tagSearchKey, pCriterion, "tags", askedTypePredicate, toAskedEntityFct);
+        List<T> objects = repository.search(tagSearchKey, criterion, "tags", askedTypePredicate, toAskedEntityFct);
         if (searchResultFilter != null) {
             objects = objects.stream().filter(searchResultFilter).collect(Collectors.toList());
         }
-        final int total = objects.size();
+        int total = objects.size();
         if (!objects.isEmpty()) {
             objects = objects.subList(pageRequest.getOffset(),
                                       Math.min(pageRequest.getOffset() + pageRequest.getPageSize(), objects.size()));
@@ -116,21 +110,31 @@ public class SearchService implements ISearchService {
     }
 
     @Override
-    public <T> Page<T> multiFieldsSearch(final SearchKey<T, T> pSearchKey, final Pageable pPageRequest,
-            final Object pValue, final String... pFields) {
-        return repository.multiFieldsSearch(pSearchKey, pPageRequest, pValue, pFields);
+    public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object value,
+            String... fields) {
+        return repository.multiFieldsSearch(searchKey, pageRequest, value, fields);
     }
 
     @Override
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, String... fileTypes) {
-        return repository.computeDataFilesSummary(searchKey, crit, discriminantProperty, fileTypes);
+            ICriterion criterion, String discriminantProperty, String... fileTypes) {
+        DocFilesSummary summary = new DocFilesSummary();
+        // Adjust criterion to search for internal data
+        ICriterion internalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", true));
+        repository.computeInternalDataFilesSummary(searchKey, internalCrit, discriminantProperty, summary, fileTypes);
+        // Adjust criterion to search for external data (=> internal is false and all at least one searched file type
+        // has an uri starting with http or https
+        ICriterion filterUriCrit = ICriterion.or(Arrays.stream(fileTypes).map(fileType -> ICriterion
+                .likes("files." + fileType + ".uri", "https?://.*")).collect(Collectors.toList()));
+        ICriterion externalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", false), filterUriCrit);
+        repository.computeExternalDataFilesSummary(searchKey, externalCrit, discriminantProperty, summary, fileTypes);
+        return summary;
     }
 
     @Override
-    public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+    public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion criterion,
             String attName, int maxCount) {
-        SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, crit, attName, maxCount);
+        SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, criterion, attName, maxCount);
         return values.stream().limit(maxCount).collect(Collectors.toList());
     }
 }

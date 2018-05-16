@@ -92,33 +92,31 @@ public interface ISearchService {
     /**
      * Searching specified page of elements from index giving page size
      * @param searchKey the search key
-     * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
+     * @param pageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
-     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
+     * @param fields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
      * too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */
-    <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue, String... pFields);
+    <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object pValue, String... fields);
 
-    default <T> Page<T> multiFieldsSearch(final SearchKey<T, T> searchKey, final int pageSize, final Object pValue,
-            final String... pFields) {
-        return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), pValue, pFields);
+    default <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, int pageSize, Object value, String... fields) {
+        return multiFieldsSearch(searchKey, new PageRequest(0, pageSize), value, fields);
     }
 
-    default <S, R extends IIndexable> Page<R> search(final JoinEntitySearchKey<S, R> searchKey, final int pageSize,
-            final ICriterion pCriterion) {
-        return this.search(searchKey, new PageRequest(0, pageSize), pCriterion);
+    default <S, R extends IIndexable> Page<R> search(JoinEntitySearchKey<S, R> searchKey, int pageSize,
+            ICriterion criterion) {
+        return this.search(searchKey, new PageRequest(0, pageSize), criterion);
     }
 
-    default <T extends IIndexable> Page<T> search(final SimpleSearchKey<T> searchKey, final int pPageSize,
-            final ICriterion criterion) {
-        return search(searchKey, new PageRequest(0, pPageSize), criterion);
+    default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, int pageSize, ICriterion criterion) {
+        return search(searchKey, new PageRequest(0, pageSize), criterion);
     }
 
-    default <T extends IIndexable> Page<T> search(final SimpleSearchKey<T> searchKey, final Pageable pPageRequest,
-            final ICriterion criterion) {
-        return search(searchKey, pPageRequest, criterion, null);
+    default <T extends IIndexable> Page<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,
+            ICriterion criterion) {
+        return search(searchKey, pageRequest, criterion, null);
     }
 
     /**
@@ -133,6 +131,6 @@ public interface ISearchService {
     /**
      * Search for alphabeticly sorted top maxCount values of given attribute following given request
      */
-    <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+    <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion criterion,
             String attName, int maxCount);
 }

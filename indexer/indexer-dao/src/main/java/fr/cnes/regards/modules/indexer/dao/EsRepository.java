@@ -1241,49 +1241,23 @@ public class EsRepository implements IEsRepository {
     }
 
     @Override
-    public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, String... fileTypes) {
+    public <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes) {
         try {
             if ((fileTypes == null) || (fileTypes.length == 0)) {
-                throw new IllegalArgumentException("At least on file type must be provided");
+                throw new IllegalArgumentException("At least one file type must be provided");
             }
             SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
-            // Add aggregations to manage compute summary
-            // First "global" aggregations on each asked file types
-            for (String fileType : fileTypes) {
-                // file count
-                builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                                            .field("files." + fileType + ".size")); // Only count files with a size
-                // file size sum
-                builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
-                                            .field("files." + fileType + ".size"));
-            }
-            // Then bucket aggregation by discriminants
-            String termsFieldProperty = discriminantProperty;
-            if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
-                termsFieldProperty += ".keyword";
-            }
-            // Discriminant distribution aggregator
-            TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
-                    .field(termsFieldProperty).size(Integer.MAX_VALUE);
-            // and "total" aggregations on each asked file types
-            for (String fileType : fileTypes) {
-                // files count
-                termsAggBuilder.subAggregation(
-                        AggregationBuilders.count(fileType + "_files_count").field("files." + fileType + ".size"));
-                // file size sum
-                termsAggBuilder.subAggregation(
-                        AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));
-            }
-            builder.aggregation(termsAggBuilder);
+            // Add files count and files sum size aggregations
+            addFilesCountAndSumAggs(searchKey, discriminantProperty, builder, fileTypes);
 
             SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
                     .source(builder);
             // Launch the request
             SearchResponse response = client.search(request);
-            DocFilesSummary summary = new DocFilesSummary();
+
             // First "global" aggregations results
-            summary.setDocumentsCount(response.getHits().getTotalHits());
+            summary.addDocumentsCount(response.getHits().getTotalHits());
             Aggregations aggs = response.getAggregations();
             long totalFileCount = 0;
             long totalFileSize = 0;
@@ -1293,14 +1267,18 @@ public class EsRepository implements IEsRepository {
                 Sum sum = aggs.get("total_" + fileType + "_files_size");
                 totalFileSize += sum.getValue();
             }
-            summary.setFilesCount(totalFileCount);
-            summary.setFilesSize(totalFileSize);
+            summary.addFilesCount(totalFileCount);
+            summary.addFilesSize(totalFileSize);
             // Then discriminants buckets aggregations results
             Terms buckets = aggs.get(discriminantProperty);
             for (Terms.Bucket bucket : buckets.getBuckets()) {
+                // Usualy discriminant = tag name
                 String discriminant = bucket.getKeyAsString();
-                DocFilesSubSummary discSummary = new DocFilesSubSummary();
-                discSummary.setDocumentsCount(bucket.getDocCount());
+                if (!summary.getSubSummariesMap().containsKey(discriminant)) {
+                    summary.getSubSummariesMap().put(discriminant, new DocFilesSubSummary(fileTypes));
+                }
+                DocFilesSubSummary discSummary = summary.getSubSummariesMap().get(discriminant);
+                discSummary.addDocumentsCount(bucket.getDocCount());
                 Aggregations discAggs = bucket.getAggregations();
                 long filesCount = 0;
                 long filesSize = 0;
@@ -1309,16 +1287,123 @@ public class EsRepository implements IEsRepository {
                     filesCount += valueCount.getValue();
                     Sum sum = discAggs.get(fileType + "_files_size");
                     filesSize += sum.getValue();
-                    discSummary.getFileTypesSummaryMap()
-                            .put(fileType, new FilesSummary(valueCount.getValue(), (long) sum.getValue()));
+                    FilesSummary filesSummary = discSummary.getFileTypesSummaryMap().get(fileType);
+                    filesSummary.addFilesCount(valueCount.getValue());
+                    filesSummary.addFilesSize((long) sum.getValue());
                 }
-                discSummary.setFilesCount(filesCount);
-                discSummary.setFilesSize(filesSize);
-                summary.getSubSummariesMap().put(discriminant, discSummary);
+                discSummary.addFilesCount(filesCount);
+                discSummary.addFilesSize(filesSize);
+
             }
-            return summary;
         } catch (IOException e) {
             throw new RsRuntimeException(e);
         }
+    }
+
+    private <T extends IIndexable & IDocFiles> void addFilesCountAndSumAggs(SearchKey<T, T> searchKey,
+            String discriminantProperty, SearchSourceBuilder builder, String[] fileTypes) throws IOException {
+        // Add aggregations to manage compute summary
+        // First "global" aggregations on each asked file types
+        for (String fileType : fileTypes) {
+            // file count
+            builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
+                                        .field("files." + fileType + ".size")); // Only count files with a size
+            // file size sum
+            builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
+                                        .field("files." + fileType + ".size"));
+        }
+        // Then bucket aggregation by discriminants
+        String termsFieldProperty = discriminantProperty;
+        if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
+            termsFieldProperty += ".keyword";
+        }
+        // Discriminant distribution aggregator
+        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
+                .field(termsFieldProperty).size(Integer.MAX_VALUE);
+        // and "total" aggregations on each asked file types
+        for (String fileType : fileTypes) {
+            // files count
+            termsAggBuilder.subAggregation(
+                    AggregationBuilders.count(fileType + "_files_count").field("files." + fileType + ".size"));
+            // file size sum
+            termsAggBuilder.subAggregation(
+                    AggregationBuilders.sum(fileType + "_files_size").field("files." + fileType + ".size"));
+        }
+        builder.aggregation(termsAggBuilder);
+    }
+
+    @Override
+    public <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes) {
+        try {
+            if ((fileTypes == null) || (fileTypes.length == 0)) {
+                throw new IllegalArgumentException("At least one file type must be provided");
+            }
+
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, crit);
+            // Add files count aggregation
+            addFilesCountAgg(searchKey, discriminantProperty, builder, fileTypes);
+
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            // First "global" aggregations results
+            summary.addDocumentsCount(response.getHits().getTotalHits());
+            Aggregations aggs = response.getAggregations();
+            long totalFileCount = 0;
+            for (String fileType : fileTypes) {
+                ValueCount valueCount = aggs.get("total_" + fileType + "_files_count");
+                totalFileCount += valueCount.getValue();
+            }
+            summary.addFilesCount(totalFileCount);
+            // Then discriminants buckets aggregations results
+            Terms buckets = aggs.get(discriminantProperty);
+            for (Terms.Bucket bucket : buckets.getBuckets()) {
+                String discriminant = bucket.getKeyAsString();
+                if (!summary.getSubSummariesMap().containsKey(discriminant)) {
+                    summary.getSubSummariesMap().put(discriminant, new DocFilesSubSummary(fileTypes));
+                }
+                DocFilesSubSummary discSummary = summary.getSubSummariesMap().get(discriminant);
+                discSummary.addDocumentsCount(bucket.getDocCount());
+                Aggregations discAggs = bucket.getAggregations();
+                long filesCount = 0;
+                for (String fileType : fileTypes) {
+                    ValueCount valueCount = discAggs.get(fileType + "_files_count");
+                    filesCount += valueCount.getValue();
+                    discSummary.getFileTypesSummaryMap().get(fileType).addFilesCount(valueCount.getValue());
+                }
+                discSummary.addFilesCount(filesCount);
+            }
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+    }
+
+    private <T extends IIndexable & IDocFiles> void addFilesCountAgg(SearchKey<T, T> searchKey,
+            String discriminantProperty, SearchSourceBuilder builder, String[] fileTypes) throws IOException {
+        // Add aggregations to manage compute summary
+        // First "global" aggregations on each asked file types
+        for (String fileType : fileTypes) {
+            // file count
+            builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
+                                        .field("files." + fileType
+                                                       + ".uri.keyword")); // Only count files with a size
+        }
+        // Then bucket aggregation by discriminants
+        String termsFieldProperty = discriminantProperty;
+        if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
+            termsFieldProperty += ".keyword";
+        }
+        // Discriminant distribution aggregator
+        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
+                .field(termsFieldProperty).size(Integer.MAX_VALUE);
+        // and "total" aggregations on each asked file types
+        for (String fileType : fileTypes) {
+            // files count
+            termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
+                                                   .field("files." + fileType + ".uri.keyword"));
+        }
+        builder.aggregation(termsAggBuilder);
     }
 }

@@ -41,6 +41,10 @@ public class ValueComparison<T extends Comparable<? super T>> implements Compara
         this.value = value;
     }
 
+    public ValueComparison<T> copy() {
+        return new ValueComparison<>(this.operator, this.value);
+    }
+
     // hashCode() and equals() use only operator because ValueComparison is used
     // into a set and must not be encountered twice with same operator
     @Override
