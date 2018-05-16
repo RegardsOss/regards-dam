@@ -61,7 +61,7 @@ public class EntityAdapterFactory extends PolymorphicTypeAdapterFactory<Abstract
         registerSubtype(Collection.class, EntityType.COLLECTION);
         registerSubtype(Dataset.class, EntityType.DATASET);
         registerSubtype(Document.class, EntityType.DOCUMENT);
-        registerSubtype(DataObject.class, EntityType.DATA);
+        registerSubtype(DataObject.class, EntityType.DATA, true);
     }
 
     @Override

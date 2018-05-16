@@ -3,6 +3,7 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A range criterion defines a range of value comparisons for a named property.<br/>
@@ -16,14 +17,14 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     /**
      * Set of comparisons (att > 0, att <= 25.34, etc...)
      */
-    private final Set<ValueComparison<T>> valueComparisons = new HashSet<>();
+    protected final Set<ValueComparison<T>> valueComparisons = new HashSet<>();
 
-    protected RangeCriterion(String pName) {
-        super(pName);
+    protected RangeCriterion(String name) {
+        super(name);
     }
 
-    public void addValueComparison(ValueComparison<T> pValueComparison) {
-        valueComparisons.add(pValueComparison);
+    public void addValueComparison(ValueComparison<T> valueComparison) {
+        valueComparisons.add(valueComparison);
     }
 
     public Set<ValueComparison<T>> getValueComparisons() {
@@ -31,8 +32,15 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitRangeCriterion(this);
+    public RangeCriterion<T> copy() {
+        RangeCriterion<T> copy = new RangeCriterion<>(super.name);
+        copy.valueComparisons.addAll(this.valueComparisons.stream().map(ValueComparison::copy).collect(Collectors.toSet()));
+        return copy;
+    }
+
+    @Override
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitRangeCriterion(this);
     }
 
     @Override

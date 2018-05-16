@@ -12,6 +12,11 @@ public class BooleanMatchCriterion extends AbstractMatchCriterion<Boolean> {
     }
 
     @Override
+    public ICriterion copy() {
+        return new BooleanMatchCriterion(super.name, super.value);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitBooleanMatchCriterion(this);
     }

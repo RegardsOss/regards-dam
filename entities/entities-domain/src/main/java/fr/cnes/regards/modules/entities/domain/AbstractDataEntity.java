@@ -76,7 +76,7 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
      * @return true if at least one associated file (through "files" property) is physically available (cf. Storage).
      * This concerns only RAW_DATA and all QUICKLOOKS
      */
-    public boolean containsPhysicalData() {
+    protected boolean containsPhysicalData() {
         return Multimaps.filterKeys(files, k -> {
             switch (k) {
                 case RAWDATA:
@@ -90,7 +90,11 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
         }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
     }
 
-    public boolean canBeExternallyDownloaded() {
+    /**
+     * @return true if at least one associated file (through "files" property) can be externally downloaded
+     * This concerns only RAW_DATA and all QUICKLOOKS
+     */
+    protected boolean canBeExternallyDownloaded() {
         return Multimaps.filterKeys(files, k -> {
             switch (k) {
                 case RAWDATA:
@@ -102,6 +106,13 @@ public abstract class AbstractDataEntity extends AbstractEntity implements IDocF
                     return false;
             }
         }).values().stream().filter(DataFile::canBeExternallyDownloaded).findAny().isPresent();
+    }
+
+    /**
+     * Update downloadable property on all files
+     */
+    public void updateDownloadable() {
+        Multimaps.filterKeys(files, k -> k == DataType.RAWDATA).values().forEach(DataFile::isDownloadable);
     }
 
     @Override

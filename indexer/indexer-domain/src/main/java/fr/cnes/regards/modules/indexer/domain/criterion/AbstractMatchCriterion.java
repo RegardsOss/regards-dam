@@ -10,12 +10,12 @@ public abstract class AbstractMatchCriterion<T> extends AbstractPropertyCriterio
     /**
      * Matching type
      */
-    private MatchType type;
+    protected MatchType type;
 
     /**
      * Value to be matched
      */
-    private T value;
+    protected T value;
 
     private AbstractMatchCriterion(String name) {
         super(name);

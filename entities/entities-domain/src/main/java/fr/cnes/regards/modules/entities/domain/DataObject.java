@@ -130,16 +130,15 @@ public class DataObject extends AbstractDataEntity {
         this.internal = internal;
     }
 
-    @Override
-    public boolean containsPhysicalData() {
+    /**
+     * Update both containsPhysiclaData and canBeExternallyDownloaded properties on DataObject AND downloadable property
+     * on all associated files.
+     * Theses properties are needed by frontend
+     */
+    public void updateJsonSpecificProperties() {
         containsPhysicalData = super.containsPhysicalData();
-        return containsPhysicalData;
-    }
-
-    @Override
-    public boolean canBeExternallyDownloaded() {
         canBeExternallyDownloaded = super.canBeExternallyDownloaded();
-        return canBeExternallyDownloaded;
+        super.updateDownloadable();
     }
 
     @Override

@@ -20,10 +20,6 @@ public class DocFilesSummary extends AbstractDocSummary {
 
     }
 
-    public DocFilesSummary(long documentsCount, long filesCount, long filesSize) {
-        super(documentsCount, filesCount, filesSize);
-    }
-
     public Map<String, DocFilesSubSummary> getSubSummariesMap() {
         return subSummariesMap;
     }

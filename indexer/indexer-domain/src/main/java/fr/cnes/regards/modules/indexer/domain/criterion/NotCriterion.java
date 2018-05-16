@@ -24,6 +24,11 @@ public class NotCriterion implements ICriterion {
     }
 
     @Override
+    public NotCriterion copy() {
+        return new NotCriterion(this.criterion.copy());
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitNotCriterion(this);
     }

@@ -69,6 +69,12 @@ public class DataFile {
 
     private Integer imageHeight;
 
+    /**
+     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search through
+     * DataObject updating.
+     */
+    private Boolean downloadable = null;
+
     public URI getUri() {
         return URI.create(uri);
     }
@@ -163,7 +169,8 @@ public class DataFile {
      * OR external (ie not managed by storage) and uri starts with http
      */
     public boolean isDownloadable() {
-        return ((online != null) && online) || canBeExternallyDownloaded();
+        downloadable = ((online != null) && online) || canBeExternallyDownloaded();
+        return downloadable;
     }
 
     @Override
