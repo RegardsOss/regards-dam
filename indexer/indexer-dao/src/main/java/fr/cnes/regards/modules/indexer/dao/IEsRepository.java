@@ -397,13 +397,29 @@ public interface IEsRepository {
     <T> void searchAll(SearchKey<T, T> searchKey, Consumer<T> pAction, ICriterion crit);
 
     /**
-     * Compute a DocFilesSummary for given request distributing results based on disciminantProperty for given file
-     * types
+     * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
+     * types. Only internal data files with a strictly positive size are taken into account. This size is used to count
+     * files and to compute sum.
+     * @see DocFilesSummary
+     * @param discriminantProperty property used to distribute computed sub-summaries (usually "tags")
+     * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
      * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
-     * @return the compmuted summary
      */
-    <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, String... fileTypes);
+    <T extends IIndexable & IDocFiles> void computeInternalDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes);
+
+    /**
+     * Fill DocFilesSummary for given request distributing results based on discriminantProperty for given file
+     * types. Only external data files with an http or https uri are taken into account. This uri is used to count
+     * files. No sum is computed.
+     * @see DocFilesSummary
+     * @param discriminantProperty property used to distribute computed sub-summaries (usually "tags")
+     * @param fileTypes file types concerned by the computation (usually RAWDATA, QUICKLOOK_(HD|MD|SD))
+     * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     */
+    <T extends IIndexable & IDocFiles> void computeExternalDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, DocFilesSummary summary, String... fileTypes);
+
 
     /**
      * Close Client

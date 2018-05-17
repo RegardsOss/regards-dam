@@ -17,11 +17,10 @@ public class DocFilesSummary extends AbstractDocSummary {
     private final Map<String, DocFilesSubSummary> subSummariesMap = new HashMap<>();
 
     public DocFilesSummary() {
-
     }
 
     public DocFilesSummary(long documentsCount, long filesCount, long filesSize) {
-        super(documentsCount, filesCount, filesSize);
+        super(filesCount, filesSize, documentsCount);
     }
 
     public Map<String, DocFilesSubSummary> getSubSummariesMap() {

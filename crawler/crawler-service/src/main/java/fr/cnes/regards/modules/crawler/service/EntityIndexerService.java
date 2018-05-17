@@ -455,8 +455,9 @@ public class EntityIndexerService implements IEntityIndexerService {
         }
         int createdCount = esRepos.saveBulk(tenant, toSaveObjects);
         if (createdCount != 0) {
+            // Ingest needs to know when an internal DataObject is indexed
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                       toSaveObjects.stream().filter(DataObject::isInternal)
                                                                .map(DataObject::getIpId)
                                                                .toArray(n -> new UniformResourceName[n])));
         }
@@ -540,8 +541,9 @@ public class EntityIndexerService implements IEntityIndexerService {
         // has same size as page.getContent() or is empty
         int savedCount = esRepos.saveBulk(tenant, toSaveObjects);
         if (savedCount != 0) {
+            // Ingest needs to know when an internal DataObject is indexed
             publisher.publish(new BroadcastEntityEvent(EventType.INDEXED,
-                                                       toSaveObjects.stream().filter(DataObject::containsPhysicalData)
+                                                       toSaveObjects.stream().filter(DataObject::isInternal)
                                                                .map(DataObject::getIpId)
                                                                .toArray(n -> new UniformResourceName[n])));
         }

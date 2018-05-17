@@ -1,5 +1,7 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
 
 /**
@@ -14,6 +16,11 @@ public final class AndCriterion extends AbstractMultiCriterion implements ICrite
 
     AndCriterion(Iterable<ICriterion> criteria) {
         this.criterions = Lists.newArrayList(criteria);
+    }
+
+    @Override
+    public AndCriterion copy() {
+        return new AndCriterion(this.criterions.stream().map(ICriterion::copy).collect(Collectors.toList()));
     }
 
     @Override

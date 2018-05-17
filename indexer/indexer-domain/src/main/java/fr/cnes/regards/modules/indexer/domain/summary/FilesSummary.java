@@ -1,7 +1,7 @@
 package fr.cnes.regards.modules.indexer.domain.summary;
 
 /**
- * A simple POJO that contains filesCount and filesSize prop)erties
+ * A simple POJO that contains filesCount and filesSize properties
  * @author oroussel
  */
 public class FilesSummary {
@@ -21,16 +21,17 @@ public class FilesSummary {
         return filesCount;
     }
 
-    public void setFilesCount(long filesCount) {
-        this.filesCount = filesCount;
+    public void addFilesCount(long filesCount) {
+        this.filesCount += filesCount;
     }
 
     public long getFilesSize() {
         return filesSize;
     }
 
-    public void setFilesSize(long filesSize) {
-        this.filesSize = filesSize;
+
+    public void addFilesSize(long filesSize) {
+        this.filesSize += filesSize;
     }
 
     @Override

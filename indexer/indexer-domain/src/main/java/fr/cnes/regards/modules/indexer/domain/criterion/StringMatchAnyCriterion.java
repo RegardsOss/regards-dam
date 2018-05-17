@@ -13,6 +13,11 @@ public class StringMatchAnyCriterion extends AbstractMatchCriterion<String[]> {
     }
 
     @Override
+    public StringMatchAnyCriterion copy() {
+        return new StringMatchAnyCriterion(super.name, super.value);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitStringMatchAnyCriterion(this);
     }

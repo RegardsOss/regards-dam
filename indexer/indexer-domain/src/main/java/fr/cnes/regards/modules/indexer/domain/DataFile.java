@@ -54,7 +54,9 @@ public class DataFile {
     private String name;
 
     /**
-     * Is the file online ?
+     * Is the file online ? (if not, it is NEARLINE)
+     * Boolean is used better than boolean because in case DataObject is external (not managed by rs_storage), this
+     * concept doesn't exist and so online is null
      */
     private Boolean online;
 
@@ -66,6 +68,12 @@ public class DataFile {
     private Integer imageWidth;
 
     private Integer imageHeight;
+
+    /**
+     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search through
+     * DataObject updating.
+     */
+    private Boolean downloadable = null;
 
     public URI getUri() {
         return URI.create(uri);
@@ -140,10 +148,29 @@ public class DataFile {
     }
 
     /**
+     * Is this file managed internally by regards (in fact storage) and so can be downloaded (regardless user rights) ?
+     * Its size must be present if yes
      * @return true if associated file can be downloaded/ordered from Regards (online or nearline)
      */
     public boolean isPhysicallyAvailable() {
-        return (size != null) && (size > 0l);
+        return (online != null) && (size != null) && (size > 0l);
+    }
+
+    /**
+     * Is this file not managed internally by regards can be downloaded ?
+     * @return true is associated file url starts with http or https
+     */
+    public boolean canBeExternallyDownloaded() {
+        return (online == null) && (uri != null) && (uri.startsWith("http") || uri.startsWith("https"));
+    }
+
+    /**
+     * A DataFile is downloadable IF it is managed by storage (=> online != null) and is ONLINE
+     * OR external (ie not managed by storage) and uri starts with http
+     */
+    public boolean isDownloadable() {
+        downloadable = ((online != null) && online) || canBeExternallyDownloaded();
+        return downloadable;
     }
 
     @Override

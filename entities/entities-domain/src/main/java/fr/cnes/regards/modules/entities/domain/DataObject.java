@@ -53,16 +53,31 @@ public class DataObject extends AbstractDataEntity {
     private DataObjectMetadata metadata = new DataObjectMetadata();
 
     /**
+     * A data object can be internal (created from AIP) or external (created from external Database).
+     * If internal, this means it is managed by storage (in this case, all files are ONLINE or NEARLINE).
+     * By default, to provide ascendant compatibility, a DataObject is internal (event if it is not the case on already
+     * created dataObjects)
+     * @see fr.cnes.regards.modules.indexer.domain.DataFile#online
+     */
+    private boolean internal = true;
+
+    /**
      * This field only exists for Gson serialization (used by frontent)
-     * Indicates if a physical file (ie a RAWDATA) exists with this data object
+     * Indicates if a physical file (ie a RAWDATA or QUICKLOOK) exists with this data object
      */
     private Boolean containsPhysicalData = null;
+
+    /**
+     * This field only exists for Gson serialization (used by frontent)
+     * Indicates if an external allowingDownload file (ie a RAWDATA or QUICKLOOK) exists with this data object
+     */
+    private Boolean canBeExternallyDownloaded = null;
 
     /**
      * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search.
      * Indicates if user who made the search has the RIGHT to download associated DATA
      */
-    private Boolean downloadable = null;
+    private Boolean allowingDownload = null;
 
     public DataObject(Model model, String tenant, String label) {
         super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
@@ -99,18 +114,31 @@ public class DataObject extends AbstractDataEntity {
         this.metadata = metadata;
     }
 
-    public Boolean getDownloadable() {
-        return downloadable;
+    public Boolean getAllowingDownload() {
+        return allowingDownload;
     }
 
-    public void setDownloadable(Boolean downloadable) {
-        this.downloadable = downloadable;
+    public void setAllowingDownload(Boolean allowingDownload) {
+        this.allowingDownload = allowingDownload;
     }
 
-    @Override
-    public boolean containsPhysicalData() {
+    public boolean isInternal() {
+        return internal;
+    }
+
+    public void setInternal(boolean internal) {
+        this.internal = internal;
+    }
+
+    /**
+     * Update both containsPhysiclaData and canBeExternallyDownloaded properties on DataObject AND downloadable property
+     * on all associated files.
+     * Theses properties are needed by frontend
+     */
+    public void updateJsonSpecificProperties() {
         containsPhysicalData = super.containsPhysicalData();
-        return containsPhysicalData;
+        canBeExternallyDownloaded = super.canBeExternallyDownloaded();
+        super.updateDownloadable();
     }
 
     @Override

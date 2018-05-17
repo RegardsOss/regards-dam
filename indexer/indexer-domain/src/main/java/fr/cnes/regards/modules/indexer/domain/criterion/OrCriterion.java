@@ -1,5 +1,7 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
+import java.util.stream.Collectors;
+
 import com.google.common.collect.Lists;
 
 /**
@@ -19,6 +21,11 @@ public final class OrCriterion extends AbstractMultiCriterion implements ICriter
     @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitOrCriterion(this);
+    }
+
+    @Override
+    public OrCriterion copy() {
+        return new OrCriterion(this.criterions.stream().map(ICriterion::copy).collect(Collectors.toList()));
     }
 
     @Override

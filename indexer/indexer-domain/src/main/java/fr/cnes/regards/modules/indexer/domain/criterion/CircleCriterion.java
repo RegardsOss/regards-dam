@@ -32,6 +32,11 @@ public class CircleCriterion implements ICriterion {
     }
 
     @Override
+    public CircleCriterion copy() {
+        return new CircleCriterion(this.coordinates.clone(), this.radius);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitCircleCriterion(this);
     }

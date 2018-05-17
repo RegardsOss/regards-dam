@@ -28,6 +28,11 @@ public class FieldExistsCriterion extends AbstractPropertyCriterion {
     }
 
     @Override
+    public FieldExistsCriterion copy() {
+        return new FieldExistsCriterion(super.name);
+    }
+
+    @Override
     public <U> U accept(ICriterionVisitor<U> visitor) {
         return visitor.visitFieldExistsCriterion(this);
     }
