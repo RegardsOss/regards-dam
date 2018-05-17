@@ -10,6 +10,11 @@ public abstract class AbstractDocSummary extends FilesSummary {
     protected AbstractDocSummary() {
     }
 
+    protected AbstractDocSummary(long filesCount, long filesSize, long documentsCount) {
+        super(filesCount, filesSize);
+        this.documentsCount = documentsCount;
+    }
+
     public long getDocumentsCount() {
         return documentsCount;
     }

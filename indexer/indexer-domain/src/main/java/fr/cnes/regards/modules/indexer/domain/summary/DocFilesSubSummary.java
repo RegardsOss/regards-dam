@@ -11,6 +11,13 @@ public class DocFilesSubSummary extends AbstractDocSummary {
 
     private final Map<String, FilesSummary> fileTypesSummaryMap = new HashMap<>();
 
+    public DocFilesSubSummary(long documentsCount, long filesCount, long filesSize,  String... fileTypes) {
+        super(filesCount, filesSize, documentsCount);
+        for (String fileType : fileTypes) {
+            fileTypesSummaryMap.put(fileType, new FilesSummary());
+        }
+    }
+
     /**
      * Constructor
      * @param fileTypes to initialise map

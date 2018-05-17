@@ -12,6 +12,11 @@ public class FilesSummary {
     public FilesSummary() {
     }
 
+    public FilesSummary(long filesCount, long filesSize) {
+        this.filesCount = filesCount;
+        this.filesSize = filesSize;
+    }
+
     public long getFilesCount() {
         return filesCount;
     }
