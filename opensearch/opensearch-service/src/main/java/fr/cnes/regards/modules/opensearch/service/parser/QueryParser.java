@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -30,6 +30,7 @@ import org.apache.lucene.queryparser.flexible.standard.processors.StandardQueryN
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.builder.RegardsQueryTreeBuilder;
@@ -81,17 +82,14 @@ public class QueryParser extends QueryParserHelper implements IParser {
         return "<QueryParser config=\"" + this.getQueryConfigHandler() + "\"/>";
     }
 
-    /* (non-Javadoc)
-     * @see fr.cnes.regards.modules.opensearch.service.IParser#parse(java.util.Map)
-     */
     @Override
-    public ICriterion parse(Map<String, String> pParameters) throws OpenSearchParseException {
+    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
 
-        String q = pParameters.get(QUERY_PARAMETER);
+        String q = parameters.get(QUERY_PARAMETER);
 
         // Check required query parameter
-        if (q == null) {
-            return null;
+        if (Strings.isNullOrEmpty(q)) {
+            return ICriterion.all();
         }
         try {
             return (ICriterion) super.parse(q, DEFAULT_FIELD);
@@ -109,14 +107,14 @@ public class QueryParser extends QueryParserHelper implements IParser {
      * <p>
      * Default: false.
      */
-    public void setAllowLeadingWildcard(final boolean allowLeadingWildcard) {
+    public final void setAllowLeadingWildcard(final boolean allowLeadingWildcard) {
         getQueryConfigHandler().set(ConfigurationKeys.ALLOW_LEADING_WILDCARD, allowLeadingWildcard);
     }
 
     /**
      * Enable or disable lowercase regexp transformation
      */
-    public void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
+    public final void setLowercaseExpandedTerms(final boolean lowercaseExpandedTerms) {
         getQueryConfigHandler().set(ConfigurationKeys.LOWERCASE_EXPANDED_TERMS, lowercaseExpandedTerms);
     }
 
@@ -128,7 +126,7 @@ public class QueryParser extends QueryParserHelper implements IParser {
      * <p>
      * Default: false.
      */
-    public void setEnablePositionIncrements(final boolean enabled) {
+    public final void setEnablePositionIncrements(final boolean enabled) {
         getQueryConfigHandler().set(ConfigurationKeys.ENABLE_POSITION_INCREMENTS, enabled);
     }
 

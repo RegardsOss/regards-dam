@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -40,7 +40,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.*;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotEmptyException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
@@ -106,7 +110,7 @@ public class FragmentServiceTest {
     @Before
     public void beforeTest() {
         fragmentService = new FragmentService(mockFragmentR, mockAttModelR, mockAttModelS,
-                                              Mockito.mock(IPublisher.class));
+                Mockito.mock(IPublisher.class));
     }
 
     @Test
@@ -116,7 +120,7 @@ public class FragmentServiceTest {
         final Fragment expected = Fragment.buildFragment(TEST_FRAG_NAME, TEST_FRAG_DESC);
 
         Mockito.when(mockFragmentR.findByName(TEST_FRAG_NAME)).thenReturn(null);
-        //lets consider there is no attribute created yet
+        // lets consider there is no attribute created yet
         Mockito.when(mockAttModelS.isFragmentCreatable(TEST_FRAG_NAME)).thenReturn(true);
         Mockito.when(mockFragmentR.save(expected)).thenReturn(expected);
 
@@ -135,7 +139,7 @@ public class FragmentServiceTest {
         fragmentService.addFragment(expected);
     }
 
-    @Test(expected = EntityNotIdentifiableException.class)
+    @Test(expected = EntityNotFoundException.class)
     public void updateNotIdetnfiableFragmentTest() throws ModuleException {
         final Long fragmentId = 1L;
         final Fragment expected = Fragment.buildFragment(TEST_FRAG_NAME, TEST_FRAG_DESC);
@@ -205,9 +209,9 @@ public class FragmentServiceTest {
         // CHECKSTYLE:OFF
         attModels.add(AttributeModelBuilder.build("NAME", AttributeType.BOOLEAN, "ForTests").withoutRestriction());
         attModels.add(AttributeModelBuilder.build("PROFILE", AttributeType.STRING, "ForTests")
-                              .withEnumerationRestriction("public", "scientist", "user"));
+                .withEnumerationRestriction("public", "scientist", "user"));
         attModels.add(AttributeModelBuilder.build("DATA", AttributeType.DOUBLE_ARRAY, "ForTests")
-                              .description("physical data").withoutRestriction());
+                .description("physical data").withoutRestriction());
         // CHECKSTYLE:ON
 
         Mockito.when(mockFragmentR.exists(fragmentId)).thenReturn(true);

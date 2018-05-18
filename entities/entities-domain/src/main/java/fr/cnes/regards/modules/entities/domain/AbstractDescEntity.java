@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,11 +18,17 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 
 import com.google.gson.annotations.JsonAdapter;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.converter.DescriptionFileAdapter;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -35,7 +41,7 @@ public abstract class AbstractDescEntity extends AbstractEntity {
     /**
      * Description file
      */
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "description_file_id", foreignKey = @ForeignKey(name = "fk_entity_description_file"))
     @JsonAdapter(value = DescriptionFileAdapter.class)
     private DescriptionFile descriptionFile;
@@ -48,10 +54,17 @@ public abstract class AbstractDescEntity extends AbstractEntity {
         super(pModel, pIpId, pLabel);
     }
 
+    /**
+     * @return the description file
+     */
     public DescriptionFile getDescriptionFile() {
         return descriptionFile;
     }
 
+    /**
+     * Set the description file
+     * @param pDescriptionFile
+     */
     public void setDescriptionFile(DescriptionFile pDescriptionFile) {
         descriptionFile = pDescriptionFile;
     }

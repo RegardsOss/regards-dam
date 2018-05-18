@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -47,17 +47,14 @@ public class AttributeFinder implements IAttributeFinder {
         this.attributeModelCache = attributeModelCache;
     }
 
-    /* (non-Javadoc)
-     * @see fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder#findByName(java.lang.String)
-     */
     @Override
-    public AttributeModel findByName(String pName) throws OpenSearchUnknownParameter {
+    public AttributeModel findByName(String name) throws OpenSearchUnknownParameter {
 
         // Activate cache refresh if necessary
         attributeModelCache.getAttributeModels(runtimeTenantResolver.getTenant());
 
         // Check queryable static properties
-        return attributeModelCache.findByName(pName);
+        return attributeModelCache.findByName(name);
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -44,7 +44,7 @@ public class RegardsQueryTreeBuilder extends QueryTreeBuilder implements ICriter
 
     /**
      * Constructor
-     * @param pAttributeModelCache provides access to attribute models with caching facilities
+     * @param finder attribute finder
      */
     public RegardsQueryTreeBuilder(IAttributeFinder finder) {
 

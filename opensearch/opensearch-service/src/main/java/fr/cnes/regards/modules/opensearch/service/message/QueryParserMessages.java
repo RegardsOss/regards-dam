@@ -11,7 +11,7 @@ import org.apache.lucene.queryparser.flexible.messages.NLS;
  *
  * @author Xavier-Alexandre Brochard
  */
-public class QueryParserMessages extends NLS {
+public final class QueryParserMessages extends NLS {
 
     private static final String BUNDLE_NAME = QueryParserMessages.class.getName();
 

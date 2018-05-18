@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -24,6 +24,7 @@ import org.apache.lucene.queryparser.flexible.core.nodes.QueryNode;
 import org.apache.lucene.queryparser.flexible.messages.MessageImpl;
 import org.apache.lucene.queryparser.flexible.standard.nodes.PointQueryNode;
 
+import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
@@ -37,7 +38,6 @@ import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
  * Builds a {@link StringMatchCriterion} from a {@link FieldQueryNode} object when the value is a String.<br>
  * Builds a {@link IntMatchCriterion} from a {@link PointQueryNode} object when the value is an Integer.<br>
  * Builds a {@link RangeCriterion} from a {@link PointQueryNode} object when the value is a double.<br>
- *
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
@@ -49,8 +49,7 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
     private final IAttributeFinder finder;
 
     /**
-     * @param pAttributeModelCache
-     *            Service retrieving the up-to-date list of {@link AttributeModel}s
+     * @param finder Service permitting to retrieve up-to-date list of {@link AttributeModel}s
      */
     public FieldQueryNodeBuilder(IAttributeFinder finder) {
         super();
@@ -58,8 +57,8 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
     }
 
     @Override
-    public ICriterion build(final QueryNode pQueryNode) throws QueryNodeException { // NOSONAR
-        final FieldQueryNode fieldNode = (FieldQueryNode) pQueryNode;
+    public ICriterion build(final QueryNode queryNode) throws QueryNodeException { // NOSONAR
+        final FieldQueryNode fieldNode = (FieldQueryNode) queryNode;
 
         final String field = fieldNode.getFieldAsString();
         final String value = fieldNode.getValue().toString();
@@ -75,7 +74,20 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
         switch (attributeModel.getType()) {
             case INTEGER:
             case INTEGER_ARRAY:
-                return ICriterion.eq(field, Integer.parseInt(value));
+                /*
+                 * Important :
+                 * We have to do it because the value of the criterion returned by Elasticsearch is always a double value,
+                 * even if the value is an integer value.
+                 * For example, it did not work, then the open search criterion was : "property:26.0"
+                 */
+                int val;
+                try {
+                    val = Integer.parseInt(value);
+                } catch (NumberFormatException ex) {
+                    Double doubleValue = Double.parseDouble(value);
+                    val = doubleValue.intValue();
+                }
+                return ICriterion.eq(field, val);
             case DOUBLE:
             case DOUBLE_ARRAY:
                 Double asDouble = Double.parseDouble(value);
@@ -88,6 +100,8 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 return ICriterion.eq(field, value);
             case STRING_ARRAY:
                 return ICriterion.contains(field, value);
+            case DATE_ISO8601:
+                return ICriterion.eq(field, OffsetDateTimeAdapter.parse(value));
             default:
                 throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
         }

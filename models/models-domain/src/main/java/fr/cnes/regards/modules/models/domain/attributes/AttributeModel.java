@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -80,11 +80,12 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute name
      */
-    @NotNull
+    @NotNull(message = "Name cannot be null")
     @Pattern(regexp = Model.NAME_REGEXP,
             message = "Attribute name must conform to regular expression \"" + Model.NAME_REGEXP + "\".")
-    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name must be between "
-            + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
+    @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE,
+            message = "Attribute name must be between " + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE
+                    + " length.")
     @Column(nullable = false, updatable = false, length = Model.NAME_MAX_SIZE)
     private String name;
 
@@ -104,7 +105,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     /**
      * Attribute type
      */
-    @NotNull
+    @NotNull(message = "Type cannot be null")
     @Column(length = 32, nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private AttributeType type;
@@ -139,7 +140,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
      * Whether this attribute can be altered by users
      */
     @Column
-    private boolean alterable=true;
+    private boolean alterable = true;
 
     /**
      * Whether this attribute is optional
@@ -147,8 +148,11 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     @Column
     private boolean optional;
 
+    /**
+     * Attribute label
+     */
     @Column(length = 20)
-    @NotBlank
+    @NotBlank(message = "Label cannot be empty")
     @Size(max = 20, message = "Label must be between 1 and 20 characters.")
     private String label;
 
@@ -243,10 +247,16 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         return (restriction != null) && !restriction.getType().equals(RestrictionType.NO_RESTRICTION);
     }
 
+    /**
+     * @return the label
+     */
     public String getLabel() {
         return label;
     }
 
+    /**
+     * Set the label
+     */
     public void setLabel(String label) {
         this.label = label;
     }

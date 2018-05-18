@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,13 +18,6 @@
  */
 package fr.cnes.regards.modules.models.service.xml;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -32,13 +25,17 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.SchemaFactory;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import com.google.common.collect.Iterables;
-
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.schema.Fragment;
@@ -47,9 +44,7 @@ import fr.cnes.regards.modules.models.service.exception.ExportException;
 
 /**
  * Help to manage model XML export based on XML schema definition
- *
  * @author Marc Sordi
- *
  */
 public final class XmlExportHelper {
 
@@ -67,104 +62,92 @@ public final class XmlExportHelper {
     private XmlExportHelper() {
     }
 
-    public static void exportFragment(OutputStream pOutputStream,
-            fr.cnes.regards.modules.models.domain.attributes.Fragment pFragment, List<AttributeModel> pAttributes)
+    public static void exportFragment(OutputStream os,
+            fr.cnes.regards.modules.models.domain.attributes.Fragment fragment, List<AttributeModel> attributes)
             throws ExportException {
-        write(pOutputStream, Fragment.class, toXmlFragment(pFragment, pAttributes));
+        write(os, Fragment.class, toXmlFragment(fragment, attributes));
     }
 
-    public static void exportModel(OutputStream pOutputStream, fr.cnes.regards.modules.models.domain.Model pModel,
-            List<ModelAttrAssoc> pAttributes) throws ExportException {
-        write(pOutputStream, Model.class, toXmlModel(pModel, pAttributes));
+    public static void exportModel(OutputStream os, fr.cnes.regards.modules.models.domain.Model model,
+            List<ModelAttrAssoc> attributes) throws ExportException {
+        write(os, Model.class, toXmlModel(model, attributes));
     }
 
     /**
      * Build a {@link Model} based on a {@link fr.cnes.regards.modules.models.domain.Model} and its related
      * {@link ModelAttrAssoc}
-     *
-     * @param pModel
-     *            {@link fr.cnes.regards.modules.models.domain.Model}
-     * @param pAttributes
-     *            list of {@link ModelAttrAssoc}
+     * @param model {@link fr.cnes.regards.modules.models.domain.Model}
+     * @param attributes list of {@link ModelAttrAssoc}
      * @return serializable {@link Model}
-     * @throws ExportException
-     *             if error occurs!
+     * @throws ExportException if error occurs!
      */
-    private static Model toXmlModel(fr.cnes.regards.modules.models.domain.Model pModel,
-            List<ModelAttrAssoc> pAttributes) throws ExportException {
+    private static Model toXmlModel(fr.cnes.regards.modules.models.domain.Model model, List<ModelAttrAssoc> attributes)
+            throws ExportException {
 
         // Manage model
-        final Model model = pModel.toXml();
+        final Model xmlModel = model.toXml();
 
         // Manage attributes from both default fragment (i.e. default namespace) and from particular fragment
-        final Map<String, Fragment> fragmentMap = new HashMap<>();
+        final Map<String, Fragment> xmlFragmentMap = new HashMap<>();
 
-        if ((pAttributes != null) && !Iterables.isEmpty(pAttributes)) {
-            for (ModelAttrAssoc modelAtt : pAttributes) {
-                dispatchAttribute(fragmentMap, modelAtt);
+        if ((attributes != null) && !Iterables.isEmpty(attributes)) {
+            for (ModelAttrAssoc modelAtt : attributes) {
+                dispatchAttribute(xmlFragmentMap, modelAtt);
             }
         }
 
         // Get default fragment
-        final Fragment defaultFragment = fragmentMap
+        final Fragment xmlDefaultFragment = xmlFragmentMap
                 .remove(fr.cnes.regards.modules.models.domain.attributes.Fragment.getDefaultName());
-        if (defaultFragment != null) {
-            model.getAttribute().addAll(defaultFragment.getAttribute());
+        if (xmlDefaultFragment != null) {
+            xmlModel.getAttribute().addAll(xmlDefaultFragment.getAttribute());
         }
 
         // Manage attributes in particular fragments
-        final List<Fragment> fragments = fragmentMap.entrySet().stream().map(x -> x.getValue())
-                .collect(Collectors.toList());
-        if (!fragments.isEmpty()) {
-            model.getFragment().addAll(fragments);
+        if (!xmlFragmentMap.isEmpty()) {
+            xmlModel.getFragment().addAll(xmlFragmentMap.values());
         }
 
-        return model;
+        return xmlModel;
     }
 
     /**
      * Dispatch {@link ModelAttrAssoc} in its related fragment navigating through {@link AttributeModel}
-     *
-     * @param pFragmentMap
-     *            {@link Fragment} map
-     * @param pModelAtt
-     *            {@link ModelAttrAssoc} to dispatch
+     * @param fragmentMap {@link Fragment} map
+     * @param modelAttrAssoc {@link ModelAttrAssoc} to dispatch
      */
-    private static void dispatchAttribute(Map<String, Fragment> pFragmentMap, ModelAttrAssoc pModelAtt) {
-        final AttributeModel attModel = pModelAtt.getAttribute();
+    private static void dispatchAttribute(Map<String, Fragment> fragmentMap, ModelAttrAssoc modelAttrAssoc) {
+        final AttributeModel attModel = modelAttrAssoc.getAttribute();
         final fr.cnes.regards.modules.models.domain.attributes.Fragment fragment = attModel.getFragment();
 
         // Init or retrieve fragment DTO
-        Fragment xmlFragment = pFragmentMap.get(fragment.getName());
+        Fragment xmlFragment = fragmentMap.get(fragment.getName());
         if (xmlFragment == null) {
             // Init fragment
             xmlFragment = new Fragment();
             xmlFragment.setName(fragment.getName());
             xmlFragment.setDescription(fragment.getDescription());
-            pFragmentMap.put(fragment.getName(), xmlFragment);
+            fragmentMap.put(fragment.getName(), xmlFragment);
         }
-        xmlFragment.getAttribute().add(pModelAtt.toXml());
+        xmlFragment.getAttribute().add(modelAttrAssoc.toXml());
     }
 
     /**
      * Build a {@link Fragment} based on a {@link fr.cnes.regards.modules.models.domain.attributes.Fragment} and its
      * related {@link AttributeModel}
-     *
-     * @param pFragment
-     *            {@link fr.cnes.regards.modules.models.domain.attributes.Fragment}
-     * @param pAttributes
-     *            list of {@link AttributeModel}
+     * @param fragment {@link fr.cnes.regards.modules.models.domain.attributes.Fragment}
+     * @param attributes list of {@link AttributeModel}
      * @return {@link Fragment}
      */
-    private static Fragment toXmlFragment(fr.cnes.regards.modules.models.domain.attributes.Fragment pFragment,
-            List<AttributeModel> pAttributes) {
+    private static Fragment toXmlFragment(fr.cnes.regards.modules.models.domain.attributes.Fragment fragment,
+            List<AttributeModel> attributes) {
 
         // Manage fragment
-        final Fragment xmlFragment = pFragment.toXml();
+        final Fragment xmlFragment = fragment.toXml();
 
         // Manage attributes
-        if ((pAttributes != null) && !Iterables.isEmpty(pAttributes)) {
-            for (AttributeModel att : pAttributes) {
+        if ((attributes != null) && !Iterables.isEmpty(attributes)) {
+            for (AttributeModel att : attributes) {
                 xmlFragment.getAttribute().add(att.toXml());
             }
         }
@@ -174,23 +157,17 @@ public final class XmlExportHelper {
 
     /**
      * Write {@link JAXBElement} to {@link OutputStream}
-     *
-     * @param <T>
-     *            {@link JAXBElement} type
-     * @param pOutputStream
-     *            {@link OutputStream}
-     * @param pClass
-     *            {@link JAXBElement} type
-     * @param pJaxbElement
-     *            {@link JAXBElement}
-     * @throws ExportException
-     *             if error occurs!
+     * @param <T> {@link JAXBElement} type
+     * @param os {@link OutputStream}
+     * @param clazz {@link JAXBElement} type
+     * @param jaxbElement {@link JAXBElement}
+     * @throws ExportException if error occurs!
      */
-    private static <T> void write(OutputStream pOutputStream, Class<T> pClass, T pJaxbElement) throws ExportException {
+    private static <T> void write(OutputStream os, Class<T> clazz, T jaxbElement) throws ExportException {
 
         try {
             // Init marshaller
-            final JAXBContext jaxbContext = JAXBContext.newInstance(pClass);
+            final JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
             final Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
             // Format output
@@ -203,9 +180,9 @@ public final class XmlExportHelper {
                     .setSchema(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(xsdSource));
 
             // Marshall data
-            jaxbMarshaller.marshal(pJaxbElement, pOutputStream);
+            jaxbMarshaller.marshal(jaxbElement, os);
         } catch (JAXBException | SAXException e) {
-            final String message = String.format("Error while exporting data of %s type. %s", pClass, e.toString());
+            final String message = String.format("Error while exporting data of %s type. %s", clazz, e.toString());
             LOGGER.error(message, e);
             throw new ExportException(message);
         }

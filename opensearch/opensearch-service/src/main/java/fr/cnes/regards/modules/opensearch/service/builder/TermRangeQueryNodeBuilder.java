@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableTable;
-
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.RangeCriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -41,7 +40,6 @@ import fr.cnes.regards.modules.opensearch.service.message.QueryParserMessages;
 
 /**
  * Builds a {@link RangeCriterion} from a {@link TermRangeQueryNode} object.
- *
  * @author Xavier-Alexandre Brochard
  */
 public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICriterionQueryBuilder {
@@ -136,8 +134,7 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
     // @formatter:on
 
     /**
-     * @param pAttributeModelCache
-     *            Service retrieving the up-to-date list of {@link AttributeModel}s
+     * @param attributeFinder attribute finder
      */
     public TermRangeQueryNodeBuilder(IAttributeFinder attributeFinder) {
         super();
@@ -165,12 +162,12 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
                                                              wrapper.getUpperBound(), wrapper.isLowerInclusive(),
                                                              wrapper.isUpperInclusive());
 
-        Function<TermRangeQueryNodeFacade, ICriterion> queryToCriterion = CRITERION_TABLE.get(attributeType,
-                                                                                              rangeComparison);
+        Function<TermRangeQueryNodeFacade, ICriterion> queryToCriterion = CRITERION_TABLE
+                .get(attributeType, rangeComparison);
 
         if (queryToCriterion == null) {
             Message message = new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE_FOR_RANGE_QUERY,
-                    attributeType);
+                                              attributeType);
             LOGGER.error(message.getLocalizedMessage());
             throw new QueryNodeException(message);
         }
@@ -179,13 +176,6 @@ public class TermRangeQueryNodeBuilder extends QueryTreeBuilder implements ICrit
 
     /**
      * Return the range comparison type based on the lower/upper values and if they are inclusive/exclusive
-     *
-     * @param pLowerText
-     * @param pUpperText
-     * @param pIsLowerInclusive
-     * @param pIsUpperInclusive
-     * @return
-     * @throws QueryNodeException
      */
     private RangeComparison getRangeComparison(String pField, String pLowerText, String pUpperText, // NOSONAR
             boolean pIsLowerInclusive, boolean pIsUpperInclusive) throws QueryNodeException {

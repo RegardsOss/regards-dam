@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -73,9 +73,9 @@ public class DoubleRangeRestriction extends AbstractRestriction {
     @Column(name = "maxf_excluded")
     private boolean maxExcluded = false;
 
-    public DoubleRangeRestriction() {// NOSONAR
+    public DoubleRangeRestriction() {
         super();
-        setType(RestrictionType.DOUBLE_RANGE);
+        type = RestrictionType.DOUBLE_RANGE;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -37,12 +37,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
-
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -68,12 +69,12 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.service.IIndexerService;
 import fr.cnes.regards.modules.indexer.service.ISearchService;
 import fr.cnes.regards.modules.indexer.service.Searches;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
+@TestPropertySource(locations = { "classpath:test.properties" })
 public class IndexerServiceIT {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexerServiceIT.class);
@@ -151,8 +152,8 @@ public class IndexerServiceIT {
                                                        OffsetDateTime.of(2016, 1, 13, 11, 5, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2015, 12, 31, 11, 59, 0, 0, ZoneOffset.UTC),
                                                        OffsetDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)));
-        attributes.add(AttributeBuilder.buildDate("dateAtt",
-                                                  OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
+        attributes.add(AttributeBuilder
+                               .buildDate("dateAtt", OffsetDateTime.of(1974, 10, 31, 1, 50, 0, 0, ZoneOffset.UTC)));
         attributes.add(AttributeBuilder.buildDateInterval("dateInterval",
                                                           OffsetDateTime.of(1939, 9, 1, 0, 0, 0, 0, ZoneOffset.UTC),
                                                           OffsetDateTime.of(1945, 9, 2, 0, 0, 0, 0, ZoneOffset.UTC)));
@@ -182,20 +183,18 @@ public class IndexerServiceIT {
 
         attributes.add(AttributeBuilder.buildString("string", "Esope reste et se repose"));
 
-        final ObjectAttribute fragment = AttributeBuilder
-                .buildObject("correspondance",
-                             AttributeBuilder.buildStringArray("stringArrayMusset",
-                                                               "Quand je mets à vos pieds un éternel hommage",
-                                                               "Voulez-vous qu'un instant je change de visage ?",
-                                                               "Vous avez capturé les sentiments d'un coeur",
-                                                               "Que pour vous adorer forma le créateur.",
-                                                               "Je vous chéris, amour, et ma plume en délire",
-                                                               "Couche sur le papier ce que je n'ose dire.",
-                                                               "Avec soin de mes vers lisez les premiers mots,",
-                                                               "Vous saurez quel remède apporter à mes maux."),
-                             AttributeBuilder.buildStringArray("stringArraySand",
-                                                               "Cette indigne faveur que votre esprit réclame",
-                                                               "Nuit à mes sentiments et répugne à mon âme"));
+        final ObjectAttribute fragment = AttributeBuilder.buildObject("correspondance", AttributeBuilder
+                .buildStringArray("stringArrayMusset", "Quand je mets à vos pieds un éternel hommage",
+                                  "Voulez-vous qu'un instant je change de visage ?",
+                                  "Vous avez capturé les sentiments d'un coeur",
+                                  "Que pour vous adorer forma le créateur.",
+                                  "Je vous chéris, amour, et ma plume en délire",
+                                  "Couche sur le papier ce que je n'ose dire.",
+                                  "Avec soin de mes vers lisez les premiers mots,",
+                                  "Vous saurez quel remède apporter à mes maux."), AttributeBuilder
+                                                                              .buildStringArray("stringArraySand",
+                                                                                                "Cette indigne faveur que votre esprit réclame",
+                                                                                                "Nuit à mes sentiments et répugne à mon âme"));
         attributes.add(fragment);
 
         collection.setProperties(attributes);
@@ -208,8 +207,7 @@ public class IndexerServiceIT {
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         final List<Collection> singleCollColl = searchService
                 .search(new SimpleSearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
-                        ICriterion.eq("properties.int", 42))
-                .getContent();
+                        ICriterion.eq("properties.int", 42)).getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
 

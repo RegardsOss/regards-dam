@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -26,16 +26,24 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.jpa.domain.Specification;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.module.rest.exception.*;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
 import fr.cnes.regards.modules.models.dao.IRestrictionRepository;
-import fr.cnes.regards.modules.models.domain.attributes.*;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeProperty;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
+import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 import fr.cnes.regards.modules.models.domain.attributes.restriction.RestrictionFactory;
 import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionException;
 
@@ -89,8 +97,7 @@ public class AttributeModelServiceTest {
         mockAttPropertyR = Mockito.mock(IAttributePropertyRepository.class);
         mockPublisher = Mockito.mock(IPublisher.class);
         attributeModelService = new AttributeModelService(mockAttModelR, mockRestrictionR, mockFragmentR,
-                                                          mockAttPropertyR, mockPublisher,
-                                                          Mockito.mock(ApplicationEventPublisher.class));
+                mockAttPropertyR, mockPublisher, Mockito.mock(ApplicationEventPublisher.class));
     }
 
     @Test
@@ -101,9 +108,9 @@ public class AttributeModelServiceTest {
         expectedAttModels.add(AttributeModelBuilder.build("FIRST", AttributeType.STRING, "ForTests").get());
         expectedAttModels.add(AttributeModelBuilder.build("SECOND", AttributeType.BOOLEAN, "ForTests").get());
 
-        Mockito.when(mockAttModelR.findAll()).thenReturn(expectedAttModels);
+        Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(null, null);
+        final List<AttributeModel> attModels = attributeModelService.getAttributes(null, null, null);
         Assert.assertEquals(2, attModels.size());
     }
 
@@ -115,9 +122,9 @@ public class AttributeModelServiceTest {
         final List<AttributeModel> expectedAttModels = new ArrayList<>();
         expectedAttModels.add(AttributeModelBuilder.build("FIRST_STRING", AttributeType.STRING, "ForTests").get());
 
-        Mockito.when(mockAttModelR.findByType(AttributeType.STRING)).thenReturn(expectedAttModels);
+        Mockito.when(mockAttModelR.findAll(Mockito.any(Specification.class))).thenReturn(expectedAttModels);
 
-        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null);
+        final List<AttributeModel> attModels = attributeModelService.getAttributes(AttributeType.STRING, null, null);
         Assert.assertEquals(1, attModels.size());
     }
 
@@ -229,7 +236,7 @@ public class AttributeModelServiceTest {
         Assert.assertNotNull(attModel);
     }
 
-    @Test(expected = EntityNotIdentifiableException.class)
+    @Test(expected = EntityNotFoundException.class)
     public void updateNotIdentifiableAttributeTest() throws ModuleException {
         final AttributeModel expectedAttModel = AttributeModelBuilder.build(ATT_NAME, AttributeType.DOUBLE, "ForTests")
                 .withoutRestriction();

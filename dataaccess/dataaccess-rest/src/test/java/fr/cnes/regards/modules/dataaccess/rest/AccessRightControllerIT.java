@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -23,8 +23,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -45,13 +43,21 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.RequestParamBuilder;
 import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.accessrights.domain.projects.ProjectUser;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessGroupRepository;
 import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.*;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityFilter;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -59,7 +65,6 @@ import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
@@ -74,6 +79,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     @Configuration
     static class Conf {
+
         @Bean
         public IAttributeModelClient attributeModelClient() {
             return Mockito.mock(IAttributeModelClient.class);
@@ -94,6 +100,12 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         public IModelAttrAssocClient modelAttrAssocClient() {
             return Mockito.mock(IModelAttrAssocClient.class);
         }
+
+        @Bean
+        public IProjectUsersClient mockProjectUsersClient() {
+            return Mockito.mock(IProjectUsersClient.class);
+        }
+
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessRightControllerIT.class);
@@ -143,7 +155,7 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
 
     private User user;
 
-    private String email = "test@email.com";
+    private final String email = "test@email.com";
 
     @Autowired
     private IAccessGroupService agService;
@@ -202,6 +214,15 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS, expectations, ACCESS_RIGHTS_ERROR_MSG);
+    }
+
+    @Test
+    public void testRetrieveDatasetWithAccessRights() {
+        final List<ResultMatcher> expectations = new ArrayList<>();
+        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.jsonPath(JSON_PATH_ROOT).isNotEmpty());
+        performDefaultGet(DatasetWithAccessRightController.ROOT_PATH + DatasetWithAccessRightController.GROUP_PATH,
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, ag1Name);
     }
 
     @Test
@@ -294,33 +315,28 @@ public class AccessRightControllerIT extends AbstractRegardsTransactionalIT {
                              expectations, ACCESS_RIGHTS_ERROR_MSG, ar1.getId());
     }
 
-
-
     @Test
     public void testIsUserAutorisedToAccessDataset() {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().string("true"));
-        RequestParamBuilder requestParamBuilder = RequestParamBuilder.build()
-                .param("dataset", ds1.getIpId().toString())
+        RequestParamBuilder requestParamBuilder = RequestParamBuilder.build().param("dataset", ds1.getIpId().toString())
                 .param("user", email);
 
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
-                expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
 
         expectations.clear();
 
         String notExistingUser = "not.existing" + email;
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().string("false"));
-        requestParamBuilder = RequestParamBuilder.build()
-                .param("dataset", ds1.getIpId().toString())
+        requestParamBuilder = RequestParamBuilder.build().param("dataset", ds1.getIpId().toString())
                 .param("user", notExistingUser);
 
         performDefaultGet(AccessRightController.PATH_ACCESS_RIGHTS + AccessRightController.PATH_IS_DATASET_ACCESSIBLE,
-                expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
+                          expectations, ACCESS_RIGHTS_ERROR_MSG, requestParamBuilder);
     }
-
 
     @Override
     protected Logger getLogger() {

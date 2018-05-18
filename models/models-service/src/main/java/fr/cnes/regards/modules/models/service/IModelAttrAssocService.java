@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -27,7 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.TypeMetadataConfMapping;
@@ -43,40 +43,69 @@ import fr.cnes.regards.modules.models.service.event.NewFragmentAttributeEvent;
  */
 public interface IModelAttrAssocService extends ApplicationListener<NewFragmentAttributeEvent> {
 
-    List<ModelAttrAssoc> getModelAttrAssocs(Long pModelId) throws ModuleException;
+    List<ModelAttrAssoc> getModelAttrAssocs(String modelName);
 
-    ModelAttrAssoc bindAttributeToModel(Long pModelId, ModelAttrAssoc pModelAttribute) throws ModuleException;
+    ModelAttrAssoc bindAttributeToModel(String modelName, ModelAttrAssoc pModelAttribute) throws ModuleException;
 
-    ModelAttrAssoc getModelAttrAssoc(Long pModelId, Long pAttributeId) throws ModuleException;
+    ModelAttrAssoc getModelAttrAssoc(String modelName, Long pAttributeId) throws ModuleException;
 
     ModelAttrAssoc getModelAttrAssoc(Long pModelId, AttributeModel pAttribute);
 
-    ModelAttrAssoc updateModelAttribute(Long pModelId, Long pAttributeId, ModelAttrAssoc pModelAttribute)
+    ModelAttrAssoc updateModelAttribute(String modelName, Long pAttributeId, ModelAttrAssoc pModelAttribute)
             throws ModuleException;
 
-    void unbindAttributeFromModel(Long pModelId, Long pAttributeId) throws ModuleException;
+    void unbindAttributeFromModel(String modelName, Long pAttributeId) throws ModuleException;
 
-    List<ModelAttrAssoc> bindNSAttributeToModel(Long pModelId, Fragment pFragment) throws ModuleException;
+    List<ModelAttrAssoc> bindNSAttributeToModel(String modelName, Fragment pFragment) throws ModuleException;
 
     /**
      * Propagate a fragment update
-     *
-     * @param pFragmentId fragment updated
-     * @throws ModuleException if error occurs!
      */
     void updateNSBind(AttributeModel added);
 
-    void unbindNSAttributeToModel(Long pModelId, Long pFragmentId) throws ModuleException;
+    void unbindNSAttributeToModel(String modelName, Long pFragmentId);
 
+    /**
+     * Find all model attribute associations by attribute
+     * @param attr
+     * @return the model attribute associations
+     */
     Collection<ModelAttrAssoc> retrieveModelAttrAssocsByAttributeId(AttributeModel attr);
 
-    Model duplicateModelAttrAssocs(Long pSourceModelId, Model pTargetModel) throws ModuleException;
+    Model duplicateModelAttrAssocs(String sourceModelName, Model pTargetModel) throws ModuleException;
 
+    /**
+     * Retrieve the computed attributes association to a model, represented by its id
+     * @param pId
+     * @return computed attributes association to the model
+     */
     Set<ModelAttrAssoc> getComputedAttributes(Long pId);
 
-    Page<AttributeModel> getAttributeModels(List<Long> pModelIds, Pageable pPageable) throws ModuleException;
+    /**
+     * Find page attribute which are associated to at least one of the models
+     * @param pModelNames
+     * @param pPageable
+     * @return a page of attribute which are associated to at least one of the models
+     */
+    Page<AttributeModel> getAttributeModelsByName(List<String> pModelNames, Pageable pPageable) throws ModuleException;
 
+    /**
+     * Find the model attribute associations for a given entity type(or all if none is given)
+     * @param pType
+     * @return model attribute associations for a given entity type(or all if none is given)
+     */
     Collection<ModelAttrAssoc> getModelAttrAssocsFor(EntityType pType);
 
+    /**
+     * @return the possible mappings between an attribute, computation plugin configurations and their metadata
+     */
     List<TypeMetadataConfMapping> retrievePossibleMappingsForComputed();
+
+    /**
+     * Retrieve {@link AttributeModel} for the given {@link Model}s identifier.
+     * @param modelIds List of {@link Model}s identifier
+     * @param pageable
+     * @return {@link AttributeModel}s
+     */
+    Page<AttributeModel> getAttributeModels(Set<Long> modelIds, Pageable pageable);
 }

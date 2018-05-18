@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -26,26 +26,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Specific requests on Dataset
- *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
 @Repository
 public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
-
     List<Dataset> findByGroups(String group);
 
     /**
      * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity)
-     *
-     * @param pId
-     *            id of entity
+     * @param pId id of entity
      * @return entity
      */
     @Override
@@ -55,9 +51,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find all datasets of which ipId belongs to given set (eagerly loading all relations)
-     *
-     * @param pIpIds
-     *            set of ipId
+     * @param pIpIds set of ipId
      * @return found entities
      */
     @Override
@@ -67,9 +61,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find entity of given IpId eagerly loading all common relations (except pluginConfigurationIds)
-     *
-     * @param pIpId
-     *            ipId of which entity
+     * @param pIpId ipId of which entity
      * @return found entity
      */
     @Override
@@ -79,9 +71,7 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
 
     /**
      * Find all entities complient with the given modelName
-     *
-     * @param pModelName
-     *            name of the model we want to be complient with
+     * @param pModelName name of the model we want to be complient with
      * @return datasets complient with the given model
      */
     @Override
@@ -89,19 +79,18 @@ public interface IDatasetRepository extends IAbstractEntityRepository<Dataset> {
             "plgConfDataSource.parameters.dynamicsValues" })
     Set<Dataset> findAllByModelName(String pModelName);
 
+    /**
+     * Find a dataset by its ip id with the description file loaded
+     * @return the dataset with the description file loaded or null if none were found
+     */
     @Query("from Dataset ds left join fetch ds.descriptionFile where ds.ipId=:ipId")
     Dataset findOneDescriptionFile(@Param("ipId") UniformResourceName datasetIpId);
 
     /**
-     * Find all entities complient with the given modelName
-     *
-     * @param pModelName
-     *            name of the model we want to be complient with
-     * @return datasets complient with the given model
+     * Find all entities complient with given model ids
      */
     @Override
     @EntityGraph(attributePaths = { "tags", "groups", "quotations", "model", "plgConfDataSource.parameters",
             "plgConfDataSource.parameters.dynamicsValues" })
-    Set<Dataset> findAllByModelId(Set<Long> pModelIds);
-
+    Set<Dataset> findAllByModelIdIn(Set<Long> pModelIds);
 }

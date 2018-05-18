@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -23,7 +23,6 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
  * This class is used to map a data source attribute to an attribute of a {@link Model}
- *
  * @author Christophe Mertz
  * @author oroussel
  */
@@ -47,10 +46,15 @@ public abstract class AbstractAttributeMapping {
     /**
      * Constant used for the raw data attribute
      */
-    public static final String RAW_DATA = "download";
+    public static final String RAW_DATA = "rawdata";
 
     /**
-     * Constant used for the thumbnail attribute 
+     * Constant used for the raw data size attribute
+     */
+    /* public static final String RAW_DATA_SIZE = "rawdata_size"; */
+
+    /**
+     * Constant used for the thumbnail attribute
      */
     public static final String THUMBNAIL = "thumbnail";
 
@@ -62,58 +66,61 @@ public abstract class AbstractAttributeMapping {
     /**
      * The attribute name in the model
      */
-    private String name;
+    protected String name;
 
     /**
      * The attribute type in the model
      */
-    private AttributeType type;
+    protected AttributeType type;
 
     /**
      * The attribute namespace in the model
      */
-    private String nameSpace = null;
+    protected String namespace = null;
 
     /**
      * The attribute name in the data source
      */
-    private String nameDS;
+    protected String nameDS;
+
+    protected AttributeMappingEnum attributeType;
 
     protected AbstractAttributeMapping() {
     }
 
     /**
      * Constructor with all attributes
-     * @param pName the attribute name in the model
-     * @param pNameSpace the attribute name space in the model
-     * @param pType the attribute type in the model @see {@link AttributeType}
-     * @param pMappingDS The attribute name in the data source
+     * @param name the attribute name in the model
+     * @param nameSpace the attribute name space in the model
+     * @param type the attribute type in the model @see {@link AttributeType}
+     * @param mappingDS The attribute name in the data source
      */
-    protected AbstractAttributeMapping(String pName, String pNameSpace, AttributeType pType, String pMappingDS) {
-        this.name = pName;
-        this.nameSpace = pNameSpace;
-        this.nameDS = pMappingDS;
-        if (pType == null && isMappedToStaticProperty()) {
-            this.type = getStaticdAttributeType(pName);
+    protected AbstractAttributeMapping(String name, String nameSpace, AttributeType type, String mappingDS) {
+        this.name = name;
+        this.namespace = nameSpace;
+        this.nameDS = mappingDS;
+        if ((type == null) && isMappedToStaticProperty()) {
+            this.type = getStaticAttributeType(name);
         } else {
-            this.type = pType;
+            this.type = type;
         }
     }
 
     /**
      * Get the {@link AttributeType} for a static attribute
      * @param staticAttrName of one of the static attribute :
-     * <li>{@value #PRIMARY_KEY}
-     * <li>{@value #LAST_UPDATE}
-     * <li>{@value #LABEL}
-     * <li>{@value #RAW_DATA}
-     * <li>{@value #THUMBNAIL}
-     * <li>{@value #GEOMETRY}
+     *            <li>{@value #PRIMARY_KEY}
+     *            <li>{@value #LAST_UPDATE}
+     *            <li>{@value #LABEL}
+     *            <li>{@value #RAW_DATA}
+     *            <li>{@value #THUMBNAIL}
+     *            <li>{@value #GEOMETRY}
      * @return the {@link AttributeType}
      */
-    private AttributeType getStaticdAttributeType(String staticAttrName) {
+    protected AttributeType getStaticAttributeType(String staticAttrName) {
         switch (staticAttrName) {
             case PRIMARY_KEY:
+                // case RAW_DATA_SIZE:
                 return AttributeType.LONG;
             case LABEL:
             case RAW_DATA:
@@ -132,32 +139,32 @@ public abstract class AbstractAttributeMapping {
         return name;
     }
 
-    public void setName(String pName) {
-        this.name = pName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public AttributeType getType() {
         return type;
     }
 
-    public void setType(AttributeType pType) {
-        this.type = pType;
+    public void setType(AttributeType type) {
+        this.type = type;
     }
 
     public String getNameSpace() {
-        return nameSpace;
+        return namespace;
     }
 
-    public void setNameSpace(String pNameSpace) {
-        this.nameSpace = pNameSpace;
+    public void setNameSpace(String nameSpace) {
+        this.namespace = nameSpace;
     }
 
     public String getNameDS() {
         return nameDS;
     }
 
-    public void setNameDS(String pNameDS) {
-        this.nameDS = pNameDS;
+    public void setNameDS(String nameDS) {
+        this.nameDS = nameDS;
     }
 
     public boolean isPrimaryKey() {
@@ -176,6 +183,12 @@ public abstract class AbstractAttributeMapping {
         return name.equals(RAW_DATA);
     }
 
+    /*
+     * public boolean isRawDataSize() {
+     * return name.equals(RAW_DATA_SIZE);
+     * }
+     */
+
     public boolean isThumbnail() {
         return name.equals(THUMBNAIL);
     }
@@ -184,7 +197,8 @@ public abstract class AbstractAttributeMapping {
         return name.equals(GEOMETRY);
     }
 
-    public boolean isMappedToStaticProperty() {
-        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() || isThumbnail() || isGeometry();
+    public final boolean isMappedToStaticProperty() {
+        return isPrimaryKey() || isLastUpdate() || isLabel() || isRawData() /* || isRawDataSize() */ || isThumbnail()
+                || isGeometry();
     }
 }

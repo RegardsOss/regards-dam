@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  
  This file is part of REGARDS.
  
@@ -25,7 +25,6 @@
 	<artifactId>crawler-domain</artifactId>
 	<packaging>jar</packaging>
 	
-	<name>Crawler Domain</name>
 	<description>Model layer of Crawler module</description>
 	<url>https://github.com/RegardsOss/RegardsOss.github.io</url>
 	<inceptionYear>2016</inceptionYear>
@@ -51,12 +50,12 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>crawler</artifactId>
-		<version>1.1.0</version>
+		<version>2.0.0-RELEASE</version>
 	</parent>
 	<dependencies>
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>regards-core-jpa-common</artifactId>
+			<artifactId>jpa-commons-regards</artifactId>
 		</dependency>
 	</dependencies>
 </project>

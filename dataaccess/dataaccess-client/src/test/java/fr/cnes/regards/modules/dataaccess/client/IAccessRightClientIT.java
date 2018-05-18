@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -41,6 +41,7 @@ import fr.cnes.regards.framework.feign.FeignClientBuilder;
 import fr.cnes.regards.framework.feign.TokenClientProvider;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsWebIT;
+import fr.cnes.regards.modules.accessrights.client.IProjectUsersClient;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
@@ -78,6 +79,13 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
         public IModelAttrAssocClient modelAttrAssocClient() {
             return Mockito.mock(IModelAttrAssocClient.class);
         }
+
+        @Bean
+        public IProjectUsersClient mockProjectUsersClient() {
+            return Mockito.mock(IProjectUsersClient.class);
+        }
+
+
     }
 
     /**
@@ -116,7 +124,7 @@ public class IAccessRightClientIT extends AbstractRegardsWebIT {
     @Test
     public void testRetrieveAccessRightsList() {
         ResponseEntity<PagedResources<Resource<AccessRight>>> accessRights = client
-                .retrieveAccessRightsList(null, null, null, 0, 10);
+                .retrieveAccessRightsList(null, null, 0, 10);
         Assert.assertTrue(accessRights.getStatusCode().equals(HttpStatus.OK));
     }
 

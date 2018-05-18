@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -60,7 +60,8 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
 
     @Override
     public String toString() {
-        return name + " : " + value.toString();
+        String display = value == null ? "null" : value.toString();
+        return name + " : " + display;
     }
 
     public abstract boolean represents(AttributeType pAttributeType);
@@ -89,10 +90,9 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
             if (other.name != null) {
                 return false;
             }
-        } else
-            if (!name.equals(other.name)) {
-                return false;
-            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
         return true;
     }
 

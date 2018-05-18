@@ -12,6 +12,7 @@ public class StaticAttributeMapping extends AbstractAttributeMapping {
 
     public StaticAttributeMapping() {
         super();
+        attributeType = AttributeMappingEnum.STATIC;
     }
 
     /**
@@ -21,6 +22,8 @@ public class StaticAttributeMapping extends AbstractAttributeMapping {
      */
     public StaticAttributeMapping(String name, String mappingDS) {
         super(name, null, null, mappingDS);
+
+        attributeType = AttributeMappingEnum.STATIC;
     }
 
     /**
@@ -31,6 +34,15 @@ public class StaticAttributeMapping extends AbstractAttributeMapping {
      */
     public StaticAttributeMapping(String name, AttributeType type, String mappingDS) {
         super(name, null, type, mappingDS);
+
+        attributeType = AttributeMappingEnum.STATIC;
     }
 
+    @Override
+    public AttributeType getType() {
+        if (super.type == null) {
+            super.type = getStaticAttributeType(getName());
+        }
+        return super.type;
+    }
 }

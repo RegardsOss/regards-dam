@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -26,8 +26,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * @author lmieulet
@@ -39,7 +39,11 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
 
     List<Collection> findByGroups(String group);
 
-
+    /**
+     * Find a collection by its ip id with the description file loaded
+     * @param collectionIpId
+     * @return the collection with the description file loaded or null if none were found
+     */
     @Query("from Collection col left join fetch col.descriptionFile where col.ipId=:ipId")
     Collection findOneWithDescriptionFile(@Param("ipId") UniformResourceName collectionIpId);
 
@@ -63,6 +67,12 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
     @EntityGraph(attributePaths = { "tags", "groups", "model", "descriptionFile" })
     Collection findByIpId(UniformResourceName pIpId);
 
+    /**
+     * Find a collection by its id
+     * @param pId
+     *            id of entity
+     * @return the collection or null if none were found
+     */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Collection findById(Long pId);
 }

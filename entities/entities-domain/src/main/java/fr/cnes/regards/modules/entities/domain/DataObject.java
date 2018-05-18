@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -22,14 +22,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- * A DataObject is created by a DataSource when an external database is ingested.
+ * A DataObject is created by a DataSource when a data source (external database or AIPs by example) is ingested.
  *
  * @author lmieulet
  * @author Marc Sordi
@@ -52,9 +52,23 @@ public class DataObject extends AbstractDataEntity {
      */
     private DataObjectMetadata metadata = new DataObjectMetadata();
 
-    public DataObject(Model pModel, String pTenant, String pLabel) {
-        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, pTenant, UUID.randomUUID(), 1),
-              pLabel);
+    /**
+     * This field only exists for Gson serialization (used by frontent)
+     * Indicates if a physical file (ie a RAWDATA) exists with this data object
+     */
+    private Boolean containsPhysicalData = null;
+
+    /**
+     * This field only exists for Gson serialization (used by frontent), it is filled by Catalog after a search.
+     * Indicates if user who made the search has the RIGHT to download associated DATA
+     */
+    private Boolean downloadable = null;
+
+    public DataObject(Model model, String tenant, String label) {
+        super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
+                                             UUID.fromString("0-0-0-0-" + (int)(Math.random() * Integer.MAX_VALUE)),
+                                                             1),
+              label);
     }
 
     public DataObject() {
@@ -85,6 +99,20 @@ public class DataObject extends AbstractDataEntity {
         this.metadata = metadata;
     }
 
+    public Boolean getDownloadable() {
+        return downloadable;
+    }
+
+    public void setDownloadable(Boolean downloadable) {
+        this.downloadable = downloadable;
+    }
+
+    @Override
+    public boolean containsPhysicalData() {
+        containsPhysicalData = super.containsPhysicalData();
+        return containsPhysicalData;
+    }
+
     @Override
     public String getType() {
         return EntityType.DATA.toString();
@@ -96,7 +124,7 @@ public class DataObject extends AbstractDataEntity {
     }
 
     @Override
-    public boolean equals(Object pObject) {
-        return super.equals(pObject);
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 }

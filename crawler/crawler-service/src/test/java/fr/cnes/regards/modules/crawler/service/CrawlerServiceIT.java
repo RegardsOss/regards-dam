@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -20,7 +20,6 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -42,20 +41,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.google.common.collect.Sets;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
-import fr.cnes.regards.framework.modules.plugins.domain.PluginParametersFactory;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.framework.test.util.Beans;
+import fr.cnes.regards.framework.utils.plugins.PluginUtilsRuntimeException;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.datasources.domain.AbstractAttributeMapping;
-import fr.cnes.regards.modules.datasources.domain.DataSourceModelMapping;
-import fr.cnes.regards.modules.datasources.domain.ModelMappingAdapter;
 import fr.cnes.regards.modules.datasources.domain.StaticAttributeMapping;
-import fr.cnes.regards.modules.datasources.plugins.DefaultOracleConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.OracleDataSourceFromSingleTablePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -67,12 +62,9 @@ import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.service.IModelService;
-import fr.cnes.regards.plugins.utils.PluginUtils;
-import fr.cnes.regards.plugins.utils.PluginUtilsRuntimeException;
 
 /**
  * Crawler service integration tests
@@ -147,9 +139,7 @@ public class CrawlerServiceIT {
     @Autowired
     private IDeletedEntityRepository deletedEntityRepository;
 
-    private DataSourceModelMapping dataSourceModelMapping;
-
-    private final ModelMappingAdapter adapter = new ModelMappingAdapter();
+    private List<AbstractAttributeMapping> modelAttrMapping;
 
     @Before
     public void setUp() {
@@ -172,37 +162,41 @@ public class CrawlerServiceIT {
         Utils.execute(entityRepos::delete, coll2.getId());
         Utils.execute(entityRepos::delete, coll3.getId());
 
-        Utils.execute(modelService::deleteModel, modelColl.getId());
-        Utils.execute(modelService::deleteModel, modelDataset.getId());
-        Utils.execute(modelService::deleteModel, dataModel.getId());
+        Utils.execute(modelService::deleteModel, modelColl.getName());
+        Utils.execute(modelService::deleteModel, modelDataset.getName());
+        Utils.execute(modelService::deleteModel, dataModel.getName());
         Utils.execute(pluginService::deletePluginConfiguration, dataSourcePluginConf.getId());
         Utils.execute(pluginService::deletePluginConfiguration, pluginConf.getId());
 
     }
 
     private PluginConfiguration getOracleDataSource(final PluginConfiguration pluginConf) {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
-                .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
-                .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, adapter.toJson(dataSourceModelMapping))
-                .getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // final List<PluginParameter> parameters = PluginParametersFactory.build()
+        // .addParameterPluginConfiguration(OracleDataSourceFromSingleTablePlugin.CONNECTION_PARAM, pluginConf)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.TABLE_PARAM, TABLE_NAME_TEST)
+        // .addParameter(OracleDataSourceFromSingleTablePlugin.MODEL_PARAM, dataSourceModelMapping)
+        // .getParameters();
+        //
+        // return PluginUtils.getPluginConfiguration(parameters, OracleDataSourceFromSingleTablePlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO replace by a Postgres plugin
+        return null;
     }
 
     private PluginConfiguration getOracleConnectionConfiguration() {
-        final List<PluginParameter> parameters = PluginParametersFactory.build()
-                .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
-                .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
-                .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
-
-        return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
-                                                  Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // final List<PluginParameter> parameters = PluginParametersFactory.build()
+        // .addParameter(DefaultOracleConnectionPlugin.USER_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.PASSWORD_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.DB_HOST_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.DB_PORT_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.DB_NAME_PARAM, "toto")
+        // .addParameter(DefaultOracleConnectionPlugin.MAX_POOLSIZE_PARAM, "1")
+        // .addParameter(DefaultOracleConnectionPlugin.MIN_POOLSIZE_PARAM, "1").getParameters();
+        //
+        // return PluginUtils.getPluginConfiguration(parameters, DefaultOracleConnectionPlugin.class,
+        // Arrays.asList(PLUGIN_CURRENT_PACKAGE));
+        // TODO replace by a Postgres plugin
+        return null;
     }
 
     public void buildData1() throws ModuleException {
@@ -224,10 +218,8 @@ public class CrawlerServiceIT {
         dataModel.setVersion("1");
         dataModel.setDescription("Test data object model");
         modelService.createModel(dataModel);
-        dataSourceModelMapping = new DataSourceModelMapping(dataModel.getId(), Collections.singletonList(
-                new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY, AttributeType.INTEGER,
-                                           "DATA_OBJECTS_ID")));
-
+        modelAttrMapping = Collections.singletonList(new StaticAttributeMapping(AbstractAttributeMapping.PRIMARY_KEY,
+                AttributeType.INTEGER, "DATA_OBJECTS_ID"));
         pluginConf = getOracleConnectionConfiguration();
         pluginService.savePluginConfiguration(pluginConf);
 
@@ -305,23 +297,23 @@ public class CrawlerServiceIT {
         esRepos.refresh(tenant);
         Collection coll1Bis = esRepos.get(tenant, coll1);
         Assert.assertNotNull(coll1Bis);
-        Assert.assertTrue(Beans.equals(coll1, coll1Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(coll1, coll1Bis, "getModel"));
         final Collection coll2Bis = esRepos.get(tenant, coll2);
         Assert.assertNotNull(coll2Bis);
-        Assert.assertTrue(Beans.equals(coll2, coll2Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(coll2, coll2Bis, "getModel"));
         final Collection coll3Bis = esRepos.get(tenant, coll3);
         Assert.assertNotNull(coll3Bis);
-        Assert.assertTrue(Beans.equals(coll3, coll3Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(coll3, coll3Bis, "getModel"));
 
         Dataset ds1Bis = esRepos.get(tenant, dataset1);
         Assert.assertNotNull(ds1Bis);
-        Assert.assertTrue(Beans.equals(dataset1, ds1Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(dataset1, ds1Bis, "getModel"));
         final Dataset ds2Bis = esRepos.get(tenant, dataset2);
         Assert.assertNotNull(ds2Bis);
-        Assert.assertTrue(Beans.equals(dataset2, ds2Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(dataset2, ds2Bis, "getModel"));
         final Dataset ds3Bis = esRepos.get(tenant, dataset3);
         Assert.assertNotNull(ds3Bis);
-        Assert.assertTrue(Beans.equals(dataset3, ds3Bis, "getModel"));
+        Assert.assertTrue(Beans.areEqual(dataset3, ds3Bis, "getModel"));
 
         crawlerService.startWork();
         final OffsetDateTime suppressDate = OffsetDateTime.now();

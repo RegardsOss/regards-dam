@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -19,7 +19,7 @@
 package fr.cnes.regards.modules.entities.domain.event;
 
 import fr.cnes.regards.framework.amqp.event.IPollable;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 
 /**
  * Microservice specific abstract entity event (@see CrawlerService) sent to AMQP indicating that the concerned entity has been
@@ -38,9 +38,9 @@ public abstract class AbstractEntityEvent implements IPollable {
         super();
     }
 
-    public AbstractEntityEvent(UniformResourceName... pIpIds) {
+    public AbstractEntityEvent(UniformResourceName... ipIds) {
         this();
-        ipIds = pIpIds;
+        this.ipIds = ipIds;
     }
 
     public UniformResourceName[] getIpIds() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -38,32 +38,32 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @RestClient(name = "rs-dam")
 @RequestMapping(value = IAttributeModelClient.PATH, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
         produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-public interface IAttributeModelClient { //NOSONAR
+public interface IAttributeModelClient {
 
     /**
      * Mapping
      */
-    public static final String PATH = "/models/attributes";
+    String PATH = "/models/attributes";
 
     /**
      * Request parameter : attribute type
      */
-    public static final String PARAM_TYPE = "type";
+    String PARAM_TYPE = "type";
 
     /**
-     * Request parameter : fragement name
+     * Request parameter : fragment name
      */
-    public static final String PARAM_FRAGMENT_NAME = "fragmentName";
+    String PARAM_FRAGMENT_NAME = "fragmentName";
 
     /**
      * Get the list of {@link AttributeModel}
-     * @param pType the type to filter on
-     * @param pFragmentName the fragment to filter on
+     * @param type the type to filter on
+     * @param fragmentName the fragment to filter on
      * @return the list wrapped in an HTTP response
      */
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
-            @RequestParam(value = PARAM_TYPE, required = false) AttributeType pType,
-            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String pFragmentName);
+    ResponseEntity<List<Resource<AttributeModel>>> getAttributes(
+            @RequestParam(value = PARAM_TYPE, required = false) AttributeType type,
+            @RequestParam(value = PARAM_FRAGMENT_NAME, required = false) String fragmentName);
 
 }

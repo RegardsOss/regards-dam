@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,15 +33,20 @@ import org.springframework.web.util.UriUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.EntityOperationForbiddenException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.service.IDataSourceService;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -52,7 +58,6 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -63,7 +68,6 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 
 /**
  * Specific EntityService for Datasets
- *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
@@ -71,96 +75,102 @@ import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 @MultitenantTransactional
 public class DatasetService extends AbstractEntityService<Dataset> implements IDatasetService {
 
+    /**
+     * {@link IAttributeModelService} instance
+     */
     private final IAttributeModelService attributeService;
 
-    private final IDataSourceService dataSourceService;
-
+    /**
+     * {@link IOpenSearchService} instance
+     */
     private final IOpenSearchService openSearchService;
 
-    public DatasetService(IDatasetRepository pRepository, IAttributeModelService pAttributeService,
-            IModelAttrAssocService pModelAttributeService, IDataSourceService pDataSourceService,
-            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
-            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository pCollectionRepository,
-            EntityManager pEm, IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IDescriptionFileRepository descriptionFileRepository, IOpenSearchService openSearchService) {
-        super(pModelAttributeService, pEntityRepository, pModelService, deletedEntityRepository, pCollectionRepository,
-              pRepository, pRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
-        attributeService = pAttributeService;
-        dataSourceService = pDataSourceService;
+    private final IPluginService pluginService;
+
+    public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
+            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity> entityRepository,
+            IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
+            ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
+            IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
+            IOpenSearchService openSearchService, IPluginService pluginService) {
+        super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
+              repository, repository, em, publisher, runtimeTenantResolver, descriptionFileRepository);
+        this.attributeService = attributeService;
         this.openSearchService = openSearchService;
+        this.pluginService = pluginService;
     }
 
     /**
      * Control the DataSource associated to the {@link Dataset} in parameter if needed.</br>
      * If any DataSource is associated, sets the default DataSource.
-     *
-     * @param pDataset
-     * @throws EntityNotFoundException
+     * @throws ModuleException if error occurs!
      */
-    private Dataset checkDataSource(final Dataset pDataset) throws EntityNotFoundException {
-        if (pDataset.getDataSource() == null) {
-            // If any DataSource, set the default DataSource
-            pDataset.setDataSource(dataSourceService.getInternalDataSource());
-            // TODO ? which data model ?
-        } else {
-            // Verify the existence of the DataSource associated to the Dataset
-            final DataSource src = dataSourceService.getDataSource(pDataset.getDataSource().getId());
-            pDataset.setDataModel(src.getMapping().getModel());
+    private Dataset checkDataSource(final Dataset dataset) throws ModuleException {
+        if (dataset.getDataSource() != null) {
+            // Retrieve plugin from associated datasource
+            IDataSourcePlugin datasourcePlugin = pluginService.getPlugin(dataset.getDataSource().getId());
+            String modelName = datasourcePlugin.getModelName();
+            try {
+                Model model = modelService.getModelByName(modelName);
+                dataset.setDataModel(model.getName());
+            } catch (ModuleException e) {
+                logger.error("Unable to dejsonify model parameter from PluginConfiguration", e);
+                throw new EntityNotFoundException(String
+                        .format("Unable to dejsonify model parameter from PluginConfiguration (%s)", e.getMessage()),
+                        PluginConfiguration.class);
+            }
         }
-        return pDataset;
+        return dataset;
     }
 
     /**
      * Check that the sub-setting criterion setting on a Dataset are coherent with the {@link Model} associated to the
-     * {@link DataSource}. Should always be closed after checkDataSource, so the dataModel is properly set.
-     *
-     * @param pDataset
-     *            the {@link Dataset} to check
+     * data source. Should always be closed after checkDataSource, so the dataModel is properly set.
+     * @param dataset the {@link Dataset} to check
      * @return the modified {@link Dataset}
-     * @throws ModuleException
      */
-    private Dataset checkSubsettingCriterion(final Dataset pDataset) throws ModuleException {
+    private Dataset checkSubsettingCriterion(final Dataset dataset) throws ModuleException {
         // getUserSubsettingClause() cannot be null
         try {
-            String stringClause = pDataset.getOpenSearchSubsettingClause();
+            String stringClause = dataset.getOpenSearchSubsettingClause();
             if (Strings.isNullOrEmpty(stringClause)) {
-                pDataset.setSubsettingClause(ICriterion.all());
+                dataset.setSubsettingClause(ICriterion.all());
             } else {
-                pDataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
+                dataset.setSubsettingClause(openSearchService.parse("q=" + UriUtils.encode(stringClause, "UTF-8")));
             }
         } catch (UnsupportedEncodingException e) {
-            //if this exception happens its really an issue as the whole system relys on the fact UTF-8 is handled
-            throw new RuntimeException(e);
+            // if this exception happens it's really an issue as the whole system relys on the fact UTF-8 is handled
+            throw new RsRuntimeException(e);
         }
-        final ICriterion subsettingCriterion = pDataset.getUserSubsettingClause();
+        final ICriterion subsettingCriterion = dataset.getUserSubsettingClause();
         // To avoid loading models when not necessary
         if (!subsettingCriterion.equals(ICriterion.all())) {
-            final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(pDataset.getDataModel());
+            final SubsettingCoherenceVisitor criterionVisitor = getSubsettingCoherenceVisitor(dataset.getDataModel());
             if (!subsettingCriterion.accept(criterionVisitor)) {
                 throw new EntityInvalidException(
-                        "Given subsettingCriterion cannot be accepted for the Dataset : " + pDataset.getLabel());
+                        "Given subsettingCriterion cannot be accepted for the Dataset : " + dataset.getLabel());
             }
         }
-        return pDataset;
+        return dataset;
     }
 
     @Override
-    public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(Long dataModelId) throws ModuleException {
-        return new SubsettingCoherenceVisitor(modelService.getModel(dataModelId), attributeService,
-                                              modelAttributeService);
+    public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
+        return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
+                modelAttributeService);
     }
 
     @Override
-    protected void doCheck(final Dataset pEntity, final Dataset entityInDB) throws ModuleException {
-        Dataset ds = checkDataSource(pEntity);
+    protected void doCheck(final Dataset entity, final Dataset entityInDB) throws ModuleException {
+        Dataset ds = checkDataSource(entity);
         checkSubsettingCriterion(ds);
         // check for updates on data model or datasource
         // if entityInDB is null then it is a creation so we cannot be modifying the data model or the datasource
         if (entityInDB != null) {
-            if (!Objects.equal(pEntity.getDataSource(), entityInDB.getDataSource())) {
+            if (!Objects.equal(entity.getDataSource(), entityInDB.getDataSource())) {
                 throw new EntityOperationForbiddenException("Datasources of datasets cannot be updated");
             }
-            if (!Objects.equal(pEntity.getDataModel(), entityInDB.getDataModel())) {
+            if (!Objects.equal(entity.getDataModel(), entityInDB.getDataModel())) {
                 throw new EntityOperationForbiddenException("Data models of datasets cannot be updated");
             }
         }
@@ -168,19 +178,45 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     @Override
     public Page<AttributeModel> getDataAttributeModels(final Set<UniformResourceName> urns, final Set<Long> modelIds,
-            final Pageable pPageable) throws ModuleException {
+            final Pageable pageable) throws ModuleException {
         if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
             final List<Dataset> datasets = datasetRepository.findAll();
-            return getDataAttributeModelsFromDatasets(datasets, pPageable);
+            return getDataAttributeModelsFromDatasets(datasets, pageable);
         } else {
             if ((modelIds == null) || modelIds.isEmpty()) {
                 final List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
-                return getDataAttributeModelsFromDatasets(datasets, pPageable);
+                return getDataAttributeModelsFromDatasets(datasets, pageable);
             } else {
-                final Set<Dataset> datasets = datasetRepository.findAllByModelId(modelIds);
-                return getDataAttributeModelsFromDatasets(datasets, pPageable);
+                final Set<Dataset> datasets = datasetRepository.findAllByModelIdIn(modelIds);
+                return getDataAttributeModelsFromDatasets(datasets, pageable);
             }
         }
+    }
+
+    @Override
+    public Page<AttributeModel> getAttributeModels(Set<UniformResourceName> urns, Set<Long> modelIds, Pageable pageable)
+            throws ModuleException {
+        Page<AttributeModel> attModelPage;
+        if (((modelIds == null) || modelIds.isEmpty()) && ((urns == null) || urns.isEmpty())) {
+            // Retrieve all dataset models attributes
+            List<Model> allDsModels = modelService.getModels(EntityType.DATASET);
+            Set<Long> dsModelIds = allDsModels.stream().map(ds -> ds.getId()).collect(Collectors.toSet());
+            attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
+        } else {
+            if ((modelIds == null) || modelIds.isEmpty()) {
+                // Retrieve all attributes associated to the given datasets
+                List<Dataset> datasets = datasetRepository.findByIpIdIn(urns);
+                Set<Long> dsModelIds = datasets.stream().map(ds -> ds.getModel().getId()).collect(Collectors.toSet());
+                attModelPage = modelAttributeService.getAttributeModels(dsModelIds, pageable);
+            } else {
+                // Retrieve all attributes associated to the given models.
+                attModelPage = modelAttributeService.getAttributeModels(modelIds, pageable);
+            }
+        }
+
+        // Add jsonpath to each attribute
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        return attModelPage;
     }
 
     @Override
@@ -207,12 +243,11 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
      * extract all the AttributeModel of {@link DataObject} that can be contained into the datasets
      */
     private Page<AttributeModel> getDataAttributeModelsFromDatasets(final Collection<Dataset> datasets,
-            final Pageable pPageable) throws ModuleException {
-        final List<Long> modelIds = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
-        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModels(modelIds, pPageable);
+            final Pageable pageable) throws ModuleException {
+        final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
+        Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
         // Build JSON path
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
         return attModelPage;
     }
-
 }

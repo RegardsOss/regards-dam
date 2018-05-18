@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -20,7 +20,11 @@ package fr.cnes.regards.modules.crawler.test;
 
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.PropertySource;
 
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.security.autoconfigure.MethodAuthorizationServiceAutoConfiguration;
@@ -31,6 +35,7 @@ import fr.cnes.regards.modules.dataaccess.service.AccessRightService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
 import fr.cnes.regards.modules.models.client.IAttributeModelClient;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
+import fr.cnes.regards.modules.notification.client.INotificationClient;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 
@@ -42,8 +47,6 @@ import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 @EnableAutoConfiguration(
         exclude = { MethodAuthorizationServiceAutoConfiguration.class, MethodSecurityAutoConfiguration.class,
                 SecurityVoterAutoConfiguration.class, WebSecurityAutoConfiguration.class })
-@PropertySource(value = { "classpath:test.properties", "classpath:test_${user.name}.properties" },
-        ignoreResourceNotFound = true)
 public class CrawlerConfiguration {
 
     @Bean
@@ -75,5 +78,10 @@ public class CrawlerConfiguration {
     @Bean
     public IResourceService getResourceService() {
         return Mockito.mock(IResourceService.class);
+    }
+
+    @Bean
+    public INotificationClient notifClient() {
+        return Mockito.mock(INotificationClient.class);
     }
 }

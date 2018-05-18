@@ -30,6 +30,9 @@ public class DatasourceIngestion {
     @Column(name = "ds_id")
     private Long id;
 
+    @Column(name = "label", length = 255)
+    private String label;
+
     /**
      * Date of last ingestion (null if none yet)
      */
@@ -45,7 +48,7 @@ public class DatasourceIngestion {
     private OffsetDateTime nextPlannedIngestDate;
 
     /**
-     * Duration from Status.STARTED to Status.FINISHED with second representation format (for esample PT8H6M12.345S --
+     * Duration from Status.STARTED to Status.FINISHED with second representation format (for example PT8H6M12.345S --
      * "8 hours 6 mn 12.345 s"
      */
     @Column(name = "duration", length = 20)
@@ -87,39 +90,40 @@ public class DatasourceIngestion {
         this.id = id;
     }
 
-    public DatasourceIngestion(Long id, OffsetDateTime nextPlannedIngestDate) {
+    public DatasourceIngestion(Long id, OffsetDateTime nextPlannedIngestDate, String label) {
         this(id);
         this.nextPlannedIngestDate = nextPlannedIngestDate;
+        this.label = label;
     }
 
     public Long getId() {
         return id;
     }
 
-    public void setId(Long pId) {
-        id = pId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public OffsetDateTime getLastIngestDate() {
         return lastIngestDate;
     }
 
-    public void setLastIngestDate(OffsetDateTime pLastIngestDate) {
-        lastIngestDate = pLastIngestDate;
+    public void setLastIngestDate(OffsetDateTime lastIngestDate) {
+        this.lastIngestDate = lastIngestDate;
     }
 
     public IngestionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(IngestionStatus pStatus) {
+    public void setStatus(IngestionStatus status) {
         OffsetDateTime now = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC);
-        if ((pStatus == IngestionStatus.FINISHED) && (statusDate != null)) {
+        if ((status == IngestionStatus.FINISHED) && (statusDate != null)) {
             duration = Duration.between(statusDate, now).toString();
         } else {
             duration = null;
         }
-        status = pStatus;
+        this.status = status;
         statusDate = now;
     }
 
@@ -127,32 +131,40 @@ public class DatasourceIngestion {
         return statusDate;
     }
 
-    public void setStatusDate(OffsetDateTime pStatusDate) {
-        statusDate = pStatusDate;
+    public void setStatusDate(OffsetDateTime statusDate) {
+        this.statusDate = statusDate;
     }
 
     public OffsetDateTime getNextPlannedIngestDate() {
         return nextPlannedIngestDate;
     }
 
-    public void setNextPlannedIngestDate(OffsetDateTime pNextPlannedIngestDate) {
-        nextPlannedIngestDate = pNextPlannedIngestDate;
+    public void setNextPlannedIngestDate(OffsetDateTime nextPlannedIngestDate) {
+        this.nextPlannedIngestDate = nextPlannedIngestDate;
     }
 
     public Integer getSavedObjectsCount() {
         return savedObjectsCount;
     }
 
-    public void setSavedObjectsCount(Integer pSavedObjectsCount) {
-        savedObjectsCount = pSavedObjectsCount;
+    public void setSavedObjectsCount(Integer savedObjectsCount) {
+        this.savedObjectsCount = savedObjectsCount;
     }
 
     public String getStackTrace() {
         return stackTrace;
     }
 
-    public void setStackTrace(String pStackTrace) {
-        stackTrace = pStackTrace;
+    public void setStackTrace(String stackTrace) {
+        this.stackTrace = stackTrace;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -76,7 +76,7 @@ public class LongRangeRestriction extends AbstractRestriction {
 
     public LongRangeRestriction() {// NOSONAR
         super();
-        setType(RestrictionType.LONG_RANGE);
+        type = RestrictionType.LONG_RANGE;
     }
 
     @Override

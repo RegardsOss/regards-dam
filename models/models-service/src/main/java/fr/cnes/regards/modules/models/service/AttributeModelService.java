@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -19,8 +19,8 @@
 package fr.cnes.regards.modules.models.service;
 
 import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +28,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.*;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.modules.models.dao.AttributeModelSpecifications;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
 import fr.cnes.regards.modules.models.dao.IAttributePropertyRepository;
 import fr.cnes.regards.modules.models.dao.IFragmentRepository;
@@ -106,22 +110,8 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName) {
-        final Iterable<AttributeModel> attModels;
-        if (pFragmentName != null) {
-            if (pType != null) {
-                attModels = attModelRepository.findByTypeAndFragmentName(pType, pFragmentName);
-            } else {
-                attModels = attModelRepository.findByFragmentName(pFragmentName);
-            }
-        } else {
-            if (pType != null) {
-                attModels = attModelRepository.findByType(pType);
-            } else {
-                attModels = attModelRepository.findAll();
-            }
-        }
-        return (attModels != null) ? Lists.newArrayList(attModels) : Collections.emptyList();
+    public List<AttributeModel> getAttributes(AttributeType type, String fragmentName, Set<Long> modelIds) {
+        return attModelRepository.findAll(AttributeModelSpecifications.search(type, fragmentName, modelIds));
     }
 
     @Override
@@ -156,20 +146,19 @@ public class AttributeModelService implements IAttributeModelService {
     }
 
     @Override
-    public AttributeModel updateAttribute(Long pAttributeId, AttributeModel pAttributeModel) throws ModuleException {
-        if (!pAttributeModel.isIdentifiable()) {
-            throw new EntityNotIdentifiableException(
-                    String.format("Unknown identifier for attribute model \"%s\"", pAttributeModel.getName()));
+    public AttributeModel updateAttribute(Long id, AttributeModel attributeModel) throws ModuleException {
+        if (!attributeModel.isIdentifiable()) {
+            throw new EntityNotFoundException(
+                    String.format("Unknown identifier for attribute model \"%s\"", attributeModel.getName()));
         }
-        if (!pAttributeId.equals(pAttributeModel.getId())) {
-            throw new EntityInconsistentIdentifierException(pAttributeId, pAttributeModel.getId(),
-                                                            pAttributeModel.getClass());
+        if (!id.equals(attributeModel.getId())) {
+            throw new EntityInconsistentIdentifierException(id, attributeModel.getId(), attributeModel.getClass());
         }
-        if (!attModelRepository.exists(pAttributeId)) {
-            throw new EntityNotFoundException(pAttributeModel.getId(), AttributeModel.class);
+        if (!attModelRepository.exists(id)) {
+            throw new EntityNotFoundException(attributeModel.getId(), AttributeModel.class);
         }
-        manageRestriction(pAttributeModel);
-        return attModelRepository.save(pAttributeModel);
+        manageRestriction(attributeModel);
+        return attModelRepository.save(attributeModel);
     }
 
     @Override
@@ -237,9 +226,9 @@ public class AttributeModelService implements IAttributeModelService {
         if (fragment == null) {
             pFragment.setId(null);
             if (!isFragmentCreatable(pFragment.getName())) {
-                throw new EntityAlreadyExistsException(String.format(
-                        "Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
-                        pFragment.getName()));
+                throw new EntityAlreadyExistsException(
+                        String.format("Fragment with name \"%s\" cannot be created because an attribute with the same name already exists!",
+                                      pFragment.getName()));
             }
             fragment = fragmentRepository.save(pFragment);
         }
@@ -263,22 +252,22 @@ public class AttributeModelService implements IAttributeModelService {
             if (attributeModel != null) {
                 final String message;
                 if (pAttributeModel.getFragment().isDefaultFragment()) {
-                    message = MessageFormat
-                            .format("Attribute model with name \"{0}\" already exists.", pAttributeModel.getName());
+                    message = MessageFormat.format("Attribute model with name \"{0}\" already exists.",
+                                                   pAttributeModel.getName());
                 } else {
                     // CHECKSTYLE:OFF
-                    message = MessageFormat
-                            .format("Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
-                                    pAttributeModel.getName(), pAttributeModel.getFragment().getName());
+                    message = MessageFormat.format(
+                                                   "Attribute model with name \"{0}\" in fragment \"{1}\" already exists.",
+                                                   pAttributeModel.getName(), pAttributeModel.getFragment().getName());
                     // CHECKSTYLE:ON
                 }
                 LOGGER.error(message);
                 throw new EntityAlreadyExistsException(message);
             }
             if (fragmentRepository.findByName(pAttributeModel.getName()) != null) {
-                throw new EntityAlreadyExistsException(MessageFormat
-                                                               .format("Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
-                                                                       pAttributeModel.getName()));
+                throw new EntityAlreadyExistsException(MessageFormat.format(
+                                                                            "Attribute with name \"{0}\" cannot be created because a fragment with the same name already exists",
+                                                                            pAttributeModel.getName()));
             }
         }
         return attModelRepository.save(pAttributeModel);
@@ -307,9 +296,8 @@ public class AttributeModelService implements IAttributeModelService {
     public void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException {
         final IRestriction restriction = pAttributeModel.getRestriction();
         if ((restriction != null) && !restriction.supports(pAttributeModel.getType())) {
-            final String message = String
-                    .format("Attribute of type %s does not support %s restriction", pAttributeModel.getType(),
-                            restriction.getType());
+            final String message = String.format("Attribute of type %s does not support %s restriction",
+                                                 pAttributeModel.getType(), restriction.getType());
             LOGGER.error(message);
             throw new UnsupportedRestrictionException(message);
         }

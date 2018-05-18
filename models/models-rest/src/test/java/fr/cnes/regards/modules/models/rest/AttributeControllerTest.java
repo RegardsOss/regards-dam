@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -97,8 +97,9 @@ public class AttributeControllerTest {
         attributes.add(AttributeModelBuilder.build("STOP_DATE", AttributeType.DATE_ISO8601, "ForTests").withId(3L)
                 .defaultFragment().get());
         // CHECKSTYLE:ON
-        Mockito.when(attributeServiceMocked.getAttributes(null, null)).thenReturn(attributes);
-        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null);
+        Mockito.when(attributeServiceMocked.getAttributes(null, null, null)).thenReturn(attributes);
+        final ResponseEntity<List<Resource<AttributeModel>>> response = attributeController.getAttributes(null, null,
+                                                                                                          null);
         Assert.assertEquals(attributes.size(), response.getBody().size());
     }
 

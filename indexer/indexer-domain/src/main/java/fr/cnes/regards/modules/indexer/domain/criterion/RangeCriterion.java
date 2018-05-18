@@ -1,6 +1,7 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -15,7 +16,7 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     /**
      * Set of comparisons (att > 0, att <= 25.34, etc...)
      */
-    private Set<ValueComparison<T>> valueComparisons = new HashSet<>();
+    private final Set<ValueComparison<T>> valueComparisons = new HashSet<>();
 
     protected RangeCriterion(String pName) {
         super(pName);
@@ -35,33 +36,22 @@ public class RangeCriterion<T extends Comparable<? super T>> extends AbstractPro
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = (prime * result) + ((valueComparisons == null) ? 0 : valueComparisons.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        RangeCriterion<?> that = (RangeCriterion<?>) o;
+        return Objects.equals(valueComparisons, that.valueComparisons);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        RangeCriterion<?> other = (RangeCriterion<?>) obj;
-        if (valueComparisons == null) {
-            if (other.valueComparisons != null) {
-                return false;
-            }
-        } else if (!valueComparisons.equals(other.valueComparisons)) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), valueComparisons);
     }
-
 }

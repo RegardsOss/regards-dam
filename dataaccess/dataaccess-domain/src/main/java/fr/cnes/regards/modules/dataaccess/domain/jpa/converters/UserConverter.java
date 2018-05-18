@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -24,8 +24,9 @@ import javax.persistence.Converter;
 import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
 
 /**
- * @author Sylvain Vissiere-Guerinet
+ * User database converter
  *
+ * @author Sylvain Vissiere-Guerinet
  */
 @Converter(autoApply = true)
 public class UserConverter implements AttributeConverter<User, String> {

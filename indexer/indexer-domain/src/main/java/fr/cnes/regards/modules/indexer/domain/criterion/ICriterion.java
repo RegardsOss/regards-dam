@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -40,24 +40,24 @@ public interface ICriterion {
         return EmptyCriterion.INSTANCE;
     }
 
-    static ICriterion and(ICriterion... crits) {
-        return new AndCriterion(crits);
+    static ICriterion and(ICriterion... criteria) {
+        return new AndCriterion(criteria);
     }
 
-    static ICriterion and(Iterable<ICriterion> crits) {
-        return new AndCriterion(crits);
+    static ICriterion and(Iterable<ICriterion> criteria) {
+        return new AndCriterion(criteria);
     }
 
-    static ICriterion or(ICriterion... crits) {
-        return new OrCriterion(crits);
+    static ICriterion or(ICriterion... criteria) {
+        return new OrCriterion(criteria);
     }
 
-    static ICriterion or(Iterable<ICriterion> crits) {
-        return new OrCriterion(crits);
+    static ICriterion or(Iterable<ICriterion> criteria) {
+        return new OrCriterion(criteria);
     }
 
-    static ICriterion not(ICriterion crit) {
-        return new NotCriterion(crit);
+    static ICriterion not(ICriterion criterion) {
+        return new NotCriterion(criterion);
     }
 
     static <T extends Number & Comparable<T>> ICriterion gt(String attName, T value) {
@@ -129,11 +129,17 @@ public interface ICriterion {
     }
 
     static ICriterion in(String attName, int... values) {
+        if (values.length == 0) {
+            return new NotCriterion(all());
+        }
         return new OrCriterion(IntStream.of(values).mapToObj(val -> new IntMatchCriterion(attName, val))
                                        .collect(Collectors.toList()));
     }
 
     static ICriterion in(String attName, long... values) {
+        if (values.length == 0) {
+            return new NotCriterion(all());
+        }
         return new OrCriterion(LongStream.of(values).mapToObj(val -> new LongMatchCriterion(attName, val))
                                        .collect(Collectors.toList()));
     }
@@ -167,6 +173,17 @@ public interface ICriterion {
     static ICriterion eq(String attName, String text) {
         return new StringMatchCriterion(attName, MatchType.EQUALS, text);
     }
+
+    /**
+     * Criterion to test if a parameter is exactly the provided date
+     * @param attName Date attribute
+     * @param date provided text
+     * @return criterion
+     */
+    static ICriterion eq(String attName, OffsetDateTime date) {
+        return new DateMatchCriterion(attName, date);
+    }
+
 
     /**
      * Criterion to test if a parameter starts with the provided text or if a String array parameter contains an element
@@ -250,6 +267,9 @@ public interface ICriterion {
      * @return criterion
      */
     static ICriterion in(String attName, String... texts) {
+        if (texts.length == 0) {
+            return new NotCriterion(all());
+        }
         // If one of the texts contains a blank character, StringMatchAnyCriterion cannot be used due to ES limitations
         if (Stream.of(texts).anyMatch(str -> str.contains(" "))) {
             return new OrCriterion(
@@ -391,7 +411,6 @@ public interface ICriterion {
      * @param value value to test inclusion
      * @return criterion
      */
-    // CHECKSTYLE:OFF
     static <T extends Number & Comparable<T>> ICriterion into(String attName, T value) {
         return ICriterion.and(ICriterion.le(attName + "." + IMapping.RANGE_LOWER_BOUND, value),
                               ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, value));
@@ -421,8 +440,6 @@ public interface ICriterion {
                               ICriterion.ge(attName + "." + IMapping.RANGE_UPPER_BOUND, lowerBound));
     }
 
-    // CHECKSTYLE:ON
-
     /**
      * Criterion to test the intersection with a circle giving center coordinates and radius.
      * @param center coordinates of center
@@ -440,5 +457,14 @@ public interface ICriterion {
      */
     static ICriterion intersectsPolygon(Double[][][] coordinates) {
         return new PolygonCriterion(coordinates);
+    }
+
+    /**
+     * Criterion to test if given attribute exists
+     * @param attName attribute name
+     * @return criterion
+     */
+    static ICriterion attributeExists(String attName) {
+        return new FieldExistsCriterion(attName);
     }
 }

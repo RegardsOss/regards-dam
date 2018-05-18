@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,102 +18,109 @@
  */
 package fr.cnes.regards.modules.dataaccess.service;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
-import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
-import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
-import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEventType;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.common.base.Preconditions;
+import fr.cnes.regards.framework.amqp.IPublisher;
+import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.dataaccess.dao.IAccessRightRepository;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
+import fr.cnes.regards.modules.dataaccess.domain.accessgroup.User;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.DataAccessLevel;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEvent;
+import fr.cnes.regards.modules.dataaccess.domain.accessright.event.AccessRightEventType;
+import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.service.IDatasetService;
 
 /**
+ * Access right service implementation
  * @author Sylvain Vissiere-Guerinet
  */
 @Service
 @MultitenantTransactional
 public class AccessRightService implements IAccessRightService {
 
-    private final IAccessRightRepository repository;
+    @Autowired
+    private IAccessRightRepository repository;
 
-    private final IAccessGroupService accessGroupService;
+    @Autowired
+    private IAccessGroupService accessGroupService;
 
-    private final IDatasetService datasetService;
+    @Autowired
+    private IDatasetService datasetService;
 
-    private final IPublisher eventPublisher;
-
-    public AccessRightService(final IAccessRightRepository pAccessRightRepository,
-                              final IAccessGroupService pAccessGroupService, final IDatasetService pDatasetService,
-                              final IPublisher pEventPublisher) {
-        repository = pAccessRightRepository;
-        accessGroupService = pAccessGroupService;
-        datasetService = pDatasetService;
-        eventPublisher = pEventPublisher;
-    }
+    @Autowired
+    private IPublisher eventPublisher;
 
     @Override
-    public Page<AccessRight> retrieveAccessRights(final String pAccessGroupName, final UniformResourceName pDatasetIpId,
-                                                  final Pageable pPageable) throws EntityNotFoundException {
-        if (pAccessGroupName != null) {
-            return retrieveAccessRightsByAccessGroup(pDatasetIpId, pAccessGroupName, pPageable);
+    public Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
+            Pageable pageable) throws EntityNotFoundException {
+        if (accessGroupName != null) {
+            return retrieveAccessRightsByAccessGroup(datasetIpId, accessGroupName, pageable);
         }
-        return retrieveAccessRightsByDataset(pDatasetIpId, pPageable);
+        return retrieveAccessRightsByDataset(datasetIpId, pageable);
     }
 
-    private Page<AccessRight> retrieveAccessRightsByDataset(final UniformResourceName pDatasetIpId,
-                                                            final Pageable pPageable) throws EntityNotFoundException {
-        if (pDatasetIpId != null) {
-            final Dataset ds = datasetService.load(pDatasetIpId);
+    private Page<AccessRight> retrieveAccessRightsByDataset(UniformResourceName datasetIpId, Pageable pageable)
+            throws EntityNotFoundException {
+        if (datasetIpId != null) {
+            Dataset ds = datasetService.load(datasetIpId);
             if (ds == null) {
-                throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
+                throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
             }
 
-            return repository.findAllByDataset(ds, pPageable);
+            return repository.findAllByDataset(ds, pageable);
         }
-        return repository.findAll(pPageable);
+        return repository.findAll(pageable);
     }
 
-    /**
-     * Retrieve groups access levels of a specified dataset
-     *
-     * @param datasetIpId concerned datasetIpId, must not be null
-     * @return a map { groupName, accessLevel }
-     * @throws EntityNotFoundException if dataset doesn't exist
-     */
     @Override
-    public Map<String, AccessLevel> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId) {
+    public Optional<AccessRight> retrieveAccessRight(String accessGroupName, UniformResourceName datasetIpId)
+            throws EntityNotFoundException {
+        Preconditions.checkNotNull(accessGroupName);
+        Preconditions.checkNotNull(datasetIpId);
+        AccessGroup ag = accessGroupService.retrieveAccessGroup(accessGroupName);
+        Dataset dataset = datasetService.load(datasetIpId);
+
+        return repository.findAccessRightByAccessGroupAndDataset(ag, dataset);
+    }
+
+    @Override
+    public Map<String, Pair<AccessLevel, DataAccessLevel>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
+            throws EntityNotFoundException {
         if (datasetIpId == null) {
             throw new IllegalArgumentException("datasetIpId must not be null");
         }
-        try {
-            return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream().collect(Collectors.toMap(r -> r.getAccessGroup().getName(), AccessRight::getAccessLevel));
-        } catch (EntityNotFoundException e) {
-            return Collections.emptyMap();
-        }
+        return retrieveAccessRightsByDataset(datasetIpId, new PageRequest(0, Integer.MAX_VALUE)).getContent().stream()
+                .collect(Collectors.toMap(r -> r.getAccessGroup().getName(), accessRight -> Pair
+                        .of(accessRight.getAccessLevel(), accessRight.getDataAccessRight().getDataAccessLevel())));
     }
 
-    private Page<AccessRight> retrieveAccessRightsByAccessGroup(final UniformResourceName pDatasetIpId,
-                                                                final String pAccessGroupName, final Pageable pPageable) throws EntityNotFoundException {
-        final AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
+    private Page<AccessRight> retrieveAccessRightsByAccessGroup(UniformResourceName pDatasetIpId,
+            String pAccessGroupName, Pageable pPageable) throws EntityNotFoundException {
+        AccessGroup ag = accessGroupService.retrieveAccessGroup(pAccessGroupName);
         if (ag == null) {
             throw new EntityNotFoundException(pAccessGroupName, AccessGroup.class);
         }
         if (pDatasetIpId != null) {
-            final Dataset ds = datasetService.load(pDatasetIpId);
+            Dataset ds = datasetService.load(pDatasetIpId);
             if (ds == null) {
                 throw new EntityNotFoundException(pDatasetIpId.toString(), Dataset.class);
             }
@@ -125,13 +132,13 @@ public class AccessRightService implements IAccessRightService {
     }
 
     @Override
-    public AccessRight createAccessRight(final AccessRight pAccessRight) throws ModuleException {
-        final Dataset dataset = datasetService.load(pAccessRight.getDataset().getId());
+    public AccessRight createAccessRight(AccessRight accessRight) throws ModuleException {
+        Dataset dataset = datasetService.load(accessRight.getDataset().getId());
         if (dataset == null) {
-            throw new EntityNotFoundException(pAccessRight.getDataset().getId(), Dataset.class);
+            throw new EntityNotFoundException(accessRight.getDataset().getId(), Dataset.class);
         }
 
-        final AccessGroup accessGroup = pAccessRight.getAccessGroup();
+        AccessGroup accessGroup = accessRight.getAccessGroup();
         if (!accessGroupService.existGroup(accessGroup.getId())) {
             throw new EntityNotFoundException(accessGroup.getId(), AccessGroup.class);
         }
@@ -140,80 +147,86 @@ public class AccessRightService implements IAccessRightService {
         // Save dataset through DatasetService (no cascade on AbstractAccessRight.dataset)
         datasetService.update(dataset);
         // re-set updated dataset on accessRight to make its state correct on accessRight object
-        pAccessRight.setDataset(dataset);
+        accessRight.setDataset(dataset);
 
-        final AccessRight created = repository.save(pAccessRight);
+        AccessRight created = repository.save(accessRight);
         eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.CREATE));
         return created;
     }
 
     @Override
-    public AccessRight retrieveAccessRight(final Long pId) throws EntityNotFoundException {
-        final AccessRight result = repository.findById(pId);
+    public AccessRight retrieveAccessRight(Long id) throws EntityNotFoundException {
+        AccessRight result = repository.findById(id);
         if (result == null) {
-            throw new EntityNotFoundException(pId, AccessRight.class);
+            throw new EntityNotFoundException(id, AccessRight.class);
         }
         return result;
     }
 
     @Override
-    public AccessRight updateAccessRight(final Long pId, final AccessRight pToBe) throws ModuleException {
-        final AccessRight toBeUpdated = repository.findById(pId);
-        if (toBeUpdated == null) {
-            throw new EntityNotFoundException(pId, AccessRight.class);
+    public AccessRight updateAccessRight(Long id, AccessRight accessRight) throws ModuleException {
+        AccessRight accessRightFromDb = repository.findById(id);
+        if (accessRightFromDb == null) {
+            throw new EntityNotFoundException(id, AccessRight.class);
         }
-        if (!pToBe.getId().equals(pId)) {
-            throw new EntityInconsistentIdentifierException(pId, pToBe.getId(), AccessRight.class);
+        if (!accessRight.getId().equals(id)) {
+            throw new EntityInconsistentIdentifierException(id, accessRight.getId(), AccessRight.class);
         }
         // Remove current group from dataset if accessRight is a GroupAccessRight
-        final Dataset dataset = datasetService.load(toBeUpdated.getDataset().getId());
+        Dataset dataset = datasetService.load(accessRightFromDb.getDataset().getId());
         if (dataset != null) {
-
             // If group has changed
-            final AccessGroup currentAccessGroup = toBeUpdated.getAccessGroup();
-            final AccessGroup newAccessGroup = pToBe.getAccessGroup();
+            AccessGroup currentAccessGroup = accessRightFromDb.getAccessGroup();
+            AccessGroup newAccessGroup = accessRight.getAccessGroup();
             if (!Objects.equals(currentAccessGroup, newAccessGroup)) {
                 dataset.getGroups().remove(currentAccessGroup.getName());
                 dataset.getGroups().add(newAccessGroup.getName());
                 datasetService.update(dataset);
-                pToBe.setDataset(dataset);
+                accessRight.setDataset(dataset);
             }
 
         }
-        final AccessRight updated = repository.save(pToBe);
-        eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
+        AccessRight updated = repository.save(accessRight);
+        if (dataset != null) {
+            eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.UPDATE));
+        }
         return updated;
     }
 
     @Override
-    public void deleteAccessRight(final Long pId) throws ModuleException {
-        final AccessRight accessRight = repository.findById(pId);
+    public void deleteAccessRight(Long id) throws ModuleException {
+        AccessRight accessRight = repository.findById(id);
         // Remove current group from dataset if accessRight is a GroupAccessRight
-        final Dataset dataset = datasetService.load(accessRight.getDataset().getId());
+        Dataset dataset = datasetService.load(accessRight.getDataset().getId());
         if (dataset != null) {
             dataset.getGroups().remove(accessRight.getAccessGroup().getName());
             datasetService.update(dataset);
         }
-        repository.delete(pId);
-        eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
+        repository.delete(id);
+        if (dataset != null) {
+            eventPublisher.publish(new AccessRightEvent(dataset.getIpId(), AccessRightEventType.DELETE));
+        }
     }
 
     @Override
-    public Boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail) throws EntityNotFoundException {
+    public boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
+            throws EntityNotFoundException {
         User user = new User(userEMail);
 
-        final Dataset ds = datasetService.load(datasetIpId);
+        Dataset ds = datasetService.load(datasetIpId);
         if (ds == null) {
             throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
         }
         Set<AccessGroup> accessGroups = accessGroupService.retrieveAllUserAccessGroupsOrPublicAccessGroups(userEMail);
-        Boolean isAutorised = false;
+        boolean isAutorised = false;
         for (AccessGroup accessGroup : accessGroups) {
             // Check if the user is concerned by the accessGroup
             if (accessGroup.isPublic() || accessGroup.getUsers().contains(user)) {
-                Optional<AccessRight> accessRightOptional = repository.findAccessRightByAccessGroupAndDataset(accessGroup, ds);
+                Optional<AccessRight> accessRightOptional = repository
+                        .findAccessRightByAccessGroupAndDataset(accessGroup, ds);
                 // Check if the accessRight allows to access to that dataset
-                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS.equals(accessRightOptional.get().getAccessLevel())) {
+                if (accessRightOptional.isPresent() && !AccessLevel.NO_ACCESS
+                        .equals(accessRightOptional.get().getAccessLevel())) {
                     isAutorised = true;
                     // Stop loop iteration
                     break;

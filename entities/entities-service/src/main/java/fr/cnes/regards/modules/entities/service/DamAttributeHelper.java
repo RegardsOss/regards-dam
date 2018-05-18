@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -56,7 +56,7 @@ public class DamAttributeHelper implements IAttributeHelper {
     public List<AttributeModel> getAllAttributes(String pTenant) {
         try {
             runtimeTenantResolver.forceTenant(pTenant);
-            return attributeModelService.getAttributes(null, null);
+            return attributeModelService.getAttributes(null, null, null);
         } finally {
             runtimeTenantResolver.clearTenant();
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,10 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -39,33 +35,42 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
+import org.hibernate.validator.constraints.NotBlank;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.gson.annotations.JsonAdapter;
-
+import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
+import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Base class for all entities(on a REGARDS point of view)
- *
  * @author Léo Mieulet
  * @author Sylvain Vissiere-Guerinet
  */
@@ -77,24 +82,25 @@ import fr.cnes.regards.modules.models.domain.Model;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable {
 
-    private static final int MAX_IPID_SIZE = 128;
-
     /**
      * Information Package ID for REST request
      */
-    @Column(nullable = false, length = MAX_IPID_SIZE)
+    @Column(nullable = false, length = UniformResourceName.MAX_SIZE)
     @Convert(converter = UrnConverter.class)
     @Valid
     protected UniformResourceName ipId;
 
-    @NotNull
-    @Column(length = MAX_IPID_SIZE, nullable = false)
+    /**
+     * The entity label
+     */
+    @NotBlank(message="The label must not be null and empty")
+    @Column(length = 128, nullable = false)
     protected String label;
 
     /**
      * model that this entity is respecting
      */
-    @NotNull
+    @NotNull(message="The Model must not be null")
     @ManyToOne
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
@@ -103,7 +109,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * last time the entity was updated
      */
-    @PastOrNow
+    @PastOrNow(message="The lastUpdate date must be in the past or now")
     @Column(name = "update_date")
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime lastUpdate;
@@ -111,7 +117,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * time at which the entity was created
      */
-    @PastOrNow
+    @PastOrNow(message="The creationDate must be in the past or now")
     @Column(name = "creation_date", nullable = false)
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime creationDate;
@@ -126,7 +132,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Submission Information Package (SIP): which is the information sent from the producer to the archive used for
-     * REST request If no SIP ID is there it means it's not an AIP?
+     * REST request.
      */
     @Column
     protected String sipId;
@@ -161,15 +167,20 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     @Valid
     protected Set<AbstractAttribute<?>> properties = new HashSet<>();
 
+    // To perform quick access to attribute from its name
+    @Transient
+    @GsonIgnore
+    private Map<String, AbstractAttribute<?>> propertyMap = null;
+
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
     @JsonAdapter(value = GeometryAdapter.class)
     protected Geometry<?> geometry;
 
-    protected AbstractEntity(Model pModel, UniformResourceName pIpId, String pLabel) { // NOSONAR
-        model = pModel;
-        ipId = pIpId;
-        label = pLabel;
+    protected AbstractEntity(Model model, UniformResourceName ipId, String label) { // NOSONAR
+        this.model = model;
+        this.ipId = ipId;
+        this.label = label;
     }
 
     protected AbstractEntity() { // NOSONAR
@@ -185,89 +196,152 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         return lastUpdate;
     }
 
-    public void setLastUpdate(OffsetDateTime pLastUpdate) {
-        lastUpdate = pLastUpdate;
+    public void setLastUpdate(OffsetDateTime lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 
     public OffsetDateTime getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(OffsetDateTime pCreationDate) {
-        creationDate = pCreationDate;
+    public void setCreationDate(OffsetDateTime creationDate) {
+        this.creationDate = creationDate;
     }
 
+    /**
+     * @return the id
+     */
     @Override
     public Long getId() {
         return id;
     }
 
-    public void setId(Long pId) {
-        id = pId;
+    /**
+     * Set the id
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
+    /**
+     * @return the ip id
+     */
     public UniformResourceName getIpId() {
         return ipId;
     }
 
-    public void setIpId(UniformResourceName pIpId) {
-        ipId = pIpId;
+    /**
+     * Set the ip id
+     */
+    public void setIpId(UniformResourceName ipId) {
+        this.ipId = ipId;
     }
 
     public Set<String> getTags() {
         return tags;
     }
 
-    public void setTags(Set<String> pTags) {
-        tags = pTags;
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
     }
 
-    public Set<AbstractAttribute<?>> getProperties() { // NOSONAR
-        return properties;
+    /**
+     * Get an immutable copy of properties.
+     * If this set should be modified, please use addPorperty or removeProperty
+     */
+    public ImmutableSet<AbstractAttribute<?>> getProperties() { // NOSONAR
+        return ImmutableSet.copyOf(properties);
     }
 
-    public void setProperties(Set<AbstractAttribute<?>> pAttributes) {
-        properties = pAttributes;
+    public void addProperty(AbstractAttribute<?> property) {
+        properties.add(property);
+        // If property key is null, it is not a valid property and so it may not pass validation process
+        if (property.getName() != null) {
+            propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        }
     }
 
+    public void removeProperty(AbstractAttribute<?> property) {
+        properties.remove(property);
+        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+    }
+
+    public AbstractAttribute<?> getProperty(String name) {
+        if (propertyMap == null) {
+            propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+        }
+        if (!name.contains(".")) {
+            return this.propertyMap.get(name);
+        } else {
+            ObjectAttribute fragment = (ObjectAttribute) this.propertyMap.get(name.substring(0, name.indexOf('.')));
+            String propName = name.substring(name.indexOf('.') + 1);
+            if (fragment != null) {
+                Optional<AbstractAttribute<?>> attOpt = fragment.getValue().stream()
+                        .filter(p -> p.getName().equals(propName)).findFirst();
+                return attOpt.isPresent() ? attOpt.get() : null;
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Set the properties
+     */
+    public void setProperties(Set<AbstractAttribute<?>> attributes) {
+        properties = attributes;
+        propertyMap = Maps.uniqueIndex(properties, AbstractAttribute::getName);
+    }
+
+    /**
+     * @return the model
+     */
     public Model getModel() {
         return model;
     }
 
-    public void setModel(Model pModel) {
-        model = pModel;
+    /**
+     * Set the model
+     */
+    public void setModel(Model model) {
+        this.model = model;
     }
 
+    /**
+     * @return the sip id
+     */
     public String getSipId() {
         return sipId;
     }
 
-    public void setSipId(String pSipId) {
-        sipId = pSipId;
+    /**
+     * Set the sip id
+     */
+    public void setSipId(String sipId) {
+        this.sipId = sipId;
     }
 
     public String getLabel() {
         return label;
     }
 
-    public void setLabel(String pLabel) {
-        label = pLabel;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public Set<String> getGroups() {
         return groups;
     }
 
-    public void setGroups(Set<String> pGroups) {
-        groups = pGroups;
+    public void setGroups(Set<String> groups) {
+        this.groups = groups;
     }
 
     public Geometry<?> getGeometry() {
         return geometry;
     }
 
-    public void setGeometry(Geometry<?> pGeometry) {
-        geometry = pGeometry;
+    public void setGeometry(Geometry<?> geometry) {
+        this.geometry = geometry;
     }
 
     @Override

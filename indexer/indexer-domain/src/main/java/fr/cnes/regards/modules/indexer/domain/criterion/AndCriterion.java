@@ -8,17 +8,17 @@ import com.google.common.collect.Lists;
  */
 public final class AndCriterion extends AbstractMultiCriterion implements ICriterion {
 
-    AndCriterion(ICriterion... pCriterions) {
-        this.criterions = Lists.newArrayList(pCriterions);
+    AndCriterion(ICriterion... criteria) {
+        this.criterions = Lists.newArrayList(criteria);
     }
 
-    AndCriterion(Iterable<ICriterion> pCriterions) {
-        this.criterions = Lists.newArrayList(pCriterions);
+    AndCriterion(Iterable<ICriterion> criteria) {
+        this.criterions = Lists.newArrayList(criteria);
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitAndCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitAndCriterion(this);
     }
 
     @Override
@@ -30,16 +30,16 @@ public final class AndCriterion extends AbstractMultiCriterion implements ICrite
     }
 
     @Override
-    public boolean equals(Object pObj) {
-        if (this == pObj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (pObj == null) {
+        if (o == null) {
             return false;
         }
-        if (getClass() != pObj.getClass()) {
+        if (getClass() != o.getClass()) {
             return false;
         }
-        return super.equals(pObj);
+        return super.equals(o);
     }
 }

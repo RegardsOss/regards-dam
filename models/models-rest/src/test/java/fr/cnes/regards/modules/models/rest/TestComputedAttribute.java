@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.models.rest;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -29,6 +30,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 @Plugin(description = "plugin there just for tests in model-rest", author = "REGARDS Team", contact = "regards@c-s.fr",
         licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss", id = "TestComputedAttribute",
         version = "1.0.0")
+@ComputationPlugin(supportedType = AttributeType.STRING)
 public class TestComputedAttribute implements IComputedAttribute<Long, String> {
 
     @Override
@@ -39,11 +41,6 @@ public class TestComputedAttribute implements IComputedAttribute<Long, String> {
     @Override
     public void compute(Long pPartialData) {
 
-    }
-
-    @Override
-    public AttributeType getSupported() {
-        return AttributeType.STRING;
     }
 
     @Override

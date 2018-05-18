@@ -3,7 +3,6 @@ package fr.cnes.regards.modules.indexer.dao;
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,16 +13,21 @@ import java.util.stream.Stream;
 
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
 import de.svenjacobs.loremipsum.LoremIpsum;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
@@ -31,11 +35,10 @@ import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * EsRepository test
+ * @author oroussel
  */
 @RunWith(SpringRunner.class)
 @TestPropertySource("classpath:test.properties")
@@ -53,26 +56,22 @@ public class EsRepositoryTest {
 
     @Value("${regards.elasticsearch.address}")
     private String elasticHost;
-    @Value("${regards.elasticsearch.cluster.name}")
-    private String elasticName;
-    @Value("${regards.elasticsearch.tcp.port}")
+
+    @Value("${regards.elasticsearch.http.port}")
     private int elasticPort;
 
     /**
      * Befor class setting up method
-     *
-     * @throws Exception
-     *             exception
+     * @throws Exception exception
      */
     @Before
     public void setUp() throws Exception {
         boolean repositoryOK = true;
+        // we get the properties into target/test-classes because this is where maven will put the filtered file(with real values and not placeholder)
         try {
             gson = new GsonBuilder().create();
-            repository = new EsRepository(gson, null, elasticHost,
-                    elasticPort,
-                    elasticName,
-                    new AggregationBuilderFacetTypeVisitor(10, 1));
+            repository = new EsRepository(gson, null, elasticHost, elasticPort,
+                                          new AggregationBuilderFacetTypeVisitor(10, 1));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
@@ -103,15 +102,27 @@ public class EsRepositoryTest {
     }
 
     @Test
+    public void testDeleteByQuery() {
+        if (repository.indexExists("Pouet")) {
+            repository.deleteIndex("Pouet");
+        }
+        repository.createIndex("Pouet");
+        repository.deleteAll("Pouet");
+    }
+
+    @Test
     public void testCreateDeleteIndex() throws UnknownHostException {
         Assert.assertTrue(repository.createIndex("test"));
         Assert.assertTrue(repository.deleteIndex("test"));
     }
 
     @Test
-    public void testFindIndices() {
-        Assert.assertTrue(repository.createIndex("titi"));
-        Assert.assertTrue(Arrays.stream(repository.findIndices()).anyMatch((pIndex) -> pIndex.equals("titi")));
+    public void testCreateIndexWithSpecialMappings() {
+        Assert.assertTrue(repository.createIndex("test"));
+        String[] types = { "pipo", "bimbo" };
+        repository.setAutomaticDoubleMapping("test", types);
+        repository.setGeometryMapping("test", types);
+
     }
 
     @Test
@@ -160,45 +171,6 @@ public class EsRepositoryTest {
         Assert.assertTrue(repository.delete("items", "item", "4"));
         Assert.assertTrue(repository.delete("items", "item", "1"));
 
-    }
-
-    /**
-     * Test merge
-     */
-    @Test
-    public void testMerge() {
-        repository.createIndex("mergeditems");
-        // Creations for firt two
-        final Item item1 = new Item("1", "group1", "group2", "group3");
-        // final Item subItem = new Item(10);
-        // subItem.setName("Bert");
-        // item1.setSubItem(subItem);
-        Assert.assertTrue(repository.save("mergeditems", item1));
-
-        // Add name and change groups
-        final Map<String, Object> propsMap = new HashMap<>();
-        propsMap.put("name", "Robert");
-        propsMap.put("groups", new String[] { "group1" });
-        Assert.assertTrue(repository.merge("mergeditems", "item", "1", propsMap));
-        Item item1FromIndex = repository.get("mergeditems", "item", "1", Item.class);
-        Assert.assertNotNull(item1FromIndex.getName());
-        Assert.assertEquals("Robert", item1FromIndex.getName());
-        Assert.assertNotNull(item1FromIndex.getGroups());
-        Assert.assertEquals(1, item1FromIndex.getGroups().size());
-        Assert.assertEquals("group1", item1FromIndex.getGroups().get(0));
-        Assert.assertEquals("1", item1FromIndex.getDocId());
-
-        // Adding subItem
-        propsMap.clear();
-        propsMap.put("subItem.name", "Bart");
-        propsMap.put("subItem.groups", new String[] { "G1, G2" });
-
-        Assert.assertTrue(repository.merge("mergeditems", "item", "1", propsMap));
-        item1FromIndex = repository.get("mergeditems", "item", "1", Item.class);
-        Assert.assertNotNull(item1FromIndex.getSubItem());
-        Assert.assertEquals("Bart", item1FromIndex.getSubItem().getName());
-        Assert.assertNull(item1FromIndex.getSubItem().getDocId());
-        Assert.assertEquals(Arrays.asList(new String[] { "G1, G2" }), item1FromIndex.getSubItem().getGroups());
     }
 
     /**
@@ -253,10 +225,18 @@ public class EsRepositoryTest {
             item.setHeight((int) (Math.random() * 1000));
             item.setPrice(Math.random() * 10000.);
             items.add(item);
+            if (i % 10_000 == 0) {
+                final long start = System.currentTimeMillis();
+                repository.saveBulk("loading", items);
+                System.out.println("Loading (10 000 items): " + (System.currentTimeMillis() - start) + " ms");
+                items.clear();
+            }
         }
-        final long start = System.currentTimeMillis();
-        repository.saveBulk("loading", items);
-        System.out.println("Loading (" + pCount + " items): " + (System.currentTimeMillis() - start) + " ms");
+        if (items.size() > 0) {
+            final long start = System.currentTimeMillis();
+            repository.saveBulk("loading", items);
+            System.out.println("Loading (" + items.size() + " items): " + (System.currentTimeMillis() - start) + " ms");
+        }
     }
 
     /**

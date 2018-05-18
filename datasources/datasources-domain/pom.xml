@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  
  This file is part of REGARDS.
  
@@ -50,14 +50,14 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>datasources</artifactId>
-		<version>1.1.0</version>
+		<version>2.0.0-RELEASE</version>
 	</parent>
 
 	<dependencies>
-		<dependency>
-			<groupId>fr.cnes.regards.framework</groupId>
-			<artifactId>regards-core-jpa-data</artifactId>
-		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>fr.cnes.regards.framework</groupId>-->
+			<!--<artifactId>jpa-data-regards</artifactId>-->
+		<!--</dependency>-->
 		<dependency>
 			<groupId>fr.cnes.regards.framework</groupId>
 			<artifactId>gson-regards</artifactId>
@@ -73,8 +73,12 @@
 			<artifactId>models-domain</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>fr.cnes.regards.modules.entities</groupId>
+			<artifactId>entities-domain</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			<artifactId>module-plugins-domain</artifactId>
+			<artifactId>plugins-domain</artifactId>
 		</dependency>
 	</dependencies>
 </project>

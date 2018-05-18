@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -28,7 +28,6 @@ import com.google.common.collect.Range;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
@@ -49,7 +48,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacet {
+    private static class AdaptedFacet {
 
         private final String attributeName;
 
@@ -69,7 +68,7 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    private class AdaptedFacetValue {
+    private static class AdaptedFacetValue {
 
         private static final String OPENSEARCH_WILDCARD = "*";
 
@@ -81,22 +80,31 @@ public class DateFacetSerializer implements JsonSerializer<DateFacet> {
 
         private final String openSearchQuery;
 
-        public AdaptedFacetValue(Entry<Range<OffsetDateTime>, Long> pEntry, String pAttributeName) {
-            Range<OffsetDateTime> key = pEntry.getKey();
+        /**
+         * Be careful, the range must be closed-opened => [ date1 TO date2 }
+         * @param entry
+         * @param attributeName
+         */
+        public AdaptedFacetValue(Entry<Range<OffsetDateTime>, Long> entry, String attributeName) {
+            Range<OffsetDateTime> key = entry.getKey();
             if (key.hasLowerBound()) {
-                lowerBound = pEntry.getKey().lowerEndpoint().toString();
+                lowerBound = entry.getKey().lowerEndpoint().toString();
             } else {
                 // Directly build openSearch lower bound
                 lowerBound = OPENSEARCH_WILDCARD;
             }
             if (key.hasUpperBound()) {
-                upperBound = pEntry.getKey().upperEndpoint().toString();
+                upperBound = entry.getKey().upperEndpoint().toString();
             } else {
                 // Directly build openSearch lower bound
                 upperBound = OPENSEARCH_WILDCARD;
             }
-            count = pEntry.getValue();
-            openSearchQuery = pAttributeName + ":[" + lowerBound + " TO " + upperBound + "]";
+            count = entry.getValue();
+            if (lowerBound.equals(upperBound)) {
+                openSearchQuery = attributeName + ":\"" + lowerBound + "\"";
+            } else {
+                openSearchQuery = attributeName + ":[" + lowerBound + " TO " + upperBound + "}";
+            }
         }
 
     }

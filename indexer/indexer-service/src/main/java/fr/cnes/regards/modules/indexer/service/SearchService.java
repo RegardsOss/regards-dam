@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.indexer.service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -32,18 +33,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 @Service
 public class SearchService implements ISearchService {
@@ -91,10 +94,11 @@ public class SearchService implements ISearchService {
 
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
         final SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(),
-                searchKey.getSearchTypeMap(), String[].class);
+                                                                    searchKey.getSearchTypeMap(), String[].class);
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
-        final Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
-                .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
+        final Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (
+                Searches.TYPE_MAP.get(UniformResourceName.fromString(tag).getEntityType()) == searchKey
+                        .getResultClass());
         // Function to get Entity from its ipId (URN) (from Elasticsearch)
         final Function<String, T> toAskedEntityFct = tag -> repository
                 .get(searchKey.getSearchIndex(), Searches.TYPE_MAP.inverse().get(searchKey.getResultClass()).toString(),
@@ -115,5 +119,18 @@ public class SearchService implements ISearchService {
     public <T> Page<T> multiFieldsSearch(final SearchKey<T, T> pSearchKey, final Pageable pPageRequest,
             final Object pValue, final String... pFields) {
         return repository.multiFieldsSearch(pSearchKey, pPageRequest, pValue, pFields);
+    }
+
+    @Override
+    public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, String... fileTypes) {
+        return repository.computeDataFilesSummary(searchKey, crit, discriminantProperty, fileTypes);
+    }
+
+    @Override
+    public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+            String attName, int maxCount) {
+        SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, crit, attName, maxCount);
+        return values.stream().limit(maxCount).collect(Collectors.toList());
     }
 }

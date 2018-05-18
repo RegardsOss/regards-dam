@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,7 +18,6 @@
  */
 package fr.cnes.regards.modules.entities.plugin;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -26,7 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
@@ -35,7 +37,6 @@ import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.Fragment;
@@ -47,10 +48,17 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
  */
 public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAttribute<Dataset, R> {
 
-    public static final String PARAMETER_ATTRIBUTE_NAME="parameterAttributeName";
-    public static final String PARAMETER_FRAGMENT_NAME="parameterAttributeFragmentName";
+    /**
+     * The plugin parameter name for the attribute name
+     */
+    public static final String PARAMETER_ATTRIBUTE_NAME = "parameterAttributeName";
 
-    protected static final Logger LOG= LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
+    /**
+     * The plugin parameter name for the fragment name
+     */
+    public static final String PARAMETER_FRAGMENT_NAME = "parameterAttributeFragmentName";
+
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractDataObjectComputePlugin.class);
 
     private IEsRepository esRepo;
 
@@ -61,6 +69,15 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     protected AttributeModel parameterAttribute;
 
     private AttributeModel attributeToCompute;
+
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
+            description = "Name of attribute to compute (ie result attribute).", unconfigurable = true)
+    protected String attributeToComputeName;
+
+    @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
+            description = "Name of attribute to compute fragment. If computed attribute belongs to default fragment, this value can be set to null.",
+            optional = true, unconfigurable = true)
+    protected String attributeToComputeFragmentName;
 
     protected R result;
 
@@ -86,11 +103,11 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                 attributeToComputeFragmentName) ? Fragment.getDefaultName() : attributeToComputeFragmentName));
         if (attributeToCompute == null) {
             if (!Strings.isNullOrEmpty(attributeToComputeFragmentName)) {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find computed attribute '%s'.'%s'", attributeToComputeFragmentName,
                                       attributeToComputeName));
             } else {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find computed attribute '%s'", attributeToComputeName));
             }
         }
@@ -98,11 +115,11 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
                 parameterAttributeFragmentName) ? Fragment.getDefaultName() : parameterAttributeFragmentName));
         if (parameterAttribute == null) {
             if (!Strings.isNullOrEmpty(parameterAttributeFragmentName)) {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find parameter attribute '%s'.'%s'", parameterAttributeFragmentName,
                                       parameterAttributeName));
             } else {
-                throw new EntityNotFoundException(
+                throw new IllegalArgumentException(
                         String.format("Cannot find parameter attribute '%s'", parameterAttributeName));
             }
         }
@@ -121,7 +138,8 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
         SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
                                                                       EntityType.DATA.toString(), DataObject.class);
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
-        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(), dataset.getIpId().toString(), result);
+        LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
+                  dataset.getIpId().toString(), result);
     }
 
     @Override
@@ -137,15 +155,16 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     protected Optional<AbstractAttribute<?>> extractProperty(DataObject object) { //NOSONAR
         if (parameterAttribute.getFragment().isDefaultFragment()) {
             // the attribute is in the default fragment so it has at the root level of properties
-            return object.getProperties().stream().filter(p -> p.getName().equals(parameterAttribute.getName()))
-                    .findFirst();
+            return Optional.ofNullable(object.getProperty(parameterAttribute.getName()));
         }
         // the attribute is in a fragment so :
         // filter the fragment property then filter the right property on fragment properties
-        return object.getProperties().stream().filter(p -> (p instanceof ObjectAttribute) && p.getName()
-                .equals(parameterAttribute.getFragment().getName())).limit(1) // Only one fragment with searched name
-                .flatMap(fragment -> ((ObjectAttribute) fragment).getValue().stream())
-                .filter(p -> p.getName().equals(parameterAttribute.getName())).findFirst();
+        com.google.common.base.Optional<ObjectAttribute> fragmentOpt = com.google.common.base.Optional
+                .fromNullable((ObjectAttribute) object.getProperty(parameterAttribute.getFragment().getName()));
+        return (fragmentOpt.isPresent() ?
+                Iterables.tryFind(fragmentOpt.get().getValue(), p -> p.getName().equals(parameterAttribute.getName())).toJavaUtil():
+                Optional.empty());
+
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -37,9 +37,15 @@ import fr.cnes.regards.modules.models.domain.Model;
 @RequestMapping(IModelClient.TYPE_MAPPING)
 public interface IModelClient {
 
-    public static final String TYPE_MAPPING = "/models";
+    /**
+     * Client base path
+     */
+    String TYPE_MAPPING = "/models";
 
+    /**
+     * Retrieve the models of a given type (optional)
+     * @return the models
+     */
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<Model>>> getModels(
-            @RequestParam(value = "type", required = false) EntityType pType);
+    ResponseEntity<List<Resource<Model>>> getModels(@RequestParam(value = "type", required = false) EntityType pType);
 }

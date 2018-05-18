@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -35,8 +35,8 @@ import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 public class AndQueryNodeBuilder implements ICriterionQueryBuilder {
 
     @Override
-    public ICriterion build(final QueryNode pQueryNode) throws QueryNodeException {
-        final AndQueryNode andQueryNode = (AndQueryNode) pQueryNode;
+    public ICriterion build(final QueryNode queryNode) throws QueryNodeException {
+        final AndQueryNode andQueryNode = (AndQueryNode) queryNode;
         final List<QueryNode> children = andQueryNode.getChildren();
 
         // Build criterions

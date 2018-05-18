@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -43,8 +43,8 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
     private static final String WILDCARD_STRING = "*";
 
     @Override
-    public ICriterion build(final QueryNode pQueryNode) throws QueryNodeException {
-        WildcardQueryNode wildcardNode = (WildcardQueryNode) pQueryNode;
+    public ICriterion build(final QueryNode queryNode) throws QueryNodeException {
+        WildcardQueryNode wildcardNode = (WildcardQueryNode) queryNode;
 
         String field = wildcardNode.getFieldAsString();
         String value = wildcardNode.getTextAsString();
@@ -58,7 +58,7 @@ public class WildcardQueryNodeBuilder implements ICriterionQueryBuilder {
             return ICriterion.endsWith(field, val);
         } else {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR,
-                    pQueryNode.toQueryString(new EscapeQuerySyntaxImpl()), pQueryNode.getClass().getName()));
+                    queryNode.toQueryString(new EscapeQuerySyntaxImpl()), queryNode.getClass().getName()));
         }
     }
 

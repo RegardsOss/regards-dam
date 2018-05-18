@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -23,20 +23,19 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumHashBiMap;
-
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
-import fr.cnes.regards.modules.models.domain.EntityType;
 
 /**
  * Factory class for search (types, keys, etc...)
  * @author oroussel
  */
-public class Searches {
+public final class Searches {
 
     protected static final BiMap<EntityType, Class<? extends AbstractEntity>> TYPE_MAP = EnumHashBiMap
             .create(EntityType.class);
@@ -49,6 +48,9 @@ public class Searches {
 
     private static final Map<String, Class<? extends AbstractEntity>> SEARCH_TYPE_MAP = TYPE_MAP.keySet().stream()
             .collect(Collectors.toMap(EntityType::toString, type -> TYPE_MAP.get(type)));
+
+    private Searches() {
+    }
 
     public static EntityType fromClass(Class<?> clazz) {
         return TYPE_MAP.inverse().get(clazz);

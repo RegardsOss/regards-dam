@@ -4,25 +4,25 @@ import java.util.Map;
 
 public class JoinEntitySearchKey<S, R> extends SearchKey<S, R> {
 
-    public JoinEntitySearchKey(String pSearchIndex, Map<String, Class<? extends S>> pSearchTypeMap,
-            Class<R> pResultClass) {
-        super(pSearchIndex, pSearchTypeMap, pResultClass);
+    public JoinEntitySearchKey(String searchIndex, Map<String, Class<? extends S>> searchTypeMap,
+            Class<R> resultClass) {
+        super(searchIndex, searchTypeMap, resultClass);
 
     }
 
-    public JoinEntitySearchKey(String pSearchIndex, Map<String, Class<? extends S>> pSearchTypeMap) {
-        super(pSearchIndex, pSearchTypeMap);
+    public JoinEntitySearchKey(String searchIndex, Map<String, Class<? extends S>> searchTypeMap) {
+        super(searchIndex, searchTypeMap);
 
     }
 
-    public JoinEntitySearchKey(String pSearchIndex, String pSearchType, Class<? extends S> pSearchClass,
-            Class<R> pResultClass) {
-        super(pSearchIndex, pSearchType, pSearchClass, pResultClass);
+    public JoinEntitySearchKey(String searchIndex, String searchType, Class<? extends S> searchClass,
+            Class<R> resultClass) {
+        super(searchIndex, searchType, searchClass, resultClass);
 
     }
 
-    public JoinEntitySearchKey(String pSearchIndex, String pSearchType, Class<? extends S> pSearchClass) {
-        super(pSearchIndex, pSearchType, pSearchClass);
+    public JoinEntitySearchKey(String searchIndex, String searchType, Class<? extends S> searchClass) {
+        super(searchIndex, searchType, searchClass);
 
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -21,6 +21,9 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +45,7 @@ import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ComparisonOperator;
+import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.IntMatchCriterion;
@@ -61,7 +65,6 @@ import fr.cnes.regards.modules.opensearch.service.utils.SampleDataUtils;
 
 /**
  * Unit test for {@link QueryParser}.
- *
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
  */
@@ -91,13 +94,13 @@ public class QueryParserTest {
         Mockito.when(attributeModelClient.getAttributes(null, null))
                 .thenReturn(new ResponseEntity<>(HateoasUtils.wrapList(SampleDataUtils.LIST), HttpStatus.OK));
         IAttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelClient, subscriber,
-                runtimeTenantResolver);
+                                                                           runtimeTenantResolver);
         IAttributeFinder finder = new AttributeFinder(runtimeTenantResolver, attributeModelCache);
 
         parser = new QueryParser(finder);
     }
 
-    @Test(expected = OpenSearchParseException.class)
+    @Test
     @Purpose("Tests empty q")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void emptyQTest() throws OpenSearchParseException {
@@ -121,6 +124,24 @@ public class QueryParserTest {
         final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final Integer value = 8848;
         final String term = field + ":" + value;
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof IntMatchCriterion);
+
+        final IntMatchCriterion crit = (IntMatchCriterion) criterion;
+        Assert.assertEquals(field, crit.getName());
+        Assert.assertEquals(MatchType.EQUALS, crit.getType());
+        Assert.assertEquals(value, crit.getValue());
+    }
+
+    @Test
+    @Purpose("Tests queries like altitude:-8848")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    public void negativeIntMatchTest() throws OpenSearchParseException {
+        final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final Integer value = -8848;
+        final String term = field + ":%5C" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
 
         Assert.assertNotNull(criterion);
@@ -225,6 +246,22 @@ public class QueryParserTest {
         Assert.assertEquals(key, crit.getName());
         Assert.assertEquals(MatchType.STARTS_WITH, crit.getType());
         Assert.assertEquals("harry", crit.getValue());
+    }
+
+    @Test
+    @Purpose("Tests queries like tag:<ip id containing :>")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    public void ipIdParsing() throws OpenSearchParseException, UnsupportedEncodingException {
+        String key = StaticProperties.TAGS;
+        String val = "\"URN\\:PROJECT\\:DATA\\:patati\\:V1\"";
+        String term = key + ":" + val;
+        ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof StringMatchCriterion);
+
+        final StringMatchCriterion crit = (StringMatchCriterion) criterion;
+        Assert.assertEquals(key, crit.getName());
     }
 
     @Test
@@ -527,6 +564,28 @@ public class QueryParserTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    @Purpose("Tests queries like date:2007-12-03T10:15:30.166Z")
+    @Requirement("REGARDS_DSL_DAM_ARC_810")
+    @Ignore
+    public void OffsetDateTimeEqTest() throws OpenSearchParseException, UnsupportedEncodingException {
+        final String field = SampleDataUtils.LOCAL_DATE_TIME_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.PROPERTIES);
+        final OffsetDateTime lowerValue = OffsetDateTime.now();
+        DateTimeFormatter ISO_DATE_TIME_UTC = new DateTimeFormatterBuilder().parseCaseInsensitive()
+                .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).optionalStart().appendOffset("+HH:MM", "Z")
+                .toFormatter();
+        final String term = field + ": \"" + ISO_DATE_TIME_UTC.format(lowerValue.withOffsetSameInstant(ZoneOffset.UTC)) + "\"";
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
+
+        Assert.assertNotNull(criterion);
+        Assert.assertTrue(criterion instanceof DateMatchCriterion);
+        final DateMatchCriterion crit = (DateMatchCriterion) criterion;
+
+        Assert.assertEquals(field, crit.getName());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     @Purpose("Tests queries like altitude:{* TO 1}")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
@@ -754,8 +813,8 @@ public class QueryParserTest {
 
         final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         final String val = "harrypotter";
-        final ICriterion criterion = parser.parse(QUERY_PREFIX
-                + URLEncoder.encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
+        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder
+                .encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof NotCriterion);
 

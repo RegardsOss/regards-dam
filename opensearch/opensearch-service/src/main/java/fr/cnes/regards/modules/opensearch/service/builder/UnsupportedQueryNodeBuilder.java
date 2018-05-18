@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -38,9 +38,9 @@ public class UnsupportedQueryNodeBuilder implements ICriterionQueryBuilder {
      * Systematicly throw an error
      */
     @Override
-    public ICriterion build(final QueryNode pQueryNode) throws QueryNodeException {
+    public ICriterion build(final QueryNode queryNode) throws QueryNodeException {
         throw new QueryNodeException(new MessageImpl(QueryParserMessages.LUCENE_QUERY_CONVERSION_ERROR,
-                pQueryNode.toQueryString(new EscapeQuerySyntaxImpl()), pQueryNode.getClass().getName()));
+                queryNode.toQueryString(new EscapeQuerySyntaxImpl()), queryNode.getClass().getName()));
     }
 
 }

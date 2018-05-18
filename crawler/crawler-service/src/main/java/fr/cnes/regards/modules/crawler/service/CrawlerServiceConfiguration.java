@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -20,6 +20,8 @@ package fr.cnes.regards.modules.crawler.service;
 
 import java.util.concurrent.Executor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -29,14 +31,15 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Asynchronous task configuration
- *
  * @author Marc Sordi
- *
  */
 @Configuration
 @EnableAsync
 @Profile("!nocrawl")
 public class CrawlerServiceConfiguration implements AsyncConfigurer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
+
+    private static final String HR = "*****************************************************";
 
     @Override
     public Executor getAsyncExecutor() {
@@ -45,6 +48,14 @@ public class CrawlerServiceConfiguration implements AsyncConfigurer {
 
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-        return new CrawlerServiceAsyncUncaughtExceptionHandler();
+        return (throwable, method, params) -> {
+            LOGGER.error(HR);
+            LOGGER.error("Exception message - " + throwable.getMessage(), throwable);
+            LOGGER.error("Method name - " + method.getName());
+            for (Object param : params) {
+                LOGGER.error("Parameter value - " + param);
+            }
+            LOGGER.error(HR);
+        };
     }
 }

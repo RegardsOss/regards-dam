@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -31,6 +31,7 @@ import org.mockito.Mockito;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
@@ -38,7 +39,6 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
@@ -122,12 +122,8 @@ public class CollectionServiceTest {
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
-                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, collectionRepositoryMocked, null,
+                deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null,
                 publisherMocked, runtimeTenantResolver, null);
-
-        // collectionServiceMocked = new CollectionService(collectionRepositoryMocked, entitiesRepositoryMocked,
-        // pModelAttributeService, pModelService, deletedEntityRepositoryMocked, null, null, publisherMocked);
-
     }
 
     @Test

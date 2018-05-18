@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,8 +18,10 @@
  */
 package fr.cnes.regards.modules.models.service;
 
-import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Set;
+
+import javax.transaction.Transactional;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -34,7 +36,7 @@ import fr.cnes.regards.modules.models.service.exception.UnsupportedRestrictionEx
  */
 public interface IAttributeModelService {
 
-    List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName);
+    List<AttributeModel> getAttributes(AttributeType pType, String pFragmentName, Set<Long> modelIds);
 
     /**
      * Add an attribute in a {@link Transactional} context
@@ -89,8 +91,18 @@ public interface IAttributeModelService {
      */
     boolean isFragmentAttribute(Long pAttributeId) throws ModuleException;
 
+    /**
+     * Find attributes by fragment id
+     * @param pFragmentId
+     * @return attribute which fragment id is the given one
+     */
     List<AttributeModel> findByFragmentId(Long pFragmentId);
 
+    /**
+     * Find attributes by fragment name
+     * @param pFragmentName
+     * @return attribute which fragment name is the given one
+     */
     List<AttributeModel> findByFragmentName(String pFragmentName);
 
     void checkRestrictionSupport(AttributeModel pAttributeModel) throws UnsupportedRestrictionException;

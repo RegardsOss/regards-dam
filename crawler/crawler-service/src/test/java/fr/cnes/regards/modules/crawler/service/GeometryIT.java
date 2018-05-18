@@ -11,10 +11,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.crawler.test.CrawlerConfiguration;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -24,13 +26,13 @@ import fr.cnes.regards.modules.entities.domain.geometry.GeometryType;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactoryEventHandler;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = { CrawlerConfiguration.class })
 @ActiveProfiles("noschedule") // Disable scheduling, this will activate IngesterService during all tests
+@TestPropertySource(locations = { "classpath:test.properties" })
 public class GeometryIT {
 
     @Autowired
@@ -71,7 +73,11 @@ public class GeometryIT {
         tenantResolver.forceTenant(TENANT);
 
         if (esRepos.indexExists(TENANT)) {
-            esRepos.deleteAll(TENANT);
+            try {
+                esRepos.deleteAll(TENANT);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+            }
         } else {
             esRepos.createIndex(TENANT);
         }
@@ -91,7 +97,7 @@ public class GeometryIT {
             Utils.execute(entityRepos::delete, collection2.getId());
         }
         if (collectionModel != null) {
-            Utils.execute(modelService::deleteModel, collectionModel.getId());
+            Utils.execute(modelService::deleteModel, collectionModel.getName());
         }
     }
 

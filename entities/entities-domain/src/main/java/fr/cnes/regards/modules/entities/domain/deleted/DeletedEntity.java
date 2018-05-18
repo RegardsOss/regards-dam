@@ -12,8 +12,8 @@ import javax.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
-import fr.cnes.regards.modules.entities.urn.converters.UrnConverter;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 
 /**
  * Deleted entity (collection, dataset, ...).
@@ -47,9 +47,6 @@ public class DeletedEntity {
     @Column(nullable = false)
     @Convert(converter = UrnConverter.class)
     private UniformResourceName ipId;
-
-    public DeletedEntity() {
-    }
 
     public Long getId() {
         return id;

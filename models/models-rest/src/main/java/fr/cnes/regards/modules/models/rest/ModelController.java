@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,12 +18,11 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import java.io.IOException;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,26 +45,23 @@ import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
 import fr.cnes.regards.framework.module.annotation.ModuleInfo;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.framework.security.role.DefaultRole;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.service.FragmentService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
- *
  * REST interface for managing data {@link Model}
- *
  * @author msordi
  * @author Xavier-Alexandre Brochard
  */
 @RestController
-// CHECKSTYLE:OFF
+
 @ModuleInfo(name = "models", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
         documentation = "http://test")
-// CHECKSTYLE:ON
 @RequestMapping(ModelController.TYPE_MAPPING)
 public class ModelController implements IResourceController<Model> {
 
@@ -73,6 +69,11 @@ public class ModelController implements IResourceController<Model> {
      * Type mapping
      */
     public static final String TYPE_MAPPING = "/models";
+
+    /**
+     * Model management mapping
+     */
+    public static final String MODEL_MAPPING = "/{modelName}";
 
     /**
      * Prefix for imported/exported filename
@@ -111,9 +112,7 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Retrieve all {@link Model}. The request can be filtered by {@link EntityType}.
-     *
-     * @param pType
-     *            filter
+     * @param pType filter
      * @return a list of {@link Model}
      */
     @ResourceAccess(description = "List all models")
@@ -125,12 +124,9 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Create a {@link Model}
-     *
-     * @param pModel
-     *            the {@link Model} to create
+     * @param pModel the {@link Model} to create
      * @return the created {@link Model}
-     * @throws ModuleException
-     *             if problem occurs during model creation
+     * @throws ModuleException if problem occurs during model creation
      */
     @ResourceAccess(description = "Create a model")
     @RequestMapping(method = RequestMethod.POST)
@@ -140,88 +136,69 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Get a {@link Model} without its attributes
-     *
-     * @param pModelId
-     *            {@link Model} identifier
+     * @param pModelId {@link Model} identifier
      * @return a {@link Model}
-     * @throws ModuleException
-     *             if model cannot be retrieved
+     * @throws ModuleException if model cannot be retrieved
      */
     @ResourceAccess(description = "Get a model", role = DefaultRole.PUBLIC)
-    @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}")
-    public ResponseEntity<Resource<Model>> getModel(@PathVariable Long pModelId) throws ModuleException {
-        return ResponseEntity.ok(toResource(modelService.getModel(pModelId)));
+    @RequestMapping(method = RequestMethod.GET, value = MODEL_MAPPING)
+    public ResponseEntity<Resource<Model>> getModel(@PathVariable String modelName) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.getModelByName(modelName)));
     }
 
     /**
      * Allow to update {@link Model} description
-     *
-     * @param pModelId
-     *            {@link Model} identifier
-     * @param pModel
-     *            {@link Model} to update
+     * @param pModelId {@link Model} identifier
+     * @param pModel {@link Model} to update
      * @return updated {@link Model}
-     * @throws ModuleException
-     *             if model cannot be updated
+     * @throws ModuleException if model cannot be updated
      */
     @ResourceAccess(description = "Update a model")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pModelId}")
-    public ResponseEntity<Resource<Model>> updateModel(@PathVariable Long pModelId, @Valid @RequestBody Model pModel)
+    @RequestMapping(method = RequestMethod.PUT, value = MODEL_MAPPING)
+    public ResponseEntity<Resource<Model>> updateModel(@PathVariable String modelName, @Valid @RequestBody Model pModel)
             throws ModuleException {
-        return ResponseEntity.ok(toResource(modelService.updateModel(pModelId, pModel)));
+        return ResponseEntity.ok(toResource(modelService.updateModel(modelName, pModel)));
     }
 
     /**
      * Delete a {@link Model} and detach all {@link ModelAttrAssoc}
-     *
-     * @param pModelId
-     *            {@link Model} identifier
+     * @param pModelId {@link Model} identifier
      * @return nothing
-     * @throws ModuleException
-     *             if model cannot be deleted
+     * @throws ModuleException if model cannot be deleted
      */
     @ResourceAccess(description = "Delete a model")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{pModelId}")
-    public ResponseEntity<Void> deleteModel(@PathVariable Long pModelId) throws ModuleException {
-        modelService.deleteModel(pModelId);
+    @RequestMapping(method = RequestMethod.DELETE, value = MODEL_MAPPING)
+    public ResponseEntity<Void> deleteModel(@PathVariable String modelName) throws ModuleException {
+        modelService.deleteModel(modelName);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Duplicate a model
-     *
-     * @param pModelId
-     *            {@link Model} to duplicate
-     * @param pModel
-     *            new model to create with its own name, description and type
+     * @param pModelId {@link Model} to duplicate
+     * @param pModel new model to create with its own name, description and type
      * @return a new model based on actual one
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Duplicate a model")
-    @RequestMapping(method = RequestMethod.POST, value = "/{pModelId}/duplicate")
-    public ResponseEntity<Resource<Model>> duplicateModel(@PathVariable Long pModelId, @Valid @RequestBody Model pModel)
-            throws ModuleException {
-        return ResponseEntity.ok(toResource(modelService.duplicateModel(pModelId, pModel)));
+    @RequestMapping(method = RequestMethod.POST, value = MODEL_MAPPING + "/duplicate")
+    public ResponseEntity<Resource<Model>> duplicateModel(@PathVariable String modelName,
+            @Valid @RequestBody Model pModel) throws ModuleException {
+        return ResponseEntity.ok(toResource(modelService.duplicateModel(modelName, pModel)));
     }
 
     /**
      * Export a model
-     *
-     * @param pRequest
-     *            HTTP request
-     * @param pResponse
-     *            HTTP response
-     * @param pModelId
-     *            model to export
-     * @throws ModuleException
-     *             if error occurs!
+     * @param pRequest HTTP request
+     * @param pResponse HTTP response
+     * @param pModelId model to export
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Export a model")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pModelId}/export")
-    public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, @PathVariable Long pModelId)
+    @RequestMapping(method = RequestMethod.GET, value = MODEL_MAPPING + "/export")
+    public void exportModel(HttpServletRequest pRequest, HttpServletResponse pResponse, @PathVariable String modelName)
             throws ModuleException {
-        final Model model = modelService.getModel(pModelId);
+        final Model model = modelService.getModelByName(modelName);
         final String exportedFilename = MODEL_FILE_PREFIX + model.getName() + MODEL_EXTENSION;
 
         // Produce octet stream to force navigator opening "save as" dialog
@@ -229,7 +206,7 @@ public class ModelController implements IResourceController<Model> {
         pResponse.addHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + exportedFilename + "\"");
 
         try {
-            modelService.exportModel(pModelId, pResponse.getOutputStream());
+            modelService.exportModel(modelName, pResponse.getOutputStream());
             pResponse.getOutputStream().flush();
         } catch (IOException e) {
             final String message = String.format("Error with servlet output stream while exporting model %s.",
@@ -241,12 +218,9 @@ public class ModelController implements IResourceController<Model> {
 
     /**
      * Import a model
-     *
-     * @param pFile
-     *            model to import
+     * @param pFile model to import
      * @return nothing
-     * @throws ModuleException
-     *             if error occurs!
+     * @throws ModuleException if error occurs!
      */
     @ResourceAccess(description = "Import a model")
     @RequestMapping(method = RequestMethod.POST, value = "/import")
@@ -266,19 +240,19 @@ public class ModelController implements IResourceController<Model> {
     public Resource<Model> toResource(Model pElement, Object... pExtras) {
         final Resource<Model> resource = resourceService.toResource(pElement);
         resourceService.addLink(resource, this.getClass(), "getModel", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(String.class, pElement.getName()));
         resourceService.addLink(resource, this.getClass(), "updateModel", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pElement.getId()),
+                                MethodParamFactory.build(String.class, pElement.getName()),
                                 MethodParamFactory.build(Model.class));
         resourceService.addLink(resource, this.getClass(), "deleteModel", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(String.class, pElement.getName()));
         resourceService.addLink(resource, this.getClass(), "getModels", LinkRels.LIST,
                                 MethodParamFactory.build(EntityType.class));
         // Export
         resourceService.addLink(resource, this.getClass(), "exportModel", "export",
                                 MethodParamFactory.build(HttpServletRequest.class),
                                 MethodParamFactory.build(HttpServletResponse.class),
-                                MethodParamFactory.build(Long.class, pElement.getId()));
+                                MethodParamFactory.build(String.class, pElement.getName()));
         return resource;
     }
 

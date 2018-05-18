@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -44,7 +44,7 @@ public class AccessGroupAssociationEvent implements ISubscribable {
 
     public AccessGroupAssociationEvent(AccessGroup accessGroup, String userEmail) {
         this.accessGroup = accessGroup;
-        this.setUserEmail(userEmail);
+        this.userEmail = userEmail;
     }
 
     public AccessGroup getAccessGroup() {

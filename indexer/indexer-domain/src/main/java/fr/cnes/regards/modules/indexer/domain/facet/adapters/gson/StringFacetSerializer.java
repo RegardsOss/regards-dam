@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -36,8 +36,8 @@ import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 public class StringFacetSerializer implements JsonSerializer<StringFacet> {
 
     @Override
-    public JsonElement serialize(StringFacet pSrc, Type pTypeOfSrc, JsonSerializationContext pContext) {
-        return pContext.serialize(new AdaptedFacet(pSrc));
+    public JsonElement serialize(StringFacet src, Type srcType, JsonSerializationContext context) {
+        return context.serialize(new AdaptedFacet(src));
     }
 
     /**
@@ -45,22 +45,21 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    class AdaptedFacet {
+    static class AdaptedFacet {
 
         private final String attributeName;
 
         private final List<AdaptedFacetValue> values;
 
-        /**
-         * @param pAttributeName
-         * @param pValues
-         */
-        public AdaptedFacet(StringFacet pFacet) {
+        private final long others;
+
+        public AdaptedFacet(StringFacet facet) {
             super();
-            attributeName = pFacet.getAttributeName();
-            values = pFacet.getValues().entrySet().stream()
-                    .map(entry -> new AdaptedFacetValue(entry.getKey(), entry.getValue(), pFacet.getAttributeName()))
+            attributeName = facet.getAttributeName();
+            values = facet.getValues().entrySet().stream()
+                    .map(entry -> new AdaptedFacetValue(entry.getKey(), entry.getValue(), facet.getAttributeName()))
                     .collect(Collectors.toList());
+            others = facet.getOthers();
         }
 
         /**
@@ -77,6 +76,10 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
             return values;
         }
 
+        public long getOthers() {
+            return others;
+        }
+
     }
 
     /**
@@ -84,7 +87,7 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
      *
      * @author Xavier-Alexandre Brochard
      */
-    class AdaptedFacetValue {
+    static class AdaptedFacetValue {
 
         private final String word;
 
@@ -93,17 +96,17 @@ public class StringFacetSerializer implements JsonSerializer<StringFacet> {
         private final String openSearchQuery;
 
         /**
-         * @param pWord
-         * @param pCount
+         * @param word
+         * @param count
          */
-        public AdaptedFacetValue(String pWord, Long pCount, String pAttributeName) {
+        public AdaptedFacetValue(String word, Long count, String attributeName) {
             super();
-            word = pWord;
-            count = pCount;
-            if (pWord.contains(" ")) {
-                openSearchQuery = pAttributeName + ":" + "\"" + pWord + "\"";
+            this.word = word;
+            this.count = count;
+            if (word.contains(" ")) {
+                openSearchQuery = attributeName + ":" + "\"" + word + "\"";
             } else {
-                openSearchQuery = pAttributeName + ":" + pWord;
+                openSearchQuery = attributeName + ":" + word;
             }
         }
 

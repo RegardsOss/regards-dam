@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -29,9 +29,9 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
      */
     protected String name;
 
-    public AbstractPropertyCriterion(String pName) {
+    public AbstractPropertyCriterion(String name) {
         super();
-        name = pName;
+        this.name = name;
     }
 
     /**
@@ -41,8 +41,8 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
         return name;
     }
 
-    public void setName(String pName) {
-        name = pName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
@@ -54,17 +54,17 @@ public abstract class AbstractPropertyCriterion implements ICriterion {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (obj == null) {
+        if (o == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != o.getClass()) {
             return false;
         }
-        AbstractPropertyCriterion other = (AbstractPropertyCriterion) obj;
+        AbstractPropertyCriterion other = (AbstractPropertyCriterion) o;
         if (name == null) {
             if (other.name != null) {
                 return false;

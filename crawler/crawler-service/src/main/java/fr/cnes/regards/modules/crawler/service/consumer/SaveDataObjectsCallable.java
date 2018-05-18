@@ -20,17 +20,17 @@ public class SaveDataObjectsCallable implements Callable<Void> {
     /**
      * Tenant resolver needed to force tenant because ot multi-threading
      */
-    private IRuntimeTenantResolver runtimeTenantResolver;
+    private final IRuntimeTenantResolver runtimeTenantResolver;
 
     /**
      * Elasticsearch repository
      */
-    private IEsRepository esRepos;
+    private final IEsRepository esRepos;
 
     /**
      * Current tenant
      */
-    private String tenant;
+    private final String tenant;
 
     /**
      * Set of objects to save
@@ -40,7 +40,7 @@ public class SaveDataObjectsCallable implements Callable<Void> {
     /**
      * dataset id (only used for logging purpose)
      */
-    private long datasetId;
+    private final long datasetId;
 
     public SaveDataObjectsCallable(IRuntimeTenantResolver runtimeTenantResolver, IEsRepository esRepos, String tenant,
             long datasetId) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -25,12 +25,13 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -44,6 +45,7 @@ import fr.cnes.regards.modules.models.domain.attributes.Fragment;
 @Plugin(id = "CountPlugin", description = "allows to compute the number of data of a Dataset", author = "REGARDS Team",
         contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI", url = "https://github.com/RegardsOss",
         version = "1.0.0")
+@ComputationPlugin(supportedType = AttributeType.LONG)
 public class CountPlugin implements IComputedAttribute<Dataset, Long> {
 
     @Autowired
@@ -55,13 +57,13 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     @Autowired
     protected IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = RESULT_ATTRIBUTE_NAME,
-            description = "Name of the attribute to compute (ie result attribute).")
+    @PluginParameter(name = RESULT_ATTRIBUTE_NAME, label = "Result attribute name",
+            description = "Name of attribute to compute (ie result attribute).", unconfigurable = true)
     private String attributeToComputeName;
 
-    @PluginParameter(name = RESULT_FRAGMENT_NAME,
-            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the "
-                    + "default fragment, this value can be set to null.", optional = true)
+    @PluginParameter(name = RESULT_FRAGMENT_NAME, label = "Result fragment name",
+            description = "Name of attribute to compute fragment. If computed attribute belongs to "
+                    + "default fragment, this value can be set to null.", optional = true, unconfigurable = true)
     private String attributeToComputeFragmentName;
 
     private AttributeModel attributeToCompute;
@@ -93,11 +95,6 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     @Override
     public AttributeModel getAttributeToCompute() {
         return attributeToCompute;
-    }
-
-    @Override
-    public AttributeType getSupported() {
-        return AttributeType.LONG;
     }
 
 }

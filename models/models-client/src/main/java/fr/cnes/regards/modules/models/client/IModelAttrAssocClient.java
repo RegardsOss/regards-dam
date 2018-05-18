@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import fr.cnes.regards.framework.feign.annotation.RestClient;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 
 /**
@@ -39,17 +39,30 @@ import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 @RequestMapping(IModelAttrAssocClient.BASE_MAPPING)
 public interface IModelAttrAssocClient {
 
-    public static final String BASE_MAPPING = "/models";
+    /**
+     * Client base path
+     */
+    String BASE_MAPPING = "/models";
 
-    public static final String TYPE_MAPPING = "/{pModelId}/attributes";
+    /**
+     * Client type path
+     */
+    String TYPE_MAPPING = "/{pModelId}/attributes";
 
-    public static final String ASSOCS_MAPPING = "/assocs";
+    /**
+     * Client association path
+     */
+    String ASSOCS_MAPPING = "/assocs";
 
     @RequestMapping(method = RequestMethod.GET, path = TYPE_MAPPING)
-    public ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId);
+    ResponseEntity<List<Resource<ModelAttrAssoc>>> getModelAttrAssocs(@PathVariable("pModelId") Long pModelId);
 
+    /**
+     * Retrieve model attribute associations for a given entity type (optional)
+     * @return the model attribute associations
+     */
     @RequestMapping(path = ASSOCS_MAPPING, method = RequestMethod.GET)
-    public ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(
+    ResponseEntity<Collection<ModelAttrAssoc>> getModelAttrAssocsFor(
             @RequestParam(name = "type", required = false) EntityType type);
 
 }

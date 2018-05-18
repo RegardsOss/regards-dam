@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -31,7 +31,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
@@ -86,8 +91,17 @@ public class FragmentController implements IResourceController<Fragment> {
      */
     private final IResourceService resourceService;
 
+    /**
+     * {@link IAttributeModelService} instance
+     */
     private final IAttributeModelService attributeModelService;
 
+    /**
+     * Constructor setting the parameters as attributes
+     * @param pFragmentService
+     * @param pResourceService
+     * @param attributeModelService
+     */
     public FragmentController(IFragmentService pFragmentService, IResourceService pResourceService,
             IAttributeModelService attributeModelService) {
         this.fragmentService = pFragmentService;

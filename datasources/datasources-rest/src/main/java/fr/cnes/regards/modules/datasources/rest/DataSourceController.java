@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,26 +40,21 @@ import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentif
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.modules.datasources.domain.DataSource;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDBConnectionPlugin;
-import fr.cnes.regards.modules.datasources.plugins.interfaces.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDBConnectionPlugin;
+import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
+import fr.cnes.regards.modules.datasources.rest.exception.AssociatedDatasetExistsException;
 import fr.cnes.regards.modules.datasources.service.IDataSourceService;
-import fr.cnes.regards.modules.models.domain.Model;
 
 /**
- *
- * REST interface for managing data {@link Model}
- *
+ * REST interface for Datasources plugin configuration ie only {@link IDataSourcePlugin} are concerned
  * @author Christophe Mertz
- *
+ * @author oroussel
  */
 @RestController
-// CHECKSTYLE:OFF
 @ModuleInfo(name = "datasource", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS SI",
         documentation = "http://test")
-// CHECKSTYLE:ON
 @RequestMapping(DataSourceController.TYPE_MAPPING)
-public class DataSourceController implements IResourceController<DataSource> {
+public class DataSourceController implements IResourceController<PluginConfiguration> {
 
     /**
      * Type mapping
@@ -66,112 +62,108 @@ public class DataSourceController implements IResourceController<DataSource> {
     public static final String TYPE_MAPPING = "/datasources";
 
     /**
-     * DBConnectionService attribute service
+     * Datasource service
      */
-    private final IDataSourceService dataSourceService;
+    @Autowired
+    private IDataSourceService dataSourceService;
 
     /**
      * Resource service
      */
-    private final IResourceService resourceService;
-
-    public DataSourceController(IDataSourceService pDBConnectionService, IResourceService pResourceService) {
-        this.dataSourceService = pDBConnectionService;
-        this.resourceService = pResourceService;
-    }
+    @Autowired
+    private IResourceService resourceService;
 
     /**
-     * Retrieve all {@link DataSource}.
-     *
+     * Retrieve all {@link IDataSourcePlugin} {@link PluginConfiguration}s.
      * @return a list of {@link PluginConfiguration}
      */
-    @ResourceAccess(description = "List all the datasources defined for the plugin type IDataSourcePlugin")
+    @ResourceAccess(description = "List all plugin configurations of type IDataSourcePlugin")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<Resource<DataSource>>> getAllDataSources() {
+    public ResponseEntity<List<Resource<PluginConfiguration>>> getAllDataSources() {
         return ResponseEntity.ok(toResources(dataSourceService.getAllDataSources()));
     }
 
     /**
-     * Create a {@link DataSource}.</br>
+     * Create a data source.</br>
      * A {@link PluginConfiguration} for the plugin type {@link IDBConnectionPlugin} is created.
-     *
-     * @param pDatasource
-     *            the DataSource used to create the {@link PluginConfiguration}
-     * @return the created {@link DataSource}
-     * @throws ModuleException
-     *             if problem occurs during plugin configuration creation
+     * @param datasource the DataSource used to create the {@link PluginConfiguration}
+     * @return the created data source
+     * @throws ModuleException if problem occurs during plugin configuration creation
      */
     @ResourceAccess(description = "Create a DataSource")
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Resource<DataSource>> createDataSource(@Valid @RequestBody DataSource pDatasource)
-            throws ModuleException {
-        return ResponseEntity.ok(toResource(dataSourceService.createDataSource(pDatasource)));
+    public ResponseEntity<Resource<PluginConfiguration>> createDataSource(
+            @Valid @RequestBody PluginConfiguration datasource) throws ModuleException {
+        return ResponseEntity.ok(toResource(dataSourceService.createDataSource(datasource)));
     }
 
     /**
-     * Get a {@link DataSource}
-     *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * Get a data source
+     * @param pluginConfId {@link PluginConfiguration} identifier
      * @return a {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if plugin configuration cannot be retrieved
+     * @throws ModuleException if plugin configuration cannot be retrieved
      */
-    @ResourceAccess(
-            description = "Get a DataSource ie a identifier of a PluginConfiguration for a plugin type IDataSourcePlugin")
-    @RequestMapping(method = RequestMethod.GET, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<DataSource>> getDataSource(@PathVariable Long pPluginConfId) throws ModuleException {
-        return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pPluginConfId)));
+    @ResourceAccess(description = "Get a DataSource ie a PluginConfiguration of type IDataSourcePlugin")
+    @RequestMapping(method = RequestMethod.GET, value = "/{pluginConfId}")
+    public ResponseEntity<Resource<PluginConfiguration>> getDataSource(@PathVariable Long pluginConfId)
+            throws ModuleException {
+        return ResponseEntity.ok(toResource(dataSourceService.getDataSource(pluginConfId)));
     }
 
     /**
      * Allow to update {@link PluginConfiguration} for the plugin type {@link IDataSourcePlugin}
-     *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
-     * @param pDataSource
-     *            {@link DataSource} to update
+     * @param pluginConfId {@link PluginConfiguration} identifier
+     * @param dataSource data source to update
      * @return updated {@link PluginConfiguration}
-     * @throws ModuleException
-     *             if plugin configuration cannot be updated
+     * @throws ModuleException if plugin configuration cannot be updated
      */
-    @ResourceAccess(description = "Update a plugin configuration defined for the plugin type IDataSourcePlugin")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{pPluginConfId}")
-    public ResponseEntity<Resource<DataSource>> updateDataSource(@PathVariable Long pPluginConfId,
-            @Valid @RequestBody DataSource pDataSource) throws ModuleException {
-        if (!pPluginConfId.equals(pDataSource.getPluginConfigurationId())) {
-            throw new EntityInconsistentIdentifierException(pPluginConfId, pDataSource.getPluginConfigurationId(),
+    @ResourceAccess(description = "Update a plugin configuration of type IDataSourcePlugin")
+    @RequestMapping(method = RequestMethod.PUT, value = "/{pluginConfId}")
+    public ResponseEntity<Resource<PluginConfiguration>> updateDataSource(@PathVariable Long pluginConfId,
+            @Valid @RequestBody PluginConfiguration dataSource) throws ModuleException {
+        if (!pluginConfId.equals(dataSource.getId())) {
+            throw new EntityInconsistentIdentifierException(pluginConfId, dataSource.getId(),
                     PluginConfiguration.class);
         }
-        return ResponseEntity.ok(toResource(dataSourceService.updateDataSource(pDataSource)));
+        return ResponseEntity.ok(toResource(dataSourceService.updateDataSource(dataSource)));
     }
 
     /**
      * Delete a {@link PluginConfiguration} defined for the plugin type {@link IDataSourcePlugin}
-     *
-     * @param pPluginConfId
-     *            {@link PluginConfiguration} identifier
+     * @param pluginConfId {@link PluginConfiguration} identifier
      * @return nothing
-     * @throws ModuleException
-     *             if {@link PluginConfiguration} cannot be deleted
+     * @throws ModuleException if {@link PluginConfiguration} cannot be deleted
      */
-    @ResourceAccess(description = "Delete a plugin configuration defined for the plugin type IDBConnectionPlugin")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{pPluginConfId}")
-    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pPluginConfId) throws ModuleException {
-        dataSourceService.deleteDataSouce(pPluginConfId);
+    @ResourceAccess(description = "Delete a plugin configuration of type IDataSourcePlugin")
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{pluginConfId}")
+    public ResponseEntity<Void> deleteDataSource(@PathVariable Long pluginConfId)
+            throws AssociatedDatasetExistsException, ModuleException {
+        try {
+            dataSourceService.deleteDataSource(pluginConfId);
+        } catch (RuntimeException e) {
+            // Ugliest method to manage constraints on entites which are associated to this datasource but because
+            // of the overuse of plugins everywhere a billion of dependencies exist with some cyclics if we try to
+            // do things cleanly so let's be pigs and do shit without any problems....
+            // And ugliest of the ugliest, this exception is thrown at transaction commit that's why it is done here and
+            // not into service
+            if (e.getMessage().contains("fk_ds_plugin_conf_id")) {
+                throw new AssociatedDatasetExistsException();
+            }
+            throw e;
+        }
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    public Resource<DataSource> toResource(DataSource pElement, Object... pExtras) {
-        final Resource<DataSource> resource = resourceService.toResource(pElement);
+    public Resource<PluginConfiguration> toResource(PluginConfiguration conf, Object... pExtras) {
+        Resource<PluginConfiguration> resource = resourceService.toResource(conf);
         resourceService.addLink(resource, this.getClass(), "getDataSource", LinkRels.SELF,
-                                MethodParamFactory.build(Long.class, pElement.getPluginConfigurationId()));
+                                MethodParamFactory.build(Long.class, conf.getId()));
         resourceService.addLink(resource, this.getClass(), "deleteDataSource", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, pElement.getPluginConfigurationId()));
+                                MethodParamFactory.build(Long.class, conf.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDataSource", LinkRels.UPDATE,
-                                MethodParamFactory.build(Long.class, pElement.getPluginConfigurationId()),
-                                MethodParamFactory.build(DataSource.class));
+                                MethodParamFactory.build(Long.class, conf.getId()),
+                                MethodParamFactory.build(PluginConfiguration.class));
         resourceService.addLink(resource, this.getClass(), "getAllDataSources", LinkRels.LIST);
         return resource;
     }

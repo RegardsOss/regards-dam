@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -32,13 +32,20 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.cnes.regards.framework.module.rest.exception.*;
+import com.google.common.collect.Lists;
+import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
+import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.dao.IModelAttrAssocRepository;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -98,7 +105,7 @@ public class ModelServiceTest {
         modelService = new ModelService(mockModelR, mockModelAttR, mockAttModelS, mockPluginService);
     }
 
-    @Test(expected = EntityUnexpectedIdentifierException.class)
+    @Test(expected = EntityInvalidException.class)
     @Requirement("REGARDS_DSL_DAM_MOD_010")
     @Purpose("Test unexpected model creation")
     public void createUnexpectedModelTest() throws ModuleException {
@@ -158,24 +165,22 @@ public class ModelServiceTest {
         Assert.assertNotNull(modelService.getModel(modelId));
     }
 
-    @Test(expected = EntityNotIdentifiableException.class)
+    @Test(expected = EntityNotFoundException.class)
     public void updateUnexpectedModelTest() throws ModuleException {
-        final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
-        modelService.updateModel(modelId, model);
+        modelService.updateModel(MODEL_NAME, model);
     }
 
     @Test(expected = EntityInconsistentIdentifierException.class)
     public void updateInconsistentModelTest() throws ModuleException {
-        final Long modelId = 1L;
         final Model model = new Model();
         model.setName(MODEL_NAME);
         model.setType(EntityType.COLLECTION);
         model.setId(2L);
 
-        modelService.updateModel(modelId, model);
+        modelService.updateModel("toto", model);
     }
 
     @Test(expected = EntityNotFoundException.class)
@@ -188,7 +193,7 @@ public class ModelServiceTest {
 
         Mockito.when(mockModelR.exists(modelId)).thenReturn(false);
 
-        modelService.updateModel(modelId, model);
+        modelService.updateModel(MODEL_NAME, model);
     }
 
     @Test
@@ -204,23 +209,11 @@ public class ModelServiceTest {
         Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
         Mockito.when(mockModelR.save(model)).thenReturn(model);
 
-        Assert.assertNotNull(modelService.updateModel(modelId, model));
-    }
-
-    @Test
-    public void deleteModelTest() throws ModuleException {
-        final Long modelId = 1L;
-
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
-        final IModelService spy = Mockito.spy(modelService);
-        Mockito.doNothing().when(spy).deleteModel(modelId);
-
-        modelService.deleteModel(modelId);
+        Assert.assertNotNull(modelService.updateModel(MODEL_NAME, model));
     }
 
     /**
      * Do not bind an attribute that is part of fragment
-     *
      * @throws ModuleException if error occurs!
      */
     @Test(expected = FragmentAttributeException.class)
@@ -242,18 +235,16 @@ public class ModelServiceTest {
 
         final ModelAttrAssoc modAtt = new ModelAttrAssoc(attModel, model);
 
-        Mockito.when(mockModelR.exists(modelId)).thenReturn(true);
-        Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
+        Mockito.when(mockModelR.findByName(MODEL_NAME)).thenReturn(model);
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
 
-        modelService.bindAttributeToModel(modelId, modAtt);
+        modelService.bindAttributeToModel(MODEL_NAME, modAtt);
     }
 
     // TODO do not rebind an attribute
 
     /**
      * Do not unbind an attribute that is part of fragment
-     *
      * @throws ModuleException if error occurs!
      */
     @Test(expected = FragmentAttributeException.class)
@@ -282,37 +273,37 @@ public class ModelServiceTest {
         Mockito.when(mockModelAttR.findOne(modAttId)).thenReturn(modAtt);
         Mockito.when(mockAttModelS.isFragmentAttribute(attId)).thenReturn(true);
 
-        modelService.unbindAttributeFromModel(modelId, modAttId);
+        modelService.unbindAttributeFromModel(MODEL_NAME, modAttId);
     }
 
     /**
      * Test model export
-     *
      * @throws ModuleException if error occurs!
      */
     @Test
     public void exportModelTest() throws ModuleException {
 
         final Long modelId = 1L;
+        String modelName = "sample";
         final Model model = new Model();
         model.setId(modelId);
-        model.setName("sample");
+        model.setName(modelName);
         model.setDescription("Model description");
         model.setType(EntityType.COLLECTION);
 
-        final List<ModelAttrAssoc> modAtts = new ArrayList<>();
+        final List<ModelAttrAssoc> modelAttrAssocs = new ArrayList<>();
 
         // Attribute #1 in default fragment
         AttributeModel attMod = AttributeModelBuilder.build("att_string", AttributeType.STRING, "ForTests")
                 .fragment(Fragment.buildDefault()).withoutRestriction();
         ModelAttrAssoc modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Attribute #2 in default fragment
         attMod = AttributeModelBuilder.build("att_boolean", AttributeType.BOOLEAN, "ForTests")
                 .fragment(Fragment.buildDefault()).withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Geo fragment
         final Fragment geo = Fragment.buildFragment("GEO", "Geographic information");
@@ -321,7 +312,7 @@ public class ModelServiceTest {
         attMod = AttributeModelBuilder.build("CRS", AttributeType.STRING, "ForTests").fragment(geo)
                 .withEnumerationRestriction("Earth", "Mars", "Venus");
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Geo fragment
         final Fragment contact = Fragment.buildFragment("Contact", "Contact information");
@@ -330,20 +321,35 @@ public class ModelServiceTest {
         attMod = AttributeModelBuilder.build("Phone", AttributeType.STRING, "ForTests").fragment(contact)
                 .withPatternRestriction("[0-9 ]{10}");
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
         // Attribute #6 in contact fragment
         attMod = AttributeModelBuilder.build("date", AttributeType.DATE_ISO8601, "ForTests").fragment(contact)
                 .withoutRestriction();
         modAtt = new ModelAttrAssoc(attMod, model);
-        modAtts.add(modAtt);
+        modelAttrAssocs.add(modAtt);
 
+        // Attribute #7 (computed) in default fragment
+        attMod = AttributeModelBuilder.build("value_sum", AttributeType.LONG, "ForTests").defaultFragment()
+                .withoutRestriction();
+        modAtt = new ModelAttrAssoc(attMod, model);
+        PluginConfiguration sumComputeConf = new PluginConfiguration();
+        sumComputeConf.setLabel("SumComputeValue");
+        sumComputeConf.setPluginClassName("fr.cnes.regards.modules.entities.plugin.LongSumComputePlugin");
+        sumComputeConf.setParameters(Lists.newArrayList(new PluginParameter("parameterAttributeName", "\"paramName\""),
+                                                        // No parameter fragment => default value => "" => stripped as """"
+                                                        new PluginParameter("parameterAttributeFragmentName", "\"\"")));
+
+        modAtt.setComputationConf(sumComputeConf);
+        modelAttrAssocs.add(modAtt);
+
+        Mockito.when(mockModelR.findByName(modelName)).thenReturn(model);
         Mockito.when(mockModelR.findOne(modelId)).thenReturn(model);
-        Mockito.when(mockModelAttR.findByModelId(modelId)).thenReturn(modAtts);
+        Mockito.when(mockModelAttR.findByModelName(modelName)).thenReturn(modelAttrAssocs);
 
         try {
             final OutputStream output = Files.newOutputStream(Paths.get("target", model.getName() + ".xml"));
-            modelService.exportModel(modelId, output);
+            modelService.exportModel(modelName, output);
         } catch (IOException e) {
             LOGGER.debug("Cannot export fragment");
         }

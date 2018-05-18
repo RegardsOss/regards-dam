@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -36,6 +36,7 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
 
 /**
@@ -99,7 +100,7 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
     /**
      * Model type
      */
-    @NotNull
+    @NotNull(message="The EntityType must not be null")
     @Column(length = 10, nullable = false, updatable = false)
     @Enumerated(EnumType.STRING)
     private EntityType type;

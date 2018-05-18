@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,15 +38,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.google.common.net.HttpHeaders;
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
@@ -53,9 +53,7 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -164,18 +162,18 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
 
         final String collectionStr = gsonBuilder.create().toJson(collection2);
         final MockMultipartFile collection = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                   collectionStr.getBytes());
+                collectionStr.getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
-        performDefaultFileUploadPost(COLLECTIONS, parts, expectations, "Failed to create a new collection");
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
         //we have tested to create a collection with a pdf description, so lets test with an url
         Collection collectionWithUrl = new Collection(model1, DEFAULT_TENANT, "collectionWithURL");
         collectionWithUrl.setDescriptionFile(new DescriptionFile("https://descrition.url.test/lol"));
         parts.clear();
         parts.add(new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_UTF8_VALUE,
-                                        gson(collectionWithUrl).getBytes()));
-        performDefaultFileUploadPost(COLLECTIONS, parts, expectations, "Failed to create a new collection");
+                gson(collectionWithUrl).getBytes()));
+        performDefaultFileUpload(COLLECTIONS, parts, expectations, "Failed to create a new collection");
 
     }
 
@@ -190,6 +188,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
                           collection1.getId());
     }
 
+    @Ignore
     @Test
     public void testCollectionDescriptionFile() throws IOException, ModuleException {
 
@@ -204,8 +203,9 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.header().stringValues(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM test"));
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
         expectations.add(MockMvcResultMatchers.content().bytes(pdf.getBytes()));
-        performDefaultGet(CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE+"?origin=test",
-                          expectations, "Could not fetch collection description file", collection.getIpId());
+        performDefaultGet(
+                CollectionController.ROOT_MAPPING + CollectionController.COLLECTION_IPID_PATH_FILE + "?origin=test",
+                expectations, "Could not fetch collection description file", collection.getIpId());
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
@@ -228,17 +228,16 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         final MockMultipartFile collection = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                   gson(collectionClone).getBytes());
+                gson(collectionClone).getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
 
-        performDefaultFileUpload(RequestMethod.POST, COLLECTIONS_COLLECTION_ID, parts, expectations,
+        performDefaultFileUpload(COLLECTIONS_COLLECTION_ID, parts, expectations,
                                  "Failed to update a specific collection using its id", collection1.getId());
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_220")
-    @Purpose(
-            "Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
+    @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour.")
     @Test
     public void testFullUpdate() {
         final Collection collectionClone = new Collection(collection1.getModel(), "", "collection1clone");
@@ -250,27 +249,13 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isOk());
         expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
         final MockMultipartFile collection = new MockMultipartFile("collection", "", MediaType.APPLICATION_JSON_VALUE,
-                                                                   gson(collectionClone).getBytes());
+                gson(collectionClone).getBytes());
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collection);
 
-        performDefaultFileUpload(RequestMethod.POST, COLLECTIONS_COLLECTION_ID, parts, expectations,
+        performDefaultFileUpload(COLLECTIONS_COLLECTION_ID, parts, expectations,
                                  "Failed to update a specific collection using its id", collection1.getId());
 
-    }
-
-    @Override
-    protected MockMultipartHttpServletRequestBuilder getMultipartRequestBuilder(final String pAuthToken,
-            final List<MockMultipartFile> pFiles, final String pUrlTemplate, final Object... pUrlVars) {
-
-        final MockMultipartHttpServletRequestBuilder multipartRequestBuilder = MockMvcRequestBuilders
-                .fileUpload(pUrlTemplate, pUrlVars);
-        for (final MockMultipartFile file : pFiles) {
-            multipartRequestBuilder.file(file);
-        }
-        multipartRequestBuilder.accept(MediaType.APPLICATION_JSON_UTF8);
-        addSecurityHeader(multipartRequestBuilder, pAuthToken);
-        return multipartRequestBuilder;
     }
 
     // TODO: add delete by ip id
@@ -287,7 +272,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testDissociateCollections() {
         final List<UniformResourceName> toDissociate = new ArrayList<>();
         toDissociate.add(collection3.getIpId());
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultPut(COLLECTIONS_COLLECTION_ID_DISSOCIATE, toDissociate, expectations,
                           "Failed to dissociate collections from one collection using its id", collection1.getId());
     }
@@ -296,7 +281,7 @@ public class CollectionControllerIT extends AbstractRegardsTransactionalIT {
     public void testAssociateCollections() {
         final List<UniformResourceName> toAssociate = new ArrayList<>();
         toAssociate.add(collection4.getIpId());
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        expectations.add(MockMvcResultMatchers.status().isNoContent());
         performDefaultPut(COLLECTIONS_COLLECTION_ID_ASSOCIATE, toAssociate, expectations,
                           "Failed to associate collections from one collection using its id", collection1.getId());
     }

@@ -1,10 +1,13 @@
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +20,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.assertj.core.util.Maps;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -32,12 +34,15 @@ import org.springframework.data.domain.Sort;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.framework.jpa.json.GsonUtil;
 import fr.cnes.regards.modules.indexer.dao.EsRepository;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.dao.converter.LinkedHashMapToSort;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
@@ -48,6 +53,7 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.NumericFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.StringFacet;
 
+@Ignore
 public class EsQueryTest {
 
     private static final String INDEX = "criterions";
@@ -70,30 +76,37 @@ public class EsQueryTest {
 
     /**
      * Befor class setting up method
-     *
-     * @throws Exception
-     *             exception
+     * @throws Exception exception
      */
     @BeforeClass
     public static void setUp() throws Exception {
+        Map<String, String> propMap = Maps.newHashMap();
         // By now, repository try to connect localhost:9300 for ElasticSearch
         boolean repositoryOK = true;
+        // we get the properties into target/test-classes because this is where maven will put the filtered file(with
+        // real values and not placeholder)
+        Stream<String> props = Files.lines(Paths.get("target/test-classes/test.properties"));
+        props.filter(line -> !(line.startsWith("#") || line.trim().isEmpty())).forEach(line -> {
+            String[] keyVal = line.split("=");
+            propMap.put(keyVal[0], keyVal[1]);
+        });
         try {
-            gson = new GsonBuilder().create();
-            // FIXME valeurs en dur pour l'instant
-            // repository = new EsRepository(gson, null, "172.26.47.52", 9300, "regards");
-            repository = new EsRepository(gson, null, "localhost", 9300, "regards",
+            gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter().nullSafe())
+                    .create();
+            repository = new EsRepository(gson, null, "localhost", 9200,
                                           new AggregationBuilderFacetTypeVisitor(100, 5));
+
+            // This test is not intended to be executed on integration serveur but better locally to test
+            // functionnalities during development phase
+            //            repository = new EsRepository(gson, null, propMap.get("regards.elasticsearch.address"),
+            //                    Integer.parseInt(propMap.get("regards.elasticsearch.http.port")), new AggregationBuilderFacetTypeVisitor(100, 5));
         } catch (NoNodeAvailableException e) {
             repositoryOK = false;
         }
         // Do not launch tests is Elasticsearch is not available
         Assume.assumeTrue(repositoryOK);
 
-        /*
-         * final Consumer<String> cleanFct = (pIndex) -> { try { repository.deleteIndex(pIndex); } catch (final
-         * IndexNotFoundException infe) { } }; // All created indices from tests cleanFct.accept(INDEX);
-         */
+        GsonUtil.setGson(gson);
     }
 
     @AfterClass
@@ -351,7 +364,7 @@ public class EsQueryTest {
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, 100, ICriterion.between("properties.x", lower, upper),
-                                 Maps.newHashMap("properties.x", FacetType.NUMERIC));
+                                 Collections.singletonMap("properties.x", FacetType.NUMERIC));
         System.out.println(
                 String.format("Search valeur entre 2 bornes aléatoires avec facette [%f, %f] : %4$d (%3$d) ms", lower,
                               upper, page.getTotalElements(), System.currentTimeMillis() - start));
@@ -377,7 +390,7 @@ public class EsQueryTest {
 
         start = System.currentTimeMillis();
         page = repository.search(searchKey, pageable, ICriterion.between("properties.x", lower, upper),
-                                 Maps.newHashMap("properties.a", FacetType.NUMERIC));
+                                 Collections.singletonMap("properties.a", FacetType.NUMERIC));
         System.out.println(
                 String.format("Search valeur entre 2 bornes aléatoires avec tri et facette [%f, %f] : %4$d (%3$d) ms",
                               lower, upper, page.getTotalElements(), System.currentTimeMillis() - start));
@@ -388,8 +401,8 @@ public class EsQueryTest {
         this.createData();
 
         // Without knowing type (ie on AbstractItem which is a subtype of Item)
-        SearchKey<AbstractItem, AbstractItem> abstractSearchKey = new SearchKey<>(INDEX,
-                                                                                  Maps.newHashMap(TYPE1, Item.class));
+        SearchKey<AbstractItem, AbstractItem> abstractSearchKey = new SearchKey<>(INDEX, Collections
+                .singletonMap(TYPE1, Item.class));
         Assert.assertEquals(10, repository.search(abstractSearchKey, 10, ICriterion.all()).getContent().size());
 
         // On integers
@@ -406,6 +419,10 @@ public class EsQueryTest {
 
         ICriterion inCrit = ICriterion.in("properties.size", 1, 3, 5, 7, 9);
         Assert.assertEquals(5, repository.search(searchKey, 10, inCrit).getContent().size());
+
+        ICriterion emptyInCrit = ICriterion.in("properties.size", new int[0]);
+        Assert.assertEquals(0, repository.search(searchKey, 10, emptyInCrit).getContent().size());
+
 
         ICriterion allCrit = ICriterion.ne("atributes.size", -1);
         Assert.assertEquals(10, repository.search(searchKey, 10, allCrit).getContent().size());
@@ -431,7 +448,7 @@ public class EsQueryTest {
         Assert.assertEquals(1, repository.search(searchKey, 10, startsWithCrit).getContent().size());
 
         ICriterion endsWithCrit = ICriterion.endsWith("properties.text", "t");
-         Assert.assertEquals(5, repository.search(searchKey, 10, endsWithCrit).getContent().size());
+        Assert.assertEquals(5, repository.search(searchKey, 10, endsWithCrit).getContent().size());
 
         // On Dates
         ICriterion gtDateCriterion = ICriterion
@@ -600,6 +617,106 @@ public class EsQueryTest {
         Assert.assertEquals(items, itemsSorted);
     }
 
+    @Test
+    public void testPageOther10_000() throws InterruptedException {
+        LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
+        sortMap.put("properties.text", true);
+        sortMap.put("properties.size", false);
+        //                ICriterion crit = ICriterion.gt("properties.weight", -10000.0);
+        ICriterion crit = ICriterion.all();
+        Sort sort = new LinkedHashMapToSort().convert(sortMap);
+        SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
+        long now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(43, 1000, sort), crit).getContent();
+        System.out.println("page n : " + (System.currentTimeMillis() - now) + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(44, 1000, sort), crit).getContent();
+        System.out.println("page n + 1 : " + (System.currentTimeMillis() - now) + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(45, 1000, sort), crit).getContent();
+        System.out.println("page n + 2 : " + (System.currentTimeMillis() - now) + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(43, 1000, sort), crit).getContent();
+        System.out.println("page n : " + (System.currentTimeMillis() - now) + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(49, 1000, sort), crit).getContent();
+        System.out.println(
+                "page n + m (m > 1) with (m - n) * page size < 10 000 : " + (System.currentTimeMillis() - now) + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(65, 1000, sort), crit,
+                          Collections.singletonMap("properties.text", FacetType.STRING)).getContent();
+        System.out.println(
+                "page n + m (m > 1) with (m - n) * page size >= 10 000 : " + (System.currentTimeMillis() - now)
+                        + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(0, 10000, sort), crit).getContent();
+        System.out.println("page 0 (10000) : " + (System.currentTimeMillis() - now) + " ms");
+
+        now = System.currentTimeMillis();
+        repository.search(searchKey, new PageRequest(1, 10000, sort), crit).getContent();
+        System.out.println("page 1 (10000) : " + (System.currentTimeMillis() - now) + " ms");
+
+    }
+
+    @Test
+    public void testFrom0To10MNoSortNoCrit() throws InterruptedException {
+        ICriterion crit = ICriterion.all();
+        SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
+        long start = System.currentTimeMillis();
+
+        int totalPageCount = 10_000_000 / 10_000;
+        for (int i = 0; i < totalPageCount; i++) {
+            long now = System.currentTimeMillis();
+            repository.search(searchKey, new PageRequest(i, 10_00), crit).getContent();
+            System.out.println(
+                    String.format("page %d / %d : %d ms", i + 1, totalPageCount, (System.currentTimeMillis() - now)));
+        }
+        System.out.println("***************");
+        System.out.println(
+                String.format("Total (%d pages) : %d ms", totalPageCount, (System.currentTimeMillis() - start)));
+    }
+
+    @Test
+    public void test10_000WithAggs() throws InterruptedException {
+        ICriterion crit = ICriterion.all();
+        SearchKey<Item, Item> searchKey = new SearchKey<>("criterions2", TYPE1, Item.class);
+        long start = System.currentTimeMillis();
+
+        int totalPageCount = 10_000_000 / 10_000;
+        long now = System.currentTimeMillis();
+        FacetPage<Item> facetPage1 = repository.search(searchKey, new PageRequest(0, 10_00), crit,
+                                                       Collections.singletonMap("properties.text", FacetType.STRING));
+        Assert.assertNotNull(facetPage1.getFacets());
+        Assert.assertFalse(facetPage1.getFacets().isEmpty());
+        Assert.assertEquals(1, facetPage1.getFacets().size());
+        IFacet<?> ifacet1 = facetPage1.getFacets().iterator().next();
+        Assert.assertTrue(ifacet1 instanceof StringFacet);
+        StringFacet facet1 = (StringFacet) ifacet1;
+        Assert.assertEquals(9, facet1.getValues().size());
+
+        FacetPage<Item> facetPage2 = repository.search(searchKey, new PageRequest(0, 10_00), crit,
+                                                       Collections.singletonMap("properties.text", FacetType.STRING));
+        Assert.assertNotNull(facetPage2.getFacets());
+        Assert.assertFalse(facetPage2.getFacets().isEmpty());
+        Assert.assertEquals(1, facetPage2.getFacets().size());
+        IFacet<?> ifacet2 = facetPage2.getFacets().iterator().next();
+        Assert.assertTrue(ifacet2 instanceof StringFacet);
+        StringFacet facet2 = (StringFacet) ifacet2;
+        Assert.assertEquals(9, facet2.getValues().size());
+
+        Assert.assertTrue(Maps.difference(facet1.getValues(), facet2.getValues()).areEqual());
+
+        System.out.println("***************");
+        System.out.println(
+                String.format("Total (%d pages) : %d ms", totalPageCount, (System.currentTimeMillis() - start)));
+    }
+
     /**
      * This test creates BIG_VOLUME_SIZE entities so it is to be used only once to test perf.
      * Some search queries are done then
@@ -618,7 +735,7 @@ public class EsQueryTest {
         // .put("properties.ints", FacetType.NUMERIC);
         // .put("properties.doubles", FacetType.NUMERIC).put("properties.dates", FacetType.DATE);
         LinkedHashMap<String, Boolean> sortMap = new LinkedHashMap<>();
-        // sortMap.put("docId", false);
+        sortMap.put("docId", false);
         long start = System.currentTimeMillis();
         SearchKey<Item, Item> searchKey = new SearchKey<>(INDEX2, TYPE1, Item.class);
         Page<Item> page = repository.search(searchKey, 100, ICriterion.all(), facetMapBuilder.build(), sortMap);
@@ -651,14 +768,14 @@ public class EsQueryTest {
         //        this.createData2();
         // Search with aggregations
         long start = System.currentTimeMillis();
-        SearchKey<Item, Properties> searchKey1 = new SearchKey<>(INDEX2, Maps.newHashMap(TYPE1, Item.class),
+        SearchKey<Item, Properties> searchKey1 = new SearchKey<>(INDEX2, Collections.singletonMap(TYPE1, Item.class),
                                                                  Properties.class);
         List<Properties> propertieses = repository
-                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties");
+                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start) + " ms");
         long start2 = System.currentTimeMillis();
         List<Properties> propertieses2 = repository
-                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties");
+                .search(searchKey1, ICriterion.lt("properties.size", 1000), "properties.text");
         System.out.println("search : " + (System.currentTimeMillis() - start2) + " ms");
 
         Object[] array1 = propertieses.toArray();
@@ -669,7 +786,7 @@ public class EsQueryTest {
         Assert.assertArrayEquals(array1, array2);
 
         // Testing with '.' into source attribute
-        SearchKey<Item, Integer> searchKey2 = new SearchKey<>(INDEX2, Maps.newHashMap(TYPE1, Item.class),
+        SearchKey<Item, Integer> searchKey2 = new SearchKey<>(INDEX2, Collections.singletonMap(TYPE1, Item.class),
                                                               Integer.class);
         List<Integer> upperBounds = repository
                 .search(searchKey2, ICriterion.lt("properties.size", 1000), "properties.intRange.upperBound");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -53,20 +53,32 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
         attributeNodes = { @NamedAttributeNode(value = "dataset"), @NamedAttributeNode(value = "accessGroup") })
 public class AccessRight implements IIdentifiable<Long> {
 
+    /**
+     * The id
+     */
     @Id
     @SequenceGenerator(name = "AccessRightSequence", initialValue = 1, sequenceName = "seq_access_right")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AccessRightSequence")
     private Long id;
 
+    /**
+     * The quality filter
+     */
     @Embedded
     @NotNull
     protected QualityFilter qualityFilter;
 
+    /**
+     * The access level
+     */
     @Column(length = 30, name = "access_level")
     @Enumerated(EnumType.STRING)
     @NotNull
     protected AccessLevel accessLevel;
 
+    /**
+     * The data access right
+     */
     @Embedded
     protected DataAccessRight dataAccessRight;
 
@@ -79,12 +91,18 @@ public class AccessRight implements IIdentifiable<Long> {
             updatable = false)
     private Dataset dataset;
 
+    /**
+     * The access group to which this access right is applied to
+     */
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "access_group_id", foreignKey = @ForeignKey(name = "fk_access_right_access_group_id"),
             updatable = false)
     private AccessGroup accessGroup;
 
+    /**
+     * Default constructor
+     */
     protected AccessRight() {
     }
 
@@ -97,6 +115,9 @@ public class AccessRight implements IIdentifiable<Long> {
         accessGroup = pAccessGroup;
     }
 
+    /**
+     * @return the dataset
+     */
     public Dataset getDataset() {
         return dataset;
     }
@@ -105,6 +126,9 @@ public class AccessRight implements IIdentifiable<Long> {
         dataset = pDataset;
     }
 
+    /**
+     * @return the quality filter
+     */
     public QualityFilter getQualityFilter() {
         return qualityFilter;
     }
@@ -113,6 +137,9 @@ public class AccessRight implements IIdentifiable<Long> {
         qualityFilter = pQualityFilter;
     }
 
+    /**
+     * @return the access level
+     */
     public AccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -121,6 +148,9 @@ public class AccessRight implements IIdentifiable<Long> {
         accessLevel = pAccessLevel;
     }
 
+    /**
+     * @return the data access right
+     */
     public DataAccessRight getDataAccessRight() {
         return dataAccessRight;
     }
@@ -129,6 +159,9 @@ public class AccessRight implements IIdentifiable<Long> {
         dataAccessRight = pDataAccessRight;
     }
 
+    /**
+     * @return the dataset constrained
+     */
     public Dataset getConstrained() {
         return dataset;
     }
@@ -137,6 +170,9 @@ public class AccessRight implements IIdentifiable<Long> {
         dataset = pConstrained;
     }
 
+    /**
+     * @return the id
+     */
     @Override
     public Long getId() {
         return id;
@@ -146,6 +182,9 @@ public class AccessRight implements IIdentifiable<Long> {
         id = pId;
     }
 
+    /**
+     * @return the access group
+     */
     public AccessGroup getAccessGroup() {
         return accessGroup;
     }

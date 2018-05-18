@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -106,10 +106,10 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUploadPost(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
-                                     "Should be able to import a fragment");
+        performDefaultFileUpload(ModelController.TYPE_MAPPING + "/import", filePath, expectations,
+                                 "Should be able to import a fragment");
 
-        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null);
+        final List<AttributeModel> atts = attributeModelService.getAttributes(null, null, null);
         attributeAdapterFactory.refresh(DEFAULT_TENANT, atts);
     }
 
@@ -164,8 +164,8 @@ public class CollectionValidationIT extends AbstractRegardsTransactionalIT {
 
         List<MockMultipartFile> parts = new ArrayList<>();
         parts.add(collectionPart);
-        performDefaultFileUploadPost(CollectionController.ROOT_MAPPING, parts, expectations,
-                                     "Failed to create a new collection");
+        performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
+                                 "Failed to create a new collection");
     }
 
     @Override

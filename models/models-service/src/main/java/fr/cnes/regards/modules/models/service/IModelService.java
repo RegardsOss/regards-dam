@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -39,17 +39,17 @@ public interface IModelService {
 
     Model createModel(Model pModel) throws ModuleException;
 
-    Model getModel(Long pModelId) throws ModuleException;
+    Model getModel(Long id) throws ModuleException;
 
-    Model getModelByName(String pModelName) throws ModuleException;
+    Model getModelByName(String modelName) throws ModuleException;
 
-    Model updateModel(Long pModelId, Model pModel) throws ModuleException;
+    Model updateModel(String modelName, Model pModel) throws ModuleException;
 
-    void deleteModel(Long pModelId) throws ModuleException;
+    void deleteModel(String modelName) throws ModuleException;
 
-    Model duplicateModel(Long pModelId, Model pModel) throws ModuleException;
+    Model duplicateModel(String modelName, Model pModel) throws ModuleException;
 
-    void exportModel(Long pModelId, OutputStream pOutputStream) throws ModuleException;
+    void exportModel(String modelName, OutputStream pOutputStream) throws ModuleException;
 
     Model importModel(InputStream pInputStream) throws ModuleException;
 }

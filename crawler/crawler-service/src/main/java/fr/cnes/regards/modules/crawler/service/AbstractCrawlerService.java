@@ -10,15 +10,14 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.event.AbstractEntityEvent;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Abstract crawler service.
@@ -66,13 +65,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     private IPoller poller;
 
     /**
-     * To retrieve ICrawlerService (self) proxy
-     */
-    @Autowired
-    protected ApplicationContext applicationContext;
-
-
-    /**
      * Indicate that daemon stop has been asked
      */
     private boolean stopAsked = false;
@@ -102,7 +94,12 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
      */
     private static boolean consumeOnlyMode = false;
 
-    private Class<T> entityClass;
+    private final Class<T> entityClass;
+
+    protected AbstractCrawlerService() {
+        this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
+                .getActualTypeArguments()[0];
+    }
 
     /**
      * Ask for termination of daemon process
@@ -110,11 +107,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     @PreDestroy
     private void endCrawl() {
         stopAsked = true;
-    }
-
-    protected AbstractCrawlerService() {
-        this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
-                .getActualTypeArguments()[0];
     }
 
     /**
@@ -135,8 +127,8 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                     runtimeTenantResolver.forceTenant(tenant);
                     // Try to poll an entity event on this tenant
                     atLeastOnePoll |= pollMethod.get();
-                } catch (Throwable t) {
-                    LOGGER.error("Cannot manage entity event message", t);
+                } catch (Exception e) {
+                    LOGGER.error("Cannot manage entity event message", e);
                 }
                 // Reset inProgress AFTER transaction
                 inProgress = false;
@@ -159,7 +151,6 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     /**
      * Try to do a transactional poll. If a poll is done but an exception occurs, the transaction is rolbacked and the
      * event is still present into AMQP
-     *
      * @return true if a poll has been done, false otherwise
      */
     @MultitenantTransactional
@@ -181,13 +172,12 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                 }
                 inProgress = true;
                 OffsetDateTime now = OffsetDateTime.now();
-                Arrays.stream(ipIds).forEach(ipId -> entityIndexerService.updateEntityIntoEs(tenant, ipId, now));
+                Arrays.stream(ipIds).forEach(ipId -> entityIndexerService.updateEntityIntoEs(tenant, ipId, now, false));
                 somethingDone = true;
             }
         }
         return atLeastOnePoll;
     }
-
 
     public boolean working() { // NOSONAR : test purpose
         return delay.get() < MAX_DELAY_MS;
@@ -203,7 +193,8 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
 
     public void startWork() { // NOSONAR : test purpose
         // If crawler is busy, wait for it
-        while (working());
+        while (working())
+            ;
         scheduledWork = true;
         somethingDone = false;
         LOGGER.info("start working...");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,44 +18,81 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
-import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import com.google.common.collect.Multimaps;
+import fr.cnes.regards.framework.jpa.json.JsonTypeDescriptor;
+import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
  * Abstraction for entities managing data files
- *
  * @author lmieulet
  * @author Marc Sordi
- *
+ * @author oroussel
  */
-public abstract class AbstractDataEntity extends AbstractEntity {
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public abstract class AbstractDataEntity extends AbstractEntity implements IDocFiles {
 
     /**
      * Physical data file references
      */
-    private List<DataFile> files;
+    @Type(type = "jsonb", parameters = {
+            @Parameter(name = JsonTypeDescriptor.ARG_TYPE, value = "fr.cnes.regards.modules.indexer.domain.DataFile"),
+            @Parameter(name = JsonTypeDescriptor.KEY_ARG_TYPE, value = "fr.cnes.regards.framework.oais.urn.DataType") })
+    @Column(columnDefinition = "jsonb", name = "files")
+    private Multimap<DataType, DataFile> files = HashMultimap.create();
 
     protected AbstractDataEntity() {
         this(null, null, null);
     }
 
-    protected AbstractDataEntity(Model pModel, UniformResourceName pIpId, String pLabel) {
-        super(pModel, pIpId, pLabel);
+    protected AbstractDataEntity(Model model, UniformResourceName ipId, String label) {
+        super(model, ipId, label);
     }
 
-    public List<DataFile> getFiles() {
+    public Multimap<DataType, DataFile> getFiles() {
         return files;
     }
 
-    public void setFiles(List<DataFile> pFiles) {
-        files = pFiles;
+    public void setFiles(Multimap<DataType, DataFile> files) {
+        this.files = files;
+    }
+
+    /**
+     * @return true if at least one associated file (through "files" property) is physically available (cf. Storage).
+     * This concerns only RAW_DATA and all QUICKLOOKS
+     */
+    public boolean containsPhysicalData() {
+        return Multimaps.filterKeys(files, k -> {
+            switch (k) {
+                case RAWDATA:
+                case QUICKLOOK_SD:
+                case QUICKLOOK_MD:
+                case QUICKLOOK_HD:
+                    return true;
+                default:
+                    return false;
+            }
+        }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
     }
 
     @Override
-    public boolean equals(Object pObj) {
-        return super.equals(pObj);
+    public boolean equals(Object obj) {
+        return super.equals(obj);
     }
 
     @Override

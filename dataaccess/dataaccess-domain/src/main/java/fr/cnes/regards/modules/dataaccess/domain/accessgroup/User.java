@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -29,6 +29,9 @@ import javax.validation.constraints.NotNull;
  */
 public class User {
 
+    /**
+     * The email
+     */
     @NotNull
     private String email;
 
@@ -36,16 +39,24 @@ public class User {
     }
 
     /**
-     * @param pDbData
+     * Contructor setting the parameter as attribute
+     * @param pEmail
      */
     public User(String pEmail) {
         email = pEmail;
     }
 
+    /**
+     * @return the email
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Set the email
+     * @param pEmail
+     */
     public void setEmail(String pEmail) {
         email = pEmail;
     }

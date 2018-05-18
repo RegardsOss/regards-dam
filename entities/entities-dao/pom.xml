@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  
  This file is part of REGARDS.
  
@@ -51,7 +51,7 @@
 	<parent>
 		<groupId>fr.cnes.regards.modules</groupId>
 		<artifactId>entities</artifactId>
-		<version>1.1.0</version>
+		<version>2.0.0-RELEASE</version>
 	</parent>
 
 	<dependencies>
@@ -66,8 +66,7 @@
 		<!-- Tests -->
 		<dependency>
 			<groupId>fr.cnes.regards.framework.modules.plugins</groupId>
-			
-			<artifactId>module-plugins-dao</artifactId>
+			<artifactId>plugins-dao</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -85,15 +84,17 @@
 			<artifactId>jpa-multitenant-regards-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- imported as test jsut to be able to import model and make a subsetting clause for datasets -->
+		<!-- imported as test just to be able to import model and make a subsetting clause for datasets -->
 		<dependency>
 			<groupId>fr.cnes.regards.modules.models</groupId>
 			<artifactId>models-service</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>fr.cnes.regards.modules.indexer</groupId>
-			<artifactId>indexer-domain</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>fr.cnes.regards.modules.indexer</groupId>
+					<artifactId>indexer-dao</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 </project>

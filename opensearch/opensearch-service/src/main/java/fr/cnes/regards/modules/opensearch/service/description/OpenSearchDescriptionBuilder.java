@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -36,8 +36,8 @@ import org.springframework.web.util.UriUtils;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.utils.HttpUtils;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.client.IModelAttrAssocClient;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
@@ -54,18 +54,43 @@ import fr.cnes.regards.modules.search.schema.UrlType;
 @Component
 public class OpenSearchDescriptionBuilder {
 
+    /**
+     * Description format constant
+     */
     private static final String DESCRIPTION = "%s REGARDS Search Engine";
 
+    /**
+     * Short name format constant
+     */
     private static final String SHORT_NAME = "%s Search";
 
+    /**
+     * microservice name
+     */
     private final String microserviceName;
 
+    /**
+     * {@link IProjectsClient} instance
+     */
     private final IProjectsClient projectClient;
 
+    /**
+     * {@link IRuntimeTenantResolver} instance
+     */
     private final IRuntimeTenantResolver tenantResolver;
 
+    /**
+     * {@link IModelAttrAssocClient} instance
+     */
     private final IModelAttrAssocClient modelAttrAssocClient;
 
+    /**
+     * Constructor setting the parameters as attributes
+     * @param microserviceName
+     * @param projectClient
+     * @param tenantResolver
+     * @param modelAttrAssocClient
+     */
     public OpenSearchDescriptionBuilder(@Value("${spring.application.name}") String microserviceName,
             @Autowired IProjectsClient projectClient, @Autowired IRuntimeTenantResolver tenantResolver,
             @Autowired IModelAttrAssocClient modelAttrAssocClient) {
@@ -92,21 +117,24 @@ public class OpenSearchDescriptionBuilder {
         UrlType url = new UrlType();
         StringJoiner sj = new StringJoiner("/");
         sj.add(project.getHost());
+        //FIXME: do not fix the gateway prefix with a constant, we should find a way to retrieve it
+        sj.add("api/v1");
         // UriUtils.encode give back the string in US-ASCII encoding, so let create a new String that will then reencode
         // the string however the jvm wants
         sj.add(new String(UriUtils.encode(microserviceName, Charset.defaultCharset().name()).getBytes(),
                 StandardCharsets.US_ASCII));
         sj.add(endpointPath);
         String urlTemplate = sj.toString();
-        // urlTemplate can contains double slashes on the part part which is valid but ugly so let make the worlkd a bit
+        // urlTemplate can contain double slashes on the part which is valid but ugly so let make the world a bit
         // prettier. We choose project.getHost().length()-1 because Project.getHost() can finish by a "/" so we would
         // have a double "/" with the joiner and we admit that what the administrator entered as host is valid
         int incorrectDoubleSlashIndex = project.getHost().length() - 1;
         String correctPart = urlTemplate.substring(0, incorrectDoubleSlashIndex);
         String incorrectPart = urlTemplate.substring(incorrectDoubleSlashIndex);
-        urlTemplate = correctPart + incorrectPart.replaceAll("//", "/");
-        urlTemplate += "?q={searchTerms}";
-        url.setTemplate(urlTemplate);
+        StringBuilder urlTemplateBuilder = new StringBuilder(correctPart);
+        urlTemplateBuilder.append(incorrectPart.replaceAll("//", "/"));
+        urlTemplateBuilder.append("?q={searchTerms}");
+        url.setTemplate(urlTemplateBuilder.toString());
         desc.getUrl().add(url);
 
         Set<AttributeModel> attrs = getAttributesFor(searchOn, currentTenant);

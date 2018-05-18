@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -41,6 +41,13 @@ public final class AttributeModelBuilder {
         this.attributeModel = pAttributeModel;
     }
 
+    /**
+     * Initialize the builder by instanciating a minimal attribute model
+     * @param pName attribute name
+     * @param pType attribute type
+     * @param label attribute label
+     * @return initialized builder
+     */
     public static AttributeModelBuilder build(String pName, AttributeType pType, String label) {
         final AttributeModel am = new AttributeModel();
         am.setName(pName);
@@ -93,7 +100,7 @@ public final class AttributeModelBuilder {
     // Restriction
 
     public <T extends AbstractRestriction> AttributeModel withRestriction(T pRestriction) {
-        Assert.notNull(pRestriction);
+        Assert.notNull(pRestriction, "Restriction is required");
         if (!pRestriction.supports(attributeModel.getType())) {
             throw new IllegalArgumentException("Unsupported restriction " + pRestriction.getType()
                     + " for attribute type " + attributeModel.getType());

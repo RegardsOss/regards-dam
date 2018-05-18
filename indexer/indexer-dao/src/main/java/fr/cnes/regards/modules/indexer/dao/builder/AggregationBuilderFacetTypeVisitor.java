@@ -38,9 +38,9 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
 
     public static final String MAX_FACET_SUFFIX = "_max";
 
-    private int stringFacetSize;
+    private final int stringFacetSize;
 
-    private int stringFacetMinDocCount;
+    private final int stringFacetMinDocCount;
 
     public AggregationBuilderFacetTypeVisitor(
             @Value("${regards.elasticsearch.string.facet.size:10}") int stringFacetSize,

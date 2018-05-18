@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -34,6 +34,7 @@ import javax.validation.constraints.NotNull;
 
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.validation.ComputedAttribute;
 import fr.cnes.regards.modules.models.domain.xml.IXmlisable;
@@ -49,7 +50,6 @@ import fr.cnes.regards.modules.models.schema.ParamPluginType;
  * manually or calculated through a calculation plugin.<<br/>
  * Thus, a same {@link AttributeModel} may be linked to different model and can either be set manually or calculated
  * depending on the model.
- *
  * @author msordi
  */
 @Entity
@@ -74,6 +74,9 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
     @NotNull
     private AttributeModel attribute;
 
+    /**
+     * The computation plugin configuration
+     */
     @OneToOne
     @JoinColumn(name = "compute_conf_id", foreignKey = @ForeignKey(name = "fk_plugin_id"))
     private PluginConfiguration computationConf;
@@ -95,7 +98,11 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
         super();
     }
 
-    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition, Boolean pIsCalculated) {// NOSONAR
+    /**
+     * Constructor
+     */
+    public ModelAttrAssoc(AttributeModel pAttributeModel, Model pModel, Integer pPosition,
+            Boolean pIsCalculated) {// NOSONAR
         attribute = pAttributeModel;
         model = pModel;
         pos = pPosition;
@@ -204,17 +211,26 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
             // Cyclic dependency between entities plugin and models-domain
             // TODO : Find a good idea to avoid this shit
             // Count plugin are really something different from others, lets treat them apart
-            String pluginClassName=computationConf.getPluginClassName();
-            if(pluginClassName.equals("fr.cnes.regards.modules.entities.plugin.CountPlugin")) {
+            String pluginClassName = computationConf.getPluginClassName();
+            if ("fr.cnes.regards.modules.entities.plugin.CountPlugin".equals(pluginClassName)) {
                 computation.setCount(new NoParamPluginType());
             } else {
-                // For plugins which are calculated according to a data object property, lets set the parameters and then the type
+                // For plugins which are calculated according to a data object property, let's set the parameters and then the type
                 ParamPluginType paramPluginType = new ParamPluginType();
-                paramPluginType.setParameterAttributeName(
-                        computationConf.getParameter("parameterAttributeName").getValue());
-                String parameterAttributeFragmentName = computationConf.getParameter("parameterAttributeFragmentName").getValue();
-                if (parameterAttributeFragmentName != null) {
-                    paramPluginType.setParameterAttributeFragmentName(parameterAttributeFragmentName);
+                String parameterAttributeName = computationConf.getParameter("parameterAttributeName").getValue();
+                if (parameterAttributeName.matches("^\"[^\"]*\"$")) {
+                    parameterAttributeName = parameterAttributeName.substring(1, parameterAttributeName.length() - 1);
+                }
+                paramPluginType.setParameterAttributeName(parameterAttributeName);
+                PluginParameter paramAttrFragment = computationConf.getParameter("parameterAttributeFragmentName");
+                if(paramAttrFragment != null) {
+                    String paramAttrFragmentName = paramAttrFragment.getValue();
+                    if (paramAttrFragmentName != null) {
+                        if (paramAttrFragmentName.matches("^\"[^\"]*\"$")) {
+                            paramAttrFragmentName = paramAttrFragmentName.substring(1, paramAttrFragmentName.length() - 1);
+                        }
+                        paramPluginType.setParameterAttributeFragmentName(paramAttrFragmentName);
+                    }
                 }
                 switch (pluginClassName) {
                     case "fr.cnes.regards.modules.entities.plugin.IntSumComputePlugin":
@@ -226,6 +242,8 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
                         break;
                     case "fr.cnes.regards.modules.entities.plugin.MinDateComputePlugin":
                         computation.setMaxCompute(paramPluginType);
+                        break;
+                    default:
                         break;
                 }
             }
@@ -243,10 +261,16 @@ public class ModelAttrAssoc implements Comparable<ModelAttrAssoc>, IIdentifiable
 
     }
 
+    /**
+     * @return the computation plugin configuration
+     */
     public PluginConfiguration getComputationConf() {
         return computationConf;
     }
 
+    /**
+     * Set the computation plugin configuration
+     */
     public void setComputationConf(PluginConfiguration pComputationConf) {
         computationConf = pComputationConf;
     }

@@ -7,14 +7,14 @@ package fr.cnes.regards.modules.indexer.domain.criterion;
  */
 public class LongMatchCriterion extends AbstractMatchCriterion<Long> {
 
-    public LongMatchCriterion(String pName, long pValue) {
-        super(pName, MatchType.EQUALS, pValue);
+    public LongMatchCriterion(String name, long value) {
+        super(name, MatchType.EQUALS, value);
 
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitLongMatchCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitLongMatchCriterion(this);
     }
 
 }

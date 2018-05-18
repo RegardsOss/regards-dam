@@ -12,12 +12,17 @@ public final class EmptyCriterion implements ICriterion {
     }
 
     @Override
-    public <U> U accept(ICriterionVisitor<U> pVisitor) {
-        return pVisitor.visitEmptyCriterion(this);
+    public <U> U accept(ICriterionVisitor<U> visitor) {
+        return visitor.visitEmptyCriterion(this);
     }
 
     @Override
-    public boolean equals(Object pObj) {
-        return (this == pObj);
+    public boolean equals(Object o) {
+        return (this == o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -164,8 +164,8 @@ public class FragmentControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isCreated());
 
-        performDefaultFileUploadPost(FragmentController.TYPE_MAPPING + "/import", filePath, expectations,
-                                     "Should be able to import a fragment");
+        performDefaultFileUpload(FragmentController.TYPE_MAPPING + "/import", filePath, expectations,
+                                 "Should be able to import a fragment");
 
         // Get fragment from repository
         final String fragmentName = "IMPORT_FRAGMENT";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -37,5 +37,5 @@ public enum AccessLevel {
      * full acces to the dataset(so the meta data of the dataset and the meta data of its data), the access to the
      * physical data of the datum is constrained by the {@link DataAccessRight}
      */
-    FULL_ACCESS;
+    FULL_ACCESS
 }

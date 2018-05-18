@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,9 +18,8 @@
  */
 package fr.cnes.regards.modules.dataaccess.rest;
 
-import java.util.List;
-
 import javax.validation.Valid;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,23 +45,43 @@ import fr.cnes.regards.modules.dataaccess.domain.accessgroup.AccessGroup;
 import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 
 /**
- * @author Sylvain Vissiere-Guerinet
+ * DAM User REST controller
  *
+ * @author Sylvain Vissiere-Guerinet
  */
 @RestController
 @RequestMapping(UserController.BASE_PATH)
 public class UserController implements IResourceController<AccessGroup> {
 
+    /**
+     * Controller base path
+     */
     public static final String BASE_PATH = "/users/{email}/accessgroups";
 
+    /**
+     * Controller path using a group name as path variable
+     */
     public static final String GROUP_NAME_PATH = "/{name}";
 
+    /**
+     * {@link IAccessGroupService} instance
+     */
     @Autowired
     private IAccessGroupService accessGroupService;
 
+    /**
+     * {@link IResourceService} instance
+     */
     @Autowired
     private IResourceService resourceService;
 
+    /**
+     * Retrieve page of a user, represented by its email, access groups
+     * @param pUserEmail
+     * @param pPageable
+     * @param pAssembler
+     * @return page of a user access groups
+     */
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
     @ResourceAccess(description = "send the list of accessGroups of the specified user")
@@ -73,6 +92,12 @@ public class UserController implements IResourceController<AccessGroup> {
         return new ResponseEntity<>(toPagedResources(accessGroups, pAssembler), HttpStatus.OK);
     }
 
+    /**
+     * Set a user, represented by its email, access groups
+     * @param pUserEmail
+     * @param pNewAcessGroups
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseBody
     @ResourceAccess(description = "replace actual access groups of the user by the ones in parameter")
@@ -81,6 +106,13 @@ public class UserController implements IResourceController<AccessGroup> {
         accessGroupService.setAccessGroupsOfUser(pUserEmail, pNewAcessGroups);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    /**
+     * Dissociate an access group, represented by its name, to a user, represented by its email
+     * @param pUserEmail
+     * @param pAcessGroupNameToBeAdded
+     * @throws EntityNotFoundException
+     */
 
     @RequestMapping(method = RequestMethod.PUT, value = GROUP_NAME_PATH)
     @ResponseBody
@@ -91,6 +123,12 @@ public class UserController implements IResourceController<AccessGroup> {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    /**
+     * Dissociate an access group, represented by its name, from a user, represented by its email
+     * @param pUserEmail
+     * @param pAcessGroupNameToBeAdded
+     * @throws EntityNotFoundException
+     */
     @RequestMapping(method = RequestMethod.DELETE, value = GROUP_NAME_PATH)
     @ResponseBody
     @ResourceAccess(description = "remove the access group in parameter to the specified user")

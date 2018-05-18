@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -25,21 +26,28 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import fr.cnes.regards.framework.module.rest.exception.TooManyResultsException;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
+import fr.cnes.regards.modules.indexer.dao.IEsRepository;
+import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.JoinEntitySearchKey;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
+import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 /**
  * Elasticsearch search service. This service contains all search and get methods. For other methods, check crawler-service and IndexerService class.
  * @author oroussel
  */
 public interface ISearchService {
+
+    /**
+     * Maximum page size (Elasticsearch constraint)
+     */
+    int MAX_PAGE_SIZE = IEsRepository.MAX_RESULT_WINDOW;
 
     <T extends IIndexable> T get(UniformResourceName urn);
 
@@ -81,14 +89,13 @@ public interface ISearchService {
     <S, R extends IIndexable> FacetPage<R> search(JoinEntitySearchKey<S, R> searchKey, Pageable pageRequest,
             ICriterion criterion, Predicate<R> searchResultFilter);
 
-
     /**
      * Searching specified page of elements from index giving page size
      * @param searchKey the search key
      * @param pPageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
-     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used too (ie attributes.dataRange.*). <b>Fields types must be consistent with given
-     * value type</b>
+     * @param pFields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
+     * too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */
@@ -114,4 +121,18 @@ public interface ISearchService {
         return search(searchKey, pPageRequest, criterion, null);
     }
 
+    /**
+     * Compute a DocFilesSummary for given request distributing results based on disciminantProperty for given file
+     * types
+     * @param <T> document type (must be of type IIndexable to be searched and IDocFiles to provide "files" property)
+     * @return the compmuted summary
+     */
+    <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
+            ICriterion crit, String discriminantProperty, String... fileTypes);
+
+    /**
+     * Search for alphabeticly sorted top maxCount values of given attribute following given request
+     */
+    <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion crit,
+            String attName, int maxCount);
 }

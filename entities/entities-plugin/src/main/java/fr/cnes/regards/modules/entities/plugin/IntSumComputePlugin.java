@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -27,6 +27,7 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginInit;
 import fr.cnes.regards.framework.modules.plugins.annotations.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
@@ -34,7 +35,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.IntegerAttribute;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.indexer.domain.SimpleSearchKey;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 
 /**
@@ -47,6 +48,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
         description = "allows to compute the sum of IntegerAttribute according to a collection of data using the same IntegerAttribute name",
         author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
+@ComputationPlugin(supportedType = AttributeType.INTEGER)
 public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer> {
 
     @Autowired
@@ -58,21 +60,12 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
     @Autowired
     private IAttributeModelRepository attModelRepos;
 
-    @PluginParameter(name = RESULT_ATTRIBUTE_NAME,
-            description = "Name of the attribute to compute (ie result attribute).")
-    private String attributeToComputeName;
-
-    @PluginParameter(name = RESULT_FRAGMENT_NAME,
-            description = "Name of the attribute to compute fragment. If the computed attribute belongs to the default fragment, this value can be set to null.",
-            optional = true)
-    private String attributeToComputeFragmentName;
-
-    @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME,
-            description = "Name of the parameter attribute used to compute result attribute.")
+    @PluginParameter(name = PARAMETER_ATTRIBUTE_NAME, label = "Parameter attribute name",
+            description = "Name of parameter attribute used to compute result attribute.")
     private String parameterAttributeName;
 
-    @PluginParameter(name = PARAMETER_FRAGMENT_NAME,
-            description = "Name of the parameter attribute fragment. If the parameter attribute belongs to the default fragment, this value can be set to null.",
+    @PluginParameter(name = PARAMETER_FRAGMENT_NAME, label = "Parameter fragment name",
+            description = "Name of parameter attribute fragment. If parameter attribute belongs to default fragment, this value can be set to null.",
             optional = true)
     private String parameterAttributeFragmentName;
 
@@ -94,11 +87,6 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
                 super.result += value;
             }
         }
-    }
-
-    @Override
-    public AttributeType getSupported() {
-        return AttributeType.INTEGER;
     }
 
     /**

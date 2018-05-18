@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,9 +18,6 @@
  */
 package fr.cnes.regards.modules.models.domain.attributes.restriction;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
@@ -29,6 +26,8 @@ import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Set;
 
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
 import fr.cnes.regards.modules.models.schema.Enumeration;
@@ -50,7 +49,7 @@ import fr.cnes.regards.modules.models.schema.Restriction;
 public class EnumerationRestriction extends AbstractRestriction {
 
     /**
-     * Acceptable values, relevant for {@link AttributeType#ENUMERATION} attributes
+     * Acceptable values, relevant for AttributeType#ENUMERATION
      */
     @NotNull
     @ElementCollection
@@ -61,7 +60,7 @@ public class EnumerationRestriction extends AbstractRestriction {
 
     public EnumerationRestriction() {
         super();
-        setType(RestrictionType.ENUMERATION);
+        type = RestrictionType.ENUMERATION;
         acceptableValues = new HashSet<>();
     }
 

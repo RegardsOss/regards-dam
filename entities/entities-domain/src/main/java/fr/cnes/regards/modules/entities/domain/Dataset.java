@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -35,11 +35,11 @@ import java.util.UUID;
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.metadata.DatasetMetadata;
-import fr.cnes.regards.modules.entities.urn.OAISIdentifier;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
-import fr.cnes.regards.modules.models.domain.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -75,15 +75,15 @@ public class Dataset extends AbstractDescEntity {
     private PluginConfiguration plgConfDataSource;
 
     /**
-     * Model id of the Data objects held by this Dataset. nullable=true because fo single table
+     * Model name of the Data objects held by this Dataset.
+     * nullable=true because all abstract entities share the same table (single table mapping)
      */
-    @Column(name = "data_model_id", updatable = false, nullable = true)
-    private Long dataModel;
+    @Column(name = "data_model_name", updatable = false, nullable = true)
+    private String dataModel;
 
     /**
      * Request clause to subset data from the DataSource, only used by the catalog(elasticsearch) as all data from
      * DataSource has been given to the catalog
-     * FIXME do not index
      */
     @Type(type = "jsonb")
     @Column(name = "sub_setting_clause", columnDefinition = "jsonb")
@@ -127,10 +127,17 @@ public class Dataset extends AbstractDescEntity {
               pLabel);
     }
 
+    /**
+     * @return the score
+     */
     public int getScore() {
         return score;
     }
 
+    /**
+     * Set the score
+     * @param pScore
+     */
     public void setScore(int pScore) {
         score = pScore;
     }
@@ -155,6 +162,14 @@ public class Dataset extends AbstractDescEntity {
         return subsettingCrit;
     }
 
+    /**
+     * Set the subsetting clause
+     * @param pSubsettingClause
+     */
+    public void setSubsettingClause(ICriterion pSubsettingClause) {
+        subsettingClause = pSubsettingClause;
+    }
+
     public ICriterion getUserSubsettingClause() {
         return (subsettingClause == null) ? ICriterion.all() : subsettingClause;
     }
@@ -167,34 +182,55 @@ public class Dataset extends AbstractDescEntity {
         plgConfDataSource = pPlgConfDataSource;
     }
 
-    public void setSubsettingClause(ICriterion pSubsettingClause) {
-        subsettingClause = pSubsettingClause;
-    }
-
-    public Long getDataModel() {
+    /**
+     * @return the data model
+     */
+    public String getDataModel() {
         return dataModel;
     }
 
-    public void setDataModel(Long pDataModel) {
+    /**
+     * Set the data model
+     * @param pDataModel
+     */
+    public void setDataModel(String pDataModel) {
         dataModel = pDataModel;
     }
 
+    /**
+     * @return the quotations
+     */
     public Set<String> getQuotations() {
         return quotations;
     }
 
+    /**
+     * Set the quotations
+     * @param pQuotations
+     */
     public void setQuotations(Set<String> pQuotations) {
         quotations = pQuotations;
     }
 
-    public void addQuotation(String pQuotations) {
-        quotations.add(pQuotations);
+    /**
+     * Add a quotation
+     * @param pQuotation
+     */
+    public void addQuotation(String pQuotation) {
+        quotations.add(pQuotation);
     }
 
+    /**
+     * @return the licence
+     */
     public String getLicence() {
         return licence;
     }
 
+    /**
+     * Set the licence
+     * @param pLicence
+     */
     public void setLicence(String pLicence) {
         licence = pLicence;
     }

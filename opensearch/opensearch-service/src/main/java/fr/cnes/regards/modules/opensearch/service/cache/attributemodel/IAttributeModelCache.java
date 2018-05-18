@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -37,27 +37,27 @@ public interface IAttributeModelCache {
     /**
      * The call will first check the cache "attributemodels" before actually invoking the method and then caching the
      * result.
-     * @param pTenant the tenant. Only here for auto-building a multitenant cache, and might not be used in the implementation.
+     * @param tenant the tenant. Only here for auto-building a multitenant cache, and might not be used in the implementation.
      * @return the list of attribute models
      */
     @Cacheable(value = "attributemodels")
-    List<AttributeModel> getAttributeModels(String pTenant);
+    List<AttributeModel> getAttributeModels(String tenant);
 
     /**
      * The call will first check the cache "attributemodels" before actually invoking the method and then caching the
      * result.
-     * @param pTenant the tenant. Only here for auto-building a multitenant cache, and might not be used in the implementation.
+     * @param tenant the tenant. Only here for auto-building a multitenant cache, and might not be used in the implementation.
      * @return the list of attribute models
      */
     @CachePut(value = "attributemodels")
-    List<AttributeModel> getAttributeModelsThenCache(String pTenant);
+    List<AttributeModel> getAttributeModelsThenCache(String tenant);
 
     /**
     * Return the {@link AttributeModel} of passed name. It will search in a cached list for performance.
-    * @param pName the attribute model name
+    * @param name the attribute model name
     * @return the attribute model
     * @throws EntityNotFoundException when no attribute model with passed name could be found
     */
-    AttributeModel findByName(String pName) throws OpenSearchUnknownParameter;
+    AttributeModel findByName(String name) throws OpenSearchUnknownParameter;
 
 }

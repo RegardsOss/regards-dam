@@ -2,8 +2,7 @@ package fr.cnes.regards.modules.indexer.domain;
 
 import java.util.Map;
 
-import org.springframework.util.Assert;
-
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -26,44 +25,45 @@ public class SearchKey<S, R> {
 
     /**
      * Constructor with result class to be searched from search types
-     * @param pSearchIndex index to search on (or tenant)
-     * @param pSearchTypeMap map of { type, associated class with empty constructor }
+     * @param searchIndex index to search on (or tenant)
+     * @param searchTypeMap map of { type, associated class with empty constructor }
      */
-    public SearchKey(String pSearchIndex, Map<String, Class<? extends S>> pSearchTypeMap) {
-        this(pSearchIndex, ImmutableMap.copyOf(pSearchTypeMap));
+    public SearchKey(String searchIndex, Map<String, Class<? extends S>> searchTypeMap) {
+        this(searchIndex, ImmutableMap.copyOf(searchTypeMap));
     }
 
     /**
      * Constructor with only one search type
      */
-    public SearchKey(String pSearchIndex, String searchType, Class<? extends S> searchClass) {
-        this(pSearchIndex, ImmutableMap.of(searchType, searchClass));
+    public SearchKey(String searchIndex, String searchType, Class<? extends S> searchClass) {
+        this(searchIndex, ImmutableMap.of(searchType, searchClass));
     }
 
-    private SearchKey(String pSearchIndex, ImmutableMap<String, Class<? extends S>> pSearchTypeMap) {
+    private SearchKey(String searchIndex, ImmutableMap<String, Class<? extends S>> searchTypeMap) {
         super();
-        Assert.notNull(pSearchIndex);
-        Assert.notNull(pSearchTypeMap);
-        Assert.notEmpty(pSearchTypeMap);
-        searchIndex = pSearchIndex.toLowerCase();
-        searchTypeMap = pSearchTypeMap;
-        searchTypes = searchTypeMap.keySet().toArray(new String[searchTypeMap.size()]);
+        Preconditions.checkNotNull(searchIndex);
+        Preconditions.checkNotNull(searchTypeMap);
+        Preconditions.checkArgument(searchTypeMap.size() != 0);
+
+        this.searchIndex = searchIndex.toLowerCase();
+        this.searchTypeMap = searchTypeMap;
+        this.searchTypes = searchTypeMap.keySet().toArray(new String[searchTypeMap.size()]);
     }
 
-    public SearchKey(String pSearchIndex, String searchType, Class<? extends S> searchClass, Class<R> pResultClass) {
-        this(pSearchIndex, ImmutableMap.of(searchType, searchClass));
-        resultClass = pResultClass;
+    public SearchKey(String searchIndex, String searchType, Class<? extends S> searchClass, Class<R> resultClass) {
+        this(searchIndex, ImmutableMap.of(searchType, searchClass));
+        this.resultClass = resultClass;
     }
 
     /**
      * Constructor with a result class different from search types
-     * @param pSearchIndex index to search on (or tenant)
-     * @param pSearchTypeMap map of { type, associated class with empty constructor }
-     * @param pResultClass result type
+     * @param searchIndex index to search on (or tenant)
+     * @param searchTypeMap map of { type, associated class with empty constructor }
+     * @param resultClass result type
      */
-    public SearchKey(String pSearchIndex, Map<String, Class<? extends S>> pSearchTypeMap, Class<R> pResultClass) {
-        this(pSearchIndex, pSearchTypeMap);
-        resultClass = pResultClass;
+    public SearchKey(String searchIndex, Map<String, Class<? extends S>> searchTypeMap, Class<R> resultClass) {
+        this(searchIndex, searchTypeMap);
+        this.resultClass = resultClass;
     }
 
     public String getSearchIndex() {

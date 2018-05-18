@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -25,7 +25,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import fr.cnes.regards.modules.models.domain.EntityType;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
@@ -44,6 +44,6 @@ public interface IModelRepository extends CrudRepository<Model, Long> {
 
     @Override
     @Modifying
-    @Query(value = "DELETE FROM t_model CASCADE", nativeQuery = true)
+    @Query(value = "DELETE FROM {h-schema}t_model CASCADE", nativeQuery = true)
     void deleteAll();
 }

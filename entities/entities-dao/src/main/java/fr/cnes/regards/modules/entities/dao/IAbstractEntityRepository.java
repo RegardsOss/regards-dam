@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -23,24 +23,22 @@ import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.urn.UniformResourceName;
 
 /**
  * Common requests on entities
- *
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
-public interface IAbstractEntityRepository<T extends AbstractEntity> extends JpaRepository<T, Long> {
+public interface IAbstractEntityRepository<T extends AbstractEntity>
+        extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
 
     /**
      * Find entity giving its id eagerly loading its common relations (ie relations defined into AbstractEntity
-     *
-     * @param pId
-     *            id of entity
+     * @param pId id of entity
      * @return entity
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
@@ -48,9 +46,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find all entities of which ipId belongs to given set (eagerly loading all relations)
-     *
-     * @param pIpIds
-     *            set of ipId
+     * @param pIpIds set of ipId
      * @return found entities
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
@@ -58,18 +54,14 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find entity of given ipId
-     *
-     * @param pIpId
-     *            ipId of which entity
+     * @param pIpId ipId of which entity
      * @return found entity
      */
     T findOneByIpId(UniformResourceName pIpId);
 
     /**
      * Find entity of given IpId eagerly loading all common relations
-     *
-     * @param pIpId
-     *            ipId of which entity
+     * @param pIpId ipId of which entity
      * @return found entity
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
@@ -77,30 +69,31 @@ public interface IAbstractEntityRepository<T extends AbstractEntity> extends Jpa
 
     /**
      * Find all entities complient with the given modelName
-     *
-     * @param pModelName
-     *            name of the model we want to be complient with
-     * @return datasets complient with the given model
+     * @param pModelName name of the model we want to be complient with
+     * @return entities complient with the given model
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Set<T> findAllByModelName(String pModelName);
 
     /**
      * Find all entities complient with the given modelName
-     *
-     * @param pModelName
-     *            name of the model we want to be complient with
-     * @return datasets complient with the given model
+     * @param pModelName name of the model we want to be complient with
+     * @return entities complient with the given model
      */
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
-    Set<Dataset> findAllByModelId(Set<Long> pModelIds);
+    Set<T> findAllByModelIdIn(Set<Long> pModelIds);
 
     /**
      * Find all entities containing given tag
-     *
-     * @param pTagToSearch
-     *            tag to search entities for
+     * @param pTagToSearch tag to search entities for
      * @return entities which contain given tag
      */
     List<T> findByTags(String pTagToSearch);
+
+    /**
+     * Find the all the entity with this specified SIP ID!
+     * @param sipId a SIP ID
+     * @return entities corresponding to the SIP ID
+     */
+    Set<T> findAllBySipId(String sipId);
 }
