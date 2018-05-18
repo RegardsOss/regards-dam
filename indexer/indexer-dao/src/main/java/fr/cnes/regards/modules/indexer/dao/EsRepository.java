@@ -110,6 +110,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
@@ -581,7 +582,13 @@ public class EsRepository implements IEsRepository {
 
             SearchHits hits = response.getHits();
             for (SearchHit hit : hits) {
-                results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                try {
+                    results.add(gson.fromJson(hit.getSourceAsString(), searchKey.fromType(hit.getType())));
+                } catch (JsonParseException e) {
+                    LOGGER.error("Unable to jsonify entity with id {}, source: \"{}\"", hit.getId(),
+                                 hit.getSourceAsString());
+                    throw new RsRuntimeException(e);
+                }
             }
             return new FacetPage<>(results, facetResults, pageRequest, response.getHits().getTotalHits());
         } catch (final JsonSyntaxException | IOException e) {
@@ -1226,7 +1233,6 @@ public class EsRepository implements IEsRepository {
         facets.add(new BooleanFacet(attributeName, valueMap, terms.getSumOfOtherDocCounts()));
     }
 
-
     @Override
     public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue,
             String... pFields) {
@@ -1323,8 +1329,8 @@ public class EsRepository implements IEsRepository {
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
                                         .field("files." + fileType + ".size")); // Only count files with a size
             // file size sum
-            builder.aggregation(AggregationBuilders.sum("total_" + fileType + "_files_size")
-                                        .field("files." + fileType + ".size"));
+            builder.aggregation(
+                    AggregationBuilders.sum("total_" + fileType + "_files_size").field("files." + fileType + ".size"));
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1401,8 +1407,7 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                                        .field("files." + fileType
-                                                       + ".uri.keyword")); // Only count files with a size
+                                        .field("files." + fileType + ".uri.keyword")); // Only count files with a size
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
@@ -1415,8 +1420,8 @@ public class EsRepository implements IEsRepository {
         // and "total" aggregations on each asked file types
         for (String fileType : fileTypes) {
             // files count
-            termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                                                   .field("files." + fileType + ".uri.keyword"));
+            termsAggBuilder.subAggregation(
+                    AggregationBuilders.count(fileType + "_files_count").field("files." + fileType + ".uri.keyword"));
         }
         builder.aggregation(termsAggBuilder);
     }
