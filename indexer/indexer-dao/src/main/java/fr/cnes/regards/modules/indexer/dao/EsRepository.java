@@ -122,6 +122,7 @@ import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
@@ -1030,19 +1031,19 @@ public class EsRepository implements IEsRepository {
 
     /**
      * Add aggregations to the search request.
-     * @param pFacetsMap asked facets
+     * @param facetsMap asked facets
      * @param builder search request
      * @return true if a second pass is needed (managing range facets)
      */
-    private boolean manageFirstPassRequestAggregations(Map<String, FacetType> pFacetsMap, SearchSourceBuilder builder) {
+    private boolean manageFirstPassRequestAggregations(Map<String, FacetType> facetsMap, SearchSourceBuilder builder) {
         boolean twoPassRequestNeeded = false;
-        if (pFacetsMap != null) {
+        if (facetsMap != null) {
             // Numeric/date facets needs :
             // First to add a percentiles aggregation to retrieved 9 values corresponding to
             // 10%, 20 %, ..., 90 % of the values
             // Secondly to add a range aggregation with these 9 values in order to retrieve 10 buckets of equal
             // size of values
-            for (Map.Entry<String, FacetType> entry : pFacetsMap.entrySet()) {
+            for (Map.Entry<String, FacetType> entry : facetsMap.entrySet()) {
                 FacetType facetType = entry.getValue();
                 if ((facetType == FacetType.NUMERIC) || (facetType == FacetType.DATE)) {
                     // Add min aggregation and max aggregagtion when a range aggregagtion is asked for (NUMERIC and DATE
@@ -1112,6 +1113,8 @@ public class EsRepository implements IEsRepository {
             case STRING:
                 fillStringFacets(aggsMap, facets, attributeName);
                 break;
+            case BOOLEAN:
+                fillBooleanFacets(aggsMap, facets, attributeName);
             case NUMERIC:
                 fillNumericFacets(aggsMap, facets, attributeName);
                 break;
@@ -1212,6 +1215,17 @@ public class EsRepository implements IEsRepository {
         terms.getBuckets().forEach(b -> valueMap.put(b.getKeyAsString(), b.getDocCount()));
         facets.add(new StringFacet(attributeName, valueMap, terms.getSumOfOtherDocCounts()));
     }
+
+    private void fillBooleanFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+        Terms terms = (Terms) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
+        if (terms.getBuckets().isEmpty()) {
+            return;
+        }
+        Map<Boolean, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
+        terms.getBuckets().forEach(b -> valueMap.put(Boolean.valueOf(b.getKeyAsString()), b.getDocCount()));
+        facets.add(new BooleanFacet(attributeName, valueMap, terms.getSumOfOtherDocCounts()));
+    }
+
 
     @Override
     public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pPageRequest, Object pValue,

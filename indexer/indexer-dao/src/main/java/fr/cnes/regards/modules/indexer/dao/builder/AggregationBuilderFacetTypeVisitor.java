@@ -60,6 +60,16 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
     }
 
     @Override
+    public AggregationBuilder visitBooleanFacet(Object... args) {
+        String attributeName = (String) args[0]; // Development error if ClassCast or null array
+        TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(attributeName + STRING_FACET_SUFFIX);
+        termsAggBuilder.field(attributeName);
+        termsAggBuilder.size(2);
+        termsAggBuilder.minDocCount(stringFacetMinDocCount);
+        return termsAggBuilder;
+    }
+
+    @Override
     public AggregationBuilder visitDateFacet(Object... args) {
         String attributeName = (String) args[0]; // Development error if ClassCast or null array
         PercentilesAggregationBuilder percentsAggsBuilder = AggregationBuilders

@@ -8,6 +8,8 @@ public interface IFacetTypeVisitor<T> {
 
     T visitStringFacet(Object... args);
 
+    T visitBooleanFacet(Object... args);
+
     T visitDateFacet(Object... args);
 
     T visitNumericFacet(Object... args);

@@ -556,11 +556,14 @@ public class EsQueryTest {
         // Search with aggregations
         ImmutableMap.Builder<String, FacetType> facetMapBuilder = new ImmutableMap.Builder<>();
         Page<Item> page = repository.search(searchKey, 10, ICriterion.all(),
-                                            facetMapBuilder.put("properties.tags", FacetType.STRING).build());
+                                            facetMapBuilder.put("properties.tags", FacetType.STRING)
+                                                    .put("properties.bool", FacetType.STRING)
+                                                    .build());
         Assert.assertEquals(10, page.getContent().size());
         Assert.assertTrue(page instanceof FacetPage);
         Set<IFacet<?>> facets = ((FacetPage<Item>) page).getFacets();
         Assert.assertFalse(facets.isEmpty());
+        Assert.assertTrue(facets.iterator().next() instanceof StringFacet);
         Assert.assertTrue(facets.iterator().next() instanceof StringFacet);
         StringFacet strFacet = (StringFacet) facets.iterator().next();
         Assert.assertNotNull(strFacet);
