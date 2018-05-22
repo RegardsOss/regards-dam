@@ -44,6 +44,7 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.indexer.domain.criterion.AndCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.ComparisonOperator;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
@@ -107,14 +108,16 @@ public class QueryParserTest {
         parser.parse(QUERY_PREFIX);
     }
 
-    @Test(expected = OpenSearchParseException.class)
+    @Test
     @Purpose("Tests queries like isTrue:false")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void booleanMatchTest() throws OpenSearchParseException {
         String field = SampleDataUtils.BOOLEAN_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
         Boolean value = true;
         String term = field + ":" + value;
-        parser.parse(QUERY_PREFIX + term);
+        ICriterion criterion = parser.parse(QUERY_PREFIX + term);
+
+        Assert.assertTrue(criterion instanceof BooleanMatchCriterion);
     }
 
     @Test
