@@ -102,6 +102,8 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 return ICriterion.contains(field, value);
             case DATE_ISO8601:
                 return ICriterion.eq(field, OffsetDateTimeAdapter.parse(value));
+            case BOOLEAN:
+                return ICriterion.eq(field, Boolean.valueOf(value));
             default:
                 throw new QueryNodeException(new MessageImpl(QueryParserMessages.UNSUPPORTED_ATTRIBUTE_TYPE, field));
         }

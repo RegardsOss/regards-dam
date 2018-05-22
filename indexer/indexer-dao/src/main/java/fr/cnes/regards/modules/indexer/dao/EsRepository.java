@@ -37,6 +37,7 @@ import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -575,7 +576,7 @@ public class EsRepository implements IEsRepository {
                     for (Map.Entry<String, FacetType> entry : facetsMap.entrySet()) {
                         FacetType facetType = entry.getValue();
                         String attributeName = entry.getKey();
-                        fillFacets(aggsMap, facetResults, facetType, attributeName);
+                        fillFacets(aggsMap, facetResults, facetType, attributeName, response.getHits().getTotalHits());
                     }
                 }
             }
@@ -1115,13 +1116,13 @@ public class EsRepository implements IEsRepository {
      */
 
     private void fillFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, FacetType facetType,
-            String attributeName) {
+            String attributeName, long totalHits) {
         switch (facetType) {
             case STRING:
                 fillStringFacets(aggsMap, facets, attributeName);
                 break;
             case BOOLEAN:
-                fillBooleanFacets(aggsMap, facets, attributeName);
+                fillBooleanFacets(aggsMap, facets, attributeName, totalHits);
             case NUMERIC:
                 fillNumericFacets(aggsMap, facets, attributeName);
                 break;
@@ -1223,14 +1224,22 @@ public class EsRepository implements IEsRepository {
         facets.add(new StringFacet(attributeName, valueMap, terms.getSumOfOtherDocCounts()));
     }
 
-    private void fillBooleanFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName) {
+    private void fillBooleanFacets(Map<String, Aggregation> aggsMap, Set<IFacet<?>> facets, String attributeName,
+            long totalHits) {
         Terms terms = (Terms) aggsMap.get(attributeName + AggregationBuilderFacetTypeVisitor.STRING_FACET_SUFFIX);
         if (terms.getBuckets().isEmpty()) {
             return;
         }
         Map<Boolean, Long> valueMap = new LinkedHashMap<>(terms.getBuckets().size());
-        terms.getBuckets().forEach(b -> valueMap.put(Boolean.valueOf(b.getKeyAsString()), b.getDocCount()));
-        facets.add(new BooleanFacet(attributeName, valueMap, terms.getSumOfOtherDocCounts()));
+        AtomicLong docWithTrueOrFalseCount = new AtomicLong(0);
+        terms.getBuckets().forEach(b -> {
+            valueMap.put(Boolean.valueOf(b.getKeyAsString()), b.getDocCount());
+            docWithTrueOrFalseCount.addAndGet(b.getDocCount());
+        });
+
+        // A boolean bucket boes not set null values into "sum_other_doc_count" so "others" is computed from
+        // total - true values - false values
+        facets.add(new BooleanFacet(attributeName, valueMap, totalHits - docWithTrueOrFalseCount.get()));
     }
 
     @Override
