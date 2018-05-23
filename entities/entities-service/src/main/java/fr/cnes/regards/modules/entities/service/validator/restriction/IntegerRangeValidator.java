@@ -55,9 +55,9 @@ public class IntegerRangeValidator extends AbstractAttributeValidator {
     }
 
     @Override
-    public boolean supports(Class<?> pClazz) {
-        return (pClazz == IntegerAttribute.class) || (pClazz == IntegerArrayAttribute.class)
-                || (pClazz == IntegerIntervalAttribute.class);
+    public boolean supports(Class<?> clazz) {
+        return (clazz == IntegerAttribute.class) || (clazz == IntegerArrayAttribute.class)
+                || (clazz == IntegerIntervalAttribute.class);
     }
 
     @Override

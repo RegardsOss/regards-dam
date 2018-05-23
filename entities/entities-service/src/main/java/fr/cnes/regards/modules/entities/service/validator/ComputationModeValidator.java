@@ -35,15 +35,15 @@ public class ComputationModeValidator extends AbstractAttributeValidator {
      */
     private final ComputationMode computationMode;
 
-    public ComputationModeValidator(ComputationMode pComputationMode, String pAttributeKey) {
-        super(pAttributeKey);
-        this.computationMode = pComputationMode;
+    public ComputationModeValidator(ComputationMode computationMode, String attributeKey) {
+        super(attributeKey);
+        this.computationMode = computationMode;
     }
 
     @Override
-    public void validate(Object pTarget, Errors pErrors) {
+    public void validate(Object target, Errors errors) {
         if (!ComputationMode.GIVEN.equals(computationMode)) {
-            pErrors.reject("error.computed.attribute.given.message",
+            errors.reject("error.computed.attribute.given.message",
                            String.format("Computed value for attribute \"%s\" must not be set.", attributeKey));
         }
     }

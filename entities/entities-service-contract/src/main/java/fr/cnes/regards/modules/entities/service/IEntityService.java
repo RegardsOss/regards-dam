@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -40,7 +39,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @author oroussel
  */
 @MultitenantTransactional
-public interface IEntityService<U extends AbstractEntity> {
+public interface IEntityService<U extends AbstractEntity> extends IValidationService<U> {
 
     /**
      * Load entity by IpId without relations
@@ -88,8 +87,6 @@ public interface IEntityService<U extends AbstractEntity> {
      * @throws ModuleException
      */
     void checkAndOrSetModel(U entity) throws ModuleException;
-
-    void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws ModuleException;
 
     /**
      * Associate a set of URNs to an entity. Depending on entity types, association results in tags, groups or nothing.

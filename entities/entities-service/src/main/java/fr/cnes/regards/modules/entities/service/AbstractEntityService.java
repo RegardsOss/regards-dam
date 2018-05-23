@@ -33,22 +33,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
-import org.springframework.validation.Errors;
-import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
@@ -83,7 +77,6 @@ import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
-import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -96,19 +89,13 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @param <U> Entity type
  * @author oroussel
  */
-public abstract class AbstractEntityService<U extends AbstractEntity> implements IEntityService<U> {
-
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+public abstract class AbstractEntityService<U extends AbstractEntity> extends AbstractValidationService<U>
+        implements IEntityService<U> {
 
     /**
      * Max description file acceptable byte size
      */
     private static final int MAX_DESC_FILE_SIZE = 10_000_000;
-
-    /**
-     * Attribute model service
-     */
-    protected final IModelAttrAssocService modelAttributeService;
 
     /**
      * {@link IModelService} instance
@@ -154,21 +141,21 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
      */
     protected final IDescriptionFileRepository descriptionFileRepository;
 
-    public AbstractEntityService(IModelAttrAssocService pModelAttributeService,
-            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
-            IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDatasetRepository pDatasetRepository, IAbstractEntityRepository<U> pRepository, EntityManager pEm,
-            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,
+    public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
+            IAbstractEntityRepository<AbstractEntity> entityRepository, IModelService modelService,
+            IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
+            IDatasetRepository datasetRepository, IAbstractEntityRepository<U> repository, EntityManager em,
+            IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
             IDescriptionFileRepository descriptionFileRepository) {
-        modelAttributeService = pModelAttributeService;
-        entityRepository = pEntityRepository;
-        modelService = pModelService;
-        deletedEntityRepository = pDeletedEntityRepository;
-        collectionRepository = pCollectionRepository;
-        datasetRepository = pDatasetRepository;
-        repository = pRepository;
-        em = pEm;
-        publisher = pPublisher;
+        super(modelAttrAssocService);
+        this.entityRepository = entityRepository;
+        this.modelService = modelService;
+        this.deletedEntityRepository = deletedEntityRepository;
+        this.collectionRepository = collectionRepository;
+        this.datasetRepository = datasetRepository;
+        this.repository = repository;
+        this.em = em;
+        this.publisher = publisher;
         this.runtimeTenantResolver = runtimeTenantResolver;
         this.descriptionFileRepository = descriptionFileRepository;
     }
@@ -214,44 +201,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return repository.findAll();
     }
 
-    @Override
-    public void validate(U entity, Errors inErrors, boolean manageAlterable) throws ModuleException {
-        Assert.notNull(entity, "Entity must not be null.");
-
-        Model model = entity.getModel();
-
-        Assert.notNull(model, "Model must be set on entity in order to be validated.");
-        Assert.notNull(model.getId(), "Model identifier must be specified.");
-
-        // Retrieve model attributes
-        List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getName());
-
-        // Check model not empty
-        if (CollectionUtils.isEmpty(modAtts) && !CollectionUtils.isEmpty(entity.getProperties())) {
-            inErrors.rejectValue("properties", "error.no.properties.defined.but.set",
-                                 "No properties defined in corresponding model but trying to create.");
-        }
-
-        // Loop over model attributes ... to validate each attribute
-        for (ModelAttrAssoc modelAtt : modAtts) {
-            checkModelAttribute(modelAtt, inErrors, manageAlterable, entity);
-        }
-
-        if (inErrors.hasErrors()) {
-            List<String> errors = new ArrayList<>();
-            for (ObjectError error : inErrors.getAllErrors()) {
-                String errorMessage = error.getDefaultMessage();
-                logger.error(errorMessage);
-                errors.add(errorMessage);
-            }
-            throw new EntityInvalidException(errors);
-        }
-    }
-
     /**
      * Check if model is loaded else load it then set it on entity.
      * @param entity cocnerned entity
-     * @throws ModuleException
      */
     public void checkAndOrSetModel(U entity) throws ModuleException {
         Model model = entity.getModel();
@@ -259,55 +211,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         if ((model.getId() == null) && (model.getName() != null)) {
             model = modelService.getModelByName(model.getName());
             entity.setModel(model);
-        }
-    }
-
-    /**
-     * Validate an attribute with its corresponding model attribute
-     * @param modelAttribute model attribute
-     * @param errors validation errors
-     * @param manageAlterable manage update or not
-     */
-    protected void checkModelAttribute(ModelAttrAssoc modelAttribute,
-            Errors errors, boolean manageAlterable, AbstractEntity entity) {
-
-        // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
-        // missing and is added during the crawling process
-        if (ComputationMode.GIVEN.equals(modelAttribute.getMode())) {
-            AttributeModel attModel = modelAttribute.getAttribute();
-            String attPath = attModel.getName();
-            if (!attModel.getFragment().isDefaultFragment()) {
-                attPath = attModel.getFragment().getName().concat(".").concat(attPath);
-            }
-            logger.debug(String.format("Computed key : \"%s\"", attPath));
-
-            // Retrieve attribute
-            AbstractAttribute<?> att = entity.getProperty(attPath);
-
-            // Null value check
-            if (att == null) {
-                String messageKey = "error.missing.required.attribute.message";
-                String defaultMessage = String.format("Missing required attribute \"%s\".", attPath);
-                // if (pManageAlterable && attModel.isAlterable() && !attModel.isOptional()) {
-                if (!attModel.isOptional()) {
-                    errors.reject(messageKey, defaultMessage);
-                    return;
-                }
-                logger.debug(String.format("Attribute \"%s\" not required in current context.", attPath));
-                return;
-            }
-
-            // Do validation
-            for (Validator validator : getValidators(modelAttribute, attPath, manageAlterable, entity)) {
-                if (validator.supports(att.getClass())) {
-                    validator.validate(att, errors);
-                } else {
-                    String defaultMessage = String
-                            .format("Unsupported validator \"%s\" for attribute \"%s\"", validator.getClass().getName(),
-                                    attPath);
-                    errors.reject("error.unsupported.validator.message", defaultMessage);
-                }
-            }
         }
     }
 
@@ -331,10 +234,10 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         if (manageAlterable && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
             AbstractEntity fromDb = entityRepository.findByIpId(entity.getIpId());
-            AbstractAttribute<?> propertyFromDb = extractProperty(fromDb, attModel);
-            AbstractAttribute<?> property = extractProperty(entity, attModel);
+            AbstractAttribute<?> valueFromDb = extractProperty(fromDb, attModel);
+            AbstractAttribute<?> valueFromEntity = extractProperty(entity, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
-            validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, propertyFromDb, property));
+            validators.add(new NotAlterableAttributeValidator(attributeKey, attModel, valueFromDb, valueFromEntity));
         }
         // Check attribute type
         validators.add(new AttributeTypeValidator(attModel.getType(), attributeKey));
@@ -345,8 +248,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> implements
         return validators;
     }
 
-    protected AbstractAttribute<?> extractProperty(AbstractEntity entity,
-            AttributeModel attribute) { // NOSONAR
+    protected AbstractAttribute<?> extractProperty(AbstractEntity entity, AttributeModel attribute) {
         Fragment fragment = attribute.getFragment();
         String attName = attribute.getName();
         String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;

@@ -55,9 +55,9 @@ public class DoubleRangeValidator extends AbstractAttributeValidator {
     }
 
     @Override
-    public boolean supports(Class<?> pClazz) {
-        return (pClazz == DoubleAttribute.class) || (pClazz == DoubleArrayAttribute.class)
-                || (pClazz == DoubleIntervalAttribute.class);
+    public boolean supports(Class<?> clazz) {
+        return (clazz == DoubleAttribute.class) || (clazz == DoubleArrayAttribute.class)
+                || (clazz == DoubleIntervalAttribute.class);
     }
 
     @Override

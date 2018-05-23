@@ -36,16 +36,16 @@ public class AttributeTypeValidator extends AbstractAttributeValidator {
      */
     private final AttributeType attributeType;
 
-    public AttributeTypeValidator(AttributeType pAttributeType, String pAttributeKey) {
-        super(pAttributeKey);
-        this.attributeType = pAttributeType;
+    public AttributeTypeValidator(AttributeType attributeType, String attributeKey) {
+        super(attributeKey);
+        this.attributeType = attributeType;
     }
 
     @Override
-    public void validate(Object pTarget, Errors pErrors) {
-        AbstractAttribute<?> att = (AbstractAttribute<?>) pTarget;
+    public void validate(Object target, Errors errors) {
+        AbstractAttribute<?> att = (AbstractAttribute<?>) target;
         if (!att.represents(attributeType)) {
-            pErrors.reject("error.inconsistent.attribute.type.message",
+            errors.reject("error.inconsistent.attribute.type.message",
                            String.format("Attribute \"%s\" not consistent with model attribute type.", attributeKey));
 
         }

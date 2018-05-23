@@ -34,17 +34,17 @@ public abstract class AbstractAttributeValidator implements Validator {
      */
     protected final String attributeKey;
 
-    public AbstractAttributeValidator(String pAttributeKey) {
-        this.attributeKey = pAttributeKey;
+    public AbstractAttributeValidator(String attributeKey) {
+        this.attributeKey = attributeKey;
     }
 
-    protected void rejectUnsupported(Errors pErrors) {
-        pErrors.reject("error.unsupported.attribute.type.message", String
+    protected void rejectUnsupported(Errors errors) {
+        errors.reject("error.unsupported.attribute.type.message", String
                 .format("Unsupported attribute \"%s\" for validator \"%s\".", attributeKey, this.getClass().getName()));
     }
 
     @Override
-    public boolean supports(Class<?> pClazz) {
-        return AbstractAttribute.class.isAssignableFrom(pClazz);
+    public boolean supports(Class<?> clazz) {
+        return AbstractAttribute.class.isAssignableFrom(clazz);
     }
 }

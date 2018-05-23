@@ -44,8 +44,8 @@ public class EnumerationValidator extends AbstractAttributeValidator {
     }
 
     @Override
-    public boolean supports(Class<?> pClazz) {
-        return (pClazz == StringAttribute.class) || (pClazz == StringArrayAttribute.class);
+    public boolean supports(Class<?> clazz) {
+        return (clazz == StringAttribute.class) || (clazz == StringArrayAttribute.class);
     }
 
     @Override

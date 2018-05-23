@@ -34,7 +34,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.validation.Validator;
 
 import com.google.common.base.Strings;
 import fr.cnes.regards.framework.amqp.IPublisher;
@@ -43,6 +42,7 @@ import fr.cnes.regards.framework.amqp.domain.IHandler;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -65,6 +65,7 @@ import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.entities.domain.event.EventType;
+import fr.cnes.regards.modules.entities.service.DataObjectService;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.entities.service.visitor.AttributeBuilderVisitor;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -109,11 +110,9 @@ public class EntityIndexerService implements IEntityIndexerService {
     @PersistenceContext
     private EntityManager em;
 
-    /**
-     * Validator used to validate each DataObject creation before its indexing into ElasticSearch
-     */
+
     @Autowired
-    private Validator validator;
+    private DataObjectService dataObjectService;
 
     @Autowired
     @Lazy
@@ -483,7 +482,11 @@ public class EntityIndexerService implements IEntityIndexerService {
     private void validateDataObject(Set<DataObject> toSaveObjects, DataObject dataObject, StringBuilder buf) {
         Errors errors = new MapBindingResult(new HashMap<>(), dataObject.getIpId().toString());
         // If some validation errors occur, don't index data object
-        validator.validate(dataObject, errors);
+        try {
+            dataObjectService.validate(dataObject, errors, false);
+        } catch (EntityInvalidException e) {
+            // Don't give a shit, failed validation has added some errors, it is managed lower
+        }
         if (errors.getErrorCount() == 0) {
             toSaveObjects.add(dataObject);
         } else {
