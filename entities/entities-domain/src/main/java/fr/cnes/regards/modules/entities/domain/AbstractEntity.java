@@ -93,14 +93,14 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * The entity label
      */
-    @NotBlank(message="The label must not be null and empty")
+    @NotBlank(message = "The label must not be null and empty")
     @Column(length = 128, nullable = false)
     protected String label;
 
     /**
      * model that this entity is respecting
      */
-    @NotNull(message="The Model must not be null")
+    @NotNull(message = "The Model must not be null")
     @ManyToOne
     @JoinColumn(name = "model_id", foreignKey = @ForeignKey(name = "fk_entity_model_id"), nullable = false,
             updatable = false)
@@ -109,7 +109,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * last time the entity was updated
      */
-    @PastOrNow(message="The lastUpdate date must be in the past or now")
+    @PastOrNow(message = "The lastUpdate date must be in the past or now")
     @Column(name = "update_date")
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime lastUpdate;
@@ -117,7 +117,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
     /**
      * time at which the entity was created
      */
-    @PastOrNow(message="The creationDate must be in the past or now")
+    @PastOrNow(message = "The creationDate must be in the past or now")
     @Column(name = "creation_date", nullable = false)
     @Convert(converter = OffsetDateTimeAttributeConverter.class)
     protected OffsetDateTime creationDate;
@@ -247,10 +247,29 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     /**
      * Get an immutable copy of properties.
-     * If this set should be modified, please use addPorperty or removeProperty
+     * If this set should be modified, please use addProperty or removeProperty
      */
     public ImmutableSet<AbstractAttribute<?>> getProperties() { // NOSONAR
         return ImmutableSet.copyOf(properties);
+    }
+
+    /**
+     * Get a mutable copy of properties.
+     */
+    public Set<String> getMutableCopyOfPropertiesPaths() {
+        Set<String> propertiesPaths = new HashSet<>();
+        for (AbstractAttribute<?> prop : properties) {
+            // Fragment
+            if (prop instanceof ObjectAttribute) {
+                String fragmentName = prop.getName();
+                ((ObjectAttribute) prop).getValue()
+                        .forEach(fProp -> propertiesPaths.add(fragmentName + "." + fProp.getName()));
+            } else {
+                propertiesPaths.add(prop.getName());
+
+            }
+        }
+        return propertiesPaths;
     }
 
     public void addProperty(AbstractAttribute<?> property) {

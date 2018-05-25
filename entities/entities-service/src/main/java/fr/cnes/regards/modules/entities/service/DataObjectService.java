@@ -63,12 +63,18 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
     private LoadingCache<String, List<ModelAttrAssoc>> modelServiceCache;
 
     /**
+     * Original IModelAttrAssocService (ie. not proxyfied)
+     */
+    private IModelAttrAssocService modelAttrAssocServiceNoProxy;
+
+    /**
      * Constructor
      * @param modelAttributeService model attribute service autowired by Spring on which a proxy with cache is created
      * @param dataObjectValidator classic Spring validator (inspecting class annotations)
      */
     public DataObjectService(final IModelAttrAssocService modelAttributeService, Validator dataObjectValidator) {
         super(modelAttributeService);
+        this.modelAttrAssocServiceNoProxy = modelAttributeService;
         this.dataObjectValidator = dataObjectValidator;
         // Init the cache to speed up model attributes from model name retrieval
         modelServiceCache = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
@@ -85,7 +91,7 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
                     args.length == 1) && (args[0] instanceof String)) {
                 return modelServiceCache.get((String) args[0]);
             } else { // else call "true" modelService
-                return method.invoke(proxy, args);
+                return method.invoke(modelAttrAssocServiceNoProxy, args);
             }
         };
         // Replace modelAttributeService by proxy which use cache

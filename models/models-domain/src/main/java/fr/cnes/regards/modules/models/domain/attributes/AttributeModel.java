@@ -456,4 +456,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         jsonPath = builder.toString();
         return jsonPath;
     }
+
+    @Override
+    public String toString() {
+        return "AttributeModel{" + "id=" + id + ", name='" + name + '\'' + ", defaultValue='" + defaultValue + '\''
+                + ", type=" + type + ", fragment=" + fragment + ", jsonPath='" + jsonPath + '\'' + '}';
+    }
 }
