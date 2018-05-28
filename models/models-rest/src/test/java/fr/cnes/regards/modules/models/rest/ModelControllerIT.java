@@ -19,23 +19,33 @@
 package fr.cnes.regards.modules.models.rest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.assertj.core.util.Strings;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.PayloadDocumentation;
+import org.springframework.restdocs.request.RequestDocumentation;
+import org.springframework.restdocs.snippet.Attributes;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
+import fr.cnes.regards.framework.test.integration.ConstrainedFields;
+import fr.cnes.regards.framework.test.integration.RequestBuilderCustomizer;
 import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -95,10 +105,13 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         final Model model = new Model();
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isUnprocessableEntity());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isUnprocessableEntity());
 
-        performDefaultPost(ModelController.TYPE_MAPPING, model, expectations, "Empty model shouldn't be created.");
+        performDefaultPost(ModelController.TYPE_MAPPING,
+                           model,
+                           requestBuilderCustomizer,
+                           "Empty model shouldn't be created.");
     }
 
     /**
@@ -160,11 +173,45 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
         model.setType(pType);
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
-        expectations.add(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath(JSON_ID, Matchers.notNullValue()));
 
-        performDefaultPost(ModelController.TYPE_MAPPING, model, expectations, "Consistent model should be created.");
+        requestBuilderCustomizer.addDocumentationSnippet(PayloadDocumentation.requestFields(documentBody(true, "")));
+        requestBuilderCustomizer
+                .addDocumentationSnippet(PayloadDocumentation.responseFields(documentBody(false, "content")));
+
+        performDefaultPost(ModelController.TYPE_MAPPING,
+                           model,
+                           requestBuilderCustomizer,
+                           "Consistent model should be created.");
+    }
+
+    public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(Model.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        if (!creation) {
+            descriptors.add(constrainedFields.withPath(prefixPath + "id", "id", "model identifier"));
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "model name"));
+        descriptors.add(constrainedFields.withPath(prefixPath + "description", "description", "model description")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "model version")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "type",
+                                                   "type",
+                                                   "model type",
+                                                   "Available values: " + Arrays.stream(EntityType.values())
+                                                           .map(type -> type.name()).collect(Collectors.joining(", ")))
+                                .type(JSON_STRING_TYPE));
+        // ignore links
+        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
+        ignoreFields = new ConstrainedFields(Link.class);
+        descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());
+        descriptors.add(ignoreFields.withPath("links[].href", "href", "hateoas links href").optional().ignored());
+        return descriptors;
     }
 
     /**
@@ -221,11 +268,14 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         modelAttributeService.bindNSAttributeToModel(model.getName(), attMod.getFragment());
 
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isOk());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
 
-        final ResultActions resultActions = performDefaultGet(ModelController.TYPE_MAPPING
-                + ModelController.MODEL_MAPPING + "/export", expectations, "Should return result", model.getName());
+        final ResultActions resultActions = performDefaultGet(
+                ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING + "/export",
+                requestBuilderCustomizer,
+                "Should return result",
+                model.getName());
 
         assertMediaType(resultActions, MediaType.APPLICATION_XML);
         Assert.assertNotNull(payload(resultActions));
@@ -244,11 +294,23 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                 .createModel(Model.build("MODEL", "I will be deleted soon", EntityType.DOCUMENT));
 
         // Define expectations
-        final List<ResultMatcher> expectations = new ArrayList<>();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
+        RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
+        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "modelName")
+                                                                                                     .description(
+                                                                                                             "model name")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_STRING_TYPE))));
 
         // Perform test
-        performDefaultDelete(ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING, expectations,
-                             "Model should be deleted", model.getName());
+        performDefaultDelete(ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING,
+                             requestBuilderCustomizer,
+                             "Model should be deleted",
+                             model.getName());
     }
 }
