@@ -85,7 +85,7 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
         PercentilesAggregationBuilder percentsAggsBuilder = AggregationBuilders
                 .percentiles(attributeName + NUMERIC_FACET_SUFFIX);
         percentsAggsBuilder.field(attributeName);
-        percentsAggsBuilder.percentiles(10., 20., 30., 40., 50., 60., 70., 80., 90.);
+        percentsAggsBuilder.percentiles(0.0, 10., 20., 30., 40., 50., 60., 70., 80., 90., 100.0);
         return percentsAggsBuilder;
     }
 
