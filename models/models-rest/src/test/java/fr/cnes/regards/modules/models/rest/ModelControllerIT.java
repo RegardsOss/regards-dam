@@ -94,6 +94,33 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
     @Autowired
     private IModelAttrAssocService modelAttributeService;
 
+    public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
+        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
+        ConstrainedFields constrainedFields = new ConstrainedFields(Model.class);
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        if (!creation) {
+            descriptors.add(constrainedFields.withPath(prefixPath + "id", "id", "model identifier"));
+        }
+        descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "model name"));
+        descriptors.add(constrainedFields.withPath(prefixPath + "description", "description", "model description")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "model version")
+                                .type(JSON_STRING_TYPE).optional());
+        descriptors.add(constrainedFields.withPath(prefixPath + "type",
+                                                   "type",
+                                                   "model type",
+                                                   "Available values: " + Arrays.stream(EntityType.values())
+                                                           .map(type -> type.name()).collect(Collectors.joining(", ")))
+                                .type(JSON_STRING_TYPE));
+        // ignore links
+        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
+        descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
+        ignoreFields = new ConstrainedFields(Link.class);
+        descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());
+        descriptors.add(ignoreFields.withPath("links[].href", "href", "hateoas links href").optional().ignored());
+        return descriptors;
+    }
+
     @Override
     protected Logger getLogger() {
         return LOGGER;
@@ -187,33 +214,6 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
                            "Consistent model should be created.");
     }
 
-    public static List<FieldDescriptor> documentBody(boolean creation, String prefix) {
-        String prefixPath = Strings.isNullOrEmpty(prefix) ? "" : prefix + ".";
-        ConstrainedFields constrainedFields = new ConstrainedFields(Model.class);
-        List<FieldDescriptor> descriptors = new ArrayList<>();
-        if (!creation) {
-            descriptors.add(constrainedFields.withPath(prefixPath + "id", "id", "model identifier"));
-        }
-        descriptors.add(constrainedFields.withPath(prefixPath + "name", "name", "model name"));
-        descriptors.add(constrainedFields.withPath(prefixPath + "description", "description", "model description")
-                                .type(JSON_STRING_TYPE).optional());
-        descriptors.add(constrainedFields.withPath(prefixPath + "version", "version", "model version")
-                                .type(JSON_STRING_TYPE).optional());
-        descriptors.add(constrainedFields.withPath(prefixPath + "type",
-                                                   "type",
-                                                   "model type",
-                                                   "Available values: " + Arrays.stream(EntityType.values())
-                                                           .map(type -> type.name()).collect(Collectors.joining(", ")))
-                                .type(JSON_STRING_TYPE));
-        // ignore links
-        ConstrainedFields ignoreFields = new ConstrainedFields(Resource.class);
-        descriptors.add(ignoreFields.withPath("links", "links", "hateoas links").optional().ignored());
-        ignoreFields = new ConstrainedFields(Link.class);
-        descriptors.add(ignoreFields.withPath("links[].rel", "rel", "hateoas links rel").optional().ignored());
-        descriptors.add(ignoreFields.withPath("links[].href", "href", "hateoas links href").optional().ignored());
-        return descriptors;
-    }
-
     /**
      * Export model
      *
@@ -270,6 +270,16 @@ public class ModelControllerIT extends AbstractRegardsTransactionalIT {
 
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isOk());
+
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
+                                                                                                     .parameterWithName(
+                                                                                                             "modelName")
+                                                                                                     .description(
+                                                                                                             "model name")
+                                                                                                     .attributes(
+                                                                                                             Attributes
+                                                                                                                     .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                     .value(JSON_STRING_TYPE))));
 
         final ResultActions resultActions = performDefaultGet(
                 ModelController.TYPE_MAPPING + ModelController.MODEL_MAPPING + "/export",

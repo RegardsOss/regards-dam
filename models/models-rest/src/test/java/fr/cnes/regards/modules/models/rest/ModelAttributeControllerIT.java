@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.models.rest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -424,6 +425,29 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(shouldBe.size())));
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.content().json(gson(shouldBe), false));
 
+        requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.requestParameters(RequestDocumentation
+                                                                                                        .parameterWithName(
+                                                                                                                "type")
+                                                                                                        .description(
+                                                                                                                "Model type for which we want the associations")
+                                                                                                        .attributes(
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_TYPE)
+                                                                                                                        .value(JSON_STRING_TYPE),
+                                                                                                                Attributes
+                                                                                                                        .key(RequestBuilderCustomizer.PARAM_CONSTRAINTS)
+                                                                                                                        .value("Available values: "
+                                                                                                                                       + Arrays
+                                                                                                                                .stream(EntityType
+                                                                                                                                                .values())
+                                                                                                                                .map(type -> type
+                                                                                                                                        .name())
+                                                                                                                                .collect(
+                                                                                                                                        Collectors
+                                                                                                                                                .joining(
+                                                                                                                                                        ", "))))
+                                                                                                        .optional()));
+
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING,
                           requestBuilderCustomizer,
                           "Should return model attribute association");
@@ -633,16 +657,6 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         RequestBuilderCustomizer requestBuilderCustomizer = getNewRequestBuilderCustomizer();
         requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNoContent());
 
-        performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                     + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING,
-                             requestBuilderCustomizer,
-                             "Fragment's attributes should be deleted",
-                             mod.getName(),
-                             frag.getId());
-
-        requestBuilderCustomizer = getNewRequestBuilderCustomizer();
-        requestBuilderCustomizer.addExpectation(MockMvcResultMatchers.status().isNotFound());
-
         requestBuilderCustomizer.addDocumentationSnippet(RequestDocumentation.pathParameters(RequestDocumentation
                                                                                                      .parameterWithName(
                                                                                                              "modelName")
@@ -654,22 +668,20 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
                                                                                                                      .value(JSON_STRING_TYPE)),
                                                                                              RequestDocumentation
                                                                                                      .parameterWithName(
-                                                                                                             "pAttributeId")
+                                                                                                             "pFragmentId")
                                                                                                      .description(
-                                                                                                             "Attribute identifier")
+                                                                                                             "Fragment identifier")
                                                                                                      .attributes(
                                                                                                              Attributes
                                                                                                                      .key(RequestBuilderCustomizer.PARAM_TYPE)
                                                                                                                      .value(JSON_NUMBER_TYPE))));
 
-        for (ModelAttrAssoc modAtt : modelAttributes) {
-            performDefaultGet(
-                    ModelAttrAssocController.TYPE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                    requestBuilderCustomizer,
-                    "ModelAttribute shouldn't exist anymore",
-                    mod.getId(),
-                    modAtt.getId());
-        }
+        performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                                     + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING,
+                             requestBuilderCustomizer,
+                             "Fragment's attributes should be deleted",
+                             mod.getName(),
+                             frag.getId());
     }
 
 }
