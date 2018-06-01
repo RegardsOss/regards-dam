@@ -206,7 +206,7 @@ public class IndexerServiceIT {
 
         // Following lines are just to test Gson serialization/deserialization of all attribute types
         final List<Collection> singleCollColl = searchService
-                .search(new SimpleSearchKey<>(tenant, EntityType.COLLECTION.toString(), Collection.class), 10,
+                .search(new SimpleSearchKey<>(EntityType.COLLECTION.toString(), Collection.class), 10,
                         ICriterion.eq("properties.int", 42)).getContent();
         Assert.assertEquals(1, singleCollColl.size());
     }
@@ -268,7 +268,8 @@ public class IndexerServiceIT {
 
         final ICriterion criterion = ICriterion.eq("attributes.altitude", 3700);
         // SearchKey<AbstractEntity> searchKey = new SearchKey<>(SEARCH, null, AbstractEntity.class);
-        final SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities(SEARCH);
+        final SimpleSearchKey<AbstractEntity> searchKey = Searches.onAllEntities();
+        searchKey.setSearchIndex(SEARCH);
         Page<? extends AbstractEntity> collPage = searchService.search(searchKey, 10, criterion);
         int count = 0;
         while (true) {
