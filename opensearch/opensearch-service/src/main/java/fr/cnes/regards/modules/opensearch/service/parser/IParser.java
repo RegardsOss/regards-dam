@@ -22,11 +22,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -47,13 +47,13 @@ public interface IParser {
      * {
      * lat => 43.25
      * lon => -123.45
-     * r   => 10
+     * r => 10
      * }
      * @param parameters the map of parameters
      * @return the {@link ICriterion}
      * @throws OpenSearchParseException when an error occurs during parsing
      */
-    ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException;
+    ICriterion parse(MultiValueMap<String, String> parameters) throws OpenSearchParseException;
 
     /**
      * Parses the passed OpenSearch request string.<br>
@@ -66,10 +66,10 @@ public interface IParser {
      */
     default ICriterion parse(String parameters) throws OpenSearchParseException {
         try {
-            List<NameValuePair> nameValues = URLEncodedUtils
-                    .parse(new URI("http://dummy?" + parameters), Charset.forName("UTF-8"));
-            Map<String, String> paramMap = nameValues.stream()
-                    .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+            List<NameValuePair> nameValues = URLEncodedUtils.parse(new URI("http://dummy?" + parameters),
+                                                                   Charset.forName("UTF-8"));
+            MultiValueMap<String, String> paramMap = new LinkedMultiValueMap<>();
+            nameValues.forEach(nvp -> paramMap.add(nvp.getName(), nvp.getValue()));
             return parse(paramMap);
         } catch (URISyntaxException e) {
             throw new OpenSearchParseException(e);

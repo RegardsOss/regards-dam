@@ -18,16 +18,16 @@
  */
 package fr.cnes.regards.modules.opensearch.service.parser;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.util.MultiValueMap;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
+
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.converter.PolygonToArray;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -45,9 +45,9 @@ public class GeometryParser implements IParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(GeometryParser.class);
 
     @Override
-    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
+    public ICriterion parse(MultiValueMap<String, String> parameters) throws OpenSearchParseException {
 
-        String geoParam = parameters.get("g");
+        String geoParam = parameters.getFirst("g");
 
         // Check required query parameter
         if (geoParam == null) {

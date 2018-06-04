@@ -18,7 +18,7 @@
  */
 package fr.cnes.regards.modules.opensearch.service.parser;
 
-import java.util.Map;
+import org.springframework.util.MultiValueMap;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
@@ -37,11 +37,11 @@ public class CircleParser implements IParser {
     private static final String RADIUS = "r";
 
     @Override
-    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
+    public ICriterion parse(MultiValueMap<String, String> parameters) throws OpenSearchParseException {
 
-        String latParam = parameters.get(CENTER_LAT);
-        String lonParam = parameters.get(CENTER_LON);
-        String rParam = parameters.get(RADIUS);
+        String latParam = parameters.getFirst(CENTER_LAT);
+        String lonParam = parameters.getFirst(CENTER_LON);
+        String rParam = parameters.getFirst(RADIUS);
 
         // Check required query parameter
         if ((latParam == null) && (lonParam == null) && (rParam == null)) {

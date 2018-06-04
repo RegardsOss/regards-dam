@@ -18,8 +18,6 @@
  */
 package fr.cnes.regards.modules.opensearch.service.parser;
 
-import java.util.Map;
-
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.core.QueryParserHelper;
 import org.apache.lucene.queryparser.flexible.standard.CommonQueryParserConfiguration;
@@ -29,8 +27,10 @@ import org.apache.lucene.queryparser.flexible.standard.parser.StandardSyntaxPars
 import org.apache.lucene.queryparser.flexible.standard.processors.StandardQueryNodeProcessorPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.MultiValueMap;
 
 import com.google.common.base.Strings;
+
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.opensearch.service.builder.RegardsQueryTreeBuilder;
@@ -43,7 +43,8 @@ import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseExcep
  *
  * This {@link IParser} implementation only handles the the "q" part of the OpenSearch request.<br>
  *
- * Expects HTML-encoded string values. For example, <code>q=title(harrypotter OR starwars)</code> will fail, but <code>q=title%3A%28harrypotter+OR+starwars%29</code> will work
+ * Expects HTML-encoded string values. For example, <code>q=title(harrypotter OR starwars)</code> will fail, but
+ * <code>q=title%3A%28harrypotter+OR+starwars%29</code> will work
  *
  * @author Marc Sordi
  * @author Xavier-Alexandre Brochard
@@ -83,9 +84,9 @@ public class QueryParser extends QueryParserHelper implements IParser {
     }
 
     @Override
-    public ICriterion parse(Map<String, String> parameters) throws OpenSearchParseException {
+    public ICriterion parse(MultiValueMap<String, String> parameters) throws OpenSearchParseException {
 
-        String q = parameters.get(QUERY_PARAMETER);
+        String q = parameters.getFirst(QUERY_PARAMETER);
 
         // Check required query parameter
         if (Strings.isNullOrEmpty(q)) {
