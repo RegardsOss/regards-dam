@@ -26,6 +26,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -51,12 +52,18 @@ public @interface ComputedAttribute {
      */
     String CLASS_NAME = "fr.cnes.regards.modules.models.domain.validation.ComputedAttribute";
 
+    String TEMPLATE_START = "Validation annotation @" + CLASS_NAME + " validating ModelAttrAssoc (attribute %s): mode is COMPUTED but associated PluginConfiguration %s ";
+
+    String DEFAULT_TEMPLATE = TEMPLATE_START + "is null or not implementing IComputedAttribute";
+
+    String INCOMPATIBLE_TYPE = TEMPLATE_START + "has an incompatible attribute type";
+
+    String WRONG_MODEL_TYPE = TEMPLATE_START + "only attributes associated with a model of type %s can be computed.";
+
     /**
      * @return error message key
      */
-    String message() default "{Validation annotation @" + CLASS_NAME
-            + " validating ModelAttrAssoc (attribute %s): mode is COMPUTED but associated PluginConfiguration %s is null "
-            + "or not implementing IComputedAttribute or has an incompatible attribute type}";
+    String message() default DEFAULT_TEMPLATE;
 
     /**
      * @return validation groups

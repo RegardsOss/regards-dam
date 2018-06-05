@@ -25,10 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
+import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.models.domain.ComputationMode;
 import fr.cnes.regards.modules.models.domain.ComputationPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
+import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 
 /**
@@ -53,42 +55,59 @@ public class ComputedAttributeValidator implements ConstraintValidator<ComputedA
         if (modelAttrAssoc == null) {
             return true;
         }
-        String template = context.getDefaultConstraintMessageTemplate();
         if (modelAttrAssoc.getAttribute() == null) {
-            LOG.debug("ModelAttrAssoc to validate has no AttributeModel specified");
-            String msg = String.format(template, "null", "undefined");
+            String msg = "ModelAttrAssoc to validate has no AttributeModel specified";
+            LOG.debug(msg);
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
             return false;
         }
-        // If computed attribute, check that computation plugin mechanism is correct
         PluginConfiguration computationConf = modelAttrAssoc.getComputationConf();
-        if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null) && computationConf
-                .getInterfaceNames().contains(IComputedAttribute.class.getName())) {
+        if (modelAttrAssoc.getMode() == ComputationMode.COMPUTED) {
+            // If computed attribute, check that the model is a dataset model
+            Model model = modelAttrAssoc.getModel();
+            if (model.getType() != EntityType.DATASET) {
+                String msg = String.format(ComputedAttribute.WRONG_MODEL_TYPE,
+                                           modelAttrAssoc.getAttribute().getName(),
+                                           computationConf,
+                                           EntityType.DATASET);
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
+                return false;
+            }
+            // If computed attribute, check that computation plugin mechanism is correct
+            if ((modelAttrAssoc.getMode() == ComputationMode.COMPUTED) && (computationConf != null) && computationConf
+                    .getInterfaceNames().contains(IComputedAttribute.class.getName())) {
 
-            try {
-                // Retrieve computation plugin and instance it
-                ComputationPlugin computationPlugin = Class.forName(computationConf.getPluginClassName())
-                        .getAnnotation(ComputationPlugin.class);
-                // Check validated attribute type is the same as plugin managed attribute type
-                boolean ok = (computationPlugin.supportedType() == modelAttrAssoc.getAttribute().getType());
-                if (!ok) {
-                    String msg = String.format(template, modelAttrAssoc.getAttribute().getName(), computationConf);
-                    context.disableDefaultConstraintViolation();
-                    context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
+                try {
+                    // Retrieve annotation and check plugin supported type
+                    ComputationPlugin computationPlugin = Class.forName(computationConf.getPluginClassName())
+                            .getAnnotation(ComputationPlugin.class);
+                    // Check validated attribute type is the same as plugin managed attribute type
+                    boolean ok = (computationPlugin.supportedType() == modelAttrAssoc.getAttribute().getType());
+                    if (!ok) {
+                        String msg = String.format(ComputedAttribute.INCOMPATIBLE_TYPE,
+                                                   modelAttrAssoc.getAttribute().getName(),
+                                                   computationConf);
+                        context.disableDefaultConstraintViolation();
+                        context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
+                    }
+                    return ok;
+                } catch (ClassNotFoundException e) {
+                    LOG.error("ModelAttrAssoc of id: " + modelAttrAssoc.getId()
+                                      + " cannot be validated because we couldn't find annotation"
+                                      + ComputationPlugin.class.getName() + " on the associated plugin to check the "
+                                      + "coherence of its return type.");
+                    throw new RsRuntimeException(e);
                 }
-                return ok;
-            } catch (ClassNotFoundException e) {
-                LOG.error("ModelAttrAssoc of id: " + modelAttrAssoc.getId()
-                                  + " cannot be validated because we couldn't instanciate the associated plugin to check the "
-                                  + "coherence of its return type.");
-                throw new RsRuntimeException(e);
             }
         }
         // It is not a computed attribute so it must be GIVEN one
         boolean ok = (modelAttrAssoc.getMode() == ComputationMode.GIVEN);
         if (!ok) {
-            String msg = String.format(template, modelAttrAssoc.getAttribute().getName(), computationConf);
+            String msg = String.format(ComputedAttribute.DEFAULT_TEMPLATE,
+                                       modelAttrAssoc.getAttribute().getName(),
+                                       computationConf);
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(msg).addConstraintViolation();
         }
