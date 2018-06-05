@@ -135,8 +135,8 @@ public abstract class AbstractDataObjectComputePlugin<R> implements IComputedAtt
     public void compute(Dataset dataset) {
         result = null;
         // create the search
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
-                                                                      EntityType.DATA.toString(), DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         esRepo.searchAll(searchKey, this.doCompute(), dataset.getSubsettingClause());
         LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),
                   dataset.getIpId().toString(), result);

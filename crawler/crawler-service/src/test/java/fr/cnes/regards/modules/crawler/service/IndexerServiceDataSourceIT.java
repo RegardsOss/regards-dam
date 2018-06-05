@@ -291,8 +291,7 @@ public class IndexerServiceDataSourceIT {
         List<PluginParameter> param = PluginParametersFactory.build()
                 .addParameter(TestDataSourcePlugin.MODEL, dataModel)
                 .addParameter(IDataSourcePlugin.MODEL_NAME_PARAM, dataModel.getName()).getParameters();
-        return PluginUtils.getPluginConfiguration(param,
-                                                  TestDataSourcePlugin.class,
+        return PluginUtils.getPluginConfiguration(param, TestDataSourcePlugin.class,
                                                   Arrays.asList(PLUGIN_CURRENT_PACKAGE,
                                                                 IDataSourcePlugin.class.getPackage().getName()));
     }
@@ -362,7 +361,8 @@ public class IndexerServiceDataSourceIT {
 
         // SearchKey<DataObject> objectSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(),
         // DataObject.class);
-        final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(tenant, EntityType.DATA);
+        final SimpleSearchKey<DataObject> objectSearchKey = Searches.onSingleEntity(EntityType.DATA);
+        objectSearchKey.setSearchIndex(tenant);
         // check that computed attribute were correclty done
         checkDatasetComputedAttribute(dataset1, objectSearchKey, summary1.getSavedObjectsCount());
         // Search for DataObjects tagging dataset1
@@ -397,7 +397,8 @@ public class IndexerServiceDataSourceIT {
         // Search for Dataset but with criterion on DataObjects
         // SearchKey<Dataset> dsSearchKey = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
         final JoinEntitySearchKey<DataObject, Dataset> dsSearchKey = Searches
-                .onSingleEntityReturningJoinEntity(tenant, EntityType.DATA, EntityType.DATASET);
+                .onSingleEntityReturningJoinEntity(EntityType.DATA, EntityType.DATASET);
+        dsSearchKey.setSearchIndex(tenant);
         // Page<Dataset> dsPage = searchService.searchAndReturnJoinedEntities(dsSearchKey, 1, ICriterion.all());
         Page<Dataset> dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
@@ -412,7 +413,8 @@ public class IndexerServiceDataSourceIT {
         // Search for Dataset but with criterion on everything
         // SearchKey<Dataset> dsSearchKey2 = new SearchKey<>(tenant, EntityType.DATA.toString(), Dataset.class);
         final JoinEntitySearchKey<AbstractEntity, Dataset> dsSearchKey2 = Searches
-                .onAllEntitiesReturningJoinEntity(tenant, EntityType.DATASET);
+                .onAllEntitiesReturningJoinEntity(EntityType.DATASET);
+        dsSearchKey2.setSearchIndex(tenant);
         dsPage = searchService.search(dsSearchKey, 1, ICriterion.all());
         Assert.assertNotNull(dsPage);
         Assert.assertFalse(dsPage.getContent().isEmpty());
@@ -429,9 +431,9 @@ public class IndexerServiceDataSourceIT {
         RestClient restClient;
         RestHighLevelClient client;
         try {
-            restClient = RestClient
-                    .builder(new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress),
-                                          esPort)).build();
+            restClient = RestClient.builder(
+                    new HttpHost(InetAddress.getByName((!Strings.isNullOrEmpty(esHost)) ? esHost : esAddress), esPort))
+                    .build();
             client = new RestHighLevelClient(restClient);
 
         } catch (final UnknownHostException e) {

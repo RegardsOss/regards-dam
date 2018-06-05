@@ -97,8 +97,8 @@ public class IntSumComputePlugin extends AbstractDataObjectComputePlugin<Integer
     public void compute(Dataset dataset) {
         result = null;
         // create the search
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
-                                                                      EntityType.DATA.toString(), DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         Double doubleResult = esRepo.sum(searchKey, dataset.getSubsettingClause(), parameterAttribute.getJsonPath());
         result = doubleResult.intValue();
         LOG.debug("Attribute {} computed for Dataset {}. Result: {}", parameterAttribute.getJsonPath(),

@@ -134,8 +134,10 @@ public class EsAggsTest {
     public void test() {
         createData();
         DocFilesSummary summary = new DocFilesSummary();
+        SimpleSearchKey<Data> searchKey = new SimpleSearchKey<>(TYPE, Data.class);
+        searchKey.setSearchIndex(INDEX);
         repository
-                .computeInternalDataFilesSummary(new SimpleSearchKey<>(INDEX, TYPE, Data.class), null, "tags", summary,
+                .computeInternalDataFilesSummary(searchKey, null, "tags", summary,
                                                  "RAWDATA", "QUICKLOOK_HD");
         System.out.println(summary);
         Assert.assertEquals(12, summary.getDocumentsCount());

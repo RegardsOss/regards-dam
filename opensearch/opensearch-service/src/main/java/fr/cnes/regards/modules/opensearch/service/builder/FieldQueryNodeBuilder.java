@@ -68,18 +68,16 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
             attributeModel = finder.findByName(field);
         } catch (OpenSearchUnknownParameter e) {
             throw new QueryNodeException(new MessageImpl(QueryParserMessages.FIELD_TYPE_UNDETERMINATED, e.getMessage()),
-                    e);
+                                         e);
         }
 
         switch (attributeModel.getType()) {
             case INTEGER:
             case INTEGER_ARRAY:
-                /*
-                 * Important :
-                 * We have to do it because the value of the criterion returned by Elasticsearch is always a double value,
-                 * even if the value is an integer value.
-                 * For example, it did not work, then the open search criterion was : "property:26.0"
-                 */
+                // Important :
+                // We have to do it because the value of the criterion returned by Elasticsearch is always a double value,
+                // even if the value is an integer value.
+                // For example, it did not work, then the open search criterion was : "property:26.0"
                 int val;
                 try {
                     val = Integer.parseInt(value);
@@ -94,8 +92,18 @@ public class FieldQueryNodeBuilder implements ICriterionQueryBuilder {
                 return ICriterion.eq(field, asDouble, asDouble - Math.nextDown(asDouble));
             case LONG:
             case LONG_ARRAY:
-                Long asLong = Long.parseLong(value);
-                return ICriterion.eq(field, asLong);
+                // Important :
+                // We have to do it because the value of the criterion returned by Elasticsearch is always a double value,
+                // even if the value is a long value.
+                // For example, it did not work, then the open search criterion was : "property:26.0"
+                long valL;
+                try {
+                    valL = Long.parseLong(value);
+                } catch (NumberFormatException ex) {
+                    Double doubleValue = Double.parseDouble(value);
+                    valL = doubleValue.longValue();
+                }
+                return ICriterion.eq(field, valL);
             case STRING:
                 return ICriterion.eq(field, value);
             case STRING_ARRAY:

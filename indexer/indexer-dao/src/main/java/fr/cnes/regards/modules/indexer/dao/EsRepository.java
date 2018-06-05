@@ -1123,6 +1123,7 @@ public class EsRepository implements IEsRepository {
                 break;
             case BOOLEAN:
                 fillBooleanFacets(aggsMap, facets, attributeName, totalHits);
+                break;
             case NUMERIC:
                 fillNumericFacets(aggsMap, facets, attributeName);
                 break;

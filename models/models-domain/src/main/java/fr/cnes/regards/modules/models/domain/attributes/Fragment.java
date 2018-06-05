@@ -90,16 +90,6 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
     @Column(length = 16)
     private String version;
 
-    // /**
-    // * Fragment reference
-    // */
-    // @Pattern(regexp = Model.NAME_REGEXP, message = "Attribute name reference must conform to regular expression \""
-    // + Model.NAME_REGEXP + "\".")
-    // @Size(min = Model.NAME_MIN_SIZE, max = Model.NAME_MAX_SIZE, message = "Attribute name reference must be between "
-    // + Model.NAME_MIN_SIZE + " and " + Model.NAME_MAX_SIZE + " length.")
-    // @Column(name = "refname", length = Model.NAME_MAX_SIZE)
-    // private String ref;
-
     public String getName() {
         return name;
     }
@@ -144,9 +134,6 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
         return DEFAULT_FRAGMENT_NAME;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -169,9 +156,6 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -209,11 +193,8 @@ public class Fragment implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards
         version = pVersion;
     }
 
-    // public String getRef() {
-    // return ref;
-    // }
-    //
-    // public void setRef(String pRef) {
-    // ref = pRef;
-    // }
+    @Override
+    public String toString() {
+        return "Fragment{" + "id=" + id + ", name='" + name + '\'' + '}';
+    }
 }

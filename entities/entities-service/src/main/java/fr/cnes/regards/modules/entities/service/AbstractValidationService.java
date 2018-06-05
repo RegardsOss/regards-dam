@@ -20,11 +20,11 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.Validator;
@@ -42,6 +42,7 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
  * @author oroussel
  */
 public abstract class AbstractValidationService<U extends AbstractEntity> implements IValidationService<U> {
+
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
@@ -65,19 +66,24 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
         // Retrieve model attributes
         List<ModelAttrAssoc> modAtts = modelAttributeService.getModelAttrAssocs(model.getName());
 
-        // Check model not empty
-        if (CollectionUtils.isEmpty(modAtts) && !CollectionUtils.isEmpty(entity.getProperties())) {
-            inErrors.rejectValue("properties", "error.no.properties.defined.but.set",
-                                 "No properties defined in corresponding model but trying to create.");
-        }
-
-        // Loop over model attributes ... to validate each attribute
+        // Get a copy of entity attributes values to optimize the search of unexpected properties
+        Set<String> toCheckProperties = entity.getMutableCopyOfPropertiesPaths();
+        // Loop over model attributes ... to validate each properties
         for (ModelAttrAssoc modelAtt : modAtts) {
-            checkModelAttribute(modelAtt, inErrors, manageAlterable, entity);
+            checkModelAttribute(modelAtt, inErrors, manageAlterable, entity, toCheckProperties);
         }
 
-        if (inErrors.hasErrors()) {
+        // If properties isn't empty it means some properties are unexpected by the model
+        List<String> unexpectedPropertyErrors = new ArrayList<>();
+        if (!toCheckProperties.isEmpty()) {
+            toCheckProperties.forEach(propPath -> inErrors.reject("error.unexpected.attribute.message",
+                                                              String.format("%s isn't expected by the model",
+                                                                            propPath)));
+        }
+
+        if (inErrors.hasErrors() || !unexpectedPropertyErrors.isEmpty()) {
             List<String> errors = new ArrayList<>();
+            errors.addAll(unexpectedPropertyErrors);
             for (ObjectError error : inErrors.getAllErrors()) {
                 String errorMessage = error.getDefaultMessage();
                 logger.error(errorMessage);
@@ -92,13 +98,15 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
      * @param modelAttribute model attribute
      * @param errors validation errors
      * @param manageAlterable manage update or not
+     * @param entity current entity to check
+     * @param toCheckProperties properties not already checked
      */
     protected void checkModelAttribute(ModelAttrAssoc modelAttribute, Errors errors, boolean manageAlterable,
-            AbstractEntity entity) {
+            AbstractEntity entity, Set<String> toCheckProperties) {
 
         // only validate attribute that have a ComputationMode of GIVEN. Otherwise the attribute will most likely be
         // missing and is added during the crawling process
-        if (ComputationMode.GIVEN.equals(modelAttribute.getMode())) {
+        if (modelAttribute.getMode() == ComputationMode.GIVEN) {
             AttributeModel attModel = modelAttribute.getAttribute();
             String attPath = attModel.getName();
             if (!attModel.getFragment().isDefaultFragment()) {
@@ -133,7 +141,10 @@ public abstract class AbstractValidationService<U extends AbstractEntity> implem
                     errors.reject("error.unsupported.validator.message", defaultMessage);
                 }
             }
+            // Ok, attribute has been checked
+            toCheckProperties.remove(attPath);
         }
+
     }
 
     abstract protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey,

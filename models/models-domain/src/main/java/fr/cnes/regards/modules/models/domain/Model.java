@@ -204,7 +204,6 @@ public class Model implements IIdentifiable<Long>, IXmlisable<fr.cnes.regards.mo
 
     @Override
     public String toString() {
-        return "Model [id=" + id + ", name=" + name + ", description=" + description + ", version=" + version
-                + ", type=" + type + "]";
+        return "Model [id=" + id + ", name=" + name + ", type=" + type + "]";
     }
 }
