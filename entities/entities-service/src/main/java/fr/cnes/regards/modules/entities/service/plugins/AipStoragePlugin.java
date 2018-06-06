@@ -33,7 +33,6 @@ import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.service.IStorageService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIPBuilder;
@@ -77,11 +76,19 @@ public class AipStoragePlugin implements IStorageService {
     }
 
     private void extractEntity(AIPBuilder builder, AbstractEntity entity) {
-        builder.addTags(entity.getTags().toArray(new String[entity.getTags().size()]));
-        builder.addEvent("AIP creation", entity.getCreationDate());
-        entity.getProperties().stream().forEach(attr->{
-            builder.addDescriptiveInformation(attr.getName(), gson.toJson(attr.getValue()));            
-        });
+        if (entity.getTags() != null && entity.getTags().size() > 0) {
+            builder.addTags(entity.getTags().toArray(new String[entity.getTags().size()]));
+        }
+        if (entity.getCreationDate() != null) {
+            builder.addEvent("AIP creation", entity.getCreationDate());
+        }
+        if (entity.getProperties() != null && entity.getProperties().size() > 0) {
+            entity.getProperties().stream().forEach(attr -> {
+                builder.addDescriptiveInformation(attr.getName(), gson.toJson(attr.getValue()));
+            });
+        }
+        //        builder.setGeometry(entity.getGeometry());
+        //        entity.getGeometry();
     }
 
     private void extractDataset(AIPBuilder builder, Dataset dataSet) {

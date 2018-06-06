@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,7 @@ import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
+import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.storage.client.IAipClient;
@@ -140,18 +142,8 @@ public class DatasetServiceIT extends AbstractRegardsServiceIT {
 
     @Before
     public void init() throws ModuleException {
-        tenantResolver.forceTenant(TENANT);
+        clean();
 
-        datasetRepository.deleteAll();
-        pluginConfRepository.deleteAll();
-
-        try {
-            // Remove the model if existing
-            modelService.getModelByName(MODEL_NAME);
-            modelService.deleteModel(MODEL_NAME);
-        } catch (ModuleException e) {
-            // There is nothing to do - we create the model later
-        }
         modelDataset = importModel(MODEL_FILE_NAME);
 
         dataset1 = new Dataset(modelDataset, TENANT, "labelDs1");
@@ -163,6 +155,7 @@ public class DatasetServiceIT extends AbstractRegardsServiceIT {
         dataset1.addQuotation("bonjour");
         dataset1.addQuotation("guten tag");
         dataset1.setScore(99);
+        dataset1.setGeometry(new Geometry.MultiPoint(new Double[][] { { 41.12, -71.34 }, { 42., -72. } }));
 
         dataset1.addProperty(AttributeBuilder.buildInteger("SIZE", (int) 12345));
         dataset1.addProperty(AttributeBuilder.buildDate("START_DATE", OffsetDateTime.now().minusHours(15)));
@@ -235,6 +228,26 @@ public class DatasetServiceIT extends AbstractRegardsServiceIT {
         } catch (final IOException e) {
             final String errorMessage = "Cannot import " + filename;
             throw new AssertionError(errorMessage);
+        }
+    }
+
+    @After
+    public void cleanAfter() {
+        clean();
+    }
+
+    private void clean() {
+        tenantResolver.forceTenant(TENANT);
+
+        datasetRepository.deleteAll();
+        pluginConfRepository.deleteAll();
+
+        try {
+            // Remove the model if existing
+            modelService.getModelByName(MODEL_NAME);
+            modelService.deleteModel(MODEL_NAME);
+        } catch (ModuleException e) {
+            // There is nothing to do - we create the model later
         }
     }
 
