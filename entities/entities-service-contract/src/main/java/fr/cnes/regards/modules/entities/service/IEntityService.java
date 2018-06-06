@@ -119,7 +119,7 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
     /**
      * Create entity without description file
      *
-     * @param pEntity entioty to create
+     * @param pEntity entity to create
      * @return updated entity from database
      * @throws ModuleException
      */

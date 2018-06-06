@@ -26,7 +26,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  *
  */
 @PluginInterface(
-        description = "plugins interface which are responsible for storing entities(Collection, Dataset, Document, Data)")
+        description = "Plugin interface which are responsible for storing entities (Collection, Dataset, Document)")
 public interface IStorageService {
 
     /**

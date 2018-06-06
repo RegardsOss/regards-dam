@@ -16,18 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.service;
+package fr.cnes.regards.modules.entities.service.plugins;
 
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.service.IStorageService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
+ * @author Christophe Mertz
  */
-@Plugin(description = "Plugin responsible for the local storing of entities as AIP ", id = "LocalStoragePlugin",
+@Plugin(description = "With plugins does not POST AIP entities to Storrage module", id = "NohupStoragePlugin",
         version = "1.0.0", author = "REGARDS Team", contact = "regards@c-s.fr", licence = "LGPLv3.0", owner = "CSSI",
         url = "https://github.com/RegardsOss")
-public class LocalStoragePlugin implements IStorageService {
+public class NohupStoragePlugin implements IStorageService {
 
     @Override
     public <T extends AbstractEntity> T storeAIP(T pToPersist) {
@@ -38,13 +40,11 @@ public class LocalStoragePlugin implements IStorageService {
 
     @Override
     public void deleteAIP(AbstractEntity pToDelete) {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public <T extends AbstractEntity> T updateAIP(T pToUpdate) {
-        // TODO Auto-generated method stub
         return pToUpdate;
     }
 
