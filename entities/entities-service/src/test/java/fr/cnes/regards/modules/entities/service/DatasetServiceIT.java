@@ -177,9 +177,9 @@ public class DatasetServiceIT extends AbstractRegardsServiceIT {
         dataset1.addProperty(AttributeBuilder.buildDoubleArray("DOUBLE_VALUES", 1.23, 0.232, 1.2323, 54.656565,
                                                                0.5656565656565));
 
-        dataset1.addProperty(AttributeBuilder.buildLongArray("LONG_VALUES", new Long(985432L), new Long(5656565465L),
-                                                             new Long(5698L), new Long(5522336689L), new Long(7748578L),
-                                                             new Long(22000014L), new Long(9850012565556565L)));
+//        dataset1.addProperty(AttributeBuilder.buildLongArray("LONG_VALUES", new Long(985432L), new Long(5656565465L),
+//                                                             new Long(5698L), new Long(5522336689L), new Long(7748578L),
+//                                                             new Long(22000014L), new Long(9850012565556565L)));
 
         //        PluginConfiguration datasource = pluginService.savePluginConfiguration(new PluginConfiguration(
         //                getPluginMetaData(), "a datasource pluginconf fake", PluginParametersFactory.build()
