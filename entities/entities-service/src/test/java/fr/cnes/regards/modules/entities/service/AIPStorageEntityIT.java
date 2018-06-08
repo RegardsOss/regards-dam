@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
@@ -62,7 +64,9 @@ import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
 import fr.cnes.regards.modules.entities.dao.IDocumentRepository;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.service.plugins.AipStoragePlugin;
@@ -192,7 +196,7 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     }
 
     @Test
-    public void testCreateDataset() throws ModuleException, IOException {
+    public void createDataset() throws ModuleException, IOException {
 
         dataset1 = dsService.create(dataset1);
         LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
@@ -204,7 +208,7 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     }
 
     @Test
-    public void testCreateDocument() throws ModuleException, IOException {
+    public void createDocument() throws ModuleException, IOException {
 
         document1 = docService.create(document1);
         LOGGER.info("===> create document (" + document1.getIpId() + ")");
@@ -221,9 +225,14 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     }
 
     @Test
-    public void testCreateCollection() throws ModuleException, IOException {
+    public void createCollection() throws ModuleException, IOException {
 
-        collection1 = colService.create(collection1);
+        collection1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "data", "test.md"));
+        final MockMultipartFile multiPartFile = new MockMultipartFile("description-markdown-format", "test.pdf",
+                MediaType.APPLICATION_PDF_VALUE, input);
+
+        collection1 = colService.create(collection1, multiPartFile);
         LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
 
         Assert.assertEquals(1, colRepository.count());
@@ -232,6 +241,25 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     private PluginMetaData getPluginMetaData() {
         return PluginUtils.createPluginMetaData(FakeDataSourcePlugin.class,
                                                 FakeDataSourcePlugin.class.getPackage().getName());
+    }
+
+    @Test
+    public void updateDataset() throws ModuleException, IOException {
+
+        dataset1 = dsService.create(dataset1);
+        LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
+
+        dataset1.addQuotation("a new quotation");
+        AbstractAttribute<?> attr2Delete = dataset1.getProperty("LONG_VALUE");
+        dataset1.removeProperty(attr2Delete);
+
+        Set<String> tags = dataset1.getTags();
+        tags.remove(tags.iterator().next());
+        dataset1.setTags(tags);
+
+        dsService.update(dataset1);
+
+        Assert.assertEquals(1, dsRepository.count());
     }
 
     /**
@@ -291,7 +319,7 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
         dataset1 = new Dataset(modelDataset, TENANT, "dataset one label");
         dataset1.setLicence("the licence");
         dataset1.setSipId("SipId1");
-        dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thusrday", "Friday", "Saturday"));
+        dataset1.setTags(Sets.newHashSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"));
         dataset1.addQuotation("hello");
         dataset1.addQuotation("coucou");
         dataset1.addQuotation("bonjour");
@@ -351,6 +379,25 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
         collection1 = new Collection(modelCollection, TENANT, "My collection label");
         collection1.setTags(Sets.newHashSet("COLLECTION-ONE", "COLLECTION-02", "COLLECTION-03"));
 
+        //        try {
+        //            URL baseStorageLocation = new URL("file", "",
+        //                    System.getProperty("user.dir") + "/src/test/resources/data/test.md");
+        //            DescriptionFile dFile = new DescriptionFile(baseStorageLocation.toString());
+        //            dFile.setType(MediaType.TEXT_MARKDOWN);
+        //            collection1.setDescriptionFile(dFile);
+        //            
+        //            
+        //            collection1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
+        //            final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "data", "test.md"));
+        //            final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
+        //            
+        //            
+        //            
+        //        } catch (IOException e) {
+        //            // TODO Auto-generated catch block
+        //            e.printStackTrace();
+        //        }
+        //
         collection1.addProperty(AttributeBuilder.buildDate("creation_date", OffsetDateTime.now().minusHours(452)));
     }
 

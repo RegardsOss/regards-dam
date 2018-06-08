@@ -18,29 +18,43 @@
  */
 package fr.cnes.regards.modules.entities.service.plugins;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 
+import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.utils.file.ChecksumUtils;
+import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.entities.service.IStorageService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
 import fr.cnes.regards.modules.storage.client.IAipClient;
 import fr.cnes.regards.modules.storage.domain.AIP;
 import fr.cnes.regards.modules.storage.domain.AIPBuilder;
 import fr.cnes.regards.modules.storage.domain.AIPCollection;
+import fr.cnes.regards.modules.storage.domain.DataFileDto;
 import fr.cnes.regards.modules.storage.domain.RejectedAip;
 
 /**
@@ -56,6 +70,21 @@ public class AipStoragePlugin implements IStorageService {
 
     @Autowired
     private IAipClient aipClient;
+
+    //    @Autowired
+    //    private IProjectsClient projectsClient;
+    //
+    //    /**
+    //     * {@link IRuntimeTenantResolver} instance
+    //     */
+    //    @Autowired
+    //    private IRuntimeTenantResolver runtimeTenantResolver;
+    //
+    //    @Value("${zuul.prefix}")
+    //    private String gatewayPrefix;
+    //
+    //    @Value("${spring.application.name}")
+    //    private String microserviceName;
 
     @Autowired
     private Gson gson;
@@ -85,7 +114,7 @@ public class AipStoragePlugin implements IStorageService {
      * Build an {@link AIPBuilder} for an entity that can be
      * a {@link EntityType#COLLECTION}, {@link EntityType#DATASET} or {@link EntityType#DOCUMENT}.
      * 
-     * @param entity the {@link AbstractEntity} for whihc to build an {@link AIPBuilder}
+     * @param entity the {@link AbstractEntity} for which to build an {@link AIPBuilder}
      * @return the created {@link AIPBuilder}
      */
     private <T extends AbstractEntity> AIPBuilder getBuilder(T entity) {
@@ -97,8 +126,9 @@ public class AipStoragePlugin implements IStorageService {
             extractDataset(builder, (Dataset) entity);
         } else if (entity instanceof Document) {
             extractDocument(builder, (Document) entity);
+        } else if (entity instanceof Collection) {
+            extractCollection(builder, (Collection) entity);
         }
-        // A collection is an entity without peculiarities 
 
         return builder;
     }
@@ -146,10 +176,67 @@ public class AipStoragePlugin implements IStorageService {
                 builder.getContentInformationBuilder().setSyntax(df.getMimeType().toString(), "", df.getMimeType());
                 builder.addContentInformation();
             } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         });
+
+    }
+
+    private <T extends AbstractDescEntity> void extractDescription(AIPBuilder builder, T entity) {
+        if (entity.getDescriptionFile() == null) {
+            return;
+        }
+
+        if (entity.getDescriptionFile().getUrl() != null) {
+            try {
+                URL fUrl = new URL(entity.getDescriptionFile().getUrl());
+
+                try (FileInputStream in = new FileInputStream(fUrl.getFile())) {
+                    String fCheckSum = ChecksumUtils.computeHexChecksum(in, "MD5");
+                    builder.getContentInformationBuilder().setDataObject(DataType.DOCUMENT, fUrl, "MD5", fCheckSum);
+                    builder.getContentInformationBuilder()
+                            .setSyntax(entity.getDescriptionFile().getType().getType().toString(), "",
+                                       entity.getDescriptionFile().getType());
+                    builder.addContentInformation();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                }
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        } else if (entity.getDescriptionFile().getContent() != null) {
+            try (ByteArrayInputStream in = new ByteArrayInputStream(entity.getDescriptionFile().getContent())) {
+                String fCheckSum = ChecksumUtils.computeHexChecksum(in, "MD5");
+                builder.getContentInformationBuilder()
+                        .setDataObject(DataType.DOCUMENT, new URL("https://to/be/calculated"), "MD5", fCheckSum);
+                builder.getContentInformationBuilder()
+                        .setSyntax(entity.getDescriptionFile().getType().getType().toString(), "",
+                                   entity.getDescriptionFile().getType());
+                builder.addContentInformation();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // error
+        }
+    }
+
+    /**
+     * Populates the {@link AIPBuilder} for a {@link Collection}
+     * @param builder the current {@link AIPBuilder}
+     * @param collection the current {@link Collection}
+     */
+    private void extractCollection(AIPBuilder builder, Collection collection) {
+        extractDescription(builder, collection);
     }
 
     /**
@@ -166,6 +253,7 @@ public class AipStoragePlugin implements IStorageService {
         if (dataSet.getQuotations() != null && dataSet.getQuotations().size() > 0) {
             builder.addDescriptiveInformation("quotations", gson.toJson(dataSet.getQuotations()));
         }
+        extractDescription(builder, dataSet);
     }
 
     @Override
@@ -257,5 +345,31 @@ public class AipStoragePlugin implements IStorageService {
         ////                throw new JobRuntimeException(message);
         //        }
     }
+
+    //    /**
+    //     * Handles any changes that should occurred between private rs-storage information and how the rest of the world
+    //     * should see them.
+    //     * For example, change URL from file:// to http://[project_host]/[gateway prefix]/rs-storage/...
+    //     */
+    //    private void toPublicDataFile(DataFileDto dataFile, AIP owningAip) throws MalformedURLException {
+    //        // Lets reconstruct the public url of rs-storage
+    //        // First lets get the public hostname from rs-admin-instance
+    //        FeignSecurityManager.asSystem();
+    //        String projectHost = projectsClient.retrieveProject(runtimeTenantResolver.getTenant()).getBody().getContent()
+    //                .getHost();
+    //        FeignSecurityManager.reset();
+    //        // now lets add it the gateway prefix and the microservice name and the endpoint path to it
+    //        StringBuilder sb = new StringBuilder();
+    //        sb.append(projectHost);
+    //        sb.append("/");
+    //        sb.append(gatewayPrefix);
+    //        sb.append("/");
+    //        sb.append(microserviceName);
+    //        sb.append(AIP_PATH);
+    //        sb.append(DOWNLOAD_AIP_FILE.replaceAll("\\{ip_id\\}", owningAip.getId().toString())
+    //                .replaceAll("\\{checksum\\}", dataFile.getChecksum()));
+    //        URL downloadUrl = new URL(sb.toString());
+    //        dataFile.setUrl(downloadUrl);
+    //    }
 
 }
