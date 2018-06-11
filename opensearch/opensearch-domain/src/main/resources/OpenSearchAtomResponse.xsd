@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Taken from https://api.echo.nasa.gov/cwic-smart/assets/OpenSearch.xsd minus ATOM import. -->
+<xs:schema xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://a9.com/-/spec/opensearch/1.1/" elementFormDefault="qualified">
+
+	<xs:annotation>
+		<xs:documentation>Based on http://www.opensearch.org/Specifications/OpenSearch/1.1</xs:documentation>
+	</xs:annotation>
+	
+	<xs:complexType name="Author_Type">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="Link_Type">
+		<xs:attribute name="rel"/>
+		<xs:attribute name="href"/>
+		<xs:attribute name="type"/>
+	</xs:complexType>
+	
+	<xs:complexType name="Service_Type">
+		<xs:attribute name="title"/>
+		<xs:attribute name="url"/>
+	</xs:complexType>
+	
+	<xs:complexType name="Content_Type">
+		<xs:sequence>
+			<xs:any minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="Entry_Type">
+		<xs:sequence>
+			<xs:element name="title" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="id" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="updated" type="xs:date" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="quicklook" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="thumbnail" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="link" type="Link_Type" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="service" type="Service_Type" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="content" type="Content_Type" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:element name="feed">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="title" type="xs:string" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="author" type="Author_Type" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="subtitle" type="xs:string" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="updated" type="xs:date" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="id" type="xs:string" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="lang" type="xs:string" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="totalResults" type="xs:int" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="startIndex" type="xs:int" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="itemsPerPage" type="xs:int" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="link" type="Link_Type" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="entry" type="Entry_Type" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+        </xs:complexType>
+	</xs:element>
+</xs:schema>

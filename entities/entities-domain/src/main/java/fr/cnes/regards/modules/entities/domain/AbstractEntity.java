@@ -18,6 +18,12 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -39,11 +45,6 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -53,7 +54,8 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.gson.annotations.JsonAdapter;
+
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -64,8 +66,6 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.oais.urn.converters.UrnConverter;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
-import fr.cnes.regards.modules.entities.domain.converter.GeometryAdapter;
-import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -174,8 +174,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb")
-    @JsonAdapter(value = GeometryAdapter.class)
-    protected Geometry<?> geometry;
+    protected IGeometry geometry;
 
     protected AbstractEntity(Model model, UniformResourceName ipId, String label) { // NOSONAR
         this.model = model;
@@ -355,11 +354,11 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         this.groups = groups;
     }
 
-    public Geometry<?> getGeometry() {
+    public IGeometry getGeometry() {
         return geometry;
     }
 
-    public void setGeometry(Geometry<?> geometry) {
+    public void setGeometry(IGeometry geometry) {
         this.geometry = geometry;
     }
 
