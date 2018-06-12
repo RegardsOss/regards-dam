@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Taken from https://api.echo.nasa.gov/cwic-smart/assets/OpenSearch.xsd minus ATOM import. -->
 <xs:schema xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			xmlns:parameter="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/"
            targetNamespace="http://a9.com/-/spec/opensearch/1.1/" elementFormDefault="qualified">
+           
+    <xs:import schemaLocation="OpenSearchParameterExtension.xsd" namespace="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/"/>
 
 	<xs:annotation>
 		<xs:documentation>Based on http://www.opensearch.org/Specifications/OpenSearch/1.1</xs:documentation>
@@ -116,7 +119,8 @@
 					Allows for non-deterministic elements (such as OpenSearch Parameter extension elements) to be added in the URL before the component schemas are available.  This also allows the addition of custom schema elements without the need tot have the custom schemas available.
 				</xs:documentation>
 			</xs:annotation>
-			<xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+			<xs:element type="parameter:OpenSearchParameter" name="parameter" minOccurs="0" maxOccurs="unbounded"/>
+			<!-- <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/> -->
 		</xs:sequence>
 		<xs:attribute name="template" use="required">
 			<xs:annotation>
