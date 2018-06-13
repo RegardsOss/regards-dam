@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
 import fr.cnes.regards.framework.oais.urn.EntityType;
@@ -31,7 +32,6 @@ import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
-import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -76,10 +76,10 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
 
     protected Set<String> groups = new HashSet<>();
 
-    //    protected Set<AbstractAttribute<?>> properties = new HashSet<>();
+    // protected Set<AbstractAttribute<?>> properties = new HashSet<>();
     protected Object properties = new Object();
 
-    protected Geometry<?> geometry;
+    protected IGeometry geometry;
 
     /**
      * Default constructor
@@ -342,14 +342,14 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
     /**
      * @return the geometry
      */
-    public Geometry<?> getGeometry() {
+    public IGeometry getGeometry() {
         return geometry;
     }
 
     /**
      * @param pGeometry the geometry to set
      */
-    public void setGeometry(Geometry<?> pGeometry) {
+    public void setGeometry(IGeometry pGeometry) {
         geometry = pGeometry;
     }
 
@@ -358,7 +358,9 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
         return ipId.toString();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see fr.cnes.regards.modules.indexer.domain.IIndexable#getType()
      */
     @Override
