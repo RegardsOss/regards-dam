@@ -110,7 +110,6 @@ public class EntityIndexerService implements IEntityIndexerService {
     @PersistenceContext
     private EntityManager em;
 
-
     @Autowired
     private DataObjectService dataObjectService;
 
@@ -275,8 +274,8 @@ public class EntityIndexerService implements IEntityIndexerService {
             }
         };
         // Apply updateTag function to all tagging objects
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
-                                                                      DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenant);
         esRepos.searchAll(searchKey, updateDataObject, taggingObjectsCrit);
         // Bulk save remaining objects to save
         if (!toSaveObjects.isEmpty()) {
@@ -296,8 +295,8 @@ public class EntityIndexerService implements IEntityIndexerService {
         sendMessage(String.format("Updating dataset %s indexation and all its associated data objects...",
                                   dataset.getLabel()), dsiId);
         sendMessage(String.format("Searching for dataset %s associated data objects...", dataset.getLabel()), dsiId);
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATA.toString(),
-                                                                      DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenant);
         // A set used to accumulate data objects to save into ES
         HashSet<DataObject> toSaveObjects = new HashSet<>();
         ExecutorService executor = Executors.newFixedThreadPool(1);

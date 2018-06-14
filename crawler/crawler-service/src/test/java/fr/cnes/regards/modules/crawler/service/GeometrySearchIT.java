@@ -42,8 +42,11 @@ public class GeometrySearchIT {
 
     private static final String TENANT = "GEOM";
 
-    private static final SimpleSearchKey<Collection> SEARCH_KEY = Searches.onSingleEntity(TENANT,
-                                                                                          EntityType.COLLECTION);
+    private static final SimpleSearchKey<Collection> SEARCH_KEY = Searches.onSingleEntity(EntityType.COLLECTION);
+
+    static {
+        SEARCH_KEY.setSearchIndex(TENANT);
+    }
 
     @PostConstruct
     public void setUp() {

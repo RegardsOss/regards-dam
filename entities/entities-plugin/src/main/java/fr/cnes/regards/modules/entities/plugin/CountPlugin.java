@@ -87,8 +87,8 @@ public class CountPlugin implements IComputedAttribute<Dataset, Long> {
     @Override
     public void compute(Dataset dataset) {
         // create the search
-        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(tenantResolver.getTenant(),
-                                                                      EntityType.DATA.toString(), DataObject.class);
+        SimpleSearchKey<DataObject> searchKey = new SimpleSearchKey<>(EntityType.DATA.toString(), DataObject.class);
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         count = esRepo.count(searchKey, dataset.getSubsettingClause());
     }
 

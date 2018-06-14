@@ -122,8 +122,8 @@ public class CrawlerService extends AbstractCrawlerService<NotDatasetEntityEvent
         // In case Dataset associated with datasourceId already exists (or had been created between datasource creation
         // and its ingestion), we must search for it and do as it has been updated (to update all associated data
         // objects which have a lastUpdate date >= now)
-        SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(tenant, EntityType.DATASET.toString(),
-                                                                   Dataset.class);
+        SimpleSearchKey<Dataset> searchKey = new SimpleSearchKey<>(EntityType.DATASET.toString(), Dataset.class);
+        searchKey.setSearchIndex(tenant);
         Set<Dataset> datasetsToUpdate = new HashSet<>();
         esRepos.searchAll(searchKey, datasetsToUpdate::add, ICriterion.eq("plgConfDataSource.id", datasourceId));
         if (!datasetsToUpdate.isEmpty()) {

@@ -32,7 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -53,6 +53,9 @@ public class SearchService implements ISearchService {
 
     @Autowired
     private IEsRepository repository;
+
+    @Autowired
+    private IRuntimeTenantResolver tenantResolver;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -80,16 +83,17 @@ public class SearchService implements ISearchService {
     @Override
     public <T extends IIndexable> FacetPage<T> search(SimpleSearchKey<T> searchKey, Pageable pageRequest,
             ICriterion criterion, Map<String, FacetType> facetsMap) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         return repository.search(searchKey, pageRequest, criterion, facetsMap);
     }
 
     @Override
     public <S, T extends IIndexable> FacetPage<T> search(JoinEntitySearchKey<S, T> searchKey, Pageable pageRequest,
             ICriterion criterion, Predicate<T> searchResultFilter) {
-
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         // Create a new SearchKey to search on asked type but to only retrieve tags of found results
-        SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchIndex(), searchKey.getSearchTypeMap(),
-                String[].class);
+        SearchKey<S, String[]> tagSearchKey = new SearchKey<>(searchKey.getSearchTypeMap(), String[].class);
+        tagSearchKey.setSearchIndex(searchKey.getSearchIndex());
         // Predicate to filter each tag : it must be a valid URN and this URN must concern wanted result type
         Predicate<String> askedTypePredicate = tag -> UniformResourceName.isValidUrn(tag) && (Searches.TYPE_MAP
                 .get(UniformResourceName.fromString(tag).getEntityType()) == searchKey.getResultClass());
@@ -112,15 +116,14 @@ public class SearchService implements ISearchService {
     @Override
     public <T> Page<T> multiFieldsSearch(SearchKey<T, T> searchKey, Pageable pageRequest, Object value,
             String... fields) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         return repository.multiFieldsSearch(searchKey, pageRequest, value, fields);
     }
 
     @Override
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion criterion, String discriminantProperty, List<DataType> dataTypes) {
-
-        String[] fileTypes = dataTypes.toArray(new String[dataTypes.size()]);
-
+            ICriterion criterion, String discriminantProperty, String... fileTypes) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         DocFilesSummary summary = new DocFilesSummary();
         // Adjust criterion to search for internal data
         ICriterion internalCrit = ICriterion.and(criterion.copy(), ICriterion.eq("internal", true));
@@ -138,6 +141,7 @@ public class SearchService implements ISearchService {
     @Override
     public <T extends IIndexable> List<String> searchUniqueTopValues(SearchKey<T, T> searchKey, ICriterion criterion,
             String attName, int maxCount) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         SortedSet<String> values = repository.uniqueAlphaSorted(searchKey, criterion, attName, maxCount);
         return values.stream().limit(maxCount).collect(Collectors.toList());
     }

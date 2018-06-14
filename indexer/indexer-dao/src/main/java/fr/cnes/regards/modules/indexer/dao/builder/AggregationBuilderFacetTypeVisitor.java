@@ -102,7 +102,14 @@ public class AggregationBuilderFacetTypeVisitor implements IFacetTypeVisitor<Agg
      */
     @Override
     public AggregationBuilder visitRangeDateFacet(Object... args) {
-        return visitRangeFacet(args, UnaryOperator.identity());
+        // In some cases, ElasticSearch computes percentiles date values strangely. For example, in a case when 80%
+        // of dates are same, it could respond 9 times 1525443751176 (=> "2018-05-04T14:22:31.176Z") and one
+        // time a slightly different value as 1525443751176.0002 (=> "2018-05-04T14:22:31.176Z") which is not a problem
+        // or WORST : 1525443751175.9998 (=> "2018-05-04T14:22:31.175Z") which IS a problem because when commparing
+        // dates, they are considered as different and so a Range is intended to be created as
+        // ["2018-05-04T14:22:31.176Z".."2018-05-04T14:22:31.175Z") which throw an invalid range (up < bottom)
+        // To avoid this, scalingFct rounds double value into long then cast it into double
+        return visitRangeFacet(args, v -> (double)Math.round(v));
     }
 
     private AggregationBuilder visitRangeFacet(Object[] args, UnaryOperator<Double> scalingFct) {

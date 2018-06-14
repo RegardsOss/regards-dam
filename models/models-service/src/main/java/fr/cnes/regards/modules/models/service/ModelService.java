@@ -640,16 +640,19 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         List<PluginConfiguration> computationConfs = pluginService
                 .getPluginConfigurationsByType(IComputedAttribute.class);
         for (PluginConfiguration conf : computationConfs) {
-            try {
-                Class<?> computationPlugin = Class.forName(conf.getPluginClassName());
-                ComputationPlugin computationPluginAnnotation = computationPlugin.getAnnotation(ComputationPlugin.class);
-                typeConfMappings.put(computationPluginAnnotation.supportedType(), conf);
-            } catch (ClassNotFoundException e) {
-                // This is only possible in case a plugin is still configured but the implementation is no longer available
-                LOGGER.warn(
-                        "Plugin class with name {} couldn't be found. Please check your available plugins or delete the configuration using it.",
-                        conf.getPluginClassName());
-                LOGGER.debug(e.getMessage(), e);
+            //remove inactive configuration
+            if(conf.isActive()) {
+                try {
+                    Class<?> computationPlugin = Class.forName(conf.getPluginClassName());
+                    ComputationPlugin computationPluginAnnotation = computationPlugin.getAnnotation(ComputationPlugin.class);
+                    typeConfMappings.put(computationPluginAnnotation.supportedType(), conf);
+                } catch (ClassNotFoundException e) {
+                    // This is only possible in case a plugin is still configured but the implementation is no longer available
+                    LOGGER.warn(
+                            "Plugin class with name {} couldn't be found. Please check your available plugins or delete the configuration using it.",
+                            conf.getPluginClassName());
+                    LOGGER.debug(e.getMessage(), e);
+                }
             }
         }
 

@@ -3,7 +3,7 @@
 	xsi:noNamespaceSchemaLocation="../../../../models-domain/src/main/resources/model_V1.0.xsd">
 	<name>sample</name>
 	<description>Sample mission</description>
-	<type>COLLECTION</type>
+	<type>DATASET</type>
 	<attribute alterable="false" optional="true">
 		<label>forTests</label>
 		<name>att_string</name>
