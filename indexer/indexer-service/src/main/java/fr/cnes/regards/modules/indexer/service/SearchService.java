@@ -156,6 +156,7 @@ public class SearchService implements ISearchService {
     @Override
     public <T extends IIndexable> Aggregations getAggregations(SimpleSearchKey<T> searchKey, ICriterion criterion,
             Collection<QueryableAttribute> attributes) {
+        searchKey.setSearchIndex(tenantResolver.getTenant());
         return repository.getAggregations(searchKey, criterion, attributes);
     }
 }
