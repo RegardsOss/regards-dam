@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.indexer.dao.FacetPage;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
@@ -39,7 +40,8 @@ import fr.cnes.regards.modules.indexer.domain.facet.FacetType;
 import fr.cnes.regards.modules.indexer.domain.summary.DocFilesSummary;
 
 /**
- * Elasticsearch search service. This service contains all search and get methods. For other methods, check crawler-service and IndexerService class.
+ * Elasticsearch search service. This service contains all search and get methods. For other methods, check
+ * crawler-service and IndexerService class.
  * @author oroussel
  */
 public interface ISearchService {
@@ -64,7 +66,8 @@ public interface ISearchService {
 
     /**
      * Search documents as usual BUT return joined entity whom type is specified into searchKey
-     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
+     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result
+     *            class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
      * @param <S> entity class on which request is done
@@ -78,7 +81,8 @@ public interface ISearchService {
 
     /**
      * Search documents as usual BUT return joined entity whom type is specified into searchKey
-     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result class must be joined entity class </b>
+     * @param searchKey the search key. <b>Be careful, the search type must be the type concerned by criterion, result
+     *            class must be joined entity class </b>
      * @param pageRequest pagination information ({@link PageRequest}
      * @param criterion search criterion on document
      * @param searchResultFilter a result filter to be used before result pagination. Can be null.
@@ -95,7 +99,7 @@ public interface ISearchService {
      * @param pageRequest page request (use {@link Page#nextPageable()} method for example)
      * @param pValue value to search
      * @param fields fields to search on (use '.' for inner objects, ie "attributes.tags"). Wildcards '*' can be used
-     * too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
+     *            too (ie attributes.dataRange.*). <b>Fields types must be consistent with given value type</b>
      * @param <T> document type
      * @return specified result page
      */
@@ -126,7 +130,7 @@ public interface ISearchService {
      * @return the compmuted summary
      */
     <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion crit, String discriminantProperty, String... fileTypes);
+            ICriterion crit, String discriminantProperty, List<DataType> dataTypes);
 
     /**
      * Search for alphabeticly sorted top maxCount values of given attribute following given request
