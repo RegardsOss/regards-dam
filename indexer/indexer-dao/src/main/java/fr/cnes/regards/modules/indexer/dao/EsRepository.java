@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -125,6 +126,7 @@ import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.SearchKey;
+import fr.cnes.regards.modules.indexer.domain.aggregation.QueryableAttribute;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.indexer.domain.facet.BooleanFacet;
 import fr.cnes.regards.modules.indexer.domain.facet.DateFacet;
@@ -169,6 +171,11 @@ public class EsRepository implements IEsRepository {
     private static final QueryBuilderCriterionVisitor CRITERION_VISITOR = new QueryBuilderCriterionVisitor();
 
     public static final String REMINDER_IDX = "reminder";
+
+    /**
+     * Suffix for text attributes
+     */
+    private static final String KEYWORD_SUFFIX = ".keyword";
 
     /**
      * Single scheduled executor service to clean reminder tasks once expiration date is reached
@@ -468,7 +475,7 @@ public class EsRepository implements IEsRepository {
             // Only first type is chosen, this case is too complex to permit a multi-type search
             // Add ".keyword" if attribute mapping type is of type text
             String attribute = isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], attributeSource)
-                    ? attributeSource + ".keyword"
+                    ? attributeSource + KEYWORD_SUFFIX
                     : attributeSource;
             return this.unique(searchKey, pCrit, attribute);
         } catch (IOException e) {
@@ -792,6 +799,31 @@ public class EsRepository implements IEsRepository {
         }
     }
 
+    @Override
+    public <T extends IIndexable> Aggregations getAggregations(SearchKey<?, T> searchKey, ICriterion criterion,
+            Collection<QueryableAttribute> attributes) {
+        try {
+            SearchSourceBuilder builder = createSourceBuilder4Agg(searchKey, criterion);
+            attributes.stream().filter(qa -> qa.isTextAttribute() && (qa.getTermsLimit() > 0))
+                    .forEach(a -> builder.aggregation(AggregationBuilders.terms(a.getAttributeName())
+                            .field(a.getAttributeName() + KEYWORD_SUFFIX).size(a.getTermsLimit())));
+            attributes.stream().filter(qa -> !qa.isTextAttribute()).forEach(qa -> builder
+                    .aggregation(AggregationBuilders.stats(qa.getAttributeName()).field(qa.getAttributeName())));
+            SearchRequest request = new SearchRequest(searchKey.getSearchIndex()).types(searchKey.getSearchTypes())
+                    .source(builder);
+            // Launch the request
+            SearchResponse response = client.search(request);
+            //Update attributes with aggregation if any
+            for (Aggregation agg : response.getAggregations()) {
+                attributes.stream().filter(a -> agg.getName().equals(a.getAttributeName())).findFirst()
+                        .ifPresent(a -> a.setAggregation(agg));
+            }
+            return response.getAggregations();
+        } catch (IOException e) {
+            throw new RsRuntimeException(e);
+        }
+    }
+
     /**
      * Retrieve sorted set of given attribute unique string values following request
      * @param searchKey search key
@@ -1017,7 +1049,7 @@ public class EsRepository implements IEsRepository {
                 for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
                     String attribute = sortEntry.getKey();
                     if (isTextMapping(index, map, attribute)) {
-                        updatedAscSortMap.put(attribute + ".keyword", sortEntry.getValue());
+                        updatedAscSortMap.put(attribute + KEYWORD_SUFFIX, sortEntry.getValue());
                     } else {
                         updatedAscSortMap.put(attribute, sortEntry.getValue());
                     }
@@ -1339,7 +1371,7 @@ public class EsRepository implements IEsRepository {
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
         if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
-            termsFieldProperty += ".keyword";
+            termsFieldProperty += KEYWORD_SUFFIX;
         }
         // Discriminant distribution aggregator
         TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
@@ -1411,12 +1443,12 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // file count
             builder.aggregation(AggregationBuilders.count("total_" + fileType + "_files_count")
-                    .field("files." + fileType + ".uri.keyword")); // Only count files with a size
+                    .field("files." + fileType + ".uri" + KEYWORD_SUFFIX)); // Only count files with a size
         }
         // Then bucket aggregation by discriminants
         String termsFieldProperty = discriminantProperty;
         if (isTextMapping(searchKey.getSearchIndex(), searchKey.getSearchTypes()[0], discriminantProperty)) {
-            termsFieldProperty += ".keyword";
+            termsFieldProperty += KEYWORD_SUFFIX;
         }
         // Discriminant distribution aggregator
         TermsAggregationBuilder termsAggBuilder = AggregationBuilders.terms(discriminantProperty)
@@ -1425,7 +1457,7 @@ public class EsRepository implements IEsRepository {
         for (String fileType : fileTypes) {
             // files count
             termsAggBuilder.subAggregation(AggregationBuilders.count(fileType + "_files_count")
-                    .field("files." + fileType + ".uri.keyword"));
+                    .field("files." + fileType + ".uri" + KEYWORD_SUFFIX));
         }
         builder.aggregation(termsAggBuilder);
     }
