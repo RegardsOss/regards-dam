@@ -354,8 +354,9 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
         this.groups = groups;
     }
 
-    public IGeometry getGeometry() {
-        return geometry;
+    @SuppressWarnings("unchecked")
+    public <T extends IGeometry> T getGeometry() {
+        return (T) geometry;
     }
 
     public void setGeometry(IGeometry geometry) {
