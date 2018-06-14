@@ -33,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -122,7 +123,10 @@ public class SearchService implements ISearchService {
 
     @Override
     public <T extends IIndexable & IDocFiles> DocFilesSummary computeDataFilesSummary(SearchKey<T, T> searchKey,
-            ICriterion criterion, String discriminantProperty, String... fileTypes) {
+            ICriterion criterion, String discriminantProperty, List<DataType> dataTypes) {
+
+        String[] fileTypes = dataTypes.toArray(new String[dataTypes.size()]);
+
         searchKey.setSearchIndex(tenantResolver.getTenant());
         DocFilesSummary summary = new DocFilesSummary();
         // Adjust criterion to search for internal data
