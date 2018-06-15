@@ -18,12 +18,20 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -39,11 +47,6 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -54,6 +57,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.gson.annotations.JsonAdapter;
+
 import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.IIdentifiable;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
@@ -136,6 +140,13 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     @Column
     protected String sipId;
+
+    /**
+     * State determined through different storage steps for the AIP
+     */
+    @GsonIgnore
+    @Enumerated(EnumType.STRING)
+    private EntityAipState stateAip;
 
     /**
      * Input tags: a tag is either an URN to a collection (ie a direct access collection) or a word without business
@@ -235,6 +246,14 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      */
     public void setIpId(UniformResourceName ipId) {
         this.ipId = ipId;
+    }
+
+    public EntityAipState getStateAip() {
+        return stateAip;
+    }
+
+    public void setStateAip(EntityAipState stateAip) {
+        this.stateAip = stateAip;
     }
 
     public Set<String> getTags() {

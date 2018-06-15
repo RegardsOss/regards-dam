@@ -20,43 +20,36 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Set;
-
-import javax.validation.Valid;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
 
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.dao.IPluginConfigurationRepository;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginMetaData;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.test.integration.AbstractRegardsServiceIT;
+import fr.cnes.regards.framework.test.integration.AbstractRegardsTransactionalIT;
 import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
@@ -66,16 +59,16 @@ import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.domain.geometry.Geometry;
 import fr.cnes.regards.modules.entities.service.plugins.AipStoragePlugin;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelService;
+import fr.cnes.regards.modules.project.client.rest.IProjectsClient;
+import fr.cnes.regards.modules.project.domain.Project;
 import fr.cnes.regards.modules.storage.client.IAipClient;
-import fr.cnes.regards.modules.storage.domain.AIP;
-import fr.cnes.regards.modules.storage.domain.AIPCollection;
-import fr.cnes.regards.modules.storage.domain.RejectedAip;
 
 /**
  * This test IT allows to test the AIP storage for the entities {@link Dataset}, {@link Document} and {@link Collection}.
@@ -83,10 +76,14 @@ import fr.cnes.regards.modules.storage.domain.RejectedAip;
  *  
  * @author Christophe Mertz
  */
+@ContextConfiguration(classes = AipClientConfigurationMock.class)
 @TestPropertySource(locations = { "classpath:test-with-storage.properties" })
-public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
+@ActiveProfiles({ "testAmqp" })
+public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityIT.class);
+    
+    private static final int SLEEP_TIME = 1500;
 
     private static final String TENANT = DEFAULT_TENANT;
 
@@ -114,9 +111,6 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     @Autowired
     private ICollectionService colService;
 
-    //    @Autowired
-    //    private IPluginService pluginService;
-
     @Autowired
     private IDatasetRepository dsRepository;
 
@@ -131,6 +125,9 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
 
     @Autowired
     private IPluginConfigurationRepository pluginConfRepository;
+
+    @Autowired
+    private IProjectsClient projectsClient;
 
     private Model modelDataset;
 
@@ -150,65 +147,43 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     @Autowired
     private IRuntimeTenantResolver tenantResolver;
 
-    @Configuration
-    static class AipClientConfigurationMock {
-
-        @Autowired
-        private Gson gson;
-
-        @Bean
-        public IAipClient aipClient() {
-            AipClientProxy aipClientProxy = new AipClientProxy();
-            InvocationHandler handler = (proxy, method, args) -> {
-                for (Method aipClientProxyMethod : aipClientProxy.getClass().getMethods()) {
-                    if (aipClientProxyMethod.getName().equals(method.getName())) {
-                        return aipClientProxyMethod.invoke(aipClientProxy, args);
-                    }
-                }
-                return null;
-            };
-            return (IAipClient) Proxy.newProxyInstance(IAipClient.class.getClassLoader(),
-                                                       new Class<?>[] { IAipClient.class }, handler);
-        }
-
-        private class AipClientProxy {
-
-            @SuppressWarnings("unused")
-            public ResponseEntity<List<RejectedAip>> store(@RequestBody AIPCollection aips) {
-
-                String gsonString = gson.toJson(aips.getFeatures().get(0));
-                LOGGER.debug("==========>  CREATION ===> " + aips.getFeatures().get(0).getId() + " ============="
-                        + gsonString);
-
-                return new ResponseEntity<>(HttpStatus.CREATED);
-            }
-
-            @SuppressWarnings("unused")
-            public ResponseEntity<AIP> updateAip(@PathVariable(name = "ip_id") String ipId,
-                    @RequestBody @Valid AIP updated) {
-
-                String gsonString = gson.toJson(updated);
-                LOGGER.debug("==========>  UPDATE   ===> " + ipId + " =============" + gsonString);
-                return new ResponseEntity<>(updated, HttpStatus.OK);
-            }
-
-        }
-    }
-
     @Test
-    public void createDataset() throws ModuleException, IOException {
+    public void createDataset() throws ModuleException, IOException, InterruptedException {
 
         dataset1 = dsService.create(dataset1);
         LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
 
-        //        dataset2 = dsService.create(dataset2);
-        //        LOGGER.info("===> create dataset1 (" + dataset2.getIpId() + ")");
-
         Assert.assertEquals(1, dsRepository.count());
+
+//        Dataset dsFind = dsRepository.findOne(dataset1.getId());
+//        Assert.assertEquals(EntityAipState.AIP_STORE_PENDING, dsFind.getStateAip());
+
+        Thread.sleep(SLEEP_TIME);
+
+        Dataset dsFind = dsRepository.findOne(dataset1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, dsFind.getStateAip());
     }
 
     @Test
-    public void createDocument() throws ModuleException, IOException {
+    public void createDatasetWithDescription() throws ModuleException, IOException, InterruptedException {
+        dataset1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.TEXT_MARKDOWN));
+        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "data", "test.md"));
+        final MockMultipartFile multiPartFile = new MockMultipartFile("description-markdown-format", "test.md",
+                MediaType.APPLICATION_PDF_VALUE, input);
+
+        dataset1 = dsService.create(dataset1, multiPartFile);
+        LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
+
+        Assert.assertEquals(1, dsRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
+
+        Dataset dsFind = dsRepository.findOne(dataset1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, dsFind.getStateAip());
+    }
+
+    @Test
+    public void createDocument() throws ModuleException, IOException, InterruptedException {
 
         document1 = docService.create(document1);
         LOGGER.info("===> create document (" + document1.getIpId() + ")");
@@ -222,20 +197,58 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
         document1 = docService.addFiles(document1.getId(), multipartFiles, fileLsUriTemplate);
 
         Assert.assertEquals(1, docRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
+
+        Document docFind = docRepository.findOne(document1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, docFind.getStateAip());
     }
 
     @Test
-    public void createCollection() throws ModuleException, IOException {
-
-        collection1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
+    public void createCollection() throws ModuleException, IOException, InterruptedException {
+        collection1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.TEXT_MARKDOWN));
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "data", "test.md"));
-        final MockMultipartFile multiPartFile = new MockMultipartFile("description-markdown-format", "test.pdf",
+        final MockMultipartFile multiPartFile = new MockMultipartFile("description-markdown-format", "test.md",
                 MediaType.APPLICATION_PDF_VALUE, input);
 
         collection1 = colService.create(collection1, multiPartFile);
         LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
 
         Assert.assertEquals(1, colRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
+
+        Collection colFind = colRepository.findOne(collection1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, colFind.getStateAip());
+    }
+
+    @Test
+    public void createCollectionWithDescriptionAsUrl() throws ModuleException, IOException, InterruptedException {
+        collection1.setDescriptionFile(new DescriptionFile(
+                "https://docs.spring.io/spring/docs/current/spring-framework-reference/index.html"));
+        collection1 = colService.create(collection1);
+        LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
+
+        Assert.assertEquals(1, colRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
+
+        Collection colFind = colRepository.findOne(collection1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, colFind.getStateAip());
+    }
+
+    @Test
+    public void createCollectionWithoutDescription() throws ModuleException, IOException, InterruptedException {
+
+        collection1 = colService.create(collection1);
+        LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
+
+        Assert.assertEquals(1, colRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
+
+        Collection colFind = colRepository.findOne(collection1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, colFind.getStateAip());
     }
 
     private PluginMetaData getPluginMetaData() {
@@ -244,7 +257,7 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
     }
 
     @Test
-    public void updateDataset() throws ModuleException, IOException {
+    public void updateDataset() throws ModuleException, IOException, InterruptedException {
 
         dataset1 = dsService.create(dataset1);
         LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
@@ -260,11 +273,16 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
         dsService.update(dataset1);
 
         Assert.assertEquals(1, dsRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
+
+        Dataset dsFind = dsRepository.findOne(dataset1.getId());
+        Assert.assertEquals(EntityAipState.AIP_STORE_OK, dsFind.getStateAip());
     }
 
     /**
      * Import model definition file from resources directory
-     * @param filename filename
+     * @param filename the XML file containing the model to import
      * @return the created model attributes
      * @throws ModuleException if error occurs
      */
@@ -280,7 +298,13 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
 
     @Before
     public void init() throws ModuleException {
-        cleanRepository();
+        Project project = new Project();
+        project.setHost("http://regardsHost");
+
+        Mockito.when(projectsClient.retrieveProject(Mockito.anyString()))
+                .thenReturn(new ResponseEntity<>(new Resource<>(project), HttpStatus.OK));
+
+        cleanUp();
 
         initDataset();
 
@@ -291,10 +315,10 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
 
     @After
     public void cleanAfter() {
-        cleanRepository();
+        cleanUp();
     }
 
-    private void cleanRepository() {
+    private void cleanUp() {
         tenantResolver.forceTenant(TENANT);
 
         dsRepository.deleteAll();
@@ -379,26 +403,6 @@ public class AIPStorageEntityIT extends AbstractRegardsServiceIT {
         collection1 = new Collection(modelCollection, TENANT, "My collection label");
         collection1.setTags(Sets.newHashSet("COLLECTION-ONE", "COLLECTION-02", "COLLECTION-03"));
 
-        //        try {
-        //            URL baseStorageLocation = new URL("file", "",
-        //                    System.getProperty("user.dir") + "/src/test/resources/data/test.md");
-        //            DescriptionFile dFile = new DescriptionFile(baseStorageLocation.toString());
-        //            dFile.setType(MediaType.TEXT_MARKDOWN);
-        //            collection1.setDescriptionFile(dFile);
-        //            
-        //            
-        //            collection1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
-        //            final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "data", "test.md"));
-        //            final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        //            
-        //            
-        //            
-        //        } catch (IOException e) {
-        //            // TODO Auto-generated catch block
-        //            e.printStackTrace();
-        //        }
-        //
         collection1.addProperty(AttributeBuilder.buildDate("creation_date", OffsetDateTime.now().minusHours(452)));
     }
-
 }

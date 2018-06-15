@@ -1,0 +1,1 @@
+alter table t_entity add column stateAip varchar(255);
