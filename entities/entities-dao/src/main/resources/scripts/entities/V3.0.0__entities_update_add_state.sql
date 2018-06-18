@@ -1,1 +1,1 @@
-alter table t_entity add column stateAip varchar(255);
+alter table t_entity add column aip_state varchar(32);
