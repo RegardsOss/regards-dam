@@ -335,9 +335,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         this.manageGroups(entity, updatedIpIds);
-        
+
         entity = storeAipStorage(entity);
-        
+
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
 
@@ -576,11 +576,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         // Update entity, checks already assures us that everything which is updated can be updated so we can just put
         // pEntity into the DB.
         entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
-        
+
         entity = updateAipStorage(entity);
-        
+
         U updated = repository.save(entity);
-        
+
         updatedIpIds.add(updated.getIpId());
         // Compute tags to remove and tags to add
         if (!oldLinks.equals(newLinks) || !oldGroups.equals(newGroups)) {
@@ -610,6 +610,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         // AMQP event publishing
         publishEvents(EventType.UPDATE, updatedIpIds);
         return updated;
+    }
+
+    @Override
+    public U save(U entity) {
+        return repository.save(entity);
     }
 
     @Override

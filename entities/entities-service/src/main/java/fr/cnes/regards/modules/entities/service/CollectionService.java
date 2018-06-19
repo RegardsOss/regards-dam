@@ -51,10 +51,11 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
     public CollectionService(IModelAttrAssocService pModelAttributeService,
             IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
-            IDatasetRepository pDatasetRepository, EntityManager pEm,
-            IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository) {
+            IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher,
+            IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
-              pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver, descriptionFileRepository);
+              pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver,
+              descriptionFileRepository);
     }
 
     @Override
@@ -76,4 +77,5 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
         col.setDescriptionFile(null);
         descriptionFileRepository.delete(desc);
     }
+
 }

@@ -92,7 +92,7 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
                     AbstractEntity entity = getService(urn.getEntityType()).loadWithRelations(urn);
                     FeignSecurityManager.asSystem();
                     entity.setStateAip(EntityAipState.AIP_STORE_OK);
-                    getService(urn.getEntityType()).update(entity);
+                    getService(urn.getEntityType()).save(entity);
 
                     LOGGER.info("AIP with IP_ID <" + wrapper.getContent().getIpId() + "> state set to <"
                             + wrapper.getContent().getAipState() + ">");

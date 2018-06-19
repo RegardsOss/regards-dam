@@ -147,6 +147,8 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      */
     U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException;
 
+    U save(U entity);
+
     /**
      * Update given entity identified by its id property (ie. getId() method) OR identified by its ipId property if id
      * is null

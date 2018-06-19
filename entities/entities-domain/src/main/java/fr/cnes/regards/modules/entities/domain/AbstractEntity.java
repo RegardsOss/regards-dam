@@ -145,6 +145,7 @@ public abstract class AbstractEntity implements IIdentifiable<Long>, IIndexable 
      * State determined through different storage steps for the AIP
      */
     @GsonIgnore
+    @Column(name = "aip_state", length = 32)
     @Enumerated(EnumType.STRING)
     private EntityAipState stateAip;
 
