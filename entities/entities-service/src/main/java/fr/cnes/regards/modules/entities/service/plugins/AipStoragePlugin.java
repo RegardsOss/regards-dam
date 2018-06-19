@@ -77,6 +77,10 @@ public class AipStoragePlugin implements IStorageService {
 
     private final static String PATH_COLLECTIONS = "/collections/";
 
+    private final static String PATH_DATASETS = "/datasets/";
+
+    private final static String PATH_DOCUMENTS = "/documents/";
+
     private final static String REGARDS_DESCRIPTION = "REGARDS description";
 
     private final static String PATH_FILE = "/file/";
@@ -243,7 +247,7 @@ public class AipStoragePlugin implements IStorageService {
     private void extractDataset(AIPBuilder builder, Dataset dataSet) throws ModuleException {
         builder.addContextInformation("score", dataSet.getScore());
 
-        if (Strings.nullToEmpty(dataSet.getLicence()) != null) {
+        if (!Strings.isNullOrEmpty(dataSet.getLicence())) {
             builder.addDescriptiveInformation("licence", dataSet.getLicence());
         }
         if (dataSet.getQuotations() != null && dataSet.getQuotations().size() > 0) {
@@ -296,7 +300,15 @@ public class AipStoragePlugin implements IStorageService {
         sb.append(SLASH);
         sb.append(microserviceName);
         sb.append(SLASH);
-        sb.append(PATH_COLLECTIONS);
+        
+        if (owningAip.getEntityType().equals(EntityType.COLLECTION)) {
+            sb.append(PATH_COLLECTIONS);
+        } else if (owningAip.getEntityType().equals(EntityType.DATASET)) {
+            sb.append(PATH_DATASETS);
+        } else if (owningAip.getEntityType().equals(EntityType.DOCUMENT)) {
+            sb.append(PATH_DOCUMENTS);
+        }
+
         sb.append(owningAip.toString());
         sb.append(PATH_FILE);
         sb.append(SCOPE_PARAM);
