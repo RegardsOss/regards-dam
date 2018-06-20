@@ -16,16 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.gson;
+package fr.cnes.regards.modules.entities.dao;
+
+import org.junit.Ignore;
+
+import fr.cnes.regards.framework.jpa.multitenant.test.AbstractScriptGeneratorTest;
 
 /**
+ * Generate DDL with HBM2DDL
  * @author Marc Sordi
  *
  */
-public class TestEntityAdapterFactory extends EntityAdapterFactory {
+@Ignore
+public class EntitySQLGenerator extends AbstractScriptGeneratorTest {
 
-    protected TestEntityAdapterFactory() {
-        super();
-        registerSubtype(Car.class, "CAR");
-    }
 }

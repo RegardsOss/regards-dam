@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="model_V1.0.xsd">
+	<name>galaxy</name>
+	<type>COLLECTION</type>
+	<attribute>
+		<label>Galaxy name</label>
+		<name>galaxy</name>
+		<type>STRING</type>
+	</attribute>
+	<attribute>
+		<label>Abstract</label>
+		<name>abstract</name>
+		<type>STRING</type>
+	</attribute>
+	<fragment>
+		<name>data</name>
+		<attribute>
+			<label>Star number</label>
+			<name>starnb</name>
+			<type unit="Billion stars">INTEGER</type>
+		</attribute>
+		<attribute>
+			<label>Planet number</label>
+			<name>planetnb</name>
+			<type unit="Billion planets">INTEGER</type>
+		</attribute>
+	</fragment>
+
+</model>

@@ -24,6 +24,7 @@ import java.util.Set;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -33,7 +34,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @author Sylvain Vissiere-Guerinet
  * @author oroussel
  */
-public interface IAbstractEntityRepository<T extends AbstractEntity>
+public interface IAbstractEntityRepository<T extends AbstractEntity<?>>
         extends JpaRepository<T, Long>, JpaSpecificationExecutor<T> {
 
     /**
@@ -95,5 +96,7 @@ public interface IAbstractEntityRepository<T extends AbstractEntity>
      * @param sipId a SIP ID
      * @return entities corresponding to the SIP ID
      */
+    @Query(value = "select * from {h-schema}t_entity where feature @> jsonb_build_object('sipId', ?1)",
+            nativeQuery = true)
     Set<T> findAllBySipId(String sipId);
 }

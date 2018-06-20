@@ -88,7 +88,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     private final IPluginService pluginService;
 
     public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
-            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity> entityRepository,
+            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
             IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
             ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
             IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
@@ -219,24 +219,27 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         return attModelPage;
     }
 
+    // FIXME
     @Override
     public DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        if (ds == null) {
-            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        }
-        return ds.getDescriptionFile();
+        // Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
+        // if (ds == null) {
+        // throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
+        // }
+        // return ds.getDescriptionFile();
+        return null;
     }
 
+    // FIXME
     @Override
     public void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        if (ds == null) {
-            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        }
-        DescriptionFile desc = ds.getDescriptionFile();
-        ds.setDescriptionFile(null);
-        descriptionFileRepository.delete(desc);
+        // Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
+        // if (ds == null) {
+        // throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
+        // }
+        // DescriptionFile desc = ds.getDescriptionFile();
+        // ds.setDescriptionFile(null);
+        // descriptionFileRepository.delete(desc);
     }
 
     /**

@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,7 +42,6 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
@@ -81,14 +81,11 @@ public class EntityServiceTest {
 
         collection2 = new Collection(model2, "PROJECT", "collection2");
         collection2.setId(2L);
-        collection2.setDescriptionFile(new DescriptionFile("pDescription2"));
         collection3 = new Collection(model2, "PROJECT", "collection3");
         collection3.setId(3L);
-        collection3.setDescriptionFile(new DescriptionFile("pDescription3"));
         collection3.setLabel("pName3");
         collection4 = new Collection(model2, "PROJECT", "collection4");
         collection4.setId(4L);
-        collection4.setDescriptionFile(new DescriptionFile("pDescription4"));
         Set<String> collection2Tags = collection2.getTags();
         collection2Tags.add(collection4.getIpId().toString());
         collection2.setTags(collection2Tags);
@@ -100,11 +97,9 @@ public class EntityServiceTest {
         dataset = new Dataset(model2, "PROJECT", "dataset");
         dataset.setLicence("licence");
         dataset.setId(3L);
-        dataset.setDescriptionFile(new DescriptionFile("datasetDesc"));
         dataset.setLabel("dataset");
         dataset2 = new Dataset(model2, "PROJECT", "dataset2");
         dataset2.setLicence("licence");
-        dataset2.setDescriptionFile(new DescriptionFile("datasetDesc2"));
 
         IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
         IModelService pModelService = Mockito.mock(IModelService.class);
@@ -118,7 +113,7 @@ public class EntityServiceTest {
         EntityManager emMocked = Mockito.mock(EntityManager.class);
 
         IPublisher publisherMocked = Mockito.mock(IPublisher.class);
-        IRuntimeTenantResolver runtimeTenantResolver=Mockito.mock(IRuntimeTenantResolver.class);
+        IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
         Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);

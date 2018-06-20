@@ -39,7 +39,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
  * @author oroussel
  */
 @MultitenantTransactional
-public interface IEntityService<U extends AbstractEntity> extends IValidationService<U> {
+public interface IEntityService<U extends AbstractEntity<?>> extends IValidationService<U> {
 
     /**
      * Load entity by IpId without relations

@@ -18,44 +18,37 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.util.Collection;
+
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import java.util.Collection;
-import java.util.UUID;
 
 import fr.cnes.regards.framework.oais.urn.DataType;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.domain.feature.DocumentFeature;
 import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ * Document feature decorator
+ *
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
  * @author Léo Mieulet
  */
 @Entity
 @DiscriminatorValue("DOCUMENT")
-public class Document extends AbstractDataEntity {
-
-    public Document(Model pModel, String pTenant, String pLabel) {
-        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, pTenant, UUID.randomUUID(), 1),
-                pLabel);
-    }
+public class Document extends AbstractEntity<DocumentFeature> {
 
     public Document() {
-        super(null, null, null);
+        super(null, null);
     }
 
-    @Override
-    public String getType() {
-        return EntityType.DOCUMENT.toString();
+    public Document(Model model, String tenant, String label) {
+        super(model, new DocumentFeature(tenant, label));
     }
-
 
     public Collection<DataFile> getDocumentFiles() {
-        return this.getFiles().get(DataType.DOCUMENT);
+        return getFiles().get(DataType.DOCUMENT);
     }
 
 }

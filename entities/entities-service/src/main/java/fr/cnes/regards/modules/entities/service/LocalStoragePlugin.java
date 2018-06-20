@@ -30,20 +30,20 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 public class LocalStoragePlugin implements IStorageService {
 
     @Override
-    public <T extends AbstractEntity> T storeAIP(T pToPersist) {
+    public <T extends AbstractEntity<?>> T storeAIP(T pToPersist) {
         // nothing to do because we don't create AIP without storage and description is inside the database not on file
         // system
         return pToPersist;
     }
 
     @Override
-    public void deleteAIP(AbstractEntity pToDelete) {
+    public void deleteAIP(AbstractEntity<?> pToDelete) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public <T extends AbstractEntity> T updateAIP(T pToUpdate) {
+    public <T extends AbstractEntity<?>> T updateAIP(T pToUpdate) {
         // TODO Auto-generated method stub
         return pToUpdate;
     }

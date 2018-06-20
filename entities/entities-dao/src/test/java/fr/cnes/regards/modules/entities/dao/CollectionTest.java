@@ -34,8 +34,7 @@ import fr.cnes.regards.modules.models.domain.Model;
  * @author Sylvain Vissiere-Guerinet
  *
  */
-@TestPropertySource("classpath:application-test.properties")
-
+@TestPropertySource(properties = { "spring.jpa.properties.hibernate.default_schema=projectdb" })
 public class CollectionTest extends AbstractDaoTransactionalTest {
 
     @Autowired

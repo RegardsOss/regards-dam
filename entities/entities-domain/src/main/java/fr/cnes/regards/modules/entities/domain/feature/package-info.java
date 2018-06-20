@@ -16,19 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.service;
-
-import org.springframework.validation.Errors;
-
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
-
 /**
- * Validation interface (implemented by AbstractEntityService for (Collection|Dataset|Document)Service via
- * AbstractValidationService and DataObjectService
- * @author oroussel
+ * Public entity features
+ * @author Marc Sordi
  */
-public interface IValidationService<U extends AbstractEntity<?>> {
-
-    void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws EntityInvalidException;
-}
+package fr.cnes.regards.modules.entities.domain.feature;

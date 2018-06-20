@@ -16,19 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.service;
+package fr.cnes.regards.modules.entities.domain.feature;
 
-import org.springframework.validation.Errors;
+import java.util.UUID;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.framework.oais.urn.EntityType;
+import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
+import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 
 /**
- * Validation interface (implemented by AbstractEntityService for (Collection|Dataset|Document)Service via
- * AbstractValidationService and DataObjectService
- * @author oroussel
+ * Specific feature properties for documents
+ * @author Marc Sordi
+ *
  */
-public interface IValidationService<U extends AbstractEntity<?>> {
+public class DocumentFeature extends EntityFeature {
 
-    void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws EntityInvalidException;
+    /**
+     * Deserialization constructor
+     */
+    public DocumentFeature() {
+        super(null, EntityType.DOCUMENT, null);
+    }
+
+    public DocumentFeature(String tenant, String label) {
+        super(new UniformResourceName(OAISIdentifier.AIP, EntityType.DOCUMENT, tenant, UUID.randomUUID(), 1),
+              EntityType.DOCUMENT, label);
+    }
 }

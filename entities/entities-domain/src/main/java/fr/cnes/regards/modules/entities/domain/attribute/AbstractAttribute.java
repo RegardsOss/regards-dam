@@ -85,7 +85,7 @@ public abstract class AbstractAttribute<T> implements IAttribute<T> {
         if (getClass() != pObj.getClass()) {
             return false;
         }
-        AbstractAttribute other = (AbstractAttribute) pObj;
+        AbstractAttribute<?> other = (AbstractAttribute<?>) pObj;
         if (name == null) {
             if (other.name != null) {
                 return false;

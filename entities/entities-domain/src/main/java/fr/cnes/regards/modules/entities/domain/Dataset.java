@@ -19,30 +19,24 @@
 package fr.cnes.regards.modules.entities.domain;
 
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 import org.hibernate.annotations.Type;
 
 import fr.cnes.regards.framework.modules.plugins.domain.PluginConfiguration;
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.modules.entities.domain.feature.DatasetFeature;
 import fr.cnes.regards.modules.entities.domain.metadata.DatasetMetadata;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ * Dataset feature decorator
  *
  * @author Sylvain Vissiere-Guerinet
  * @author Marc Sordi
@@ -51,17 +45,11 @@ import fr.cnes.regards.modules.models.domain.Model;
  */
 @Entity
 @DiscriminatorValue("DATASET")
-public class Dataset extends AbstractDescEntity {
+public class Dataset extends AbstractEntity<DatasetFeature> {
 
     public static final String DATA_SOURCE_ID = "dataSourceId";
 
     public static final String LAST_UPDATE = "lastUpdate";
-
-    /**
-     * value allowing the system to order a set of result
-     */
-    @Column
-    private int score;
 
     /**
      * A PluginConfiguration for a plugin type IDataSourcePlugin.</br>
@@ -97,54 +85,19 @@ public class Dataset extends AbstractDescEntity {
     private String openSearchSubsettingClause;
 
     /**
-     * set of quotations associated to the {@link Dataset}
-     */
-    @ElementCollection
-    @CollectionTable(name = "t_dataset_quotation", joinColumns = @JoinColumn(name = "dataset_id"),
-            foreignKey = @javax.persistence.ForeignKey(name = "fk_dataset_quotation_dataset_id"))
-    private Set<String> quotations = new HashSet<>();
-
-    /**
-     * Dataset licence
-     */
-    @Type(type = "text")
-    @Column
-    private String licence;
-
-    /**
      * Metadata, only used by Elasticsearch
      */
     @Transient
     private DatasetMetadata metadata = new DatasetMetadata();
 
     public Dataset() {
-        // we use super and not this because at deserialization we need a ipId null at the object creation which is then replaced by the attribute if present or added by creation method
-        super(null, null, null);
+        // we use super and not this because at deserialization we need a ipId null at the object creation which is then
+        // replaced by the attribute if present or added by creation method
+        super(null, null);
     }
 
-    public Dataset(Model pModel, String pTenant, String pLabel) {
-        super(pModel, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATASET, pTenant, UUID.randomUUID(), 1),
-              pLabel);
-    }
-
-    /**
-     * @return the score
-     */
-    public int getScore() {
-        return score;
-    }
-
-    /**
-     * Set the score
-     * @param pScore
-     */
-    public void setScore(int pScore) {
-        score = pScore;
-    }
-
-    @Override
-    public String getType() {
-        return EntityType.DATASET.toString();
+    public Dataset(Model model, String tenant, String label) {
+        super(model, new DatasetFeature(tenant, label));
     }
 
     /**
@@ -164,10 +117,10 @@ public class Dataset extends AbstractDescEntity {
 
     /**
      * Set the subsetting clause
-     * @param pSubsettingClause
+     * @param subsettingClause
      */
-    public void setSubsettingClause(ICriterion pSubsettingClause) {
-        subsettingClause = pSubsettingClause;
+    public void setSubsettingClause(ICriterion subsettingClause) {
+        this.subsettingClause = subsettingClause;
     }
 
     public ICriterion getUserSubsettingClause() {
@@ -178,8 +131,8 @@ public class Dataset extends AbstractDescEntity {
         return plgConfDataSource;
     }
 
-    public void setDataSource(PluginConfiguration pPlgConfDataSource) {
-        plgConfDataSource = pPlgConfDataSource;
+    public void setDataSource(PluginConfiguration plgConfDataSource) {
+        this.plgConfDataSource = plgConfDataSource;
     }
 
     /**
@@ -191,48 +144,10 @@ public class Dataset extends AbstractDescEntity {
 
     /**
      * Set the data model
-     * @param pDataModel
+     * @param dataModel
      */
-    public void setDataModel(String pDataModel) {
-        dataModel = pDataModel;
-    }
-
-    /**
-     * @return the quotations
-     */
-    public Set<String> getQuotations() {
-        return quotations;
-    }
-
-    /**
-     * Set the quotations
-     * @param pQuotations
-     */
-    public void setQuotations(Set<String> pQuotations) {
-        quotations = pQuotations;
-    }
-
-    /**
-     * Add a quotation
-     * @param pQuotation
-     */
-    public void addQuotation(String pQuotation) {
-        quotations.add(pQuotation);
-    }
-
-    /**
-     * @return the licence
-     */
-    public String getLicence() {
-        return licence;
-    }
-
-    /**
-     * Set the licence
-     * @param pLicence
-     */
-    public void setLicence(String pLicence) {
-        licence = pLicence;
+    public void setDataModel(String dataModel) {
+        this.dataModel = dataModel;
     }
 
     public DatasetMetadata getMetadata() {
@@ -261,9 +176,17 @@ public class Dataset extends AbstractDescEntity {
     }
 
     /**
-     * @param pOpenSearchSubsettingClause the openSearchSubsettingClause to set
+     * @param openSearchSubsettingClause the openSearchSubsettingClause to set
      */
-    public void setOpenSearchSubsettingClause(String pOpenSearchSubsettingClause) {
-        openSearchSubsettingClause = pOpenSearchSubsettingClause;
+    public void setOpenSearchSubsettingClause(String openSearchSubsettingClause) {
+        this.openSearchSubsettingClause = openSearchSubsettingClause;
+    }
+
+    public String getLicence() {
+        return feature.getLicence();
+    }
+
+    public void setLicence(String licence) {
+        feature.setLicence(licence);
     }
 }

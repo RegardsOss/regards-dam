@@ -35,6 +35,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
@@ -59,6 +60,7 @@ import fr.cnes.regards.modules.models.domain.Model;
 @ActiveProfiles({ "default", "test" })
 public class CollectionDatasetGroupsIT {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(CollectionDatasetGroupsIT.class);
 
     private Model modelColl;
@@ -326,7 +328,6 @@ public class CollectionDatasetGroupsIT {
         dataSetService.associate(dataset2.getId(), Sets.newHashSet(coll1.getIpId()));
         dataSetService.associate(dataset3.getId(), Sets.newHashSet(coll2.getIpId(), coll3.getIpId()));
 
-
         coll1 = collService.load(coll1.getId());
         Assert.assertEquals(Sets.newHashSet("G1", "G2"), coll1.getGroups());
         coll2 = collService.load(coll2.getId());
@@ -351,15 +352,12 @@ public class CollectionDatasetGroupsIT {
         // the logic is respected
         Dataset dataset1Updated = new Dataset();
         dataset1Updated.setGroups(Sets.newHashSet("G1"));
-        dataset1Updated.setDescriptionFile(dataset1.getDescriptionFile());
         dataset1Updated.setDataModel(dataset1.getDataModel());
         dataset1Updated.setCreationDate(dataset1.getCreationDate());
         dataset1Updated.setDataSource(dataset1.getDataSource());
         dataset1Updated.setLicence(dataset1.getLicence());
         dataset1Updated.setMetadata(dataset1.getMetadata());
         dataset1Updated.setOpenSearchSubsettingClause(dataset1.getOpenSearchSubsettingClause());
-        dataset1Updated.setQuotations(dataset1.getQuotations());
-        dataset1Updated.setScore(dataset1.getScore());
         dataset1Updated.setGeometry(dataset1.getGeometry());
         dataset1Updated.setId(dataset1.getId());
         dataset1Updated.setIpId(dataset1.getIpId());
@@ -387,10 +385,9 @@ public class CollectionDatasetGroupsIT {
 
     @Requirement("REGARDS_DSL_DAM_COL_220")
     @Requirement("REGARDS_DSL_DAM_COL_040")
-    @Purpose(
-            "Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour."
-                    + "Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
-                    + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
+    @Purpose("Le système doit permettre d’associer/dissocier des collections à la collection courante lors de la mise à jour."
+            + "Le système doit permettre de mettre à jour les valeurs d’une collection via son IP_ID et d’archiver ces "
+            + "modifications dans son AIP au niveau du composant « Archival storage » si ce composant est déployé.")
     @Requirement("REGARDS_DSL_DAM_COL_210")
     @Test
     public void testUpdate() throws ModuleException, IOException {
@@ -443,8 +440,7 @@ public class CollectionDatasetGroupsIT {
     }
 
     @Requirement("REGARDS_DSL_DAM_COL_120")
-    @Purpose(
-            "Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
+    @Purpose("Si la suppression d’une collection est demandée, le système doit au préalable supprimer le tag correspondant de tout autre AIP (dissociation complète).")
     @Test
     public void testDelete() throws ModuleException, IOException {
         buildData1();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -16,19 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.service;
+package fr.cnes.regards.modules.entities.dao;
 
-import org.springframework.validation.Errors;
+import org.junit.Ignore;
 
-import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
-import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.framework.jpa.multitenant.test.AbstractFlywayInitialization;
 
 /**
- * Validation interface (implemented by AbstractEntityService for (Collection|Dataset|Document)Service via
- * AbstractValidationService and DataObjectService
- * @author oroussel
+ * Init database public schema with Flyway
+ * @author Marc Sordi
+ *
  */
-public interface IValidationService<U extends AbstractEntity<?>> {
+@Ignore
+public class EntityFlywayInitialization extends AbstractFlywayInitialization {
 
-    void validate(U pAbstractEntity, Errors pErrors, boolean pManageAlterable) throws EntityInvalidException;
 }

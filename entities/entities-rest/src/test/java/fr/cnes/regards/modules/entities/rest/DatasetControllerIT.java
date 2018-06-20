@@ -57,7 +57,6 @@ import fr.cnes.regards.framework.test.report.annotation.Purpose;
 import fr.cnes.regards.framework.test.report.annotation.Requirement;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.builder.AttributeBuilder;
 import fr.cnes.regards.modules.entities.gson.MultitenantFlattenedAttributeAdapterFactory;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
@@ -220,7 +219,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         Dataset dataSet21 = new Dataset(model1, DEFAULT_TENANT, "dataSet21");
         dataSet21.setLicence("licence");
         dataSet21.setCreationDate(OffsetDateTime.now());
-        dataSet21.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.APPLICATION_PDF));
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
         final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
         dataSet21 = dsService.create(dataSet21, pdf);
