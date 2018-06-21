@@ -448,7 +448,7 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
     public String buildJsonPath(String namespace) {
         StringBuilder builder = new StringBuilder(namespace);
         builder.append(GSONConstants.JSON_PATH_SEPARATOR);
-        if (!fragment.isDefaultFragment()) {
+        if ((fragment != null) && !fragment.isDefaultFragment()) {
             builder.append(fragment.getName());
             builder.append(GSONConstants.JSON_PATH_SEPARATOR);
         }
