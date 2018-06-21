@@ -20,6 +20,7 @@ package fr.cnes.regards.modules.entities.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,21 +28,28 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.modules.plugins.service.IPluginService;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
+import fr.cnes.regards.framework.utils.plugins.PluginParametersFactory;
+import fr.cnes.regards.framework.utils.plugins.PluginUtils;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Dataset;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 import fr.cnes.regards.modules.entities.plugin.CountPlugin;
 import fr.cnes.regards.modules.models.domain.IComputedAttribute;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
@@ -49,14 +57,15 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 
 /**
  * Unparameterized entity service. This service is used when the entity type is unknown (ex. CrawlerService)
- *
+ * 
  * @author oroussel
+ * @author Christophe Mertz
  */
 @Service
 @MultitenantTransactional
 public class EntitiesService implements IEntitiesService {
 
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledStoreAipEntitiesTasks.class);
 
     @Autowired
     private IDatasetRepository datasetRepository;
@@ -75,6 +84,18 @@ public class EntitiesService implements IEntitiesService {
      */
     @Autowired
     private ICollectionRepository collectionRepository;
+    
+    /**
+     * If true the AIP entities are send to Storage module to be stored
+     */
+    @Value("${regards.dam.post.aip.entities.to.storage:true}")
+    private Boolean postAipEntitiesToStorage;
+
+    /**
+     * The plugin's class name of type {@link IStorageService} used to store AIP entities 
+     */
+    @Value("${regards.dam.post.aip.entities.to.storage.plugins:fr.cnes.regards.modules.entities.service.plugins.AipStoragePlugin}")
+    private String postAipEntitiesToStoragePlugin;
 
     public EntitiesService() {
         super();
@@ -123,11 +144,14 @@ public class EntitiesService implements IEntitiesService {
         try {
             for (ModelAttrAssoc attr : computedAttributes) {
                 try {
-                    PluginParameter resultFragmentName = new PluginParameter(IComputedAttribute.RESULT_FRAGMENT_NAME, attr.getAttribute().getFragment().getName());
+                    PluginParameter resultFragmentName = new PluginParameter(IComputedAttribute.RESULT_FRAGMENT_NAME,
+                            attr.getAttribute().getFragment().getName());
                     resultFragmentName.setOnlyDynamic(true);
-                    PluginParameter resultAttrName = new PluginParameter(IComputedAttribute.RESULT_ATTRIBUTE_NAME, attr.getAttribute().getName());
+                    PluginParameter resultAttrName = new PluginParameter(IComputedAttribute.RESULT_ATTRIBUTE_NAME,
+                            attr.getAttribute().getName());
                     resultAttrName.setOnlyDynamic(true);
-                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId(), resultAttrName, resultFragmentName);
+                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId(),
+                                                                              resultAttrName, resultFragmentName);
                     // here we have a plugin with no idea of the type of the generic parameter used by the "compute"
                     // method, lets check that it is a IComputedAttribute<Dataset,?>
                     plugin.getClass().getMethod("compute", Dataset.class);
@@ -150,6 +174,85 @@ public class EntitiesService implements IEntitiesService {
             throw new RsRuntimeException(e);
         }
         return computationPlugins;
+    }
+
+    @Override
+    public void storeAips() {
+
+        /*
+         *  Search entities with state EntityAipState#AIP_TO_STORE
+         */
+        entityRepository.findAllByStateAip(EntityAipState.AIP_TO_CREATE).stream().forEach(e -> {
+            storeAipStorage(e);
+        });
+
+        // Search entities with state EntityAipState#AIP_TO_UPDATE
+        entityRepository.findAllByStateAip(EntityAipState.AIP_TO_UPDATE).stream().forEach(e -> {
+            updateAipStorage(e);
+        });
+    }
+
+    /**
+     * @return a {@link Plugin} implementation of {@link IStorageService}
+     */
+    private IStorageService getStorageService() {
+        if (postAipEntitiesToStorage == null) {
+            return null;
+        }
+
+        List<PluginParameter> parameters = PluginParametersFactory.build().getParameters();
+        Class<?> ttt;
+        try {
+            ttt = Class.forName(postAipEntitiesToStoragePlugin);
+            return (IStorageService) PluginUtils.getPlugin(parameters, ttt, Arrays.asList(ttt.getPackage().getName()),
+                                                           new HashMap<>());
+        } catch (ClassNotFoundException e) {
+            LOGGER.error(e.getMessage());
+        }
+
+        return null;
+    }
+
+    private AbstractEntity storeAipStorage(AbstractEntity entity) {
+        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+            return entity;
+        }
+
+        IStorageService storageService = getStorageService();
+
+        if (storageService == null) {
+            return entity;
+        }
+
+        return storageService.storeAIP(entity);
+    }
+
+    private AbstractEntity updateAipStorage(AbstractEntity entity) {
+        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+            return entity;
+        }
+
+        IStorageService storageService = getStorageService();
+
+        if (storageService == null) {
+            return entity;
+        }
+
+        return getStorageService().updateAIP(entity);
+    }
+
+    private void deleteAipStorage(AbstractEntity entity) {
+        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+            return;
+        }
+
+        IStorageService storageService = getStorageService();
+
+        if (storageService == null) {
+            return;
+        }
+
+        getStorageService().deleteAIP(entity);
     }
 
 }

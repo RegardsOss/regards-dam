@@ -82,8 +82,8 @@ import fr.cnes.regards.modules.storage.client.IAipClient;
 public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityIT.class);
-    
-    private static final int SLEEP_TIME = 1500;
+
+    private static final int SLEEP_TIME = 20000;
 
     private static final String TENANT = DEFAULT_TENANT;
 
@@ -155,8 +155,8 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
 
         Assert.assertEquals(1, dsRepository.count());
 
-//        Dataset dsFind = dsRepository.findOne(dataset1.getId());
-//        Assert.assertEquals(EntityAipState.AIP_STORE_PENDING, dsFind.getStateAip());
+        //        Dataset dsFind = dsRepository.findOne(dataset1.getId());
+        //        Assert.assertEquals(EntityAipState.AIP_STORE_PENDING, dsFind.getStateAip());
 
         Thread.sleep(SLEEP_TIME);
 
@@ -175,7 +175,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
 
         Assert.assertEquals(1, dsRepository.count());
-        
+
         Thread.sleep(SLEEP_TIME);
 
         Dataset dsFind = dsRepository.findOne(dataset1.getId());
@@ -197,7 +197,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         document1 = docService.addFiles(document1.getId(), multipartFiles, fileLsUriTemplate);
 
         Assert.assertEquals(1, docRepository.count());
-        
+
         Thread.sleep(SLEEP_TIME);
 
         Document docFind = docRepository.findOne(document1.getId());
@@ -205,7 +205,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
     }
 
     @Test
-    public void createCollection() throws ModuleException, IOException, InterruptedException {
+    public void createCollectionWithDescription() throws ModuleException, IOException, InterruptedException {
         collection1.setDescriptionFile(new DescriptionFile(new byte[0], MediaType.TEXT_MARKDOWN));
         final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "data", "test.md"));
         final MockMultipartFile multiPartFile = new MockMultipartFile("description-markdown-format", "test.md",
@@ -215,7 +215,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
 
         Assert.assertEquals(1, colRepository.count());
-        
+
         Thread.sleep(SLEEP_TIME);
 
         Collection colFind = colRepository.findOne(collection1.getId());
@@ -230,7 +230,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
 
         Assert.assertEquals(1, colRepository.count());
-        
+
         Thread.sleep(SLEEP_TIME);
 
         Collection colFind = colRepository.findOne(collection1.getId());
@@ -244,7 +244,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         LOGGER.info("===> create collection1 (" + collection1.getIpId() + ")");
 
         Assert.assertEquals(1, colRepository.count());
-        
+
         Thread.sleep(SLEEP_TIME);
 
         Collection colFind = colRepository.findOne(collection1.getId());
@@ -273,7 +273,7 @@ public class AIPStorageEntityIT extends AbstractRegardsTransactionalIT {
         dsService.update(dataset1);
 
         Assert.assertEquals(1, dsRepository.count());
-        
+
         Thread.sleep(SLEEP_TIME);
 
         Dataset dsFind = dsRepository.findOne(dataset1.getId());

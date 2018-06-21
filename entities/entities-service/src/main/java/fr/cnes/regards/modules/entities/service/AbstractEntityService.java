@@ -67,6 +67,7 @@ import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.DescriptionFile;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -336,7 +337,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         entity.setCreationDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
         this.manageGroups(entity, updatedIpIds);
 
-        entity = storeAipStorage(entity);
+        entity.setStateAip(EntityAipState.AIP_TO_CREATE);
 
         entity = repository.save(entity);
         updatedIpIds.add(entity.getIpId());
@@ -577,7 +578,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         // pEntity into the DB.
         entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
 
-        entity = updateAipStorage(entity);
+        if (entity.getStateAip() == null || !entity.getStateAip().equals(EntityAipState.AIP_TO_CREATE)) {
+            entity.setStateAip(EntityAipState.AIP_TO_UPDATE);
+        }
 
         U updated = repository.save(entity);
 
@@ -665,8 +668,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         datasets.forEach(ds -> this.manageGroups(ds, updatedIpIds));
 
         deletedEntityRepository.save(createDeletedEntity(toDelete));
-
-        deleteAipStorage(toDelete);
 
         // Publish events to AMQP
         publishEvents(EventType.DELETE, updatedIpIds);

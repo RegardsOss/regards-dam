@@ -26,6 +26,14 @@ package fr.cnes.regards.modules.entities.domain;
  */
 public enum EntityAipState {
     /**
+     * AIP must be created
+     */
+    AIP_TO_CREATE,
+    /**
+     * AIP must be updated
+     */
+    AIP_TO_UPDATE,
+    /**
      * AIP has been stored
      */
     AIP_STORE_OK,

@@ -27,6 +27,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.EntityAipState;
 
 /**
  * Common requests on entities
@@ -96,4 +97,6 @@ public interface IAbstractEntityRepository<T extends AbstractEntity>
      * @return entities corresponding to the SIP ID
      */
     Set<T> findAllBySipId(String sipId);
+    
+    Set<T> findAllByStateAip(EntityAipState state);
 }

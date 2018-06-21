@@ -105,7 +105,7 @@ class AipClientConfigurationMock {
             AIP oneAip = new AIP();
             oneAip.setId(aips.getFeatures().get(0).getId());
             oneAip.setState(AIPState.STORED);
-            oneAip.setSipId("hellop aip");
+            oneAip.setSipId("hello aip");
             publisher.publish(new AIPEvent(oneAip));
 
             return new ResponseEntity<>(HttpStatus.CREATED);

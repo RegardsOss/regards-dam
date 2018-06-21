@@ -37,13 +37,17 @@ import com.google.common.base.Strings;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
+import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import fr.cnes.regards.framework.security.utils.endpoint.RoleAuthority;
+import fr.cnes.regards.framework.security.utils.jwt.JWTService;
 import fr.cnes.regards.framework.utils.file.ChecksumUtils;
 import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
@@ -85,7 +89,9 @@ public class AipStoragePlugin implements IStorageService {
 
     private final static String PATH_FILE = "/file/";
 
-    private final String SCOPE_PARAM = "?scope=";
+    private final String SCOPE_PARAM = "scope=";
+
+    private final String TOKEN_PARAM = "token=";
 
     @Autowired
     private IAipClient aipClient;
@@ -99,6 +105,15 @@ public class AipStoragePlugin implements IStorageService {
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
 
+    @Autowired
+    private IAuthenticationResolver authResolver;
+
+    @Autowired
+    private ITenantResolver tenantResolver;
+
+    @Autowired
+    private JWTService jwtService;
+
     @Value("${zuul.prefix}")
     private String gatewayPrefix;
 
@@ -110,11 +125,10 @@ public class AipStoragePlugin implements IStorageService {
 
     @Override
     public <T extends AbstractEntity> T storeAIP(T entity) {
-
         try {
             AIPCollection collection = new AIPCollection();
-
             collection.add(getBuilder(entity).build());
+            FeignSecurityManager.asSystem();
             ResponseEntity<List<RejectedAip>> response = aipClient.store(collection);
             handleClientAIPResponse(response.getStatusCode(), entity, response.getBody());
         } catch (ModuleException e) {
@@ -130,6 +144,8 @@ public class AipStoragePlugin implements IStorageService {
                 rejectedAips = gson.fromJson(e.getResponseBodyAsString(), bodyTypeToken.getType());
             }
             handleClientAIPResponse(e.getStatusCode(), entity, rejectedAips);
+        } finally {
+            FeignSecurityManager.reset();
         }
 
         return entity;
@@ -137,14 +153,18 @@ public class AipStoragePlugin implements IStorageService {
 
     @Override
     public <T extends AbstractEntity> T updateAIP(T entity) {
-
         ResponseEntity<AIP> response;
         try {
-            response = aipClient.updateAip(entity.getIpId().toString(), getBuilder(entity).build());
+            AIP aip = getBuilder(entity).build();
+            
+            FeignSecurityManager.asSystem();
+            response = aipClient.updateAip(entity.getIpId().toString(), aip);
             handleClientAIPResponse(response.getStatusCode(), entity, response.getBody());
         } catch (ModuleException e) {
             LOGGER.error("The AIP entity {} can not be updated by microservice storage", entity.getIpId(), e);
             entity.setStateAip(EntityAipState.AIP_STORE_ERROR);
+        } finally {
+            FeignSecurityManager.reset();
         }
 
         return entity;
@@ -292,6 +312,7 @@ public class AipStoragePlugin implements IStorageService {
         String projectHost = projectsClient.retrieveProject(runtimeTenantResolver.getTenant()).getBody().getContent()
                 .getHost();
         FeignSecurityManager.reset();
+
         // now lets add it the gateway prefix and the microservice name and the endpoint path to it
         StringBuilder sb = new StringBuilder();
         sb.append(projectHost);
@@ -300,7 +321,7 @@ public class AipStoragePlugin implements IStorageService {
         sb.append(SLASH);
         sb.append(microserviceName);
         sb.append(SLASH);
-        
+
         if (owningAip.getEntityType().equals(EntityType.COLLECTION)) {
             sb.append(PATH_COLLECTIONS);
         } else if (owningAip.getEntityType().equals(EntityType.DATASET)) {
@@ -311,8 +332,17 @@ public class AipStoragePlugin implements IStorageService {
 
         sb.append(owningAip.toString());
         sb.append(PATH_FILE);
+        sb.append("?");
         sb.append(SCOPE_PARAM);
         sb.append(runtimeTenantResolver.getTenant());
+
+        if (owningAip.getEntityType().equals(EntityType.DATASET)) {
+            sb.append("&");
+            sb.append(TOKEN_PARAM);
+            sb.append(jwtService.generateToken(runtimeTenantResolver.getTenant(), microserviceName,
+                                               RoleAuthority.getSysRole(microserviceName)));
+        }
+
         URL downloadUrl = new URL(sb.toString());
         return downloadUrl;
     }
@@ -321,7 +351,7 @@ public class AipStoragePlugin implements IStorageService {
         LOGGER.info("status=" + status.toString());
         switch (status) {
             case CREATED:
-                LOGGER.info("update entity state set to AIP_STORE_OK:" + entity.getIpId());
+                LOGGER.info("{} : update entity state to AIP_STORE_OK:", entity.getIpId());
                 entity.setStateAip(EntityAipState.AIP_STORE_PENDING);
                 break;
             case PARTIAL_CONTENT:
@@ -329,7 +359,7 @@ public class AipStoragePlugin implements IStorageService {
                 // Some AIP are rejected
                 if (rejectedAips != null) {
                     rejectedAips.stream().filter(r -> r.getIpId().equals(entity.getIpId().toString())).forEach(r -> {
-                        LOGGER.error("{} : update entity state set to AIP_STORE_ERROR for reason : {}",
+                        LOGGER.error("{} : update entity state to AIP_STORE_ERROR for reason : {}",
                                      entity.getIpId(), r.getRejectionCauses().get(0));
                         entity.setStateAip(EntityAipState.AIP_STORE_ERROR);
                     });

@@ -147,6 +147,12 @@ public interface IEntityService<U extends AbstractEntity> extends IValidationSer
      */
     U update(UniformResourceName pEntityUrn, U pEntity, MultipartFile file) throws ModuleException, IOException;
 
+    /**
+     * Save an entity.
+     * 
+     * @param entity the entity t saved
+     * @return the saved entity 
+     */
     U save(U entity);
 
     /**

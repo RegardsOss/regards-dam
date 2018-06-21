@@ -72,6 +72,8 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AIPStorageEntityPartialResponseIT.class);
 
+    private static final int SLEEP_TIME = 20000;
+    
     private static final String TENANT = DEFAULT_TENANT;
 
     private static final String MODEL_DATASET_FILE_NAME = "modelDataSet.xml";
@@ -113,12 +115,14 @@ public class AIPStorageEntityPartialResponseIT extends AbstractRegardsServiceIT 
     private IRuntimeTenantResolver tenantResolver;
 
     @Test
-    public void createDataset() throws ModuleException, IOException {
+    public void createDataset() throws ModuleException, IOException, InterruptedException {
 
         dataset1 = dsService.create(dataset1);
         LOGGER.info("===> create dataset1 (" + dataset1.getIpId() + ")");
 
         Assert.assertEquals(1, dsRepository.count());
+        
+        Thread.sleep(SLEEP_TIME);
 
         Dataset dsFind = dsRepository.findOne(dataset1.getId());
         Assert.assertEquals(EntityAipState.AIP_STORE_ERROR, dsFind.getStateAip());
