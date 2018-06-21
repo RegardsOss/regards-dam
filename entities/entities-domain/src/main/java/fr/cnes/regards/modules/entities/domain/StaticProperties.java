@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.entities.domain;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModelBuilder;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
@@ -34,13 +35,10 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeType;
  */
 public final class StaticProperties {
 
-    // URN
+    // URN (duplicate as ID in feature)
     public static final String IP_ID = "ipId";
 
     // ##########-AbstractEntity-##########
-
-    // String
-    public static final String LABEL = "label";
 
     // Model
     public static final String MODEL_TYPE = "model";
@@ -63,23 +61,33 @@ public final class StaticProperties {
     // Long
     public static final String ID = "id";
 
+    // String list
+    public static final String GROUPS = "groups";
+
+    // ##########-EntityFeature-##########
+
+    /**
+     * Feature namespace
+     */
+    public static final String FEATURE_NS = "feature";
+
     // String
     public static final String SIP_ID = "sipId";
 
-    // String list
-    public static final String TAGS = "tags";
+    // String
+    public static final String LABEL = "label";
+
+    // List of DataFile
+    public static final String FILES = "files";
 
     // String list
-    public static final String GROUPS = "groups";
+    public static final String TAGS = "tags";
 
     // Geometry
     public static final String GEOMETRY = "geometry";
 
     // Wrappped dynamic properties
     public static final String PROPERTIES = "properties";
-
-    // List of DataFile
-    public static final String FILES = "files";
 
     // ##########-AbstractDataEntity-##########
 
@@ -117,27 +125,10 @@ public final class StaticProperties {
 
     // ##########-From GSON factory EntityAdapterFactory-##########
 
-    private static final Set<String> staticPropertiesName = Sets.newHashSet(CREATION_DATE,
-                                                                            DATA_MODEL,
-                                                                            DATASET_MODEL_IDS,
-                                                                            DATASOURCE_ID,
-                                                                            DESCRIPTION_FILE,
-                                                                            ENTITY_TYPE,
-                                                                            FILES,
-                                                                            GEOMETRY,
-                                                                            GROUPS,
-                                                                            ID,
-                                                                            IP_ID,
-                                                                            LABEL,
-                                                                            LAST_UPDATE,
-                                                                            LICENCE,
-                                                                            MODEL_DESCRIPTION,
-                                                                            MODEL_NAME,
-                                                                            MODEL_VERSION,
-                                                                            QUOTATIONS,
-                                                                            SCORE,
-                                                                            SIP_ID,
-                                                                            TAGS);
+    private static final Set<String> staticPropertiesName = Sets
+            .newHashSet(CREATION_DATE, DATA_MODEL, DATASET_MODEL_IDS, DATASOURCE_ID, DESCRIPTION_FILE, ENTITY_TYPE,
+                        FILES, GEOMETRY, GROUPS, ID, IP_ID, LABEL, LAST_UPDATE, LICENCE, MODEL_DESCRIPTION, MODEL_NAME,
+                        MODEL_VERSION, QUOTATIONS, SCORE, SIP_ID, TAGS);
 
     private StaticProperties() {
     }
@@ -149,7 +140,8 @@ public final class StaticProperties {
     /**
      * Build a "fake" {@link AttributeModel} corresponding to the given static property.
      * @param propertyName static property name
-     * @return Built {@link AttributeModel} corresponding to the given static property. null if the attribute was not created
+     * @return Built {@link AttributeModel} corresponding to the given static property. null if the attribute was not
+     *         created
      */
     public static AttributeModel buildStaticAttributeModel(String propertyName) {
         switch (propertyName) {
