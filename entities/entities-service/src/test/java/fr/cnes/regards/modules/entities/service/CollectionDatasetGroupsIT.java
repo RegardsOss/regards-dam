@@ -47,9 +47,7 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 
@@ -81,10 +79,6 @@ public class CollectionDatasetGroupsIT {
 
     private Collection coll4;
 
-    private Document doc1;
-
-    private DataObject dataObj1;
-
     @Autowired
     private ICollectionService collService;
 
@@ -98,7 +92,7 @@ public class CollectionDatasetGroupsIT {
     private IDatasetRepository datasetRepository;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -170,7 +164,7 @@ public class CollectionDatasetGroupsIT {
         // DS2 -> C1
         dataset2.setTags(Sets.newHashSet(coll1.getIpId().toString()));
         // C1 -> C2
-        coll1.getTags().add(coll2.getIpId().toString());
+        coll1.addTags(coll2.getIpId().toString());
 
         coll3 = new Collection(modelColl, "PROJECT", "coll3");
         coll3.setSipId("SipId6");
@@ -235,7 +229,7 @@ public class CollectionDatasetGroupsIT {
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
         coll4.setSipId("SipId7");
         coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
-        coll2.getTags().add(coll4.getIpId().toString());
+        coll2.addTags(coll4.getIpId().toString());
 
         coll4 = collService.create(coll4);
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
@@ -276,7 +270,7 @@ public class CollectionDatasetGroupsIT {
         coll4 = new Collection(modelColl, "PROJECT", "coll4");
         coll4.setSipId("SipId7");
         coll4.setTags(Sets.newHashSet(coll1.getIpId().toString()));
-        coll2.getTags().add(coll4.getIpId().toString());
+        coll2.addTags(coll4.getIpId().toString());
 
         coll4 = collService.create(coll4);
         Assert.assertEquals(Sets.newHashSet("G1", "G2", "G3"), coll4.getGroups());
@@ -403,13 +397,13 @@ public class CollectionDatasetGroupsIT {
         coll3 = collService.create(coll3); // C3 tags DS3 => (G3)
 
         // Dissociate "by hand"
-        coll1.getTags().clear();
-        coll2.getTags().clear();
-        coll3.getTags().clear();
+        coll1.clearTags();
+        coll2.clearTags();
+        coll3.clearTags();
 
-        dataset1.getTags().clear();
-        dataset2.getTags().clear();
-        dataset3.getTags().clear();
+        dataset1.clearTags();
+        dataset2.clearTags();
+        dataset3.clearTags();
 
         coll1 = collService.update(coll1);
         Assert.assertTrue(coll1.getTags().isEmpty());
@@ -426,15 +420,15 @@ public class CollectionDatasetGroupsIT {
         Assert.assertTrue(dataset3.getTags().isEmpty());
 
         // Associate "by hand" C1 -> (C3, DS1)
-        coll1.getTags().add(coll3.getIpId().toString());
-        coll1.getTags().add(dataset1.getIpId().toString());
+        coll1.addTags(coll3.getIpId().toString());
+        coll1.addTags(dataset1.getIpId().toString());
         coll1 = collService.update(coll1.getId(), coll1);
         Assert.assertTrue(coll1.getTags().contains(coll3.getIpId().toString()));
         Assert.assertTrue(coll1.getTags().contains(dataset1.getIpId().toString()));
 
         // Associate "by hands" DS1 -> (C1, DS2)
-        dataset1.getTags().add(coll1.getIpId().toString());
-        dataset1.getTags().add(dataset2.getIpId().toString());
+        dataset1.addTags(coll1.getIpId().toString());
+        dataset1.addTags(dataset2.getIpId().toString());
         Assert.assertTrue(dataset1.getTags().contains(coll1.getIpId().toString()));
         Assert.assertTrue(dataset1.getTags().contains(dataset2.getIpId().toString()));
     }
@@ -452,7 +446,7 @@ public class CollectionDatasetGroupsIT {
         // Then collections => groups must have been updated on collections
         coll2 = collService.create(coll2); // DS3 tags C2 => C2 (G1, G2, G3)
         coll3 = collService.create(coll3); // DS3 tags C3 => C3 (G3)
-        coll1.getTags().add(coll3.getIpId().toString()); // Add C1 -> C3
+        coll1.addTags(coll3.getIpId().toString()); // Add C1 -> C3
         coll1 = collService.create(coll1); // DS1 and DS2 tag C1 => C1 (G1, G2)
 
         // C1 -> C2 and C1 -> C3

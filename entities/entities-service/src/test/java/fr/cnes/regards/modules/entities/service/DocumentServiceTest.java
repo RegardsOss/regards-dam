@@ -26,12 +26,13 @@ import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.dao.IModelRepository;
 import fr.cnes.regards.modules.models.domain.Model;
 
-@TestPropertySource(locations = {"classpath:test.properties"})
+@TestPropertySource(locations = { "classpath:test.properties" })
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {ServiceConfiguration.class})
+@ContextConfiguration(classes = { ServiceConfiguration.class })
 @MultitenantTransactional
 public class DocumentServiceTest {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(DocumentServiceTest.class);
 
     @Autowired
@@ -50,7 +51,6 @@ public class DocumentServiceTest {
 
     private Document document1;
 
-
     @Before
     public void init() throws ModuleException {
         model1 = Model.build("modelName2", "model desc", EntityType.DOCUMENT);
@@ -64,14 +64,16 @@ public class DocumentServiceTest {
 
     }
 
-
     @Test
     @Commit
     public void testAddFiles() throws ModuleException, IOException {
-        String fileLsUriTemplate = "/documents/" + document1.getId() + "/files/" + DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE;
-        MockMultipartFile mockMultipartFile = new MockMultipartFile("document1.xml", "document1.xml", "doc/xml", "content of my file".getBytes());
-        MockMultipartFile mockMultipartFile2 = new MockMultipartFile("document2.png", "document2.png", "image/png", "some pixels informations".getBytes());
-        MultipartFile[] multipartFiles = {mockMultipartFile, mockMultipartFile2};
+        String fileLsUriTemplate = "/documents/" + document1.getId() + "/files/"
+                + DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE;
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("document1.xml", "document1.xml", "doc/xml",
+                "content of my file".getBytes());
+        MockMultipartFile mockMultipartFile2 = new MockMultipartFile("document2.png", "document2.png", "image/png",
+                "some pixels informations".getBytes());
+        MultipartFile[] multipartFiles = { mockMultipartFile, mockMultipartFile2 };
         Document updatedDoc = documentService.addFiles(document1.getId(), multipartFiles, fileLsUriTemplate);
 
         Assert.assertEquals(updatedDoc.getDocumentFiles().size(), 2);

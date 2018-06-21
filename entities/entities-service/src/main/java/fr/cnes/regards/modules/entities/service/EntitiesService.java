@@ -54,14 +54,13 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
  */
 @Service
 @MultitenantTransactional
-@SuppressWarnings("rawtypes")
 public class EntitiesService implements IEntitiesService {
 
     @Autowired
     private IDatasetRepository datasetRepository;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepository;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepository;
 
     @Autowired
     private IModelAttrAssocService modelAttributeService;

@@ -24,14 +24,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -44,8 +41,6 @@ import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.domain.Document;
 import fr.cnes.regards.modules.models.domain.Model;
-import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
-import fr.cnes.regards.modules.models.service.IModelService;
 
 /**
  * @author Sylvain Vissiere-Guerinet
@@ -53,7 +48,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
  */
 public class EntityServiceTest {
 
-    private IAbstractEntityRepository<AbstractEntity> entitiesRepositoryMocked;
+    private IAbstractEntityRepository<AbstractEntity<?>> entitiesRepositoryMocked;
 
     private Collection collection2;
 
@@ -71,7 +66,7 @@ public class EntityServiceTest {
 
     private Model model2;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void init() {
 
@@ -101,24 +96,24 @@ public class EntityServiceTest {
         dataset2 = new Dataset(model2, "PROJECT", "dataset2");
         dataset2.setLicence("licence");
 
-        IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
-        IModelService pModelService = Mockito.mock(IModelService.class);
+        // IModelAttrAssocService pModelAttributeService = Mockito.mock(IModelAttrAssocService.class);
+        // IModelService pModelService = Mockito.mock(IModelService.class);
 
         entitiesRepositoryMocked = Mockito.mock(IAbstractEntityRepository.class);
-        final List<AbstractEntity> findByTagsValueCol2IpId = new ArrayList<>();
+        List<AbstractEntity<?>> findByTagsValueCol2IpId = new ArrayList<>();
         findByTagsValueCol2IpId.add(collection4);
         Mockito.when(entitiesRepositoryMocked.findByTags(collection2.getIpId().toString()))
                 .thenReturn(findByTagsValueCol2IpId);
 
-        EntityManager emMocked = Mockito.mock(EntityManager.class);
+        // EntityManager emMocked = Mockito.mock(EntityManager.class);
 
-        IPublisher publisherMocked = Mockito.mock(IPublisher.class);
+        // IPublisher publisherMocked = Mockito.mock(IPublisher.class);
         IRuntimeTenantResolver runtimeTenantResolver = Mockito.mock(IRuntimeTenantResolver.class);
         Mockito.when(runtimeTenantResolver.getTenant()).thenReturn("Tenant");
 
-        Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn(data);
-        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn(doc);
-        Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn(dataset);
+        Mockito.when(entitiesRepositoryMocked.findById(1L)).thenReturn((AbstractEntity) data);
+        Mockito.when(entitiesRepositoryMocked.findById(2L)).thenReturn((AbstractEntity) doc);
+        Mockito.when(entitiesRepositoryMocked.findById(3L)).thenReturn((AbstractEntity) dataset);
     }
 
     @Test
@@ -126,12 +121,12 @@ public class EntityServiceTest {
     @Requirement("REGARDS_DSL_SYS_ARC_420")
     @Purpose("A document identifier is an URN")
     public void testAssociateDatasetToAnything() {
-        final List<AbstractEntity> entityList = new ArrayList<>();
+        List<AbstractEntity<?>> entityList = new ArrayList<>();
         entityList.add(collection3);
         entityList.add(dataset2);
         entityList.add(data);
         entityList.add(doc);
-        final Set<UniformResourceName> entityURNList = new HashSet<>();
+        Set<UniformResourceName> entityURNList = new HashSet<>();
         entityURNList.add(collection3.getIpId());
         entityURNList.add(dataset2.getIpId());
         entityURNList.add(data.getIpId());

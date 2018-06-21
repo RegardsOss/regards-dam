@@ -263,6 +263,12 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.removeTags(tags);
     }
 
+    public void clearTags() {
+        this.tags.clear();
+        // Propagate to feature
+        feature.getTags().clear();
+    }
+
     /**
      * Get an immutable copy of feature properties.
      * If this set should be modified, please use addProperty or removeProperty
@@ -410,5 +416,9 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         return "AbstractEntity [lastUpdate=" + lastUpdate + ", creationDate=" + creationDate + ", id=" + id + ", ipId="
                 + getIpId() + ", sipId=" + getSipId() + ", label=" + getLabel() + ", attributes=" + getProperties()
                 + ", model=" + model + "]";
+    }
+
+    public F getFeature() {
+        return feature;
     }
 }
