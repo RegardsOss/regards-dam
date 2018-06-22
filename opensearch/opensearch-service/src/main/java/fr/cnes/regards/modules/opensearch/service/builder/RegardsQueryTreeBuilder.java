@@ -54,7 +54,7 @@ public class RegardsQueryTreeBuilder extends QueryTreeBuilder implements ICriter
         setBuilder(OrQueryNode.class, new OrQueryNodeBuilder());
         setBuilder(ModifierQueryNode.class, new ModifierQueryNodeBuilder());
         setBuilder(TermRangeQueryNode.class, new TermRangeQueryNodeBuilder(finder));
-        setBuilder(WildcardQueryNode.class, new WildcardQueryNodeBuilder());
+        setBuilder(WildcardQueryNode.class, new WildcardQueryNodeBuilder(finder));
         setBuilder(GroupQueryNode.class, new GroupQueryNodeBuilder());
         setBuilder(FuzzyQueryNode.class, new UnsupportedQueryNodeBuilder());
         setBuilder(BooleanQueryNode.class, new BooleanNodeQueryBuilder());
