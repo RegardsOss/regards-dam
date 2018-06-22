@@ -37,12 +37,10 @@ import com.google.common.base.Strings;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
-import fr.cnes.regards.framework.authentication.IAuthenticationResolver;
 import fr.cnes.regards.framework.feign.security.FeignSecurityManager;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.annotations.Plugin;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -106,12 +104,6 @@ public class AipStoragePlugin implements IStorageService {
     private IRuntimeTenantResolver runtimeTenantResolver;
 
     @Autowired
-    private IAuthenticationResolver authResolver;
-
-    @Autowired
-    private ITenantResolver tenantResolver;
-
-    @Autowired
     private JWTService jwtService;
 
     @Value("${zuul.prefix}")
@@ -127,8 +119,10 @@ public class AipStoragePlugin implements IStorageService {
     public <T extends AbstractEntity> T storeAIP(T entity) {
         try {
             AIPCollection collection = new AIPCollection();
-            collection.add(getBuilder(entity).build());
             FeignSecurityManager.asSystem();
+
+            collection.add(getBuilder(entity).build());
+
             ResponseEntity<List<RejectedAip>> response = aipClient.store(collection);
             handleClientAIPResponse(response.getStatusCode(), entity, response.getBody());
         } catch (ModuleException e) {
@@ -155,9 +149,10 @@ public class AipStoragePlugin implements IStorageService {
     public <T extends AbstractEntity> T updateAIP(T entity) {
         ResponseEntity<AIP> response;
         try {
-            AIP aip = getBuilder(entity).build();
-            
             FeignSecurityManager.asSystem();
+            
+            AIP aip = getBuilder(entity).build();
+
             response = aipClient.updateAip(entity.getIpId().toString(), aip);
             handleClientAIPResponse(response.getStatusCode(), entity, response.getBody());
         } catch (ModuleException e) {
@@ -308,10 +303,8 @@ public class AipStoragePlugin implements IStorageService {
     private URL toPublicDescription(UniformResourceName owningAip) throws MalformedURLException {
         // Lets reconstruct the public url of rs-dam
         // First lets get the public hostname from rs-admin-instance
-        FeignSecurityManager.asSystem();
         String projectHost = projectsClient.retrieveProject(runtimeTenantResolver.getTenant()).getBody().getContent()
                 .getHost();
-        FeignSecurityManager.reset();
 
         // now lets add it the gateway prefix and the microservice name and the endpoint path to it
         StringBuilder sb = new StringBuilder();
@@ -359,8 +352,8 @@ public class AipStoragePlugin implements IStorageService {
                 // Some AIP are rejected
                 if (rejectedAips != null) {
                     rejectedAips.stream().filter(r -> r.getIpId().equals(entity.getIpId().toString())).forEach(r -> {
-                        LOGGER.error("{} : update entity state to AIP_STORE_ERROR for reason : {}",
-                                     entity.getIpId(), r.getRejectionCauses().get(0));
+                        LOGGER.error("{} : update entity state to AIP_STORE_ERROR for reason : {}", entity.getIpId(),
+                                     r.getRejectionCauses().get(0));
                         entity.setStateAip(EntityAipState.AIP_STORE_ERROR);
                     });
                 }

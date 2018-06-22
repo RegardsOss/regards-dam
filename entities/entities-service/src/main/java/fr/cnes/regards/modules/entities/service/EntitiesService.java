@@ -84,7 +84,7 @@ public class EntitiesService implements IEntitiesService {
      */
     @Autowired
     private ICollectionRepository collectionRepository;
-    
+
     /**
      * If true the AIP entities are send to Storage module to be stored
      */
@@ -179,9 +179,7 @@ public class EntitiesService implements IEntitiesService {
     @Override
     public void storeAips() {
 
-        /*
-         *  Search entities with state EntityAipState#AIP_TO_STORE
-         */
+        // Search entities with state EntityAipState#AIP_TO_STORE
         entityRepository.findAllByStateAip(EntityAipState.AIP_TO_CREATE).stream().forEach(e -> {
             storeAipStorage(e);
         });
@@ -224,6 +222,8 @@ public class EntitiesService implements IEntitiesService {
             return entity;
         }
 
+        LOGGER.info("Store AIP for entity <{}> ", entity.getIpId());
+
         return storageService.storeAIP(entity);
     }
 
@@ -238,6 +238,8 @@ public class EntitiesService implements IEntitiesService {
             return entity;
         }
 
+        LOGGER.info("Update AIP for entity <{}> ", entity.getIpId());
+
         return getStorageService().updateAIP(entity);
     }
 
@@ -251,6 +253,8 @@ public class EntitiesService implements IEntitiesService {
         if (storageService == null) {
             return;
         }
+
+        LOGGER.info("Delete AIP for entity <{}> ", entity.getIpId());
 
         getStorageService().deleteAIP(entity);
     }
