@@ -52,8 +52,11 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
     @NotNull(message = "Feature type is required")
     protected EntityType entityType;
 
-    @NotBlank(message = "The label must not be null or empty")
+    @NotBlank(message = "Label is required")
     protected String label;
+
+    @NotBlank(message = "Model name is required")
+    protected String model;
 
     /**
      * Related entity files
@@ -123,5 +126,13 @@ public abstract class EntityFeature extends AbstractFeature<Set<AbstractAttribut
 
     public void removeTags(Collection<String> tags) {
         this.tags.removeAll(tags);
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
     }
 }

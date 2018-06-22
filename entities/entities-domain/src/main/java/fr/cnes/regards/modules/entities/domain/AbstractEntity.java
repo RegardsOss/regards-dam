@@ -169,9 +169,9 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     protected AbstractEntity(Model model, F feature) {
         this.model = model;
         this.feature = feature;
-        // FIXME
         if (this.feature != null) {
             this.ipId = feature.getId();
+            this.feature.setModel(model.getName());
         }
     }
 
