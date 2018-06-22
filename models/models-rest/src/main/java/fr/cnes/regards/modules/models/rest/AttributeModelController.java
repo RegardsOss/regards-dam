@@ -18,12 +18,13 @@
  */
 package fr.cnes.regards.modules.models.rest;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.validation.Valid;
 
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
@@ -128,7 +129,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             @RequestParam(name = "modelIds", required = false) final Set<Long> pModelIds) {
         final List<AttributeModel> attributes = attributeService.getAttributes(pType, pFragmentName, pModelIds);
         // Build JSON path
-        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
     }
 
@@ -144,7 +145,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
         Collection<ModelAttrAssoc> assocs = modelAttrAssocService.getModelAttrAssocsFor(pModelType);
         List<AttributeModel> attributes = assocs.stream().map(attrAssoc -> attrAssoc.getAttribute())
                 .collect(Collectors.toList());
-        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        attributes.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return ResponseEntity.ok(toResources(attributes));
 
     }
@@ -174,7 +175,7 @@ public class AttributeModelController implements IResourceController<AttributeMo
             throws ModuleException {
         AttributeModel attribute = attributeService.getAttribute(pAttributeId);
 
-        attribute.buildJsonPath(StaticProperties.PROPERTIES);
+        attribute.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         return ResponseEntity.ok(toResource(attribute));
     }
 
@@ -242,16 +243,17 @@ public class AttributeModelController implements IResourceController<AttributeMo
                                     MethodParamFactory.build(Long.class, attributeModel.getId()));
         }
         resourceService.addLink(resource, this.getClass(), "getAttributes", LinkRels.LIST,
-                                MethodParamFactory.build(AttributeType.class),
-                                MethodParamFactory.build(String.class),
+                                MethodParamFactory.build(AttributeType.class), MethodParamFactory.build(String.class),
                                 MethodParamFactory.build(Set.class));
         return resource;
     }
 
     private boolean isDeletable(AttributeModel attributeModel) {
         // Allows deletion for given attribute if it is not linked to any model.
-        // FIXME : Remove delete attributes functionality for V1. How to delete an attribute already indexed in elasticsearch ?
-        // Problem is caused by the MultinantAtributeAdapterFactory during mapping between elasticsearch results and attributes models.
+        // FIXME : Remove delete attributes functionality for V1. How to delete an attribute already indexed in
+        // elasticsearch ?
+        // Problem is caused by the MultinantAtributeAdapterFactory during mapping between elasticsearch results and
+        // attributes models.
         // return modelAttrAssocService.retrieveModelAttrAssocsByAttributeId(attributeModel).isEmpty();
         return false;
     }

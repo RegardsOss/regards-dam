@@ -95,7 +95,7 @@ public class QueryParserTest {
         Mockito.when(attributeModelClient.getAttributes(null, null))
                 .thenReturn(new ResponseEntity<>(HateoasUtils.wrapList(SampleDataUtils.LIST), HttpStatus.OK));
         IAttributeModelCache attributeModelCache = new AttributeModelCache(attributeModelClient, subscriber,
-                                                                           runtimeTenantResolver);
+                runtimeTenantResolver);
         IAttributeFinder finder = new AttributeFinder(runtimeTenantResolver, attributeModelCache);
 
         parser = new QueryParser(finder);
@@ -112,7 +112,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like isTrue:false")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void booleanMatchTest() throws OpenSearchParseException {
-        String field = SampleDataUtils.BOOLEAN_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        String field = SampleDataUtils.BOOLEAN_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         Boolean value = true;
         String term = field + ":" + value;
         ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -124,7 +124,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like altitude:8848")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void intMatchTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer value = 8848;
         final String term = field + ":" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -142,7 +142,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like altitude:-8848")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void negativeIntMatchTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer value = -8848;
         final String term = field + ":%5C" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -161,7 +161,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like bpm:128.0")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void doubleMatchTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.DOUBLE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.DOUBLE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Double value = 145.6;
         final String term = field + ":" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -182,7 +182,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:harrypotter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void stringMatchTest() throws OpenSearchParseException {
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "harrypotter";
         final String term = key + ":" + val;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -200,7 +200,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:\"harry potter\"")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void stringPhraseMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "\"a phrase query\"";
         final String expectedAfterParse = "a phrase query";
         final String term = key + ":" + val;
@@ -219,7 +219,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:*potter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void wildcardLeading() throws OpenSearchParseException {
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "*potter";
         final String term = key + ":" + val;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -237,7 +237,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:harry*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void wildcardTrailing() throws OpenSearchParseException {
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "harry*";
         final String term = key + ":" + val;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -255,7 +255,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like tag:<ip id containing :>")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void ipIdParsing() throws OpenSearchParseException, UnsupportedEncodingException {
-        String key = StaticProperties.TAGS;
+        String key = StaticProperties.FEATURE_TAGS;
         String val = "\"URN\\:PROJECT\\:DATA\\:patati\\:V1\"";
         String term = key + ":" + val;
         ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -271,7 +271,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:*rry*")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void wildcardsAround() throws OpenSearchParseException {
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "*RRY*";
         final String term = key + ":" + val;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -289,7 +289,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:har*ter")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void wildcardMiddleTest() throws OpenSearchParseException {
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "har*ter";
         final String term = key + ":" + val;
         parser.parse(QUERY_PREFIX + term);
@@ -299,8 +299,8 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:harrypotter AND author:jkrowling")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void andMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        String key0 = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
-        String key1 = SampleDataUtils.STRING_ATTRIBUTE_MODEL_1.buildJsonPath(StaticProperties.PROPERTIES);
+        String key0 = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
+        String key1 = SampleDataUtils.STRING_ATTRIBUTE_MODEL_1.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         String term = key0 + ":harrypotter AND " + key1 + ":jkrowling";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
@@ -317,8 +317,8 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:harrypotter OR author:jkrowling")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void orMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        String key0 = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
-        String key1 = SampleDataUtils.STRING_ATTRIBUTE_MODEL_1.buildJsonPath(StaticProperties.PROPERTIES);
+        String key0 = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
+        String key1 = SampleDataUtils.STRING_ATTRIBUTE_MODEL_1.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         String term = key0 + ":val1 OR " + key1 + ":val2";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
@@ -357,7 +357,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void integerRangeExclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String lowerInclusion = "{";
         final Integer lowerValue = 90;
         final Integer upperValue = 120;
@@ -382,7 +383,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void integerRangeInclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String lowerInclusion = "[";
         final Integer lowerValue = 0;
         final Integer upperValue = 2;
@@ -407,7 +409,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void doubleRangeSemiInclusiveTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.DOUBLE_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.DOUBLE_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String lowerInclusion = "{";
         final Double lowerValue = 128d;
         final Double upperValue = 145d;
@@ -432,7 +435,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void longRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.LONG_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.LONG_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String lowerInclusion = "{";
         final Long lowerValue = 0L;
         final Long upperValue = 88L;
@@ -457,7 +461,7 @@ public class QueryParserTest {
     @Ignore
     public void OffsetDateTimeRangeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String lowerInclusion = "{";
         final OffsetDateTime lowerValue = OffsetDateTime.now().minusHours(1);
         final OffsetDateTime upperValue = OffsetDateTime.now();
@@ -483,7 +487,7 @@ public class QueryParserTest {
     @Ignore
     public void OffsetDateTimeLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final OffsetDateTime upperValue = OffsetDateTime.now();
         final String term = field + ":{ * TO " + upperValue + "}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -505,7 +509,7 @@ public class QueryParserTest {
     @Ignore
     public void OffsetDateTimeLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final OffsetDateTime upperValue = OffsetDateTime.now();
         final String term = field + ":{ * TO " + upperValue + "]";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -527,7 +531,7 @@ public class QueryParserTest {
     @Ignore
     public void OffsetDateTimeGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final OffsetDateTime lowerValue = OffsetDateTime.now();
         final String term = field + ":{" + lowerValue + " TO *}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -549,7 +553,7 @@ public class QueryParserTest {
     @Ignore
     public void OffsetDateTimeGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_RANGE_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final OffsetDateTime lowerValue = OffsetDateTime.now();
         final String term = field + ":[ " + lowerValue + " TO *}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -572,12 +576,13 @@ public class QueryParserTest {
     @Ignore
     public void OffsetDateTimeEqTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final OffsetDateTime lowerValue = OffsetDateTime.now();
         DateTimeFormatter ISO_DATE_TIME_UTC = new DateTimeFormatterBuilder().parseCaseInsensitive()
                 .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).optionalStart().appendOffset("+HH:MM", "Z")
                 .toFormatter();
-        final String term = field + ": \"" + ISO_DATE_TIME_UTC.format(lowerValue.withOffsetSameInstant(ZoneOffset.UTC)) + "\"";
+        final String term = field + ": \"" + ISO_DATE_TIME_UTC.format(lowerValue.withOffsetSameInstant(ZoneOffset.UTC))
+                + "\"";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
         Assert.assertNotNull(criterion);
@@ -593,7 +598,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void integerLtTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer upperValue = 1;
         final String term = field + ":{ * TO " + upperValue + "}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -614,7 +620,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void integerLeTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer upperValue = 1;
         final String term = field + ":{ * TO " + upperValue + "]";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -635,7 +642,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void integerGtTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer lowerValue = 1;
         final String term = field + ":{" + lowerValue + " TO *}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -656,7 +664,8 @@ public class QueryParserTest {
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     @Ignore
     public void integerGeTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_RANGE_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer lowerValue = 1;
         final String term = field + ":[ " + lowerValue + " TO *}";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
@@ -675,7 +684,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like (title:harrypotter)")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void parenthesisAroundAllTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String value = "harrypotter";
         final String term = "(" + field + ":" + value + ")";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -692,7 +701,7 @@ public class QueryParserTest {
     @Purpose("Tests queries like title:(harrypotter OR starwars)")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void parenthesisAroundOrTest() throws OpenSearchParseException, UnsupportedEncodingException {
-        final String field = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String term = field + ":(harrypotter OR starwars)";
         final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder.encode(term, "UTF-8"));
 
@@ -704,7 +713,8 @@ public class QueryParserTest {
     @Purpose("Tests queries like cast:danielradcliffe")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void stringArrayTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.STRING_ARRAY_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.STRING_ARRAY_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String value = "danielradcliffe";
         final String term = field + ":" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -721,7 +731,8 @@ public class QueryParserTest {
     @Purpose("Tests queries like years:2001")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void integerArrayTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.INTEGER_ARRAY_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.INTEGER_ARRAY_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Integer value = 2001;
         final String term = field + ":" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -739,7 +750,8 @@ public class QueryParserTest {
     @Purpose("Tests queries like duration:159")
     @Requirement("REGARDS_DSL_DAM_ARC_810")
     public void doubleArrayTest() throws OpenSearchParseException {
-        final String field = SampleDataUtils.DOUBLE_ARRAY_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String field = SampleDataUtils.DOUBLE_ARRAY_ATTRIBUTE_MODEL
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final Double value = 159d;
         final String term = field + ":" + value;
         final ICriterion criterion = parser.parse(QUERY_PREFIX + term);
@@ -762,7 +774,7 @@ public class QueryParserTest {
     @Ignore
     public void containsDateBetweenTest() throws OpenSearchParseException, UnsupportedEncodingException {
         final String field = SampleDataUtils.LOCAL_DATE_TIME_ARRAY_ATTRIBUTE_MODEL
-                .buildJsonPath(StaticProperties.PROPERTIES);
+                .buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final OffsetDateTime lowerValue = OffsetDateTimeAdapter.parse("2001-11-04T00:00:00");
         final OffsetDateTime upperValue = OffsetDateTimeAdapter.parse("2001-11-16T23:59:59");
         final String lowerInclusion = "[";
@@ -814,10 +826,10 @@ public class QueryParserTest {
     @Test
     public void notMatchTest() throws OpenSearchParseException, UnsupportedEncodingException {
 
-        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.PROPERTIES);
+        final String key = SampleDataUtils.STRING_ATTRIBUTE_MODEL.buildJsonPath(StaticProperties.FEATURE_PROPERTIES);
         final String val = "harrypotter";
-        final ICriterion criterion = parser.parse(QUERY_PREFIX + URLEncoder
-                .encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
+        final ICriterion criterion = parser.parse(QUERY_PREFIX
+                + URLEncoder.encode("!(" + key + ":" + val + " OR " + key + ":" + val + ")", "UTF-8"));
         Assert.assertNotNull(criterion);
         Assert.assertTrue(criterion instanceof NotCriterion);
 

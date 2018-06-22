@@ -34,7 +34,7 @@ import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 public interface IFeatureCriterion extends ICriterion {
 
     static String buildFeaturePath(AttributeModel att) {
-        return att.buildJsonPath(StaticProperties.FEATURE_NS + "." + StaticProperties.PROPERTIES);
+        return att.buildJsonPath(StaticProperties.FEATURE_PROPERTIES_PATH);
     }
 
     static <T extends Number & Comparable<T>> ICriterion gt(AttributeModel att, T value) {
