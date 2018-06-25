@@ -47,6 +47,6 @@ public interface IMapping {
     /**
      * Mapping name for geometry attribute
      */
-    static final String GEOMETRY = "geometry";
+    static final String GEOMETRY = "feature.geometry";
 }
 // CHECKSTYLE:ON

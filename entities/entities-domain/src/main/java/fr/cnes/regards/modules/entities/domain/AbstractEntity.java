@@ -22,8 +22,6 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
@@ -43,7 +41,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -54,11 +51,9 @@ import org.hibernate.annotations.TypeDefs;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
-import fr.cnes.regards.framework.gson.annotation.GsonIgnore;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
 import fr.cnes.regards.framework.jpa.validator.PastOrNow;
@@ -160,11 +155,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     @Column(columnDefinition = "jsonb")
     @Type(type = "jsonb")
     protected F feature;
-
-    // To perform quick access to attribute from its name
-    @Transient
-    @GsonIgnore
-    private Map<String, AbstractAttribute<?>> propertyMap = null;
 
     protected AbstractEntity(Model model, F feature) {
         this.model = model;
@@ -300,34 +290,15 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      * Add feature property
      */
     public void addProperty(AbstractAttribute<?> property) {
-        feature.getProperties().add(property);
-        // If property key is null, it is not a valid property and so it may not pass validation process
-        if (property.getName() != null) {
-            propertyMap = Maps.uniqueIndex(feature.getProperties(), AbstractAttribute::getName);
-        }
+        feature.addProperty(property);
     }
 
     public void removeProperty(AbstractAttribute<?> property) {
-        feature.getProperties().remove(property);
-        propertyMap = Maps.uniqueIndex(feature.getProperties(), AbstractAttribute::getName);
+        feature.removeProperty(property);
     }
 
     public AbstractAttribute<?> getProperty(String name) {
-        if (propertyMap == null) {
-            propertyMap = Maps.uniqueIndex(feature.getProperties(), AbstractAttribute::getName);
-        }
-        if (!name.contains(".")) {
-            return this.propertyMap.get(name);
-        } else {
-            ObjectAttribute fragment = (ObjectAttribute) this.propertyMap.get(name.substring(0, name.indexOf('.')));
-            String propName = name.substring(name.indexOf('.') + 1);
-            if (fragment != null) {
-                Optional<AbstractAttribute<?>> attOpt = fragment.getValue().stream()
-                        .filter(p -> p.getName().equals(propName)).findFirst();
-                return attOpt.isPresent() ? attOpt.get() : null;
-            }
-            return null;
-        }
+        return feature.getProperty(name);
     }
 
     /**
@@ -335,7 +306,6 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
      */
     public void setProperties(Set<AbstractAttribute<?>> attributes) {
         feature.setProperties(attributes);
-        propertyMap = Maps.uniqueIndex(feature.getProperties(), AbstractAttribute::getName);
     }
 
     public Model getModel() {

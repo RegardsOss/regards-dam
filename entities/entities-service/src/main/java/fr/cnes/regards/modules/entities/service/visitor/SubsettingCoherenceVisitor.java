@@ -27,6 +27,7 @@ import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractPropertyCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
@@ -216,6 +217,11 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
+        return true;
+    }
+
+    @Override
     public Boolean visitCircleCriterion(CircleCriterion criterion) {
         return true;
     }
@@ -229,4 +235,5 @@ public class SubsettingCoherenceVisitor implements ICriterionVisitor<Boolean> {
         AttributeModel attribute = extractAttribute(criterion);
         return (attribute != null);
     }
+
 }
