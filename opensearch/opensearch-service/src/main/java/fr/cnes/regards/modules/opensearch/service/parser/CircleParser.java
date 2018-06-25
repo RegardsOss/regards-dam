@@ -42,9 +42,9 @@ public class CircleParser implements IParser {
         String latParam = parameters.getFirst(CENTER_LAT);
         String lonParam = parameters.getFirst(CENTER_LON);
         String radiusParam = parameters.getFirst(RADIUS);
-        
+
         // Check required query parameter
-        if ((latParam == null) && (lonParam == null) && (rParam == null)) {
+        if ((latParam == null) && (lonParam == null) && (radiusParam == null)) {
             return null;
         }
 
@@ -62,7 +62,7 @@ public class CircleParser implements IParser {
             String errorMessage = String.format("Missing radius parameter :  : %s", RADIUS);
             throw new OpenSearchParseException(errorMessage);
         }
-        
+
         try {
             return GeometryCriterionBuilder.build(lonParam, latParam, radiusParam);
         } catch (InvalidGeometryException e) {
