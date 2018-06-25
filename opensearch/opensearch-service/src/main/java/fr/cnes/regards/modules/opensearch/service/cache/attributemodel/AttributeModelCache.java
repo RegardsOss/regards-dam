@@ -187,17 +187,12 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
                 attModels = HateoasUtils.unwrapCollection(response.getBody());
             }
 
-            // Fill dynamic property mapping
-            Map<String, AttributeModel> tenantMap = propertyMap.get(tenant);
-            // TODO cleaning .... rebuilding!
-            if (tenantMap == null) {
-                // Initialize the map
-                tenantMap = new HashMap<>();
-                // Add static properties
-                initStaticProperties(tenantMap);
-                // Reference tenant map
-                propertyMap.put(tenant, tenantMap);
-            }
+            // Build or rebuild the map
+            Map<String, AttributeModel> tenantMap = new HashMap<>();
+            // Add static properties
+            initStaticProperties(tenantMap);
+            // Reference tenant map (override current if any)
+            propertyMap.put(tenant, tenantMap);
 
             // Conflictual dynamic keys to be removed
             List<String> conflictualKeys = new ArrayList<>();
@@ -223,7 +218,6 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
                     String fragment = attModel.getFragment().getName();
                     // Prevent conflicts with static properties
                     if (!StaticProperties.FEATURES_STATICS.contains(fragment)) {
-                        key = attModel.buildJsonPath("");
                         // Bind fragment qualified property name to attribute
                         tenantMap.put(attModel.buildJsonPath(""), attModel);
                     }
@@ -292,4 +286,7 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         }
     }
 
+    public Map<String, Map<String, AttributeModel>> getPropertyMap() {
+        return propertyMap;
+    }
 }
