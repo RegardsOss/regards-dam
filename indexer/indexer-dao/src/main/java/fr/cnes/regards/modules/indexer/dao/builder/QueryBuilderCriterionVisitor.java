@@ -1,3 +1,21 @@
+/*
+ * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ *
+ * This file is part of REGARDS.
+ *
+ * REGARDS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * REGARDS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
+ */
 package fr.cnes.regards.modules.indexer.dao.builder;
 
 import java.io.IOException;
@@ -12,11 +30,13 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 
 import com.google.common.base.Joiner;
 import com.vividsolutions.jts.geom.Coordinate;
+
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.domain.IMapping;
 import fr.cnes.regards.modules.indexer.domain.criterion.AbstractMultiCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.BooleanMatchCriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.BoundaryBoxCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.CircleCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateMatchCriterion;
 import fr.cnes.regards.modules.indexer.domain.criterion.DateRangeCriterion;
@@ -198,6 +218,16 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
+    }
 
+    @Override
+    public QueryBuilder visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
+        try {
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders
+                    .newEnvelope(new Coordinate(criterion.getMaxY(), criterion.getMinX()),
+                                 new Coordinate(criterion.getMinY(), criterion.getMaxX())));
+        } catch (IOException ioe) {
+            throw new RsRuntimeException(ioe);
+        }
     }
 }

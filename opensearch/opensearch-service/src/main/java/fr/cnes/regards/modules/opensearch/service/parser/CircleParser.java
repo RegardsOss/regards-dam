@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.opensearch.service.parser;
 import org.springframework.util.MultiValueMap;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
+import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 import fr.cnes.regards.modules.opensearch.service.exception.OpenSearchParseException;
 
 /**
@@ -38,11 +39,10 @@ public class CircleParser implements IParser {
 
     @Override
     public ICriterion parse(MultiValueMap<String, String> parameters) throws OpenSearchParseException {
-
         String latParam = parameters.getFirst(CENTER_LAT);
         String lonParam = parameters.getFirst(CENTER_LON);
-        String rParam = parameters.getFirst(RADIUS);
-
+        String radiusParam = parameters.getFirst(RADIUS);
+        
         // Check required query parameter
         if ((latParam == null) && (lonParam == null) && (rParam == null)) {
             return null;
@@ -58,12 +58,15 @@ public class CircleParser implements IParser {
             throw new OpenSearchParseException(errorMessage);
         }
 
-        if (rParam == null) {
+        if (radiusParam == null) {
             String errorMessage = String.format("Missing radius parameter :  : %s", RADIUS);
             throw new OpenSearchParseException(errorMessage);
         }
-
-        Double[] center = { Double.parseDouble(lonParam), Double.parseDouble(latParam) };
-        return ICriterion.intersectsCircle(center, rParam);
+        
+        try {
+            return GeometryCriterionBuilder.build(lonParam, latParam, radiusParam);
+        } catch (InvalidGeometryException e) {
+            throw new OpenSearchParseException(e);
+        }
     }
 }
