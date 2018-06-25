@@ -24,14 +24,18 @@ import org.apache.lucene.queryparser.flexible.core.util.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.nodes.TermRangeQueryNode;
 
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
+import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
 
 /**
  * Facade class wrapping a {@link TermRangeQueryNode} for simplifiying access to usefull parameters.
  * @author Xavier-Alexandre Brochard
+ * @author Marc Sordi
  */
 class TermRangeQueryNodeFacade {
 
     private final String field;
+
+    private final AttributeModel attModel;
 
     private final boolean isLowerInclusive;
 
@@ -44,18 +48,16 @@ class TermRangeQueryNodeFacade {
     /**
      * Constructor
      */
-    public TermRangeQueryNodeFacade(TermRangeQueryNode termRangeQueryNode) {
+    public TermRangeQueryNodeFacade(TermRangeQueryNode termRangeQueryNode, AttributeModel attModel) {
         super();
         field = StringUtils.toString(termRangeQueryNode.getField());
         lowerBound = termRangeQueryNode.getLowerBound().getTextAsString();
         upperBound = termRangeQueryNode.getUpperBound().getTextAsString();
         isLowerInclusive = termRangeQueryNode.isLowerInclusive();
         isUpperInclusive = termRangeQueryNode.isUpperInclusive();
+        this.attModel = attModel;
     }
 
-    /**
-     * @return the field
-     */
     public String getField() {
         return field;
     }
@@ -142,6 +144,10 @@ class TermRangeQueryNodeFacade {
      */
     public boolean isUpperInclusive() {
         return isUpperInclusive;
+    }
+
+    public AttributeModel getAttModel() {
+        return attModel;
     }
 
 }

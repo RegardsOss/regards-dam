@@ -24,7 +24,6 @@ import java.util.Set;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
 
 /**
@@ -33,23 +32,32 @@ import fr.cnes.regards.modules.indexer.domain.facet.IFacet;
  * @param <T> the type of which the page consists.
  * @author oroussel
  */
-public class FacetPage<T extends IIndexable> extends PageImpl<T> {
+@SuppressWarnings("serial")
+public class FacetPage<T> extends PageImpl<T> {
 
     private final Set<IFacet<?>> facets;
 
-    public FacetPage(List<T> pContent, Set<IFacet<?>> pFacets, Pageable pPageable, long pTotal) {
-        super(pContent, pPageable, pTotal);
-        this.facets = pFacets;
+    private final Pageable pageable;
+
+    public FacetPage(List<T> content, Set<IFacet<?>> facets, Pageable pageable, long total) {
+        super(content, pageable, total);
+        this.pageable = pageable;
+        this.facets = facets;
 
     }
 
-    public FacetPage(List<T> pContent, Set<IFacet<?>> pFacets) {
-        super(pContent);
-        this.facets = pFacets;
+    public FacetPage(List<T> content, Set<IFacet<?>> facets) {
+        super(content);
+        this.pageable = null;
+        this.facets = facets;
     }
 
     public Set<IFacet<?>> getFacets() {
         return facets;
+    }
+
+    public Pageable getPageable() {
+        return pageable;
     }
 
     @Override
@@ -70,5 +78,4 @@ public class FacetPage<T extends IIndexable> extends PageImpl<T> {
         }
         return super.equals(obj);
     }
-
 }

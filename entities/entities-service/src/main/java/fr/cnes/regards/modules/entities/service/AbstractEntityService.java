@@ -18,9 +18,7 @@
  */
 package fr.cnes.regards.modules.entities.service;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -33,14 +31,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
+
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
@@ -58,11 +58,9 @@ import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
 import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
-import fr.cnes.regards.modules.entities.domain.AbstractDescEntity;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.entities.domain.attribute.ObjectAttribute;
 import fr.cnes.regards.modules.entities.domain.deleted.DeletedEntity;
@@ -70,9 +68,6 @@ import fr.cnes.regards.modules.entities.domain.event.BroadcastEntityEvent;
 import fr.cnes.regards.modules.entities.domain.event.DatasetEvent;
 import fr.cnes.regards.modules.entities.domain.event.EventType;
 import fr.cnes.regards.modules.entities.domain.event.NotDatasetEntityEvent;
-import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionTooLargeException;
-import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableCharsetException;
-import fr.cnes.regards.modules.entities.service.exception.EntityDescriptionUnacceptableType;
 import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator;
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
@@ -89,12 +84,13 @@ import fr.cnes.regards.modules.models.service.IModelService;
  * @param <U> Entity type
  * @author oroussel
  */
-public abstract class AbstractEntityService<U extends AbstractEntity> extends AbstractValidationService<U>
+public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends AbstractValidationService<U>
         implements IEntityService<U> {
 
     /**
      * Max description file acceptable byte size
      */
+    @SuppressWarnings("unused")
     private static final int MAX_DESC_FILE_SIZE = 10_000_000;
 
     /**
@@ -110,7 +106,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
     /**
      * Unparameterized entity repository
      */
-    protected final IAbstractEntityRepository<AbstractEntity> entityRepository;
+    protected final IAbstractEntityRepository<AbstractEntity<?>> entityRepository;
 
     /**
      * Collection repository
@@ -142,7 +138,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
     protected final IDescriptionFileRepository descriptionFileRepository;
 
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
-            IAbstractEntityRepository<AbstractEntity> entityRepository, IModelService modelService,
+            IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
             IDatasetRepository datasetRepository, IAbstractEntityRepository<U> repository, EntityManager em,
             IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
@@ -205,6 +201,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
      * Check if model is loaded else load it then set it on entity.
      * @param entity cocnerned entity
      */
+    @Override
     public void checkAndOrSetModel(U entity) throws ModuleException {
         Model model = entity.getModel();
         // Load model by name if id not specified
@@ -221,8 +218,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
      * @param manageAlterable manage update or not
      * @return {@link Validator} list
      */
+    @Override
     protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
-            AbstractEntity entity) {
+            AbstractEntity<?> entity) {
 
         AttributeModel attModel = modelAttribute.getAttribute();
 
@@ -233,7 +231,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         // Update mode only :
         if (manageAlterable && !attModel.isAlterable()) {
             // lets retrieve the value of the property from db and check if its the same value.
-            AbstractEntity fromDb = entityRepository.findByIpId(entity.getIpId());
+            AbstractEntity<?> fromDb = entityRepository.findByIpId(entity.getIpId());
             AbstractAttribute<?> valueFromDb = extractProperty(fromDb, attModel);
             AbstractAttribute<?> valueFromEntity = extractProperty(entity, attModel);
             // retrieve entity from db, and then update the new one, but i do not have the entity here....
@@ -248,7 +246,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         return validators;
     }
 
-    protected AbstractAttribute<?> extractProperty(AbstractEntity entity, AttributeModel attribute) {
+    protected AbstractAttribute<?> extractProperty(AbstractEntity<?> entity, AttributeModel attribute) {
         Fragment fragment = attribute.getFragment();
         String attName = attribute.getName();
         String attPath = fragment.isDefaultFragment() ? attName : fragment.getName() + "." + attName;
@@ -294,7 +292,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         }
         // Adding new tags to detached entity
         em.detach(entity);
-        entity.getTags().addAll(ipIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        ipIds.forEach(ipId -> entity.addTags(ipId.toString()));
         final U entityInDb = repository.findById(pEntityId);
         // And detach it because it is the other one that will be persisted
         em.detach(entityInDb);
@@ -308,11 +306,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         // Set IpId
         if (entity.getIpId() == null) {
             entity.setIpId(new UniformResourceName(OAISIdentifier.AIP, EntityType.valueOf(entity.getType()),
-                                                   runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
-        }
-        // Set description
-        if (entity instanceof AbstractDescEntity) {
-            this.setDescription((AbstractDescEntity) entity, file, null);
+                    runtimeTenantResolver.getTenant(), UUID.randomUUID(), 1));
         }
 
         // IpIds of entities that will need an AMQP event publishing
@@ -335,7 +329,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         }
         // Removing tags to detached entity
         em.detach(entity);
-        entity.getTags().removeAll(ipIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
+        entity.removeTags(ipIds.stream().map(UniformResourceName::toString).collect(Collectors.toSet()));
         final U entityInDb = repository.findById(entityId);
         // And detach it too because it is the other one that will be persisted
         em.detach(entityInDb);
@@ -366,11 +360,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
      * collection, retrieve and add all groups from collections and datasets tagging this entity
      * @param entity entity to manage the add of groups
      */
-    private <T extends AbstractEntity> void manageGroups(final T entity, Set<UniformResourceName> updatedIpIds) {
+    private <T extends AbstractEntity<?>> void manageGroups(final T entity, Set<UniformResourceName> updatedIpIds) {
         // Search Datasets and collections which tag this entity (if entity is a collection)
         if (entity instanceof Collection) {
-            List<AbstractEntity> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
-            for (AbstractEntity e : taggingEntities) {
+            List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(entity.getIpId().toString());
+            for (AbstractEntity<?> e : taggingEntities) {
                 if ((e instanceof Dataset) || (e instanceof Collection)) {
                     entity.getGroups().addAll(e.getGroups());
                 }
@@ -379,9 +373,9 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
 
         // If entity is a collection or a dataset => propagate its groups to tagged collections (recursively)
         if (((entity instanceof Collection) || (entity instanceof Dataset)) && !entity.getTags().isEmpty()) {
-            List<AbstractEntity> taggedColls = entityRepository
+            List<AbstractEntity<?>> taggedColls = entityRepository
                     .findByIpIdIn(extractUrnsOfType(entity.getTags(), EntityType.COLLECTION));
-            for (AbstractEntity coll : taggedColls) {
+            for (AbstractEntity<?> coll : taggedColls) {
                 if (coll.getGroups().addAll(entity.getGroups())) {
                     // If collection has already been updated, stop recursion !!! (else StackOverflow)
                     updatedIpIds.add(coll.getIpId());
@@ -404,85 +398,87 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
 
     }
 
-    /**
-     * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
-     * @param updatedEntity entity being created/updated
-     * @param pFile the description of the entity
-     * @param oldOne previous description file of updatedEntity
-     * @throws IOException     if description cannot be read
-     * @throws ModuleException if description not conform to REGARDS requirements
-     */
-    private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,
-            DescriptionFile oldOne) throws IOException, ModuleException {
-        // we are updating/creating a description
-        if ((updatedEntity.getDescriptionFile() != null) && !updatedEntity.getDescriptionFile().equals(oldOne)) {
-            // this is a description file
-            if ((pFile != null) && !pFile.isEmpty()) {
-                // collections and dataset only have a description which is a url or a file
-                if (!isContentTypeAcceptable(updatedEntity)) {
-                    throw new EntityDescriptionUnacceptableType(pFile.getContentType());
-                }
-                // 10MB
-                if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
-                    EntityDescriptionTooLargeException e = new EntityDescriptionTooLargeException(
-                            pFile.getOriginalFilename());
-                    logger.error("DescriptionFile is too big", e);
-                    throw e;
-                }
-                String fileCharset = getCharset(pFile);
-                if ((fileCharset != null) && !fileCharset.equals(StandardCharsets.UTF_8.toString())) {
-                    throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
-                }
-                // description file, change the old one because if we don't we accumulate tones of description
-                if (oldOne != null) {
-                    oldOne.setType(updatedEntity.getDescriptionFile().getType());
-                    oldOne.setContent(pFile.getBytes());
-                    oldOne.setUrl(null);
-                    updatedEntity.setDescriptionFile(oldOne);
-                } else {
-                    // if there is no descriptionFile existing then lets create one
-                    updatedEntity.setDescriptionFile(
-                            new DescriptionFile(pFile.getBytes(), updatedEntity.getDescriptionFile().getType()));
-                }
-            } else { // pFile is null
-                // this is an url
-                if (oldOne != null) {
-                    oldOne.setType(null);
-                    oldOne.setContent(null);
-                    oldOne.setUrl(updatedEntity.getDescriptionFile().getUrl());
-                    updatedEntity.setDescriptionFile(oldOne);
-                } else {
-                    // if there is no description existing then lets create one
-                    updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
-                }
-            }
-        } else { // No description file provided on entity to update : keep the current one
-            updatedEntity.setDescriptionFile(oldOne);
-        }
-    }
-
-    /**
-     * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type saved in the
-     * entity and not the multipart file content type because markdown is not yet a standardized MIMEType and
-     * our front cannot modify the content type of the corresponding part
-     * @return true or false
-     */
-    private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(T pEntity) {
-        if (pEntity.getDescriptionFile() != null) {
-            String fileContentType = pEntity.getDescriptionFile().getType().toString();
-            int charsetIdx = fileContentType.indexOf(";charset");
-            String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-            return contentType.equals(MediaType.APPLICATION_PDF_VALUE) || contentType
-                    .equals(MediaType.TEXT_MARKDOWN_VALUE);
-        }
-        return false;
-    }
+    // FIXME
+    // /**
+    // * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
+    // * @param updatedEntity entity being created/updated
+    // * @param pFile the description of the entity
+    // * @param oldOne previous description file of updatedEntity
+    // * @throws IOException if description cannot be read
+    // * @throws ModuleException if description not conform to REGARDS requirements
+    // */
+    // private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,
+    // DescriptionFile oldOne) throws IOException, ModuleException {
+    // // we are updating/creating a description
+    // if ((updatedEntity.getDescriptionFile() != null) && !updatedEntity.getDescriptionFile().equals(oldOne)) {
+    // // this is a description file
+    // if ((pFile != null) && !pFile.isEmpty()) {
+    // // collections and dataset only have a description which is a url or a file
+    // if (!isContentTypeAcceptable(updatedEntity)) {
+    // throw new EntityDescriptionUnacceptableType(pFile.getContentType());
+    // }
+    // // 10MB
+    // if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
+    // EntityDescriptionTooLargeException e = new EntityDescriptionTooLargeException(
+    // pFile.getOriginalFilename());
+    // logger.error("DescriptionFile is too big", e);
+    // throw e;
+    // }
+    // String fileCharset = getCharset(pFile);
+    // if ((fileCharset != null) && !fileCharset.equals(StandardCharsets.UTF_8.toString())) {
+    // throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
+    // }
+    // // description file, change the old one because if we don't we accumulate tones of description
+    // if (oldOne != null) {
+    // oldOne.setType(updatedEntity.getDescriptionFile().getType());
+    // oldOne.setContent(pFile.getBytes());
+    // oldOne.setUrl(null);
+    // updatedEntity.setDescriptionFile(oldOne);
+    // } else {
+    // // if there is no descriptionFile existing then lets create one
+    // updatedEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
+    // updatedEntity.getDescriptionFile().getType()));
+    // }
+    // } else { // pFile is null
+    // // this is an url
+    // if (oldOne != null) {
+    // oldOne.setType(null);
+    // oldOne.setContent(null);
+    // oldOne.setUrl(updatedEntity.getDescriptionFile().getUrl());
+    // updatedEntity.setDescriptionFile(oldOne);
+    // } else {
+    // // if there is no description existing then lets create one
+    // updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
+    // }
+    // }
+    // } else { // No description file provided on entity to update : keep the current one
+    // updatedEntity.setDescriptionFile(oldOne);
+    // }
+    // }
+    //
+    // /**
+    // * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type saved in the
+    // * entity and not the multipart file content type because markdown is not yet a standardized MIMEType and
+    // * our front cannot modify the content type of the corresponding part
+    // * @return true or false
+    // */
+    // private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(T pEntity) {
+    // if (pEntity.getDescriptionFile() != null) {
+    // String fileContentType = pEntity.getDescriptionFile().getType().toString();
+    // int charsetIdx = fileContentType.indexOf(";charset");
+    // String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
+    // return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
+    // || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
+    // }
+    // return false;
+    // }
 
     /**
      * Retrieve file charset
      * @param pFile description file from the user
      * @return file charset
      */
+    @SuppressWarnings("unused")
     private static String getCharset(MultipartFile pFile) {
         String contentType = pFile.getContentType();
         int charsetIdx = contentType.indexOf("charset=");
@@ -525,12 +521,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
     public U update(Long pEntityId, U pEntity, MultipartFile file) throws ModuleException, IOException {
         // checks
         U entityInDb = checkUpdate(pEntityId, pEntity);
-        if (pEntity instanceof AbstractDescEntity) {
-            // If the entity already has a descriptionFile lets get it ....
-            DescriptionFile descriptionFileFromDb = ((AbstractDescEntity) entityInDb).getDescriptionFile();
-            // ...and eventually override it if file != null (see this.setDescription() method)
-            this.setDescription((AbstractDescEntity) pEntity, file, descriptionFileFromDb);
-        }
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
@@ -543,13 +533,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         pEntity.setId(entityInDb.getId());
         // checks
         entityInDb = checkUpdate(entityInDb.getId(), pEntity);
-        if (pEntity instanceof AbstractDescEntity) {
-            // If the entity already has a descriptionFile lets set it ....
-            DescriptionFile descriptionFileFromDb = ((AbstractDescEntity) entityInDb).getDescriptionFile();
-            // ...and eventually override it if file != null (see this.setDescription() method)
-            this.setDescription((AbstractDescEntity) pEntity, file, descriptionFileFromDb);
-        }
-
         return updateWithoutCheck(pEntity, entityInDb);
     }
 
@@ -576,7 +559,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
             Set<UniformResourceName> tagsToRemove = getDiff(oldLinks, newLinks);
             // For all previously tagged entities, retrieve all groups...
             Set<String> groupsToRemove = new HashSet<>();
-            List<AbstractEntity> taggedEntitiesWithGroupsToRemove = entityRepository.findByIpIdIn(tagsToRemove);
+            List<AbstractEntity<?>> taggedEntitiesWithGroupsToRemove = entityRepository.findByIpIdIn(tagsToRemove);
             taggedEntitiesWithGroupsToRemove.forEach(e -> groupsToRemove.addAll(e.getGroups()));
             // ... delete all these groups on all collections...
             for (String group : groupsToRemove) {
@@ -618,11 +601,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
         // Manage tags (must be done before group managing to avoid bad propagation)
         // Retrieve all entities tagging the one to delete
-        final List<AbstractEntity> taggingEntities = entityRepository.findByTags(urn.toString());
+        final List<AbstractEntity<?>> taggingEntities = entityRepository.findByTags(urn.toString());
         // Manage tags
-        for (AbstractEntity taggingEntity : taggingEntities) {
+        for (AbstractEntity<?> taggingEntity : taggingEntities) {
             // remove tag to ipId
-            taggingEntity.getTags().remove(urn.toString());
+            taggingEntity.removeTags(Arrays.asList(urn.toString()));
         }
         // Save all these tagging entities
         entityRepository.save(taggingEntities);
@@ -632,7 +615,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         Set<Dataset> datasets = new HashSet<>();
         // If entity contains groups => update all entities tagging this entity (recursively)
         // Need to manage groups one by one
-        for (String group : toDelete.getGroups()) {
+        for (String group : ((AbstractEntity<?>) toDelete).getGroups()) {
             // Find all collections containing group.
             List<Collection> collectionsWithGroup = collectionRepository.findByGroups(group);
             // Remove group from collections groups
@@ -667,7 +650,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         return result;
     }
 
-    public void checkModelExists(AbstractEntity entity) throws ModuleException {
+    public void checkModelExists(AbstractEntity<?> entity) throws ModuleException {
         // model must exist : EntityNotFoundException thrown if not
         modelService.getModel(entity.getModel().getId());
     }
@@ -682,7 +665,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
                 .filter(urn -> urn.getEntityType() == entityType).collect(Collectors.toSet());
     }
 
-    private static DeletedEntity createDeletedEntity(AbstractEntity entity) {
+    private static DeletedEntity createDeletedEntity(AbstractEntity<?> entity) {
         DeletedEntity delEntity = new DeletedEntity();
         delEntity.setCreationDate(entity.getCreationDate());
         delEntity.setDeletionDate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));

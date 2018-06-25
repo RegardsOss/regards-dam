@@ -282,8 +282,8 @@ public class EsRepository implements IEsRepository {
             for (String type : types) {
                 try (XContentBuilder builder = XContentFactory.jsonBuilder()) {
                     String mapping = builder.startObject().startObject(type).startObject("properties")
-                            .startObject("geometry").field("type", "geo_shape").endObject().endObject().endObject()
-                            .endObject().string();
+                            .startObject("feature.geometry").field("type", "geo_shape").endObject().endObject()
+                            .endObject().endObject().string();
 
                     HttpEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
                     Response response = restClient.performRequest("PUT", index.toLowerCase() + "/" + type + "/_mapping",
@@ -813,7 +813,7 @@ public class EsRepository implements IEsRepository {
                     .source(builder);
             // Launch the request
             SearchResponse response = client.search(request);
-            //Update attributes with aggregation if any
+            // Update attributes with aggregation if any
             for (Aggregation agg : response.getAggregations()) {
                 attributes.stream().filter(a -> agg.getName().equals(a.getAttributeName())).findFirst()
                         .ifPresent(a -> a.setAggregation(agg));

@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -65,6 +66,7 @@ import fr.cnes.regards.modules.models.service.IAttributeModelService;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 import fr.cnes.regards.modules.opensearch.service.IOpenSearchService;
+import fr.cnes.regards.modules.opensearch.service.cache.attributemodel.IAttributeFinder;
 
 /**
  * Specific EntityService for Datasets
@@ -87,8 +89,11 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
 
     private final IPluginService pluginService;
 
+    @Autowired
+    private IAttributeFinder finder;
+
     public DatasetService(IDatasetRepository repository, IAttributeModelService attributeService,
-            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity> entityRepository,
+            IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
             IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
             ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
             IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
@@ -157,7 +162,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
     @Override
     public SubsettingCoherenceVisitor getSubsettingCoherenceVisitor(String dataModelName) throws ModuleException {
         return new SubsettingCoherenceVisitor(modelService.getModelByName(dataModelName), attributeService,
-                modelAttributeService);
+                modelAttributeService, finder);
     }
 
     @Override
@@ -215,28 +220,31 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         }
 
         // Add jsonpath to each attribute
-        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
     }
 
+    // FIXME
     @Override
     public DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        if (ds == null) {
-            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        }
-        return ds.getDescriptionFile();
+        // Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
+        // if (ds == null) {
+        // throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
+        // }
+        // return ds.getDescriptionFile();
+        return null;
     }
 
+    // FIXME
     @Override
     public void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        if (ds == null) {
-            throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        }
-        DescriptionFile desc = ds.getDescriptionFile();
-        ds.setDescriptionFile(null);
-        descriptionFileRepository.delete(desc);
+        // Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
+        // if (ds == null) {
+        // throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
+        // }
+        // DescriptionFile desc = ds.getDescriptionFile();
+        // ds.setDescriptionFile(null);
+        // descriptionFileRepository.delete(desc);
     }
 
     /**
@@ -247,7 +255,7 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         final List<String> modelNames = datasets.stream().map(ds -> ds.getDataModel()).collect(Collectors.toList());
         Page<AttributeModel> attModelPage = modelAttributeService.getAttributeModelsByName(modelNames, pageable);
         // Build JSON path
-        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.PROPERTIES));
+        attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
     }
 }

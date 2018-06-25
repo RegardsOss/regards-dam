@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -40,23 +38,14 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
     List<Collection> findByGroups(String group);
 
     /**
-     * Find a collection by its ip id with the description file loaded
-     * @param collectionIpId
-     * @return the collection with the description file loaded or null if none were found
-     */
-    @Query("from Collection col left join fetch col.descriptionFile where col.ipId=:ipId")
-    Collection findOneWithDescriptionFile(@Param("ipId") UniformResourceName collectionIpId);
-
-
-    /**
      * Find all collection of which ipId belongs to given set (eagerly loading all relations)
      *
      * @param pIpIds set of ipId
      * @return found collections
      */
-    @EntityGraph(attributePaths = { "tags", "groups", "model", "descriptionFile" })
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
     List<Collection> findByIpIdIn(Set<UniformResourceName> pIpIds);
-
 
     /**
      * Find collection of given IpId eagerly loading all common relations
@@ -64,7 +53,8 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
      * @param pIpId ipId of which entity
      * @return found entity
      */
-    @EntityGraph(attributePaths = { "tags", "groups", "model", "descriptionFile" })
+    @Override
+    @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Collection findByIpId(UniformResourceName pIpId);
 
     /**
@@ -73,6 +63,7 @@ public interface ICollectionRepository extends IAbstractEntityRepository<Collect
      *            id of entity
      * @return the collection or null if none were found
      */
+    @Override
     @EntityGraph(attributePaths = { "tags", "groups", "model" })
     Collection findById(Long pId);
 }

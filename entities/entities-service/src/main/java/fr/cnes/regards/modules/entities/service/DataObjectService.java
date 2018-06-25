@@ -31,6 +31,7 @@ import org.springframework.validation.Validator;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
 import fr.cnes.regards.framework.module.rest.exception.EntityInvalidException;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
@@ -87,8 +88,8 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
                 });
         // Use cache when calling for getModelAttrAssocs with modelName
         InvocationHandler invocationHandler = (InvocationHandler) (proxy, method, args) -> {
-            if (method.getName().equals("getModelAttrAssocs") && method.getReturnType().equals(List.class) && (
-                    args.length == 1) && (args[0] instanceof String)) {
+            if (method.getName().equals("getModelAttrAssocs") && method.getReturnType().equals(List.class)
+                    && (args.length == 1) && (args[0] instanceof String)) {
                 return modelServiceCache.get((String) args[0]);
             } else { // else call "true" modelService
                 return method.invoke(modelAttrAssocServiceNoProxy, args);
@@ -110,7 +111,7 @@ public class DataObjectService extends AbstractValidationService<DataObject> {
 
     @Override
     protected List<Validator> getValidators(ModelAttrAssoc modelAttribute, String attributeKey, boolean manageAlterable,
-            AbstractEntity entity) {
+            AbstractEntity<?> entity) {
         AttributeModel attModel = modelAttribute.getAttribute();
 
         List<Validator> validators = new ArrayList<>();

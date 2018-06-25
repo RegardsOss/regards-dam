@@ -56,13 +56,11 @@ import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 @MultitenantTransactional
 public class EntitiesService implements IEntitiesService {
 
-
-
     @Autowired
     private IDatasetRepository datasetRepository;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepository;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepository;
 
     @Autowired
     private IModelAttrAssocService modelAttributeService;
@@ -86,7 +84,7 @@ public class EntitiesService implements IEntitiesService {
     }
 
     @Override
-    public AbstractEntity loadWithRelations(UniformResourceName pIpId) {
+    public AbstractEntity<?> loadWithRelations(UniformResourceName pIpId) {
         // Particular case on datasets and collections which contains more relations
         if (pIpId.getEntityType() == EntityType.DATASET) {
             return datasetRepository.findByIpId(pIpId);
@@ -98,8 +96,8 @@ public class EntitiesService implements IEntitiesService {
     }
 
     @Override
-    public List<AbstractEntity> loadAllWithRelations(UniformResourceName... pIpIds) {
-        List<AbstractEntity> entities = new ArrayList<>(pIpIds.length);
+    public List<AbstractEntity<?>> loadAllWithRelations(UniformResourceName... pIpIds) {
+        List<AbstractEntity<?>> entities = new ArrayList<>(pIpIds.length);
         Set<UniformResourceName> dsUrns = Arrays.stream(pIpIds)
                 .filter(ipId -> ipId.getEntityType() == EntityType.DATASET).collect(Collectors.toSet());
         if (!dsUrns.isEmpty()) {
@@ -123,11 +121,14 @@ public class EntitiesService implements IEntitiesService {
         try {
             for (ModelAttrAssoc attr : computedAttributes) {
                 try {
-                    PluginParameter resultFragmentName = new PluginParameter(IComputedAttribute.RESULT_FRAGMENT_NAME, attr.getAttribute().getFragment().getName());
+                    PluginParameter resultFragmentName = new PluginParameter(IComputedAttribute.RESULT_FRAGMENT_NAME,
+                            attr.getAttribute().getFragment().getName());
                     resultFragmentName.setOnlyDynamic(true);
-                    PluginParameter resultAttrName = new PluginParameter(IComputedAttribute.RESULT_ATTRIBUTE_NAME, attr.getAttribute().getName());
+                    PluginParameter resultAttrName = new PluginParameter(IComputedAttribute.RESULT_ATTRIBUTE_NAME,
+                            attr.getAttribute().getName());
                     resultAttrName.setOnlyDynamic(true);
-                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId(), resultAttrName, resultFragmentName);
+                    IComputedAttribute<?, ?> plugin = pluginService.getPlugin(attr.getComputationConf().getId(),
+                                                                              resultAttrName, resultFragmentName);
                     // here we have a plugin with no idea of the type of the generic parameter used by the "compute"
                     // method, lets check that it is a IComputedAttribute<Dataset,?>
                     plugin.getClass().getMethod("compute", Dataset.class);

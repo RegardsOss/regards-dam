@@ -20,22 +20,26 @@ package fr.cnes.regards.modules.entities.domain;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
-import fr.cnes.regards.framework.oais.urn.EntityType;
-import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
+import com.google.common.collect.Multimaps;
+
+import fr.cnes.regards.framework.oais.urn.DataType;
+import fr.cnes.regards.modules.entities.domain.feature.DataObjectFeature;
 import fr.cnes.regards.modules.entities.domain.metadata.DataObjectMetadata;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 
 /**
+ *
+ * Data object feature decorator<br/>
  * A DataObject is created by a DataSource when a data source (external database or AIPs by example) is ingested.
  *
  * @author lmieulet
  * @author Marc Sordi
  * @author oroussel
+ * @author Marc Sordi
  */
-public class DataObject extends AbstractDataEntity {
+public class DataObject extends AbstractEntity<DataObjectFeature> {
 
     /**
      * This field permits to identify which datasource provides it
@@ -65,12 +69,14 @@ public class DataObject extends AbstractDataEntity {
      * This field only exists for Gson serialization (used by frontent)
      * Indicates if a physical file (ie a RAWDATA or QUICKLOOK) exists with this data object
      */
+    @SuppressWarnings("unused")
     private Boolean containsPhysicalData = null;
 
     /**
      * This field only exists for Gson serialization (used by frontent)
      * Indicates if an external allowingDownload file (ie a RAWDATA or QUICKLOOK) exists with this data object
      */
+    @SuppressWarnings("unused")
     private Boolean canBeExternallyDownloaded = null;
 
     /**
@@ -79,15 +85,12 @@ public class DataObject extends AbstractDataEntity {
      */
     private Boolean allowingDownload = null;
 
-    public DataObject(Model model, String tenant, String label) {
-        super(model, new UniformResourceName(OAISIdentifier.AIP, EntityType.DATA, tenant,
-                                             UUID.fromString("0-0-0-0-" + (int)(Math.random() * Integer.MAX_VALUE)),
-                                                             1),
-              label);
+    public DataObject() {
+        super(null, null);
     }
 
-    public DataObject() {
-        this(null, null, null);
+    public DataObject(Model model, String tenant, String label) {
+        super(model, new DataObjectFeature(tenant, label));
     }
 
     public String getDataSourceId() {
@@ -136,14 +139,52 @@ public class DataObject extends AbstractDataEntity {
      * Theses properties are needed by frontend
      */
     public void updateJsonSpecificProperties() {
-        containsPhysicalData = super.containsPhysicalData();
-        canBeExternallyDownloaded = super.canBeExternallyDownloaded();
-        super.updateDownloadable();
+        containsPhysicalData = containsPhysicalData();
+        canBeExternallyDownloaded = canBeExternallyDownloaded();
+        updateDownloadable();
     }
 
-    @Override
-    public String getType() {
-        return EntityType.DATA.toString();
+    /**
+     * @return true if at least one associated file (through "files" property) is physically available (cf. Storage).
+     *         This concerns only RAW_DATA and all QUICKLOOKS
+     */
+    protected boolean containsPhysicalData() {
+        return Multimaps.filterKeys(getFiles(), k -> {
+            switch (k) {
+                case RAWDATA:
+                case QUICKLOOK_SD:
+                case QUICKLOOK_MD:
+                case QUICKLOOK_HD:
+                    return true;
+                default:
+                    return false;
+            }
+        }).values().stream().filter(DataFile::isPhysicallyAvailable).findAny().isPresent();
+    }
+
+    /**
+     * @return true if at least one associated file (through "files" property) can be externally downloaded
+     *         This concerns only RAW_DATA and all QUICKLOOKS
+     */
+    protected boolean canBeExternallyDownloaded() {
+        return Multimaps.filterKeys(getFiles(), k -> {
+            switch (k) {
+                case RAWDATA:
+                case QUICKLOOK_SD:
+                case QUICKLOOK_MD:
+                case QUICKLOOK_HD:
+                    return true;
+                default:
+                    return false;
+            }
+        }).values().stream().filter(DataFile::canBeExternallyDownloaded).findAny().isPresent();
+    }
+
+    /**
+     * Update downloadable property on all files
+     */
+    public void updateDownloadable() {
+        Multimaps.filterKeys(getFiles(), k -> k == DataType.RAWDATA).values().forEach(DataFile::isDownloadable);
     }
 
     @Override

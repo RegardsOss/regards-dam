@@ -39,13 +39,13 @@ public interface IStorageService {
      *            {@link AbstractEntity} to be persisted
      * @return persisted {@link AbstractEntity}
      */
-    public <T extends AbstractEntity> T storeAIP(T pToPersist);
+    public <T extends AbstractEntity<?>> T storeAIP(T pToPersist);
 
     /**
      * Delete the aip associated to the given entity
      * @param pToDelete
      */
-    public void deleteAIP(AbstractEntity pToDelete);
+    public void deleteAIP(AbstractEntity<?> pToDelete);
 
     /**
      * Update the aip associated to the given entity
@@ -53,6 +53,6 @@ public interface IStorageService {
      * @param <T>
      * @return updated aip
      */
-    public <T extends AbstractEntity> T updateAIP(T pToUpdate);
+    public <T extends AbstractEntity<?>> T updateAIP(T pToUpdate);
 
 }

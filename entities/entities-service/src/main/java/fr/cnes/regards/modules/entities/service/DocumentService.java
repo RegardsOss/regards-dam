@@ -60,7 +60,7 @@ public class DocumentService extends AbstractEntityService<Document> implements 
     private final IDocumentLSService documentFilesService;
 
     public DocumentService(IModelAttrAssocService pModelAttributeService,
-            IAbstractEntityRepository<AbstractEntity> pEntityRepository, IModelService pModelService,
+            IAbstractEntityRepository<AbstractEntity<?>> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, IDocumentRepository pDocumentRepository, EntityManager pEm,
             IPublisher pPublisher, IRuntimeTenantResolver runtimeTenantResolver,

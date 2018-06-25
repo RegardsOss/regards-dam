@@ -248,7 +248,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(CollectionController.ROOT_MAPPING, parts, expectations,
                                  "Failed to create a new collection");
 
-        //lets test update without altering the non alterable attribute(active)
+        // lets test update without altering the non alterable attribute(active)
 
         tenantResolver.forceTenant(DEFAULT_TENANT);
         collection = collectionService.load(collection.getIpId());
@@ -269,11 +269,10 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
                                  "Failed to update a collection", collection.getId());
 
-        //lets change the non alterable
+        // lets change the non alterable
         tenantResolver.forceTenant(DEFAULT_TENANT);
         atts = new HashSet<>();
         Collection newCollection = new Collection();
-        newCollection.setDescriptionFile(collection.getDescriptionFile());
         newCollection.setCreationDate(collection.getCreationDate());
         newCollection.setGeometry(collection.getGeometry());
         newCollection.setGroups(collection.getGroups());
@@ -303,7 +302,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
     public void testOptionalNonAlterable() throws ModuleException {
         importModel("simpleCollectionOptional.xml");
         Model model = modelRepository.findByName("TestOptionalNonAlterable");
-        //lets first create a collection with the optional non alterable attribute given.
+        // lets first create a collection with the optional non alterable attribute given.
         Collection optionalNonAlterable = new Collection(model, DEFAULT_TENANT, "optionalNonAlterable");
         optionalNonAlterable.setSipId(sipId);
         optionalNonAlterable.setCreationDate(OffsetDateTime.now());
@@ -327,7 +326,6 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         optionalNonAlterable = collectionService.load(optionalNonAlterable.getIpId());
         atts = new HashSet<>();
         Collection optionalAltered = new Collection();
-        optionalAltered.setDescriptionFile(optionalNonAlterable.getDescriptionFile());
         optionalAltered.setCreationDate(optionalNonAlterable.getCreationDate());
         optionalAltered.setGeometry(optionalNonAlterable.getGeometry());
         optionalAltered.setGroups(optionalNonAlterable.getGroups());
@@ -350,7 +348,7 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         performDefaultFileUpload(CollectionController.ROOT_MAPPING + "/{collection_id}", parts, expectations,
                                  "Failed to update a collection", optionalNonAlterable.getId());
 
-        //now lets try again without giving the value on the creation
+        // now lets try again without giving the value on the creation
 
         Collection optionalNotGivenNonAlterable = new Collection(model, DEFAULT_TENANT, "optionalNotGivenNonAlterable");
         optionalNonAlterable.setSipId(sipId);
@@ -372,7 +370,6 @@ public class CollectionValidation2IT extends AbstractRegardsTransactionalIT {
         optionalNotGivenNonAlterable = collectionService.load(optionalNotGivenNonAlterable.getIpId());
         atts = new HashSet<>();
         Collection optionalAlteredNotGiven = new Collection();
-        optionalAlteredNotGiven.setDescriptionFile(optionalNotGivenNonAlterable.getDescriptionFile());
         optionalAlteredNotGiven.setCreationDate(optionalNotGivenNonAlterable.getCreationDate());
         optionalAlteredNotGiven.setGeometry(optionalNotGivenNonAlterable.getGeometry());
         optionalAlteredNotGiven.setGroups(optionalNotGivenNonAlterable.getGroups());

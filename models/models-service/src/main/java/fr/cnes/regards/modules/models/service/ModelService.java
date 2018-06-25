@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityAlreadyExistsException;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -129,13 +130,13 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     @Override
     public Model createModel(Model model) throws ModuleException {
         if (model.isIdentifiable()) {
-            throw new EntityInvalidException(String.format("Model with name \"%s\" cannot have an identifier!",
-                                                           model.getName()));
+            throw new EntityInvalidException(
+                    String.format("Model with name \"%s\" cannot have an identifier!", model.getName()));
         }
         Model modelFromDb = modelRepository.findByName(model.getName());
         if (modelFromDb != null) {
-            throw new EntityAlreadyExistsException(String.format("Model with name \"%s\" already exists!",
-                                                                 model.getName()));
+            throw new EntityAlreadyExistsException(
+                    String.format("Model with name \"%s\" already exists!", model.getName()));
         }
         return modelRepository.save(model);
     }
@@ -193,7 +194,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         Iterable<ModelAttrAssoc> modelAttributes = modelAttributeRepository.findByModelName(modelName);
 
         if (modelAttributes != null) {
-            modelAttributes.forEach(modelAttr -> modelAttr.getAttribute().buildJsonPath(StaticProperties.PROPERTIES));
+            modelAttributes
+                    .forEach(modelAttr -> modelAttr.getAttribute().buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
             return ImmutableList.copyOf(modelAttributes);
         } else {
             return Collections.emptyList();
@@ -215,9 +217,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
             if (m != null) {
                 return m.getId();
             }
-            LOGGER.error(
-                    "The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.",
-                    modelName);
+            LOGGER.error("The model name {} does not exist anymore but is probably referenced in another entity with a weak DB constraint.",
+                         modelName);
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
         return modelAttributeRepository.findAllAttributeByModelIdIn(modelIds, pageable);
@@ -238,9 +239,9 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         if (existingModelAtts != null) {
             for (ModelAttrAssoc modAtt : existingModelAtts) {
                 if (modAtt.equals(modelAttrAssoc)) {
-                    throw new EntityAlreadyExistsException(String.format("Attribute %s already exists in model %s!",
-                                                                         modAtt.getAttribute().getName(),
-                                                                         model.getName()));
+                    throw new EntityAlreadyExistsException(
+                            String.format("Attribute %s already exists in model %s!", modAtt.getAttribute().getName(),
+                                          model.getName()));
                 }
             }
         }
@@ -270,8 +271,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
     public ModelAttrAssoc updateModelAttribute(String modelName, Long attributeId, ModelAttrAssoc modelAttrAssoc)
             throws ModuleException {
         if (!modelAttrAssoc.isIdentifiable()) {
-            throw new EntityNotFoundException(String.format("Unknown identifier for model attribute \"%s\"",
-                                                            modelAttrAssoc.getId()));
+            throw new EntityNotFoundException(
+                    String.format("Unknown identifier for model attribute \"%s\"", modelAttrAssoc.getId()));
         }
         if (!modelAttrAssoc.getId().equals(attributeId)) {
             throw new EntityInconsistentIdentifierException(attributeId, modelAttrAssoc.getId(), ModelAttrAssoc.class);
@@ -438,19 +439,17 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                         if (!Objects.equals(param.getStripParameterValue(), curValue)) {
                             String msg = String
                                     .format("Compute plugin with label %s is inconsistent with existing one : "
-                                                    + "plugin parameter %s with value %s differs from existing value (%s)",
-                                            plgConf.getLabel(),
-                                            param.getName(),
-                                            curValue,
+                                            + "plugin parameter %s with value %s differs from existing value (%s)",
+                                            plgConf.getLabel(), param.getName(), curValue,
                                             param.getStripParameterValue());
                             LOGGER.error(msg);
                             throw new ImportException(msg);
                         }
                     } else { // Plugin parameter not found
-                        String msg = String.format("Compute plugin with label %s is inconsistent with existing one : "
+                        String msg = String.format(
+                                                   "Compute plugin with label %s is inconsistent with existing one : "
                                                            + "no plugin parameter %s found",
-                                                   plgConf.getLabel(),
-                                                   param.getName());
+                                                   plgConf.getLabel(), param.getName());
                         LOGGER.error(msg);
                         throw new ImportException(msg);
                     }
@@ -506,13 +505,11 @@ public class ModelService implements IModelService, IModelAttrAssocService {
                     break;
                 case COMPUTED:
                     modelAtt.setComputationConf(pluginService
-                                                        .getPluginConfigurationByLabel(modelAtt.getComputationConf()
-                                                                                               .getLabel()));
+                            .getPluginConfigurationByLabel(modelAtt.getComputationConf().getLabel()));
                     break;
                 default:
-                    throw new IllegalArgumentException(
-                            modelAtt.getMode() + " is not a handled value of " + ComputationMode.class.getName()
-                                    + " in " + getClass().getName());
+                    throw new IllegalArgumentException(modelAtt.getMode() + " is not a handled value of "
+                            + ComputationMode.class.getName() + " in " + getClass().getName());
             }
             // we have to check if it already exists because of logic to add modelAttrAssocs when we are adding a new
             // attribute to a fragment
@@ -523,8 +520,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
 
         for (Map.Entry<String, List<AttributeModel>> entry : fragmentAttMap.entrySet()) {
             if (!containsExactly(entry.getKey(), entry.getValue())) {
-                String errorMessage = String
-                        .format("Imported fragment \"%s\" not compatible with existing one.", entry.getKey());
+                String errorMessage = String.format("Imported fragment \"%s\" not compatible with existing one.",
+                                                    entry.getKey());
                 LOGGER.error(errorMessage);
                 throw new ImportException(errorMessage);
             }
@@ -577,9 +574,7 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         // Check size
         if (attModels.size() != existingAttModels.size()) {
             LOGGER.error(String.format("Existing fragment \"%s\" contains exactly %s unique attributes (not %s).",
-                                       fragmentName,
-                                       existingAttModels.size(),
-                                       attModels.size()));
+                                       fragmentName, existingAttModels.size(), attModels.size()));
             return false;
         }
 
@@ -587,15 +582,12 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         for (AttributeModel attMod : attModels) {
             if (!fragmentName.equals(attMod.getFragment().getName())) {
                 LOGGER.error(String.format("Attribute \"%s\" not part of fragment \"%s\" but \"%s\".)",
-                                           attMod.getName(),
-                                           fragmentName,
-                                           attMod.getFragment().getName()));
+                                           attMod.getName(), fragmentName, attMod.getFragment().getName()));
                 return false;
             }
 
             if (!existingAttModels.contains(attMod)) {
-                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".",
-                                           attMod.getName(),
+                LOGGER.error(String.format("Unknown attribute \"%s\" in fragment \"%s\".", attMod.getName(),
                                            fragmentName));
                 return false;
             }
@@ -640,17 +632,18 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         List<PluginConfiguration> computationConfs = pluginService
                 .getPluginConfigurationsByType(IComputedAttribute.class);
         for (PluginConfiguration conf : computationConfs) {
-            //remove inactive configuration
-            if(conf.isActive()) {
+            // remove inactive configuration
+            if (conf.isActive()) {
                 try {
                     Class<?> computationPlugin = Class.forName(conf.getPluginClassName());
-                    ComputationPlugin computationPluginAnnotation = computationPlugin.getAnnotation(ComputationPlugin.class);
+                    ComputationPlugin computationPluginAnnotation = computationPlugin
+                            .getAnnotation(ComputationPlugin.class);
                     typeConfMappings.put(computationPluginAnnotation.supportedType(), conf);
                 } catch (ClassNotFoundException e) {
-                    // This is only possible in case a plugin is still configured but the implementation is no longer available
-                    LOGGER.warn(
-                            "Plugin class with name {} couldn't be found. Please check your available plugins or delete the configuration using it.",
-                            conf.getPluginClassName());
+                    // This is only possible in case a plugin is still configured but the implementation is no longer
+                    // available
+                    LOGGER.warn("Plugin class with name {} couldn't be found. Please check your available plugins or delete the configuration using it.",
+                                conf.getPluginClassName());
                     LOGGER.debug(e.getMessage(), e);
                 }
             }
@@ -667,7 +660,8 @@ public class ModelService implements IModelService, IModelAttrAssocService {
         for (PluginMetaData metaData : pluginMetadata) {
             try {
                 Class<?> computationPlugin = Class.forName(metaData.getPluginClassName());
-                ComputationPlugin computationPluginAnnotation = computationPlugin.getAnnotation(ComputationPlugin.class);
+                ComputationPlugin computationPluginAnnotation = computationPlugin
+                        .getAnnotation(ComputationPlugin.class);
                 typeMetadataMappings.put(computationPluginAnnotation.supportedType(), metaData);
             } catch (ClassNotFoundException e) {
                 // ClassNotFound is already covered by the getPluginsByType method

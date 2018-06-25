@@ -219,6 +219,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
         type = pType;
     }
 
+    public boolean hasFragment() {
+        return (fragment != null) && !fragment.isDefaultFragment();
+    }
+
     public Fragment getFragment() {
         return fragment;
     }
@@ -447,8 +451,10 @@ public class AttributeModel implements IIdentifiable<Long>, IXmlisable<Attribute
 
     public String buildJsonPath(String namespace) {
         StringBuilder builder = new StringBuilder(namespace);
-        builder.append(GSONConstants.JSON_PATH_SEPARATOR);
-        if ((fragment != null) && !fragment.isDefaultFragment()) {
+        if (!namespace.isEmpty()) {
+            builder.append(GSONConstants.JSON_PATH_SEPARATOR);
+        }
+        if (hasFragment()) {
             builder.append(fragment.getName());
             builder.append(GSONConstants.JSON_PATH_SEPARATOR);
         }
