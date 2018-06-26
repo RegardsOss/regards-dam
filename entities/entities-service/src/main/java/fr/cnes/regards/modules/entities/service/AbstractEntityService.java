@@ -578,7 +578,11 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         // pEntity into the DB.
         entity.setLastUpdate(OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC));
 
-        if (entity.getStateAip() == null || !entity.getStateAip().equals(EntityAipState.AIP_TO_CREATE)) {
+        if (entity.getStateAip() == null) {
+            entity.setStateAip(EntityAipState.AIP_TO_CREATE);
+        }
+        else if (!entity.getStateAip().equals(EntityAipState.AIP_TO_CREATE)) {
+            // non si ajout d'un fichier description, il faut faire un create
             entity.setStateAip(EntityAipState.AIP_TO_UPDATE);
         }
 
@@ -666,6 +670,8 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         updatedIpIds.add(toDelete.getIpId());
         // Manage all impacted datasets groups from scratch
         datasets.forEach(ds -> this.manageGroups(ds, updatedIpIds));
+        
+        deleteAipStorage(toDelete);
 
         deletedEntityRepository.save(createDeletedEntity(toDelete));
 
@@ -732,34 +738,7 @@ public abstract class AbstractEntityService<U extends AbstractEntity> extends Ab
         return null;
     }
 
-    private U storeAipStorage(U entity) {
-        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
-            return entity;
-        }
-
-        IStorageService storageService = getStorageService();
-
-        if (storageService == null) {
-            return entity;
-        }
-
-        return storageService.storeAIP(entity);
-    }
-
-    private U updateAipStorage(U entity) {
-        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
-            return entity;
-        }
-
-        IStorageService storageService = getStorageService();
-
-        if (storageService == null) {
-            return entity;
-        }
-
-        return getStorageService().updateAIP(entity);
-    }
-
+    // TODO CMZ : delete à faire de manière synchrone dans AbstractEntityService
     private void deleteAipStorage(U entity) {
         if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
             return;

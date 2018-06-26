@@ -243,20 +243,4 @@ public class EntitiesService implements IEntitiesService {
         return getStorageService().updateAIP(entity);
     }
 
-    private void deleteAipStorage(AbstractEntity entity) {
-        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
-            return;
-        }
-
-        IStorageService storageService = getStorageService();
-
-        if (storageService == null) {
-            return;
-        }
-
-        LOGGER.info("Delete AIP for entity <{}> ", entity.getIpId());
-
-        getStorageService().deleteAIP(entity);
-    }
-
 }

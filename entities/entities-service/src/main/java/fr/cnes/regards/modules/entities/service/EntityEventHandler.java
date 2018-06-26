@@ -90,12 +90,13 @@ public class EntityEventHandler implements ApplicationListener<ApplicationReadyE
                     UniformResourceName urn = UniformResourceName.fromString(event.getIpId());
 
                     AbstractEntity entity = getService(urn.getEntityType()).loadWithRelations(urn);
+
                     FeignSecurityManager.asSystem();
+                    entity.setIpId(urn);
                     entity.setStateAip(EntityAipState.AIP_STORE_OK);
                     getService(urn.getEntityType()).save(entity);
 
-                    LOGGER.info("AIP with IP_ID <" + wrapper.getContent().getIpId() + "> state set to <"
-                            + wrapper.getContent().getAipState() + ">");
+                    LOGGER.info("AIP with IP_ID <" + urn.toString() + "> state set to <" + event.getAipState() + ">");
                 }
 
             } catch (Exception e) {

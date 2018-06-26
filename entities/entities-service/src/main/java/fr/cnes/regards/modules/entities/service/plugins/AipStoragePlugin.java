@@ -83,7 +83,7 @@ public class AipStoragePlugin implements IStorageService {
 
     private final static String PATH_DOCUMENTS = "/documents/";
 
-    private final static String REGARDS_DESCRIPTION = "REGARDS description";
+    private final static String REGARDS_DESCRIPTION = "entity description";
 
     private final static String PATH_FILE = "/file/";
 
@@ -126,7 +126,7 @@ public class AipStoragePlugin implements IStorageService {
             ResponseEntity<List<RejectedAip>> response = aipClient.store(collection);
             handleClientAIPResponse(response.getStatusCode(), entity, response.getBody());
         } catch (ModuleException e) {
-            LOGGER.error("The AIP entity {} can not be stored by microservice storage", entity.getIpId(), e);
+            LOGGER.error("The AIP entity {} can not be store by microservice storage", entity.getIpId(), e);
             entity.setStateAip(EntityAipState.AIP_STORE_ERROR);
         } catch (HttpClientErrorException e) {
             // Handle non 2xx or 404 status code
@@ -150,13 +150,13 @@ public class AipStoragePlugin implements IStorageService {
         ResponseEntity<AIP> response;
         try {
             FeignSecurityManager.asSystem();
-            
+
             AIP aip = getBuilder(entity).build();
 
             response = aipClient.updateAip(entity.getIpId().toString(), aip);
             handleClientAIPResponse(response.getStatusCode(), entity, response.getBody());
         } catch (ModuleException e) {
-            LOGGER.error("The AIP entity {} can not be updated by microservice storage", entity.getIpId(), e);
+            LOGGER.error("The AIP entity {} can not be update by microservice storage", entity.getIpId(), e);
             entity.setStateAip(EntityAipState.AIP_STORE_ERROR);
         } finally {
             FeignSecurityManager.reset();
@@ -166,7 +166,12 @@ public class AipStoragePlugin implements IStorageService {
     }
 
     @Override
-    public void deleteAIP(AbstractEntity pToDelete) {
+    public void deleteAIP(AbstractEntity entity) {
+        FeignSecurityManager.asSystem();
+
+        ResponseEntity<String> response = aipClient.deleteAip(entity.getIpId().toString());
+        handleClientAIPDeleteResponse(response.getStatusCode(), entity, response.getBody());
+        FeignSecurityManager.reset();
     }
 
     /**
@@ -287,7 +292,7 @@ public class AipStoragePlugin implements IStorageService {
 
                 URL url = toPublicDescription(entity.getIpId());
 
-                builder.getContentInformationBuilder().setDataObject(DataType.DOCUMENT, url, MD5, fCheckSum);
+                builder.getContentInformationBuilder().setDataObject(DataType.DESCRIPTION, url, MD5, fCheckSum);
 
                 builder.getContentInformationBuilder()
                         .setSyntax(entity.getDescriptionFile().getType().getType().toString(), REGARDS_DESCRIPTION,
@@ -379,6 +384,20 @@ public class AipStoragePlugin implements IStorageService {
                         entity.setStateAip(EntityAipState.AIP_STORE_ERROR);
                     }
                 }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void handleClientAIPDeleteResponse(HttpStatus status, AbstractEntity entity, String ipId) {
+        LOGGER.info("status=" + status.toString());
+        switch (status) {
+            case NO_CONTENT:
+                LOGGER.info("{} : AIP deletion is done", entity.getIpId());
+                break;
+            case CONFLICT:
+                LOGGER.error("{} : AIP deletion failed", entity.getIpId());
                 break;
             default:
                 break;

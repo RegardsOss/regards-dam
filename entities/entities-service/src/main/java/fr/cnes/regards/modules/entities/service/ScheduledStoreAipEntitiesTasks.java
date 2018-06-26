@@ -21,6 +21,7 @@ package fr.cnes.regards.modules.entities.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -54,13 +55,23 @@ public class ScheduledStoreAipEntitiesTasks {
 
     @Autowired
     private IRuntimeTenantResolver runtimeTenantResolver;
-    
+
     @Autowired
     private IEntitiesService entitiesService;
 
-    @Scheduled(fixedRateString = "${regards.dam.store.aip.entities.delay:60000}", initialDelay=60000)
+    /**
+     * If true the AIP entities are send to Storage module to be stored
+     */
+    @Value("${regards.dam.post.aip.entities.to.storage:true}")
+    private Boolean postAipEntitiesToStorage;
+
+    @Scheduled(fixedRateString = "${regards.dam.store.aip.entities.delay:60000}",
+            initialDelayString = "${regards.dam.store.aip.entities.initial.delay:60000}")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void processStoreAips() {
+        if (postAipEntitiesToStorage == null || !postAipEntitiesToStorage) {
+            return;
+        }
         for (String tenant : tenantResolver.getAllActiveTenants()) {
             LOGGER.info("Scheduled task : Store AIP entities for tenant {}", tenant);
             runtimeTenantResolver.forceTenant(tenant);
