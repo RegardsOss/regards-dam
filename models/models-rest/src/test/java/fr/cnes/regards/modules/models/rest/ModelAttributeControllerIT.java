@@ -112,7 +112,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
     private IDatasetRepository datasetRepository;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
     private IPluginService pluginService;
@@ -296,7 +296,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().json(gson(shouldBeCollections), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
-                                  + EntityType.COLLECTION, expectations, "Should return model attribute association");
+                + EntityType.COLLECTION, expectations, "Should return model attribute association");
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -305,7 +305,7 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.content().json(gson(shouldBeData), false));
 
         performDefaultGet(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.ASSOCS_MAPPING + "?type="
-                                  + EntityType.DATA, expectations, "Should return model attribute association");
+                + EntityType.DATA, expectations, "Should return model attribute association");
 
         expectations.clear();
         expectations.add(MockMvcResultMatchers.status().isOk());
@@ -370,9 +370,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         final List<ResultMatcher> expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
-        performDefaultDelete(
-                ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                expectations, "Model should be deleted", mod.getName(), modAtt.getId());
+        performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                + apiAttribute, expectations, "Model should be deleted", mod.getName(), modAtt.getId());
     }
 
     /**
@@ -414,8 +413,8 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.jsonPath("$.[1]content.model.type").value(mod.getType().toString()));
 
         performDefaultPost(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                   + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, expectations,
-                           "Should bind fragment", mod.getName());
+                + ModelAttrAssocController.FRAGMENT_BIND_MAPPING, frag, expectations, "Should bind fragment",
+                           mod.getName());
     }
 
     /**
@@ -445,16 +444,16 @@ public class ModelAttributeControllerIT extends AbstractRegardsTransactionalIT {
         expectations.add(MockMvcResultMatchers.status().isNoContent());
 
         performDefaultDelete(ModelAttrAssocController.BASE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
-                                     + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, expectations,
+                + ModelAttrAssocController.FRAGMENT_UNBIND_MAPPING, expectations,
                              "Fragment's attributes should be deleted", mod.getName(), frag.getId());
 
         expectations = new ArrayList<>();
         expectations.add(MockMvcResultMatchers.status().isNotFound());
 
         for (ModelAttrAssoc modAtt : modelAttributes) {
-            performDefaultGet(
-                    ModelAttrAssocController.TYPE_MAPPING + ModelAttrAssocController.TYPE_MAPPING + apiAttribute,
-                    expectations, "ModelAttribute shouldn't exist anymore", mod.getId(), modAtt.getId());
+            performDefaultGet(ModelAttrAssocController.TYPE_MAPPING + ModelAttrAssocController.TYPE_MAPPING
+                    + apiAttribute, expectations, "ModelAttribute shouldn't exist anymore", mod.getId(),
+                              modAtt.getId());
         }
     }
 }

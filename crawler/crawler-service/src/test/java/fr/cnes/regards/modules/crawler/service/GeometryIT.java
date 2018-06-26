@@ -50,7 +50,7 @@ public class GeometryIT {
     private ICollectionService collService;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
     private IEsRepository esRepos;

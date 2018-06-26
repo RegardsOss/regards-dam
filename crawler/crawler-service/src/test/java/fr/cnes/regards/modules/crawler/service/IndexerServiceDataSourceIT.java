@@ -120,6 +120,7 @@ public class IndexerServiceDataSourceIT {
 
     private static final String PLUGIN_CURRENT_PACKAGE = "fr.cnes.regards.modules.crawler.plugins";
 
+    @SuppressWarnings("unused")
     private static final String TABLE_NAME_TEST = "t_validation_1";
 
     private static final String DATA_MODEL_FILE_NAME = "validationDataModel1.xml";
@@ -193,7 +194,7 @@ public class IndexerServiceDataSourceIT {
     private ICrawlerAndIngesterService crawlerService;
 
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepos;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepos;
 
     @Autowired
     private IDatasetRepository datasetRepos;

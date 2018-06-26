@@ -52,9 +52,8 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
     private static final String TAG_LAST = "LAST";
 
-    @SuppressWarnings("rawtypes")
     @Autowired
-    private IAbstractEntityRepository<AbstractEntity> entityRepository;
+    private IAbstractEntityRepository<AbstractEntity<?>> entityRepository;
 
     @Autowired
     private IModelRepository modelRepository;
@@ -109,8 +108,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity4.setTags(entity4Tags);
         entity4 = entityRepository.save(entity4);
 
-        @SuppressWarnings("rawtypes")
-        List<AbstractEntity> result = entityRepository.findByTags(TAG_TO_SEARCH);
+        List<AbstractEntity<?>> result = entityRepository.findByTags(TAG_TO_SEARCH);
         Assert.assertTrue(result.contains(entity1));
         Assert.assertTrue(result.contains(entity2));
         Assert.assertTrue(result.contains(entity3));
@@ -137,8 +135,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         ipIds.add(entity3.getIpId());
         ipIds.add(entity2.getIpId());
 
-        @SuppressWarnings("rawtypes")
-        List<AbstractEntity> result = entityRepository.findByIpIdIn(ipIds);
+        List<AbstractEntity<?>> result = entityRepository.findByIpIdIn(ipIds);
         Assert.assertTrue(result.contains(entity1));
         Assert.assertTrue(result.contains(entity2));
         Assert.assertTrue(result.contains(entity3));
@@ -162,8 +159,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
 
         Set<UniformResourceName> ipIds = new HashSet<>();
 
-        @SuppressWarnings("rawtypes")
-        List<AbstractEntity> result = entityRepository.findByIpIdIn(ipIds);
+        List<AbstractEntity<?>> result = entityRepository.findByIpIdIn(ipIds);
         Assert.assertEquals(0, result.size());
     }
 
@@ -174,8 +170,7 @@ public class AbstractEntityDaoTest extends AbstractDaoTransactionalTest {
         entity1.setSipId(sipId);
         entity1 = entityRepository.save(entity1);
 
-        @SuppressWarnings("rawtypes")
-        Set<AbstractEntity> entities = entityRepository.findAllBySipId(sipId);
+        Set<AbstractEntity<?>> entities = entityRepository.findAllBySipId(sipId);
         Assert.assertEquals(1, entities.size());
 
         entities = entityRepository.findAllBySipId("fake");
