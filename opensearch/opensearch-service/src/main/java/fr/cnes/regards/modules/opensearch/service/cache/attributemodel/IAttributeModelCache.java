@@ -60,4 +60,11 @@ public interface IAttributeModelCache {
     */
     AttributeModel findByName(String name) throws OpenSearchUnknownParameter;
 
+    /**
+     * Return the smaller distinct path of the given attribute by removing if possible "feature", "properties" and fragment names.
+     * @param attribute {@link AttributeModel} to find smaller path name.
+     * @return {@link String} smaller path name
+     */
+    String findName(AttributeModel attribute);
+
 }

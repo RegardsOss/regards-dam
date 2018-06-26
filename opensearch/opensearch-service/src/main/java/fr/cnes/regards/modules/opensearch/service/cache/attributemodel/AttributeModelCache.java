@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -258,6 +259,32 @@ public class AttributeModelCache implements IAttributeModelCache, ApplicationLis
         }
 
         return attModel;
+    }
+
+    @Override
+    public String findName(AttributeModel attribute) {
+        // Check dynamic properties
+        String name = attribute.getJsonPath();
+
+        // Only dynamic attributes can have a reduce name path
+        if (!attribute.isDynamic() && (attribute.getId() != null)) {
+            return name;
+        }
+
+        String tenant = runtimeTenantResolver.getTenant();
+        Map<String, AttributeModel> tenantMap = propertyMap.get(tenant);
+
+        for (Entry<String, AttributeModel> entry : tenantMap.entrySet()) {
+            AttributeModel att = entry.getValue();
+            if (att.isDynamic() && (att.getId() != null) && att.getId().equals(attribute.getId())) {
+                if (entry.getKey().length() < name.length()) {
+                    name = entry.getKey();
+                }
+            }
+        }
+
+        return name;
+
     }
 
     /**
