@@ -18,6 +18,7 @@
  */
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,15 +33,15 @@ public class BoundaryBoxCriterion implements ICriterion {
     private static final Pattern p = Pattern
             .compile("^([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)$");
 
-    private final Double minX;
+    private final double minX;
 
-    private final Double minY;
+    private final double minY;
 
-    private final Double maxX;
+    private final double maxX;
 
-    private final Double maxY;
+    private final double maxY;
 
-    public BoundaryBoxCriterion(Double minX, Double minY, Double maxX, Double maxY) {
+    public BoundaryBoxCriterion(double minX, double minY, double maxX, double maxY) {
         super();
         this.maxY = maxY;
         this.minX = minX;
@@ -49,7 +50,7 @@ public class BoundaryBoxCriterion implements ICriterion {
     }
 
     /**
-     * Creates BoundaryBoxCriterion from string format <left,bottom,right,top> where each field is a {@link Double}.
+     * Creates BoundaryBoxCriterion from string format <left,bottom,right,top> where each field is a {@link double}.
      * @param bbox
      * @throws InvalidGeometryException
      */
@@ -76,25 +77,25 @@ public class BoundaryBoxCriterion implements ICriterion {
         return visitor.visitBoundaryBoxCriterion(this);
     }
 
-    public Double getMaxY() {
+    public double getMaxY() {
         return maxY;
     }
 
-    public Double getMinX() {
+    public double getMinX() {
         return minX;
     }
 
-    public Double getMinY() {
+    public double getMinY() {
         return minY;
     }
 
-    public Double getMaxX() {
+    public double getMaxX() {
         return maxX;
     }
 
     @Override
     public int hashCode() {
-        return maxY.hashCode() + minX.hashCode() + maxX.hashCode() + minY.hashCode();
+        return Objects.hash(minX, minY, maxX, maxY);
     }
 
     @Override
@@ -106,8 +107,8 @@ public class BoundaryBoxCriterion implements ICriterion {
             return false;
         }
         BoundaryBoxCriterion crit = (BoundaryBoxCriterion) o;
-        return crit.getMinX().equals(this.getMinX()) && crit.getMinY().equals(this.getMinY())
-                && crit.getMaxX().equals(this.getMaxX()) && crit.getMaxY().equals(this.getMaxY());
+        return (crit.getMinX() == this.getMinX()) && (crit.getMinY() == this.getMinY())
+                && (crit.getMaxX() == this.getMaxX()) && (crit.getMaxY() == this.getMaxY());
     }
 
 }
