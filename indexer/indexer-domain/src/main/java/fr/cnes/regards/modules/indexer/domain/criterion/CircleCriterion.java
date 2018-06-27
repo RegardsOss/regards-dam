@@ -29,19 +29,19 @@ public class CircleCriterion implements ICriterion {
     /**
      * Center point coordinates
      */
-    private final Double[] coordinates;
+    private final double[] coordinates;
 
     /**
      * Radius length. Format : a number eventually followed by unit (m, km, ...). In meter by default
      */
     private final String radius;
 
-    public CircleCriterion(Double[] coordinates, String radius) {
+    public CircleCriterion(double[] coordinates, String radius) {
         this.coordinates = coordinates;
         this.radius = radius;
     }
 
-    public Double[] getCoordinates() {
+    public double[] getCoordinates() {
         return coordinates;
     }
 

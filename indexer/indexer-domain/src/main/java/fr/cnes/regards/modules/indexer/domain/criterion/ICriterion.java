@@ -453,7 +453,7 @@ public interface ICriterion {
      * @param radius radius eventually with unit (ie "100m" or "5km"), default to meters
      * @return criterion
      */
-    static ICriterion intersectsCircle(Double[] center, String radius) {
+    static ICriterion intersectsCircle(double[] center, String radius) {
         return new CircleCriterion(center, radius);
     }
 
@@ -462,14 +462,13 @@ public interface ICriterion {
      * @param coordinates coordinates of polygon
      * @return criterion
      */
-    static ICriterion intersectsPolygon(Double[][][] coordinates) {
+    static ICriterion intersectsPolygon(double[][][] coordinates) {
         return new PolygonCriterion(coordinates);
     }
 
     /**
      * Criterion to test the intersaction with a boundary box
-     * @param bbox String bbox as <left,bottom,right,top,
-     * @return
+     * @param bbox String bbox as &lt;left,bottom,right,top>
      * @throws InvalidGeometryException
      */
     static ICriterion intersectsBbox(String bbox) throws InvalidGeometryException {
@@ -478,10 +477,8 @@ public interface ICriterion {
 
     /**
      * Criterion to test the intersaction with a boundary box
-     * @param bbox
-     * @return
      */
-    static ICriterion intersectsBbox(Double left, Double bottom, Double right, Double top) {
+    static ICriterion intersectsBbox(double left, double bottom, double right, double top) {
         return new BoundaryBoxCriterion(left, bottom, right, top);
     }
 

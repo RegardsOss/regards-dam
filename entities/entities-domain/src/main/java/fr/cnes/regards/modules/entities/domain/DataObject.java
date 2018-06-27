@@ -66,14 +66,14 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
     private boolean internal = true;
 
     /**
-     * This field only exists for Gson serialization (used by frontent)
+     * This field only exists for Gson serialization (used by frontend)
      * Indicates if a physical file (ie a RAWDATA or QUICKLOOK) exists with this data object
      */
     @SuppressWarnings("unused")
     private Boolean containsPhysicalData = null;
 
     /**
-     * This field only exists for Gson serialization (used by frontent)
+     * This field only exists for Gson serialization (used by frontend)
      * Indicates if an external allowingDownload file (ie a RAWDATA or QUICKLOOK) exists with this data object
      */
     @SuppressWarnings("unused")
@@ -134,7 +134,7 @@ public class DataObject extends AbstractEntity<DataObjectFeature> {
     }
 
     /**
-     * Update both containsPhysiclaData and canBeExternallyDownloaded properties on DataObject AND downloadable property
+     * Update both containsPhysicalData and canBeExternallyDownloaded properties on DataObject AND downloadable property
      * on all associated files.
      * Theses properties are needed by frontend
      */

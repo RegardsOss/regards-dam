@@ -29,13 +29,13 @@ public class PolygonCriterion implements ICriterion {
     /**
      * Polygon coordinates
      */
-    private final Double[][][] coordinates;
+    private final double[][][] coordinates;
 
-    protected PolygonCriterion(Double[][][] coordinates) {
+    protected PolygonCriterion(double[][][] coordinates) {
         this.coordinates = coordinates;
     }
 
-    public Double[][][] getCoordinates() {
+    public double[][][] getCoordinates() {
         return coordinates;
     }
 
