@@ -102,20 +102,20 @@ public class GeoQueryOnPolygonsTest {
         searchKey.setSearchIndex(INDEX);
     }
 
-    private Double[] point(Integer... lonLats) {
+    private double[] point(Integer... lonLats) {
         assert (lonLats.length == 2);
-        return new Double[] { lonLats[0].doubleValue(), lonLats[1].doubleValue() };
+        return new double[] { lonLats[0].doubleValue(), lonLats[1].doubleValue() };
     }
 
-    private static Double[][][] simplePolygon(Integer... lonLats) {
+    private static double[][][] simplePolygon(Integer... lonLats) {
         assert (lonLats.length >= 6);
         assert (lonLats.length % 2 == 0);
-        Double[][] shell = new Double[lonLats.length / 2 + 1][];
+        double[][] shell = new double[lonLats.length / 2 + 1][];
         for (int i = 0; i < lonLats.length; i += 2) {
-            shell[i / 2] = new Double[] { lonLats[i].doubleValue(), lonLats[i + 1].doubleValue() };
+            shell[i / 2] = new double[] { lonLats[i].doubleValue(), lonLats[i + 1].doubleValue() };
         }
-        shell[shell.length - 1] = new Double[] { lonLats[0].doubleValue(), lonLats[1].doubleValue() };
-        return new Double[][][] { shell };
+        shell[shell.length - 1] = new double[] { lonLats[0].doubleValue(), lonLats[1].doubleValue() };
+        return new double[][][] { shell };
     }
 
     @Test
@@ -282,7 +282,7 @@ public class GeoQueryOnPolygonsTest {
         }
     }
 
-    private static class PolygonItem extends Item<Double[][][]> {
+    private static class PolygonItem extends Item<double[][][]> {
 
         public PolygonItem(String id, Integer... coordinates) {
             super(id, new Polygon(simplePolygon(coordinates)));
@@ -335,12 +335,12 @@ public class GeoQueryOnPolygonsTest {
         }
     }
 
-     private static class Polygon extends Geometry<Double[][][]> {
+     private static class Polygon extends Geometry<double[][][]> {
         public Polygon() {
             super(GeometryType.Polygon, null);
         }
 
-        public Polygon(Double[][][] coordinates) {
+        public Polygon(double[][][] coordinates) {
             super(GeometryType.Polygon, coordinates);
         }
     }
