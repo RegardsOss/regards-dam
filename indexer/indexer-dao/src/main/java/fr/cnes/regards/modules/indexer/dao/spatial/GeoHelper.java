@@ -62,7 +62,11 @@ public class GeoHelper {
                 calcMap.put(crs, new GeodeticCalculator(coordinateReferenceSystem));
             } catch (FactoryException e) {
                 LOGGER.error("Bad WKT", e);
-            } for (Crs otherCrs : Crs.values()) {
+            }
+
+        }
+        for (Crs crs : Crs.values()) {
+            for (Crs otherCrs : Crs.values()) {
                 if (crs != otherCrs) {
                     try {
                         MathTransform transform = CRS.findMathTransform(crsMap.get(crs), crsMap.get(otherCrs), true);
@@ -83,6 +87,14 @@ public class GeoHelper {
         return getDistance(lon1, lat1, lon2, lat2, Crs.WGS_84);
     }
 
+    public static double getDistanceOnMars(double[] lonLat1, double[] lonLat2) {
+        return getDistance(lonLat1, lonLat2, Crs.MARS_49900);
+    }
+
+    public static double getDistanceOnMars(double lon1, double lat1, double lon2, double lat2) {
+        return getDistance(lon1, lat1, lon2, lat2, Crs.MARS_49900);
+    }
+
     public static double getDistance(double[] lonLat1, double[] lonLat2, Crs crs) {
         return getDistance(lonLat1[0], lonLat1[1], lonLat2[0], lonLat2[1], crs);
     }
@@ -92,6 +104,43 @@ public class GeoHelper {
         calc.setStartingGeographicPoint(lon1, lat1);
         calc.setDestinationGeographicPoint(lon2, lat2);
         return calc.getOrthodromicDistance();
+    }
+
+    public static double[] getPointAtDirectionOnEarth(double srcLon, double srcLat, double azimuth, double distance)
+            throws TransformException {
+        return getPointAtDirection(srcLon, srcLat, azimuth, distance, Crs.WGS_84);
+    }
+
+    public static double[] getPointAtDirectionOnEarth(double[] srcLonLat, double azimuth, double distance)
+            throws TransformException {
+        return getPointAtDirection(srcLonLat, azimuth, distance, Crs.WGS_84);
+    }
+
+    public static double[] getPointAtDirectionOnMars(double srcLon, double srcLat, double azimuth, double distance)
+            throws TransformException {
+        return getPointAtDirection(srcLon, srcLat, azimuth, distance, Crs.MARS_49900);
+    }
+
+    public static double[] getPointAtDirectionOnMars(double[] srcLonLat, double azimuth, double distance)
+            throws TransformException {
+        return getPointAtDirection(srcLonLat, azimuth, distance, Crs.MARS_49900);
+    }
+
+    public static double[] getPointAtDirection(double[] srcLonLat, double azimuth, double distance, Crs crs)
+            throws TransformException {
+        GeodeticCalculator calc = calcMap.get(crs);
+        calc.setStartingGeographicPoint(srcLonLat[0], srcLonLat[1]);
+        calc.setDirection(azimuth, distance);
+        return calc.getDestinationPosition().getCoordinate();
+    }
+
+
+    public static double[] getPointAtDirection(double srcLon, double srcLat, double azimuth, double distance, Crs crs)
+            throws TransformException {
+        GeodeticCalculator calc = calcMap.get(crs);
+        calc.setStartingGeographicPoint(srcLon, srcLat);
+        calc.setDirection(azimuth, distance);
+        return calc.getDestinationPosition().getCoordinate();
     }
 
     public static double[] transform(double[] fromPoint, Crs fromCrs, Crs toCrs) throws TransformException {
