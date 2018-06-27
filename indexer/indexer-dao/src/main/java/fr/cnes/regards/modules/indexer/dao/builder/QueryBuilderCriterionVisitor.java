@@ -21,7 +21,6 @@ package fr.cnes.regards.modules.indexer.dao.builder;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 
-import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilders;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -190,7 +189,7 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitCircleCriterion(CircleCriterion criterion) {
-        Double[] center = criterion.getCoordinates();
+        double[] center = criterion.getCoordinates();
         try {
             return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newCircleBuilder()
                     .center(new Coordinate(center[0], center[1])).radius(criterion.getRadius()));
@@ -206,15 +205,9 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
 
     @Override
     public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
-        Double[][][] coordinates = criterion.getCoordinates();
-        // Only shell can be taken into account
-        Double[][] shell = coordinates[0];
-        CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
-        for (Double[] point : shell) {
-            coordBuilder.coordinate(new Coordinate(point[0], point[1]));
-        }
+
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newPolygon(coordBuilder));
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, GeoQueries.computeShapeBuilder(criterion));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
@@ -230,4 +223,6 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
             throw new RsRuntimeException(ioe);
         }
     }
+
+
 }

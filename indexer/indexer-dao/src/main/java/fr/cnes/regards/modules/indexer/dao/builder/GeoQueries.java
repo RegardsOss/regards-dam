@@ -245,9 +245,9 @@ public final class GeoQueries {
      * ComputeShapeBuilder from polygon criterion depending on polygon nature
      */
     public static ShapeBuilder computeShapeBuilder(PolygonCriterion criterion) {
-        Double[][][] coordinates = criterion.getCoordinates();
+        double[][][] coordinates = criterion.getCoordinates();
         // Only shell can be taken into account (external emprise)
-        Double[][] shell = coordinates[0];
+        double[][] shell = coordinates[0];
         // Use SphericalPolygonsSet to model polygon (first shell coordinates are last too)
         S2Point[] shellPoints = new S2Point[shell.length - 1];
         for (int i = 0; i < shellPoints.length; i++) {
@@ -281,7 +281,7 @@ public final class GeoQueries {
         //        }
         // Third: no particular case polygon
         CoordinatesBuilder coordBuilder = new CoordinatesBuilder();
-        for (Double[] point : shell) {
+        for (double[] point : shell) {
             coordBuilder.coordinate(new Coordinate(point[0], point[1]));
         }
 

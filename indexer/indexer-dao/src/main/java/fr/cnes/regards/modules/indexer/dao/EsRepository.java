@@ -18,9 +18,6 @@
  */
 package fr.cnes.regards.modules.indexer.dao;
 
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
-import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -117,10 +114,11 @@ import com.google.common.collect.Range;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
-
 import fr.cnes.regards.framework.gson.adapters.OffsetDateTimeAdapter;
 import fr.cnes.regards.framework.utils.RsRuntimeException;
 import fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.DATE_FACET_SUFFIX;
+import static fr.cnes.regards.modules.indexer.dao.builder.AggregationBuilderFacetTypeVisitor.NUMERIC_FACET_SUFFIX;
 import fr.cnes.regards.modules.indexer.dao.builder.QueryBuilderCriterionVisitor;
 import fr.cnes.regards.modules.indexer.dao.converter.SortToLinkedHashMap;
 import fr.cnes.regards.modules.indexer.domain.IDocFiles;
@@ -1000,7 +998,7 @@ public class EsRepository implements IEsRepository {
      * @param map response of "mappings" rest request
      * @return true is first type mapping found fro given attribute is of type "text"
      */
-    private static boolean isTextMapping(String index, Map<String, Object> map, String attribute) {
+    private static boolean isTextMapping(Map<String, Object> map, String attribute) {
         String lastPathAttName = attribute.contains(".") ? attribute.substring(attribute.lastIndexOf('.') + 1)
                 : attribute;
         try {
@@ -1048,7 +1046,7 @@ public class EsRepository implements IEsRepository {
                 LinkedHashMap<String, Boolean> updatedAscSortMap = new LinkedHashMap<>(ascSortMap.size());
                 for (Map.Entry<String, Boolean> sortEntry : ascSortMap.entrySet()) {
                     String attribute = sortEntry.getKey();
-                    if (isTextMapping(index, map, attribute)) {
+                    if (isTextMapping(map, attribute)) {
                         updatedAscSortMap.put(attribute + KEYWORD_SUFFIX, sortEntry.getValue());
                     } else {
                         updatedAscSortMap.put(attribute, sortEntry.getValue());
