@@ -57,8 +57,8 @@ public class GeometryCriterionBuilder {
 
             if (Polygon.class.getName().equals(geometry.getGeometryType())) {
                 Polygon polygon = (Polygon) geometry;
-                Converter<Polygon, Double[][][]> converter = new PolygonToArray();
-                Double[][][] coordinates = converter.convert(polygon);
+                Converter<Polygon, double[][][]> converter = new PolygonToArray();
+                double[][][] coordinates = converter.convert(polygon);
                 return ICriterion.intersectsPolygon(coordinates);
             } else {
                 // Only Polygons are handled for now
@@ -100,7 +100,7 @@ public class GeometryCriterionBuilder {
             throw new InvalidGeometryException(errorMessage);
         }
 
-        Double[] center = { Double.parseDouble(lonParam), Double.parseDouble(latParam) };
+        double[] center = { Double.parseDouble(lonParam), Double.parseDouble(latParam) };
         return ICriterion.intersectsCircle(center, radiusParam);
     }
 

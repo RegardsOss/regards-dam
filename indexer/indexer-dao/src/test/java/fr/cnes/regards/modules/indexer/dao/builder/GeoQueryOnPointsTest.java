@@ -122,11 +122,6 @@ public class GeoQueryOnPointsTest {
                             builder.toString());
     }
 
-    private double[] point(Integer... lonLats) {
-        assert (lonLats.length == 2);
-        return new double[] { lonLats[0].doubleValue(), lonLats[1].doubleValue() };
-    }
-
     private double[] point(double... lonLats) {
         assert (lonLats.length == 2);
         return new double[] { lonLats[0], lonLats[1] };
