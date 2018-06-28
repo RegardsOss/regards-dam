@@ -1,11 +1,12 @@
 package fr.cnes.regards.modules.crawler.service;
 
-import javax.annotation.PreDestroy;
 import java.lang.reflect.ParameterizedType;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+
+import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import fr.cnes.regards.framework.amqp.IPoller;
 import fr.cnes.regards.framework.amqp.domain.TenantWrapper;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
 import fr.cnes.regards.framework.multitenant.ITenantResolver;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -96,6 +98,7 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
 
     private final Class<T> entityClass;
 
+    @SuppressWarnings("unchecked")
     protected AbstractCrawlerService() {
         this.entityClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
                 .getActualTypeArguments()[0];
@@ -149,7 +152,7 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
     }
 
     /**
-     * Try to do a transactional poll. If a poll is done but an exception occurs, the transaction is rolbacked and the
+     * Try to do a transactional poll. If a poll is done but an exception occurs, the transaction is roll backed and the
      * event is still present into AMQP
      * @return true if a poll has been done, false otherwise
      */
@@ -172,7 +175,14 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
                 }
                 inProgress = true;
                 OffsetDateTime now = OffsetDateTime.now();
-                Arrays.stream(ipIds).forEach(ipId -> entityIndexerService.updateEntityIntoEs(tenant, ipId, now, false));
+                Arrays.stream(ipIds).forEach(ipId -> {
+                    try {
+                        entityIndexerService.updateEntityIntoEs(tenant, ipId, now, false);
+                    } catch (ModuleException e) {
+                        LOGGER.error("Error handling entity update events", e);
+                        // FIXME notify
+                    }
+                });
                 somethingDone = true;
             }
         }
@@ -193,8 +203,9 @@ public abstract class AbstractCrawlerService<T extends AbstractEntityEvent> {
 
     public void startWork() { // NOSONAR : test purpose
         // If crawler is busy, wait for it
-        while (working())
+        while (working()) {
             ;
+        }
         scheduledWork = true;
         somethingDone = false;
         LOGGER.info("start working...");

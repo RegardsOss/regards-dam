@@ -18,6 +18,12 @@
  */
 package fr.cnes.regards.modules.entities.domain;
 
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -38,11 +44,6 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -51,6 +52,7 @@ import org.springframework.util.Assert;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+
 import fr.cnes.regards.framework.geojson.geometry.IGeometry;
 import fr.cnes.regards.framework.jpa.converters.OffsetDateTimeAttributeConverter;
 import fr.cnes.regards.framework.jpa.json.JsonBinaryType;
@@ -229,7 +231,8 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     }
 
     /**
-     * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)}
+     * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)} or
+     * {@link #removeTags(Collection)}
      */
     public ImmutableSet<String> getTags() {
         return ImmutableSet.copyOf(tags);
@@ -352,6 +355,7 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
         feature.setGeometry(geometry);
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends IGeometry> T getWgs84() {
         return (T) wgs84;
     }

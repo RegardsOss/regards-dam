@@ -31,7 +31,6 @@ import java.util.StringJoiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
@@ -45,8 +44,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import com.google.common.net.HttpHeaders;
 
 import fr.cnes.regards.framework.hateoas.HateoasUtils;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
@@ -210,30 +207,6 @@ public class DatasetControllerIT extends AbstractRegardsTransactionalIT {
         fileList.add(dataset21);
         performDefaultFileUpload(DatasetController.DATASET_PATH, fileList, expectations,
                                  "Failed to create a new dataset");
-    }
-
-    @Ignore
-    @Test
-    public void testDatasetDescriptionFile() throws IOException, ModuleException {
-
-        Dataset dataSet21 = new Dataset(model1, DEFAULT_TENANT, "dataSet21");
-        dataSet21.setLicence("licence");
-        dataSet21.setCreationDate(OffsetDateTime.now());
-        final byte[] input = Files.readAllBytes(Paths.get("src", "test", "resources", "test.pdf"));
-        final MockMultipartFile pdf = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, input);
-        dataSet21 = dsService.create(dataSet21, pdf);
-        expectations.add(MockMvcResultMatchers.status().is2xxSuccessful());
-        expectations.add(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_PDF_VALUE));
-        expectations.add(MockMvcResultMatchers.header().string(HttpHeaders.CONTENT_LENGTH,
-                                                               String.valueOf(pdf.getBytes().length)));
-
-        performDefaultGet(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
-                          "Could not fetch dataset description file", dataSet21.getIpId());
-
-        expectations.clear();
-        expectations.add(MockMvcResultMatchers.status().isNoContent());
-        performDefaultDelete(DatasetController.DATASET_PATH + DatasetController.DATASET_IPID_PATH_FILE, expectations,
-                             "Could not delete dataset description file", dataSet21.getIpId());
     }
 
     @Test

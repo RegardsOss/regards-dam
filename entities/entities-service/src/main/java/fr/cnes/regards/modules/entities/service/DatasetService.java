@@ -51,12 +51,10 @@ import fr.cnes.regards.modules.datasources.domain.plugins.IDataSourcePlugin;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
-import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.StaticProperties;
 import fr.cnes.regards.modules.entities.service.visitor.SubsettingCoherenceVisitor;
 import fr.cnes.regards.modules.indexer.domain.criterion.ICriterion;
@@ -96,10 +94,10 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
             IModelAttrAssocService modelAttributeService, IAbstractEntityRepository<AbstractEntity<?>> entityRepository,
             IModelService modelService, IDeletedEntityRepository deletedEntityRepository,
             ICollectionRepository collectionRepository, EntityManager em, IPublisher publisher,
-            IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository,
-            IOpenSearchService openSearchService, IPluginService pluginService) {
+            IRuntimeTenantResolver runtimeTenantResolver, IOpenSearchService openSearchService,
+            IPluginService pluginService) {
         super(modelAttributeService, entityRepository, modelService, deletedEntityRepository, collectionRepository,
-              repository, repository, em, publisher, runtimeTenantResolver, descriptionFileRepository);
+              repository, repository, em, publisher, runtimeTenantResolver);
         this.attributeService = attributeService;
         this.openSearchService = openSearchService;
         this.pluginService = pluginService;
@@ -222,29 +220,6 @@ public class DatasetService extends AbstractEntityService<Dataset> implements ID
         // Add jsonpath to each attribute
         attModelPage.forEach(attModel -> attModel.buildJsonPath(StaticProperties.FEATURE_PROPERTIES));
         return attModelPage;
-    }
-
-    // FIXME
-    @Override
-    public DescriptionFile retrieveDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        // Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        // if (ds == null) {
-        // throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        // }
-        // return ds.getDescriptionFile();
-        return null;
-    }
-
-    // FIXME
-    @Override
-    public void removeDescription(UniformResourceName datasetIpId) throws EntityNotFoundException {
-        // Dataset ds = datasetRepository.findOneDescriptionFile(datasetIpId);
-        // if (ds == null) {
-        // throw new EntityNotFoundException(datasetIpId.toString(), Dataset.class);
-        // }
-        // DescriptionFile desc = ds.getDescriptionFile();
-        // ds.setDescriptionFile(null);
-        // descriptionFileRepository.delete(desc);
     }
 
     /**

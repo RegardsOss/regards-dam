@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.AccessRight;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.dto.DatasetWithAccessRight;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -49,8 +50,8 @@ public class DatasetWithAccessRightService implements IDatasetWithAccessRightSer
     private IAccessRightService accessRightService;
 
     @Override
-    public Page<DatasetWithAccessRight> search(String datasetLabelFilter, String accessGroupName,
-            Pageable pageRequest) {
+    public Page<DatasetWithAccessRight> search(String datasetLabelFilter, String accessGroupName, Pageable pageRequest)
+            throws ModuleException {
 
         List<DatasetWithAccessRight> datasetsWithAR = new ArrayList<>();
 

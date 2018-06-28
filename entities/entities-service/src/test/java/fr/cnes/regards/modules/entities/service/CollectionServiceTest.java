@@ -123,7 +123,7 @@ public class CollectionServiceTest {
 
         collectionServiceMocked = new CollectionService(pModelAttributeService, entitiesRepositoryMocked, pModelService,
                 deletedEntityRepositoryMocked, collectionRepositoryMocked, null, null, publisherMocked,
-                runtimeTenantResolver, null);
+                runtimeTenantResolver);
     }
 
     @Test

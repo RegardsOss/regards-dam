@@ -16,23 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with REGARDS. If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.cnes.regards.modules.entities.service.exception;
+package fr.cnes.regards.modules.entities.dao;
 
-import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import java.util.Optional;
 
-/**
- * @author Sylvain Vissiere-Guerinet
- *
- */
-public class EntityDescriptionTooLargeException extends ModuleException {
+import org.springframework.data.jpa.repository.JpaRepository;
 
-    private static final String DESCRIPTION_TOO_LARGE = "The system only accept description up to 10MB. %s do not respect this constraint.";
+import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.entities.domain.LocalFile;
 
-    /**
-     * @param pDescriptionName
-     */
-    public EntityDescriptionTooLargeException(String pDescriptionName) {
-        super(String.format(DESCRIPTION_TOO_LARGE, pDescriptionName));
-    }
+public interface ILocalFileRepository extends JpaRepository<LocalFile, Long> {
 
+    Optional<LocalFile> findOneByEntityAndFileChecksum(AbstractEntity<?> entity, String fileChecksum);
+
+    Long countByFileChecksum(String fileChecksum);
 }

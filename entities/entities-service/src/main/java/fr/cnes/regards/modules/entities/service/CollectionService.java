@@ -24,17 +24,13 @@ import org.springframework.stereotype.Service;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
-import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
-import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.models.service.IModelAttrAssocService;
 import fr.cnes.regards.modules.models.service.IModelService;
 
@@ -51,31 +47,8 @@ public class CollectionService extends AbstractEntityService<Collection> impleme
             IAbstractEntityRepository<AbstractEntity<?>> pEntityRepository, IModelService pModelService,
             IDeletedEntityRepository pDeletedEntityRepository, ICollectionRepository pCollectionRepository,
             IDatasetRepository pDatasetRepository, EntityManager pEm, IPublisher pPublisher,
-            IRuntimeTenantResolver runtimeTenantResolver, IDescriptionFileRepository descriptionFileRepository) {
+            IRuntimeTenantResolver runtimeTenantResolver) {
         super(pModelAttributeService, pEntityRepository, pModelService, pDeletedEntityRepository, pCollectionRepository,
-              pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver,
-              descriptionFileRepository);
-    }
-
-    // FIXME
-    @Override
-    public DescriptionFile retrieveDescription(UniformResourceName collectionIpId) throws EntityNotFoundException {
-        // Collection col = collectionRepository.findOneWithDescriptionFile(collectionIpId);
-        // if (col == null) {
-        // throw new EntityNotFoundException(collectionIpId.toString(), Dataset.class);
-        // }
-        // return col.getDescriptionFile();
-        return null;
-    }
-
-    @Override
-    public void removeDescription(UniformResourceName collectionIpId) throws EntityNotFoundException {
-        // Collection col = collectionRepository.findOneWithDescriptionFile(collectionIpId);
-        // if (col == null) {
-        // throw new EntityNotFoundException(collectionIpId.toString(), Dataset.class);
-        // }
-        // DescriptionFile desc = col.getDescriptionFile();
-        // col.setDescriptionFile(null);
-        // descriptionFileRepository.delete(desc);
+              pDatasetRepository, pCollectionRepository, pEm, pPublisher, runtimeTenantResolver);
     }
 }

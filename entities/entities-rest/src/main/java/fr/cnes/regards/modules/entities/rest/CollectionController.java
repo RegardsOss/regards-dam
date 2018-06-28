@@ -18,11 +18,10 @@
  */
 package fr.cnes.regards.modules.entities.rest;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Set;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,7 +31,6 @@ import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,36 +43,25 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.google.common.net.HttpHeaders;
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.annotation.ModuleInfo;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.Collection;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.service.ICollectionService;
 
 /**
+ * Collection API
  * @author lmieulet
  */
 @RestController
-@ModuleInfo(name = "collections", version = "1.0-SNAPSHOT", author = "REGARDS", legalOwner = "CS",
-        documentation = "http://test")
 @RequestMapping(path = CollectionController.ROOT_MAPPING)
 public class CollectionController implements IResourceController<Collection> {
 
     public static final String ROOT_MAPPING = "/collections";
-
-    /**
-     * Controller path for description file of a collection using its ip id as path variable
-     */
-    public static final String COLLECTION_IPID_PATH_FILE = "/{collection_ipId}/file";
 
     /**
      * Service
@@ -111,54 +98,11 @@ public class CollectionController implements IResourceController<Collection> {
     @RequestMapping(method = RequestMethod.GET, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "Retrieve a collection")
-    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") final Long id) {
+    public HttpEntity<Resource<Collection>> retrieveCollection(@PathVariable("collection_id") final Long id)
+            throws ModuleException {
         final Collection collection = collectionService.load(id);
         final Resource<Collection> resource = toResource(collection);
         return new ResponseEntity<>(resource, HttpStatus.OK);
-    }
-
-    /**
-     * Retrieve the description file of a collection, represented by its ip id
-     * @param origin origin to be allowed for X-FRAME-OPTIONS header
-     */
-    @RequestMapping(method = RequestMethod.GET, value = COLLECTION_IPID_PATH_FILE)
-    @ResourceAccess(description = "Retrieves a collection description file content", role = DefaultRole.PUBLIC)
-    public void retrieveCollectionDescription(@RequestParam(name = "origin", required = false) String origin,
-            @PathVariable("collection_ipId") String ipId, HttpServletResponse response)
-            throws EntityNotFoundException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        DescriptionFile file = collectionService.retrieveDescription(UniformResourceName.fromString(ipId));
-        if (file == null) {
-            response.setStatus(HttpStatus.NO_CONTENT.value());
-        } else {
-            if (origin != null) {
-                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
-            }
-            String filename = ipId;
-            if (MediaType.APPLICATION_PDF.equals(file.getType())) {
-                filename += ".pdf";
-            }
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + filename);
-
-            out.write(file.getContent());
-            response.setContentType(file.getType().toString());
-            response.setContentLength(out.size());
-            response.getOutputStream().write(out.toByteArray());
-            response.getOutputStream().flush();
-            response.setStatus(HttpStatus.OK.value());
-        }
-    }
-
-    /**
-     * Remove the description file of a collection, represented by its ip id
-     */
-    @RequestMapping(method = RequestMethod.DELETE, value = COLLECTION_IPID_PATH_FILE)
-    @ResourceAccess(description = "remove a dataset description file content")
-    public ResponseEntity<Void> removeCollectionDescription(@PathVariable("collection_ipId") String collectionIpId)
-            throws EntityNotFoundException {
-        collectionService.removeDescription(UniformResourceName.fromString(collectionIpId));
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -189,13 +133,12 @@ public class CollectionController implements IResourceController<Collection> {
      * Entry point to delete a collection using its id
      * @param id {@link Collection} id
      * @return nothing
-     * @
+     * @throws ModuleException
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/{collection_id}")
     @ResponseBody
     @ResourceAccess(description = "delete the collection of collection_id")
-    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") final Long id)
-            throws EntityNotFoundException {
+    public HttpEntity<Void> deleteCollection(@PathVariable("collection_id") final Long id) throws ModuleException {
         collectionService.delete(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

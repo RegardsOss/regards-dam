@@ -10,6 +10,17 @@ alter table t_entity drop column sipId;
 alter table t_entity drop column licence;
 alter table t_entity drop column score;
 alter table t_entity drop column description_file_id;
+alter table t_entity drop column files;
+
+-- TODO
+-- drop table t_description_file;
+
+-- Generalize local storage to all entities
+alter table t_document_file_locally_stored rename to t_local_storage;
+alter table t_local_storage drop constraint fk_documentLS_doc_id;
+alter table t_local_storage rename column document_id to entity_id;
+alter table t_local_storage add constraint uk_t_local_storage_document_file_checksum unique (entity_id, file_checksum);
+alter table t_local_storage add constraint fk_ls_entity_id foreign key (entity_id) references t_entity;
 
 
 

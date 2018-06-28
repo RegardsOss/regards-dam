@@ -44,8 +44,8 @@ public interface IAccessRightService {
      * @param datasetIpId optional dataset ipId
      * @throws EntityNotFoundException
      */
-    Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId,
-            Pageable pageable) throws EntityNotFoundException;
+    Page<AccessRight> retrieveAccessRights(String accessGroupName, UniformResourceName datasetIpId, Pageable pageable)
+            throws ModuleException;
 
     /**
      * Retrieve access right for both given access group and dataset
@@ -53,7 +53,7 @@ public interface IAccessRightService {
      * @param datasetIpId mandatory dataset IPID
      */
     Optional<AccessRight> retrieveAccessRight(String accessGroupName, UniformResourceName datasetIpId)
-            throws EntityNotFoundException;
+            throws ModuleException;
 
     /**
      * Retrieve groups access levels of a specified dataset
@@ -62,16 +62,15 @@ public interface IAccessRightService {
      * @throws EntityNotFoundException if dataset doesn't exist
      */
     Map<String, Pair<AccessLevel, DataAccessLevel>> retrieveGroupAccessLevelMap(UniformResourceName datasetIpId)
-            throws EntityNotFoundException;
+            throws ModuleException;
 
     AccessRight createAccessRight(AccessRight accessRight) throws ModuleException;
 
-    AccessRight retrieveAccessRight(Long id) throws EntityNotFoundException;
+    AccessRight retrieveAccessRight(Long id) throws ModuleException;
 
     AccessRight updateAccessRight(Long id, AccessRight accessRight) throws ModuleException;
 
     void deleteAccessRight(Long id) throws ModuleException;
 
-    boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail)
-            throws EntityNotFoundException;
+    boolean isUserAutorisedToAccessDataset(UniformResourceName datasetIpId, String userEMail) throws ModuleException;
 }

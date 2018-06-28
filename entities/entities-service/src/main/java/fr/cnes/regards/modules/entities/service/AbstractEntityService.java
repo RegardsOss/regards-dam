@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
@@ -40,6 +44,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import fr.cnes.regards.framework.amqp.IPublisher;
 import fr.cnes.regards.framework.module.rest.exception.EntityInconsistentIdentifierException;
@@ -47,6 +52,7 @@ import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.modules.plugins.domain.PluginParameter;
 import fr.cnes.regards.framework.multitenant.IRuntimeTenantResolver;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
@@ -56,7 +62,6 @@ import fr.cnes.regards.modules.entities.dao.EntitySpecifications;
 import fr.cnes.regards.modules.entities.dao.IAbstractEntityRepository;
 import fr.cnes.regards.modules.entities.dao.ICollectionRepository;
 import fr.cnes.regards.modules.entities.dao.IDatasetRepository;
-import fr.cnes.regards.modules.entities.dao.IDescriptionFileRepository;
 import fr.cnes.regards.modules.entities.dao.deleted.IDeletedEntityRepository;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
 import fr.cnes.regards.modules.entities.domain.Collection;
@@ -72,6 +77,7 @@ import fr.cnes.regards.modules.entities.service.validator.AttributeTypeValidator
 import fr.cnes.regards.modules.entities.service.validator.ComputationModeValidator;
 import fr.cnes.regards.modules.entities.service.validator.NotAlterableAttributeValidator;
 import fr.cnes.regards.modules.entities.service.validator.restriction.RestrictionValidatorFactory;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 import fr.cnes.regards.modules.models.domain.Model;
 import fr.cnes.regards.modules.models.domain.ModelAttrAssoc;
 import fr.cnes.regards.modules.models.domain.attributes.AttributeModel;
@@ -87,11 +93,7 @@ import fr.cnes.regards.modules.models.service.IModelService;
 public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends AbstractValidationService<U>
         implements IEntityService<U> {
 
-    /**
-     * Max description file acceptable byte size
-     */
-    @SuppressWarnings("unused")
-    private static final int MAX_DESC_FILE_SIZE = 10_000_000;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEntityService.class);
 
     /**
      * {@link IModelService} instance
@@ -132,17 +134,14 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
      */
     private final IRuntimeTenantResolver runtimeTenantResolver;
 
-    /**
-     * {@link IDescriptionFileRepository} instance
-     */
-    protected final IDescriptionFileRepository descriptionFileRepository;
+    @Autowired
+    protected ILocalStorageService localStorageService;
 
     public AbstractEntityService(IModelAttrAssocService modelAttrAssocService,
             IAbstractEntityRepository<AbstractEntity<?>> entityRepository, IModelService modelService,
             IDeletedEntityRepository deletedEntityRepository, ICollectionRepository collectionRepository,
             IDatasetRepository datasetRepository, IAbstractEntityRepository<U> repository, EntityManager em,
-            IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver,
-            IDescriptionFileRepository descriptionFileRepository) {
+            IPublisher publisher, IRuntimeTenantResolver runtimeTenantResolver) {
         super(modelAttrAssocService);
         this.entityRepository = entityRepository;
         this.modelService = modelService;
@@ -153,22 +152,33 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         this.em = em;
         this.publisher = publisher;
         this.runtimeTenantResolver = runtimeTenantResolver;
-        this.descriptionFileRepository = descriptionFileRepository;
     }
 
     @Override
-    public U load(UniformResourceName ipId) {
-        return repository.findOneByIpId(ipId);
+    public U load(UniformResourceName ipId) throws ModuleException {
+        U entity = repository.findOneByIpId(ipId);
+        if (entity == null) {
+            throw new EntityNotFoundException(ipId.toString(), this.getClass());
+        }
+        return entity;
     }
 
     @Override
-    public U load(Long id) {
-        return repository.findById(id);
+    public U load(Long id) throws ModuleException {
+        U entity = repository.findById(id);
+        if (entity == null) {
+            throw new EntityNotFoundException(id, this.getClass());
+        }
+        return entity;
     }
 
     @Override
-    public U loadWithRelations(UniformResourceName ipId) {
-        return repository.findByIpId(ipId);
+    public U loadWithRelations(UniformResourceName ipId) throws ModuleException {
+        U entity = repository.findByIpId(ipId);
+        if (entity == null) {
+            throw new EntityNotFoundException(ipId.toString(), this.getClass());
+        }
+        return entity;
     }
 
     @Override
@@ -398,93 +408,6 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
 
     }
 
-    // FIXME
-    // /**
-    // * @param <T> one of {@link AbstractDescEntity} : {@link Dataset} or {@link Collection}
-    // * @param updatedEntity entity being created/updated
-    // * @param pFile the description of the entity
-    // * @param oldOne previous description file of updatedEntity
-    // * @throws IOException if description cannot be read
-    // * @throws ModuleException if description not conform to REGARDS requirements
-    // */
-    // private <T extends AbstractDescEntity> void setDescription(T updatedEntity, MultipartFile pFile,
-    // DescriptionFile oldOne) throws IOException, ModuleException {
-    // // we are updating/creating a description
-    // if ((updatedEntity.getDescriptionFile() != null) && !updatedEntity.getDescriptionFile().equals(oldOne)) {
-    // // this is a description file
-    // if ((pFile != null) && !pFile.isEmpty()) {
-    // // collections and dataset only have a description which is a url or a file
-    // if (!isContentTypeAcceptable(updatedEntity)) {
-    // throw new EntityDescriptionUnacceptableType(pFile.getContentType());
-    // }
-    // // 10MB
-    // if (pFile.getSize() > MAX_DESC_FILE_SIZE) {
-    // EntityDescriptionTooLargeException e = new EntityDescriptionTooLargeException(
-    // pFile.getOriginalFilename());
-    // logger.error("DescriptionFile is too big", e);
-    // throw e;
-    // }
-    // String fileCharset = getCharset(pFile);
-    // if ((fileCharset != null) && !fileCharset.equals(StandardCharsets.UTF_8.toString())) {
-    // throw new EntityDescriptionUnacceptableCharsetException(fileCharset);
-    // }
-    // // description file, change the old one because if we don't we accumulate tones of description
-    // if (oldOne != null) {
-    // oldOne.setType(updatedEntity.getDescriptionFile().getType());
-    // oldOne.setContent(pFile.getBytes());
-    // oldOne.setUrl(null);
-    // updatedEntity.setDescriptionFile(oldOne);
-    // } else {
-    // // if there is no descriptionFile existing then lets create one
-    // updatedEntity.setDescriptionFile(new DescriptionFile(pFile.getBytes(),
-    // updatedEntity.getDescriptionFile().getType()));
-    // }
-    // } else { // pFile is null
-    // // this is an url
-    // if (oldOne != null) {
-    // oldOne.setType(null);
-    // oldOne.setContent(null);
-    // oldOne.setUrl(updatedEntity.getDescriptionFile().getUrl());
-    // updatedEntity.setDescriptionFile(oldOne);
-    // } else {
-    // // if there is no description existing then lets create one
-    // updatedEntity.setDescriptionFile(new DescriptionFile(updatedEntity.getDescriptionFile().getUrl()));
-    // }
-    // }
-    // } else { // No description file provided on entity to update : keep the current one
-    // updatedEntity.setDescriptionFile(oldOne);
-    // }
-    // }
-    //
-    // /**
-    // * Return true if file content type is acceptable (PDF or MARKDOWN). We are checking content type saved in the
-    // * entity and not the multipart file content type because markdown is not yet a standardized MIMEType and
-    // * our front cannot modify the content type of the corresponding part
-    // * @return true or false
-    // */
-    // private <T extends AbstractDescEntity> boolean isContentTypeAcceptable(T pEntity) {
-    // if (pEntity.getDescriptionFile() != null) {
-    // String fileContentType = pEntity.getDescriptionFile().getType().toString();
-    // int charsetIdx = fileContentType.indexOf(";charset");
-    // String contentType = (charsetIdx == -1) ? fileContentType : fileContentType.substring(0, charsetIdx);
-    // return contentType.equals(MediaType.APPLICATION_PDF_VALUE)
-    // || contentType.equals(MediaType.TEXT_MARKDOWN_VALUE);
-    // }
-    // return false;
-    // }
-
-    /**
-     * Retrieve file charset
-     * @param pFile description file from the user
-     * @return file charset
-     */
-    @SuppressWarnings("unused")
-    private static String getCharset(MultipartFile pFile) {
-        String contentType = pFile.getContentType();
-        int charsetIdx = contentType.indexOf("charset=");
-        return (charsetIdx == -1) ? null : contentType.substring(charsetIdx + 8).toUpperCase();
-    }
-
     private U checkCreation(U pEntity) throws ModuleException {
         checkModelExists(pEntity);
         doCheck(pEntity, null);
@@ -585,17 +508,16 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
     }
 
     @Override
-    public U delete(Long pEntityId) throws EntityNotFoundException {
+    public U delete(Long pEntityId) throws ModuleException {
         Assert.notNull(pEntityId, "Entity identifier is required");
         final U toDelete = repository.findById(pEntityId);
         if (toDelete == null) {
             throw new EntityNotFoundException(pEntityId, this.getClass());
         }
-        getStorageService().deleteAIP(toDelete);
         return delete(toDelete);
     }
 
-    private U delete(U toDelete) {
+    private U delete(U toDelete) throws ModuleException {
         UniformResourceName urn = toDelete.getIpId();
         // IpId URNs that will need an AMQP event publishing
         Set<UniformResourceName> updatedIpIds = new HashSet<>();
@@ -625,6 +547,12 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         }
         // Remove dataset to delete from datasets (no need to manage its groups)
         datasets.remove(toDelete);
+        // Remove relate files
+        for (Map.Entry<DataType, DataFile> entry : toDelete.getFiles().entries()) {
+            if (localStorageService.isFileLocallyStored(toDelete, entry.getValue())) {
+                localStorageService.removeFile(toDelete, entry.getValue());
+            }
+        }
         // Delete the entity
         entityRepository.delete(toDelete);
         updatedIpIds.add(toDelete.getIpId());
@@ -672,5 +600,59 @@ public abstract class AbstractEntityService<U extends AbstractEntity<?>> extends
         delEntity.setIpId(entity.getIpId());
         delEntity.setLastUpdate(entity.getLastUpdate());
         return delEntity;
+    }
+
+    @Override
+    public U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments,
+            String fileUriTemplate) throws ModuleException {
+
+        U entity = load(urn);
+        // Store files locally
+        java.util.Collection<DataFile> files = localStorageService.attachFiles(entity, dataType, attachments,
+                                                                               fileUriTemplate);
+        // Merge previous files with new ones
+        if (entity.getFiles().get(dataType) != null) {
+            entity.getFiles().get(dataType).addAll(files);
+        } else {
+            entity.getFiles().putAll(dataType, files);
+        }
+        return update(entity);
+    }
+
+    @Override
+    public DataFile getFile(UniformResourceName urn, String checksum) throws ModuleException {
+
+        U entity = load(urn);
+        // Search data file
+        Multimap<DataType, DataFile> files = entity.getFiles();
+        for (Map.Entry<DataType, DataFile> entry : files.entries()) {
+            if (checksum.equals(entry.getValue().getChecksum())) {
+                return entry.getValue();
+            }
+        }
+
+        String message = String.format("Data file with checksum \"%s\" in entity \"\" not found", checksum,
+                                       urn.toString());
+        LOGGER.error(message);
+        throw new EntityNotFoundException(message);
+    }
+
+    @Override
+    public void downloadFile(UniformResourceName urn, String checksum, OutputStream output) throws ModuleException {
+        localStorageService.getFileContent(checksum, output);
+    }
+
+    @Override
+    public U removeFile(UniformResourceName urn, String checksum) throws ModuleException {
+
+        U entity = load(urn);
+        // Retrieve data file
+        DataFile dataFile = getFile(urn, checksum);
+        // Try to remove the file if locally stored, otherwise the file is not stored on this microservice
+        if (localStorageService.isFileLocallyStored(entity, dataFile)) {
+            localStorageService.removeFile(entity, dataFile);
+        }
+        entity.getFiles().get(dataFile.getDataType()).remove(dataFile);
+        return update(entity);
     }
 }

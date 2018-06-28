@@ -22,11 +22,15 @@ import java.net.URI;
 
 import org.springframework.util.MimeType;
 
+import fr.cnes.regards.framework.oais.urn.DataType;
+
 /**
  * This class manages physical data reference
  * @author lmieulet
  */
 public class DataFile {
+
+    protected DataType dataType;
 
     /**
      * File reference
@@ -178,7 +182,7 @@ public class DataFile {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ((o == null) || (getClass() != o.getClass())) {
             return false;
         }
 
@@ -190,5 +194,13 @@ public class DataFile {
     @Override
     public int hashCode() {
         return uri.hashCode();
+    }
+
+    public DataType getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
     }
 }
