@@ -468,7 +468,8 @@ public interface ICriterion {
 
     /**
      * Criterion to test the intersaction with a boundary box
-     * @param bbox String bbox as &lt;left,bottom,right,top>
+     * @param bbox String bbox as "left,bottom,right,top" (or "minX, minY, maxX, maxY" or "minLon, minLat, maxLon,
+     * maxLat"), blanks are accepted
      * @throws InvalidGeometryException
      */
     static ICriterion intersectsBbox(String bbox) throws InvalidGeometryException {

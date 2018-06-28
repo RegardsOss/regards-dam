@@ -19,8 +19,6 @@
 package fr.cnes.regards.modules.indexer.domain.criterion;
 
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometryException;
 
@@ -29,9 +27,6 @@ import fr.cnes.regards.modules.indexer.domain.criterion.exception.InvalidGeometr
  * @author Sébastien Binda
  */
 public class BoundaryBoxCriterion implements ICriterion {
-
-    private static final Pattern p = Pattern
-            .compile("^([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+),([0-9]+\\.[0-9]+)$");
 
     private final double minX;
 
@@ -50,18 +45,16 @@ public class BoundaryBoxCriterion implements ICriterion {
     }
 
     /**
-     * Creates BoundaryBoxCriterion from string format <left,bottom,right,top> where each field is a {@link double}.
-     * @param bbox
-     * @throws InvalidGeometryException
+     * Creates BoundaryBoxCriterion from string format "left,bottom,right,top" where each field is a {@link double}.
      */
     public BoundaryBoxCriterion(String bbox) throws InvalidGeometryException {
-        Matcher m = p.matcher(bbox);
-        if (m.matches()) {
-            this.minX = Double.valueOf(m.group(1));
-            this.minY = Double.valueOf(m.group(2));
-            this.maxX = Double.valueOf(m.group(3));
-            this.maxY = Double.valueOf(m.group(4));
-        } else {
+        String[] values = bbox.split(",");
+        try {
+            this.minX = Double.parseDouble(values[0].trim());
+            this.minY = Double.parseDouble(values[1].trim());
+            this.maxX = Double.parseDouble(values[2].trim());
+            this.maxY = Double.parseDouble(values[3].trim());
+        } catch (NumberFormatException | NullPointerException e) {
             throw new InvalidGeometryException(
                     String.format("Bbox %s is not a valid bbox format. Expected : minX,minY,maxX,maxY", bbox));
         }
@@ -107,8 +100,8 @@ public class BoundaryBoxCriterion implements ICriterion {
             return false;
         }
         BoundaryBoxCriterion crit = (BoundaryBoxCriterion) o;
-        return (crit.getMinX() == this.getMinX()) && (crit.getMinY() == this.getMinY())
-                && (crit.getMaxX() == this.getMaxX()) && (crit.getMaxY() == this.getMaxY());
+        return (crit.getMinX() == this.getMinX()) && (crit.getMinY() == this.getMinY()) && (crit.getMaxX() == this
+                .getMaxX()) && (crit.getMaxY() == this.getMaxY());
     }
 
 }
