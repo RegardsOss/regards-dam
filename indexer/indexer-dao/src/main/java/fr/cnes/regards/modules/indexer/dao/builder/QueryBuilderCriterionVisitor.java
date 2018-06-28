@@ -191,7 +191,7 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     public QueryBuilder visitCircleCriterion(CircleCriterion criterion) {
         double[] center = criterion.getCoordinates();
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders.newCircleBuilder()
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders.newCircleBuilder()
                     .center(new Coordinate(center[0], center[1])).radius(criterion.getRadius()));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
@@ -207,7 +207,8 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     public QueryBuilder visitPolygonCriterion(PolygonCriterion criterion) {
 
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, GeoQueries.computeShapeBuilder(criterion));
+            return QueryBuilders
+                    .geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, GeoQueries.computeShapeBuilder(criterion));
         } catch (IOException ioe) { // Never occurs
             throw new RsRuntimeException(ioe);
         }
@@ -216,13 +217,12 @@ public class QueryBuilderCriterionVisitor implements ICriterionVisitor<QueryBuil
     @Override
     public QueryBuilder visitBoundaryBoxCriterion(BoundaryBoxCriterion criterion) {
         try {
-            return QueryBuilders.geoIntersectionQuery(IMapping.GEOMETRY, ShapeBuilders
+            return QueryBuilders.geoIntersectionQuery(IMapping.GEO_SHAPE_ATTRIBUTE, ShapeBuilders
                     .newEnvelope(new Coordinate(criterion.getMaxY(), criterion.getMinX()),
                                  new Coordinate(criterion.getMinY(), criterion.getMaxX())));
         } catch (IOException ioe) {
             throw new RsRuntimeException(ioe);
         }
     }
-
 
 }
