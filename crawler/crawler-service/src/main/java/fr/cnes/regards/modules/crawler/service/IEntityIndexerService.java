@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.DataObject;
 import fr.cnes.regards.modules.entities.domain.Dataset;
@@ -26,7 +27,7 @@ public interface IEntityIndexerService {
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
      */
     default void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime updateDate,
-            boolean forceAssociatedEntitiesUpdate) {
+            boolean forceAssociatedEntitiesUpdate) throws ModuleException {
         this.updateEntityIntoEs(tenant, ipId, null, updateDate, forceAssociatedEntitiesUpdate, null);
     }
 
@@ -39,7 +40,7 @@ public interface IEntityIndexerService {
      * @param forceAssociatedEntitiesUpdate if true, force associated entities update (usually data objects for dataset)
      */
     void updateEntityIntoEs(String tenant, UniformResourceName ipId, OffsetDateTime lastUpdateDate,
-            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId);
+            OffsetDateTime updateDate, boolean forceAssociatedEntitiesUpdate, Long dsiId) throws ModuleException;
 
     /**
      * Create index it doesn't exist
@@ -55,7 +56,7 @@ public interface IEntityIndexerService {
      * @param dsiId datasetIngestion id
      */
     void updateDatasets(String tenant, Set<Dataset> datasets, OffsetDateTime lastUpdateDate,
-            boolean forceDataObjectsUpdate, Long dsiId);
+            boolean forceDataObjectsUpdate, Long dsiId) throws ModuleException;
 
     /**
      * Create given data objects into Elasticsearch

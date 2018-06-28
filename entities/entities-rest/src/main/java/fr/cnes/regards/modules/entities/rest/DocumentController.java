@@ -21,18 +21,14 @@ package fr.cnes.regards.modules.entities.rest;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -40,27 +36,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.google.common.net.HttpHeaders;
 
 import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
-import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
-import fr.cnes.regards.framework.security.role.DefaultRole;
 import fr.cnes.regards.modules.entities.domain.Document;
-import fr.cnes.regards.modules.entities.service.DocumentLSService;
 import fr.cnes.regards.modules.entities.service.IDocumentService;
-import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
  * @author lmieulet
@@ -76,10 +63,6 @@ public class DocumentController implements IResourceController<Document> {
     public static final String DOCUMENT_ASSOCIATE_MAPPING = DOCUMENT_MAPPING + "/associate";
 
     public static final String DOCUMENT_DISSOCIATE_MAPPING = DOCUMENT_MAPPING + "/dissociate";
-
-    public static final String DOCUMENT_FILES_MAPPING = DOCUMENT_MAPPING + "/files";
-
-    public static final String DOCUMENT_FILES_SINGLE_MAPPING = DOCUMENT_FILES_MAPPING + "/{file_checksum}";
 
     /**
      * Service
@@ -113,7 +96,8 @@ public class DocumentController implements IResourceController<Document> {
      */
     @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_MAPPING)
     @ResourceAccess(description = "Retrieve a document")
-    public ResponseEntity<Resource<Document>> retrieveDocument(@PathVariable("document_id") Long id) {
+    public ResponseEntity<Resource<Document>> retrieveDocument(@PathVariable("document_id") Long id)
+            throws ModuleException {
         final Document document = documentService.load(id);
         final Resource<Document> resource = toResource(document);
         return new ResponseEntity<>(resource, HttpStatus.OK);
@@ -144,14 +128,13 @@ public class DocumentController implements IResourceController<Document> {
      * Entry point to delete a document using its id
      * @param id {@link Document} id
      * @return nothing
-     * @
      */
     @RequestMapping(method = RequestMethod.DELETE, value = DocumentController.DOCUMENT_MAPPING)
     @ResponseBody
     @ResourceAccess(description = "delete the document using its id")
     public ResponseEntity<Void> deleteDocument(@PathVariable("document_id") Long id)
-            throws EntityNotFoundException, IOException {
-        documentService.deleteDocumentAndFiles(id);
+            throws IOException, ModuleException {
+        documentService.delete(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -208,75 +191,6 @@ public class DocumentController implements IResourceController<Document> {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    /**
-     * Add files to document of given id
-     * @param id the id of the document
-     * @param files The list of files
-     * @return the updated document wrapped in an HTTP response
-     */
-    @RequestMapping(method = RequestMethod.POST, value = DOCUMENT_FILES_MAPPING)
-    @ResourceAccess(description = "Add files to a document using its id")
-    public ResponseEntity<Resource<Document>> addFiles(@PathVariable("document_id") Long id,
-            @RequestPart MultipartFile[] files) throws ModuleException, IOException, NoSuchMethodException {
-        ControllerLinkBuilder controllerLinkBuilder = ControllerLinkBuilder
-                .linkTo(this.getClass(),
-                        this.getClass().getMethod("retrieveDocumentFile", String.class, Long.class, String.class,
-                                                  HttpServletResponse.class),
-                        id, DocumentLSService.FILE_CHECKSUM_URL_TEMPLATE);
-        Link link = controllerLinkBuilder.withSelfRel();
-        String fileLsUriTemplate = link.getHref();
-
-        final Document document = documentService.addFiles(id, files, fileLsUriTemplate);
-        final Resource<Document> resource = toResource(document);
-        return new ResponseEntity<>(resource, HttpStatus.OK);
-    }
-
-    /**
-     * Entry point to retrieve a file from a document with given checksum
-     * @param id {@link Document} id
-     * @param fileChecksum {String} the checksum of the file to retrieve
-     * @param response {@link HttpServletResponse} inject the response in order to manually set headers and stuff
-     * @return the requested file
-     */
-    @RequestMapping(method = RequestMethod.GET, value = DocumentController.DOCUMENT_FILES_SINGLE_MAPPING)
-    @ResponseBody
-    @ResourceAccess(description = "Retrieve the file in given document with given checksum",
-            role = DefaultRole.PUBLIC)
-    public void retrieveDocumentFile(@RequestParam(name = "origin", required = false) String origin,
-            @PathVariable("document_id") Long id, @PathVariable("file_checksum") String fileChecksum,
-            HttpServletResponse response) throws ModuleException, IOException {
-        byte[] fileContent = documentService.retrieveFileContent(id, fileChecksum);
-        DataFile dataFile = documentService.retrieveDataFile(id, fileChecksum);
-        if (fileContent != null) {
-            if (origin != null) {
-                response.setHeader(HttpHeaders.X_FRAME_OPTIONS, "ALLOW-FROM " + origin);
-            }
-            response.setHeader("Content-Disposition", "inline;filename=" + dataFile.getName());
-            response.setContentType(dataFile.getMimeType().toString());
-            response.setContentLength(fileContent.length);
-            response.getOutputStream().write(fileContent);
-            response.getOutputStream().flush();
-            response.setStatus(HttpStatus.OK.value());
-        } else {
-            response.setStatus(HttpStatus.NO_CONTENT.value());
-        }
-    }
-
-    /**
-     * Entry point to delete a file from a document
-     * @param id {@link Document} id
-     * @return the deleted document
-     */
-    @RequestMapping(method = RequestMethod.DELETE, value = DocumentController.DOCUMENT_FILES_SINGLE_MAPPING)
-    @ResponseBody
-    @ResourceAccess(description = "delete the document file using its id")
-    public HttpEntity<Resource<Document>> deleteDocumentFile(@PathVariable("document_id") Long id,
-            @PathVariable("file_checksum") String fileChecksum) throws ModuleException, IOException {
-        final Document document = documentService.deleteFile(id, fileChecksum);
-        final Resource<Document> resource = toResource(document);
-        return new ResponseEntity<>(resource, HttpStatus.OK);
-    }
-
     @Override
     public Resource<Document> toResource(Document element, Object... extras) {
         final Resource<Document> resource = resourceService.toResource(element);
@@ -285,8 +199,6 @@ public class DocumentController implements IResourceController<Document> {
         resourceService.addLink(resource, this.getClass(), "retrieveDocuments", LinkRels.LIST,
                                 MethodParamFactory.build(Pageable.class),
                                 MethodParamFactory.build(PagedResourcesAssembler.class));
-        resourceService.addLink(resource, this.getClass(), "deleteDocument", LinkRels.DELETE,
-                                MethodParamFactory.build(Long.class, element.getId()));
         resourceService.addLink(resource, this.getClass(), "updateDocument", LinkRels.UPDATE,
                                 MethodParamFactory.build(Long.class, element.getId()),
                                 MethodParamFactory.build(Document.class),

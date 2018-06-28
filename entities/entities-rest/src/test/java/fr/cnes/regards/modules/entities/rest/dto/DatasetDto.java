@@ -30,7 +30,6 @@ import fr.cnes.regards.framework.oais.urn.EntityType;
 import fr.cnes.regards.framework.oais.urn.OAISIdentifier;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.Dataset;
-import fr.cnes.regards.modules.entities.domain.DescriptionFile;
 import fr.cnes.regards.modules.entities.domain.attribute.AbstractAttribute;
 import fr.cnes.regards.modules.indexer.domain.IIndexable;
 import fr.cnes.regards.modules.models.domain.Model;
@@ -53,8 +52,6 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
     private Set<String> quotations = new HashSet<>();
 
     private String licence;
-
-    private DescriptionFile descriptionFile;
 
     private final String entityType = EntityType.DATASET.toString();
 
@@ -182,20 +179,6 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
      */
     public void setLicence(String pLicence) {
         licence = pLicence;
-    }
-
-    /**
-     * @return the descriptionFile
-     */
-    public DescriptionFile getDescriptionFile() {
-        return descriptionFile;
-    }
-
-    /**
-     * @param pDescriptionFile the descriptionFile to set
-     */
-    public void setDescriptionFile(DescriptionFile pDescriptionFile) {
-        descriptionFile = pDescriptionFile;
     }
 
     /**
@@ -360,7 +343,7 @@ public class DatasetDto implements IIdentifiable<Long>, IIndexable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see fr.cnes.regards.modules.indexer.domain.IIndexable#getType()
      */
     @Override

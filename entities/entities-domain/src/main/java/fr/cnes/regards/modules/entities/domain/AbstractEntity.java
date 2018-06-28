@@ -225,7 +225,8 @@ public abstract class AbstractEntity<F extends EntityFeature> implements IIndexa
     }
 
     /**
-     * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)}
+     * Get an immutable copy of tags. To modify tag, use {@link #setTags(Set)} or {@link #addTags(String...)} or
+     * {@link #removeTags(Collection)}
      * @return
      */
     public ImmutableSet<String> getTags() {

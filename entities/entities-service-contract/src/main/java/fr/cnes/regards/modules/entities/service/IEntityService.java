@@ -19,6 +19,7 @@
 package fr.cnes.regards.modules.entities.service;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -29,8 +30,10 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.cnes.regards.framework.jpa.multitenant.transactional.MultitenantTransactional;
 import fr.cnes.regards.framework.module.rest.exception.EntityNotFoundException;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
+import fr.cnes.regards.framework.oais.urn.DataType;
 import fr.cnes.regards.framework.oais.urn.UniformResourceName;
 import fr.cnes.regards.modules.entities.domain.AbstractEntity;
+import fr.cnes.regards.modules.indexer.domain.DataFile;
 
 /**
  * Parameterized entity service interface
@@ -47,7 +50,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @param ipId business id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    U load(UniformResourceName ipId);
+    U load(UniformResourceName ipId) throws ModuleException;
 
     /**
      * Load entity by id without relations
@@ -55,7 +58,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @param id Database id
      * @return entity without its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    U load(Long id);
+    U load(Long id) throws ModuleException;
 
     /**
      * Load entity by IpId with all its relations
@@ -63,7 +66,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @param ipId business id
      * @return entity with all its relations (ie. groups, tags, ...) or null if entity doesn't exists
      */
-    U loadWithRelations(UniformResourceName ipId);
+    U loadWithRelations(UniformResourceName ipId) throws ModuleException;
 
     /**
      * Load entities by IpId with all their relations
@@ -71,7 +74,7 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
      * @param ipIds business ids
      * @return entities with all its relations (ie. groups, tags, ...) or empty list
      */
-    List<U> loadAllWithRelations(UniformResourceName... ipIds);
+    List<U> loadAllWithRelations(UniformResourceName... ipIds) throws ModuleException;
 
     Page<U> findAll(Pageable pageRequest);
 
@@ -188,11 +191,30 @@ public interface IEntityService<U extends AbstractEntity<?>> extends IValidation
 
     /**
      * Delete entity identified by its id. A deleted entity is "logged" into "deleted_entity" table
-     *
-     * @param pEntityId id of entity to delete
-     * @return the deleted entity
-     * @throws EntityNotFoundException
      */
-    U delete(Long pEntityId) throws EntityNotFoundException;
+    U delete(Long pEntityId) throws ModuleException;
+
+    /**
+     * Attach files to given entity
+     *
+     */
+    U attachFiles(UniformResourceName urn, DataType dataType, MultipartFile[] attachments, String fileUriTemplate)
+            throws ModuleException;
+
+    /**
+     * Retrieve a {@link DataFile} attached to the specified entity with the specified checksum
+     */
+    DataFile getFile(UniformResourceName urn, String checksum) throws ModuleException;
+
+    /**
+     * Write related file content to output stream.<br/>
+     * {@link OutputStream} has to be flush after this method completes.
+     */
+    void downloadFile(UniformResourceName urn, String checksum, OutputStream output) throws ModuleException;
+
+    /**
+     * Remove file
+     */
+    U removeFile(UniformResourceName urn, String checksum) throws ModuleException;
 
 }

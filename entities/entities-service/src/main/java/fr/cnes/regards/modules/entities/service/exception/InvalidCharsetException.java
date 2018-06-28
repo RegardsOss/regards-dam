@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -21,18 +21,18 @@ package fr.cnes.regards.modules.entities.service.exception;
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- * @author Sylvain Vissiere-Guerinet
+ * Data file invalid charset exception
+ *
+ * @author Marc Sordi
  *
  */
-public class EntityDescriptionUnacceptableCharsetException extends ModuleException {
+@SuppressWarnings("serial")
+public class InvalidCharsetException extends ModuleException {
 
-    private static final String MESSAGE_FORMAT = "Entity can only have description of Type: application/pdf or text/markdown;charset=utf-8 and not charset=%s";
+    private static final String MESSAGE_FORMAT = "Invalid data file : expected charset is %s, not %s";
 
-    /**
-     * @param pCharsetOfFile
-     */
-    public EntityDescriptionUnacceptableCharsetException(String pCharsetOfFile) {
-        super(String.format(MESSAGE_FORMAT, pCharsetOfFile));
+    public InvalidCharsetException(String expectedCharset, String charset) {
+        super(String.format(MESSAGE_FORMAT, expectedCharset, charset));
     }
 
 }

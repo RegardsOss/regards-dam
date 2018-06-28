@@ -72,7 +72,7 @@ public class AccessGroupServiceIT extends AbstractRegardsServiceTransactionalIT 
 
     @Before
     public void init() {
-        runtimeTenantResolver.forceTenant(DEFAULT_TENANT);
+        runtimeTenantResolver.forceTenant(getDefaultTenant());
 
         accessGroup1 = new AccessGroup(AG1_NAME);
         dao.save(accessGroup1);

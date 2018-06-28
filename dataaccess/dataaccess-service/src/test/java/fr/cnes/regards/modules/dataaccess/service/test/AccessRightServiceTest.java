@@ -62,12 +62,11 @@ import fr.cnes.regards.modules.dataaccess.domain.accessright.QualityLevel;
 import fr.cnes.regards.modules.dataaccess.service.AccessGroupService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessGroupService;
 import fr.cnes.regards.modules.dataaccess.service.IAccessRightService;
-import fr.cnes.regards.modules.entities.dao.IDocumentLSRepository;
+import fr.cnes.regards.modules.entities.dao.ILocalFileRepository;
 import fr.cnes.regards.modules.entities.domain.Dataset;
 import fr.cnes.regards.modules.entities.service.CollectionService;
 import fr.cnes.regards.modules.entities.service.DatasetService;
 import fr.cnes.regards.modules.entities.service.IDatasetService;
-import fr.cnes.regards.modules.entities.service.IDocumentService;
 import fr.cnes.regards.modules.entities.service.IEntitiesService;
 import fr.cnes.regards.modules.indexer.dao.IEsRepository;
 import fr.cnes.regards.modules.models.dao.IAttributeModelRepository;
@@ -185,18 +184,13 @@ public class AccessRightServiceTest {
         }
 
         @Bean
-        public IDocumentLSRepository documentLSRepository() {
-            return Mockito.mock(IDocumentLSRepository.class);
+        public ILocalFileRepository documentLSRepository() {
+            return Mockito.mock(ILocalFileRepository.class);
         }
 
         @Bean
         public IModelService modelService() {
             return Mockito.mock(IModelService.class);
-        }
-
-        @Bean
-        public IDocumentService documentService() {
-            return Mockito.mock(IDocumentService.class);
         }
 
         @Bean
@@ -243,7 +237,7 @@ public class AccessRightServiceTest {
     }
 
     @Test
-    public void testRetrieveAccessRightsNoArgs() throws EntityNotFoundException {
+    public void testRetrieveAccessRightsNoArgs() throws ModuleException {
         final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         expected.add(GAR12);
@@ -261,7 +255,7 @@ public class AccessRightServiceTest {
     }
 
     @Test
-    public void testRetrieveAccessRightsDSArgs() throws EntityNotFoundException {
+    public void testRetrieveAccessRightsDSArgs() throws ModuleException {
         final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         expected.add(GAR12);
@@ -278,7 +272,7 @@ public class AccessRightServiceTest {
     }
 
     @Test
-    public void testRetrieveAccessRightsGroupArgs() throws EntityNotFoundException {
+    public void testRetrieveAccessRightsGroupArgs() throws ModuleException {
         final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         expected.add(GAR21);
@@ -295,7 +289,7 @@ public class AccessRightServiceTest {
     }
 
     @Test
-    public void testRetrieveAccessRightsFullArgs() throws EntityNotFoundException {
+    public void testRetrieveAccessRightsFullArgs() throws ModuleException {
         final List<AccessRight> expected = new ArrayList<>();
         expected.add(GAR11);
         final Page<AccessRight> pageExpected = new PageImpl<>(expected);

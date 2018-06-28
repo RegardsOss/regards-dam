@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
+ * Copyright 2017 CNES - CENTRE NATIONAL d'ETUDES SPATIALES
  *
  * This file is part of REGARDS.
  *
@@ -18,21 +18,23 @@
  */
 package fr.cnes.regards.modules.entities.service.exception;
 
+import java.util.Collection;
+
 import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 
 /**
- * @author Sylvain Vissiere-Guerinet
+ * Data file invalid charset exception
+ *
+ * @author Marc Sordi
  *
  */
-public class EntityDescriptionUnacceptableType extends ModuleException {
+@SuppressWarnings("serial")
+public class InvalidContentTypeException extends ModuleException {
 
-    private static final String UNACCEPTABLE_TYPE = "The system only accept description that are PDFs or Markdown. Not %s.";
+    private static final String MESSAGE_FORMAT = "Invalid data file : expected content type is %s, not %s";
 
-    /**
-     * @param pErrorMessage
-     */
-    public EntityDescriptionUnacceptableType(String pDescriptionType) {
-        super(String.format(UNACCEPTABLE_TYPE, pDescriptionType));
+    public InvalidContentTypeException(Collection<String> expectedContentTypes, String contentType) {
+        super(String.format(MESSAGE_FORMAT, expectedContentTypes.toString(), contentType));
     }
 
 }

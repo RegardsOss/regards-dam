@@ -36,6 +36,7 @@ import fr.cnes.regards.framework.hateoas.IResourceController;
 import fr.cnes.regards.framework.hateoas.IResourceService;
 import fr.cnes.regards.framework.hateoas.LinkRels;
 import fr.cnes.regards.framework.hateoas.MethodParamFactory;
+import fr.cnes.regards.framework.module.rest.exception.ModuleException;
 import fr.cnes.regards.framework.security.annotation.ResourceAccess;
 import fr.cnes.regards.modules.dataaccess.domain.accessright.dto.DatasetWithAccessRight;
 import fr.cnes.regards.modules.dataaccess.service.IDatasetWithAccessRightService;
@@ -76,7 +77,7 @@ public class DatasetWithAccessRightController implements IResourceController<Dat
     public ResponseEntity<PagedResources<Resource<DatasetWithAccessRight>>> retrieveDatasets(
             @PathVariable(name = "accessGroupName") String accessGroupName,
             @RequestParam(name = "datasetLabel", required = false) String label, final Pageable pageRequest,
-            final PagedResourcesAssembler<DatasetWithAccessRight> assembler) {
+            final PagedResourcesAssembler<DatasetWithAccessRight> assembler) throws ModuleException {
         final Page<DatasetWithAccessRight> datasetsWithAR = service.search(label, accessGroupName, pageRequest);
         final PagedResources<Resource<DatasetWithAccessRight>> resources = toPagedResources(datasetsWithAR, assembler);
         return new ResponseEntity<>(resources, HttpStatus.OK);

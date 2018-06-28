@@ -164,7 +164,7 @@ public class DatasetServiceTest {
         publisherMocked = Mockito.mock(IPublisher.class);
         dataSetServiceMocked = new DatasetService(dataSetRepositoryMocked, pAttributeModelService,
                 pModelAttributeService, entitiesRepositoryMocked, modelService, deletedEntityRepositoryMocked, null,
-                emMocked, publisherMocked, runtimeTenantResolver, null, Mockito.mock(IOpenSearchService.class),
+                emMocked, publisherMocked, runtimeTenantResolver, Mockito.mock(IOpenSearchService.class),
                 Mockito.mock(IPluginService.class));
     }
 
